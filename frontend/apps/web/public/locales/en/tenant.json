@@ -1,0 +1,63 @@
+{
+  "title": "Tenant Management",
+  "list": {
+    "title": "Tenant List",
+    "add": "Add Tenant",
+    "search": "Search tenants..."
+  },
+  "detail": {
+    "title": "Tenant Details",
+    "basicInfo": "Basic Information",
+    "policies": "Policy Settings",
+    "branding": "Branding",
+    "settings": "Settings"
+  },
+  "form": {
+    "code": "Tenant Code",
+    "name": "Tenant Name",
+    "nameEn": "English Name",
+    "description": "Description",
+    "adminEmail": "Admin Email",
+    "adminName": "Admin Name",
+    "status": "Status",
+    "logoUrl": "Logo URL"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "suspended": "Suspended",
+    "pending": "Pending"
+  },
+  "policy": {
+    "title": "Policy Settings",
+    "leavePolicy": "Leave Policy",
+    "attendancePolicy": "Attendance Policy",
+    "approvalPolicy": "Approval Policy",
+    "maxEmployees": "Max Employees",
+    "maxDepartments": "Max Departments",
+    "allowedModules": "Allowed Modules"
+  },
+  "branding": {
+    "title": "Branding",
+    "primaryColor": "Primary Color",
+    "secondaryColor": "Secondary Color",
+    "logo": "Logo",
+    "favicon": "Favicon",
+    "loginBackground": "Login Background"
+  },
+  "selector": {
+    "title": "Select Tenant",
+    "switch": "Switch Tenant"
+  },
+  "validation": {
+    "codeRequired": "Tenant code is required.",
+    "nameRequired": "Tenant name is required.",
+    "adminEmailRequired": "Admin email is required."
+  },
+  "message": {
+    "createSuccess": "Tenant has been created.",
+    "updateSuccess": "Tenant has been updated.",
+    "deleteSuccess": "Tenant has been deleted.",
+    "switchSuccess": "Tenant has been switched."
+  }
+}

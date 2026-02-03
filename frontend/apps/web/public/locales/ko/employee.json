@@ -1,0 +1,62 @@
+{
+  "title": "직원 관리",
+  "list": {
+    "title": "직원 목록",
+    "search": "이름, 사번, 이메일로 검색...",
+    "addEmployee": "직원 추가"
+  },
+  "detail": {
+    "title": "직원 상세",
+    "basicInfo": "기본 정보",
+    "workInfo": "근무 정보",
+    "contactInfo": "연락처 정보"
+  },
+  "form": {
+    "employeeNumber": "사번",
+    "name": "이름",
+    "nameEn": "영문 이름",
+    "email": "이메일",
+    "phone": "휴대폰",
+    "birthDate": "생년월일",
+    "gender": "성별",
+    "male": "남",
+    "female": "여",
+    "address": "주소",
+    "department": "부서",
+    "position": "직위",
+    "grade": "직급",
+    "jobTitle": "직책",
+    "hireDate": "입사일",
+    "resignDate": "퇴사일",
+    "employmentType": "고용유형",
+    "employmentStatus": "재직상태",
+    "manager": "직속상관",
+    "profileImage": "프로필 사진"
+  },
+  "status": {
+    "active": "재직",
+    "leave": "휴직",
+    "resigned": "퇴직",
+    "retired": "정년퇴직"
+  },
+  "employmentType": {
+    "fullTime": "정규직",
+    "partTime": "계약직",
+    "intern": "인턴",
+    "temporary": "임시직"
+  },
+  "validation": {
+    "employeeNumberRequired": "사번은 필수입니다.",
+    "nameRequired": "이름은 필수입니다.",
+    "emailRequired": "이메일은 필수입니다.",
+    "emailInvalid": "올바른 이메일 형식이 아닙니다.",
+    "departmentRequired": "부서를 선택해주세요.",
+    "hireDateRequired": "입사일은 필수입니다."
+  },
+  "message": {
+    "createSuccess": "직원이 등록되었습니다.",
+    "updateSuccess": "직원 정보가 수정되었습니다.",
+    "deleteSuccess": "직원이 삭제되었습니다.",
+    "deleteConfirm": "이 직원을 삭제하시겠습니까?"
+  }
+}

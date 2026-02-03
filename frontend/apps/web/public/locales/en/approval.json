@@ -1,0 +1,95 @@
+{
+  "title": "Approvals",
+  "list": {
+    "title": "Approval List",
+    "pending": "Pending",
+    "requested": "My Requests",
+    "completed": "Completed",
+    "draft": "Drafts"
+  },
+  "detail": {
+    "title": "Approval Details",
+    "documentNumber": "Document No.",
+    "requester": "Requester",
+    "department": "Department",
+    "createdAt": "Created At",
+    "completedAt": "Completed At",
+    "content": "Content",
+    "attachments": "Attachments"
+  },
+  "create": {
+    "title": "New Approval",
+    "type": "Type",
+    "titleField": "Title",
+    "content": "Content",
+    "urgency": "Urgency",
+    "dueDate": "Due Date",
+    "approvalLine": "Approval Line",
+    "attachments": "Attachments",
+    "saveDraft": "Save as Draft",
+    "submit": "Submit"
+  },
+  "type": {
+    "leaveRequest": "Leave Request",
+    "expense": "Expense",
+    "overtime": "Overtime",
+    "personnel": "Personnel",
+    "general": "General"
+  },
+  "urgency": {
+    "low": "Low",
+    "normal": "Normal",
+    "high": "High"
+  },
+  "status": {
+    "draft": "Draft",
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "cancelled": "Cancelled"
+  },
+  "action": {
+    "approve": "Approve",
+    "reject": "Reject",
+    "cancel": "Cancel",
+    "comment": "Comment",
+    "rejectReason": "Rejection Reason"
+  },
+  "approvalLine": {
+    "title": "Approval Line",
+    "requester": "Requester",
+    "approver": "Approver",
+    "addApprover": "Add Approver",
+    "specificPerson": "Specific Person",
+    "role": "Role",
+    "departmentHead": "Department Head"
+  },
+  "delegation": {
+    "title": "Delegation",
+    "delegator": "Delegator",
+    "delegatee": "Delegatee",
+    "period": "Period",
+    "reason": "Reason",
+    "status": {
+      "active": "Active",
+      "expired": "Expired",
+      "cancelled": "Cancelled"
+    }
+  },
+  "validation": {
+    "titleRequired": "Title is required.",
+    "contentRequired": "Content is required.",
+    "approverRequired": "Please select an approver.",
+    "rejectReasonRequired": "Rejection reason is required."
+  },
+  "message": {
+    "createSuccess": "Approval has been submitted.",
+    "approveSuccess": "Approved successfully.",
+    "rejectSuccess": "Rejected successfully.",
+    "cancelSuccess": "Cancelled successfully.",
+    "saveDraftSuccess": "Saved as draft.",
+    "approveConfirm": "Are you sure you want to approve?",
+    "rejectConfirm": "Are you sure you want to reject?",
+    "cancelConfirm": "Are you sure you want to cancel?"
+  }
+}

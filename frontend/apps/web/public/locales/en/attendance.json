@@ -1,0 +1,55 @@
+{
+  "title": "Attendance",
+  "checkIn": {
+    "title": "Check In/Out",
+    "checkIn": "Check In",
+    "checkOut": "Check Out",
+    "checkInComplete": "Checked In",
+    "checkOutComplete": "Checked Out",
+    "processing": "Processing..."
+  },
+  "today": {
+    "title": "Today's Attendance",
+    "checkInTime": "Check In Time",
+    "checkOutTime": "Check Out Time",
+    "workingHours": "Working Hours",
+    "status": "Status"
+  },
+  "monthly": {
+    "title": "Monthly Summary",
+    "totalWorkDays": "Work Days",
+    "totalWorkHours": "Work Hours",
+    "lateDays": "Late",
+    "earlyLeaveDays": "Early Leave",
+    "absentDays": "Absent",
+    "overtimeHours": "Overtime"
+  },
+  "records": {
+    "title": "Attendance Records",
+    "date": "Date",
+    "filter": {
+      "all": "All",
+      "normal": "Normal",
+      "late": "Late",
+      "earlyLeave": "Early Leave",
+      "absent": "Absent"
+    }
+  },
+  "status": {
+    "normal": "Normal",
+    "late": "Late",
+    "earlyLeave": "Early Leave",
+    "absent": "Absent",
+    "holiday": "Holiday",
+    "weekend": "Weekend"
+  },
+  "overtime": {
+    "title": "Overtime",
+    "request": "Request Overtime",
+    "date": "Date",
+    "startTime": "Start Time",
+    "endTime": "End Time",
+    "hours": "Hours",
+    "reason": "Reason"
+  }
+}

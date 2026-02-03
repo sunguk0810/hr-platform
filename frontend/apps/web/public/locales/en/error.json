@@ -1,0 +1,53 @@
+{
+  "title": "Error",
+  "general": {
+    "unknown": "An unknown error occurred.",
+    "network": "A network error occurred.",
+    "timeout": "Request timed out.",
+    "serverError": "A server error occurred."
+  },
+  "http": {
+    "400": "Bad request.",
+    "401": "Authentication required.",
+    "403": "Access denied.",
+    "404": "Page not found.",
+    "405": "Method not allowed.",
+    "409": "Conflict occurred.",
+    "422": "Unprocessable request.",
+    "429": "Too many requests. Please try again later.",
+    "500": "Internal server error.",
+    "502": "Bad gateway.",
+    "503": "Service temporarily unavailable.",
+    "504": "Gateway timeout."
+  },
+  "page": {
+    "notFound": {
+      "title": "Page Not Found",
+      "description": "The page you requested does not exist or has been moved.",
+      "goHome": "Go to Home",
+      "goBack": "Go Back"
+    },
+    "forbidden": {
+      "title": "Access Denied",
+      "description": "You do not have permission to access this page.",
+      "goHome": "Go to Home",
+      "goBack": "Go Back"
+    },
+    "serverError": {
+      "title": "Server Error",
+      "description": "Something went wrong on the server. Please try again later.",
+      "retry": "Try Again",
+      "goHome": "Go to Home"
+    }
+  },
+  "validation": {
+    "required": "{{field}} is required.",
+    "minLength": "{{field}} must be at least {{min}} characters.",
+    "maxLength": "{{field}} must be at most {{max}} characters.",
+    "email": "Please enter a valid email address.",
+    "phone": "Please enter a valid phone number.",
+    "number": "Only numbers are allowed.",
+    "date": "Please enter a valid date.",
+    "pattern": "Invalid format."
+  }
+}

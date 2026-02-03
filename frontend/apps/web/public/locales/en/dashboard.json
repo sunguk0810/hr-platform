@@ -1,0 +1,62 @@
+{
+  "title": "Dashboard",
+  "welcome": "Hello, {{name}}",
+  "widgets": {
+    "attendance": {
+      "title": "Attendance",
+      "description": "Today's work status"
+    },
+    "leaveBalance": {
+      "title": "Leave Balance",
+      "description": "Annual leave usage"
+    },
+    "pendingApprovals": {
+      "title": "Pending Approvals",
+      "description": "Documents awaiting approval"
+    },
+    "teamLeave": {
+      "title": "Team Leave",
+      "description": "Team leave this week"
+    },
+    "orgSummary": {
+      "title": "Organization Summary",
+      "description": "Overall organization statistics",
+      "totalEmployees": "Total Employees",
+      "active": "Active",
+      "onLeave": "On Leave",
+      "departments": "Departments",
+      "positions": "Positions",
+      "newHires": "New Hires This Month",
+      "resigned": "Resigned"
+    },
+    "statistics": {
+      "title": "Key Metrics",
+      "description": "This month vs last month",
+      "attendanceRate": "Attendance Rate",
+      "leaveUsageRate": "Leave Usage Rate",
+      "overtimeHours": "Overtime Hours",
+      "approvalTime": "Approval Processing Time"
+    },
+    "announcements": {
+      "title": "Announcements",
+      "viewAll": "View All",
+      "empty": "No announcements.",
+      "category": {
+        "notice": "Notice",
+        "event": "Event",
+        "update": "Update",
+        "urgent": "Urgent"
+      }
+    },
+    "birthdays": {
+      "title": "Birthdays",
+      "description": "Birthdays this week",
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "daysLater": "In {{days}} days",
+      "todayBirthdays": "Today's Birthdays",
+      "upcoming": "Upcoming Birthdays",
+      "empty": "No birthdays this week."
+    }
+  }
+}

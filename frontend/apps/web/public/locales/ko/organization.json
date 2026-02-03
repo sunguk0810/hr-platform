@@ -1,0 +1,57 @@
+{
+  "title": "조직 관리",
+  "department": {
+    "title": "부서 관리",
+    "list": "부서 목록",
+    "tree": "조직도",
+    "add": "부서 추가",
+    "edit": "부서 수정",
+    "delete": "부서 삭제",
+    "code": "부서 코드",
+    "name": "부서명",
+    "nameEn": "영문명",
+    "parent": "상위 부서",
+    "head": "부서장",
+    "level": "레벨",
+    "sortOrder": "정렬순서",
+    "employeeCount": "직원 수"
+  },
+  "position": {
+    "title": "직위 관리",
+    "list": "직위 목록",
+    "add": "직위 추가",
+    "code": "직위 코드",
+    "name": "직위명",
+    "level": "레벨",
+    "sortOrder": "정렬순서"
+  },
+  "grade": {
+    "title": "직급 관리",
+    "list": "직급 목록",
+    "add": "직급 추가",
+    "code": "직급 코드",
+    "name": "직급명",
+    "level": "레벨",
+    "sortOrder": "정렬순서"
+  },
+  "jobTitle": {
+    "title": "직책 관리",
+    "list": "직책 목록",
+    "add": "직책 추가",
+    "code": "직책 코드",
+    "name": "직책명"
+  },
+  "validation": {
+    "codeRequired": "코드는 필수입니다.",
+    "nameRequired": "이름은 필수입니다.",
+    "codeExists": "이미 존재하는 코드입니다."
+  },
+  "message": {
+    "createSuccess": "생성되었습니다.",
+    "updateSuccess": "수정되었습니다.",
+    "deleteSuccess": "삭제되었습니다.",
+    "deleteConfirm": "정말로 삭제하시겠습니까?",
+    "hasChildren": "하위 부서가 있어 삭제할 수 없습니다.",
+    "hasEmployees": "소속 직원이 있어 삭제할 수 없습니다."
+  }
+}

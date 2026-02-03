@@ -1,0 +1,60 @@
+{
+  "title": "휴가 관리",
+  "balance": {
+    "title": "연차 잔여",
+    "total": "총 연차",
+    "used": "사용",
+    "remaining": "잔여",
+    "pending": "승인대기",
+    "expired": "소멸예정"
+  },
+  "request": {
+    "title": "휴가 신청",
+    "new": "새 휴가 신청",
+    "type": "휴가 유형",
+    "dateRange": "기간",
+    "startDate": "시작일",
+    "endDate": "종료일",
+    "days": "일수",
+    "reason": "사유",
+    "submit": "신청하기"
+  },
+  "type": {
+    "annual": "연차",
+    "sick": "병가",
+    "special": "특별휴가",
+    "halfDayAm": "반차(오전)",
+    "halfDayPm": "반차(오후)",
+    "maternity": "출산휴가",
+    "paternity": "배우자출산휴가",
+    "unpaid": "무급휴가"
+  },
+  "status": {
+    "pending": "승인대기",
+    "approved": "승인",
+    "rejected": "반려",
+    "cancelled": "취소",
+    "inUse": "사용중"
+  },
+  "myLeave": {
+    "title": "내 휴가",
+    "history": "휴가 이력",
+    "upcoming": "예정된 휴가"
+  },
+  "calendar": {
+    "title": "휴가 캘린더",
+    "teamLeave": "팀원 휴가"
+  },
+  "validation": {
+    "typeRequired": "휴가 유형을 선택해주세요.",
+    "dateRequired": "날짜를 선택해주세요.",
+    "reasonRequired": "사유를 입력해주세요.",
+    "exceedBalance": "사용 가능한 연차를 초과했습니다.",
+    "invalidDateRange": "종료일은 시작일 이후여야 합니다."
+  },
+  "message": {
+    "createSuccess": "휴가가 신청되었습니다.",
+    "cancelSuccess": "휴가가 취소되었습니다.",
+    "cancelConfirm": "이 휴가 신청을 취소하시겠습니까?"
+  }
+}

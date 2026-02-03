@@ -1,0 +1,95 @@
+{
+  "title": "전자결재",
+  "list": {
+    "title": "결재 목록",
+    "pending": "결재 대기",
+    "requested": "내가 상신한",
+    "completed": "완료된",
+    "draft": "임시저장"
+  },
+  "detail": {
+    "title": "결재 상세",
+    "documentNumber": "문서번호",
+    "requester": "기안자",
+    "department": "부서",
+    "createdAt": "기안일시",
+    "completedAt": "완료일시",
+    "content": "내용",
+    "attachments": "첨부파일"
+  },
+  "create": {
+    "title": "새 결재 작성",
+    "type": "결재 유형",
+    "titleField": "제목",
+    "content": "내용",
+    "urgency": "긴급도",
+    "dueDate": "결재 기한",
+    "approvalLine": "결재선",
+    "attachments": "첨부파일",
+    "saveDraft": "임시저장",
+    "submit": "결재 상신"
+  },
+  "type": {
+    "leaveRequest": "휴가신청",
+    "expense": "지출결의",
+    "overtime": "연장근무",
+    "personnel": "인사발령",
+    "general": "일반"
+  },
+  "urgency": {
+    "low": "낮음",
+    "normal": "보통",
+    "high": "긴급"
+  },
+  "status": {
+    "draft": "임시저장",
+    "pending": "결재대기",
+    "approved": "승인",
+    "rejected": "반려",
+    "cancelled": "취소"
+  },
+  "action": {
+    "approve": "승인",
+    "reject": "반려",
+    "cancel": "취소",
+    "comment": "의견",
+    "rejectReason": "반려 사유"
+  },
+  "approvalLine": {
+    "title": "결재선",
+    "requester": "기안자",
+    "approver": "결재자",
+    "addApprover": "결재자 추가",
+    "specificPerson": "특정인",
+    "role": "역할",
+    "departmentHead": "부서장"
+  },
+  "delegation": {
+    "title": "결재 위임",
+    "delegator": "위임자",
+    "delegatee": "대리인",
+    "period": "위임 기간",
+    "reason": "위임 사유",
+    "status": {
+      "active": "활성",
+      "expired": "만료",
+      "cancelled": "취소"
+    }
+  },
+  "validation": {
+    "titleRequired": "제목을 입력해주세요.",
+    "contentRequired": "내용을 입력해주세요.",
+    "approverRequired": "결재자를 선택해주세요.",
+    "rejectReasonRequired": "반려 사유를 입력해주세요."
+  },
+  "message": {
+    "createSuccess": "결재가 상신되었습니다.",
+    "approveSuccess": "승인되었습니다.",
+    "rejectSuccess": "반려되었습니다.",
+    "cancelSuccess": "취소되었습니다.",
+    "saveDraftSuccess": "임시저장되었습니다.",
+    "approveConfirm": "이 결재를 승인하시겠습니까?",
+    "rejectConfirm": "이 결재를 반려하시겠습니까?",
+    "cancelConfirm": "이 결재를 취소하시겠습니까?"
+  }
+}

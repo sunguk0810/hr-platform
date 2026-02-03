@@ -1,0 +1,161 @@
+import { useEffect, useCallback } from 'react';
+import { wsClient, type NotificationEvent } from '@/lib/websocket';
+import { useNotificationStore } from '@/stores/notificationStore';
+import { useAuthStore } from '@/stores/authStore';
+import { useToast } from './useToast';
+
+export interface UseRealTimeNotificationOptions {
+  enabled?: boolean;
+  showToast?: boolean;
+}
+
+export function useRealTimeNotification(
+  options: UseRealTimeNotificationOptions = {}
+) {
+  const { enabled = true, showToast = true } = options;
+  const { isAuthenticated } = useAuthStore();
+  const {
+    addNotification,
+    setUnreadCount,
+    incrementUnreadCount,
+    markAsRead,
+  } = useNotificationStore();
+  const { toast } = useToast();
+
+  const handleNewNotification = useCallback(
+    (notification: NotificationEvent) => {
+      addNotification({
+        id: notification.id,
+        type: notification.type,
+        title: notification.title,
+        message: notification.message,
+        isRead: false,
+        createdAt: notification.createdAt,
+        data: notification.data,
+      });
+
+      incrementUnreadCount();
+
+      if (showToast) {
+        toast({
+          title: notification.title,
+          description: notification.message,
+        });
+      }
+    },
+    [addNotification, incrementUnreadCount, showToast, toast]
+  );
+
+  const handleNotificationRead = useCallback(
+    (notificationId: string) => {
+      markAsRead(notificationId);
+    },
+    [markAsRead]
+  );
+
+  const handleNotificationCount = useCallback(
+    (count: number) => {
+      setUnreadCount(count);
+    },
+    [setUnreadCount]
+  );
+
+  useEffect(() => {
+    if (!enabled || !isAuthenticated) {
+      return;
+    }
+
+    wsClient.connect();
+
+    const unsubscribeNew = wsClient.on('notification:new', handleNewNotification);
+    const unsubscribeRead = wsClient.on('notification:read', handleNotificationRead);
+    const unsubscribeCount = wsClient.on('notification:count', handleNotificationCount);
+
+    return () => {
+      unsubscribeNew();
+      unsubscribeRead();
+      unsubscribeCount();
+    };
+  }, [
+    enabled,
+    isAuthenticated,
+    handleNewNotification,
+    handleNotificationRead,
+    handleNotificationCount,
+  ]);
+
+  return {
+    isConnected: wsClient.isConnected(),
+  };
+}
+
+export function useApprovalRealTime() {
+  const { toast } = useToast();
+  const { isAuthenticated } = useAuthStore();
+
+  const handleStatusChanged = useCallback(
+    (event: { title: string; status: string; approverName: string }) => {
+      const statusText =
+        event.status === 'APPROVED'
+          ? '승인'
+          : event.status === 'REJECTED'
+            ? '반려'
+            : event.status;
+
+      toast({
+        title: `결재 ${statusText}`,
+        description: `"${event.title}" 문서가 ${event.approverName}님에 의해 ${statusText}되었습니다.`,
+      });
+    },
+    [toast]
+  );
+
+  const handleNewRequest = useCallback(
+    (event: { title: string; requesterName: string }) => {
+      toast({
+        title: '새로운 결재 요청',
+        description: `${event.requesterName}님이 "${event.title}" 결재를 요청했습니다.`,
+      });
+    },
+    [toast]
+  );
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const unsubscribeStatus = wsClient.on(
+      'approval:status_changed',
+      handleStatusChanged
+    );
+    const unsubscribeRequest = wsClient.on(
+      'approval:new_request',
+      handleNewRequest
+    );
+
+    return () => {
+      unsubscribeStatus();
+      unsubscribeRequest();
+    };
+  }, [isAuthenticated, handleStatusChanged, handleNewRequest]);
+}
+
+export function useAttendanceRealTime() {
+  const { isAuthenticated } = useAuthStore();
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const unsubscribeCheckIn = wsClient.on('attendance:checked_in', (event) => {
+      console.log('Attendance checked in:', event);
+    });
+
+    const unsubscribeCheckOut = wsClient.on('attendance:checked_out', (event) => {
+      console.log('Attendance checked out:', event);
+    });
+
+    return () => {
+      unsubscribeCheckIn();
+      unsubscribeCheckOut();
+    };
+  }, [isAuthenticated]);
+}

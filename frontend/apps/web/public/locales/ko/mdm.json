@@ -1,0 +1,50 @@
+{
+  "title": "기준정보 관리",
+  "codeGroup": {
+    "title": "코드그룹 관리",
+    "list": "코드그룹 목록",
+    "add": "코드그룹 추가",
+    "edit": "코드그룹 수정",
+    "delete": "코드그룹 삭제",
+    "code": "코드",
+    "name": "코드명",
+    "nameEn": "영문명",
+    "description": "설명",
+    "codeCount": "하위코드",
+    "isSystem": "시스템",
+    "isActive": "활성"
+  },
+  "commonCode": {
+    "title": "공통코드 관리",
+    "list": "공통코드 목록",
+    "add": "공통코드 추가",
+    "edit": "공통코드 수정",
+    "delete": "공통코드 삭제",
+    "groupCode": "코드그룹",
+    "code": "코드",
+    "name": "코드명",
+    "nameEn": "영문명",
+    "description": "설명",
+    "sortOrder": "정렬순서",
+    "isActive": "활성"
+  },
+  "status": {
+    "system": "시스템",
+    "user": "사용자",
+    "active": "활성",
+    "inactive": "비활성"
+  },
+  "validation": {
+    "groupRequired": "코드그룹을 선택해주세요.",
+    "codeRequired": "코드는 필수입니다.",
+    "nameRequired": "코드명은 필수입니다.",
+    "codeExists": "이미 존재하는 코드입니다."
+  },
+  "message": {
+    "createSuccess": "생성되었습니다.",
+    "updateSuccess": "수정되었습니다.",
+    "deleteSuccess": "삭제되었습니다.",
+    "deleteConfirm": "정말로 삭제하시겠습니까?",
+    "cannotDeleteSystem": "시스템 코드는 삭제할 수 없습니다."
+  }
+}

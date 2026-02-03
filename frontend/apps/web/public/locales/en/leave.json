@@ -1,0 +1,60 @@
+{
+  "title": "Leave Management",
+  "balance": {
+    "title": "Leave Balance",
+    "total": "Total",
+    "used": "Used",
+    "remaining": "Remaining",
+    "pending": "Pending",
+    "expired": "Expiring"
+  },
+  "request": {
+    "title": "Leave Request",
+    "new": "New Leave Request",
+    "type": "Leave Type",
+    "dateRange": "Date Range",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "days": "Days",
+    "reason": "Reason",
+    "submit": "Submit Request"
+  },
+  "type": {
+    "annual": "Annual Leave",
+    "sick": "Sick Leave",
+    "special": "Special Leave",
+    "halfDayAm": "Half Day (AM)",
+    "halfDayPm": "Half Day (PM)",
+    "maternity": "Maternity Leave",
+    "paternity": "Paternity Leave",
+    "unpaid": "Unpaid Leave"
+  },
+  "status": {
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "cancelled": "Cancelled",
+    "inUse": "In Use"
+  },
+  "myLeave": {
+    "title": "My Leave",
+    "history": "Leave History",
+    "upcoming": "Upcoming Leave"
+  },
+  "calendar": {
+    "title": "Leave Calendar",
+    "teamLeave": "Team Leave"
+  },
+  "validation": {
+    "typeRequired": "Please select a leave type.",
+    "dateRequired": "Please select dates.",
+    "reasonRequired": "Please enter a reason.",
+    "exceedBalance": "Exceeds available leave balance.",
+    "invalidDateRange": "End date must be after start date."
+  },
+  "message": {
+    "createSuccess": "Leave request has been submitted.",
+    "cancelSuccess": "Leave request has been cancelled.",
+    "cancelConfirm": "Are you sure you want to cancel this leave request?"
+  }
+}

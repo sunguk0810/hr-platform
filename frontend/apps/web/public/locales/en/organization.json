@@ -1,0 +1,57 @@
+{
+  "title": "Organization",
+  "department": {
+    "title": "Departments",
+    "list": "Department List",
+    "tree": "Organization Chart",
+    "add": "Add Department",
+    "edit": "Edit Department",
+    "delete": "Delete Department",
+    "code": "Code",
+    "name": "Name",
+    "nameEn": "English Name",
+    "parent": "Parent Department",
+    "head": "Department Head",
+    "level": "Level",
+    "sortOrder": "Sort Order",
+    "employeeCount": "Employees"
+  },
+  "position": {
+    "title": "Positions",
+    "list": "Position List",
+    "add": "Add Position",
+    "code": "Code",
+    "name": "Name",
+    "level": "Level",
+    "sortOrder": "Sort Order"
+  },
+  "grade": {
+    "title": "Grades",
+    "list": "Grade List",
+    "add": "Add Grade",
+    "code": "Code",
+    "name": "Name",
+    "level": "Level",
+    "sortOrder": "Sort Order"
+  },
+  "jobTitle": {
+    "title": "Job Titles",
+    "list": "Job Title List",
+    "add": "Add Job Title",
+    "code": "Code",
+    "name": "Name"
+  },
+  "validation": {
+    "codeRequired": "Code is required.",
+    "nameRequired": "Name is required.",
+    "codeExists": "Code already exists."
+  },
+  "message": {
+    "createSuccess": "Created successfully.",
+    "updateSuccess": "Updated successfully.",
+    "deleteSuccess": "Deleted successfully.",
+    "deleteConfirm": "Are you sure you want to delete?",
+    "hasChildren": "Cannot delete: has child departments.",
+    "hasEmployees": "Cannot delete: has employees."
+  }
+}

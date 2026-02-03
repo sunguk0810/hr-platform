@@ -1,0 +1,62 @@
+{
+  "title": "대시보드",
+  "welcome": "안녕하세요, {{name}}님",
+  "widgets": {
+    "attendance": {
+      "title": "출퇴근",
+      "description": "오늘의 근무 현황"
+    },
+    "leaveBalance": {
+      "title": "휴가 잔여",
+      "description": "연차 사용 현황"
+    },
+    "pendingApprovals": {
+      "title": "대기 중인 결재",
+      "description": "승인 대기 문서"
+    },
+    "teamLeave": {
+      "title": "팀 휴가",
+      "description": "이번 주 팀원 휴가"
+    },
+    "orgSummary": {
+      "title": "조직 현황",
+      "description": "전체 조직 통계",
+      "totalEmployees": "전체 직원",
+      "active": "재직",
+      "onLeave": "휴직 중",
+      "departments": "부서",
+      "positions": "직위",
+      "newHires": "이번 달 입사",
+      "resigned": "퇴사"
+    },
+    "statistics": {
+      "title": "주요 지표",
+      "description": "이번 달 vs 지난 달",
+      "attendanceRate": "출근율",
+      "leaveUsageRate": "휴가 사용률",
+      "overtimeHours": "초과 근무",
+      "approvalTime": "결재 처리 시간"
+    },
+    "announcements": {
+      "title": "공지사항",
+      "viewAll": "전체보기",
+      "empty": "공지사항이 없습니다.",
+      "category": {
+        "notice": "공지",
+        "event": "이벤트",
+        "update": "업데이트",
+        "urgent": "긴급"
+      }
+    },
+    "birthdays": {
+      "title": "생일",
+      "description": "이번 주 생일자",
+      "today": "오늘",
+      "tomorrow": "내일",
+      "daysLater": "{{days}}일 후",
+      "todayBirthdays": "오늘 생일",
+      "upcoming": "다가오는 생일",
+      "empty": "이번 주 생일자가 없습니다."
+    }
+  }
+}

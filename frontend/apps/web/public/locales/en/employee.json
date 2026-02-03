@@ -1,0 +1,62 @@
+{
+  "title": "Employee Management",
+  "list": {
+    "title": "Employee List",
+    "search": "Search by name, ID, email...",
+    "addEmployee": "Add Employee"
+  },
+  "detail": {
+    "title": "Employee Details",
+    "basicInfo": "Basic Information",
+    "workInfo": "Work Information",
+    "contactInfo": "Contact Information"
+  },
+  "form": {
+    "employeeNumber": "Employee ID",
+    "name": "Name",
+    "nameEn": "English Name",
+    "email": "Email",
+    "phone": "Phone",
+    "birthDate": "Date of Birth",
+    "gender": "Gender",
+    "male": "Male",
+    "female": "Female",
+    "address": "Address",
+    "department": "Department",
+    "position": "Position",
+    "grade": "Grade",
+    "jobTitle": "Job Title",
+    "hireDate": "Hire Date",
+    "resignDate": "Resign Date",
+    "employmentType": "Employment Type",
+    "employmentStatus": "Status",
+    "manager": "Manager",
+    "profileImage": "Profile Image"
+  },
+  "status": {
+    "active": "Active",
+    "leave": "On Leave",
+    "resigned": "Resigned",
+    "retired": "Retired"
+  },
+  "employmentType": {
+    "fullTime": "Full-time",
+    "partTime": "Part-time",
+    "intern": "Intern",
+    "temporary": "Temporary"
+  },
+  "validation": {
+    "employeeNumberRequired": "Employee ID is required.",
+    "nameRequired": "Name is required.",
+    "emailRequired": "Email is required.",
+    "emailInvalid": "Please enter a valid email address.",
+    "departmentRequired": "Please select a department.",
+    "hireDateRequired": "Hire date is required."
+  },
+  "message": {
+    "createSuccess": "Employee has been created.",
+    "updateSuccess": "Employee has been updated.",
+    "deleteSuccess": "Employee has been deleted.",
+    "deleteConfirm": "Are you sure you want to delete this employee?"
+  }
+}

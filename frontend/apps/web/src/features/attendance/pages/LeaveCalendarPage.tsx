@@ -1,0 +1,388 @@
+import { useState, useMemo } from 'react';
+import { PageHeader } from '@/components/common/PageHeader';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { ChevronLeft, ChevronRight, Calendar, BarChart3 } from 'lucide-react';
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  isSameMonth,
+  isToday,
+  getDay,
+  addMonths,
+  subMonths,
+  startOfWeek,
+  endOfWeek,
+} from 'date-fns';
+import { ko } from 'date-fns/locale';
+import { useLeaveCalendar } from '../hooks/useAttendance';
+import type { LeaveCalendarEvent, LeaveType } from '@hr-platform/shared-types';
+
+type ViewMode = 'month' | 'week' | 'gantt';
+
+const LEAVE_TYPE_COLORS: Record<LeaveType, string> = {
+  ANNUAL: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+  SICK: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+  SPECIAL: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+  HALF_DAY_AM: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200',
+  HALF_DAY_PM: 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200',
+  MATERNITY: 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200',
+  PATERNITY: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200',
+  UNPAID: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
+};
+
+const LEAVE_TYPE_LABELS: Record<LeaveType, string> = {
+  ANNUAL: '연차',
+  SICK: '병가',
+  SPECIAL: '특별휴가',
+  HALF_DAY_AM: '반차(오전)',
+  HALF_DAY_PM: '반차(오후)',
+  MATERNITY: '출산휴가',
+  PATERNITY: '배우자출산휴가',
+  UNPAID: '무급휴가',
+};
+
+interface CalendarDayProps {
+  date: Date;
+  isCurrentMonth: boolean;
+  events: LeaveCalendarEvent[];
+}
+
+function CalendarDay({ date, isCurrentMonth, events }: CalendarDayProps) {
+  const dayEvents = events.filter((event) => {
+    const eventStart = new Date(event.startDate);
+    const eventEnd = new Date(event.endDate);
+    return date >= eventStart && date <= eventEnd;
+  });
+
+  return (
+    <div
+      className={`min-h-[100px] p-1 border-r border-b ${
+        !isCurrentMonth ? 'bg-muted/30' : ''
+      } ${isToday(date) ? 'bg-primary/5' : ''}`}
+    >
+      <div
+        className={`text-sm font-medium mb-1 ${
+          !isCurrentMonth ? 'text-muted-foreground' : ''
+        } ${isToday(date) ? 'text-primary' : ''}`}
+      >
+        {format(date, 'd')}
+      </div>
+      <div className="space-y-0.5">
+        {dayEvents.slice(0, 3).map((event) => (
+          <div
+            key={event.id}
+            className={`text-xs px-1 py-0.5 rounded truncate ${LEAVE_TYPE_COLORS[event.leaveType]}`}
+            title={`${event.employeeName} - ${LEAVE_TYPE_LABELS[event.leaveType]}`}
+          >
+            {event.employeeName}
+          </div>
+        ))}
+        {dayEvents.length > 3 && (
+          <div className="text-xs text-muted-foreground px-1">
+            +{dayEvents.length - 3}명
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+interface GanttRowProps {
+  event: LeaveCalendarEvent;
+  startDate: Date;
+  endDate: Date;
+}
+
+function GanttRow({ event, startDate, endDate }: GanttRowProps) {
+  const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  const eventStart = new Date(event.startDate);
+  const eventEnd = new Date(event.endDate);
+
+  const startOffset = Math.max(0, Math.ceil((eventStart.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)));
+  const duration = Math.min(
+    Math.ceil((eventEnd.getTime() - eventStart.getTime()) / (1000 * 60 * 60 * 24)) + 1,
+    totalDays - startOffset
+  );
+
+  const leftPercent = (startOffset / totalDays) * 100;
+  const widthPercent = (duration / totalDays) * 100;
+
+  return (
+    <div className="flex items-center border-b py-2">
+      <div className="w-32 shrink-0 px-2 text-sm font-medium truncate">
+        {event.employeeName}
+      </div>
+      <div className="w-24 shrink-0 px-2 text-xs text-muted-foreground truncate">
+        {event.departmentName}
+      </div>
+      <div className="flex-1 relative h-6">
+        <div
+          className={`absolute h-5 rounded ${LEAVE_TYPE_COLORS[event.leaveType]}`}
+          style={{
+            left: `${leftPercent}%`,
+            width: `${widthPercent}%`,
+          }}
+        >
+          <span className="text-xs px-1 truncate block">
+            {LEAVE_TYPE_LABELS[event.leaveType]}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function LeaveCalendarPage() {
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [viewMode, setViewMode] = useState<ViewMode>('month');
+  const [departmentFilter, setDepartmentFilter] = useState<string>('all');
+
+  const monthStart = startOfMonth(currentDate);
+  const monthEnd = endOfMonth(currentDate);
+  const calendarStart = startOfWeek(monthStart, { locale: ko });
+  const calendarEnd = endOfWeek(monthEnd, { locale: ko });
+
+  const { data: leaveData, isLoading } = useLeaveCalendar({
+    startDate: format(calendarStart, 'yyyy-MM-dd'),
+    endDate: format(calendarEnd, 'yyyy-MM-dd'),
+    departmentId: departmentFilter !== 'all' ? departmentFilter : undefined,
+  });
+
+  const events = leaveData?.data ?? [];
+
+  const calendarDays = useMemo(() => {
+    return eachDayOfInterval({ start: calendarStart, end: calendarEnd });
+  }, [calendarStart, calendarEnd]);
+
+  const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
+
+  const handlePrevMonth = () => {
+    setCurrentDate(subMonths(currentDate, 1));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentDate(addMonths(currentDate, 1));
+  };
+
+  const handleToday = () => {
+    setCurrentDate(new Date());
+  };
+
+  // Mock departments for filter
+  const departments = [
+    { id: 'all', name: '전체 부서' },
+    { id: 'dept-001', name: '개발본부' },
+    { id: 'dept-002', name: '프론트엔드팀' },
+    { id: 'dept-003', name: '백엔드팀' },
+    { id: 'dept-005', name: '인사팀' },
+  ];
+
+  return (
+    <>
+      <PageHeader
+        title="휴가 캘린더"
+        description="팀원들의 휴가 일정을 확인합니다."
+      />
+
+      <Card className="mb-4">
+        <CardContent className="p-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            {/* Navigation */}
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="icon" onClick={handlePrevMonth}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" onClick={handleToday}>
+                오늘
+              </Button>
+              <Button variant="outline" size="icon" onClick={handleNextMonth}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              <h2 className="text-lg font-semibold ml-2">
+                {format(currentDate, 'yyyy년 M월', { locale: ko })}
+              </h2>
+            </div>
+
+            {/* Filters and View Toggle */}
+            <div className="flex items-center gap-2">
+              <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="부서 선택" />
+                </SelectTrigger>
+                <SelectContent>
+                  {departments.map((dept) => (
+                    <SelectItem key={dept.id} value={dept.id}>
+                      {dept.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <div className="flex border rounded-md">
+                <Button
+                  variant={viewMode === 'month' ? 'secondary' : 'ghost'}
+                  size="icon"
+                  onClick={() => setViewMode('month')}
+                  title="월간 뷰"
+                >
+                  <Calendar className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'gantt' ? 'secondary' : 'ghost'}
+                  size="icon"
+                  onClick={() => setViewMode('gantt')}
+                  title="Gantt 뷰"
+                >
+                  <BarChart3 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Legend */}
+      <Card className="mb-4">
+        <CardContent className="p-3">
+          <div className="flex flex-wrap gap-3">
+            {Object.entries(LEAVE_TYPE_LABELS).map(([type, label]) => (
+              <div key={type} className="flex items-center gap-1">
+                <div
+                  className={`w-3 h-3 rounded ${LEAVE_TYPE_COLORS[type as LeaveType]}`}
+                />
+                <span className="text-xs text-muted-foreground">{label}</span>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {isLoading ? (
+        <Card>
+          <CardContent className="p-8 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+          </CardContent>
+        </Card>
+      ) : viewMode === 'month' ? (
+        /* Monthly Calendar View */
+        <Card>
+          <CardContent className="p-0">
+            {/* Weekday Headers */}
+            <div className="grid grid-cols-7 border-b">
+              {weekDays.map((day, index) => (
+                <div
+                  key={day}
+                  className={`p-2 text-center text-sm font-medium ${
+                    index === 0
+                      ? 'text-red-500'
+                      : index === 6
+                      ? 'text-blue-500'
+                      : ''
+                  }`}
+                >
+                  {day}
+                </div>
+              ))}
+            </div>
+
+            {/* Calendar Grid */}
+            <div className="grid grid-cols-7">
+              {calendarDays.map((date) => (
+                <CalendarDay
+                  key={date.toISOString()}
+                  date={date}
+                  isCurrentMonth={isSameMonth(date, currentDate)}
+                  events={events}
+                />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        /* Gantt View */
+        <Card>
+          <CardContent className="p-0">
+            {/* Gantt Header */}
+            <div className="flex border-b bg-muted/50">
+              <div className="w-32 shrink-0 px-2 py-2 text-sm font-medium">이름</div>
+              <div className="w-24 shrink-0 px-2 py-2 text-sm font-medium">부서</div>
+              <div className="flex-1 flex">
+                {eachDayOfInterval({ start: monthStart, end: monthEnd }).map((date) => (
+                  <div
+                    key={date.toISOString()}
+                    className={`flex-1 text-center text-xs py-2 border-l ${
+                      isToday(date) ? 'bg-primary/10' : ''
+                    } ${getDay(date) === 0 ? 'text-red-500' : getDay(date) === 6 ? 'text-blue-500' : ''}`}
+                  >
+                    {format(date, 'd')}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Gantt Rows */}
+            <div className="max-h-[500px] overflow-auto">
+              {events.length === 0 ? (
+                <div className="p-8 text-center text-muted-foreground">
+                  이번 달 휴가 일정이 없습니다.
+                </div>
+              ) : (
+                events.map((event) => (
+                  <GanttRow
+                    key={event.id}
+                    event={event}
+                    startDate={monthStart}
+                    endDate={monthEnd}
+                  />
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Summary */}
+      <Card className="mt-4">
+        <CardHeader>
+          <CardTitle className="text-base">이번 달 휴가 현황</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-primary">{events.length}</div>
+              <div className="text-sm text-muted-foreground">총 휴가 건수</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">
+                {events.filter((e) => e.leaveType === 'ANNUAL').length}
+              </div>
+              <div className="text-sm text-muted-foreground">연차</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-red-600">
+                {events.filter((e) => e.leaveType === 'SICK').length}
+              </div>
+              <div className="text-sm text-muted-foreground">병가</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-purple-600">
+                {events.filter((e) => e.leaveType === 'SPECIAL').length}
+              </div>
+              <div className="text-sm text-muted-foreground">특별휴가</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </>
+  );
+}

@@ -1,0 +1,50 @@
+{
+  "title": "Master Data Management",
+  "codeGroup": {
+    "title": "Code Group Management",
+    "list": "Code Group List",
+    "add": "Add Code Group",
+    "edit": "Edit Code Group",
+    "delete": "Delete Code Group",
+    "code": "Code",
+    "name": "Name",
+    "nameEn": "English Name",
+    "description": "Description",
+    "codeCount": "Sub Codes",
+    "isSystem": "System",
+    "isActive": "Active"
+  },
+  "commonCode": {
+    "title": "Common Code Management",
+    "list": "Common Code List",
+    "add": "Add Common Code",
+    "edit": "Edit Common Code",
+    "delete": "Delete Common Code",
+    "groupCode": "Code Group",
+    "code": "Code",
+    "name": "Name",
+    "nameEn": "English Name",
+    "description": "Description",
+    "sortOrder": "Sort Order",
+    "isActive": "Active"
+  },
+  "status": {
+    "system": "System",
+    "user": "User",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "validation": {
+    "groupRequired": "Please select a code group.",
+    "codeRequired": "Code is required.",
+    "nameRequired": "Name is required.",
+    "codeExists": "Code already exists."
+  },
+  "message": {
+    "createSuccess": "Created successfully.",
+    "updateSuccess": "Updated successfully.",
+    "deleteSuccess": "Deleted successfully.",
+    "deleteConfirm": "Are you sure you want to delete?",
+    "cannotDeleteSystem": "System codes cannot be deleted."
+  }
+}
