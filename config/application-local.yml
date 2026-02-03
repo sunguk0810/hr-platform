@@ -1,0 +1,35 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/hr_saas
+    username: hr_saas
+    password: hr_saas_password
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: redis_password
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8180/realms/hr-saas
+
+  jpa:
+    show-sql: true
+
+management:
+  otlp:
+    tracing:
+      endpoint: http://localhost:4318/v1/traces
+
+app:
+  encryption:
+    key: ${ENCRYPTION_KEY:c29tZS1zZWNyZXQta2V5LWZvci1lbmNyeXB0aW9u}

@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Bash(./gradlew build:*)",
+      "Bash(gradle wrapper:*)",
+      "Bash(java:*)",
+      "Bash(curl:*)",
+      "Bash(chmod:*)",
+      "Bash(docker compose:*)",
+      "Bash(docker search:*)",
+      "Bash(docker manifest inspect:*)",
+      "Bash(docker pull:*)",
+      "Bash(netstat:*)",
+      "Bash(docker ps:*)",
+      "Bash(./gradlew:*)",
+      "Bash(ls:*)",
+      "Bash(then echo \"Port $port: IN USE\" else echo \"Port $port: FREE\" fi done)",
+      "Bash(timeout /t 15 /nobreak)",
+      "Bash(ping:*)",
+      "Bash(docker exec:*)",
+      "Bash(findstr:*)"
+    ]
+  }
+}

@@ -1,0 +1,46 @@
+dependencies {
+    // Common modules
+    implementation project(':common:common-core')
+    implementation project(':common:common-entity')
+    implementation project(':common:common-response')
+    implementation project(':common:common-database')
+    implementation project(':common:common-tenant')
+    implementation project(':common:common-security')
+    implementation project(':common:common-cache')
+    implementation project(':common:common-event')
+
+    // Spring Boot
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+    // Spring Cloud
+    implementation 'org.springframework.cloud:spring-cloud-starter-config'
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    implementation 'org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j'
+
+    // Kafka
+    implementation 'org.springframework.kafka:spring-kafka'
+
+    // Database
+    runtimeOnly 'org.postgresql:postgresql'
+    implementation 'org.flywaydb:flyway-core'
+
+    // Firebase (for push notifications)
+    implementation 'com.google.firebase:firebase-admin:9.2.0'
+
+    // Documentation
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
+
+    // Testing
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.testcontainers:postgresql'
+    testImplementation 'org.testcontainers:kafka'
+    testImplementation 'org.testcontainers:junit-jupiter'
+}

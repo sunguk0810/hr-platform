@@ -1,0 +1,14 @@
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    api project(':common:common-core')
+    api project(':common:common-tenant')
+
+    api 'org.springframework.boot:spring-boot-starter-data-redis'
+    api 'org.springframework.boot:spring-boot-starter-cache'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+}

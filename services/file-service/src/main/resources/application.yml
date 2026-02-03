@@ -1,0 +1,46 @@
+server:
+  port: 8089
+
+spring:
+  application:
+    name: file-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/hr_platform
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: hr_file
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
+cloud:
+  aws:
+    s3:
+      bucket: ${AWS_S3_BUCKET:hr-platform-files}
+      region: ${AWS_REGION:ap-northeast-2}
+    credentials:
+      access-key: ${AWS_ACCESS_KEY:}
+      secret-key: ${AWS_SECRET_KEY:}
+
+logging:
+  level:
+    com.hrsaas: DEBUG
+    org.springframework.security: DEBUG

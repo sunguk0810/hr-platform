@@ -1,0 +1,27 @@
+rootProject.name = 'hr-platform'
+
+// Common modules
+include 'common:common-core'
+include 'common:common-entity'
+include 'common:common-response'
+include 'common:common-database'
+include 'common:common-tenant'
+include 'common:common-security'
+include 'common:common-privacy'
+include 'common:common-cache'
+include 'common:common-event'
+
+// Infrastructure
+include 'infra:config-server'
+
+// Services
+include 'services:gateway-service'
+include 'services:auth-service'
+include 'services:tenant-service'
+include 'services:organization-service'
+include 'services:employee-service'
+include 'services:attendance-service'
+include 'services:approval-service'
+include 'services:mdm-service'
+include 'services:notification-service'
+include 'services:file-service'

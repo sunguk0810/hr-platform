@@ -1,0 +1,343 @@
+{
+  "id": "hr-saas",
+  "realm": "hr-saas",
+  "displayName": "HR SaaS Platform",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "waitIncrementSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+  "failureFactor": 5,
+  "accessTokenLifespan": 3600,
+  "accessTokenLifespanForImplicitFlow": 900,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "offlineSessionIdleTimeout": 2592000,
+  "offlineSessionMaxLifespanEnabled": false,
+  "offlineSessionMaxLifespan": 5184000,
+  "accessCodeLifespan": 60,
+  "accessCodeLifespanUserAction": 300,
+  "accessCodeLifespanLogin": 1800,
+  "actionTokenGeneratedByAdminLifespan": 43200,
+  "actionTokenGeneratedByUserLifespan": 300,
+  "roles": {
+    "realm": [
+      {
+        "name": "ROLE_SUPER_ADMIN",
+        "description": "Super Administrator"
+      },
+      {
+        "name": "ROLE_TENANT_ADMIN",
+        "description": "Tenant Administrator"
+      },
+      {
+        "name": "ROLE_HR_ADMIN",
+        "description": "HR Administrator"
+      },
+      {
+        "name": "ROLE_HR_MANAGER",
+        "description": "HR Manager"
+      },
+      {
+        "name": "ROLE_MANAGER",
+        "description": "Department Manager"
+      },
+      {
+        "name": "ROLE_EMPLOYEE",
+        "description": "Regular Employee"
+      }
+    ],
+    "client": {
+      "hr-saas-api": [
+        {
+          "name": "employee:read",
+          "description": "Read employee information"
+        },
+        {
+          "name": "employee:write",
+          "description": "Write employee information"
+        },
+        {
+          "name": "employee:delete",
+          "description": "Delete employee information"
+        },
+        {
+          "name": "organization:read",
+          "description": "Read organization information"
+        },
+        {
+          "name": "organization:write",
+          "description": "Write organization information"
+        },
+        {
+          "name": "approval:read",
+          "description": "Read approval documents"
+        },
+        {
+          "name": "approval:write",
+          "description": "Write approval documents"
+        },
+        {
+          "name": "approval:process",
+          "description": "Process approval documents"
+        },
+        {
+          "name": "attendance:read",
+          "description": "Read attendance information"
+        },
+        {
+          "name": "attendance:write",
+          "description": "Write attendance information"
+        },
+        {
+          "name": "tenant:admin",
+          "description": "Tenant administration"
+        },
+        {
+          "name": "mdm:read",
+          "description": "Read master data"
+        },
+        {
+          "name": "mdm:write",
+          "description": "Write master data"
+        }
+      ]
+    }
+  },
+  "clients": [
+    {
+      "clientId": "hr-saas-api",
+      "name": "HR SaaS API",
+      "description": "HR SaaS Platform Backend API",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "hr-saas-api-secret",
+      "redirectUris": [
+        "http://localhost:8080/*",
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": [
+        "http://localhost:8080",
+        "http://localhost:3000"
+      ],
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "bearerOnly": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "fullScopeAllowed": true,
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt"
+      ],
+      "protocolMappers": [
+        {
+          "name": "tenant_id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "tenant_id",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "tenant_id",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "employee_id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "employee_id",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "employee_id",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "department_id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "department_id",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "department_id",
+            "jsonType.label": "String"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "hr-saas-web",
+      "name": "HR SaaS Web Application",
+      "description": "HR SaaS Platform Frontend Web Application",
+      "enabled": true,
+      "publicClient": true,
+      "redirectUris": [
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3000"
+      ],
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "fullScopeAllowed": true,
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "admin@hrsaas.com",
+      "firstName": "System",
+      "lastName": "Administrator",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ROLE_SUPER_ADMIN"
+      ],
+      "attributes": {
+        "tenant_id": ["system"]
+      }
+    },
+    {
+      "username": "tenant_admin",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "tenant.admin@example.com",
+      "firstName": "Tenant",
+      "lastName": "Admin",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "tenant123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ROLE_TENANT_ADMIN"
+      ],
+      "attributes": {
+        "tenant_id": ["tenant-001"],
+        "employee_id": ["EMP-001"]
+      }
+    },
+    {
+      "username": "hr_admin",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "hr.admin@example.com",
+      "firstName": "HR",
+      "lastName": "Admin",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "hradmin123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ROLE_HR_ADMIN"
+      ],
+      "attributes": {
+        "tenant_id": ["tenant-001"],
+        "employee_id": ["EMP-002"]
+      }
+    },
+    {
+      "username": "employee",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "employee@example.com",
+      "firstName": "Test",
+      "lastName": "Employee",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "employee123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ROLE_EMPLOYEE"
+      ],
+      "attributes": {
+        "tenant_id": ["tenant-001"],
+        "employee_id": ["EMP-003"],
+        "department_id": ["DEPT-001"]
+      }
+    }
+  ],
+  "scopeMappings": [
+    {
+      "client": "hr-saas-api",
+      "roles": [
+        "ROLE_SUPER_ADMIN",
+        "ROLE_TENANT_ADMIN",
+        "ROLE_HR_ADMIN",
+        "ROLE_HR_MANAGER",
+        "ROLE_MANAGER",
+        "ROLE_EMPLOYEE"
+      ]
+    }
+  ],
+  "defaultDefaultClientScopes": [
+    "role_list",
+    "profile",
+    "email",
+    "roles",
+    "web-origins",
+    "acr"
+  ],
+  "defaultOptionalClientScopes": [
+    "offline_access",
+    "address",
+    "phone",
+    "microprofile-jwt"
+  ]
+}

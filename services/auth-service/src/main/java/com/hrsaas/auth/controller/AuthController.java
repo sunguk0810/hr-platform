@@ -1,0 +1,46 @@
+package com.hrsaas.auth.controller;
+
+import com.hrsaas.auth.domain.dto.request.LoginRequest;
+import com.hrsaas.auth.domain.dto.request.RefreshTokenRequest;
+import com.hrsaas.auth.domain.dto.response.TokenResponse;
+import com.hrsaas.auth.service.AuthService;
+import com.hrsaas.common.response.ApiResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/v1/auth")
+@RequiredArgsConstructor
+@Tag(name = "Authentication", description = "인증 API")
+public class AuthController {
+
+    private final AuthService authService;
+
+    @PostMapping("/login")
+    @Operation(summary = "로그인", description = "사용자 인증 후 JWT 토큰을 발급합니다.")
+    public ResponseEntity<ApiResponse<TokenResponse>> login(
+            @Valid @RequestBody LoginRequest request) {
+        TokenResponse response = authService.login(request);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PostMapping("/token/refresh")
+    @Operation(summary = "토큰 갱신", description = "Refresh Token으로 새로운 Access Token을 발급합니다.")
+    public ResponseEntity<ApiResponse<TokenResponse>> refreshToken(
+            @Valid @RequestBody RefreshTokenRequest request) {
+        TokenResponse response = authService.refreshToken(request);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PostMapping("/logout")
+    @Operation(summary = "로그아웃", description = "현재 세션을 종료합니다.")
+    public ResponseEntity<ApiResponse<Void>> logout(
+            @RequestHeader("Authorization") String authorization) {
+        authService.logout(authorization);
+        return ResponseEntity.ok(ApiResponse.success(null, "로그아웃되었습니다."));
+    }
+}

@@ -1,0 +1,13 @@
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    api project(':common:common-core')
+
+    api 'org.springframework.boot:spring-boot-starter'
+    api 'com.fasterxml.jackson.core:jackson-databind'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+}

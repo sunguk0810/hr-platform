@@ -1,0 +1,109 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.2.2' apply false
+    id 'io.spring.dependency-management' version '1.1.4' apply false
+    id 'jacoco'
+}
+
+ext {
+    set('springCloudVersion', '2023.0.0')
+    set('testcontainersVersion', '1.19.3')
+    set('queryDslVersion', '5.0.0')
+    set('springdocVersion', '2.3.0')
+}
+
+allprojects {
+    group = 'com.hrsaas'
+    version = '1.0.0-SNAPSHOT'
+
+    repositories {
+        mavenCentral()
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'jacoco'
+
+    java {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    configurations {
+        compileOnly {
+            extendsFrom annotationProcessor
+        }
+    }
+
+    dependencies {
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
+
+        testImplementation 'org.junit.jupiter:junit-jupiter'
+        testImplementation 'org.assertj:assertj-core'
+        testImplementation 'org.mockito:mockito-core'
+        testImplementation 'org.mockito:mockito-junit-jupiter'
+    }
+
+    test {
+        useJUnitPlatform()
+        finalizedBy jacocoTestReport
+    }
+
+    jacocoTestReport {
+        dependsOn test
+        reports {
+            xml.required = true
+            html.required = true
+        }
+    }
+
+    jacocoTestCoverageVerification {
+        violationRules {
+            rule {
+                limit {
+                    minimum = 0.8
+                }
+            }
+        }
+    }
+}
+
+// Configure Spring Boot projects
+configure(subprojects.findAll { it.name.endsWith('-service') || it.name == 'config-server' }) {
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+
+    dependencyManagement {
+        imports {
+            mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+            mavenBom "org.testcontainers:testcontainers-bom:${testcontainersVersion}"
+        }
+    }
+
+    dependencies {
+        implementation 'org.springframework.boot:spring-boot-starter-actuator'
+        implementation 'io.micrometer:micrometer-registry-prometheus'
+        implementation 'io.micrometer:micrometer-tracing-bridge-otel'
+        implementation 'io.opentelemetry:opentelemetry-exporter-otlp'
+
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    }
+
+    bootJar {
+        archiveFileName = "${project.name}.jar"
+    }
+}
+
+// Configure library projects (common modules)
+configure(subprojects.findAll { it.path.startsWith(':common:') }) {
+    apply plugin: 'java-library'
+    apply plugin: 'io.spring.dependency-management'
+
+    dependencyManagement {
+        imports {
+            mavenBom "org.springframework.boot:spring-boot-dependencies:3.2.2"
+        }
+    }
+}

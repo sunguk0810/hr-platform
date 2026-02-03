@@ -1,0 +1,17 @@
+# Ignore IntelliJ IDEA and Eclipse project files
+.idea/
+*.iml
+*.iws
+*.classpath
+*.project
+*.settings/
+
+# Ignore Gradle wrapper and dependency caches
+.gradle/
+build/
+
+# Ignore logs and temporary files
+logs/
+*.log
+*.tmp
+*.swp

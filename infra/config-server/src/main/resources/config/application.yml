@@ -1,0 +1,65 @@
+# Common configuration for all services
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:5432/hr_saas
+    username: ${DB_USERNAME:hr_saas}
+    password: ${DB_PASSWORD:hr_saas_password}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:redis_password}
+
+  kafka:
+    bootstrap-servers: ${KAFKA_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      properties:
+        spring.json.trusted.packages: com.hrsaas.*
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/hr-saas}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          batch_size: 50
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+  tracing:
+    sampling:
+      probability: 1.0
+
+logging:
+  level:
+    root: INFO
+    com.hrsaas: DEBUG
+
+app:
+  encryption:
+    key: ${ENCRYPTION_KEY:c29tZS1zZWNyZXQta2V5LWZvci1lbmNyeXB0aW9u}
