@@ -1,0 +1,161 @@
+# HR SaaS Platform - CI Pipeline
+# Build, test, and push Docker images to ECR
+
+name: CI - Build and Test
+
+on:
+  push:
+    branches: [main, develop]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  pull_request:
+    branches: [main]
+
+env:
+  JAVA_VERSION: '17'
+  AWS_REGION: ap-northeast-2
+
+jobs:
+  # Job 1: Build and Test
+  test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: hr_saas
+          POSTGRES_PASSWORD: hr_saas_password
+          POSTGRES_DB: hr_saas
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build and Test
+        run: ./gradlew build test --no-daemon
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/hr_saas
+          SPRING_DATASOURCE_USERNAME: hr_saas
+          SPRING_DATASOURCE_PASSWORD: hr_saas_password
+          SPRING_DATA_REDIS_HOST: localhost
+          SPRING_DATA_REDIS_PORT: 6379
+
+      - name: Generate test coverage report
+        run: ./gradlew jacocoTestReport --no-daemon
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        with:
+          files: '**/build/reports/jacoco/test/jacocoTestReport.xml'
+          fail_ci_if_error: false
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: '**/build/test-results/test/*.xml'
+
+  # Job 2: Build and Push Docker Images
+  build-images:
+    name: Build Docker Images
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - gateway-service
+          - auth-service
+          - tenant-service
+          - organization-service
+          - employee-service
+          - attendance-service
+          - approval-service
+          - mdm-service
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ matrix.service == 'gateway-service' && 'docker/Dockerfile.gateway' || 'docker/Dockerfile.service' }}
+          build-args: |
+            SERVICE_NAME=${{ matrix.service }}
+            SERVER_PORT=${{ matrix.service == 'gateway-service' && '8080' || matrix.service == 'auth-service' && '8081' || matrix.service == 'tenant-service' && '8082' || matrix.service == 'organization-service' && '8083' || matrix.service == 'employee-service' && '8084' || matrix.service == 'attendance-service' && '8085' || matrix.service == 'approval-service' && '8086' || '8087' }}
+          push: true
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/hr-platform/${{ matrix.service }}:${{ github.sha }}
+            ${{ steps.login-ecr.outputs.registry }}/hr-platform/${{ matrix.service }}:latest
+            ${{ steps.login-ecr.outputs.registry }}/hr-platform/${{ matrix.service }}:${{ github.ref == 'refs/heads/main' && 'release' || 'develop' }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Job 3: Security Scan
+  security-scan:
+    name: Security Scan
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+          ignore-unfixed: true

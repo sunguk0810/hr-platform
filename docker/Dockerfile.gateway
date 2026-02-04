@@ -1,0 +1,78 @@
+# ============================================
+# HR SaaS Platform - Gateway Service Dockerfile
+# Optimized for Spring Cloud Gateway (WebFlux)
+# ============================================
+
+# Stage 1: Build Stage
+FROM eclipse-temurin:17-jdk-alpine AS builder
+
+WORKDIR /app
+
+# Install required tools
+RUN apk add --no-cache bash
+
+# Copy Gradle wrapper and build files
+COPY gradlew .
+COPY gradle gradle
+COPY build.gradle settings.gradle ./
+
+# Copy common modules
+COPY common/ common/
+
+# Copy gateway service
+COPY services/gateway-service/ services/gateway-service/
+
+# Make gradlew executable
+RUN chmod +x gradlew
+
+# Download dependencies first (for caching)
+RUN ./gradlew :services:gateway-service:dependencies --no-daemon || true
+
+# Build gateway service
+RUN ./gradlew :services:gateway-service:bootJar --no-daemon -x test
+
+# Extract layers for efficient caching
+WORKDIR /app/services/gateway-service/build/libs
+RUN java -Djarmode=layertools -jar *.jar extract
+
+# ============================================
+# Stage 2: Runtime Stage
+# ============================================
+FROM eclipse-temurin:17-jre-alpine AS runtime
+
+# Security: Run as non-root user
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -u 1001 -S appuser -G appgroup
+
+WORKDIR /app
+
+# Copy extracted layers in order of change frequency
+COPY --from=builder /app/services/gateway-service/build/libs/dependencies/ ./
+COPY --from=builder /app/services/gateway-service/build/libs/spring-boot-loader/ ./
+COPY --from=builder /app/services/gateway-service/build/libs/snapshot-dependencies/ ./
+COPY --from=builder /app/services/gateway-service/build/libs/application/ ./
+
+# Set ownership
+RUN chown -R appuser:appgroup /app
+
+USER appuser
+
+# JVM configuration optimized for reactive workloads (WebFlux)
+ENV JAVA_OPTS="-XX:+UseContainerSupport \
+    -XX:MaxRAMPercentage=75.0 \
+    -XX:InitialRAMPercentage=50.0 \
+    -XX:+UseG1GC \
+    -Dreactor.netty.ioWorkerCount=4 \
+    -Djava.security.egd=file:/dev/./urandom \
+    -Dspring.profiles.active=${SPRING_PROFILES_ACTIVE:-aws}"
+
+ENV SERVER_PORT=8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD wget --quiet --tries=1 --spider http://localhost:8080/actuator/health || exit 1
+
+EXPOSE 8080
+
+# Spring Boot launcher
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS org.springframework.boot.loader.launch.JarLauncher"]
