@@ -1,0 +1,20 @@
+package com.hrsaas.employee.repository;
+
+import com.hrsaas.employee.domain.entity.EmployeeEducation;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.UUID;
+
+@Repository
+public interface EmployeeEducationRepository extends JpaRepository<EmployeeEducation, UUID> {
+
+    @Query("SELECT e FROM EmployeeEducation e WHERE e.employeeId = :employeeId " +
+           "ORDER BY e.endDate DESC NULLS FIRST, e.startDate DESC")
+    List<EmployeeEducation> findByEmployeeId(@Param("employeeId") UUID employeeId);
+
+    void deleteByEmployeeId(UUID employeeId);
+}

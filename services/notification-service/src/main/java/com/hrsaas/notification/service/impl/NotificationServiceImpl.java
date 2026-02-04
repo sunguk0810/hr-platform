@@ -5,6 +5,7 @@ import com.hrsaas.notification.domain.dto.response.NotificationResponse;
 import com.hrsaas.notification.domain.entity.Notification;
 import com.hrsaas.notification.domain.entity.NotificationChannel;
 import com.hrsaas.notification.repository.NotificationRepository;
+import com.hrsaas.notification.sender.NotificationDispatcher;
 import com.hrsaas.notification.service.NotificationService;
 import com.hrsaas.common.core.exception.ForbiddenException;
 import com.hrsaas.common.core.exception.NotFoundException;
@@ -28,6 +29,7 @@ import java.util.UUID;
 public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepository;
+    private final NotificationDispatcher notificationDispatcher;
 
     @Override
     @Transactional
@@ -57,15 +59,10 @@ public class NotificationServiceImpl implements NotificationService {
 
         List<Notification> saved = notificationRepository.saveAll(notifications);
 
-        // 비동기로 실제 발송 처리 (여기서는 웹 푸시만 즉시 발송 표시)
-        for (Notification n : saved) {
-            if (n.getChannel() == NotificationChannel.WEB_PUSH) {
-                n.markAsSent();
-            }
-        }
-        notificationRepository.saveAll(saved);
+        // 비동기로 실제 발송 처리
+        notificationDispatcher.dispatchAll(saved);
 
-        log.info("Notifications sent: recipientId={}, type={}, channels={}",
+        log.info("Notifications queued for sending: recipientId={}, type={}, channels={}",
             request.getRecipientId(), request.getNotificationType(), channels);
 
         return saved.stream()

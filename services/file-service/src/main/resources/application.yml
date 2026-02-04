@@ -31,14 +31,22 @@ spring:
       max-file-size: 100MB
       max-request-size: 100MB
 
-cloud:
-  aws:
-    s3:
-      bucket: ${AWS_S3_BUCKET:hr-platform-files}
-      region: ${AWS_REGION:ap-northeast-2}
-    credentials:
-      access-key: ${AWS_ACCESS_KEY:}
-      secret-key: ${AWS_SECRET_KEY:}
+aws:
+  region: ${AWS_REGION:ap-northeast-2}
+  s3:
+    bucket: ${AWS_S3_BUCKET:hr-platform-files}
+    endpoint: ${AWS_S3_ENDPOINT:}
+  access-key: ${AWS_ACCESS_KEY:}
+  secret-key: ${AWS_SECRET_KEY:}
+
+file:
+  storage:
+    default: ${FILE_STORAGE_DEFAULT:LOCAL}
+  upload:
+    path: ${FILE_UPLOAD_PATH:./uploads}
+  download:
+    base-url: /api/v1/files
+  max-size: 104857600
 
 logging:
   level:

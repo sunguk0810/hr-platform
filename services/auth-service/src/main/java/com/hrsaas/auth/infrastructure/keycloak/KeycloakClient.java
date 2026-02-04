@@ -9,6 +9,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -16,8 +17,11 @@ import java.util.Map;
 public class KeycloakClient {
 
     private final RestTemplate restTemplate;
+    private final String serverUrl;
+    private final String realm;
     private final String tokenUrl;
     private final String logoutUrl;
+    private final String adminUrl;
     private final String clientId;
     private final String clientSecret;
 
@@ -27,8 +31,11 @@ public class KeycloakClient {
             @Value("${keycloak.client-id}") String clientId,
             @Value("${keycloak.client-secret}") String clientSecret) {
         this.restTemplate = new RestTemplate();
+        this.serverUrl = serverUrl;
+        this.realm = realm;
         this.tokenUrl = serverUrl + "/realms/" + realm + "/protocol/openid-connect/token";
         this.logoutUrl = serverUrl + "/realms/" + realm + "/protocol/openid-connect/logout";
+        this.adminUrl = serverUrl + "/admin/realms/" + realm;
         this.clientId = clientId;
         this.clientSecret = clientSecret;
     }
@@ -105,5 +112,106 @@ public class KeycloakClient {
     public void logout() {
         // Implement if needed - requires session token
         log.debug("Logout called");
+    }
+
+    /**
+     * Validates user password by attempting authentication.
+     */
+    public void validatePassword(String username, String password) {
+        getToken(username, password);
+    }
+
+    /**
+     * Changes user password using Keycloak Admin API.
+     */
+    public void changePassword(String userId, String newPassword) {
+        String adminToken = getAdminToken();
+
+        // Find user by username
+        String userKeycloakId = findUserIdByUsername(userId, adminToken);
+
+        // Update password
+        String updatePasswordUrl = adminUrl + "/users/" + userKeycloakId + "/reset-password";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(adminToken);
+
+        Map<String, Object> credential = Map.of(
+            "type", "password",
+            "value", newPassword,
+            "temporary", false
+        );
+
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(credential, headers);
+
+        try {
+            restTemplate.exchange(
+                updatePasswordUrl,
+                HttpMethod.PUT,
+                request,
+                Void.class
+            );
+            log.info("Password changed successfully for user: {}", userId);
+        } catch (Exception e) {
+            log.error("Failed to change password for user: {}", userId, e);
+            throw new RuntimeException("Failed to change password", e);
+        }
+    }
+
+    /**
+     * Gets admin access token using client credentials.
+     */
+    private String getAdminToken() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("grant_type", "client_credentials");
+        body.add("client_id", clientId);
+        body.add("client_secret", clientSecret);
+
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
+
+        ResponseEntity<Map> response = restTemplate.exchange(
+            tokenUrl,
+            HttpMethod.POST,
+            request,
+            Map.class
+        );
+
+        Map<String, Object> responseBody = response.getBody();
+        if (responseBody == null) {
+            throw new RuntimeException("Empty response from Keycloak");
+        }
+
+        return (String) responseBody.get("access_token");
+    }
+
+    /**
+     * Finds Keycloak user ID by username.
+     */
+    @SuppressWarnings("unchecked")
+    private String findUserIdByUsername(String username, String adminToken) {
+        String searchUrl = adminUrl + "/users?username=" + username + "&exact=true";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(adminToken);
+
+        HttpEntity<Void> request = new HttpEntity<>(headers);
+
+        ResponseEntity<List> response = restTemplate.exchange(
+            searchUrl,
+            HttpMethod.GET,
+            request,
+            List.class
+        );
+
+        List<Map<String, Object>> users = response.getBody();
+        if (users == null || users.isEmpty()) {
+            throw new RuntimeException("User not found: " + username);
+        }
+
+        return (String) users.get(0).get("id");
     }
 }

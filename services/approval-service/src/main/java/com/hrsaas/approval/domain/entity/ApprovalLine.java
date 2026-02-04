@@ -96,12 +96,55 @@ public class ApprovalLine extends BaseEntity {
         this.actionType = ApprovalActionType.DELEGATE;
     }
 
+    /**
+     * 합의 처리 (승인권 없이 의견만 제시)
+     */
+    public void agree(String comment) {
+        validateActiveStatus();
+        if (this.lineType != ApprovalLineType.AGREEMENT) {
+            throw new IllegalStateException("Only AGREEMENT type lines can use agree action");
+        }
+        this.status = ApprovalLineStatus.AGREED;
+        this.actionType = ApprovalActionType.AGREE;
+        this.comment = comment;
+        this.completedAt = Instant.now();
+    }
+
+    /**
+     * 전결 처리 (이후 결재선 건너뜀)
+     */
+    public void approveAsArbitrary(String comment) {
+        validateActiveStatus();
+        this.status = ApprovalLineStatus.APPROVED;
+        this.actionType = ApprovalActionType.APPROVE;
+        this.comment = comment;
+        this.completedAt = Instant.now();
+    }
+
+    /**
+     * 결재선 건너뜀 처리 (전결로 인한 후속 결재선)
+     */
+    public void skip() {
+        if (this.status != ApprovalLineStatus.WAITING) {
+            throw new IllegalStateException("Only waiting lines can be skipped");
+        }
+        this.status = ApprovalLineStatus.SKIPPED;
+        this.completedAt = Instant.now();
+    }
+
     public boolean isCompleted() {
-        return this.status == ApprovalLineStatus.APPROVED || this.status == ApprovalLineStatus.REJECTED;
+        return this.status == ApprovalLineStatus.APPROVED ||
+               this.status == ApprovalLineStatus.REJECTED ||
+               this.status == ApprovalLineStatus.AGREED ||
+               this.status == ApprovalLineStatus.SKIPPED;
     }
 
     public boolean isRejected() {
         return this.status == ApprovalLineStatus.REJECTED;
+    }
+
+    public boolean isApprovedOrAgreed() {
+        return this.status == ApprovalLineStatus.APPROVED || this.status == ApprovalLineStatus.AGREED;
     }
 
     private void validateActiveStatus() {

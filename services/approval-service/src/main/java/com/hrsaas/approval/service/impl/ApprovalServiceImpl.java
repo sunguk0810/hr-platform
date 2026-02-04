@@ -149,8 +149,15 @@ public class ApprovalServiceImpl implements ApprovalService {
         ApprovalStatus fromStatus = document.getStatus();
 
         switch (request.getActionType()) {
-            case APPROVE -> currentLine.approve(request.getComment());
+            case APPROVE -> {
+                if (currentLine.getLineType() == ApprovalLineType.ARBITRARY) {
+                    currentLine.approveAsArbitrary(request.getComment());
+                } else {
+                    currentLine.approve(request.getComment());
+                }
+            }
             case REJECT -> currentLine.reject(request.getComment());
+            case AGREE -> currentLine.agree(request.getComment());
             case DELEGATE -> currentLine.delegate(request.getDelegateId(), request.getDelegateName());
             default -> throw new IllegalArgumentException("Unsupported action type: " + request.getActionType());
         }
