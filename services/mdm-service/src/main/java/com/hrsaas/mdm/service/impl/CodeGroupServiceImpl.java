@@ -1,11 +1,14 @@
 package com.hrsaas.mdm.service.impl;
 
+import com.hrsaas.common.cache.CacheNames;
 import com.hrsaas.common.core.exception.DuplicateException;
 import com.hrsaas.common.core.exception.NotFoundException;
+import com.hrsaas.common.event.EventPublisher;
 import com.hrsaas.common.tenant.TenantContext;
 import com.hrsaas.mdm.domain.dto.request.CreateCodeGroupRequest;
 import com.hrsaas.mdm.domain.dto.response.CodeGroupResponse;
 import com.hrsaas.mdm.domain.entity.CodeGroup;
+import com.hrsaas.mdm.domain.event.CodeGroupCreatedEvent;
 import com.hrsaas.mdm.repository.CodeGroupRepository;
 import com.hrsaas.mdm.service.CodeGroupService;
 import lombok.RequiredArgsConstructor;
@@ -25,10 +28,11 @@ import java.util.UUID;
 public class CodeGroupServiceImpl implements CodeGroupService {
 
     private final CodeGroupRepository codeGroupRepository;
+    private final EventPublisher eventPublisher;
 
     @Override
     @Transactional
-    @CacheEvict(value = "mdm:codeGroup", allEntries = true)
+    @CacheEvict(value = CacheNames.CODE_GROUP, allEntries = true)
     public CodeGroupResponse create(CreateCodeGroupRequest request) {
         UUID tenantId = TenantContext.getCurrentTenant();
 
@@ -40,18 +44,25 @@ public class CodeGroupServiceImpl implements CodeGroupService {
             .tenantId(tenantId)
             .groupCode(request.getGroupCode())
             .groupName(request.getGroupName())
+            .groupNameEn(request.getGroupNameEn())
             .description(request.getDescription())
+            .hierarchical(request.getHierarchical() != null && request.getHierarchical())
+            .maxLevel(request.getMaxLevel())
             .sortOrder(request.getSortOrder())
             .build();
 
         CodeGroup saved = codeGroupRepository.save(codeGroup);
+
+        // Publish event
+        eventPublisher.publish(CodeGroupCreatedEvent.of(saved));
+
         log.info("Code group created: groupCode={}", saved.getGroupCode());
 
         return CodeGroupResponse.from(saved);
     }
 
     @Override
-    @Cacheable(value = "mdm:codeGroup", key = "#groupCode")
+    @Cacheable(value = CacheNames.CODE_GROUP, key = "#groupCode")
     public CodeGroupResponse getByGroupCode(String groupCode) {
         UUID tenantId = TenantContext.getCurrentTenant();
 
@@ -79,7 +90,7 @@ public class CodeGroupServiceImpl implements CodeGroupService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "mdm:codeGroup", allEntries = true)
+    @CacheEvict(value = CacheNames.CODE_GROUP, allEntries = true)
     public void delete(UUID id) {
         CodeGroup codeGroup = codeGroupRepository.findById(id)
             .orElseThrow(() -> new NotFoundException("MDM_001", "코드 그룹을 찾을 수 없습니다: " + id));

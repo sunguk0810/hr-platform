@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,6 +28,7 @@ public class DepartmentController {
 
     @PostMapping
     @Operation(summary = "부서 생성")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<DepartmentResponse>> create(
             @Valid @RequestBody CreateDepartmentRequest request) {
         DepartmentResponse response = departmentService.create(request);
@@ -36,6 +38,7 @@ public class DepartmentController {
 
     @GetMapping("/{id}")
     @Operation(summary = "부서 상세 조회")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<DepartmentResponse>> getById(@PathVariable UUID id) {
         DepartmentResponse response = departmentService.getById(id);
         return ResponseEntity.ok(ApiResponse.success(response));
@@ -43,6 +46,7 @@ public class DepartmentController {
 
     @GetMapping
     @Operation(summary = "부서 목록 조회")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<List<DepartmentResponse>>> getAll() {
         List<DepartmentResponse> response = departmentService.getAll();
         return ResponseEntity.ok(ApiResponse.success(response));
@@ -50,6 +54,7 @@ public class DepartmentController {
 
     @GetMapping("/tree")
     @Operation(summary = "조직도 트리 조회")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<List<DepartmentTreeResponse>>> getTree() {
         List<DepartmentTreeResponse> response = departmentService.getTree();
         return ResponseEntity.ok(ApiResponse.success(response));
@@ -57,6 +62,7 @@ public class DepartmentController {
 
     @PutMapping("/{id}")
     @Operation(summary = "부서 수정")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<DepartmentResponse>> update(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateDepartmentRequest request) {
@@ -66,6 +72,7 @@ public class DepartmentController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "부서 삭제")
+    @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable UUID id) {
         departmentService.delete(id);
         return ResponseEntity.ok(ApiResponse.success(null, "부서가 삭제되었습니다."));

@@ -1,5 +1,9 @@
 package com.hrsaas.tenant.domain.dto.response;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.hrsaas.common.privacy.Masked;
+import com.hrsaas.common.privacy.MaskType;
+import com.hrsaas.common.privacy.serializer.MaskedFieldSerializer;
 import com.hrsaas.tenant.domain.entity.PlanType;
 import com.hrsaas.tenant.domain.entity.Tenant;
 import com.hrsaas.tenant.domain.entity.TenantStatus;
@@ -21,10 +25,23 @@ public class TenantResponse {
     private UUID id;
     private String code;
     private String name;
+
+    @Masked(type = MaskType.GENERIC, visibleChars = 3)
+    @JsonSerialize(using = MaskedFieldSerializer.class)
     private String businessNumber;
+
     private String representativeName;
+
+    @Masked(type = MaskType.ADDRESS)
+    @JsonSerialize(using = MaskedFieldSerializer.class)
     private String address;
+
+    @Masked(type = MaskType.PHONE)
+    @JsonSerialize(using = MaskedFieldSerializer.class)
     private String phone;
+
+    @Masked(type = MaskType.EMAIL)
+    @JsonSerialize(using = MaskedFieldSerializer.class)
     private String email;
     private TenantStatus status;
     private PlanType planType;

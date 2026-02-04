@@ -6,6 +6,7 @@ dependencies {
     implementation project(':common:common-database')
     implementation project(':common:common-tenant')
     implementation project(':common:common-security')
+    implementation project(':common:common-privacy')
     implementation project(':common:common-cache')
     implementation project(':common:common-event')
 

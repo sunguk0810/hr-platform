@@ -40,4 +40,11 @@ public interface EventTopics {
     // Notification events
     String NOTIFICATION_EVENTS = "notification-events";
     String NOTIFICATION_SEND = "notification-send";
+
+    // MDM events
+    String MDM_EVENTS = "mdm-events";
+    String CODE_GROUP_CREATED = "code-group-created";
+    String CODE_GROUP_UPDATED = "code-group-updated";
+    String COMMON_CODE_CREATED = "common-code-created";
+    String COMMON_CODE_UPDATED = "common-code-updated";
 }

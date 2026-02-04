@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,6 +27,7 @@ public class EmployeeFamilyController {
 
     @PostMapping
     @Operation(summary = "가족 정보 등록")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<EmployeeFamilyResponse>> create(
             @PathVariable UUID employeeId,
             @Valid @RequestBody CreateEmployeeFamilyRequest request) {
@@ -36,6 +38,7 @@ public class EmployeeFamilyController {
 
     @GetMapping
     @Operation(summary = "가족 정보 목록 조회")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<List<EmployeeFamilyResponse>>> getByEmployeeId(
             @PathVariable UUID employeeId,
             @RequestParam(required = false, defaultValue = "false") boolean dependentsOnly) {
@@ -47,6 +50,7 @@ public class EmployeeFamilyController {
 
     @PutMapping("/{familyId}")
     @Operation(summary = "가족 정보 수정")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<EmployeeFamilyResponse>> update(
             @PathVariable UUID employeeId,
             @PathVariable UUID familyId,
@@ -57,6 +61,7 @@ public class EmployeeFamilyController {
 
     @DeleteMapping("/{familyId}")
     @Operation(summary = "가족 정보 삭제")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Void>> delete(
             @PathVariable UUID employeeId,
             @PathVariable UUID familyId) {

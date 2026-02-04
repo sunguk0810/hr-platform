@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,6 +26,7 @@ public class CodeGroupController {
 
     @PostMapping
     @Operation(summary = "코드 그룹 생성")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<CodeGroupResponse>> create(
             @Valid @RequestBody CreateCodeGroupRequest request) {
         CodeGroupResponse response = codeGroupService.create(request);
@@ -34,6 +36,7 @@ public class CodeGroupController {
 
     @GetMapping("/{groupCode}")
     @Operation(summary = "코드 그룹 조회")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<CodeGroupResponse>> getByGroupCode(
             @PathVariable String groupCode) {
         CodeGroupResponse response = codeGroupService.getByGroupCode(groupCode);
@@ -42,6 +45,7 @@ public class CodeGroupController {
 
     @GetMapping
     @Operation(summary = "코드 그룹 목록 조회")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<List<CodeGroupResponse>>> getAll() {
         List<CodeGroupResponse> response = codeGroupService.getAll();
         return ResponseEntity.ok(ApiResponse.success(response));
@@ -49,6 +53,7 @@ public class CodeGroupController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "코드 그룹 삭제")
+    @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable UUID id) {
         codeGroupService.delete(id);
         return ResponseEntity.ok(ApiResponse.success(null, "코드 그룹이 삭제되었습니다."));

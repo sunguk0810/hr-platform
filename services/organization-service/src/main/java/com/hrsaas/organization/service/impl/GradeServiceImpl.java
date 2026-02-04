@@ -1,5 +1,6 @@
 package com.hrsaas.organization.service.impl;
 
+import com.hrsaas.common.cache.CacheNames;
 import com.hrsaas.common.core.exception.DuplicateException;
 import com.hrsaas.common.core.exception.NotFoundException;
 import com.hrsaas.common.tenant.TenantContext;
@@ -29,7 +30,7 @@ public class GradeServiceImpl implements GradeService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "grade", allEntries = true)
+    @CacheEvict(value = CacheNames.GRADE, allEntries = true)
     public GradeResponse create(CreateGradeRequest request) {
         UUID tenantId = TenantContext.getCurrentTenant();
 
@@ -52,7 +53,7 @@ public class GradeServiceImpl implements GradeService {
     }
 
     @Override
-    @Cacheable(value = "grade", key = "#id")
+    @Cacheable(value = CacheNames.GRADE, key = "#id")
     public GradeResponse getById(UUID id) {
         Grade grade = findById(id);
         return GradeResponse.from(grade);
@@ -88,7 +89,7 @@ public class GradeServiceImpl implements GradeService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "grade", allEntries = true)
+    @CacheEvict(value = CacheNames.GRADE, allEntries = true)
     public GradeResponse update(UUID id, UpdateGradeRequest request) {
         Grade grade = findById(id);
 
@@ -110,7 +111,7 @@ public class GradeServiceImpl implements GradeService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "grade", allEntries = true)
+    @CacheEvict(value = CacheNames.GRADE, allEntries = true)
     public void delete(UUID id) {
         Grade grade = findById(id);
         grade.deactivate();

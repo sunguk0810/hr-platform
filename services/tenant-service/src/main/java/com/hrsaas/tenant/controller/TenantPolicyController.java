@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,6 +31,7 @@ public class TenantPolicyController {
     // Policy APIs
     @GetMapping("/policies")
     @Operation(summary = "테넌트 정책 목록 조회")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
     public ResponseEntity<ApiResponse<List<TenantPolicyResponse>>> getAllPolicies(
             @PathVariable UUID tenantId,
             @RequestParam(required = false, defaultValue = "false") boolean activeOnly) {
@@ -41,6 +43,7 @@ public class TenantPolicyController {
 
     @GetMapping("/policies/{policyType}")
     @Operation(summary = "테넌트 정책 상세 조회")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
     public ResponseEntity<ApiResponse<TenantPolicyResponse>> getPolicy(
             @PathVariable UUID tenantId,
             @PathVariable PolicyType policyType) {
@@ -50,6 +53,7 @@ public class TenantPolicyController {
 
     @PutMapping("/policies/{policyType}")
     @Operation(summary = "테넌트 정책 저장/수정")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
     public ResponseEntity<ApiResponse<TenantPolicyResponse>> saveOrUpdatePolicy(
             @PathVariable UUID tenantId,
             @PathVariable PolicyType policyType,
@@ -60,6 +64,7 @@ public class TenantPolicyController {
 
     @DeleteMapping("/policies/{policyType}")
     @Operation(summary = "테넌트 정책 삭제")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deletePolicy(
             @PathVariable UUID tenantId,
             @PathVariable PolicyType policyType) {
@@ -70,6 +75,7 @@ public class TenantPolicyController {
     // Feature APIs
     @GetMapping("/features")
     @Operation(summary = "테넌트 기능 목록 조회")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
     public ResponseEntity<ApiResponse<List<TenantFeatureResponse>>> getAllFeatures(
             @PathVariable UUID tenantId,
             @RequestParam(required = false, defaultValue = "false") boolean enabledOnly) {
@@ -81,6 +87,7 @@ public class TenantPolicyController {
 
     @GetMapping("/features/{featureCode}")
     @Operation(summary = "테넌트 기능 상세 조회")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
     public ResponseEntity<ApiResponse<TenantFeatureResponse>> getFeature(
             @PathVariable UUID tenantId,
             @PathVariable String featureCode) {
@@ -90,6 +97,7 @@ public class TenantPolicyController {
 
     @PatchMapping("/features/{featureCode}")
     @Operation(summary = "테넌트 기능 활성화/비활성화")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
     public ResponseEntity<ApiResponse<TenantFeatureResponse>> updateFeature(
             @PathVariable UUID tenantId,
             @PathVariable String featureCode,
@@ -100,6 +108,7 @@ public class TenantPolicyController {
 
     @GetMapping("/features/{featureCode}/enabled")
     @Operation(summary = "테넌트 기능 활성화 여부 확인")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Boolean>> isFeatureEnabled(
             @PathVariable UUID tenantId,
             @PathVariable String featureCode) {

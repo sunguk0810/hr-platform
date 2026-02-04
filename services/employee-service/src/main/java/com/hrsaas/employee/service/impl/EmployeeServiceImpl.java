@@ -1,8 +1,10 @@
 package com.hrsaas.employee.service.impl;
 
+import com.hrsaas.common.cache.CacheNames;
 import com.hrsaas.common.core.exception.DuplicateException;
 import com.hrsaas.common.core.exception.NotFoundException;
 import com.hrsaas.common.event.EventPublisher;
+import com.hrsaas.common.privacy.PrivacyContext;
 import com.hrsaas.common.response.PageResponse;
 import com.hrsaas.common.tenant.TenantContext;
 import com.hrsaas.employee.domain.dto.request.CreateEmployeeRequest;
@@ -36,7 +38,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "employee", allEntries = true)
+    @CacheEvict(value = CacheNames.EMPLOYEE, allEntries = true)
     public EmployeeResponse create(CreateEmployeeRequest request) {
         UUID tenantId = TenantContext.getCurrentTenant();
 
@@ -74,18 +76,22 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    @Cacheable(value = "employee", key = "#id")
+    @Cacheable(value = CacheNames.EMPLOYEE, key = "#id")
     public EmployeeResponse getById(UUID id) {
+        // Set viewing employee ID for privacy context (determines if masking should be applied)
+        PrivacyContext.setViewingEmployeeId(id);
         Employee employee = findById(id);
         return EmployeeResponse.from(employee);
     }
 
     @Override
-    @Cacheable(value = "employee", key = "'empNo:' + #employeeNumber")
+    @Cacheable(value = CacheNames.EMPLOYEE, key = "'empNo:' + #employeeNumber")
     public EmployeeResponse getByEmployeeNumber(String employeeNumber) {
         UUID tenantId = TenantContext.getCurrentTenant();
         Employee employee = employeeRepository.findByEmployeeNumberAndTenantId(employeeNumber, tenantId)
             .orElseThrow(() -> new NotFoundException("EMP_001", "직원을 찾을 수 없습니다: " + employeeNumber));
+        // Set viewing employee ID for privacy context
+        PrivacyContext.setViewingEmployeeId(employee.getId());
         return EmployeeResponse.from(employee);
     }
 
@@ -108,7 +114,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "employee", allEntries = true)
+    @CacheEvict(value = CacheNames.EMPLOYEE, allEntries = true)
     public EmployeeResponse update(UUID id, UpdateEmployeeRequest request) {
         Employee employee = findById(id);
 
@@ -148,7 +154,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "employee", allEntries = true)
+    @CacheEvict(value = CacheNames.EMPLOYEE, allEntries = true)
     public EmployeeResponse resign(UUID id, String resignDate) {
         Employee employee = findById(id);
         employee.resign(LocalDate.parse(resignDate));
@@ -159,7 +165,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "employee", allEntries = true)
+    @CacheEvict(value = CacheNames.EMPLOYEE, allEntries = true)
     public void delete(UUID id) {
         Employee employee = findById(id);
         employeeRepository.delete(employee);

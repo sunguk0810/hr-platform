@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Data
@@ -18,6 +19,8 @@ public class CreateCommonCodeRequest {
 
     @NotNull(message = "코드 그룹 ID를 입력해주세요.")
     private UUID codeGroupId;
+
+    private UUID parentCodeId;
 
     @NotBlank(message = "코드를 입력해주세요.")
     @Size(max = 50, message = "코드는 50자 이하여야 합니다.")
@@ -36,6 +39,12 @@ public class CreateCommonCodeRequest {
     private String extraValue1;
     private String extraValue2;
     private String extraValue3;
+    private String extraJson;
+
+    private Boolean defaultCode;
+
+    private LocalDate effectiveFrom;
+    private LocalDate effectiveTo;
 
     private Integer sortOrder;
 }

@@ -1,5 +1,6 @@
 package com.hrsaas.tenant.service.impl;
 
+import com.hrsaas.common.cache.CacheNames;
 import com.hrsaas.common.core.exception.DuplicateException;
 import com.hrsaas.common.core.exception.NotFoundException;
 import com.hrsaas.common.event.EventPublisher;
@@ -70,14 +71,14 @@ public class TenantServiceImpl implements TenantService {
     }
 
     @Override
-    @Cacheable(value = "tenant", key = "#id")
+    @Cacheable(value = CacheNames.TENANT, key = "#id")
     public TenantResponse getById(UUID id) {
         Tenant tenant = findById(id);
         return TenantResponse.from(tenant);
     }
 
     @Override
-    @Cacheable(value = "tenant", key = "'code:' + #code")
+    @Cacheable(value = CacheNames.TENANT, key = "'code:' + #code")
     public TenantResponse getByCode(String code) {
         Tenant tenant = tenantRepository.findByCode(code)
             .orElseThrow(() -> new NotFoundException("TNT_001", "테넌트를 찾을 수 없습니다: " + code));
@@ -94,7 +95,7 @@ public class TenantServiceImpl implements TenantService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "tenant", allEntries = true)
+    @CacheEvict(value = CacheNames.TENANT, allEntries = true)
     public TenantResponse update(UUID id, UpdateTenantRequest request) {
         Tenant tenant = findById(id);
 
@@ -131,7 +132,7 @@ public class TenantServiceImpl implements TenantService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "tenant", allEntries = true)
+    @CacheEvict(value = CacheNames.TENANT, allEntries = true)
     public TenantResponse activate(UUID id) {
         Tenant tenant = findById(id);
         tenant.activate();
@@ -142,7 +143,7 @@ public class TenantServiceImpl implements TenantService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "tenant", allEntries = true)
+    @CacheEvict(value = CacheNames.TENANT, allEntries = true)
     public TenantResponse suspend(UUID id) {
         Tenant tenant = findById(id);
         tenant.suspend();
@@ -153,7 +154,7 @@ public class TenantServiceImpl implements TenantService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "tenant", allEntries = true)
+    @CacheEvict(value = CacheNames.TENANT, allEntries = true)
     public void terminate(UUID id) {
         Tenant tenant = findById(id);
         tenant.terminate();

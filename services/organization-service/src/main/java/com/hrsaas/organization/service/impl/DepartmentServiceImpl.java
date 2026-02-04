@@ -1,8 +1,12 @@
 package com.hrsaas.organization.service.impl;
 
+import com.hrsaas.common.cache.CacheNames;
 import com.hrsaas.common.core.exception.DuplicateException;
 import com.hrsaas.common.core.exception.NotFoundException;
+import com.hrsaas.common.event.EventPublisher;
 import com.hrsaas.common.tenant.TenantContext;
+import com.hrsaas.organization.domain.event.DepartmentCreatedEvent;
+import com.hrsaas.organization.domain.event.DepartmentUpdatedEvent;
 import com.hrsaas.organization.domain.dto.request.CreateDepartmentRequest;
 import com.hrsaas.organization.domain.dto.request.UpdateDepartmentRequest;
 import com.hrsaas.organization.domain.dto.response.DepartmentResponse;
@@ -28,10 +32,11 @@ import java.util.UUID;
 public class DepartmentServiceImpl implements DepartmentService {
 
     private final DepartmentRepository departmentRepository;
+    private final EventPublisher eventPublisher;
 
     @Override
     @Transactional
-    @CacheEvict(value = {"department", "organization:tree"}, allEntries = true)
+    @CacheEvict(value = {CacheNames.DEPARTMENT, CacheNames.ORGANIZATION_TREE}, allEntries = true)
     public DepartmentResponse create(CreateDepartmentRequest request) {
         UUID tenantId = TenantContext.getCurrentTenant();
 
@@ -54,13 +59,17 @@ public class DepartmentServiceImpl implements DepartmentService {
             .build();
 
         Department saved = departmentRepository.save(department);
+
+        // Publish event
+        eventPublisher.publish(DepartmentCreatedEvent.of(saved));
+
         log.info("Department created: id={}, code={}", saved.getId(), saved.getCode());
 
         return DepartmentResponse.from(saved);
     }
 
     @Override
-    @Cacheable(value = "department", key = "#id")
+    @Cacheable(value = CacheNames.DEPARTMENT, key = "#id")
     public DepartmentResponse getById(UUID id) {
         Department department = findById(id);
         return DepartmentResponse.from(department);
@@ -78,7 +87,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     }
 
     @Override
-    @Cacheable(value = "organization:tree")
+    @Cacheable(value = CacheNames.ORGANIZATION_TREE)
     public List<DepartmentTreeResponse> getTree() {
         UUID tenantId = TenantContext.getCurrentTenant();
         List<Department> rootDepartments = departmentRepository.findRootDepartments(
@@ -91,7 +100,7 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     @Transactional
-    @CacheEvict(value = {"department", "organization:tree"}, allEntries = true)
+    @CacheEvict(value = {CacheNames.DEPARTMENT, CacheNames.ORGANIZATION_TREE}, allEntries = true)
     public DepartmentResponse update(UUID id, UpdateDepartmentRequest request) {
         Department department = findById(id);
 
@@ -114,6 +123,10 @@ public class DepartmentServiceImpl implements DepartmentService {
         }
 
         Department saved = departmentRepository.save(department);
+
+        // Publish event
+        eventPublisher.publish(DepartmentUpdatedEvent.of(saved));
+
         log.info("Department updated: id={}", id);
 
         return DepartmentResponse.from(saved);
@@ -121,7 +134,7 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     @Transactional
-    @CacheEvict(value = {"department", "organization:tree"}, allEntries = true)
+    @CacheEvict(value = {CacheNames.DEPARTMENT, CacheNames.ORGANIZATION_TREE}, allEntries = true)
     public void delete(UUID id) {
         Department department = findById(id);
         department.setStatus(DepartmentStatus.DELETED);

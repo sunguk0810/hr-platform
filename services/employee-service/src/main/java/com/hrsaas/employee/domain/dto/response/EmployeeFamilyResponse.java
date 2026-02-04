@@ -1,5 +1,9 @@
 package com.hrsaas.employee.domain.dto.response;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.hrsaas.common.privacy.Masked;
+import com.hrsaas.common.privacy.MaskType;
+import com.hrsaas.common.privacy.serializer.MaskedFieldSerializer;
 import com.hrsaas.employee.domain.entity.EmployeeFamily;
 import com.hrsaas.employee.domain.entity.FamilyRelationType;
 import lombok.AllArgsConstructor;
@@ -20,9 +24,16 @@ public class EmployeeFamilyResponse {
     private UUID id;
     private UUID employeeId;
     private FamilyRelationType relation;
+
+    @Masked(type = MaskType.NAME)
+    @JsonSerialize(using = MaskedFieldSerializer.class)
     private String name;
+
     private LocalDate birthDate;
     private String occupation;
+
+    @Masked(type = MaskType.PHONE)
+    @JsonSerialize(using = MaskedFieldSerializer.class)
     private String phone;
     private Boolean isCohabiting;
     private Boolean isDependent;

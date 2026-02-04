@@ -14,6 +14,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,6 +31,7 @@ public class EmployeeDetailController {
     // Career APIs
     @PostMapping("/careers")
     @Operation(summary = "경력 정보 등록")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<EmployeeCareerResponse>> createCareer(
             @PathVariable UUID employeeId,
             @Valid @RequestBody CreateEmployeeCareerRequest request) {
@@ -40,6 +42,7 @@ public class EmployeeDetailController {
 
     @GetMapping("/careers")
     @Operation(summary = "경력 정보 목록 조회")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<List<EmployeeCareerResponse>>> getCareers(
             @PathVariable UUID employeeId) {
         List<EmployeeCareerResponse> response = employeeDetailService.getCareers(employeeId);
@@ -48,6 +51,7 @@ public class EmployeeDetailController {
 
     @DeleteMapping("/careers/{careerId}")
     @Operation(summary = "경력 정보 삭제")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Void>> deleteCareer(
             @PathVariable UUID employeeId,
             @PathVariable UUID careerId) {
@@ -58,6 +62,7 @@ public class EmployeeDetailController {
     // Education APIs
     @PostMapping("/educations")
     @Operation(summary = "학력 정보 등록")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<EmployeeEducationResponse>> createEducation(
             @PathVariable UUID employeeId,
             @Valid @RequestBody CreateEmployeeEducationRequest request) {
@@ -68,6 +73,7 @@ public class EmployeeDetailController {
 
     @GetMapping("/educations")
     @Operation(summary = "학력 정보 목록 조회")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<List<EmployeeEducationResponse>>> getEducations(
             @PathVariable UUID employeeId) {
         List<EmployeeEducationResponse> response = employeeDetailService.getEducations(employeeId);
@@ -76,6 +82,7 @@ public class EmployeeDetailController {
 
     @DeleteMapping("/educations/{educationId}")
     @Operation(summary = "학력 정보 삭제")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Void>> deleteEducation(
             @PathVariable UUID employeeId,
             @PathVariable UUID educationId) {
@@ -86,6 +93,7 @@ public class EmployeeDetailController {
     // Certificate APIs
     @PostMapping("/certificates")
     @Operation(summary = "자격증 정보 등록")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<EmployeeCertificateResponse>> createCertificate(
             @PathVariable UUID employeeId,
             @Valid @RequestBody CreateEmployeeCertificateRequest request) {
@@ -96,6 +104,7 @@ public class EmployeeDetailController {
 
     @GetMapping("/certificates")
     @Operation(summary = "자격증 정보 목록 조회")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<List<EmployeeCertificateResponse>>> getCertificates(
             @PathVariable UUID employeeId,
             @RequestParam(required = false, defaultValue = "false") boolean validOnly) {
@@ -107,6 +116,7 @@ public class EmployeeDetailController {
 
     @DeleteMapping("/certificates/{certificateId}")
     @Operation(summary = "자격증 정보 삭제")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Void>> deleteCertificate(
             @PathVariable UUID employeeId,
             @PathVariable UUID certificateId) {

@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -28,6 +29,7 @@ public class EmployeeHistoryController {
 
     @PostMapping
     @Operation(summary = "인사이력 등록")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<EmployeeHistoryResponse>> create(
             @PathVariable UUID employeeId,
             @Valid @RequestBody CreateEmployeeHistoryRequest request) {
@@ -38,6 +40,7 @@ public class EmployeeHistoryController {
 
     @GetMapping
     @Operation(summary = "인사이력 목록 조회")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<List<EmployeeHistoryResponse>>> getByEmployeeId(
             @PathVariable UUID employeeId,
             @RequestParam(required = false) HistoryChangeType changeType,

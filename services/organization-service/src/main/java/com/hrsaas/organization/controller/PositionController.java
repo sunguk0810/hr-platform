@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,6 +27,7 @@ public class PositionController {
 
     @PostMapping
     @Operation(summary = "직책 생성")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<PositionResponse>> create(
             @Valid @RequestBody CreatePositionRequest request) {
         PositionResponse response = positionService.create(request);
@@ -35,6 +37,7 @@ public class PositionController {
 
     @GetMapping("/{id}")
     @Operation(summary = "직책 상세 조회")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<PositionResponse>> getById(@PathVariable UUID id) {
         PositionResponse response = positionService.getById(id);
         return ResponseEntity.ok(ApiResponse.success(response));
@@ -42,6 +45,7 @@ public class PositionController {
 
     @GetMapping("/code/{code}")
     @Operation(summary = "직책 코드로 조회")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<PositionResponse>> getByCode(@PathVariable String code) {
         PositionResponse response = positionService.getByCode(code);
         return ResponseEntity.ok(ApiResponse.success(response));
@@ -49,6 +53,7 @@ public class PositionController {
 
     @GetMapping
     @Operation(summary = "직책 목록 조회")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<List<PositionResponse>>> getAll(
             @RequestParam(required = false, defaultValue = "false") boolean activeOnly) {
         List<PositionResponse> response = activeOnly ? positionService.getActive() : positionService.getAll();
@@ -57,6 +62,7 @@ public class PositionController {
 
     @PutMapping("/{id}")
     @Operation(summary = "직책 수정")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<PositionResponse>> update(
             @PathVariable UUID id,
             @Valid @RequestBody UpdatePositionRequest request) {
@@ -66,6 +72,7 @@ public class PositionController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "직책 삭제 (비활성화)")
+    @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable UUID id) {
         positionService.delete(id);
         return ResponseEntity.ok(ApiResponse.success(null, "직책이 삭제되었습니다."));

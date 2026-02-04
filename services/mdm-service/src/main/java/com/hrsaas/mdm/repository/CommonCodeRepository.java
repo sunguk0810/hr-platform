@@ -33,4 +33,22 @@ public interface CommonCodeRepository extends JpaRepository<CommonCode, UUID> {
     List<CommonCode> findByCodeGroupId(@Param("codeGroupId") UUID codeGroupId);
 
     boolean existsByCodeGroupIdAndCodeAndTenantId(UUID codeGroupId, String code, UUID tenantId);
+
+    @Query("SELECT cc FROM CommonCode cc WHERE (cc.tenantId IS NULL OR cc.tenantId = :tenantId) " +
+           "ORDER BY cc.codeGroup.groupCode ASC, cc.sortOrder ASC")
+    List<CommonCode> findAllByTenantId(@Param("tenantId") UUID tenantId);
+
+    @Query("SELECT cc FROM CommonCode cc WHERE (cc.tenantId IS NULL OR cc.tenantId = :tenantId) " +
+           "AND cc.active = true " +
+           "ORDER BY cc.codeGroup.groupCode ASC, cc.sortOrder ASC")
+    List<CommonCode> findActiveByTenantId(@Param("tenantId") UUID tenantId);
+
+    @Query("SELECT cc FROM CommonCode cc WHERE cc.codeGroup.groupCode = :groupCode " +
+           "AND (cc.tenantId IS NULL OR cc.tenantId = :tenantId) " +
+           "AND LOWER(cc.codeName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "ORDER BY cc.sortOrder ASC")
+    List<CommonCode> searchByCodeName(
+        @Param("groupCode") String groupCode,
+        @Param("keyword") String keyword,
+        @Param("tenantId") UUID tenantId);
 }

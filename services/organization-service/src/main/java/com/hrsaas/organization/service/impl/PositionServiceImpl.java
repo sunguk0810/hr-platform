@@ -1,5 +1,6 @@
 package com.hrsaas.organization.service.impl;
 
+import com.hrsaas.common.cache.CacheNames;
 import com.hrsaas.common.core.exception.DuplicateException;
 import com.hrsaas.common.core.exception.NotFoundException;
 import com.hrsaas.common.tenant.TenantContext;
@@ -29,7 +30,7 @@ public class PositionServiceImpl implements PositionService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "position", allEntries = true)
+    @CacheEvict(value = CacheNames.POSITION, allEntries = true)
     public PositionResponse create(CreatePositionRequest request) {
         UUID tenantId = TenantContext.getCurrentTenant();
 
@@ -52,7 +53,7 @@ public class PositionServiceImpl implements PositionService {
     }
 
     @Override
-    @Cacheable(value = "position", key = "#id")
+    @Cacheable(value = CacheNames.POSITION, key = "#id")
     public PositionResponse getById(UUID id) {
         Position position = findById(id);
         return PositionResponse.from(position);
@@ -88,7 +89,7 @@ public class PositionServiceImpl implements PositionService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "position", allEntries = true)
+    @CacheEvict(value = CacheNames.POSITION, allEntries = true)
     public PositionResponse update(UUID id, UpdatePositionRequest request) {
         Position position = findById(id);
 
@@ -110,7 +111,7 @@ public class PositionServiceImpl implements PositionService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "position", allEntries = true)
+    @CacheEvict(value = CacheNames.POSITION, allEntries = true)
     public void delete(UUID id) {
         Position position = findById(id);
         position.deactivate();

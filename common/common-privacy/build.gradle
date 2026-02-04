@@ -8,6 +8,14 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter'
     api 'com.fasterxml.jackson.core:jackson-databind'
 
+    // Web and Security for PrivacyFilter
+    compileOnly 'org.springframework.boot:spring-boot-starter-web'
+    compileOnly 'org.springframework.boot:spring-boot-starter-security'
+    compileOnly 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+
+    // Testing
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }

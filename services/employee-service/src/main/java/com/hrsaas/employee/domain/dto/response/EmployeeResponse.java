@@ -1,5 +1,9 @@
 package com.hrsaas.employee.domain.dto.response;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.hrsaas.common.privacy.Masked;
+import com.hrsaas.common.privacy.MaskType;
+import com.hrsaas.common.privacy.serializer.MaskedFieldSerializer;
 import com.hrsaas.employee.domain.entity.Employee;
 import com.hrsaas.employee.domain.entity.EmployeeStatus;
 import com.hrsaas.employee.domain.entity.EmploymentType;
@@ -20,11 +24,25 @@ public class EmployeeResponse {
 
     private UUID id;
     private String employeeNumber;
+
+    @Masked(type = MaskType.NAME)
+    @JsonSerialize(using = MaskedFieldSerializer.class)
     private String name;
+
     private String nameEn;
+
+    @Masked(type = MaskType.EMAIL)
+    @JsonSerialize(using = MaskedFieldSerializer.class)
     private String email;
+
+    @Masked(type = MaskType.PHONE)
+    @JsonSerialize(using = MaskedFieldSerializer.class)
     private String phone;
+
+    @Masked(type = MaskType.PHONE)
+    @JsonSerialize(using = MaskedFieldSerializer.class)
     private String mobile;
+
     private UUID departmentId;
     private String positionCode;
     private String jobTitleCode;

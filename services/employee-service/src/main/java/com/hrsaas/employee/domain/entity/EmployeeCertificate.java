@@ -1,6 +1,6 @@
 package com.hrsaas.employee.domain.entity;
 
-import com.hrsaas.common.entity.BaseEntity;
+import com.hrsaas.common.entity.AuditableEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -12,7 +12,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class EmployeeCertificate extends BaseEntity {
+public class EmployeeCertificate extends AuditableEntity {
 
     @Column(name = "employee_id", nullable = false)
     private UUID employeeId;

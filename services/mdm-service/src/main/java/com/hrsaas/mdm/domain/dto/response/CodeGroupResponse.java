@@ -1,6 +1,7 @@
 package com.hrsaas.mdm.domain.dto.response;
 
 import com.hrsaas.mdm.domain.entity.CodeGroup;
+import com.hrsaas.mdm.domain.entity.CodeStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,8 +20,12 @@ public class CodeGroupResponse {
     private UUID id;
     private String groupCode;
     private String groupName;
+    private String groupNameEn;
     private String description;
     private boolean system;
+    private boolean hierarchical;
+    private Integer maxLevel;
+    private CodeStatus status;
     private boolean active;
     private Integer sortOrder;
     private List<CommonCodeResponse> codes;
@@ -32,8 +37,12 @@ public class CodeGroupResponse {
             .id(codeGroup.getId())
             .groupCode(codeGroup.getGroupCode())
             .groupName(codeGroup.getGroupName())
+            .groupNameEn(codeGroup.getGroupNameEn())
             .description(codeGroup.getDescription())
             .system(codeGroup.isSystem())
+            .hierarchical(codeGroup.isHierarchical())
+            .maxLevel(codeGroup.getMaxLevel())
+            .status(codeGroup.getStatus())
             .active(codeGroup.isActive())
             .sortOrder(codeGroup.getSortOrder())
             .createdAt(codeGroup.getCreatedAt())
