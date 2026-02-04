@@ -24,6 +24,8 @@ export interface DepartmentTreeNode {
   sortOrder: number;
   employeeCount: number;
   children: DepartmentTreeNode[];
+  managerName?: string;
+  status?: DepartmentStatus;
 }
 
 export interface Position extends TenantAwareEntity {
@@ -32,6 +34,7 @@ export interface Position extends TenantAwareEntity {
   nameEn?: string;
   sortOrder: number;
   description?: string;
+  isActive?: boolean;
 }
 
 export interface Grade extends TenantAwareEntity {

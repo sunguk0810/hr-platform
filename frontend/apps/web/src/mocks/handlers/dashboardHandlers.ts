@@ -1,5 +1,34 @@
 import { http, HttpResponse, delay } from 'msw';
 
+// Shared attendance state for dashboard and attendance features
+let attendanceState = {
+  status: 'NOT_CHECKED_IN' as 'NOT_CHECKED_IN' | 'WORKING' | 'CHECKED_OUT',
+  checkInTime: null as string | null,
+  checkOutTime: null as string | null,
+};
+
+// Helper function to calculate work duration
+function calculateWorkDuration(): string {
+  if (!attendanceState.checkInTime) return '0분';
+
+  const checkIn = new Date(attendanceState.checkInTime);
+  const now = attendanceState.checkOutTime
+    ? new Date(attendanceState.checkOutTime)
+    : new Date();
+
+  const diffMs = now.getTime() - checkIn.getTime();
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+  if (diffHours > 0) {
+    return `${diffHours}시간 ${diffMinutes}분`;
+  }
+  return `${diffMinutes}분`;
+}
+
+// Export for use in attendance handlers
+export { attendanceState, calculateWorkDuration };
+
 export const dashboardHandlers = [
   // Get attendance status
   http.get('/api/v1/dashboard/attendance', async () => {
@@ -8,10 +37,10 @@ export const dashboardHandlers = [
     return HttpResponse.json({
       success: true,
       data: {
-        status: 'WORKING', // 'NOT_CHECKED_IN' | 'WORKING' | 'CHECKED_OUT'
-        checkInTime: '2024-03-15T09:00:00',
-        checkOutTime: null,
-        workDuration: '4시간 30분',
+        status: attendanceState.status,
+        checkInTime: attendanceState.checkInTime,
+        checkOutTime: attendanceState.checkOutTime,
+        workDuration: calculateWorkDuration(),
         scheduledWorkHours: 8,
         overtimeHours: 0,
       },
@@ -23,11 +52,15 @@ export const dashboardHandlers = [
   http.post('/api/v1/attendance/check-in', async () => {
     await delay(300);
 
+    attendanceState.status = 'WORKING';
+    attendanceState.checkInTime = new Date().toISOString();
+    attendanceState.checkOutTime = null;
+
     return HttpResponse.json({
       success: true,
       data: {
         id: 'att-001',
-        checkInTime: new Date().toISOString(),
+        checkInTime: attendanceState.checkInTime,
         status: 'WORKING',
       },
       message: '출근이 등록되었습니다.',
@@ -39,13 +72,17 @@ export const dashboardHandlers = [
   http.post('/api/v1/attendance/check-out', async () => {
     await delay(300);
 
+    attendanceState.status = 'CHECKED_OUT';
+    attendanceState.checkOutTime = new Date().toISOString();
+
     return HttpResponse.json({
       success: true,
       data: {
         id: 'att-001',
-        checkOutTime: new Date().toISOString(),
+        checkInTime: attendanceState.checkInTime,
+        checkOutTime: attendanceState.checkOutTime,
         status: 'CHECKED_OUT',
-        workDuration: '8시간 30분',
+        workDuration: calculateWorkDuration(),
       },
       message: '퇴근이 등록되었습니다.',
       timestamp: new Date().toISOString(),
@@ -335,6 +372,9 @@ export const dashboardHandlers = [
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    const dayAfter = new Date(tomorrow);
+    dayAfter.setDate(dayAfter.getDate() + 1);
+    const dayAfterStr = dayAfter.toISOString().split('T')[0];
 
     return HttpResponse.json({
       success: true,
@@ -342,48 +382,33 @@ export const dashboardHandlers = [
         leaves: [
           {
             id: 'leave-t01',
-            employee: {
-              id: 'emp-201',
-              name: '홍길동',
-              profileImageUrl: null,
-              department: '개발팀',
-              position: '대리',
-            },
-            type: 'ANNUAL',
+            employeeId: 'emp-002',
+            employeeName: '김철수',
+            departmentName: '개발팀',
+            leaveType: '연차',
             startDate: todayStr,
             endDate: todayStr,
-            days: 1,
-            status: 'IN_USE',
+            profileImageUrl: null,
           },
           {
             id: 'leave-t02',
-            employee: {
-              id: 'emp-202',
-              name: '김민수',
-              profileImageUrl: null,
-              department: '개발팀',
-              position: '사원',
-            },
-            type: 'SICK',
+            employeeId: 'emp-003',
+            employeeName: '이영희',
+            departmentName: '인사팀',
+            leaveType: '반차(오후)',
             startDate: todayStr,
-            endDate: tomorrowStr,
-            days: 2,
-            status: 'IN_USE',
+            endDate: todayStr,
+            profileImageUrl: null,
           },
           {
             id: 'leave-t03',
-            employee: {
-              id: 'emp-203',
-              name: '이서연',
-              profileImageUrl: null,
-              department: '기획팀',
-              position: '과장',
-            },
-            type: 'ANNUAL',
+            employeeId: 'emp-005',
+            employeeName: '최수진',
+            departmentName: '마케팅팀',
+            leaveType: '연차',
             startDate: tomorrowStr,
-            endDate: tomorrowStr,
-            days: 1,
-            status: 'APPROVED',
+            endDate: dayAfterStr,
+            profileImageUrl: null,
           },
         ],
       },

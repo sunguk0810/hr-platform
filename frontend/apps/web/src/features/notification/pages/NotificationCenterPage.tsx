@@ -84,22 +84,86 @@ export default function NotificationCenterPage() {
               )}
             </TabsContent>
             <TabsContent value="unread" className="mt-4">
-              <EmptyState
-                icon={Bell}
-                title="읽지 않은 알림이 없습니다"
-              />
+              {notifications.filter(n => !n.isRead).length === 0 ? (
+                <EmptyState
+                  icon={Bell}
+                  title="읽지 않은 알림이 없습니다"
+                  description="모든 알림을 확인했습니다."
+                />
+              ) : (
+                <div className="space-y-2">
+                  {notifications.filter(n => !n.isRead).map((notification) => (
+                    <div
+                      key={notification.id}
+                      className="rounded-lg border p-4 bg-accent/50"
+                    >
+                      <p className="font-medium">{notification.title}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {notification.message}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {new Date(notification.createdAt).toLocaleString('ko-KR')}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </TabsContent>
             <TabsContent value="approval" className="mt-4">
-              <EmptyState
-                icon={Bell}
-                title="결재 알림이 없습니다"
-              />
+              {notifications.filter(n => n.type === 'APPROVAL').length === 0 ? (
+                <EmptyState
+                  icon={Bell}
+                  title="결재 알림이 없습니다"
+                  description="결재 관련 알림이 있으면 여기에 표시됩니다."
+                />
+              ) : (
+                <div className="space-y-2">
+                  {notifications.filter(n => n.type === 'APPROVAL').map((notification) => (
+                    <div
+                      key={notification.id}
+                      className={`rounded-lg border p-4 ${
+                        notification.isRead ? 'bg-background' : 'bg-accent/50'
+                      }`}
+                    >
+                      <p className="font-medium">{notification.title}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {notification.message}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {new Date(notification.createdAt).toLocaleString('ko-KR')}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </TabsContent>
             <TabsContent value="system" className="mt-4">
-              <EmptyState
-                icon={Bell}
-                title="시스템 알림이 없습니다"
-              />
+              {notifications.filter(n => n.type === 'SYSTEM').length === 0 ? (
+                <EmptyState
+                  icon={Bell}
+                  title="시스템 알림이 없습니다"
+                  description="시스템 관련 알림이 있으면 여기에 표시됩니다."
+                />
+              ) : (
+                <div className="space-y-2">
+                  {notifications.filter(n => n.type === 'SYSTEM').map((notification) => (
+                    <div
+                      key={notification.id}
+                      className={`rounded-lg border p-4 ${
+                        notification.isRead ? 'bg-background' : 'bg-accent/50'
+                      }`}
+                    >
+                      <p className="font-medium">{notification.title}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {notification.message}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {new Date(notification.createdAt).toLocaleString('ko-KR')}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>

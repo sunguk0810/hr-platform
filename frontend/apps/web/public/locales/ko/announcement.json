@@ -1,0 +1,68 @@
+{
+  "title": "공지사항",
+  "description": "회사 공지사항을 확인합니다.",
+  "list": {
+    "title": "공지사항 목록",
+    "empty": "등록된 공지사항이 없습니다.",
+    "emptyDescription": "아직 공지사항이 없습니다."
+  },
+  "detail": {
+    "title": "공지사항 상세",
+    "description": "공지사항 상세 내용입니다."
+  },
+  "create": {
+    "title": "공지사항 작성",
+    "description": "새로운 공지사항을 작성합니다."
+  },
+  "form": {
+    "title": "제목",
+    "content": "내용",
+    "category": "카테고리",
+    "priority": "중요도",
+    "startDate": "게시 시작일",
+    "endDate": "게시 종료일",
+    "attachments": "첨부파일",
+    "isTop": "상단 고정"
+  },
+  "category": {
+    "GENERAL": "일반",
+    "HR": "인사",
+    "SYSTEM": "시스템",
+    "EVENT": "행사",
+    "EDUCATION": "교육",
+    "WELFARE": "복지"
+  },
+  "priority": {
+    "LOW": "낮음",
+    "NORMAL": "보통",
+    "HIGH": "높음",
+    "URGENT": "긴급"
+  },
+  "status": {
+    "DRAFT": "초안",
+    "PUBLISHED": "게시중",
+    "SCHEDULED": "예약",
+    "EXPIRED": "만료"
+  },
+  "actions": {
+    "create": "작성",
+    "edit": "수정",
+    "delete": "삭제",
+    "publish": "게시",
+    "unpublish": "게시취소"
+  },
+  "messages": {
+    "createSuccess": "공지사항이 등록되었습니다.",
+    "updateSuccess": "공지사항이 수정되었습니다.",
+    "deleteSuccess": "공지사항이 삭제되었습니다.",
+    "publishSuccess": "공지사항이 게시되었습니다.",
+    "error": "오류가 발생했습니다."
+  },
+  "table": {
+    "title": "제목",
+    "category": "카테고리",
+    "author": "작성자",
+    "createdAt": "등록일",
+    "views": "조회수"
+  }
+}

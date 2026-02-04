@@ -614,4 +614,153 @@ export const organizationHandlers = [
       timestamp: new Date().toISOString(),
     });
   }),
+
+  // Organization History
+  http.get('/api/v1/organizations/history', async ({ request }) => {
+    await delay(300);
+
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '0', 10);
+    const size = parseInt(url.searchParams.get('size') || '20', 10);
+    const departmentId = url.searchParams.get('departmentId');
+    const eventType = url.searchParams.get('eventType');
+
+    // Generate mock history data
+    const mockHistory = [
+      {
+        id: 'hist-001',
+        type: 'department_created',
+        date: '2024-01-15T09:00:00Z',
+        title: 'QA팀 신설',
+        description: '개발본부 산하에 QA팀이 신설되었습니다.',
+        departmentId: 'dept-004',
+        departmentName: 'QA팀',
+        actor: { id: 'emp-001', name: '홍길동' },
+      },
+      {
+        id: 'hist-002',
+        type: 'department_renamed',
+        date: '2024-01-10T14:30:00Z',
+        title: '프론트엔드팀 명칭 변경',
+        description: '웹개발팀에서 프론트엔드팀으로 명칭이 변경되었습니다.',
+        departmentId: 'dept-002',
+        departmentName: '프론트엔드팀',
+        previousValue: '웹개발팀',
+        newValue: '프론트엔드팀',
+        actor: { id: 'emp-001', name: '홍길동' },
+      },
+      {
+        id: 'hist-003',
+        type: 'employee_transferred',
+        date: '2024-01-08T10:00:00Z',
+        title: '직원 부서 이동',
+        description: '김철수님이 백엔드팀에서 프론트엔드팀으로 이동하였습니다.',
+        departmentId: 'dept-002',
+        departmentName: '프론트엔드팀',
+        previousValue: '백엔드팀',
+        newValue: '프론트엔드팀',
+        actor: { id: 'emp-003', name: '이영희' },
+      },
+      {
+        id: 'hist-004',
+        type: 'employee_joined',
+        date: '2024-01-05T09:00:00Z',
+        title: '신규 입사',
+        description: '한예진님이 개발본부 프론트엔드팀에 입사하였습니다.',
+        departmentId: 'dept-002',
+        departmentName: '프론트엔드팀',
+        actor: { id: 'emp-003', name: '이영희' },
+      },
+      {
+        id: 'hist-005',
+        type: 'department_moved',
+        date: '2024-01-02T11:00:00Z',
+        title: '부서 이관',
+        description: 'QA팀이 개발본부에서 품질관리본부로 이관되었습니다.',
+        departmentId: 'dept-004',
+        departmentName: 'QA팀',
+        previousValue: '개발본부',
+        newValue: '품질관리본부',
+        actor: { id: 'emp-001', name: '홍길동' },
+      },
+      {
+        id: 'hist-006',
+        type: 'employee_left',
+        date: '2023-12-31T18:00:00Z',
+        title: '퇴사',
+        description: '최수진님이 마케팅팀에서 퇴사하였습니다.',
+        departmentId: 'dept-006',
+        departmentName: '마케팅팀',
+        actor: { id: 'emp-003', name: '이영희' },
+      },
+    ];
+
+    let filtered = [...mockHistory];
+
+    if (departmentId) {
+      filtered = filtered.filter(h => h.departmentId === departmentId);
+    }
+
+    if (eventType) {
+      filtered = filtered.filter(h => h.type === eventType);
+    }
+
+    const totalElements = filtered.length;
+    const totalPages = Math.ceil(totalElements / size);
+    const start = page * size;
+    const content = filtered.slice(start, start + size);
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        content,
+        page,
+        size,
+        totalElements,
+        totalPages,
+        first: page === 0,
+        last: page >= totalPages - 1,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // Department History
+  http.get('/api/v1/organizations/departments/:id/history', async ({ params }) => {
+    await delay(200);
+
+    const { id } = params;
+    const department = mockDepartments.find(d => d.id === id);
+
+    if (!department) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'ORG_001', message: '부서를 찾을 수 없습니다.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 404 }
+      );
+    }
+
+    // Generate mock history for specific department
+    const mockHistory = [
+      {
+        id: `hist-${id}-001`,
+        type: 'department_created',
+        date: department.createdAt,
+        title: `${department.name} 생성`,
+        description: `${department.name}이(가) 생성되었습니다.`,
+        departmentId: id,
+        departmentName: department.name,
+        actor: { id: 'emp-001', name: '홍길동' },
+      },
+    ];
+
+    return HttpResponse.json({
+      success: true,
+      data: mockHistory,
+      timestamp: new Date().toISOString(),
+    });
+  }),
 ];

@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -19,13 +20,24 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Building, Plus, Search, Users } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Building, Building2, Plus, Search, Users, List, Network } from 'lucide-react';
 import {
   useTenantList,
   useTenantSearchParams,
   useCreateTenant,
+  useTenantTree,
 } from '../hooks/useTenants';
-import type { TenantStatus, CreateTenantRequest } from '@hr-platform/shared-types';
+import { TenantTree } from '../components/TenantTree';
+import type { TenantStatus, CreateTenantRequest, TenantLevel } from '@hr-platform/shared-types';
+import { TENANT_LEVEL_LABELS } from '@hr-platform/shared-types';
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -38,9 +50,12 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
+type ViewMode = 'table' | 'tree';
+
 export default function TenantListPage() {
   const navigate = useNavigate();
   const [searchInput, setSearchInput] = useState('');
+  const [viewMode, setViewMode] = useState<ViewMode>('table');
   const debouncedKeyword = useDebounce(searchInput, 300);
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -52,6 +67,7 @@ export default function TenantListPage() {
     adminEmail: '',
     adminName: '',
   });
+  const [createParentId, setCreateParentId] = useState<string>('');
 
   const {
     params,
@@ -66,11 +82,16 @@ export default function TenantListPage() {
   }, [debouncedKeyword, setKeyword]);
 
   const { data, isLoading, isError } = useTenantList(params);
+  const { data: treeData, isLoading: isTreeLoading } = useTenantTree();
   const createMutation = useCreateTenant();
 
   const tenants = data?.data?.content ?? [];
   const totalPages = data?.data?.totalPages ?? 0;
   const totalElements = data?.data?.totalElements ?? 0;
+  const treeNodes = treeData?.data ?? [];
+
+  // 그룹사 목록 (레벨 0인 테넌트)
+  const groupTenants = tenants.filter(t => t.level === 0);
 
   const handleRowClick = (id: string) => {
     navigate(`/admin/tenants/${id}`);
@@ -85,16 +106,37 @@ export default function TenantListPage() {
       adminEmail: '',
       adminName: '',
     });
+    setCreateParentId('');
     setIsCreateDialogOpen(true);
   };
 
   const handleCreate = async () => {
     try {
-      await createMutation.mutateAsync(formData);
+      await createMutation.mutateAsync({
+        ...formData,
+        parentId: createParentId || undefined,
+      });
       setIsCreateDialogOpen(false);
     } catch (error) {
       console.error('Failed to create tenant:', error);
     }
+  };
+
+  const renderLevelBadge = (level: TenantLevel) => {
+    if (level === 0) {
+      return (
+        <Badge variant="default" className="text-xs">
+          <Building2 className="mr-1 h-3 w-3" />
+          {TENANT_LEVEL_LABELS[level]}
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="outline" className="text-xs">
+        <Building className="mr-1 h-3 w-3" />
+        {TENANT_LEVEL_LABELS[level]}
+      </Badge>
+    );
   };
 
   return (
@@ -133,107 +175,160 @@ export default function TenantListPage() {
               <option value="SUSPENDED">정지</option>
               <option value="PENDING">대기</option>
             </select>
+
+            {/* 뷰 모드 전환 */}
+            <ToggleGroup
+              type="single"
+              value={viewMode}
+              onValueChange={(value) => value && setViewMode(value as ViewMode)}
+              className="border rounded-md"
+            >
+              <ToggleGroupItem value="table" aria-label="테이블 뷰">
+                <List className="h-4 w-4" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="tree" aria-label="트리 뷰">
+                <Network className="h-4 w-4" />
+              </ToggleGroupItem>
+            </ToggleGroup>
           </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="p-4">
-              <SkeletonTable rows={5} />
-            </div>
-          ) : isError ? (
-            <EmptyState
-              icon={Building}
-              title="데이터를 불러올 수 없습니다"
-              description="잠시 후 다시 시도해주세요."
-            />
-          ) : tenants.length === 0 ? (
-            <EmptyState
-              icon={Building}
-              title="등록된 테넌트가 없습니다"
-              description={
-                searchState.keyword || searchState.status
-                  ? '검색 조건에 맞는 테넌트가 없습니다.'
-                  : '새 테넌트를 추가해주세요.'
-              }
-              action={
-                !searchState.keyword && !searchState.status
-                  ? {
-                      label: '테넌트 추가',
-                      onClick: handleCreateOpen,
-                    }
-                  : undefined
-              }
-            />
-          ) : (
-            <>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b bg-muted/50">
-                      <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        테넌트코드
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        테넌트명
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        관리자
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        직원 수
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        상태
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        등록일
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {tenants.map((tenant) => (
-                      <tr
-                        key={tenant.id}
-                        onClick={() => handleRowClick(tenant.id)}
-                        className="border-b cursor-pointer transition-colors hover:bg-muted/50"
-                      >
-                        <td className="px-4 py-3 font-mono text-sm">{tenant.code}</td>
-                        <td className="px-4 py-3 text-sm font-medium">{tenant.name}</td>
-                        <td className="px-4 py-3 text-sm text-muted-foreground">
-                          {tenant.adminEmail || '-'}
-                        </td>
-                        <td className="px-4 py-3 text-sm">
-                          <div className="flex items-center gap-1">
-                            <Users className="h-4 w-4 text-muted-foreground" />
-                            {tenant.employeeCount}명
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <TenantStatusBadge status={tenant.status} />
-                        </td>
-                        <td className="px-4 py-3 text-sm text-muted-foreground">
-                          {format(new Date(tenant.createdAt), 'yyyy.M.d', { locale: ko })}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+      {viewMode === 'tree' ? (
+        // 트리 뷰
+        <Card>
+          <CardContent className="p-4">
+            {isTreeLoading ? (
+              <div className="p-4">
+                <SkeletonTable rows={5} />
               </div>
-              <Pagination
-                page={searchState.page}
-                totalPages={totalPages}
-                onPageChange={setPage}
+            ) : treeNodes.length === 0 ? (
+              <EmptyState
+                icon={Building}
+                title="등록된 테넌트가 없습니다"
+                description="새 테넌트를 추가해주세요."
+                action={{
+                  label: '테넌트 추가',
+                  onClick: handleCreateOpen,
+                }}
               />
-              <div className="px-4 pb-3 text-sm text-muted-foreground">
-                총 {totalElements}개
+            ) : (
+              <TenantTree data={treeNodes} />
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        // 테이블 뷰
+        <Card>
+          <CardContent className="p-0">
+            {isLoading ? (
+              <div className="p-4">
+                <SkeletonTable rows={5} />
               </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
+            ) : isError ? (
+              <EmptyState
+                icon={Building}
+                title="데이터를 불러올 수 없습니다"
+                description="잠시 후 다시 시도해주세요."
+              />
+            ) : tenants.length === 0 ? (
+              <EmptyState
+                icon={Building}
+                title="등록된 테넌트가 없습니다"
+                description={
+                  searchState.keyword || searchState.status
+                    ? '검색 조건에 맞는 테넌트가 없습니다.'
+                    : '새 테넌트를 추가해주세요.'
+                }
+                action={
+                  !searchState.keyword && !searchState.status
+                    ? {
+                        label: '테넌트 추가',
+                        onClick: handleCreateOpen,
+                      }
+                    : undefined
+                }
+              />
+            ) : (
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b bg-muted/50">
+                        <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                          유형
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                          테넌트코드
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                          테넌트명
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                          소속 그룹
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                          관리자
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                          직원 수
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                          상태
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                          등록일
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tenants.map((tenant) => (
+                        <tr
+                          key={tenant.id}
+                          onClick={() => handleRowClick(tenant.id)}
+                          className="border-b cursor-pointer transition-colors hover:bg-muted/50"
+                        >
+                          <td className="px-4 py-3">
+                            {renderLevelBadge(tenant.level)}
+                          </td>
+                          <td className="px-4 py-3 font-mono text-sm">{tenant.code}</td>
+                          <td className="px-4 py-3 text-sm font-medium">{tenant.name}</td>
+                          <td className="px-4 py-3 text-sm text-muted-foreground">
+                            {tenant.parentName || '-'}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-muted-foreground">
+                            {tenant.adminEmail || '-'}
+                          </td>
+                          <td className="px-4 py-3 text-sm">
+                            <div className="flex items-center gap-1">
+                              <Users className="h-4 w-4 text-muted-foreground" />
+                              {tenant.employeeCount}명
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <TenantStatusBadge status={tenant.status} />
+                          </td>
+                          <td className="px-4 py-3 text-sm text-muted-foreground">
+                            {format(new Date(tenant.createdAt), 'yyyy.M.d', { locale: ko })}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <Pagination
+                  page={searchState.page}
+                  totalPages={totalPages}
+                  onPageChange={setPage}
+                />
+                <div className="px-4 pb-3 text-sm text-muted-foreground">
+                  총 {totalElements}개
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Create Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
@@ -245,6 +340,37 @@ export default function TenantListPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
+            {/* 그룹사 선택 */}
+            {groupTenants.length > 0 && (
+              <div className="grid gap-2">
+                <Label className="flex items-center gap-2">
+                  <Building2 className="h-4 w-4" />
+                  소속 그룹사
+                </Label>
+                <Select
+                  value={createParentId || '_none'}
+                  onValueChange={(value) => setCreateParentId(value === '_none' ? '' : value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="그룹사 선택" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_none">독립 테넌트 (그룹사 없음)</SelectItem>
+                    {groupTenants.map((group) => (
+                      <SelectItem key={group.id} value={group.id}>
+                        {group.name} ({group.code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  {createParentId
+                    ? '계열사로 등록됩니다.'
+                    : '독립 테넌트(그룹사)로 등록됩니다.'}
+                </p>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="code">테넌트코드 *</Label>

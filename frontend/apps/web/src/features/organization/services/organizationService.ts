@@ -19,6 +19,40 @@ export interface DepartmentSearchParams extends PageRequest {
   status?: DepartmentStatus;
 }
 
+export type OrgHistoryEventType =
+  | 'department_created'
+  | 'department_deleted'
+  | 'department_renamed'
+  | 'department_moved'
+  | 'employee_joined'
+  | 'employee_left'
+  | 'employee_transferred';
+
+export interface OrgHistoryEvent {
+  id: string;
+  type: OrgHistoryEventType;
+  date: string;
+  title: string;
+  description?: string;
+  actor?: {
+    id: string;
+    name: string;
+    profileImage?: string;
+  };
+  departmentId?: string;
+  departmentName?: string;
+  previousValue?: string;
+  newValue?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface OrgHistorySearchParams extends PageRequest {
+  departmentId?: string;
+  eventType?: OrgHistoryEventType;
+  startDate?: string;
+  endDate?: string;
+}
+
 export const organizationService = {
   // Organization Tree
   async getOrganizationTree(): Promise<ApiResponse<DepartmentTreeNode[]>> {
@@ -93,6 +127,21 @@ export const organizationService = {
 
   async deleteGrade(id: string): Promise<ApiResponse<null>> {
     const response = await apiClient.delete<ApiResponse<null>>(`/organizations/grades/${id}`);
+    return response.data;
+  },
+
+  // Organization History
+  async getOrganizationHistory(params?: OrgHistorySearchParams): Promise<ApiResponse<PageResponse<OrgHistoryEvent>>> {
+    const response = await apiClient.get<ApiResponse<PageResponse<OrgHistoryEvent>>>('/organizations/history', {
+      params,
+    });
+    return response.data;
+  },
+
+  async getDepartmentHistory(departmentId: string, params?: OrgHistorySearchParams): Promise<ApiResponse<OrgHistoryEvent[]>> {
+    const response = await apiClient.get<ApiResponse<OrgHistoryEvent[]>>(`/organizations/departments/${departmentId}/history`, {
+      params,
+    });
     return response.data;
   },
 };

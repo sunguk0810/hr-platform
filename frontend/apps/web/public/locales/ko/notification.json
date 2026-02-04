@@ -1,0 +1,102 @@
+{
+  "title": "알림",
+  "notifications": "알림",
+  "empty": "알림이 없습니다",
+  "noUnread": "읽지 않은 알림이 없습니다",
+  "viewAll": "모든 알림 보기",
+  "markAllRead": "모두 읽음",
+  "markAsRead": "읽음으로 표시",
+  "markAsUnread": "읽지 않음으로 표시",
+  "deleteNotification": "알림 삭제",
+  "deleteAll": "모든 알림 삭제",
+  "deleteConfirm": "이 알림을 삭제하시겠습니까?",
+  "deleteAllConfirm": "모든 알림을 삭제하시겠습니까?",
+  "unreadCount": "{{count}}개 읽지 않음",
+  "newNotification": "새 알림",
+  "settings": {
+    "title": "알림 설정",
+    "description": "알림 수신 방법을 설정합니다",
+    "push": "푸시 알림",
+    "pushDescription": "브라우저 푸시 알림을 받습니다",
+    "email": "이메일 알림",
+    "emailDescription": "이메일로 알림을 받습니다",
+    "inApp": "앱 내 알림",
+    "inAppDescription": "앱 내에서 알림을 받습니다",
+    "sound": "알림음",
+    "soundDescription": "알림 수신 시 소리를 재생합니다",
+    "enableAll": "모든 알림 활성화",
+    "disableAll": "모든 알림 비활성화"
+  },
+  "categories": {
+    "all": "전체",
+    "unread": "읽지 않음",
+    "approval": "결재",
+    "attendance": "근태",
+    "leave": "휴가",
+    "employee": "직원",
+    "organization": "조직",
+    "system": "시스템",
+    "announcement": "공지사항"
+  },
+  "types": {
+    "approval_request": "결재 요청",
+    "approval_completed": "결재 완료",
+    "approval_rejected": "결재 반려",
+    "approval_cancelled": "결재 취소",
+    "leave_request": "휴가 신청",
+    "leave_approved": "휴가 승인",
+    "leave_rejected": "휴가 반려",
+    "attendance_alert": "근태 알림",
+    "attendance_reminder": "출퇴근 리마인더",
+    "employee_created": "직원 등록",
+    "employee_updated": "직원 정보 수정",
+    "password_change": "비밀번호 변경",
+    "system_notice": "시스템 공지",
+    "system_maintenance": "시스템 점검",
+    "announcement": "공지사항"
+  },
+  "messages": {
+    "approval_request_received": "{{name}}님이 결재를 요청했습니다",
+    "approval_completed_message": "{{title}} 문서가 승인되었습니다",
+    "approval_rejected_message": "{{title}} 문서가 반려되었습니다",
+    "leave_approved_message": "{{type}} {{days}}일이 승인되었습니다",
+    "leave_rejected_message": "{{type}} 신청이 반려되었습니다",
+    "attendance_check_in_reminder": "출근 기록을 해주세요",
+    "attendance_check_out_reminder": "퇴근 기록을 해주세요",
+    "password_expiry_warning": "비밀번호가 {{days}}일 후 만료됩니다",
+    "system_maintenance_notice": "{{date}}에 시스템 점검이 예정되어 있습니다"
+  },
+  "time": {
+    "justNow": "방금 전",
+    "minutesAgo": "{{count}}분 전",
+    "hoursAgo": "{{count}}시간 전",
+    "daysAgo": "{{count}}일 전",
+    "weeksAgo": "{{count}}주 전"
+  },
+  "permission": {
+    "title": "알림 권한",
+    "requestTitle": "알림 권한 요청",
+    "requestDescription": "중요한 정보를 놓치지 않도록 알림을 허용해주세요",
+    "allow": "알림 허용",
+    "deny": "나중에",
+    "blocked": "알림이 차단되었습니다",
+    "blockedDescription": "브라우저 설정에서 알림을 허용해주세요",
+    "granted": "알림이 허용되었습니다",
+    "notSupported": "이 브라우저에서는 알림을 지원하지 않습니다"
+  },
+  "filter": {
+    "all": "전체",
+    "unread": "읽지 않음",
+    "read": "읽음",
+    "startDate": "시작일",
+    "endDate": "종료일",
+    "category": "카테고리",
+    "clearFilters": "필터 초기화"
+  },
+  "errors": {
+    "loadFailed": "알림을 불러오는데 실패했습니다",
+    "markReadFailed": "알림 상태 변경에 실패했습니다",
+    "deleteFailed": "알림 삭제에 실패했습니다",
+    "permissionDenied": "알림 권한이 거부되었습니다"
+  }
+}

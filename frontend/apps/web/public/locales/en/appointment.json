@@ -1,0 +1,70 @@
+{
+  "title": "Appointments",
+  "description": "Create and manage personnel appointments.",
+  "list": {
+    "title": "Appointment List",
+    "empty": "No appointments found.",
+    "emptyDescription": "Create a new appointment."
+  },
+  "create": {
+    "title": "Create Appointment",
+    "description": "Create a new personnel appointment."
+  },
+  "detail": {
+    "title": "Appointment Details",
+    "description": "View appointment details."
+  },
+  "form": {
+    "appointmentType": "Appointment Type",
+    "appointmentDate": "Appointment Date",
+    "effectiveDate": "Effective Date",
+    "targetEmployee": "Target Employee",
+    "currentDepartment": "Current Department",
+    "currentPosition": "Current Position",
+    "currentGrade": "Current Grade",
+    "newDepartment": "New Department",
+    "newPosition": "New Position",
+    "newGrade": "New Grade",
+    "reason": "Reason",
+    "remarks": "Remarks"
+  },
+  "type": {
+    "PROMOTION": "Promotion",
+    "DEMOTION": "Demotion",
+    "TRANSFER": "Transfer",
+    "SECONDMENT": "Secondment",
+    "RETURN": "Return",
+    "DISMISSAL": "Dismissal",
+    "RESIGNATION": "Resignation",
+    "NEW_HIRE": "New Hire",
+    "REINSTATEMENT": "Reinstatement"
+  },
+  "status": {
+    "DRAFT": "Draft",
+    "PENDING": "Pending",
+    "APPROVED": "Approved",
+    "REJECTED": "Rejected",
+    "EXECUTED": "Executed",
+    "CANCELLED": "Cancelled"
+  },
+  "actions": {
+    "create": "Create Appointment",
+    "edit": "Edit",
+    "delete": "Delete",
+    "approve": "Approve",
+    "reject": "Reject",
+    "execute": "Execute",
+    "cancel": "Cancel",
+    "preview": "Preview"
+  },
+  "messages": {
+    "createSuccess": "Appointment created successfully.",
+    "updateSuccess": "Appointment updated successfully.",
+    "deleteSuccess": "Appointment deleted successfully.",
+    "approveSuccess": "Appointment approved successfully.",
+    "rejectSuccess": "Appointment rejected successfully.",
+    "executeSuccess": "Appointment executed successfully.",
+    "cancelSuccess": "Appointment cancelled successfully.",
+    "error": "An error occurred."
+  }
+}

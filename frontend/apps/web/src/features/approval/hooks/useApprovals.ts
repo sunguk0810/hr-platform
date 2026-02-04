@@ -9,6 +9,14 @@ import type {
   ApprovalType,
   ApprovalStatus,
   CreateDelegationRequest,
+  RecallRequest,
+  DelegateRequest,
+  DirectApproveRequest,
+  DelegationRuleSearchParams,
+  DelegationRuleStatus,
+  DelegationRuleConditionType,
+  CreateDelegationRuleRequest,
+  UpdateDelegationRuleRequest,
 } from '@hr-platform/shared-types';
 
 export function useApprovalList(params?: ApprovalListParams) {
@@ -80,6 +88,74 @@ export function useCancel() {
       queryClient.invalidateQueries({ queryKey: queryKeys.approvals.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.pendingApprovals() });
     },
+  });
+}
+
+// SDD 4.4 회수
+export function useRecall() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: RecallRequest }) =>
+      approvalService.recall(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.approvals.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.pendingApprovals() });
+    },
+  });
+}
+
+// SDD 4.6 대결
+export function useDelegate() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, stepId, data }: { id: string; stepId: string; data: DelegateRequest }) =>
+      approvalService.delegate(id, stepId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.approvals.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.pendingApprovals() });
+    },
+  });
+}
+
+// SDD 4.7 전결
+export function useDirectApprove() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: DirectApproveRequest }) =>
+      approvalService.directApprove(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.approvals.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.pendingApprovals() });
+    },
+  });
+}
+
+// SDD 4.5 결재 이력 조회
+export function useApprovalHistory(id: string) {
+  return useQuery({
+    queryKey: [...queryKeys.approvals.detail(id), 'history'],
+    queryFn: () => approvalService.getHistory(id),
+    enabled: !!id,
+  });
+}
+
+// SDD 3.3.4 결재 양식 목록 조회
+export function useApprovalTemplates(params?: { category?: string; isActive?: boolean }) {
+  return useQuery({
+    queryKey: [...queryKeys.approvals.templates(), params],
+    queryFn: () => approvalService.getTemplates(params),
+  });
+}
+
+// SDD 3.3.4 결재 양식 상세 조회
+export function useApprovalTemplate(id: string) {
+  return useQuery({
+    queryKey: [...queryKeys.approvals.templates(), id],
+    queryFn: () => approvalService.getTemplate(id),
+    enabled: !!id,
   });
 }
 
@@ -182,6 +258,116 @@ export function useApprovalSearchParams(initialSize = 10) {
     setType,
     setStatus,
     setTab,
+    setPage,
+    resetFilters,
+  };
+}
+
+// ===== PRD FR-APR-003: 위임전결 규칙 =====
+
+export function useDelegationRules(params?: DelegationRuleSearchParams) {
+  return useQuery({
+    queryKey: ['delegationRules', params],
+    queryFn: () => approvalService.getDelegationRules(params),
+  });
+}
+
+export function useDelegationRule(id: string) {
+  return useQuery({
+    queryKey: ['delegationRules', id],
+    queryFn: () => approvalService.getDelegationRule(id),
+    enabled: !!id,
+  });
+}
+
+export function useCreateDelegationRule() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateDelegationRuleRequest) => approvalService.createDelegationRule(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['delegationRules'] });
+    },
+  });
+}
+
+export function useUpdateDelegationRule() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateDelegationRuleRequest }) =>
+      approvalService.updateDelegationRule(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['delegationRules'] });
+    },
+  });
+}
+
+export function useDeleteDelegationRule() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => approvalService.deleteDelegationRule(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['delegationRules'] });
+    },
+  });
+}
+
+export function useToggleDelegationRuleStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => approvalService.toggleDelegationRuleStatus(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['delegationRules'] });
+    },
+  });
+}
+
+interface DelegationRuleSearchState {
+  status: DelegationRuleStatus | '';
+  conditionType: DelegationRuleConditionType | '';
+  page: number;
+  size: number;
+}
+
+export function useDelegationRuleSearchParams(initialSize = 20) {
+  const [searchState, setSearchState] = useState<DelegationRuleSearchState>({
+    status: '',
+    conditionType: '',
+    page: 0,
+    size: initialSize,
+  });
+
+  const params = useMemo<DelegationRuleSearchParams>(() => ({
+    page: searchState.page,
+    size: searchState.size,
+    ...(searchState.status && { status: searchState.status }),
+    ...(searchState.conditionType && { conditionType: searchState.conditionType }),
+  }), [searchState]);
+
+  const setStatus = useCallback((status: DelegationRuleStatus | '') => {
+    setSearchState(prev => ({ ...prev, status, page: 0 }));
+  }, []);
+
+  const setConditionType = useCallback((conditionType: DelegationRuleConditionType | '') => {
+    setSearchState(prev => ({ ...prev, conditionType, page: 0 }));
+  }, []);
+
+  const setPage = useCallback((page: number) => {
+    setSearchState(prev => ({ ...prev, page }));
+  }, []);
+
+  const resetFilters = useCallback(() => {
+    setSearchState({ status: '', conditionType: '', page: 0, size: initialSize });
+  }, [initialSize]);
+
+  return {
+    params,
+    searchState,
+    setStatus,
+    setConditionType,
     setPage,
     resetFilters,
   };

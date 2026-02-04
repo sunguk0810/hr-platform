@@ -22,6 +22,7 @@ import {
 import { Building2, Plus, Pencil, Trash2, Users, User } from 'lucide-react';
 import { EmptyState } from '@/components/common/EmptyState';
 import { StatusBadge } from '@/components/common/StatusBadge';
+import { usePermission } from '@/components/common/PermissionGate';
 import { OrgTree } from '../components/OrgTree';
 import {
   useOrganizationTree,
@@ -37,6 +38,9 @@ export default function OrganizationPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  // 조직 편집 권한 체크
+  const canEdit = usePermission({ permissions: ['organization:write'] });
 
   const [formData, setFormData] = useState<CreateDepartmentRequest>({
     code: '',
@@ -135,10 +139,12 @@ export default function OrganizationPage() {
         title="조직관리"
         description="조직도 및 부서 정보를 조회하고 관리합니다."
         actions={
-          <Button onClick={() => handleCreateOpen()}>
-            <Plus className="mr-2 h-4 w-4" />
-            부서 추가
-          </Button>
+          canEdit && (
+            <Button onClick={() => handleCreateOpen()}>
+              <Plus className="mr-2 h-4 w-4" />
+              부서 추가
+            </Button>
+          )
         }
       />
 
@@ -181,7 +187,7 @@ export default function OrganizationPage() {
         <Card className="lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>부서 상세</CardTitle>
-            {selectedDepartment && (
+            {selectedDepartment && canEdit && (
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => handleCreateOpen(selectedNode?.id)}>
                   <Plus className="mr-1 h-4 w-4" />

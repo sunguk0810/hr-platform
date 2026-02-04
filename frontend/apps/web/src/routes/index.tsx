@@ -15,10 +15,39 @@ const ForbiddenPage = lazy(() => import('@/features/error/pages/ForbiddenPage'))
 const ServerErrorPage = lazy(() => import('@/features/error/pages/ServerErrorPage'));
 
 /**
- * Recursively render routes from configuration
+ * Flatten routes for rendering - handles nested routes by creating separate routes
+ * This allows child routes to replace parent content rather than render inside it
+ */
+function flattenRoutes(routes: RouteConfig[], parentPath = ''): Array<{ path: string; element: RouteConfig['element']; permissions?: string[]; roles?: string[] }> {
+  const result: Array<{ path: string; element: RouteConfig['element']; permissions?: string[]; roles?: string[] }> = [];
+
+  for (const route of routes) {
+    const fullPath = parentPath ? `${parentPath}/${route.path}` : route.path;
+
+    // Add the current route
+    result.push({
+      path: fullPath,
+      element: route.element,
+      permissions: route.permissions,
+      roles: route.roles,
+    });
+
+    // Recursively add children routes
+    if (route.children) {
+      result.push(...flattenRoutes(route.children, fullPath));
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Render flattened routes
  */
 function renderRoutes(routes: RouteConfig[]) {
-  return routes.map((route) => {
+  const flatRoutes = flattenRoutes(routes);
+
+  return flatRoutes.map((route) => {
     const RouteElement = route.element;
 
     return (
@@ -30,9 +59,7 @@ function renderRoutes(routes: RouteConfig[]) {
             <RouteElement />
           </ProtectedRoute>
         }
-      >
-        {route.children && renderRoutes(route.children)}
-      </Route>
+      />
     );
   });
 }

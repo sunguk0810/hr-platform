@@ -1,0 +1,68 @@
+{
+  "title": "Announcements",
+  "description": "View company announcements.",
+  "list": {
+    "title": "Announcement List",
+    "empty": "No announcements found.",
+    "emptyDescription": "There are no announcements yet."
+  },
+  "detail": {
+    "title": "Announcement Details",
+    "description": "View announcement details."
+  },
+  "create": {
+    "title": "Create Announcement",
+    "description": "Create a new announcement."
+  },
+  "form": {
+    "title": "Title",
+    "content": "Content",
+    "category": "Category",
+    "priority": "Priority",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "attachments": "Attachments",
+    "isTop": "Pin to Top"
+  },
+  "category": {
+    "GENERAL": "General",
+    "HR": "HR",
+    "SYSTEM": "System",
+    "EVENT": "Event",
+    "EDUCATION": "Education",
+    "WELFARE": "Welfare"
+  },
+  "priority": {
+    "LOW": "Low",
+    "NORMAL": "Normal",
+    "HIGH": "High",
+    "URGENT": "Urgent"
+  },
+  "status": {
+    "DRAFT": "Draft",
+    "PUBLISHED": "Published",
+    "SCHEDULED": "Scheduled",
+    "EXPIRED": "Expired"
+  },
+  "actions": {
+    "create": "Create",
+    "edit": "Edit",
+    "delete": "Delete",
+    "publish": "Publish",
+    "unpublish": "Unpublish"
+  },
+  "messages": {
+    "createSuccess": "Announcement created successfully.",
+    "updateSuccess": "Announcement updated successfully.",
+    "deleteSuccess": "Announcement deleted successfully.",
+    "publishSuccess": "Announcement published successfully.",
+    "error": "An error occurred."
+  },
+  "table": {
+    "title": "Title",
+    "category": "Category",
+    "author": "Author",
+    "createdAt": "Created At",
+    "views": "Views"
+  }
+}

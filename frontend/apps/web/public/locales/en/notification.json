@@ -1,0 +1,102 @@
+{
+  "title": "Notifications",
+  "notifications": "Notifications",
+  "empty": "No notifications",
+  "noUnread": "No unread notifications",
+  "viewAll": "View all notifications",
+  "markAllRead": "Mark all as read",
+  "markAsRead": "Mark as read",
+  "markAsUnread": "Mark as unread",
+  "deleteNotification": "Delete notification",
+  "deleteAll": "Delete all notifications",
+  "deleteConfirm": "Are you sure you want to delete this notification?",
+  "deleteAllConfirm": "Are you sure you want to delete all notifications?",
+  "unreadCount": "{{count}} unread",
+  "newNotification": "New notification",
+  "settings": {
+    "title": "Notification Settings",
+    "description": "Configure how you receive notifications",
+    "push": "Push Notifications",
+    "pushDescription": "Receive browser push notifications",
+    "email": "Email Notifications",
+    "emailDescription": "Receive notifications via email",
+    "inApp": "In-App Notifications",
+    "inAppDescription": "Receive notifications within the app",
+    "sound": "Notification Sound",
+    "soundDescription": "Play sound when receiving notifications",
+    "enableAll": "Enable all notifications",
+    "disableAll": "Disable all notifications"
+  },
+  "categories": {
+    "all": "All",
+    "unread": "Unread",
+    "approval": "Approval",
+    "attendance": "Attendance",
+    "leave": "Leave",
+    "employee": "Employee",
+    "organization": "Organization",
+    "system": "System",
+    "announcement": "Announcement"
+  },
+  "types": {
+    "approval_request": "Approval Request",
+    "approval_completed": "Approval Completed",
+    "approval_rejected": "Approval Rejected",
+    "approval_cancelled": "Approval Cancelled",
+    "leave_request": "Leave Request",
+    "leave_approved": "Leave Approved",
+    "leave_rejected": "Leave Rejected",
+    "attendance_alert": "Attendance Alert",
+    "attendance_reminder": "Attendance Reminder",
+    "employee_created": "Employee Created",
+    "employee_updated": "Employee Updated",
+    "password_change": "Password Changed",
+    "system_notice": "System Notice",
+    "system_maintenance": "System Maintenance",
+    "announcement": "Announcement"
+  },
+  "messages": {
+    "approval_request_received": "{{name}} has requested your approval",
+    "approval_completed_message": "Document '{{title}}' has been approved",
+    "approval_rejected_message": "Document '{{title}}' has been rejected",
+    "leave_approved_message": "Your {{type}} leave for {{days}} day(s) has been approved",
+    "leave_rejected_message": "Your {{type}} leave request has been rejected",
+    "attendance_check_in_reminder": "Please record your check-in",
+    "attendance_check_out_reminder": "Please record your check-out",
+    "password_expiry_warning": "Your password will expire in {{days}} days",
+    "system_maintenance_notice": "System maintenance is scheduled for {{date}}"
+  },
+  "time": {
+    "justNow": "Just now",
+    "minutesAgo": "{{count}} minutes ago",
+    "hoursAgo": "{{count}} hours ago",
+    "daysAgo": "{{count}} days ago",
+    "weeksAgo": "{{count}} weeks ago"
+  },
+  "permission": {
+    "title": "Notification Permission",
+    "requestTitle": "Enable Notifications",
+    "requestDescription": "Allow notifications to stay updated with important information",
+    "allow": "Allow Notifications",
+    "deny": "Maybe Later",
+    "blocked": "Notifications are blocked",
+    "blockedDescription": "Please enable notifications in your browser settings",
+    "granted": "Notifications enabled",
+    "notSupported": "This browser does not support notifications"
+  },
+  "filter": {
+    "all": "All",
+    "unread": "Unread",
+    "read": "Read",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "category": "Category",
+    "clearFilters": "Clear Filters"
+  },
+  "errors": {
+    "loadFailed": "Failed to load notifications",
+    "markReadFailed": "Failed to update notification status",
+    "deleteFailed": "Failed to delete notification",
+    "permissionDenied": "Notification permission denied"
+  }
+}

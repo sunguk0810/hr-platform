@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { format, differenceInCalendarDays } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -22,11 +23,13 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Calendar, Plus, XCircle } from 'lucide-react';
+import { ArrowLeft, Calendar, Plus, XCircle } from 'lucide-react';
 import {
   useLeaveBalance,
   useLeaveBalanceByType,
@@ -39,6 +42,7 @@ import type { LeaveType, LeaveStatus, CreateLeaveRequest, LeaveRequest as LeaveR
 import { LEAVE_TYPE_LABELS } from '@hr-platform/shared-types';
 
 export default function LeaveRequestPage() {
+  const navigate = useNavigate();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<LeaveRequestType | null>(null);
@@ -121,10 +125,16 @@ export default function LeaveRequestPage() {
         title="휴가 신청"
         description="휴가를 신청하고 승인 현황을 확인합니다."
         actions={
-          <Button onClick={handleCreateOpen}>
-            <Plus className="mr-2 h-4 w-4" />
-            휴가 신청
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate('/attendance')}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              근태관리
+            </Button>
+            <Button onClick={handleCreateOpen}>
+              <Plus className="mr-2 h-4 w-4" />
+              휴가 신청
+            </Button>
+          </div>
         }
       />
 
@@ -327,12 +337,42 @@ export default function LeaveRequestPage() {
                   <SelectValue placeholder="휴가 유형 선택" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(LEAVE_TYPE_LABELS).map(([value, label]) => (
-                    <SelectItem key={value} value={value}>{label}</SelectItem>
-                  ))}
+                  <SelectGroup>
+                    <SelectLabel>연차</SelectLabel>
+                    <SelectItem value="ANNUAL">연차</SelectItem>
+                    <SelectItem value="HALF_DAY_AM">반차 (오전) - 09:00~13:00</SelectItem>
+                    <SelectItem value="HALF_DAY_PM">반차 (오후) - 14:00~18:00</SelectItem>
+                  </SelectGroup>
+                  <SelectGroup>
+                    <SelectLabel>특별휴가</SelectLabel>
+                    <SelectItem value="SICK">병가</SelectItem>
+                    <SelectItem value="MARRIAGE">결혼휴가</SelectItem>
+                    <SelectItem value="BEREAVEMENT">경조휴가</SelectItem>
+                    <SelectItem value="MATERNITY">출산휴가</SelectItem>
+                    <SelectItem value="PATERNITY">배우자출산휴가</SelectItem>
+                    <SelectItem value="CHILDCARE">육아휴직</SelectItem>
+                  </SelectGroup>
+                  <SelectGroup>
+                    <SelectLabel>기타</SelectLabel>
+                    <SelectItem value="OFFICIAL">공가</SelectItem>
+                    <SelectItem value="COMPENSATION">대체휴가</SelectItem>
+                    <SelectItem value="SPECIAL">특별휴가</SelectItem>
+                  </SelectGroup>
                 </SelectContent>
               </Select>
             </div>
+            {formData.leaveType?.startsWith('HALF_DAY') && (
+              <div className="rounded-md bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 p-3 text-sm">
+                <span className="font-medium text-blue-700 dark:text-blue-400">
+                  {formData.leaveType === 'HALF_DAY_AM' ? '오전 반차' : '오후 반차'}
+                </span>
+                <span className="text-blue-600 dark:text-blue-500 ml-2">
+                  {formData.leaveType === 'HALF_DAY_AM'
+                    ? '09:00 ~ 13:00 (4시간)'
+                    : '14:00 ~ 18:00 (4시간)'}
+                </span>
+              </div>
+            )}
             <div className="grid gap-2">
               <Label>시작일 *</Label>
               <DatePicker

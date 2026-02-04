@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -6,8 +7,9 @@ import { LeaveStatusBadge, LeaveTypeBadge } from '@/components/common/StatusBadg
 import { SkeletonTable } from '@/components/common/Skeleton';
 import { Pagination } from '@/components/common/Pagination';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar } from 'lucide-react';
+import { ArrowLeft, Calendar } from 'lucide-react';
 import {
   useLeaveBalance,
   useLeaveBalanceByType,
@@ -17,6 +19,7 @@ import {
 import type { LeaveStatus } from '@hr-platform/shared-types';
 
 export default function MyLeavePage() {
+  const navigate = useNavigate();
   const { params, searchState, setStatus, setPage } = useLeaveSearchParams();
   const { data: balanceData, isLoading: isBalanceLoading } = useLeaveBalance();
   const { data: balanceByTypeData } = useLeaveBalanceByType();
@@ -42,6 +45,12 @@ export default function MyLeavePage() {
       <PageHeader
         title="내 휴가"
         description="휴가 현황 및 사용 내역을 확인합니다."
+        actions={
+          <Button variant="outline" onClick={() => navigate('/attendance')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            근태관리
+          </Button>
+        }
       />
 
       <div className="grid gap-4 md:grid-cols-4">

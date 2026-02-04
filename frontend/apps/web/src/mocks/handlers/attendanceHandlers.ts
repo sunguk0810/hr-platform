@@ -1,5 +1,5 @@
 import { http, HttpResponse, delay } from 'msw';
-import { format, subDays, startOfMonth, eachDayOfInterval, isWeekend } from 'date-fns';
+import { format, subDays, startOfMonth, eachDayOfInterval, isWeekend, startOfWeek, endOfWeek, getISOWeek, getYear } from 'date-fns';
 import type {
   AttendanceRecord,
   TodayAttendance,
@@ -10,6 +10,9 @@ import type {
   AttendanceStatus,
   LeaveStatus,
   LeaveType,
+  EmployeeWorkHours,
+  WorkHourStatus,
+  PendingLeaveRequest,
 } from '@hr-platform/shared-types';
 
 // Generate mock attendance records for the current month
@@ -724,6 +727,521 @@ export const attendanceHandlers = [
       success: true,
       data: mockOvertimeRequests[index],
       message: '초과근무 신청이 취소되었습니다.',
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // ============================================
+  // Work Hours Monitoring (주 52시간 모니터링)
+  // ============================================
+
+  http.get('/api/v1/attendance/statistics/work-hours', async ({ request }) => {
+    await delay(300);
+
+    const url = new URL(request.url);
+    const weekPeriod = url.searchParams.get('weekPeriod');
+    const departmentId = url.searchParams.get('departmentId');
+    const status = url.searchParams.get('status') as WorkHourStatus | null;
+
+    // Parse week period or use current week
+    let weekStart: Date;
+    let weekEnd: Date;
+    let period: string;
+
+    if (weekPeriod) {
+      const [year, week] = weekPeriod.split('-W').map(Number);
+      // Calculate the start of the specified ISO week
+      const jan4 = new Date(year, 0, 4);
+      const dayOfWeek = jan4.getDay() || 7;
+      weekStart = new Date(jan4);
+      weekStart.setDate(jan4.getDate() - dayOfWeek + 1 + (week - 1) * 7);
+      weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 6);
+      period = weekPeriod;
+    } else {
+      const now = new Date();
+      weekStart = startOfWeek(now, { weekStartsOn: 1 });
+      weekEnd = endOfWeek(now, { weekStartsOn: 1 });
+      period = `${getYear(now)}-W${String(getISOWeek(now)).padStart(2, '0')}`;
+    }
+
+    // Generate mock employee work hours data
+    const mockEmployees: EmployeeWorkHours[] = [
+      { employeeId: 'emp-001', employeeName: '홍길동', department: '개발팀', departmentId: 'dept-001', regularHours: 40, overtimeHours: 15, totalHours: 55, status: 'EXCEEDED', exceededHours: 3 },
+      { employeeId: 'emp-002', employeeName: '김철수', department: '개발팀', departmentId: 'dept-001', regularHours: 40, overtimeHours: 10, totalHours: 50, status: 'WARNING', exceededHours: 0 },
+      { employeeId: 'emp-003', employeeName: '이영희', department: '인사팀', departmentId: 'dept-002', regularHours: 40, overtimeHours: 5, totalHours: 45, status: 'NORMAL', exceededHours: 0 },
+      { employeeId: 'emp-004', employeeName: '박민수', department: '마케팅팀', departmentId: 'dept-003', regularHours: 40, overtimeHours: 12, totalHours: 52, status: 'WARNING', exceededHours: 0 },
+      { employeeId: 'emp-005', employeeName: '최수진', department: '영업팀', departmentId: 'dept-004', regularHours: 40, overtimeHours: 18, totalHours: 58, status: 'EXCEEDED', exceededHours: 6 },
+      { employeeId: 'emp-006', employeeName: '정대현', department: '재무팀', departmentId: 'dept-005', regularHours: 40, overtimeHours: 3, totalHours: 43, status: 'NORMAL', exceededHours: 0 },
+      { employeeId: 'emp-007', employeeName: '강민지', department: '개발팀', departmentId: 'dept-001', regularHours: 40, overtimeHours: 8, totalHours: 48, status: 'WARNING', exceededHours: 0 },
+      { employeeId: 'emp-008', employeeName: '윤서영', department: '인사팀', departmentId: 'dept-002', regularHours: 40, overtimeHours: 2, totalHours: 42, status: 'NORMAL', exceededHours: 0 },
+      { employeeId: 'emp-009', employeeName: '조현우', department: '개발팀', departmentId: 'dept-001', regularHours: 40, overtimeHours: 14, totalHours: 54, status: 'EXCEEDED', exceededHours: 2 },
+      { employeeId: 'emp-010', employeeName: '한지민', department: '마케팅팀', departmentId: 'dept-003', regularHours: 40, overtimeHours: 6, totalHours: 46, status: 'NORMAL', exceededHours: 0 },
+    ];
+
+    let filtered = [...mockEmployees];
+
+    if (departmentId) {
+      filtered = filtered.filter(e => e.departmentId === departmentId);
+    }
+    if (status) {
+      filtered = filtered.filter(e => e.status === status);
+    }
+
+    const summary = {
+      totalEmployees: filtered.length,
+      normalCount: filtered.filter(e => e.status === 'NORMAL').length,
+      warningCount: filtered.filter(e => e.status === 'WARNING').length,
+      exceededCount: filtered.filter(e => e.status === 'EXCEEDED').length,
+    };
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        period,
+        weekStartDate: format(weekStart, 'yyyy-MM-dd'),
+        weekEndDate: format(weekEnd, 'yyyy-MM-dd'),
+        employees: filtered,
+        summary,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // ============================================
+  // Leave Approval Management (휴가 승인 관리)
+  // ============================================
+
+  // Get pending leave requests
+  http.get('/api/v1/leaves/pending', async ({ request }) => {
+    await delay(300);
+
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '0', 10);
+    const size = parseInt(url.searchParams.get('size') || '10', 10);
+    const leaveType = url.searchParams.get('leaveType') as LeaveType | null;
+
+    // Generate mock pending leave requests
+    const mockPendingRequests: PendingLeaveRequest[] = [
+      {
+        id: 'pending-001',
+        tenantId: 'tenant-001',
+        employeeId: 'emp-002',
+        employeeName: '김철수',
+        leaveType: 'ANNUAL',
+        startDate: format(subDays(new Date(), -3), 'yyyy-MM-dd'),
+        endDate: format(subDays(new Date(), -5), 'yyyy-MM-dd'),
+        days: 3,
+        reason: '가족 여행',
+        status: 'PENDING',
+        remainingDays: 10,
+        isUrgent: false,
+        createdAt: format(subDays(new Date(), 2), 'yyyy-MM-dd'),
+        updatedAt: format(subDays(new Date(), 2), 'yyyy-MM-dd'),
+      },
+      {
+        id: 'pending-002',
+        tenantId: 'tenant-001',
+        employeeId: 'emp-003',
+        employeeName: '이영희',
+        leaveType: 'SICK',
+        startDate: format(subDays(new Date(), -1), 'yyyy-MM-dd'),
+        endDate: format(subDays(new Date(), -1), 'yyyy-MM-dd'),
+        days: 1,
+        reason: '병원 진료',
+        status: 'PENDING',
+        remainingDays: 3,
+        isUrgent: true,
+        createdAt: format(subDays(new Date(), 1), 'yyyy-MM-dd'),
+        updatedAt: format(subDays(new Date(), 1), 'yyyy-MM-dd'),
+      },
+      {
+        id: 'pending-003',
+        tenantId: 'tenant-001',
+        employeeId: 'emp-004',
+        employeeName: '박민수',
+        leaveType: 'HALF_DAY_AM',
+        startDate: format(subDays(new Date(), -2), 'yyyy-MM-dd'),
+        endDate: format(subDays(new Date(), -2), 'yyyy-MM-dd'),
+        days: 0.5,
+        reason: '개인 사유',
+        status: 'PENDING',
+        remainingDays: 8,
+        isUrgent: false,
+        createdAt: format(subDays(new Date(), 3), 'yyyy-MM-dd'),
+        updatedAt: format(subDays(new Date(), 3), 'yyyy-MM-dd'),
+      },
+      {
+        id: 'pending-004',
+        tenantId: 'tenant-001',
+        employeeId: 'emp-005',
+        employeeName: '최수진',
+        leaveType: 'ANNUAL',
+        startDate: format(subDays(new Date(), -7), 'yyyy-MM-dd'),
+        endDate: format(subDays(new Date(), -10), 'yyyy-MM-dd'),
+        days: 4,
+        reason: '휴양',
+        status: 'PENDING',
+        remainingDays: 5,
+        isUrgent: false,
+        createdAt: format(subDays(new Date(), 5), 'yyyy-MM-dd'),
+        updatedAt: format(subDays(new Date(), 5), 'yyyy-MM-dd'),
+      },
+      {
+        id: 'pending-005',
+        tenantId: 'tenant-001',
+        employeeId: 'emp-007',
+        employeeName: '강민지',
+        leaveType: 'SPECIAL',
+        startDate: format(subDays(new Date(), -5), 'yyyy-MM-dd'),
+        endDate: format(subDays(new Date(), -5), 'yyyy-MM-dd'),
+        days: 1,
+        reason: '경조사',
+        status: 'PENDING',
+        remainingDays: 5,
+        isUrgent: true,
+        createdAt: format(new Date(), 'yyyy-MM-dd'),
+        updatedAt: format(new Date(), 'yyyy-MM-dd'),
+      },
+    ];
+
+    let filtered = [...mockPendingRequests];
+
+    if (leaveType) {
+      filtered = filtered.filter(l => l.leaveType === leaveType);
+    }
+
+    filtered.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
+    const totalElements = filtered.length;
+    const totalPages = Math.ceil(totalElements / size);
+    const start = page * size;
+    const content = filtered.slice(start, start + size);
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        content,
+        page,
+        size,
+        totalElements,
+        totalPages,
+        first: page === 0,
+        last: page >= totalPages - 1,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // Get pending leave summary
+  http.get('/api/v1/leaves/pending/summary', async () => {
+    await delay(200);
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        totalPending: 5,
+        urgentCount: 2,
+        thisWeekCount: 3,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // Get leave request detail
+  http.get('/api/v1/leaves/:id', async ({ params }) => {
+    await delay(200);
+
+    const { id } = params;
+    const request = mockLeaveRequests.find(l => l.id === id);
+
+    if (!request) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'LEV_001', message: '휴가 신청을 찾을 수 없습니다.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 404 }
+      );
+    }
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        ...request,
+        remainingDays: 10,
+        isUrgent: false,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // Approve leave request
+  http.post('/api/v1/leaves/:id/approve', async ({ params }) => {
+    await delay(300);
+
+    const { id } = params;
+    const index = mockLeaveRequests.findIndex(l => l.id === id);
+
+    if (index === -1) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'LEV_001', message: '휴가 신청을 찾을 수 없습니다.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 404 }
+      );
+    }
+
+    mockLeaveRequests[index] = {
+      ...mockLeaveRequests[index],
+      status: 'APPROVED',
+      approverName: '관리자',
+      approvedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    return HttpResponse.json({
+      success: true,
+      data: mockLeaveRequests[index],
+      message: '휴가가 승인되었습니다.',
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // Reject leave request
+  http.post('/api/v1/leaves/:id/reject', async ({ params, request }) => {
+    await delay(300);
+
+    const { id } = params;
+    const body = await request.json() as { reason: string };
+    const index = mockLeaveRequests.findIndex(l => l.id === id);
+
+    if (index === -1) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'LEV_001', message: '휴가 신청을 찾을 수 없습니다.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 404 }
+      );
+    }
+
+    if (!body.reason) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'LEV_003', message: '반려 사유를 입력해주세요.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 400 }
+      );
+    }
+
+    mockLeaveRequests[index] = {
+      ...mockLeaveRequests[index],
+      status: 'REJECTED',
+      rejectReason: body.reason,
+      approverName: '관리자',
+      updatedAt: new Date().toISOString(),
+    };
+
+    return HttpResponse.json({
+      success: true,
+      data: mockLeaveRequests[index],
+      message: '휴가가 반려되었습니다.',
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // Bulk approve leave requests
+  http.post('/api/v1/leaves/bulk-approve', async ({ request }) => {
+    await delay(500);
+
+    const body = await request.json() as { leaveRequestIds: string[]; comment?: string };
+    const { leaveRequestIds } = body;
+
+    let successCount = 0;
+    const failedIds: string[] = [];
+    const errors: { id: string; message: string }[] = [];
+
+    leaveRequestIds.forEach(id => {
+      const index = mockLeaveRequests.findIndex(l => l.id === id);
+      if (index !== -1 && mockLeaveRequests[index].status === 'PENDING') {
+        mockLeaveRequests[index] = {
+          ...mockLeaveRequests[index],
+          status: 'APPROVED',
+          approverName: '관리자',
+          approvedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        successCount++;
+      } else {
+        failedIds.push(id);
+        errors.push({ id, message: '처리할 수 없는 상태입니다.' });
+      }
+    });
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        successCount,
+        failedCount: failedIds.length,
+        failedIds,
+        errors,
+      },
+      message: `${successCount}건이 승인되었습니다.`,
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // Bulk reject leave requests
+  http.post('/api/v1/leaves/bulk-reject', async ({ request }) => {
+    await delay(500);
+
+    const body = await request.json() as { leaveRequestIds: string[]; reason: string };
+    const { leaveRequestIds, reason } = body;
+
+    if (!reason) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'LEV_003', message: '반려 사유를 입력해주세요.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 400 }
+      );
+    }
+
+    let successCount = 0;
+    const failedIds: string[] = [];
+    const errors: { id: string; message: string }[] = [];
+
+    leaveRequestIds.forEach(id => {
+      const index = mockLeaveRequests.findIndex(l => l.id === id);
+      if (index !== -1 && mockLeaveRequests[index].status === 'PENDING') {
+        mockLeaveRequests[index] = {
+          ...mockLeaveRequests[index],
+          status: 'REJECTED',
+          rejectReason: reason,
+          approverName: '관리자',
+          updatedAt: new Date().toISOString(),
+        };
+        successCount++;
+      } else {
+        failedIds.push(id);
+        errors.push({ id, message: '처리할 수 없는 상태입니다.' });
+      }
+    });
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        successCount,
+        failedCount: failedIds.length,
+        failedIds,
+        errors,
+      },
+      message: `${successCount}건이 반려되었습니다.`,
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // ============================================
+  // Attendance Record Update (근태 수정)
+  // ============================================
+
+  // Get attendance record detail
+  http.get('/api/v1/attendance/records/:id', async ({ params }) => {
+    await delay(200);
+
+    const { id } = params;
+    const record = mockAttendanceRecords.find(r => r.id === id);
+
+    if (!record) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'ATT_004', message: '근태 기록을 찾을 수 없습니다.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 404 }
+      );
+    }
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        ...record,
+        lastModifiedBy: null,
+        lastModifiedAt: null,
+        modificationHistory: [],
+      },
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // Update attendance record
+  http.put('/api/v1/attendance/records/:id', async ({ params, request }) => {
+    await delay(300);
+
+    const { id } = params;
+    const body = await request.json() as {
+      checkInTime?: string;
+      checkOutTime?: string;
+      attendanceStatus: AttendanceStatus;
+      remarks: string;
+    };
+
+    const index = mockAttendanceRecords.findIndex(r => r.id === id);
+
+    if (index === -1) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'ATT_004', message: '근태 기록을 찾을 수 없습니다.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 404 }
+      );
+    }
+
+    if (!body.remarks) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'ATT_005', message: '수정 사유를 입력해주세요.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 400 }
+      );
+    }
+
+    // Calculate working hours if both check-in and check-out times are provided
+    let workingHours = mockAttendanceRecords[index].workingHours;
+    if (body.checkInTime && body.checkOutTime) {
+      const [inH, inM] = body.checkInTime.split(':').map(Number);
+      const [outH, outM] = body.checkOutTime.split(':').map(Number);
+      workingHours = Math.round(((outH * 60 + outM) - (inH * 60 + inM)) / 60 * 10) / 10;
+    }
+
+    mockAttendanceRecords[index] = {
+      ...mockAttendanceRecords[index],
+      checkInTime: body.checkInTime || mockAttendanceRecords[index].checkInTime,
+      checkOutTime: body.checkOutTime || mockAttendanceRecords[index].checkOutTime,
+      status: body.attendanceStatus,
+      workingHours,
+      note: body.remarks,
+      updatedAt: new Date().toISOString(),
+    };
+
+    return HttpResponse.json({
+      success: true,
+      data: mockAttendanceRecords[index],
+      message: '근태 기록이 수정되었습니다.',
       timestamp: new Date().toISOString(),
     });
   }),

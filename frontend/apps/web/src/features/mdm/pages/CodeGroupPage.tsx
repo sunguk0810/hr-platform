@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useDebounce } from '@/hooks/useDebounce';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { StatusBadge } from '@/components/common/StatusBadge';
@@ -20,17 +21,6 @@ import {
 import { Database, Plus, Search, Pencil, Trash2 } from 'lucide-react';
 import { useCodeGroupList, useCodeGroupSearchParams, useCreateCodeGroup, useUpdateCodeGroup, useDeleteCodeGroup } from '../hooks/useMdm';
 import type { CodeGroupListItem, CreateCodeGroupRequest, UpdateCodeGroupRequest } from '@hr-platform/shared-types';
-
-function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedValue(value), delay);
-    return () => clearTimeout(timer);
-  }, [value, delay]);
-
-  return debouncedValue;
-}
 
 export default function CodeGroupPage() {
   const [searchInput, setSearchInput] = useState('');

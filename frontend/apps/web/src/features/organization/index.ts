@@ -1,5 +1,11 @@
 export { default as OrganizationPage } from './pages/OrganizationPage';
 export { default as DepartmentListPage } from './pages/DepartmentListPage';
 export * from './components/OrgTree';
+export * from './components/OrgChart';
+export * from './components/OrgHistoryTimeline';
+export * from './components/OrgTableView';
+export * from './components/DepartmentForm';
+export * from './components/GradeList';
+export * from './components/PositionList';
 export * from './hooks/useOrganization';
 export * from './services/organizationService';

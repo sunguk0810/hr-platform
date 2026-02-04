@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useMemo, useCallback } from 'react';
+import { getISOWeek, getYear, addWeeks, subWeeks } from 'date-fns';
 import { queryKeys } from '@/lib/queryClient';
 import { attendanceService } from '../services/attendanceService';
 import type {
@@ -12,6 +13,9 @@ import type {
   LeaveCalendarSearchParams,
   OvertimeSearchParams,
   CreateOvertimeRequest,
+  WorkHoursSearchParams,
+  WorkHourStatus,
+  UpdateAttendanceRecordRequest,
 } from '@hr-platform/shared-types';
 
 // Attendance
@@ -252,4 +256,122 @@ export function useLeaveSearchParams(initialSize = 10) {
     setPage,
     resetFilters,
   };
+}
+
+// ============================================
+// Work Hours Monitoring (주 52시간 모니터링)
+// ============================================
+
+function getCurrentWeekPeriod(): string {
+  const now = new Date();
+  return `${getYear(now)}-W${String(getISOWeek(now)).padStart(2, '0')}`;
+}
+
+function parseWeekPeriod(weekPeriod: string): Date {
+  const [year, week] = weekPeriod.split('-W').map(Number);
+  const jan4 = new Date(year, 0, 4);
+  const dayOfWeek = jan4.getDay() || 7;
+  const weekStart = new Date(jan4);
+  weekStart.setDate(jan4.getDate() - dayOfWeek + 1 + (week - 1) * 7);
+  return weekStart;
+}
+
+export function useWorkHoursStatistics(params?: WorkHoursSearchParams) {
+  return useQuery({
+    queryKey: ['attendance', 'workHours', params],
+    queryFn: () => attendanceService.getWorkHoursStatistics(params),
+  });
+}
+
+interface WorkHoursSearchState {
+  weekPeriod: string;
+  departmentId: string;
+  status: WorkHourStatus | '';
+}
+
+export function useWorkHoursSearchParams() {
+  const [searchState, setSearchState] = useState<WorkHoursSearchState>({
+    weekPeriod: getCurrentWeekPeriod(),
+    departmentId: '',
+    status: '',
+  });
+
+  const params = useMemo<WorkHoursSearchParams>(() => ({
+    weekPeriod: searchState.weekPeriod,
+    ...(searchState.departmentId && { departmentId: searchState.departmentId }),
+    ...(searchState.status && { status: searchState.status }),
+  }), [searchState]);
+
+  const weekDate = useMemo(() => parseWeekPeriod(searchState.weekPeriod), [searchState.weekPeriod]);
+
+  const goToPreviousWeek = useCallback(() => {
+    const prevWeek = subWeeks(weekDate, 1);
+    const period = `${getYear(prevWeek)}-W${String(getISOWeek(prevWeek)).padStart(2, '0')}`;
+    setSearchState(prev => ({ ...prev, weekPeriod: period }));
+  }, [weekDate]);
+
+  const goToNextWeek = useCallback(() => {
+    const nextWeek = addWeeks(weekDate, 1);
+    const period = `${getYear(nextWeek)}-W${String(getISOWeek(nextWeek)).padStart(2, '0')}`;
+    setSearchState(prev => ({ ...prev, weekPeriod: period }));
+  }, [weekDate]);
+
+  const goToCurrentWeek = useCallback(() => {
+    setSearchState(prev => ({ ...prev, weekPeriod: getCurrentWeekPeriod() }));
+  }, []);
+
+  const setDepartmentId = useCallback((departmentId: string) => {
+    setSearchState(prev => ({ ...prev, departmentId }));
+  }, []);
+
+  const setStatus = useCallback((status: WorkHourStatus | '') => {
+    setSearchState(prev => ({ ...prev, status }));
+  }, []);
+
+  const resetFilters = useCallback(() => {
+    setSearchState({
+      weekPeriod: getCurrentWeekPeriod(),
+      departmentId: '',
+      status: '',
+    });
+  }, []);
+
+  const isCurrentWeek = searchState.weekPeriod === getCurrentWeekPeriod();
+
+  return {
+    params,
+    searchState,
+    weekDate,
+    isCurrentWeek,
+    goToPreviousWeek,
+    goToNextWeek,
+    goToCurrentWeek,
+    setDepartmentId,
+    setStatus,
+    resetFilters,
+  };
+}
+
+// ============================================
+// Attendance Record Update (근태 수정)
+// ============================================
+
+export function useAttendanceRecordDetail(id: string) {
+  return useQuery({
+    queryKey: ['attendance', 'record', id],
+    queryFn: () => attendanceService.getAttendanceRecordDetail(id),
+    enabled: !!id,
+  });
+}
+
+export function useUpdateAttendanceRecord() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateAttendanceRecordRequest }) =>
+      attendanceService.updateAttendanceRecord(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.attendance.all });
+    },
+  });
 }

@@ -9,14 +9,20 @@ export function useLogin() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { login: setAuth } = useAuthStore();
-  const { setCurrentTenant } = useTenantStore();
+  const { setCurrentTenant, setAvailableTenants } = useTenantStore();
 
   return useMutation({
     mutationFn: (data: LoginRequest) => authService.login(data),
     onSuccess: (response) => {
-      const { user, accessToken, refreshToken, tenant } = response.data;
+      const { user, accessToken, refreshToken, tenant, availableTenants } = response.data;
       setAuth(user, accessToken, refreshToken, tenant.id);
       setCurrentTenant(tenant);
+      // 멀티 테넌트 지원: 접근 가능한 테넌트 목록 설정
+      if (availableTenants && availableTenants.length > 0) {
+        setAvailableTenants(availableTenants);
+      } else {
+        setAvailableTenants([tenant]);
+      }
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.all });
       navigate('/dashboard');
     },

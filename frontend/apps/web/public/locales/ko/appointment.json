@@ -1,0 +1,70 @@
+{
+  "title": "발령관리",
+  "description": "발령안을 작성하고 관리합니다.",
+  "list": {
+    "title": "발령 목록",
+    "empty": "등록된 발령이 없습니다.",
+    "emptyDescription": "새로운 발령안을 작성해주세요."
+  },
+  "create": {
+    "title": "발령안 작성",
+    "description": "새로운 발령안을 작성합니다."
+  },
+  "detail": {
+    "title": "발령안 상세",
+    "description": "발령안 상세 정보를 확인합니다."
+  },
+  "form": {
+    "appointmentType": "발령 유형",
+    "appointmentDate": "발령일",
+    "effectiveDate": "시행일",
+    "targetEmployee": "발령 대상자",
+    "currentDepartment": "현재 부서",
+    "currentPosition": "현재 직책",
+    "currentGrade": "현재 직급",
+    "newDepartment": "신규 부서",
+    "newPosition": "신규 직책",
+    "newGrade": "신규 직급",
+    "reason": "발령 사유",
+    "remarks": "비고"
+  },
+  "type": {
+    "PROMOTION": "승진",
+    "DEMOTION": "강등",
+    "TRANSFER": "전보",
+    "SECONDMENT": "파견",
+    "RETURN": "복귀",
+    "DISMISSAL": "해임",
+    "RESIGNATION": "사직",
+    "NEW_HIRE": "신규채용",
+    "REINSTATEMENT": "복직"
+  },
+  "status": {
+    "DRAFT": "초안",
+    "PENDING": "승인대기",
+    "APPROVED": "승인완료",
+    "REJECTED": "반려",
+    "EXECUTED": "시행완료",
+    "CANCELLED": "취소"
+  },
+  "actions": {
+    "create": "발령안 작성",
+    "edit": "수정",
+    "delete": "삭제",
+    "approve": "승인",
+    "reject": "반려",
+    "execute": "시행",
+    "cancel": "취소",
+    "preview": "미리보기"
+  },
+  "messages": {
+    "createSuccess": "발령안이 작성되었습니다.",
+    "updateSuccess": "발령안이 수정되었습니다.",
+    "deleteSuccess": "발령안이 삭제되었습니다.",
+    "approveSuccess": "발령안이 승인되었습니다.",
+    "rejectSuccess": "발령안이 반려되었습니다.",
+    "executeSuccess": "발령이 시행되었습니다.",
+    "cancelSuccess": "발령이 취소되었습니다.",
+    "error": "오류가 발생했습니다."
+  }
+}

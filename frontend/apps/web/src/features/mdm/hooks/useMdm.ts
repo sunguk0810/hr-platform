@@ -9,6 +9,13 @@ import type {
   CommonCodeSearchParams,
   CreateCommonCodeRequest,
   UpdateCommonCodeRequest,
+  UpdateCodeStatusRequest,
+  CheckDuplicateRequest,
+  CodeHistorySearchParams,
+  CodeSearchParams,
+  MigrateCodeRequest,
+  TenantCodeSearchParams,
+  UpdateTenantCodeRequest,
 } from '@hr-platform/shared-types';
 
 // Code Groups
@@ -117,6 +124,127 @@ export function useCodesByGroup(groupCode: string) {
     queryKey: queryKeys.mdm.codesByGroup(groupCode),
     queryFn: () => mdmService.getCodesByGroup(groupCode),
     enabled: !!groupCode,
+  });
+}
+
+// Update code status
+export function useUpdateCodeStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateCodeStatusRequest }) =>
+      mdmService.updateCodeStatus(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.mdm.all });
+    },
+  });
+}
+
+// Update code group status
+export function useUpdateCodeGroupStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateCodeStatusRequest }) =>
+      mdmService.updateCodeGroupStatus(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.mdm.all });
+    },
+  });
+}
+
+// Check duplicate
+export function useCheckDuplicate() {
+  return useMutation({
+    mutationFn: (data: CheckDuplicateRequest) => mdmService.checkDuplicate(data),
+  });
+}
+
+// Get code impact
+export function useCodeImpact(id: string, enabled = false) {
+  return useQuery({
+    queryKey: ['mdm', 'impact', id],
+    queryFn: () => mdmService.getCodeImpact(id),
+    enabled: !!id && enabled,
+  });
+}
+
+// Get code history
+export function useCodeHistory(id: string, params?: CodeHistorySearchParams) {
+  return useQuery({
+    queryKey: ['mdm', 'history', id, params],
+    queryFn: () => mdmService.getCodeHistory(id, params),
+    enabled: !!id,
+  });
+}
+
+// Search codes
+export function useCodeSearch(params: CodeSearchParams, enabled = false) {
+  return useQuery({
+    queryKey: ['mdm', 'search', params],
+    queryFn: () => mdmService.searchCodes(params),
+    enabled: enabled && !!params.keyword,
+  });
+}
+
+// Get code tree
+export function useCodeTree(groupCode: string) {
+  return useQuery({
+    queryKey: ['mdm', 'tree', groupCode],
+    queryFn: () => mdmService.getCodeTree(groupCode),
+    enabled: !!groupCode,
+  });
+}
+
+// Migration preview
+export function useMigrationPreview(sourceCodeId: string, targetCodeId: string, enabled = false) {
+  return useQuery({
+    queryKey: ['mdm', 'migration', 'preview', sourceCodeId, targetCodeId],
+    queryFn: () => mdmService.getMigrationPreview(sourceCodeId, targetCodeId),
+    enabled: enabled && !!sourceCodeId && !!targetCodeId,
+  });
+}
+
+// Migrate code
+export function useMigrateCode() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: MigrateCodeRequest) => mdmService.migrateCode(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.mdm.all });
+    },
+  });
+}
+
+// Tenant codes
+export function useTenantCodeList(params?: TenantCodeSearchParams) {
+  return useQuery({
+    queryKey: ['mdm', 'tenantCodes', params],
+    queryFn: () => mdmService.getTenantCodes(params),
+  });
+}
+
+export function useUpdateTenantCode() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ codeId, data }: { codeId: string; data: UpdateTenantCodeRequest }) =>
+      mdmService.updateTenantCode(codeId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['mdm', 'tenantCodes'] });
+    },
+  });
+}
+
+export function useResetTenantCode() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (codeId: string) => mdmService.resetTenantCode(codeId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['mdm', 'tenantCodes'] });
+    },
   });
 }
 

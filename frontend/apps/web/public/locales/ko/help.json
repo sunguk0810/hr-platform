@@ -1,0 +1,62 @@
+{
+  "title": "도움말",
+  "description": "시스템 사용 가이드와 FAQ를 확인합니다.",
+  "guide": {
+    "title": "사용자 가이드",
+    "description": "시스템 사용 방법을 안내합니다.",
+    "categories": {
+      "gettingStarted": "시작하기",
+      "employee": "인사정보",
+      "attendance": "근태관리",
+      "leave": "휴가관리",
+      "approval": "전자결재",
+      "organization": "조직관리",
+      "settings": "설정"
+    }
+  },
+  "faq": {
+    "title": "자주 묻는 질문",
+    "description": "자주 묻는 질문과 답변입니다.",
+    "empty": "등록된 FAQ가 없습니다.",
+    "searchPlaceholder": "질문 검색...",
+    "categories": {
+      "all": "전체",
+      "account": "계정",
+      "attendance": "근태",
+      "leave": "휴가",
+      "approval": "결재",
+      "system": "시스템"
+    }
+  },
+  "contact": {
+    "title": "문의하기",
+    "description": "관리자에게 문의합니다.",
+    "form": {
+      "category": "문의 유형",
+      "subject": "제목",
+      "content": "내용",
+      "email": "답변 받을 이메일",
+      "phone": "연락처"
+    },
+    "categories": {
+      "GENERAL": "일반 문의",
+      "ACCOUNT": "계정 문제",
+      "SYSTEM": "시스템 오류",
+      "SUGGESTION": "개선 제안",
+      "OTHER": "기타"
+    },
+    "submit": "문의하기",
+    "success": "문의가 접수되었습니다.",
+    "successDescription": "빠른 시일 내에 답변 드리겠습니다."
+  },
+  "actions": {
+    "search": "검색",
+    "viewMore": "더 보기",
+    "goBack": "돌아가기"
+  },
+  "messages": {
+    "loading": "로딩 중...",
+    "error": "오류가 발생했습니다.",
+    "noResults": "검색 결과가 없습니다."
+  }
+}

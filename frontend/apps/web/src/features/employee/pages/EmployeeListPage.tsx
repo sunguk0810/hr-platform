@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { EmploymentStatusBadge } from '@/components/common/StatusBadge';
 import { SkeletonTable } from '@/components/common/Skeleton';
 import { Pagination } from '@/components/common/Pagination';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -33,6 +34,9 @@ import {
 } from 'lucide-react';
 import { useEmployeeList, useEmployeeSearchParams } from '../hooks/useEmployees';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useToast } from '@/hooks/useToast';
+import { employeeService } from '../services/employeeService';
+import { EmployeeImportDialog } from '../components/EmployeeImportDialog';
 import type { EmploymentStatus, EmployeeListItem } from '@hr-platform/shared-types';
 
 function useDebounce<T>(value: T, delay: number): T {
@@ -132,11 +136,14 @@ function EmployeeCard({ employee, isSelected, onSelect, onClick }: EmployeeCardP
 export default function EmployeeListPage() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   const [searchInput, setSearchInput] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<'table' | 'card'>(isMobile ? 'card' : 'table');
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const debouncedKeyword = useDebounce(searchInput, 300);
 
@@ -206,19 +213,36 @@ export default function EmployeeListPage() {
   };
 
   const handleImportClick = () => {
-    fileInputRef.current?.click();
+    setImportDialogOpen(true);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // TODO: Implement actual import logic
-      console.log('Importing file:', file.name);
-      alert('파일 가져오기 기능은 준비 중입니다.');
-    }
-    // Reset input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+  const handleImportSuccess = () => {
+    // Refetch employee list after successful import
+    window.location.reload();
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await employeeService.bulkDelete(Array.from(selectedIds));
+      toast({
+        title: '삭제 완료',
+        description: `${response.data?.deleted || selectedIds.size}명의 직원 정보가 삭제되었습니다.`,
+      });
+      setSelectedIds(new Set());
+      setDeleteDialogOpen(false);
+      // Refetch employee list
+      window.location.reload();
+    } catch {
+      toast({
+        title: '삭제 실패',
+        description: '직원 정보 삭제 중 오류가 발생했습니다.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -228,12 +252,8 @@ export default function EmployeeListPage() {
       const emails = selectedEmployees.map((emp) => emp.email).join(',');
       window.location.href = `mailto:${emails}`;
     } else if (action === 'delete') {
-      if (confirm(`선택한 ${selectedIds.size}명의 직원을 삭제하시겠습니까?`)) {
-        // TODO: Implement bulk delete
-        console.log('Deleting:', Array.from(selectedIds));
-      }
+      setDeleteDialogOpen(true);
     }
-    setSelectedIds(new Set());
   };
 
   return (
@@ -262,13 +282,6 @@ export default function EmployeeListPage() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".csv,.xlsx,.xls"
-              className="hidden"
-              onChange={handleFileChange}
-            />
             <Button onClick={() => navigate('/employees/new')}>
               <Plus className="mr-2 h-4 w-4" />
               신규 등록
@@ -553,6 +566,25 @@ export default function EmployeeListPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Import Dialog */}
+      <EmployeeImportDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        onSuccess={handleImportSuccess}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="직원 삭제"
+        description={`선택한 ${selectedIds.size}명의 직원 정보를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`}
+        confirmLabel="삭제"
+        variant="destructive"
+        isLoading={isDeleting}
+        onConfirm={handleBulkDelete}
+      />
     </>
   );
 }

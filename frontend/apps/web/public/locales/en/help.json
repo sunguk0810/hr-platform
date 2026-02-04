@@ -1,0 +1,62 @@
+{
+  "title": "Help",
+  "description": "View system guides and FAQ.",
+  "guide": {
+    "title": "User Guide",
+    "description": "Learn how to use the system.",
+    "categories": {
+      "gettingStarted": "Getting Started",
+      "employee": "Employee",
+      "attendance": "Attendance",
+      "leave": "Leave",
+      "approval": "Approval",
+      "organization": "Organization",
+      "settings": "Settings"
+    }
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "description": "Frequently asked questions and answers.",
+    "empty": "No FAQs found.",
+    "searchPlaceholder": "Search questions...",
+    "categories": {
+      "all": "All",
+      "account": "Account",
+      "attendance": "Attendance",
+      "leave": "Leave",
+      "approval": "Approval",
+      "system": "System"
+    }
+  },
+  "contact": {
+    "title": "Contact Us",
+    "description": "Contact the administrator.",
+    "form": {
+      "category": "Inquiry Type",
+      "subject": "Subject",
+      "content": "Content",
+      "email": "Email for Response",
+      "phone": "Phone Number"
+    },
+    "categories": {
+      "GENERAL": "General Inquiry",
+      "ACCOUNT": "Account Issue",
+      "SYSTEM": "System Error",
+      "SUGGESTION": "Suggestion",
+      "OTHER": "Other"
+    },
+    "submit": "Submit",
+    "success": "Inquiry submitted successfully.",
+    "successDescription": "We will respond as soon as possible."
+  },
+  "actions": {
+    "search": "Search",
+    "viewMore": "View More",
+    "goBack": "Go Back"
+  },
+  "messages": {
+    "loading": "Loading...",
+    "error": "An error occurred.",
+    "noResults": "No results found."
+  }
+}

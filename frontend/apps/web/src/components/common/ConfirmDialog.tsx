@@ -8,13 +8,17 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
-interface ConfirmDialogProps {
+export interface ConfirmDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
   description?: string;
   confirmLabel?: string;
   cancelLabel?: string;
+  /** @deprecated Use confirmLabel instead */
+  confirmText?: string;
+  /** @deprecated Use cancelLabel instead */
+  cancelText?: string;
   variant?: 'default' | 'destructive';
   onConfirm: () => void;
   onCancel?: () => void;
@@ -26,13 +30,18 @@ export function ConfirmDialog({
   onOpenChange,
   title,
   description,
-  confirmLabel = '확인',
-  cancelLabel = '취소',
+  confirmLabel,
+  cancelLabel,
+  confirmText,
+  cancelText,
   variant = 'default',
   onConfirm,
   onCancel,
   isLoading = false,
 }: ConfirmDialogProps) {
+  // Support both new and deprecated prop names
+  const effectiveConfirmLabel = confirmLabel || confirmText || '확인';
+  const effectiveCancelLabel = cancelLabel || cancelText || '취소';
   const handleCancel = () => {
     onCancel?.();
     onOpenChange(false);
@@ -51,14 +60,14 @@ export function ConfirmDialog({
         </DialogHeader>
         <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="outline" onClick={handleCancel} disabled={isLoading}>
-            {cancelLabel}
+            {effectiveCancelLabel}
           </Button>
           <Button
             variant={variant === 'destructive' ? 'destructive' : 'default'}
             onClick={handleConfirm}
             disabled={isLoading}
           >
-            {isLoading ? '처리 중...' : confirmLabel}
+            {isLoading ? '처리 중...' : effectiveConfirmLabel}
           </Button>
         </DialogFooter>
       </DialogContent>

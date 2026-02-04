@@ -1,0 +1,65 @@
+{
+  "title": "Certificates",
+  "description": "Request and receive certificates.",
+  "myCertificates": {
+    "title": "My Certificates",
+    "description": "List of issued certificates."
+  },
+  "request": {
+    "title": "Request Certificate",
+    "description": "Request a new certificate."
+  },
+  "issueHistory": {
+    "title": "Issue History",
+    "description": "View certificate issue history."
+  },
+  "verify": {
+    "title": "Verify Certificate",
+    "description": "Verify the authenticity of a certificate."
+  },
+  "form": {
+    "certificateType": "Certificate Type",
+    "purpose": "Purpose",
+    "copies": "Number of Copies",
+    "language": "Language",
+    "notes": "Notes"
+  },
+  "type": {
+    "EMPLOYMENT": "Employment Certificate",
+    "CAREER": "Career Certificate",
+    "SALARY": "Salary Certificate",
+    "RESIGNATION": "Resignation Certificate",
+    "INCOME": "Income Certificate",
+    "WITHHOLDING": "Withholding Tax Receipt",
+    "SERVICE": "Service Confirmation"
+  },
+  "status": {
+    "PENDING": "Pending",
+    "PROCESSING": "Processing",
+    "ISSUED": "Issued",
+    "REJECTED": "Rejected",
+    "EXPIRED": "Expired"
+  },
+  "actions": {
+    "request": "Request",
+    "download": "Download",
+    "print": "Print",
+    "verify": "Verify",
+    "cancel": "Cancel Request"
+  },
+  "messages": {
+    "requestSuccess": "Certificate request submitted successfully.",
+    "downloadSuccess": "Certificate downloaded successfully.",
+    "verifyValid": "This certificate is valid.",
+    "verifyInvalid": "This certificate is not valid.",
+    "error": "An error occurred."
+  },
+  "table": {
+    "type": "Type",
+    "requestDate": "Request Date",
+    "issueDate": "Issue Date",
+    "expiryDate": "Expiry Date",
+    "status": "Status",
+    "actions": "Actions"
+  }
+}

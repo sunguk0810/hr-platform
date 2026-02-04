@@ -1,9 +1,29 @@
 import { TenantAwareEntity, PageRequest } from './common';
 
-export type ApprovalStatus = 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
+// SDD 3.2.1 기준 확장된 상태
+export type ApprovalStatus =
+  | 'DRAFT'      // 임시저장
+  | 'PENDING'    // 결재 대기
+  | 'IN_REVIEW'  // 검토 중
+  | 'APPROVED'   // 승인 완료
+  | 'REJECTED'   // 반려
+  | 'RECALLED'   // 회수됨
+  | 'CANCELLED'; // 취소됨
+
 export type ApprovalType = 'LEAVE_REQUEST' | 'EXPENSE' | 'OVERTIME' | 'PERSONNEL' | 'GENERAL';
 export type ApprovalStepStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'SKIPPED';
 export type ApprovalUrgency = 'LOW' | 'NORMAL' | 'HIGH';
+
+// SDD 4.5 기준 결재 이력 액션 타입
+export type ApprovalActionType =
+  | 'SUBMIT'
+  | 'APPROVE'
+  | 'REJECT'
+  | 'RECALL'
+  | 'DELEGATE'
+  | 'DIRECT_APPROVE'
+  | 'COMMENT'
+  | 'RETURN';
 
 export interface Approval extends TenantAwareEntity {
   documentNumber: string;
@@ -19,6 +39,11 @@ export interface Approval extends TenantAwareEntity {
   completedAt?: string;
   attachments?: ApprovalAttachment[];
   steps: ApprovalStep[];
+  // SDD 4.4, 4.7 기준 회수/전결 필드
+  recalledAt?: string;
+  recallReason?: string;
+  directApprovedBy?: string;
+  directApprovedAt?: string;
 }
 
 export interface ApprovalListItem {
@@ -35,15 +60,33 @@ export interface ApprovalListItem {
   currentStepName?: string;
 }
 
+export type ApprovalExecutionType = 'SEQUENTIAL' | 'PARALLEL' | 'AGREEMENT';
+export type ParallelCompletionCondition = 'ALL' | 'ANY' | 'MAJORITY';
+
 export interface ApprovalStep {
   id: string;
   stepOrder: number;
   approverType: 'SPECIFIC' | 'ROLE' | 'DEPARTMENT_HEAD';
   approverId?: string;
   approverName?: string;
+  approverPosition?: string;
+  approverDepartment?: string;
+  approverImage?: string;
   status: ApprovalStepStatus;
   comment?: string;
   processedAt?: string;
+  /** Execution type - sequential (default), parallel, or agreement */
+  executionType?: ApprovalExecutionType;
+  /** Group ID for parallel/agreement steps - steps with same groupId execute together */
+  parallelGroupId?: string;
+  /** Completion condition for parallel steps */
+  parallelCompletionCondition?: ParallelCompletionCondition;
+  // SDD 4.6 대결 관련 필드
+  delegatorId?: string;       // 대결 시 원 결재자 ID
+  delegatorName?: string;     // 대결 시 원 결재자 이름
+  delegatedAt?: string;       // 대결 처리 시각
+  // SDD 4.7 전결 관련 필드
+  directApproved?: boolean;   // 전결 여부
 }
 
 export interface ApprovalAttachment {
@@ -79,6 +122,15 @@ export interface ApproveRequest {
 
 export interface RejectRequest {
   comment: string;
+}
+
+// Approver options for search
+export interface ApproverOption {
+  id: string;
+  name: string;
+  departmentName: string;
+  positionName?: string;
+  profileImageUrl?: string;
 }
 
 // Delegation Types
@@ -123,4 +175,187 @@ export const DELEGATION_STATUS_LABELS: Record<DelegationStatus, string> = {
   ACTIVE: '활성',
   EXPIRED: '만료',
   CANCELLED: '취소',
+};
+
+// SDD 4.5 기준 결재 이력 타입
+export interface ApprovalHistory {
+  id: string;
+  approvalId: string;
+  stepOrder: number;
+  actionType: ApprovalActionType;
+  actorId: string;
+  actorName: string;
+  actorDepartment?: string;
+  actorPosition?: string;
+  delegatorId?: string;       // 대결 시 원 결재자
+  delegatorName?: string;
+  comment?: string;
+  actionAt: string;
+  ipAddress?: string;
+}
+
+// SDD 3.3.4 기준 결재 양식 타입
+export interface ApprovalTemplate {
+  id: string;
+  code: string;
+  name: string;
+  description?: string;
+  category: string;
+  formSchema: Record<string, unknown>;  // JSON Schema
+  defaultApprovalLine?: ApprovalLineTemplate[];
+  retentionPeriod?: number;  // 보존 기간(일)
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ApprovalLineTemplate {
+  stepOrder: number;
+  stepType: ApprovalStepType;
+  approverType: 'SPECIFIC' | 'ROLE' | 'DEPARTMENT_HEAD';
+  approverId?: string;
+  approverRole?: string;
+  isRequired: boolean;
+}
+
+export type ApprovalStepType = 'APPROVAL' | 'AGREEMENT' | 'REFERENCE';
+
+// SDD 4.4 회수 요청
+export interface RecallRequest {
+  reason: string;
+}
+
+// SDD 4.6 대결 요청
+export interface DelegateRequest {
+  delegateToId: string;
+  delegateToName?: string;
+  reason?: string;
+}
+
+// SDD 4.7 전결 요청
+export interface DirectApproveRequest {
+  skipToStep?: number;  // 몇 단계까지 전결할지
+  reason: string;
+}
+
+// 상태 레이블 확장
+export const APPROVAL_STATUS_LABELS: Record<ApprovalStatus, string> = {
+  DRAFT: '임시저장',
+  PENDING: '결재대기',
+  IN_REVIEW: '검토중',
+  APPROVED: '승인완료',
+  REJECTED: '반려',
+  RECALLED: '회수됨',
+  CANCELLED: '취소됨',
+};
+
+export const APPROVAL_ACTION_LABELS: Record<ApprovalActionType, string> = {
+  SUBMIT: '상신',
+  APPROVE: '승인',
+  REJECT: '반려',
+  RECALL: '회수',
+  DELEGATE: '대결',
+  DIRECT_APPROVE: '전결',
+  COMMENT: '의견',
+  RETURN: '반송',
+};
+
+// ===== PRD FR-APR-003: 위임전결 규칙 =====
+
+export type DelegationRuleStatus = 'ACTIVE' | 'INACTIVE';
+export type DelegationRuleConditionType = 'DOCUMENT_TYPE' | 'AMOUNT_RANGE' | 'ABSENCE' | 'ALWAYS';
+export type DelegationRuleTargetType = 'SPECIFIC' | 'ROLE' | 'DEPARTMENT_HEAD' | 'DEPUTY';
+
+export interface DelegationRuleCondition {
+  type: DelegationRuleConditionType;
+  documentTypes?: ApprovalType[];  // DOCUMENT_TYPE 조건용
+  minAmount?: number;              // AMOUNT_RANGE 조건용
+  maxAmount?: number;
+  absenceDays?: number;            // ABSENCE 조건용 (n일 이상 부재시)
+}
+
+export interface DelegationRuleTarget {
+  type: DelegationRuleTargetType;
+  employeeId?: string;    // SPECIFIC용
+  employeeName?: string;
+  role?: string;          // ROLE용 (e.g., 'TEAM_LEADER', 'DEPT_MANAGER')
+  roleName?: string;
+}
+
+export interface DelegationRule {
+  id: string;
+  tenantId: string;
+  name: string;
+  description?: string;
+  delegatorId: string;
+  delegatorName: string;
+  delegatorDepartment?: string;
+  condition: DelegationRuleCondition;
+  target: DelegationRuleTarget;
+  priority: number;         // 낮을수록 우선순위 높음
+  status: DelegationRuleStatus;
+  validFrom?: string;
+  validTo?: string;
+  createdAt: string;
+  createdBy: string;
+  createdByName?: string;
+  updatedAt: string;
+  updatedBy?: string;
+}
+
+export interface DelegationRuleListItem {
+  id: string;
+  name: string;
+  delegatorName: string;
+  delegatorDepartment?: string;
+  conditionType: DelegationRuleConditionType;
+  conditionSummary: string;
+  targetType: DelegationRuleTargetType;
+  targetSummary: string;
+  priority: number;
+  status: DelegationRuleStatus;
+  validFrom?: string;
+  validTo?: string;
+}
+
+export interface CreateDelegationRuleRequest {
+  name: string;
+  description?: string;
+  delegatorId: string;
+  condition: DelegationRuleCondition;
+  target: DelegationRuleTarget;
+  priority?: number;
+  validFrom?: string;
+  validTo?: string;
+}
+
+export interface UpdateDelegationRuleRequest {
+  name?: string;
+  description?: string;
+  condition?: DelegationRuleCondition;
+  target?: DelegationRuleTarget;
+  priority?: number;
+  status?: DelegationRuleStatus;
+  validFrom?: string;
+  validTo?: string;
+}
+
+export interface DelegationRuleSearchParams extends PageRequest {
+  delegatorId?: string;
+  status?: DelegationRuleStatus;
+  conditionType?: DelegationRuleConditionType;
+}
+
+export const DELEGATION_RULE_CONDITION_LABELS: Record<DelegationRuleConditionType, string> = {
+  DOCUMENT_TYPE: '문서 유형',
+  AMOUNT_RANGE: '금액 범위',
+  ABSENCE: '부재 시',
+  ALWAYS: '항상',
+};
+
+export const DELEGATION_RULE_TARGET_LABELS: Record<DelegationRuleTargetType, string> = {
+  SPECIFIC: '특정 직원',
+  ROLE: '특정 역할',
+  DEPARTMENT_HEAD: '부서장',
+  DEPUTY: '대리자',
 };

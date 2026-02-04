@@ -1,7 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useMemo, useCallback } from 'react';
 import { queryKeys } from '@/lib/queryClient';
-import { organizationService, DepartmentSearchParams } from '../services/organizationService';
+import {
+  organizationService,
+  DepartmentSearchParams,
+  OrgHistorySearchParams,
+  OrgHistoryEventType,
+} from '../services/organizationService';
 import type {
   CreateDepartmentRequest,
   UpdateDepartmentRequest,
@@ -196,6 +201,89 @@ export function useDepartmentSearchParams(initialSize = 20) {
     searchState,
     setKeyword,
     setStatus,
+    setPage,
+    resetFilters,
+  };
+}
+
+// Organization History hooks
+export function useOrganizationHistory(params?: OrgHistorySearchParams) {
+  return useQuery({
+    queryKey: ['organizations', 'history', params],
+    queryFn: () => organizationService.getOrganizationHistory(params),
+  });
+}
+
+export function useDepartmentHistory(departmentId: string, params?: OrgHistorySearchParams) {
+  return useQuery({
+    queryKey: ['organizations', 'departments', departmentId, 'history', params],
+    queryFn: () => organizationService.getDepartmentHistory(departmentId, params),
+    enabled: !!departmentId,
+  });
+}
+
+// Organization History Search Params hook
+interface OrgHistorySearchState {
+  departmentId: string;
+  eventType: OrgHistoryEventType | '';
+  startDate: string;
+  endDate: string;
+  page: number;
+  size: number;
+}
+
+export function useOrgHistorySearchParams(initialSize = 20) {
+  const [searchState, setSearchState] = useState<OrgHistorySearchState>({
+    departmentId: '',
+    eventType: '',
+    startDate: '',
+    endDate: '',
+    page: 0,
+    size: initialSize,
+  });
+
+  const params = useMemo<OrgHistorySearchParams>(() => ({
+    page: searchState.page,
+    size: searchState.size,
+    ...(searchState.departmentId && { departmentId: searchState.departmentId }),
+    ...(searchState.eventType && { eventType: searchState.eventType }),
+    ...(searchState.startDate && { startDate: searchState.startDate }),
+    ...(searchState.endDate && { endDate: searchState.endDate }),
+  }), [searchState]);
+
+  const setDepartmentId = useCallback((departmentId: string) => {
+    setSearchState(prev => ({ ...prev, departmentId, page: 0 }));
+  }, []);
+
+  const setEventType = useCallback((eventType: OrgHistoryEventType | '') => {
+    setSearchState(prev => ({ ...prev, eventType, page: 0 }));
+  }, []);
+
+  const setDateRange = useCallback((startDate: string, endDate: string) => {
+    setSearchState(prev => ({ ...prev, startDate, endDate, page: 0 }));
+  }, []);
+
+  const setPage = useCallback((page: number) => {
+    setSearchState(prev => ({ ...prev, page }));
+  }, []);
+
+  const resetFilters = useCallback(() => {
+    setSearchState({
+      departmentId: '',
+      eventType: '',
+      startDate: '',
+      endDate: '',
+      page: 0,
+      size: initialSize,
+    });
+  }, [initialSize]);
+
+  return {
+    params,
+    searchState,
+    setDepartmentId,
+    setEventType,
+    setDateRange,
     setPage,
     resetFilters,
   };

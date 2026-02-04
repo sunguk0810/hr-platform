@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 export interface Tenant {
   id: string;
@@ -36,21 +37,33 @@ const defaultBranding: TenantBranding = {
   secondaryColor: '#16213e',
 };
 
-export const useTenantStore = create<TenantState>((set) => ({
-  currentTenant: null,
-  availableTenants: [],
-  branding: defaultBranding,
-  isLoading: false,
-
-  setCurrentTenant: (tenant) => set({ currentTenant: tenant }),
-  setAvailableTenants: (tenants) => set({ availableTenants: tenants }),
-  setBranding: (branding) => set({ branding }),
-  setLoading: (isLoading) => set({ isLoading }),
-  reset: () =>
-    set({
+export const useTenantStore = create<TenantState>()(
+  persist(
+    (set) => ({
       currentTenant: null,
       availableTenants: [],
       branding: defaultBranding,
       isLoading: false,
+
+      setCurrentTenant: (tenant) => set({ currentTenant: tenant }),
+      setAvailableTenants: (tenants) => set({ availableTenants: tenants }),
+      setBranding: (branding) => set({ branding }),
+      setLoading: (isLoading) => set({ isLoading }),
+      reset: () =>
+        set({
+          currentTenant: null,
+          availableTenants: [],
+          branding: defaultBranding,
+          isLoading: false,
+        }),
     }),
-}));
+    {
+      name: 'hr-platform-tenant',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        currentTenant: state.currentTenant,
+        availableTenants: state.availableTenants,
+      }),
+    }
+  )
+);

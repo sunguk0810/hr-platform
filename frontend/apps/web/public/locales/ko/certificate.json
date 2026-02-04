@@ -1,0 +1,65 @@
+{
+  "title": "증명서",
+  "description": "증명서를 신청하고 발급받습니다.",
+  "myCertificates": {
+    "title": "내 증명서",
+    "description": "발급받은 증명서 목록입니다."
+  },
+  "request": {
+    "title": "증명서 신청",
+    "description": "새로운 증명서를 신청합니다."
+  },
+  "issueHistory": {
+    "title": "발급 이력",
+    "description": "증명서 발급 이력을 조회합니다."
+  },
+  "verify": {
+    "title": "진위 확인",
+    "description": "증명서의 진위를 확인합니다."
+  },
+  "form": {
+    "certificateType": "증명서 종류",
+    "purpose": "발급 용도",
+    "copies": "발급 부수",
+    "language": "언어",
+    "notes": "참고사항"
+  },
+  "type": {
+    "EMPLOYMENT": "재직증명서",
+    "CAREER": "경력증명서",
+    "SALARY": "급여증명서",
+    "RESIGNATION": "퇴직증명서",
+    "INCOME": "소득금액증명서",
+    "WITHHOLDING": "원천징수영수증",
+    "SERVICE": "복무확인서"
+  },
+  "status": {
+    "PENDING": "신청중",
+    "PROCESSING": "처리중",
+    "ISSUED": "발급완료",
+    "REJECTED": "반려",
+    "EXPIRED": "만료"
+  },
+  "actions": {
+    "request": "신청하기",
+    "download": "다운로드",
+    "print": "인쇄",
+    "verify": "진위확인",
+    "cancel": "신청취소"
+  },
+  "messages": {
+    "requestSuccess": "증명서 신청이 완료되었습니다.",
+    "downloadSuccess": "증명서가 다운로드되었습니다.",
+    "verifyValid": "유효한 증명서입니다.",
+    "verifyInvalid": "유효하지 않은 증명서입니다.",
+    "error": "오류가 발생했습니다."
+  },
+  "table": {
+    "type": "종류",
+    "requestDate": "신청일",
+    "issueDate": "발급일",
+    "expiryDate": "만료일",
+    "status": "상태",
+    "actions": "작업"
+  }
+}

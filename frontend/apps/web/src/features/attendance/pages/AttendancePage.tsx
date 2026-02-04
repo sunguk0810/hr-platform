@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -8,7 +9,7 @@ import { SkeletonTable } from '@/components/common/Skeleton';
 import { Pagination } from '@/components/common/Pagination';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Clock, LogIn, LogOut, Calendar, CheckCircle2 } from 'lucide-react';
+import { Clock, LogIn, LogOut, Calendar, CheckCircle2, CalendarDays, Plus, Pencil } from 'lucide-react';
 import {
   useTodayAttendance,
   useCheckIn,
@@ -17,11 +18,21 @@ import {
   useMonthlySummary,
   useAttendanceSearchParams,
 } from '../hooks/useAttendance';
-import type { AttendanceStatus } from '@hr-platform/shared-types';
+import { EditAttendanceDialog } from '../components/EditAttendanceDialog';
+import { useAuthStore } from '@/stores/authStore';
+import type { AttendanceStatus, AttendanceRecord } from '@hr-platform/shared-types';
 
 export default function AttendancePage() {
+  const navigate = useNavigate();
   const [currentTime, setCurrentTime] = useState(new Date());
   const currentYearMonth = format(new Date(), 'yyyy-MM');
+  const [editDialog, setEditDialog] = useState<{
+    open: boolean;
+    record: AttendanceRecord | null;
+  }>({ open: false, record: null });
+
+  const { hasAnyRole } = useAuthStore();
+  const isAdmin = hasAnyRole(['HR_ADMIN', 'SUPER_ADMIN', 'TENANT_ADMIN']);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -68,6 +79,18 @@ export default function AttendancePage() {
       <PageHeader
         title="근태 관리"
         description="출퇴근 기록 및 근태 현황을 관리합니다."
+        actions={
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate('/attendance/leave/calendar')}>
+              <CalendarDays className="mr-2 h-4 w-4" />
+              휴가 캘린더
+            </Button>
+            <Button onClick={() => navigate('/attendance/leave')}>
+              <Plus className="mr-2 h-4 w-4" />
+              휴가 신청
+            </Button>
+          </div>
+        }
       />
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -251,6 +274,11 @@ export default function AttendancePage() {
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                         상태
                       </th>
+                      {isAdmin && (
+                        <th className="w-[80px] px-4 py-3 text-center text-sm font-medium text-muted-foreground">
+                          수정
+                        </th>
+                      )}
                     </tr>
                   </thead>
                   <tbody>
@@ -274,6 +302,18 @@ export default function AttendancePage() {
                         <td className="px-4 py-3">
                           <AttendanceStatusBadge status={record.status} />
                         </td>
+                        {isAdmin && (
+                          <td className="px-4 py-3 text-center">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setEditDialog({ open: true, record })}
+                              disabled={record.status === 'WEEKEND' || record.status === 'HOLIDAY'}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
@@ -288,6 +328,15 @@ export default function AttendancePage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Edit Attendance Dialog (Admin only) */}
+      {isAdmin && (
+        <EditAttendanceDialog
+          open={editDialog.open}
+          onOpenChange={(open) => setEditDialog({ open, record: open ? editDialog.record : null })}
+          record={editDialog.record}
+        />
+      )}
     </>
   );
 }

@@ -1,4 +1,17 @@
-export { FormField, FormInput, FormTextarea } from './FormField';
+// React Hook Form integration
+export {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormDescription,
+  FormMessage,
+  useFormField,
+} from './Form';
+
+// Custom form components (renamed to avoid collision)
+export { FormField as FormFieldLegacy, FormInput, FormTextarea } from './FormField';
 export type { FormFieldProps, FormInputProps, FormTextareaProps } from './FormField';
 
 export { FormSection, FormRow, FormActions } from './FormSection';

@@ -1,6 +1,16 @@
 export { default as ApprovalListPage } from './pages/ApprovalListPage';
 export { default as ApprovalCreatePage } from './pages/ApprovalCreatePage';
 export { default as ApprovalDetailPage } from './pages/ApprovalDetailPage';
+export { default as ApprovalTemplatesPage } from './pages/ApprovalTemplatesPage';
+export { default as ApprovalTemplateEditPage } from './pages/ApprovalTemplateEditPage';
+export { default as DelegationRulesPage } from './pages/DelegationRulesPage';
 export * from './components/ApprovalLine';
+export * from './components/ApprovalLineFlow';
+export * from './components/ApprovalStepIndicator';
+export * from './components/ApprovalHistory';
+export * from './components/RecallDialog';
+export * from './components/DelegateDialog';
+export * from './components/DirectApproveDialog';
+export * from './components/DelegationRuleDialog';
 export * from './hooks/useApprovals';
 export * from './services/approvalService';

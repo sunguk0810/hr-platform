@@ -11,12 +11,14 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8080',
-        changeOrigin: true,
-      },
-    },
+    // Note: Proxy is disabled for MSW to work properly in development
+    // Enable proxy when connecting to real backend
+    // proxy: {
+    //   '/api': {
+    //     target: 'http://localhost:8080',
+    //     changeOrigin: true,
+    //   },
+    // },
   },
   build: {
     outDir: 'dist',

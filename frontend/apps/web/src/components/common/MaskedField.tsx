@@ -8,6 +8,7 @@ export type MaskingType =
   | 'email'
   | 'name'
   | 'residentNumber'
+  | 'ssn'
   | 'bankAccount'
   | 'cardNumber'
   | 'custom';
@@ -15,6 +16,8 @@ export type MaskingType =
 export interface MaskedFieldProps {
   value: string;
   type?: MaskingType;
+  /** @deprecated Use 'type' instead */
+  maskType?: MaskingType;
   customMask?: (value: string) => string;
   showToggle?: boolean;
   canReveal?: boolean;
@@ -52,6 +55,12 @@ const maskFunctions: Record<MaskingType, (value: string) => string> = {
     if (cleaned.length < 7) return '*'.repeat(value.length);
     return value.replace(/(\d{6}[-.]?)(\d{7})/, '$1*******');
   },
+  ssn: (value) => {
+    // Alias for residentNumber
+    const cleaned = value.replace(/[^0-9]/g, '');
+    if (cleaned.length < 7) return '*'.repeat(value.length);
+    return value.replace(/(\d{6}[-.]?)(\d{7})/, '$1*******');
+  },
   bankAccount: (value) => {
     // 123-456-789012 -> ***-***-789012
     const parts = value.split('-');
@@ -77,13 +86,16 @@ const maskFunctions: Record<MaskingType, (value: string) => string> = {
 
 export function MaskedField({
   value,
-  type = 'custom',
+  type,
+  maskType,
   customMask,
   showToggle = true,
   canReveal = false,
   onRevealRequest,
   className,
 }: MaskedFieldProps) {
+  // Support both 'type' and legacy 'maskType' prop
+  const effectiveType = type || maskType || 'custom';
   const [isRevealed, setIsRevealed] = React.useState(false);
   const [revealedValue, setRevealedValue] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(false);
@@ -91,8 +103,8 @@ export function MaskedField({
   const getMaskedValue = React.useCallback(() => {
     if (!value) return '-';
     if (customMask) return customMask(value);
-    return maskFunctions[type](value);
-  }, [value, type, customMask]);
+    return maskFunctions[effectiveType](value);
+  }, [value, effectiveType, customMask]);
 
   const handleToggle = async () => {
     if (isRevealed) {

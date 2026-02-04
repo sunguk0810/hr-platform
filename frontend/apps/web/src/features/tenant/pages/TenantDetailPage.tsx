@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { PageHeader } from '@/components/common/PageHeader';
 import { TenantStatusBadge } from '@/components/common/StatusBadge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,14 +24,54 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Pencil, Loader2, Users, Building2, Shield } from 'lucide-react';
+import {
+  ArrowLeft,
+  Pencil,
+  Loader2,
+  Users,
+  Building2,
+  Shield,
+  Building,
+  ArrowDown,
+  History,
+} from 'lucide-react';
 import {
   useTenant,
   useUpdateTenant,
   useChangeTenantStatus,
+  useSubsidiaries,
+  useUpdatePolicy,
+  useToggleFeature,
+  useUpdateBranding,
+  useUploadBrandingImage,
+  useInheritPolicies,
+  useUpdateModules,
+  usePolicyHistory,
+  useUpdateHierarchy,
 } from '../hooks/useTenants';
-import type { TenantStatus, UpdateTenantRequest } from '@hr-platform/shared-types';
-import { TENANT_STATUS_LABELS, TENANT_MODULES } from '@hr-platform/shared-types';
+import { PolicySettings } from '../components/PolicySettings';
+import { LeavePolicySettings } from '../components/LeavePolicySettings';
+import { AttendancePolicySettings } from '../components/AttendancePolicySettings';
+import { ApprovalPolicySettings } from '../components/ApprovalPolicySettings';
+import { HierarchySettings } from '../components/HierarchySettings';
+import { BrandingSettings } from '../components/BrandingSettings';
+import { FeatureToggleList } from '../components/FeatureToggleList';
+import { PolicyInheritDialog } from '../components/PolicyInheritDialog';
+import { ModuleSettings } from '../components/ModuleSettings';
+import { PolicyHistory } from '../components/PolicyHistory';
+import type {
+  TenantStatus,
+  UpdateTenantRequest,
+  PolicyType,
+  FeatureCode,
+  FeatureConfigMap,
+  TenantBranding,
+  LeavePolicy,
+  AttendancePolicy,
+  ApprovalPolicy,
+  OrganizationLevel,
+} from '@hr-platform/shared-types';
+import { TENANT_STATUS_LABELS } from '@hr-platform/shared-types';
 
 export default function TenantDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -39,7 +79,9 @@ export default function TenantDetailPage() {
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
+  const [isInheritDialogOpen, setIsInheritDialogOpen] = useState(false);
   const [newStatus, setNewStatus] = useState<TenantStatus>('ACTIVE');
+  const [historyPolicyFilter, setHistoryPolicyFilter] = useState<PolicyType | ''>('');
 
   const [formData, setFormData] = useState<UpdateTenantRequest>({
     name: '',
@@ -48,10 +90,26 @@ export default function TenantDetailPage() {
   });
 
   const { data, isLoading, isError } = useTenant(id || '');
+  const { data: subsidiariesData } = useSubsidiaries(id || '');
+  const { data: policyHistoryData, isLoading: isHistoryLoading } = usePolicyHistory(
+    id || '',
+    historyPolicyFilter || undefined
+  );
   const updateMutation = useUpdateTenant();
   const changeStatusMutation = useChangeTenantStatus();
+  const updatePolicyMutation = useUpdatePolicy();
+  const toggleFeatureMutation = useToggleFeature();
+  const updateBrandingMutation = useUpdateBranding();
+  const uploadBrandingImageMutation = useUploadBrandingImage();
+  const inheritPoliciesMutation = useInheritPolicies();
+  const updateModulesMutation = useUpdateModules();
+  const updateHierarchyMutation = useUpdateHierarchy();
 
   const tenant = data?.data;
+  const subsidiaries = subsidiariesData?.data ?? [];
+  const policyHistory = policyHistoryData?.data ?? [];
+  const isGroup = tenant?.level === 0;
+  const hasSubsidiaries = subsidiaries.length > 0;
 
   const handleEditOpen = () => {
     if (!tenant) return;
@@ -89,6 +147,87 @@ export default function TenantDetailPage() {
     }
   };
 
+  const handlePolicySubmit = async (policyType: PolicyType, data: unknown) => {
+    if (!id) return;
+    await updatePolicyMutation.mutateAsync({
+      id,
+      policyType,
+      data: data as Parameters<typeof updatePolicyMutation.mutateAsync>[0]['data'],
+    });
+  };
+
+  const handleFeatureToggle = async (
+    code: FeatureCode,
+    enabled: boolean,
+    config?: FeatureConfigMap[FeatureCode]
+  ) => {
+    if (!id) return;
+    await toggleFeatureMutation.mutateAsync({
+      id,
+      code,
+      data: { enabled, config: config as unknown as Record<string, unknown> },
+    });
+  };
+
+  const handleBrandingSubmit = async (data: TenantBranding) => {
+    if (!id) return;
+    await updateBrandingMutation.mutateAsync({ id, data });
+  };
+
+  const handleUploadBrandingImage = async (
+    file: File,
+    type: 'logo' | 'favicon' | 'background'
+  ): Promise<string> => {
+    if (!id) throw new Error('Tenant ID is required');
+    const result = await uploadBrandingImageMutation.mutateAsync({ id, type, file });
+    return result.data?.url || '';
+  };
+
+  const handleInheritPolicies = async (childIds: string[], policyTypes: PolicyType[]) => {
+    if (!id) return;
+    await inheritPoliciesMutation.mutateAsync({
+      parentId: id,
+      data: { childIds, policyTypes },
+    });
+  };
+
+  const handleModulesUpdate = async (modules: string[]) => {
+    if (!id) return;
+    await updateModulesMutation.mutateAsync({ id, modules });
+  };
+
+  const handleLeavePolicySubmit = async (data: LeavePolicy) => {
+    if (!id) return;
+    await updatePolicyMutation.mutateAsync({
+      id,
+      policyType: 'LEAVE',
+      data: data as Parameters<typeof updatePolicyMutation.mutateAsync>[0]['data'],
+    });
+  };
+
+  const handleAttendancePolicySubmit = async (data: AttendancePolicy) => {
+    if (!id) return;
+    await updatePolicyMutation.mutateAsync({
+      id,
+      policyType: 'ATTENDANCE',
+      data: data as Parameters<typeof updatePolicyMutation.mutateAsync>[0]['data'],
+    });
+  };
+
+  const handleApprovalPolicySubmit = async (data: ApprovalPolicy) => {
+    if (!id) return;
+    await updatePolicyMutation.mutateAsync({
+      id,
+      policyType: 'APPROVAL',
+      data: data as Parameters<typeof updatePolicyMutation.mutateAsync>[0]['data'],
+    });
+  };
+
+  const handleHierarchyUpdate = async (levels: OrganizationLevel[]) => {
+    if (!id) return;
+    await updateHierarchyMutation.mutateAsync({ id, data: { levels } });
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -113,7 +252,7 @@ export default function TenantDetailPage() {
     <>
       <PageHeader
         title={tenant.name}
-        description={`테넌트 코드: ${tenant.code}`}
+        description={`테넌트 코드: ${tenant.code}${tenant.parentName ? ` | 소속: ${tenant.parentName}` : ''}`}
         actions={
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => navigate('/admin/tenants')}>
@@ -188,10 +327,18 @@ export default function TenantDetailPage() {
       </div>
 
       <Tabs defaultValue="info">
-        <TabsList>
+        <TabsList className="mb-4">
           <TabsTrigger value="info">기본 정보</TabsTrigger>
+          <TabsTrigger value="hierarchy">조직 계층</TabsTrigger>
           <TabsTrigger value="policies">정책 설정</TabsTrigger>
+          <TabsTrigger value="features">기능 관리</TabsTrigger>
+          <TabsTrigger value="branding">브랜딩</TabsTrigger>
           <TabsTrigger value="modules">모듈 설정</TabsTrigger>
+          <TabsTrigger value="history">
+            <History className="mr-1 h-4 w-4" />
+            변경 이력
+          </TabsTrigger>
+          {isGroup && <TabsTrigger value="subsidiaries">계열사</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="info" className="mt-6">
@@ -217,6 +364,12 @@ export default function TenantDetailPage() {
                   <Label className="text-muted-foreground">설명</Label>
                   <p>{tenant.description || '-'}</p>
                 </div>
+                {tenant.parentName && (
+                  <div className="grid gap-1">
+                    <Label className="text-muted-foreground">소속 그룹사</Label>
+                    <p>{tenant.parentName}</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -250,131 +403,175 @@ export default function TenantDetailPage() {
           </div>
         </TabsContent>
 
+        <TabsContent value="hierarchy" className="mt-6">
+          <HierarchySettings
+            levels={tenant.hierarchy?.levels}
+            onSave={handleHierarchyUpdate}
+            isLoading={updateHierarchyMutation.isPending}
+          />
+        </TabsContent>
+
         <TabsContent value="policies" className="mt-6">
-          <div className="grid gap-6 lg:grid-cols-3">
-            <Card>
-              <CardHeader>
-                <CardTitle>휴가 정책</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">기본 연차</span>
-                  <span className="text-sm">{tenant.policies.leavePolicy.annualLeaveBaseDays}일</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">연차 증가분</span>
-                  <span className="text-sm">연 {tenant.policies.leavePolicy.annualLeaveIncrement}일</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">최대 연차</span>
-                  <span className="text-sm">{tenant.policies.leavePolicy.maxAnnualLeave}일</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">병가</span>
-                  <span className="text-sm">{tenant.policies.leavePolicy.sickLeaveDays}일</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">이월 가능</span>
-                  <span className="text-sm">
-                    {tenant.policies.leavePolicy.carryOverEnabled ? '예' : '아니오'}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
+          <Tabs defaultValue="leave" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-7">
+              <TabsTrigger value="leave">휴가</TabsTrigger>
+              <TabsTrigger value="attendance">근태</TabsTrigger>
+              <TabsTrigger value="approval">결재</TabsTrigger>
+              <TabsTrigger value="password">비밀번호</TabsTrigger>
+              <TabsTrigger value="security">보안</TabsTrigger>
+              <TabsTrigger value="notification">알림</TabsTrigger>
+              <TabsTrigger value="organization">조직</TabsTrigger>
+            </TabsList>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>근태 정책</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">출근 시간</span>
-                  <span className="text-sm">{tenant.policies.attendancePolicy.workStartTime}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">퇴근 시간</span>
-                  <span className="text-sm">{tenant.policies.attendancePolicy.workEndTime}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">지각 유예</span>
-                  <span className="text-sm">{tenant.policies.attendancePolicy.lateGraceMinutes}분</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">필수 근무시간</span>
-                  <span className="text-sm">{tenant.policies.attendancePolicy.requiredWorkHours}시간</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">초과근무 허용</span>
-                  <span className="text-sm">
-                    {tenant.policies.attendancePolicy.overtimeEnabled ? '예' : '아니오'}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
+            <TabsContent value="leave">
+              <LeavePolicySettings
+                initialData={tenant.policies.leavePolicy}
+                onSubmit={handleLeavePolicySubmit}
+                isLoading={updatePolicyMutation.isPending}
+              />
+            </TabsContent>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>결재 정책</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">최대 결재단계</span>
-                  <span className="text-sm">{tenant.policies.approvalPolicy.maxApprovalSteps}단계</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">자동승인</span>
-                  <span className="text-sm">
-                    {tenant.policies.approvalPolicy.autoApprovalEnabled ? '예' : '아니오'}
-                  </span>
-                </div>
-                {tenant.policies.approvalPolicy.autoApprovalEnabled && (
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">자동승인 기간</span>
-                    <span className="text-sm">{tenant.policies.approvalPolicy.autoApprovalDays}일</span>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">병렬결재</span>
-                  <span className="text-sm">
-                    {tenant.policies.approvalPolicy.parallelApprovalEnabled ? '예' : '아니오'}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+            <TabsContent value="attendance">
+              <AttendancePolicySettings
+                initialData={tenant.policies.attendancePolicy}
+                onSubmit={handleAttendancePolicySubmit}
+                isLoading={updatePolicyMutation.isPending}
+              />
+            </TabsContent>
+
+            <TabsContent value="approval">
+              <ApprovalPolicySettings
+                initialData={tenant.policies.approvalPolicy}
+                onSubmit={handleApprovalPolicySubmit}
+                isLoading={updatePolicyMutation.isPending}
+              />
+            </TabsContent>
+
+            <TabsContent value="password">
+              <PolicySettings
+                initialData={{ passwordPolicy: tenant.policies.passwordPolicy }}
+                onSubmit={handlePolicySubmit}
+                isLoading={updatePolicyMutation.isPending}
+              />
+            </TabsContent>
+
+            <TabsContent value="security">
+              <PolicySettings
+                initialData={{ securityPolicy: tenant.policies.securityPolicy }}
+                onSubmit={handlePolicySubmit}
+                isLoading={updatePolicyMutation.isPending}
+              />
+            </TabsContent>
+
+            <TabsContent value="notification">
+              <PolicySettings
+                initialData={{ notificationPolicy: tenant.policies.notificationPolicy }}
+                onSubmit={handlePolicySubmit}
+                isLoading={updatePolicyMutation.isPending}
+              />
+            </TabsContent>
+
+            <TabsContent value="organization">
+              <PolicySettings
+                initialData={{ organizationPolicy: tenant.policies.organizationPolicy }}
+                onSubmit={handlePolicySubmit}
+                isLoading={updatePolicyMutation.isPending}
+              />
+            </TabsContent>
+          </Tabs>
+        </TabsContent>
+
+        <TabsContent value="features" className="mt-6">
+          <FeatureToggleList
+            features={tenant.features}
+            onToggle={handleFeatureToggle}
+            isLoading={toggleFeatureMutation.isPending}
+          />
+        </TabsContent>
+
+        <TabsContent value="branding" className="mt-6">
+          <BrandingSettings
+            initialData={tenant.branding}
+            onSubmit={handleBrandingSubmit}
+            onUploadImage={handleUploadBrandingImage}
+            isLoading={updateBrandingMutation.isPending}
+          />
         </TabsContent>
 
         <TabsContent value="modules" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>사용 가능 모듈</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                {TENANT_MODULES.map((module) => {
-                  const isEnabled = tenant.policies.allowedModules.includes(module.code);
-                  return (
-                    <div
-                      key={module.code}
-                      className={`flex items-center gap-3 p-3 rounded-lg border ${
-                        isEnabled ? 'bg-primary/5 border-primary/20' : 'bg-muted/30 border-muted'
-                      }`}
-                    >
-                      <div
-                        className={`h-3 w-3 rounded-full ${
-                          isEnabled ? 'bg-green-500' : 'bg-gray-300'
-                        }`}
-                      />
-                      <span className={`text-sm ${isEnabled ? 'font-medium' : 'text-muted-foreground'}`}>
-                        {module.name}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
+          <ModuleSettings
+            enabledModules={tenant.policies.allowedModules}
+            onSave={handleModulesUpdate}
+            isLoading={updateModulesMutation.isPending}
+          />
         </TabsContent>
+
+        <TabsContent value="history" className="mt-6">
+          <PolicyHistory
+            history={policyHistory}
+            isLoading={isHistoryLoading}
+            selectedPolicyType={historyPolicyFilter}
+            onFilterChange={setHistoryPolicyFilter}
+          />
+        </TabsContent>
+
+        {isGroup && (
+          <TabsContent value="subsidiaries" className="mt-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>계열사 목록</CardTitle>
+                  <CardDescription>
+                    {tenant.name}에 소속된 계열사 {subsidiaries.length}개
+                  </CardDescription>
+                </div>
+                {hasSubsidiaries && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsInheritDialogOpen(true)}
+                  >
+                    <ArrowDown className="mr-2 h-4 w-4" />
+                    정책 상속
+                  </Button>
+                )}
+              </CardHeader>
+              <CardContent>
+                {subsidiaries.length === 0 ? (
+                  <div className="py-8 text-center text-muted-foreground">
+                    소속된 계열사가 없습니다.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {subsidiaries.map((sub) => (
+                      <div
+                        key={sub.id}
+                        onClick={() => navigate(`/admin/tenants/${sub.id}`)}
+                        className="flex items-center justify-between p-4 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
+                            <Building className="h-5 w-5 text-muted-foreground" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{sub.name}</p>
+                            <p className="text-sm text-muted-foreground">{sub.code}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="text-sm text-muted-foreground">
+                            <Users className="inline-block mr-1 h-4 w-4" />
+                            {sub.employeeCount}명
+                          </div>
+                          <TenantStatusBadge status={sub.status} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
       </Tabs>
 
       {/* Edit Dialog */}
@@ -466,6 +663,16 @@ export default function TenantDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Policy Inherit Dialog */}
+      <PolicyInheritDialog
+        open={isInheritDialogOpen}
+        onOpenChange={setIsInheritDialogOpen}
+        parentName={tenant.name}
+        subsidiaries={subsidiaries}
+        onSubmit={handleInheritPolicies}
+        isLoading={inheritPoliciesMutation.isPending}
+      />
     </>
   );
 }

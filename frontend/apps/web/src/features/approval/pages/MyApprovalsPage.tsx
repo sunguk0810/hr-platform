@@ -23,8 +23,10 @@ import type { ApprovalStatus, ApprovalType } from '@hr-platform/shared-types';
 const STATUS_CONFIG: Record<ApprovalStatus, { label: string; variant: 'default' | 'warning' | 'success' | 'error' }> = {
   DRAFT: { label: '임시저장', variant: 'default' },
   PENDING: { label: '진행중', variant: 'warning' },
+  IN_REVIEW: { label: '검토중', variant: 'warning' },
   APPROVED: { label: '승인', variant: 'success' },
   REJECTED: { label: '반려', variant: 'error' },
+  RECALLED: { label: '회수됨', variant: 'warning' },
   CANCELLED: { label: '취소', variant: 'default' },
 };
 

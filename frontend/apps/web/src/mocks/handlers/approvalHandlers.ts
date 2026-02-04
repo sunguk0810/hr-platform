@@ -8,6 +8,14 @@ import type {
   ApprovalStep,
   ApprovalStepStatus,
   ApprovalUrgency,
+  ApprovalHistory,
+  ApprovalTemplate,
+  ApprovalActionType,
+  DelegationRule,
+  DelegationRuleListItem,
+  DelegationRuleStatus,
+  DelegationRuleConditionType,
+  DelegationRuleTargetType,
 } from '@hr-platform/shared-types';
 
 const createApprovalStep = (
@@ -63,6 +71,544 @@ const mockEmployeeSearchResults = [
   { id: 'emp-005', name: '최수진', departmentName: '마케팅팀' },
   { id: 'emp-006', name: '정민호', departmentName: '개발팀' },
   { id: 'emp-009', name: '임준혁', departmentName: '영업팀' },
+];
+
+// Mock approval history
+const mockApprovalHistories: Record<string, ApprovalHistory[]> = {
+  'appr-001': [
+    {
+      id: 'hist-001',
+      approvalId: 'appr-001',
+      stepOrder: 0,
+      actionType: 'SUBMIT',
+      actorId: 'emp-002',
+      actorName: '김철수',
+      actorDepartment: '개발팀',
+      actorPosition: '사원',
+      actionAt: format(subDays(new Date(), 2), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+    },
+  ],
+  'appr-002': [
+    {
+      id: 'hist-002',
+      approvalId: 'appr-002',
+      stepOrder: 0,
+      actionType: 'SUBMIT',
+      actorId: 'emp-003',
+      actorName: '이영희',
+      actorDepartment: '인사팀',
+      actorPosition: '대리',
+      actionAt: format(subDays(new Date(), 7), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+    },
+    {
+      id: 'hist-003',
+      approvalId: 'appr-002',
+      stepOrder: 1,
+      actionType: 'APPROVE',
+      actorId: 'emp-001',
+      actorName: '홍길동',
+      actorDepartment: '개발팀',
+      actorPosition: '팀장',
+      comment: '승인합니다.',
+      actionAt: format(subDays(new Date(), 5), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+    },
+  ],
+  'appr-004': [
+    {
+      id: 'hist-004',
+      approvalId: 'appr-004',
+      stepOrder: 0,
+      actionType: 'SUBMIT',
+      actorId: 'emp-005',
+      actorName: '최수진',
+      actorDepartment: '마케팅팀',
+      actorPosition: '과장',
+      actionAt: format(subDays(new Date(), 3), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+    },
+    {
+      id: 'hist-005',
+      approvalId: 'appr-004',
+      stepOrder: 1,
+      actionType: 'DELEGATE',
+      actorId: 'emp-006',
+      actorName: '정민호',
+      actorDepartment: '개발팀',
+      actorPosition: '대리',
+      delegatorId: 'emp-001',
+      delegatorName: '홍길동',
+      comment: '출장으로 인한 대결',
+      actionAt: format(subDays(new Date(), 2), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+    },
+    {
+      id: 'hist-006',
+      approvalId: 'appr-004',
+      stepOrder: 1,
+      actionType: 'APPROVE',
+      actorId: 'emp-006',
+      actorName: '정민호',
+      actorDepartment: '개발팀',
+      actorPosition: '대리',
+      delegatorId: 'emp-001',
+      delegatorName: '홍길동',
+      comment: '승인',
+      actionAt: format(subDays(new Date(), 1), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+    },
+  ],
+};
+
+// Mock approval templates
+const mockApprovalTemplates: ApprovalTemplate[] = [
+  {
+    id: 'tpl-001',
+    code: 'LEAVE_ANNUAL',
+    name: '연차 휴가 신청서',
+    description: '연차 휴가를 신청할 때 사용하는 양식입니다.',
+    category: 'LEAVE_REQUEST',
+    formSchema: {
+      type: 'object',
+      properties: {
+        startDate: { type: 'string', format: 'date', title: '시작일' },
+        endDate: { type: 'string', format: 'date', title: '종료일' },
+        reason: { type: 'string', title: '사유' },
+      },
+      required: ['startDate', 'endDate'],
+    },
+    defaultApprovalLine: [
+      { stepOrder: 1, stepType: 'APPROVAL', approverType: 'DEPARTMENT_HEAD', isRequired: true },
+      { stepOrder: 2, stepType: 'APPROVAL', approverType: 'ROLE', approverRole: 'HR_MANAGER', isRequired: true },
+    ],
+    retentionPeriod: 365,
+    isActive: true,
+    createdAt: format(subDays(new Date(), 100), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+    updatedAt: format(subDays(new Date(), 10), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+  },
+  {
+    id: 'tpl-002',
+    code: 'EXPENSE_TRAVEL',
+    name: '출장 경비 청구서',
+    description: '출장 관련 경비를 청구할 때 사용하는 양식입니다.',
+    category: 'EXPENSE',
+    formSchema: {
+      type: 'object',
+      properties: {
+        travelDate: { type: 'string', format: 'date', title: '출장일' },
+        destination: { type: 'string', title: '출장지' },
+        amount: { type: 'number', title: '청구 금액' },
+        items: {
+          type: 'array',
+          title: '지출 항목',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string', title: '항목' },
+              amount: { type: 'number', title: '금액' },
+            },
+          },
+        },
+      },
+      required: ['travelDate', 'destination', 'amount'],
+    },
+    defaultApprovalLine: [
+      { stepOrder: 1, stepType: 'APPROVAL', approverType: 'DEPARTMENT_HEAD', isRequired: true },
+    ],
+    retentionPeriod: 365 * 5,
+    isActive: true,
+    createdAt: format(subDays(new Date(), 100), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+    updatedAt: format(subDays(new Date(), 5), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+  },
+  {
+    id: 'tpl-003',
+    code: 'OVERTIME',
+    name: '초과근무 신청서',
+    description: '초과근무(야근, 휴일근무)를 신청할 때 사용하는 양식입니다.',
+    category: 'OVERTIME',
+    formSchema: {
+      type: 'object',
+      properties: {
+        workDate: { type: 'string', format: 'date', title: '근무일' },
+        startTime: { type: 'string', title: '시작 시간' },
+        endTime: { type: 'string', title: '종료 시간' },
+        reason: { type: 'string', title: '사유' },
+      },
+      required: ['workDate', 'startTime', 'endTime', 'reason'],
+    },
+    defaultApprovalLine: [
+      { stepOrder: 1, stepType: 'APPROVAL', approverType: 'DEPARTMENT_HEAD', isRequired: true },
+    ],
+    retentionPeriod: 365,
+    isActive: true,
+    createdAt: format(subDays(new Date(), 90), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+    updatedAt: format(subDays(new Date(), 3), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+  },
+  {
+    id: 'tpl-004',
+    code: 'GENERAL',
+    name: '일반 기안서',
+    description: '일반적인 업무 요청이나 보고에 사용하는 양식입니다.',
+    category: 'GENERAL',
+    formSchema: {
+      type: 'object',
+      properties: {
+        subject: { type: 'string', title: '제목' },
+        content: { type: 'string', title: '내용' },
+      },
+      required: ['subject', 'content'],
+    },
+    defaultApprovalLine: [],
+    retentionPeriod: 365,
+    isActive: true,
+    createdAt: format(subDays(new Date(), 100), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+    updatedAt: format(subDays(new Date(), 1), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+  },
+];
+
+// ===== Mock Delegation Rules =====
+const mockDelegationRules: DelegationRule[] = [
+  {
+    id: 'dlgrule-001',
+    tenantId: 'tenant-001',
+    name: '휴가신청 팀장 전결',
+    description: '3일 이내 휴가신청은 팀장이 전결 처리',
+    delegatorId: 'emp-001',
+    delegatorName: '홍길동',
+    delegatorDepartment: '개발팀',
+    condition: {
+      type: 'DOCUMENT_TYPE',
+      documentTypes: ['LEAVE_REQUEST'],
+    },
+    target: {
+      type: 'DEPARTMENT_HEAD',
+    },
+    priority: 1,
+    status: 'ACTIVE',
+    createdAt: format(subDays(new Date(), 30), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+    createdBy: 'emp-001',
+    createdByName: '홍길동',
+    updatedAt: format(subDays(new Date(), 5), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+  },
+  {
+    id: 'dlgrule-002',
+    tenantId: 'tenant-001',
+    name: '소액 경비 자동 전결',
+    description: '10만원 이하 경비는 부서장 전결',
+    delegatorId: 'emp-003',
+    delegatorName: '이영희',
+    delegatorDepartment: '인사팀',
+    condition: {
+      type: 'AMOUNT_RANGE',
+      minAmount: 0,
+      maxAmount: 100000,
+    },
+    target: {
+      type: 'DEPARTMENT_HEAD',
+    },
+    priority: 2,
+    status: 'ACTIVE',
+    validFrom: format(subDays(new Date(), 60), 'yyyy-MM-dd'),
+    validTo: format(subDays(new Date(), -30), 'yyyy-MM-dd'),
+    createdAt: format(subDays(new Date(), 60), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+    createdBy: 'emp-003',
+    createdByName: '이영희',
+    updatedAt: format(subDays(new Date(), 60), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+  },
+  {
+    id: 'dlgrule-003',
+    tenantId: 'tenant-001',
+    name: '부재 시 대리자 위임',
+    description: '3일 이상 부재 시 대리자에게 위임',
+    delegatorId: 'emp-005',
+    delegatorName: '최수진',
+    delegatorDepartment: '마케팅팀',
+    condition: {
+      type: 'ABSENCE',
+      absenceDays: 3,
+    },
+    target: {
+      type: 'SPECIFIC',
+      employeeId: 'emp-006',
+      employeeName: '정민호',
+    },
+    priority: 3,
+    status: 'INACTIVE',
+    createdAt: format(subDays(new Date(), 20), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+    createdBy: 'emp-005',
+    createdByName: '최수진',
+    updatedAt: format(subDays(new Date(), 10), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+  },
+  {
+    id: 'dlgrule-004',
+    tenantId: 'tenant-001',
+    name: '일반문서 HR 담당자 위임',
+    description: '모든 일반문서는 HR 담당자에게 위임',
+    delegatorId: 'emp-009',
+    delegatorName: '임준혁',
+    delegatorDepartment: '영업팀',
+    condition: {
+      type: 'ALWAYS',
+    },
+    target: {
+      type: 'ROLE',
+      role: 'HR_MANAGER',
+      roleName: 'HR 담당자',
+    },
+    priority: 10,
+    status: 'ACTIVE',
+    createdAt: format(subDays(new Date(), 15), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+    createdBy: 'emp-009',
+    createdByName: '임준혁',
+    updatedAt: format(subDays(new Date(), 15), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+  },
+];
+
+function toRuleListItem(rule: DelegationRule): DelegationRuleListItem {
+  let conditionSummary = '';
+  switch (rule.condition.type) {
+    case 'DOCUMENT_TYPE':
+      conditionSummary = rule.condition.documentTypes?.join(', ') || '';
+      break;
+    case 'AMOUNT_RANGE':
+      conditionSummary = `${rule.condition.minAmount?.toLocaleString() || 0}원 ~ ${rule.condition.maxAmount?.toLocaleString() || '무제한'}원`;
+      break;
+    case 'ABSENCE':
+      conditionSummary = `${rule.condition.absenceDays}일 이상 부재`;
+      break;
+    case 'ALWAYS':
+      conditionSummary = '항상 적용';
+      break;
+  }
+
+  let targetSummary = '';
+  switch (rule.target.type) {
+    case 'SPECIFIC':
+      targetSummary = rule.target.employeeName || '';
+      break;
+    case 'ROLE':
+      targetSummary = rule.target.roleName || rule.target.role || '';
+      break;
+    case 'DEPARTMENT_HEAD':
+      targetSummary = '소속 부서장';
+      break;
+    case 'DEPUTY':
+      targetSummary = '지정 대리자';
+      break;
+  }
+
+  return {
+    id: rule.id,
+    name: rule.name,
+    delegatorName: rule.delegatorName,
+    delegatorDepartment: rule.delegatorDepartment,
+    conditionType: rule.condition.type,
+    conditionSummary,
+    targetType: rule.target.type,
+    targetSummary,
+    priority: rule.priority,
+    status: rule.status,
+    validFrom: rule.validFrom,
+    validTo: rule.validTo,
+  };
+}
+
+const delegationRuleHandlers = [
+  // Get delegation rules list
+  http.get('/api/v1/approvals/delegation-rules', async ({ request }) => {
+    await delay(300);
+
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '0', 10);
+    const size = parseInt(url.searchParams.get('size') || '20', 10);
+    const status = url.searchParams.get('status') as DelegationRuleStatus | null;
+    const conditionType = url.searchParams.get('conditionType') as DelegationRuleConditionType | null;
+
+    let filtered = [...mockDelegationRules];
+
+    if (status) {
+      filtered = filtered.filter(r => r.status === status);
+    }
+
+    if (conditionType) {
+      filtered = filtered.filter(r => r.condition.type === conditionType);
+    }
+
+    filtered.sort((a, b) => a.priority - b.priority);
+
+    const totalElements = filtered.length;
+    const totalPages = Math.ceil(totalElements / size);
+    const start = page * size;
+    const content = filtered.slice(start, start + size).map(toRuleListItem);
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        content,
+        page,
+        size,
+        totalElements,
+        totalPages,
+        first: page === 0,
+        last: page >= totalPages - 1,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // Get delegation rule detail
+  http.get('/api/v1/approvals/delegation-rules/:id', async ({ params }) => {
+    await delay(200);
+
+    const { id } = params;
+    const rule = mockDelegationRules.find(r => r.id === id);
+
+    if (!rule) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'DLG_001', message: '위임전결 규칙을 찾을 수 없습니다.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 404 }
+      );
+    }
+
+    return HttpResponse.json({
+      success: true,
+      data: rule,
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // Create delegation rule
+  http.post('/api/v1/approvals/delegation-rules', async ({ request }) => {
+    await delay(300);
+
+    const body = await request.json() as Record<string, unknown>;
+    const delegator = mockEmployeeSearchResults.find(e => e.id === body.delegatorId);
+
+    const newRule: DelegationRule = {
+      id: `dlgrule-${Date.now()}`,
+      tenantId: 'tenant-001',
+      name: body.name as string,
+      description: body.description as string | undefined,
+      delegatorId: body.delegatorId as string,
+      delegatorName: delegator?.name || '위임자',
+      delegatorDepartment: delegator?.departmentName,
+      condition: body.condition as DelegationRule['condition'],
+      target: body.target as DelegationRule['target'],
+      priority: (body.priority as number) || 10,
+      status: 'ACTIVE',
+      validFrom: body.validFrom as string | undefined,
+      validTo: body.validTo as string | undefined,
+      createdAt: new Date().toISOString(),
+      createdBy: 'emp-001',
+      createdByName: '홍길동',
+      updatedAt: new Date().toISOString(),
+    };
+
+    mockDelegationRules.push(newRule);
+
+    return HttpResponse.json({
+      success: true,
+      data: newRule,
+      message: '위임전결 규칙이 등록되었습니다.',
+      timestamp: new Date().toISOString(),
+    }, { status: 201 });
+  }),
+
+  // Update delegation rule
+  http.put('/api/v1/approvals/delegation-rules/:id', async ({ params, request }) => {
+    await delay(300);
+
+    const { id } = params;
+    const index = mockDelegationRules.findIndex(r => r.id === id);
+
+    if (index === -1) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'DLG_001', message: '위임전결 규칙을 찾을 수 없습니다.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 404 }
+      );
+    }
+
+    const body = await request.json() as Record<string, unknown>;
+    const rule = mockDelegationRules[index];
+
+    if (body.name !== undefined) rule.name = body.name as string;
+    if (body.description !== undefined) rule.description = body.description as string;
+    if (body.condition !== undefined) rule.condition = body.condition as DelegationRule['condition'];
+    if (body.target !== undefined) rule.target = body.target as DelegationRule['target'];
+    if (body.priority !== undefined) rule.priority = body.priority as number;
+    if (body.status !== undefined) rule.status = body.status as DelegationRuleStatus;
+    if (body.validFrom !== undefined) rule.validFrom = body.validFrom as string;
+    if (body.validTo !== undefined) rule.validTo = body.validTo as string;
+    rule.updatedAt = new Date().toISOString();
+
+    return HttpResponse.json({
+      success: true,
+      data: rule,
+      message: '위임전결 규칙이 수정되었습니다.',
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // Delete delegation rule
+  http.delete('/api/v1/approvals/delegation-rules/:id', async ({ params }) => {
+    await delay(300);
+
+    const { id } = params;
+    const index = mockDelegationRules.findIndex(r => r.id === id);
+
+    if (index === -1) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'DLG_001', message: '위임전결 규칙을 찾을 수 없습니다.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 404 }
+      );
+    }
+
+    mockDelegationRules.splice(index, 1);
+
+    return HttpResponse.json({
+      success: true,
+      message: '위임전결 규칙이 삭제되었습니다.',
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // Toggle delegation rule status
+  http.post('/api/v1/approvals/delegation-rules/:id/toggle-status', async ({ params }) => {
+    await delay(300);
+
+    const { id } = params;
+    const index = mockDelegationRules.findIndex(r => r.id === id);
+
+    if (index === -1) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'DLG_001', message: '위임전결 규칙을 찾을 수 없습니다.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 404 }
+      );
+    }
+
+    const rule = mockDelegationRules[index];
+    rule.status = rule.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+    rule.updatedAt = new Date().toISOString();
+
+    return HttpResponse.json({
+      success: true,
+      data: rule,
+      message: `규칙이 ${rule.status === 'ACTIVE' ? '활성화' : '비활성화'}되었습니다.`,
+      timestamp: new Date().toISOString(),
+    });
+  }),
 ];
 
 const mockApprovals: Approval[] = [
@@ -584,4 +1130,430 @@ export const approvalHandlers = [
       timestamp: new Date().toISOString(),
     });
   }),
+
+  // SDD 4.4 회수
+  http.post('/api/v1/approvals/:id/recall', async ({ params, request }) => {
+    await delay(300);
+
+    const { id } = params;
+    const index = mockApprovals.findIndex(a => a.id === id);
+
+    if (index === -1) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'APR_001', message: '결재 문서를 찾을 수 없습니다.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 404 }
+      );
+    }
+
+    const approval = mockApprovals[index];
+    if (approval.status !== 'PENDING') {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'APR_003', message: '회수할 수 없는 상태입니다. PENDING 상태에서만 회수 가능합니다.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 400 }
+      );
+    }
+
+    const body = await request.json() as Record<string, unknown>;
+    approval.status = 'RECALLED';
+    approval.recalledAt = new Date().toISOString();
+    approval.recallReason = body.reason as string;
+    approval.updatedAt = new Date().toISOString();
+
+    // Add history
+    const historyList = mockApprovalHistories[id as string] || [];
+    historyList.push({
+      id: `hist-${Date.now()}`,
+      approvalId: id as string,
+      stepOrder: 0,
+      actionType: 'RECALL',
+      actorId: approval.requesterId,
+      actorName: approval.requesterName,
+      actorDepartment: approval.requesterDepartment,
+      comment: body.reason as string,
+      actionAt: new Date().toISOString(),
+    });
+    mockApprovalHistories[id as string] = historyList;
+
+    return HttpResponse.json({
+      success: true,
+      data: approval,
+      message: '결재가 회수되었습니다.',
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // SDD 4.5 결재 이력 조회
+  http.get('/api/v1/approvals/:id/history', async ({ params }) => {
+    await delay(200);
+
+    const { id } = params;
+    const approval = mockApprovals.find(a => a.id === id);
+
+    if (!approval) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'APR_001', message: '결재 문서를 찾을 수 없습니다.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 404 }
+      );
+    }
+
+    // Get stored history or generate from steps
+    let history = mockApprovalHistories[id as string];
+
+    if (!history || history.length === 0) {
+      // Generate history from approval data
+      history = [
+        {
+          id: `hist-auto-${Date.now()}-0`,
+          approvalId: id as string,
+          stepOrder: 0,
+          actionType: 'SUBMIT' as ApprovalActionType,
+          actorId: approval.requesterId,
+          actorName: approval.requesterName,
+          actorDepartment: approval.requesterDepartment,
+          actionAt: approval.createdAt,
+        },
+      ];
+
+      // Add step histories
+      approval.steps.filter(s => s.processedAt).forEach((step, idx) => {
+        history!.push({
+          id: `hist-auto-${Date.now()}-${idx + 1}`,
+          approvalId: id as string,
+          stepOrder: step.stepOrder,
+          actionType: step.status === 'APPROVED' ? 'APPROVE' : step.status === 'REJECTED' ? 'REJECT' : 'APPROVE',
+          actorId: step.approverId || '',
+          actorName: step.approverName || '',
+          actorDepartment: step.approverDepartment,
+          actorPosition: step.approverPosition,
+          comment: step.comment,
+          actionAt: step.processedAt!,
+        });
+      });
+    }
+
+    return HttpResponse.json({
+      success: true,
+      data: history,
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // SDD 4.6 대결
+  http.post('/api/v1/approvals/:id/steps/:stepId/delegate', async ({ params, request }) => {
+    await delay(300);
+
+    const { id, stepId } = params;
+    const index = mockApprovals.findIndex(a => a.id === id);
+
+    if (index === -1) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'APR_001', message: '결재 문서를 찾을 수 없습니다.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 404 }
+      );
+    }
+
+    const approval = mockApprovals[index];
+    const step = approval.steps.find(s => s.id === stepId);
+
+    if (!step) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'APR_004', message: '결재 단계를 찾을 수 없습니다.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 404 }
+      );
+    }
+
+    if (step.status !== 'PENDING') {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'APR_005', message: '대결을 지정할 수 없는 단계입니다.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 400 }
+      );
+    }
+
+    const body = await request.json() as Record<string, unknown>;
+    const delegatee = mockEmployeeSearchResults.find(e => e.id === body.delegateToId);
+
+    // Update step with delegation info
+    step.delegatorId = step.approverId;
+    step.delegatorName = step.approverName;
+    step.approverId = body.delegateToId as string;
+    step.approverName = delegatee?.name || (body.delegateToName as string) || '대결자';
+    step.delegatedAt = new Date().toISOString();
+
+    approval.updatedAt = new Date().toISOString();
+
+    // Add history
+    const historyList = mockApprovalHistories[id as string] || [];
+    historyList.push({
+      id: `hist-${Date.now()}`,
+      approvalId: id as string,
+      stepOrder: step.stepOrder,
+      actionType: 'DELEGATE',
+      actorId: body.delegateToId as string,
+      actorName: delegatee?.name || (body.delegateToName as string) || '대결자',
+      actorDepartment: delegatee?.departmentName,
+      delegatorId: step.delegatorId,
+      delegatorName: step.delegatorName,
+      comment: body.reason as string,
+      actionAt: new Date().toISOString(),
+    });
+    mockApprovalHistories[id as string] = historyList;
+
+    return HttpResponse.json({
+      success: true,
+      data: approval,
+      message: '대결자가 지정되었습니다.',
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // SDD 4.7 전결
+  http.post('/api/v1/approvals/:id/direct-approve', async ({ params, request }) => {
+    await delay(300);
+
+    const { id } = params;
+    const index = mockApprovals.findIndex(a => a.id === id);
+
+    if (index === -1) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'APR_001', message: '결재 문서를 찾을 수 없습니다.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 404 }
+      );
+    }
+
+    const approval = mockApprovals[index];
+    if (approval.status !== 'PENDING') {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'APR_006', message: '전결 처리할 수 없는 상태입니다.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 400 }
+      );
+    }
+
+    const body = await request.json() as Record<string, unknown>;
+    const skipToStep = body.skipToStep as number | undefined;
+    const maxStepOrder = skipToStep || Math.max(...approval.steps.map(s => s.stepOrder));
+
+    // Approve all pending steps up to skipToStep
+    approval.steps.forEach(step => {
+      if (step.status === 'PENDING' && step.stepOrder <= maxStepOrder) {
+        step.status = 'APPROVED';
+        step.directApproved = true;
+        step.comment = `전결 처리: ${body.reason}`;
+        step.processedAt = new Date().toISOString();
+      }
+    });
+
+    // Check if all steps are approved
+    const allApproved = approval.steps.every(s => s.status === 'APPROVED' || s.status === 'SKIPPED');
+    if (allApproved) {
+      approval.status = 'APPROVED';
+      approval.completedAt = new Date().toISOString();
+    }
+
+    approval.directApprovedBy = 'emp-001'; // Mock current user
+    approval.directApprovedAt = new Date().toISOString();
+    approval.updatedAt = new Date().toISOString();
+
+    // Add history
+    const historyList = mockApprovalHistories[id as string] || [];
+    historyList.push({
+      id: `hist-${Date.now()}`,
+      approvalId: id as string,
+      stepOrder: maxStepOrder,
+      actionType: 'DIRECT_APPROVE',
+      actorId: 'emp-001',
+      actorName: '홍길동',
+      actorDepartment: '개발팀',
+      actorPosition: '팀장',
+      comment: body.reason as string,
+      actionAt: new Date().toISOString(),
+    });
+    mockApprovalHistories[id as string] = historyList;
+
+    return HttpResponse.json({
+      success: true,
+      data: approval,
+      message: '전결 처리되었습니다.',
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // SDD 3.3.4 결재 양식 목록
+  http.get('/api/v1/approval-templates', async ({ request }) => {
+    await delay(200);
+
+    const url = new URL(request.url);
+    const category = url.searchParams.get('category');
+    const isActive = url.searchParams.get('isActive');
+
+    let templates = [...mockApprovalTemplates];
+
+    if (category) {
+      templates = templates.filter(t => t.category === category);
+    }
+
+    if (isActive !== null) {
+      const activeFlag = isActive === 'true';
+      templates = templates.filter(t => t.isActive === activeFlag);
+    }
+
+    return HttpResponse.json({
+      success: true,
+      data: templates,
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // SDD 3.3.4 결재 양식 상세
+  http.get('/api/v1/approval-templates/:id', async ({ params }) => {
+    await delay(200);
+
+    const { id } = params;
+    const template = mockApprovalTemplates.find(t => t.id === id);
+
+    if (!template) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'TPL_001', message: '결재 양식을 찾을 수 없습니다.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 404 }
+      );
+    }
+
+    return HttpResponse.json({
+      success: true,
+      data: template,
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // 결재 양식 생성
+  http.post('/api/v1/approval-templates', async ({ request }) => {
+    await delay(300);
+
+    const body = await request.json() as Record<string, unknown>;
+
+    const newTemplate: ApprovalTemplate = {
+      id: `tpl-${Date.now()}`,
+      code: body.code as string,
+      name: body.name as string,
+      description: body.description as string | undefined,
+      category: body.category as string,
+      formSchema: {},
+      defaultApprovalLine: body.defaultApprovalLine as ApprovalTemplate['defaultApprovalLine'],
+      retentionPeriod: body.retentionPeriod as number | undefined,
+      isActive: body.isActive as boolean ?? true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    mockApprovalTemplates.unshift(newTemplate);
+
+    return HttpResponse.json({
+      success: true,
+      data: newTemplate,
+      message: '양식이 등록되었습니다.',
+      timestamp: new Date().toISOString(),
+    }, { status: 201 });
+  }),
+
+  // 결재 양식 수정
+  http.put('/api/v1/approval-templates/:id', async ({ params, request }) => {
+    await delay(300);
+
+    const { id } = params;
+    const index = mockApprovalTemplates.findIndex(t => t.id === id);
+
+    if (index === -1) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'TPL_001', message: '결재 양식을 찾을 수 없습니다.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 404 }
+      );
+    }
+
+    const body = await request.json() as Record<string, unknown>;
+    const template = mockApprovalTemplates[index];
+
+    if (body.name !== undefined) template.name = body.name as string;
+    if (body.description !== undefined) template.description = body.description as string;
+    if (body.category !== undefined) template.category = body.category as string;
+    if (body.defaultApprovalLine !== undefined) template.defaultApprovalLine = body.defaultApprovalLine as ApprovalTemplate['defaultApprovalLine'];
+    if (body.retentionPeriod !== undefined) template.retentionPeriod = body.retentionPeriod as number;
+    if (body.isActive !== undefined) template.isActive = body.isActive as boolean;
+    template.updatedAt = new Date().toISOString();
+
+    return HttpResponse.json({
+      success: true,
+      data: template,
+      message: '양식이 수정되었습니다.',
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // 결재 양식 삭제
+  http.delete('/api/v1/approval-templates/:id', async ({ params }) => {
+    await delay(300);
+
+    const { id } = params;
+    const index = mockApprovalTemplates.findIndex(t => t.id === id);
+
+    if (index === -1) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'TPL_001', message: '결재 양식을 찾을 수 없습니다.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 404 }
+      );
+    }
+
+    mockApprovalTemplates.splice(index, 1);
+
+    return HttpResponse.json({
+      success: true,
+      message: '양식이 삭제되었습니다.',
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // ===== 위임전결 규칙 핸들러 =====
+  ...delegationRuleHandlers,
 ];

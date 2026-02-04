@@ -15,6 +15,7 @@ import { useUIStore } from '@/stores/uiStore';
 import { useTenantStore } from '@/stores/tenantStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useLogout } from '@/features/auth/hooks/useAuth';
+import { TenantSwitcher } from './TenantSwitcher';
 import { cn } from '@/lib/utils';
 
 export function Header() {
@@ -55,17 +56,13 @@ export function Header() {
           <Menu className="h-5 w-5" />
         </Button>
 
-        {/* Tenant indicator */}
-        {currentTenant && (
-          <div className="hidden items-center gap-2 md:flex">
-            <span className="text-sm font-medium text-muted-foreground">
-              {currentTenant.name}
-            </span>
-          </div>
-        )}
+        {/* Tenant Switcher - 계열사 전환 */}
+        <div className="hidden md:block">
+          <TenantSwitcher />
+        </div>
 
         {/* Search */}
-        <div className="relative hidden md:block">
+        <div data-tour="header-search" className="relative hidden lg:block">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="search"
@@ -87,6 +84,7 @@ export function Header() {
 
         {/* Notifications */}
         <Button
+          data-tour="header-notifications"
           variant="ghost"
           size="icon"
           className="relative"
@@ -103,7 +101,7 @@ export function Header() {
         {/* User menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+            <Button data-tour="header-user-menu" variant="ghost" className="relative h-9 w-9 rounded-full">
               <Avatar className="h-9 w-9">
                 <AvatarImage src={user?.profileImageUrl} alt={user?.name} />
                 <AvatarFallback>

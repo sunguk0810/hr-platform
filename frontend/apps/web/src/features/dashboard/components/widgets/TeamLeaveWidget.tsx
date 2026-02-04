@@ -1,12 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Calendar, Users } from 'lucide-react';
 import { format, isToday, isTomorrow, addDays, isWithinInterval } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { apiClient } from '@/lib/apiClient';
+import { queryKeys } from '@/lib/queryClient';
 
 interface TeamLeave {
   id: string;
+  employeeId: string;
   employeeName: string;
   departmentName: string;
   leaveType: string;
@@ -15,10 +19,11 @@ interface TeamLeave {
   profileImageUrl?: string;
 }
 
-// Mock data for team leave
+// Mock data fallback for team leave
 const mockTeamLeaves: TeamLeave[] = [
   {
     id: '1',
+    employeeId: 'emp-002',
     employeeName: '김철수',
     departmentName: '개발팀',
     leaveType: '연차',
@@ -27,6 +32,7 @@ const mockTeamLeaves: TeamLeave[] = [
   },
   {
     id: '2',
+    employeeId: 'emp-003',
     employeeName: '이영희',
     departmentName: '인사팀',
     leaveType: '반차(오후)',
@@ -35,6 +41,7 @@ const mockTeamLeaves: TeamLeave[] = [
   },
   {
     id: '3',
+    employeeId: 'emp-005',
     employeeName: '최수진',
     departmentName: '마케팅팀',
     leaveType: '연차',
@@ -69,10 +76,18 @@ function getDateLabel(startDate: string, endDate: string): string {
 }
 
 export function TeamLeaveWidget() {
-  const { data: leaves = mockTeamLeaves, isLoading } = useQuery({
-    queryKey: ['dashboard', 'teamLeave'],
-    queryFn: async () => mockTeamLeaves, // Replace with actual API call
+  const { data, isLoading } = useQuery({
+    queryKey: queryKeys.dashboard.teamLeave(),
+    queryFn: async () => {
+      try {
+        const response = await apiClient.get<{ data: { leaves: TeamLeave[] } }>('/dashboard/team-leave');
+        return response.data.data.leaves;
+      } catch {
+        return mockTeamLeaves;
+      }
+    },
   });
+  const leaves = data ?? [];
 
   const todayLeaves = leaves.filter((leave) => {
     const start = new Date(leave.startDate);
@@ -116,28 +131,31 @@ export function TeamLeaveWidget() {
                 </h4>
                 <div className="space-y-2">
                   {todayLeaves.map((leave) => (
-                    <div
+                    <Link
                       key={leave.id}
-                      className="flex items-center gap-3 p-2 rounded-lg bg-red-50 dark:bg-red-900/20"
+                      to={`/employees/${leave.employeeId}`}
+                      className="block"
                     >
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={leave.profileImageUrl} />
-                        <AvatarFallback className="text-xs">
-                          {leave.employeeName.slice(0, 2)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {leave.employeeName}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {leave.leaveType}
-                        </p>
+                      <div className="flex items-center gap-3 p-2 rounded-lg bg-red-50 dark:bg-red-900/20 transition-colors hover:bg-red-100 dark:hover:bg-red-900/30">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={leave.profileImageUrl} />
+                          <AvatarFallback className="text-xs">
+                            {leave.employeeName.slice(0, 2)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">
+                            {leave.employeeName}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {leave.leaveType}
+                          </p>
+                        </div>
+                        <span className="text-xs text-red-600 dark:text-red-400 font-medium">
+                          {getDateLabel(leave.startDate, leave.endDate)}
+                        </span>
                       </div>
-                      <span className="text-xs text-red-600 dark:text-red-400 font-medium">
-                        {getDateLabel(leave.startDate, leave.endDate)}
-                      </span>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               </div>
@@ -151,28 +169,31 @@ export function TeamLeaveWidget() {
                 </h4>
                 <div className="space-y-2">
                   {upcomingLeaves.slice(0, 3).map((leave) => (
-                    <div
+                    <Link
                       key={leave.id}
-                      className="flex items-center gap-3 p-2 rounded-lg bg-muted/50"
+                      to={`/employees/${leave.employeeId}`}
+                      className="block"
                     >
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={leave.profileImageUrl} />
-                        <AvatarFallback className="text-xs">
-                          {leave.employeeName.slice(0, 2)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {leave.employeeName}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {leave.leaveType}
-                        </p>
+                      <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/50 transition-colors hover:bg-muted">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={leave.profileImageUrl} />
+                          <AvatarFallback className="text-xs">
+                            {leave.employeeName.slice(0, 2)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">
+                            {leave.employeeName}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {leave.leaveType}
+                          </p>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {getDateLabel(leave.startDate, leave.endDate)}
+                        </span>
                       </div>
-                      <span className="text-xs text-muted-foreground">
-                        {getDateLabel(leave.startDate, leave.endDate)}
-                      </span>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               </div>

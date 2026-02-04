@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useDebounce } from '@/hooks/useDebounce';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { StatusBadge } from '@/components/common/StatusBadge';
@@ -24,7 +25,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Code, Plus, Search, Pencil, Trash2 } from 'lucide-react';
+import { Code, Plus, Search, Pencil, Trash2, MoreHorizontal, History, AlertTriangle, RefreshCw } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   useCommonCodeList,
   useCommonCodeSearchParams,
@@ -32,19 +41,12 @@ import {
   useCreateCommonCode,
   useUpdateCommonCode,
   useDeleteCommonCode,
+  useUpdateCodeStatus,
+  useCodeImpact,
+  useCodeHistory,
+  useCheckDuplicate,
 } from '../hooks/useMdm';
-import type { CommonCodeListItem, CreateCommonCodeRequest, UpdateCommonCodeRequest } from '@hr-platform/shared-types';
-
-function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedValue(value), delay);
-    return () => clearTimeout(timer);
-  }, [value, delay]);
-
-  return debouncedValue;
-}
+import type { CommonCodeListItem, CreateCommonCodeRequest, UpdateCommonCodeRequest, CodeStatus, CheckDuplicateResponse } from '@hr-platform/shared-types';
 
 export default function CommonCodePage() {
   const [searchInput, setSearchInput] = useState('');
@@ -53,7 +55,16 @@ export default function CommonCodePage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
+  const [isImpactDialogOpen, setIsImpactDialogOpen] = useState(false);
+  const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
   const [selectedCode, setSelectedCode] = useState<CommonCodeListItem | null>(null);
+  const [statusChangeData, setStatusChangeData] = useState<{ status: CodeStatus; reason: string }>({
+    status: 'ACTIVE',
+    reason: '',
+  });
+  const [duplicateCheckResult, setDuplicateCheckResult] = useState<CheckDuplicateResponse | null>(null);
+  const [ignoreDuplicate, setIgnoreDuplicate] = useState(false);
 
   const [formData, setFormData] = useState<{
     groupId: string;
@@ -89,6 +100,17 @@ export default function CommonCodePage() {
   const createMutation = useCreateCommonCode();
   const updateMutation = useUpdateCommonCode();
   const deleteMutation = useDeleteCommonCode();
+  const statusMutation = useUpdateCodeStatus();
+  const checkDuplicateMutation = useCheckDuplicate();
+
+  // Impact and history queries (enabled when dialog is open)
+  const { data: impactData, isLoading: impactLoading } = useCodeImpact(
+    selectedCode?.id || '',
+    isImpactDialogOpen && !!selectedCode
+  );
+  const { data: historyData, isLoading: historyLoading } = useCodeHistory(
+    selectedCode?.id || ''
+  );
 
   const commonCodes = data?.data?.content ?? [];
   const totalPages = data?.data?.totalPages ?? 0;
@@ -104,7 +126,28 @@ export default function CommonCodePage() {
       description: '',
       sortOrder: 0,
     });
+    setDuplicateCheckResult(null);
+    setIgnoreDuplicate(false);
     setIsCreateDialogOpen(true);
+  };
+
+  // Check for duplicates when code or name changes
+  const handleCheckDuplicate = async () => {
+    if (!formData.groupId || !formData.code || !formData.name) return;
+
+    const group = codeGroups.find(g => g.id === formData.groupId);
+    if (!group) return;
+
+    try {
+      const result = await checkDuplicateMutation.mutateAsync({
+        groupCode: group.code,
+        code: formData.code,
+        name: formData.name,
+      });
+      setDuplicateCheckResult(result.data);
+    } catch (error) {
+      console.error('Duplicate check failed:', error);
+    }
   };
 
   const handleEditOpen = (code: CommonCodeListItem) => {
@@ -126,7 +169,47 @@ export default function CommonCodePage() {
     setIsDeleteDialogOpen(true);
   };
 
+  const handleStatusChangeOpen = (code: CommonCodeListItem, newStatus: CodeStatus) => {
+    setSelectedCode(code);
+    setStatusChangeData({ status: newStatus, reason: '' });
+    setIsStatusDialogOpen(true);
+  };
+
+  const handleImpactOpen = (code: CommonCodeListItem) => {
+    setSelectedCode(code);
+    setIsImpactDialogOpen(true);
+  };
+
+  const handleHistoryOpen = (code: CommonCodeListItem) => {
+    setSelectedCode(code);
+    setIsHistoryDialogOpen(true);
+  };
+
+  const handleStatusChange = async () => {
+    if (!selectedCode) return;
+    try {
+      await statusMutation.mutateAsync({
+        id: selectedCode.id,
+        data: statusChangeData,
+      });
+      setIsStatusDialogOpen(false);
+    } catch (error) {
+      console.error('Failed to update status:', error);
+    }
+  };
+
   const handleCreate = async () => {
+    // Check for duplicates if not already checked or ignored
+    if (!ignoreDuplicate && !duplicateCheckResult) {
+      await handleCheckDuplicate();
+      return;
+    }
+
+    // Block if exact duplicate and not ignored
+    if (!ignoreDuplicate && duplicateCheckResult?.hasDuplicate && duplicateCheckResult.duplicateType !== 'SIMILAR') {
+      return;
+    }
+
     try {
       const createData: CreateCommonCodeRequest = {
         groupId: formData.groupId,
@@ -138,6 +221,8 @@ export default function CommonCodePage() {
       };
       await createMutation.mutateAsync(createData);
       setIsCreateDialogOpen(false);
+      setDuplicateCheckResult(null);
+      setIgnoreDuplicate(false);
     } catch (error) {
       console.error('Failed to create common code:', error);
     }
@@ -300,22 +385,54 @@ export default function CommonCodePage() {
                           />
                         </td>
                         <td className="px-4 py-3">
-                          <div className="flex gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleEditOpen(code)}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeleteOpen(code)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEditOpen(code)}>
+                                <Pencil className="mr-2 h-4 w-4" />
+                                수정
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleHistoryOpen(code)}>
+                                <History className="mr-2 h-4 w-4" />
+                                변경 이력
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleImpactOpen(code)}>
+                                <AlertTriangle className="mr-2 h-4 w-4" />
+                                영향도 분석
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              {code.isActive ? (
+                                <DropdownMenuItem onClick={() => handleStatusChangeOpen(code, 'INACTIVE')}>
+                                  <RefreshCw className="mr-2 h-4 w-4" />
+                                  비활성화
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem onClick={() => handleStatusChangeOpen(code, 'ACTIVE')}>
+                                  <RefreshCw className="mr-2 h-4 w-4" />
+                                  활성화
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem
+                                onClick={() => handleStatusChangeOpen(code, 'DEPRECATED')}
+                                className="text-orange-600"
+                              >
+                                <AlertTriangle className="mr-2 h-4 w-4" />
+                                폐기(Deprecated)
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteOpen(code)}
+                                className="text-destructive"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                삭제
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </td>
                       </tr>
                     ))}
@@ -365,22 +482,95 @@ export default function CommonCodePage() {
             </div>
             <div className="grid gap-2">
               <Label htmlFor="code">코드 *</Label>
-              <Input
-                id="code"
-                value={formData.code}
-                onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value.toUpperCase() }))}
-                placeholder="예: ANNUAL"
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="code"
+                  value={formData.code}
+                  onChange={(e) => {
+                    setFormData(prev => ({ ...prev, code: e.target.value.toUpperCase() }));
+                    setDuplicateCheckResult(null);
+                    setIgnoreDuplicate(false);
+                  }}
+                  placeholder="예: ANNUAL"
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCheckDuplicate}
+                  disabled={!formData.groupId || !formData.code || !formData.name || checkDuplicateMutation.isPending}
+                >
+                  {checkDuplicateMutation.isPending ? '확인 중...' : '중복 확인'}
+                </Button>
+              </div>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="name">코드명 *</Label>
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                onChange={(e) => {
+                  setFormData(prev => ({ ...prev, name: e.target.value }));
+                  setDuplicateCheckResult(null);
+                  setIgnoreDuplicate(false);
+                }}
                 placeholder="예: 연차"
               />
             </div>
+
+            {/* Duplicate Check Result */}
+            {duplicateCheckResult && (
+              <div className="space-y-2">
+                {duplicateCheckResult.hasDuplicate ? (
+                  <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      {duplicateCheckResult.duplicateMessage}
+                      {duplicateCheckResult.duplicateType === 'SIMILAR' && (
+                        <div className="mt-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setIgnoreDuplicate(true)}
+                          >
+                            무시하고 저장
+                          </Button>
+                        </div>
+                      )}
+                    </AlertDescription>
+                  </Alert>
+                ) : duplicateCheckResult.similarCodes.length > 0 ? (
+                  <Alert>
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      <div>유사한 코드가 있습니다:</div>
+                      <ul className="mt-2 space-y-1 text-sm">
+                        {duplicateCheckResult.similarCodes.map((similar) => (
+                          <li key={similar.id} className="text-muted-foreground">
+                            • {similar.code} - {similar.name} (유사도: {similar.similarity}%)
+                          </li>
+                        ))}
+                      </ul>
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <Alert className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950">
+                    <AlertDescription className="text-green-800 dark:text-green-200">
+                      중복되는 코드가 없습니다. 저장할 수 있습니다.
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
+            )}
+
+            {ignoreDuplicate && (
+              <Alert className="border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950">
+                <AlertDescription className="text-orange-800 dark:text-orange-200">
+                  중복 경고를 무시하고 저장합니다.
+                </AlertDescription>
+              </Alert>
+            )}
+
             <div className="grid gap-2">
               <Label htmlFor="nameEn">영문명</Label>
               <Input
@@ -415,9 +605,15 @@ export default function CommonCodePage() {
             </Button>
             <Button
               onClick={handleCreate}
-              disabled={!formData.groupId || !formData.code || !formData.name || createMutation.isPending}
+              disabled={
+                !formData.groupId ||
+                !formData.code ||
+                !formData.name ||
+                createMutation.isPending ||
+                (duplicateCheckResult?.hasDuplicate && duplicateCheckResult.duplicateType !== 'SIMILAR' && !ignoreDuplicate)
+              }
             >
-              {createMutation.isPending ? '저장 중...' : '저장'}
+              {createMutation.isPending ? '저장 중...' : duplicateCheckResult ? '저장' : '중복 확인 후 저장'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -508,6 +704,247 @@ export default function CommonCodePage() {
               disabled={deleteMutation.isPending}
             >
               {deleteMutation.isPending ? '삭제 중...' : '삭제'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Status Change Dialog */}
+      <Dialog open={isStatusDialogOpen} onOpenChange={setIsStatusDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>코드 상태 변경</DialogTitle>
+            <DialogDescription>
+              <strong className="text-foreground">{selectedCode?.name}</strong> ({selectedCode?.code})의 상태를 변경합니다.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label>변경할 상태</Label>
+              <Select
+                value={statusChangeData.status}
+                onValueChange={(value) => setStatusChangeData(prev => ({ ...prev, status: value as CodeStatus }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ACTIVE">활성 (ACTIVE)</SelectItem>
+                  <SelectItem value="INACTIVE">비활성 (INACTIVE)</SelectItem>
+                  <SelectItem value="DEPRECATED">폐기 (DEPRECATED)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="status-reason">변경 사유</Label>
+              <Textarea
+                id="status-reason"
+                value={statusChangeData.reason}
+                onChange={(e) => setStatusChangeData(prev => ({ ...prev, reason: e.target.value }))}
+                placeholder="상태 변경 사유를 입력하세요."
+              />
+            </div>
+            {statusChangeData.status === 'DEPRECATED' && (
+              <div className="rounded-md bg-orange-50 p-3 text-sm text-orange-800 dark:bg-orange-950 dark:text-orange-200">
+                <AlertTriangle className="mb-1 inline-block h-4 w-4" />
+                <span className="ml-2">
+                  폐기(Deprecated) 상태로 변경하면 해당 코드는 더 이상 신규 데이터에 사용되지 않습니다.
+                  기존 데이터는 유지됩니다.
+                </span>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsStatusDialogOpen(false)}>
+              취소
+            </Button>
+            <Button
+              onClick={handleStatusChange}
+              disabled={statusMutation.isPending}
+              variant={statusChangeData.status === 'DEPRECATED' ? 'destructive' : 'default'}
+            >
+              {statusMutation.isPending ? '변경 중...' : '상태 변경'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Impact Analysis Dialog */}
+      <Dialog open={isImpactDialogOpen} onOpenChange={setIsImpactDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>영향도 분석</DialogTitle>
+            <DialogDescription>
+              <strong className="text-foreground">{selectedCode?.name}</strong> ({selectedCode?.code}) 코드의 사용 현황입니다.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            {impactLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+              </div>
+            ) : impactData?.data ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="text-2xl font-bold">{impactData.data.totalAffectedRecords}</div>
+                      <div className="text-sm text-muted-foreground">총 영향받는 레코드</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="text-2xl font-bold">{impactData.data.affectedEntities.length}</div>
+                      <div className="text-sm text-muted-foreground">관련 엔티티</div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {impactData.data.affectedEntities.length > 0 ? (
+                  <div className="space-y-3">
+                    <h4 className="font-medium">영향받는 데이터</h4>
+                    {impactData.data.affectedEntities.map((entity, idx) => (
+                      <Card key={idx}>
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div className="font-medium">{entity.entityType}</div>
+                              <div className="text-sm text-muted-foreground">{entity.tableName}</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-lg font-semibold">{entity.recordCount}건</div>
+                            </div>
+                          </div>
+                          {entity.sampleRecords && entity.sampleRecords.length > 0 && (
+                            <div className="mt-3 border-t pt-3">
+                              <div className="text-xs text-muted-foreground">샘플 데이터:</div>
+                              <ul className="mt-1 space-y-1 text-sm">
+                                {entity.sampleRecords.map((record) => (
+                                  <li key={record.id} className="truncate">
+                                    • {record.displayValue}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-md bg-green-50 p-4 text-green-800 dark:bg-green-950 dark:text-green-200">
+                    이 코드를 사용하는 데이터가 없습니다. 안전하게 삭제할 수 있습니다.
+                  </div>
+                )}
+
+                {!impactData.data.canDelete && impactData.data.deleteBlockReason && (
+                  <div className="rounded-md bg-destructive/10 p-4 text-destructive">
+                    <AlertTriangle className="mb-1 inline-block h-4 w-4" />
+                    <span className="ml-2">{impactData.data.deleteBlockReason}</span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="py-8 text-center text-muted-foreground">
+                영향도 데이터를 불러올 수 없습니다.
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsImpactDialogOpen(false)}>
+              닫기
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* History Dialog */}
+      <Dialog open={isHistoryDialogOpen} onOpenChange={setIsHistoryDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>변경 이력</DialogTitle>
+            <DialogDescription>
+              <strong className="text-foreground">{selectedCode?.name}</strong> ({selectedCode?.code}) 코드의 변경 이력입니다.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-96 overflow-y-auto py-4">
+            {historyLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+              </div>
+            ) : historyData?.data?.content && historyData.data.content.length > 0 ? (
+              <div className="relative space-y-0 pl-6">
+                <div className="absolute bottom-0 left-2 top-0 w-px bg-border" />
+                {historyData.data.content.map((history) => (
+                  <div key={history.id} className="relative pb-6">
+                    <div className="absolute -left-4 flex h-4 w-4 items-center justify-center rounded-full bg-background">
+                      <div className={`h-2 w-2 rounded-full ${
+                        history.action === 'CREATED' ? 'bg-green-500' :
+                        history.action === 'DELETED' ? 'bg-red-500' :
+                        history.action === 'STATUS_CHANGED' ? 'bg-orange-500' :
+                        'bg-blue-500'
+                      }`} />
+                    </div>
+                    <div className="ml-4">
+                      <div className="flex items-center gap-2">
+                        <StatusBadge
+                          status={
+                            history.action === 'CREATED' ? 'success' :
+                            history.action === 'DELETED' ? 'error' :
+                            history.action === 'STATUS_CHANGED' ? 'warning' :
+                            'info'
+                          }
+                          label={
+                            history.action === 'CREATED' ? '생성' :
+                            history.action === 'DELETED' ? '삭제' :
+                            history.action === 'STATUS_CHANGED' ? '상태변경' :
+                            '수정'
+                          }
+                        />
+                        <span className="text-sm text-muted-foreground">
+                          {new Date(history.changedAt).toLocaleString('ko-KR')}
+                        </span>
+                      </div>
+                      <div className="mt-1 text-sm">
+                        <span className="font-medium">{history.changedBy.name}</span>
+                        {history.changedField && (
+                          <span className="text-muted-foreground">
+                            {' '}님이 {history.changedField} 필드를 변경
+                          </span>
+                        )}
+                      </div>
+                      {(history.oldValue || history.newValue) && (
+                        <div className="mt-2 rounded bg-muted p-2 text-sm">
+                          {history.oldValue && (
+                            <div className="text-red-600 dark:text-red-400">
+                              - {history.oldValue}
+                            </div>
+                          )}
+                          {history.newValue && (
+                            <div className="text-green-600 dark:text-green-400">
+                              + {history.newValue}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {history.reason && (
+                        <div className="mt-2 text-sm text-muted-foreground">
+                          사유: {history.reason}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-8 text-center text-muted-foreground">
+                변경 이력이 없습니다.
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsHistoryDialogOpen(false)}>
+              닫기
             </Button>
           </DialogFooter>
         </DialogContent>

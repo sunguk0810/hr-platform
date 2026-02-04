@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +9,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
 import { useUIStore } from '@/stores/uiStore';
 import { useAuthStore } from '@/stores/authStore';
+import { authService, type Session } from '@/features/auth/services/authService';
+import { useToast } from '@/hooks/useToast';
 import {
   Moon,
   Sun,
@@ -26,27 +28,10 @@ import {
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
-// Mock active sessions
-const mockSessions = [
-  {
-    id: '1',
-    device: 'Chrome on Windows',
-    location: 'Seoul, South Korea',
-    lastActive: new Date().toISOString(),
-    current: true,
-  },
-  {
-    id: '2',
-    device: 'Safari on iPhone',
-    location: 'Seoul, South Korea',
-    lastActive: new Date(Date.now() - 3600000).toISOString(),
-    current: false,
-  },
-];
-
 export default function SettingsPage() {
   const { theme, setTheme } = useUIStore();
   const { user } = useAuthStore();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('profile');
 
   // Password form state
@@ -55,6 +40,12 @@ export default function SettingsPage() {
     newPassword: '',
     confirmPassword: '',
   });
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  // Sessions state
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [isLoadingSessions, setIsLoadingSessions] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState<string | null>(null);
 
   // Notification settings
   const [notifications, setNotifications] = useState({
@@ -72,24 +63,107 @@ export default function SettingsPage() {
     { value: 'system', label: '시스템', icon: Monitor },
   ] as const;
 
-  const handlePasswordChange = (e: React.FormEvent) => {
-    e.preventDefault();
-    // TODO: Implement password change API call
-    alert('비밀번호가 변경되었습니다.');
-    setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
-  };
+  // Fetch sessions when security tab is active
+  useEffect(() => {
+    if (activeTab === 'security') {
+      fetchSessions();
+    }
+  }, [activeTab]);
 
-  const handleLogoutSession = (sessionId: string) => {
-    if (confirm('이 세션을 로그아웃 하시겠습니까?')) {
-      // TODO: Implement session logout API call
-      console.log('Logging out session:', sessionId);
+  const fetchSessions = async () => {
+    setIsLoadingSessions(true);
+    try {
+      const response = await authService.getSessions();
+      setSessions(response.data || []);
+    } catch {
+      toast({
+        title: '세션 목록 조회 실패',
+        description: '세션 목록을 불러올 수 없습니다.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoadingSessions(false);
     }
   };
 
-  const handleLogoutAllSessions = () => {
-    if (confirm('현재 세션을 제외한 모든 세션을 로그아웃 하시겠습니까?')) {
-      // TODO: Implement logout all sessions API call
-      console.log('Logging out all sessions');
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      toast({
+        title: '비밀번호 불일치',
+        description: '새 비밀번호와 확인 비밀번호가 일치하지 않습니다.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      await authService.changePassword({
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+      });
+
+      toast({
+        title: '비밀번호 변경 완료',
+        description: '비밀번호가 성공적으로 변경되었습니다.',
+      });
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (error) {
+      toast({
+        title: '비밀번호 변경 실패',
+        description: error instanceof Error ? error.message : '비밀번호 변경에 실패했습니다.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
+  const handleLogoutSession = async (sessionId: string) => {
+    if (!confirm('이 세션을 로그아웃 하시겠습니까?')) return;
+
+    setIsLoggingOut(sessionId);
+    try {
+      await authService.logoutSession(sessionId);
+      toast({
+        title: '세션 로그아웃',
+        description: '해당 세션이 로그아웃되었습니다.',
+      });
+      // Refresh session list
+      fetchSessions();
+    } catch {
+      toast({
+        title: '로그아웃 실패',
+        description: '세션 로그아웃에 실패했습니다.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoggingOut(null);
+    }
+  };
+
+  const handleLogoutAllSessions = async () => {
+    if (!confirm('현재 세션을 제외한 모든 세션을 로그아웃 하시겠습니까?')) return;
+
+    setIsLoggingOut('all');
+    try {
+      await authService.logoutAllSessions();
+      toast({
+        title: '모든 세션 로그아웃',
+        description: '현재 세션을 제외한 모든 세션이 로그아웃되었습니다.',
+      });
+      // Refresh session list
+      fetchSessions();
+    } catch {
+      toast({
+        title: '로그아웃 실패',
+        description: '세션 로그아웃에 실패했습니다.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoggingOut(null);
     }
   };
 
@@ -217,12 +291,13 @@ export default function SettingsPage() {
                 <Button
                   type="submit"
                   disabled={
+                    isChangingPassword ||
                     !passwordForm.currentPassword ||
                     !passwordForm.newPassword ||
                     passwordForm.newPassword !== passwordForm.confirmPassword
                   }
                 >
-                  비밀번호 변경
+                  {isChangingPassword ? '변경 중...' : '비밀번호 변경'}
                 </Button>
               </form>
             </CardContent>
@@ -234,7 +309,15 @@ export default function SettingsPage() {
               <CardDescription>현재 로그인된 기기를 관리합니다.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {mockSessions.map((session) => (
+              {isLoadingSessions ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+                </div>
+              ) : sessions.length === 0 ? (
+                <p className="text-center text-muted-foreground py-4">
+                  활성 세션이 없습니다.
+                </p>
+              ) : sessions.map((session) => (
                 <div
                   key={session.id}
                   className="flex items-center justify-between p-4 rounded-lg border"
@@ -270,20 +353,24 @@ export default function SettingsPage() {
                       size="sm"
                       className="text-destructive"
                       onClick={() => handleLogoutSession(session.id)}
+                      disabled={isLoggingOut === session.id}
                     >
                       <LogOut className="h-4 w-4 mr-1" />
-                      로그아웃
+                      {isLoggingOut === session.id ? '처리 중...' : '로그아웃'}
                     </Button>
                   )}
                 </div>
               ))}
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={handleLogoutAllSessions}
-              >
-                다른 모든 세션 로그아웃
-              </Button>
+              {sessions.length > 1 && (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleLogoutAllSessions}
+                  disabled={isLoggingOut === 'all'}
+                >
+                  {isLoggingOut === 'all' ? '처리 중...' : '다른 모든 세션 로그아웃'}
+                </Button>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

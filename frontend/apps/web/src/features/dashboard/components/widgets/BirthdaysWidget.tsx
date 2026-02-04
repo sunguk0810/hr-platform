@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import { Cake, Gift } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { WidgetContainer } from './WidgetContainer';
@@ -70,28 +71,31 @@ export function BirthdaysWidget() {
   };
 
   const renderPersonItem = (person: BirthdayPerson, showDate = false) => (
-    <div
+    <Link
       key={person.id}
-      className="flex items-center gap-3 rounded-lg border p-3"
+      to={`/employees/${person.id}`}
+      className="block"
     >
-      <Avatar className="h-10 w-10">
-        <AvatarImage src={person.profileImageUrl} alt={person.name} />
-        <AvatarFallback className="text-xs">
-          {getInitials(person.name)}
-        </AvatarFallback>
-      </Avatar>
-      <div className="flex-1 min-w-0">
-        <p className="truncate font-medium text-sm">{person.name}</p>
-        <p className="truncate text-xs text-muted-foreground">
-          {person.department} · {person.position}
-        </p>
+      <div className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50">
+        <Avatar className="h-10 w-10">
+          <AvatarImage src={person.profileImageUrl} alt={person.name} />
+          <AvatarFallback className="text-xs">
+            {getInitials(person.name)}
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex-1 min-w-0">
+          <p className="truncate font-medium text-sm">{person.name}</p>
+          <p className="truncate text-xs text-muted-foreground">
+            {person.department} · {person.position}
+          </p>
+        </div>
+        {showDate && (
+          <Badge variant="outline" className="text-xs shrink-0">
+            {getDateLabel(person.birthDate)}
+          </Badge>
+        )}
       </div>
-      {showDate && (
-        <Badge variant="outline" className="text-xs shrink-0">
-          {getDateLabel(person.birthDate)}
-        </Badge>
-      )}
-    </div>
+    </Link>
   );
 
   const hasBirthdays = (data?.today?.length ?? 0) > 0 || (data?.upcoming?.length ?? 0) > 0;
@@ -126,27 +130,32 @@ export function BirthdaysWidget() {
                 </div>
                 <div className="space-y-2">
                   {data.today.map((person) => (
-                    <div
+                    <Link
                       key={person.id}
-                      className={cn(
-                        'flex items-center gap-3 rounded-lg border p-3',
-                        'border-pink-200 bg-pink-50 dark:border-pink-900 dark:bg-pink-950'
-                      )}
+                      to={`/employees/${person.id}`}
+                      className="block"
                     >
-                      <Avatar className="h-10 w-10 ring-2 ring-pink-300 dark:ring-pink-700">
-                        <AvatarImage src={person.profileImageUrl} alt={person.name} />
-                        <AvatarFallback className="text-xs">
-                          {getInitials(person.name)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="truncate font-medium text-sm">{person.name}</p>
-                        <p className="truncate text-xs text-muted-foreground">
-                          {person.department} · {person.position}
-                        </p>
+                      <div
+                        className={cn(
+                          'flex items-center gap-3 rounded-lg border p-3 transition-colors hover:opacity-80',
+                          'border-pink-200 bg-pink-50 dark:border-pink-900 dark:bg-pink-950'
+                        )}
+                      >
+                        <Avatar className="h-10 w-10 ring-2 ring-pink-300 dark:ring-pink-700">
+                          <AvatarImage src={person.profileImageUrl} alt={person.name} />
+                          <AvatarFallback className="text-xs">
+                            {getInitials(person.name)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="truncate font-medium text-sm">{person.name}</p>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {person.department} · {person.position}
+                          </p>
+                        </div>
+                        <Cake className="h-5 w-5 text-pink-500" />
                       </div>
-                      <Cake className="h-5 w-5 text-pink-500" />
-                    </div>
+                    </Link>
                   ))}
                 </div>
               </div>

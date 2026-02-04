@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,7 +24,7 @@ import {
 import { EmptyState } from '@/components/common/EmptyState';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { Pagination } from '@/components/common/Pagination';
-import { Clock, Plus, AlertCircle, CheckCircle, XCircle, Timer } from 'lucide-react';
+import { ArrowLeft, Clock, Plus, AlertCircle, CheckCircle, XCircle, Timer } from 'lucide-react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import {
@@ -42,6 +43,7 @@ const STATUS_CONFIG: Record<OvertimeStatus, { label: string; variant: 'default' 
 };
 
 export default function OvertimePage() {
+  const navigate = useNavigate();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<OvertimeStatus | 'all'>('all');
   const [page, setPage] = useState(0);
@@ -107,10 +109,16 @@ export default function OvertimePage() {
         title="초과근무"
         description="초과근무를 신청하고 현황을 확인합니다."
         actions={
-          <Button onClick={() => setIsCreateDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            초과근무 신청
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate('/attendance')}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              근태관리
+            </Button>
+            <Button onClick={() => setIsCreateDialogOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              초과근무 신청
+            </Button>
+          </div>
         }
       />
 

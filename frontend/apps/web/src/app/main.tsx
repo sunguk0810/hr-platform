@@ -5,12 +5,22 @@ import '@/styles/globals.css';
 
 async function enableMocking() {
   if (import.meta.env.DEV) {
-    const { worker } = await import('@/mocks/browser');
-    return worker.start({
-      onUnhandledRequest: 'bypass',
-    });
+    try {
+      const { worker } = await import('@/mocks/browser');
+
+      // Start the worker with proper configuration
+      await worker.start({
+        onUnhandledRequest: 'bypass',
+        serviceWorker: {
+          url: '/mockServiceWorker.js',
+        },
+      });
+
+      console.log('[MSW] Mocking enabled');
+    } catch (error) {
+      console.error('[MSW] Failed to enable mocking:', error);
+    }
   }
-  return Promise.resolve();
 }
 
 enableMocking().then(() => {

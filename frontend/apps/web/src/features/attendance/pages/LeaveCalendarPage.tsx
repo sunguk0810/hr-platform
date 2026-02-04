@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ChevronLeft, ChevronRight, Calendar, BarChart3 } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Calendar, BarChart3 } from 'lucide-react';
 import {
   format,
   startOfMonth,
@@ -143,6 +144,7 @@ function GanttRow({ event, startDate, endDate }: GanttRowProps) {
 }
 
 export default function LeaveCalendarPage() {
+  const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('month');
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
@@ -192,6 +194,12 @@ export default function LeaveCalendarPage() {
       <PageHeader
         title="휴가 캘린더"
         description="팀원들의 휴가 일정을 확인합니다."
+        actions={
+          <Button variant="outline" onClick={() => navigate('/attendance')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            근태관리
+          </Button>
+        }
       />
 
       <Card className="mb-4">

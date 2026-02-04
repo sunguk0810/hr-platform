@@ -4,6 +4,7 @@ import { Header } from './Header/Header';
 import { Sidebar } from './Sidebar/Sidebar';
 import { PageLoader } from '@/components/common/PageLoader';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
+import { HelpPanel, OnboardingTour } from '@/features/help';
 import { useUIStore } from '@/stores/uiStore';
 import { cn } from '@/lib/utils';
 
@@ -28,6 +29,8 @@ export function MainLayout() {
           </ErrorBoundary>
         </main>
       </div>
+      <HelpPanel />
+      <OnboardingTour />
     </div>
   );
 }

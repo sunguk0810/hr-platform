@@ -25,9 +25,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { Pagination } from '@/components/common/Pagination';
 import { useAuditLogs } from '../hooks/useAudit';
+import { auditService } from '../services/auditService';
+import { useToast } from '@/hooks/useToast';
+import { downloadBlob, generateTimestampedFilename } from '@/lib/downloadUtils';
 import {
   Search,
   Download,
@@ -39,6 +48,8 @@ import {
   FileText,
   CheckCircle2,
   XCircle,
+  ChevronDown,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -75,21 +86,23 @@ const actionColors: Record<AuditAction, string> = {
 };
 
 export default function AuditLogPage() {
+  const { toast } = useToast();
   const [page, setPage] = useState(0);
   const [filters, setFilters] = useState({
     keyword: '',
-    action: '' as AuditAction | '',
-    result: '' as AuditResult | '',
+    action: 'ALL' as AuditAction | 'ALL',
+    result: 'ALL' as AuditResult | 'ALL',
   });
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const { data, isLoading } = useAuditLogs({
     page,
     size: 10,
     ...(filters.keyword && { keyword: filters.keyword }),
-    ...(filters.action && { action: filters.action }),
-    ...(filters.result && { result: filters.result }),
+    ...(filters.action && filters.action !== 'ALL' && { action: filters.action }),
+    ...(filters.result && filters.result !== 'ALL' && { result: filters.result }),
   });
 
   const handleSearch = () => {
@@ -101,9 +114,34 @@ export default function AuditLogPage() {
     setIsDetailOpen(true);
   };
 
-  const handleExport = () => {
-    // TODO: Implement export
-    alert('감사 로그를 내보냅니다.');
+  const handleExport = async (format: 'csv' | 'excel') => {
+    setIsExporting(true);
+    try {
+      const params = {
+        ...(filters.keyword && { keyword: filters.keyword }),
+        ...(filters.action && filters.action !== 'ALL' && { action: filters.action }),
+        ...(filters.result && filters.result !== 'ALL' && { result: filters.result }),
+        format,
+      };
+
+      const blob = await auditService.exportAuditLogs(params);
+      const extension = format === 'excel' ? 'xlsx' : 'csv';
+      const filename = generateTimestampedFilename('audit-logs', extension);
+      downloadBlob(blob, filename);
+
+      toast({
+        title: '내보내기 완료',
+        description: `감사 로그가 ${format.toUpperCase()} 파일로 저장되었습니다.`,
+      });
+    } catch {
+      toast({
+        title: '내보내기 실패',
+        description: '감사 로그 내보내기 중 오류가 발생했습니다.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -112,10 +150,34 @@ export default function AuditLogPage() {
         title="감사 로그"
         description="시스템 활동 내역을 조회합니다."
         actions={
-          <Button variant="outline" onClick={handleExport}>
-            <Download className="h-4 w-4 mr-2" />
-            내보내기
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" disabled={isExporting}>
+                {isExporting ? (
+                  <>
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    내보내기 중...
+                  </>
+                ) : (
+                  <>
+                    <FileSpreadsheet className="h-4 w-4 mr-2" />
+                    내보내기
+                    <ChevronDown className="h-4 w-4 ml-2" />
+                  </>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleExport('csv')}>
+                <Download className="h-4 w-4 mr-2" />
+                CSV로 내보내기
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('excel')}>
+                <Download className="h-4 w-4 mr-2" />
+                Excel로 내보내기
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         }
       />
 
@@ -147,14 +209,14 @@ export default function AuditLogPage() {
                 <Select
                   value={filters.action}
                   onValueChange={(value) =>
-                    setFilters((prev) => ({ ...prev, action: value as AuditAction | '' }))
+                    setFilters((prev) => ({ ...prev, action: value as AuditAction | 'ALL' }))
                   }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="전체" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">전체</SelectItem>
+                    <SelectItem value="ALL">전체</SelectItem>
                     {Object.entries(actionLabels).map(([value, label]) => (
                       <SelectItem key={value} value={value}>
                         {label}
@@ -168,14 +230,14 @@ export default function AuditLogPage() {
                 <Select
                   value={filters.result}
                   onValueChange={(value) =>
-                    setFilters((prev) => ({ ...prev, result: value as AuditResult | '' }))
+                    setFilters((prev) => ({ ...prev, result: value as AuditResult | 'ALL' }))
                   }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="전체" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">전체</SelectItem>
+                    <SelectItem value="ALL">전체</SelectItem>
                     <SelectItem value="SUCCESS">성공</SelectItem>
                     <SelectItem value="FAILURE">실패</SelectItem>
                   </SelectContent>
