@@ -15,16 +15,20 @@ import { useUIStore } from '@/stores/uiStore';
 import { useTenantStore } from '@/stores/tenantStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useLogout } from '@/features/auth/hooks/useAuth';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import { TenantSwitcher } from './TenantSwitcher';
+import { LanguageSwitcher } from './LanguageSwitcher';
+import { MobileMenuDrawer } from '../MobileNav/MobileMenuDrawer';
 import { cn } from '@/lib/utils';
 
 export function Header() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const { currentTenant } = useTenantStore();
+  const { currentTenant: _currentTenant } = useTenantStore();
   const { theme, setTheme, sidebarCollapsed, toggleSidebar } = useUIStore();
   const { unreadCount } = useNotificationStore();
   const { mutate: logout } = useLogout();
+  const isMobile = useIsMobile();
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
@@ -43,25 +47,34 @@ export function Header() {
     <header
       className={cn(
         'fixed right-0 top-0 z-50 flex h-16 items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-300',
-        sidebarCollapsed ? 'left-16' : 'left-64'
+        // 모바일: left-0으로 전체 너비
+        isMobile ? 'left-0' : (sidebarCollapsed ? 'left-16' : 'left-64')
       )}
     >
       <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleSidebar}
-          className="lg:hidden"
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
+        {/* 모바일에서는 햄버거 메뉴 + 로고, 데스크톱에서는 사이드바 토글 */}
+        {isMobile ? (
+          <div className="flex items-center gap-2">
+            <MobileMenuDrawer />
+            <h1 className="text-lg font-semibold text-foreground">HR Platform</h1>
+          </div>
+        ) : (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleSidebar}
+            className="lg:hidden"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+        )}
 
-        {/* Tenant Switcher - 계열사 전환 */}
+        {/* Tenant Switcher - 계열사 전환 (데스크톱만) */}
         <div className="hidden md:block">
           <TenantSwitcher />
         </div>
 
-        {/* Search */}
+        {/* Search (데스크톱만) */}
         <div data-tour="header-search" className="relative hidden lg:block">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
@@ -73,30 +86,35 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-2">
+        {/* Language switcher */}
+        <LanguageSwitcher />
+
         {/* Theme toggle */}
-        <Button variant="ghost" size="icon" onClick={toggleTheme}>
+        <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="테마 변경">
           {theme === 'dark' ? (
-            <Sun className="h-5 w-5" />
+            <Sun className="h-5 w-5" aria-hidden="true" />
           ) : (
-            <Moon className="h-5 w-5" />
+            <Moon className="h-5 w-5" aria-hidden="true" />
           )}
         </Button>
 
-        {/* Notifications */}
-        <Button
-          data-tour="header-notifications"
-          variant="ghost"
-          size="icon"
-          className="relative"
-          onClick={() => navigate('/notifications')}
-        >
-          <Bell className="h-5 w-5" />
-          {unreadCount > 0 && (
-            <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] text-destructive-foreground">
-              {unreadCount > 9 ? '9+' : unreadCount}
-            </span>
-          )}
-        </Button>
+        {/* Notifications (모바일에서는 BottomTabBar에서 처리하므로 숨김) */}
+        {!isMobile && (
+          <Button
+            data-tour="header-notifications"
+            variant="ghost"
+            size="icon"
+            className="relative"
+            onClick={() => navigate('/notifications')}
+          >
+            <Bell className="h-5 w-5" />
+            {unreadCount > 0 && (
+              <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] text-destructive-foreground">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </Button>
+        )}
 
         {/* User menu */}
         <DropdownMenu>

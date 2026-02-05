@@ -1,7 +1,9 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import i18n from '@/lib/i18n';
 
 type Theme = 'light' | 'dark' | 'system';
+type Language = 'ko' | 'en';
 
 interface UIState {
   // Theme
@@ -18,8 +20,8 @@ interface UIState {
   setMobileMenuOpen: (open: boolean) => void;
 
   // Language
-  language: 'ko' | 'en';
-  setLanguage: (language: 'ko' | 'en') => void;
+  language: Language;
+  setLanguage: (language: Language) => void;
 }
 
 export const useUIStore = create<UIState>()(
@@ -44,7 +46,10 @@ export const useUIStore = create<UIState>()(
 
       // Language
       language: 'ko',
-      setLanguage: (language) => set({ language }),
+      setLanguage: (language) => {
+        i18n.changeLanguage(language);
+        set({ language });
+      },
     }),
     {
       name: 'hr-platform-ui',
@@ -57,6 +62,9 @@ export const useUIStore = create<UIState>()(
       onRehydrateStorage: () => (state) => {
         if (state) {
           applyTheme(state.theme);
+          if (state.language) {
+            i18n.changeLanguage(state.language);
+          }
         }
       },
     }
