@@ -29,6 +29,9 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+# Resolve project root path
+$ProjectRoot = (Resolve-Path "$PSScriptRoot\..").Path
+
 # Service configuration
 $ServiceConfig = @{
     "config-server"       = @{ Port = 8888; Path = ":infra:config-server"; Priority = 1 }
@@ -107,7 +110,7 @@ function Start-Service {
     Write-Host "Starting $ServiceName [port: $port]..." -ForegroundColor Green
 
     $process = Start-Process -FilePath "cmd.exe" `
-        -ArgumentList "/k", "title $ServiceName [$port] && cd /d $PSScriptRoot\.. && gradlew.bat ${gradlePath}:bootRun" `
+        -ArgumentList "/k", "title $ServiceName [$port] && cd /d `"$ProjectRoot`" && .\gradlew.bat ${gradlePath}:bootRun" `
         -PassThru
 
     return $process
@@ -124,7 +127,7 @@ Write-Host "HR SaaS Backend Services Starter" -ForegroundColor Cyan
 Write-Host "============================================" -ForegroundColor Cyan
 Write-Host ""
 
-Set-Location "$PSScriptRoot\.."
+Set-Location $ProjectRoot
 
 # Check infrastructure
 if (-not (Test-Infrastructure)) {

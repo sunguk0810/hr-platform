@@ -59,7 +59,7 @@ echo.
 :: Build first (optional)
 if %SKIP_BUILD%==0 (
     echo [1/2] Building all services...
-    call gradlew.bat build -x test --parallel -q
+    call .\gradlew.bat build -x test --parallel -q
     if errorlevel 1 (
         echo [ERROR] Build failed!
         exit /b 1
@@ -83,7 +83,7 @@ if %START_ALL%==1 (
 echo %SERVICES_TO_START% | findstr /i "config-server" >nul
 if not errorlevel 1 (
     echo Starting config-server [port: 8888]...
-    start "config-server [8888]" cmd /k "cd /d %~dp0.. && gradlew.bat :infra:config-server:bootRun"
+    start "config-server [8888]" cmd /k "cd /d %~dp0.. && .\gradlew.bat :infra:config-server:bootRun"
 
     :: Wait for config-server to be ready
     echo Waiting for config-server to be ready...
@@ -133,7 +133,7 @@ for %%s in (%SERVICES_TO_START%) do (
         )
 
         echo Starting %%s [port: !PORT!]...
-        start "%%s [!PORT!]" cmd /k "cd /d %~dp0.. && gradlew.bat !GRADLE_PATH!:bootRun"
+        start "%%s [!PORT!]" cmd /k "cd /d %~dp0.. && .\gradlew.bat !GRADLE_PATH!:bootRun"
 
         :: Small delay to prevent port conflicts during startup
         timeout /t 2 /nobreak >nul
