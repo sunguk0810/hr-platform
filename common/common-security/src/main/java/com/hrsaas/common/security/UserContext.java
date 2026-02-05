@@ -20,8 +20,12 @@ public class UserContext {
     private UUID userId;
     private UUID tenantId;
     private UUID employeeId;
+    private UUID departmentId;
+    private UUID teamId;
     private String username;
     private String email;
+    private String employeeName;
+    private String departmentName;
     private Set<String> roles;
     private Set<String> permissions;
 }

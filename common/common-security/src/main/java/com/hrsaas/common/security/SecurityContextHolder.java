@@ -22,6 +22,13 @@ public final class SecurityContextHolder {
         return CONTEXT.get();
     }
 
+    /**
+     * Alias for getContext() - returns the current user context.
+     */
+    public static UserContext getCurrentUser() {
+        return CONTEXT.get();
+    }
+
     public static UUID getCurrentUserId() {
         UserContext context = CONTEXT.get();
         return context != null ? context.getUserId() : null;
@@ -35,6 +42,16 @@ public final class SecurityContextHolder {
     public static UUID getCurrentEmployeeId() {
         UserContext context = CONTEXT.get();
         return context != null ? context.getEmployeeId() : null;
+    }
+
+    public static UUID getCurrentDepartmentId() {
+        UserContext context = CONTEXT.get();
+        return context != null ? context.getDepartmentId() : null;
+    }
+
+    public static UUID getCurrentTeamId() {
+        UserContext context = CONTEXT.get();
+        return context != null ? context.getTeamId() : null;
     }
 
     public static Set<String> getCurrentRoles() {

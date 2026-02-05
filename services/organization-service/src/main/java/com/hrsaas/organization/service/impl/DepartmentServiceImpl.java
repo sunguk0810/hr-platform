@@ -9,6 +9,7 @@ import com.hrsaas.organization.domain.event.DepartmentCreatedEvent;
 import com.hrsaas.organization.domain.event.DepartmentUpdatedEvent;
 import com.hrsaas.organization.domain.dto.request.CreateDepartmentRequest;
 import com.hrsaas.organization.domain.dto.request.UpdateDepartmentRequest;
+import com.hrsaas.organization.domain.dto.response.DepartmentHistoryResponse;
 import com.hrsaas.organization.domain.dto.response.DepartmentResponse;
 import com.hrsaas.organization.domain.dto.response.DepartmentTreeResponse;
 import com.hrsaas.organization.domain.entity.Department;
@@ -19,10 +20,17 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -145,5 +153,97 @@ public class DepartmentServiceImpl implements DepartmentService {
     private Department findById(UUID id) {
         return departmentRepository.findById(id)
             .orElseThrow(() -> new NotFoundException("ORG_001", "부서를 찾을 수 없습니다: " + id));
+    }
+
+    @Override
+    public Page<DepartmentHistoryResponse> getOrganizationHistory(Pageable pageable) {
+        UUID tenantId = TenantContext.getCurrentTenant();
+
+        // TODO: In production, this would query an audit/history table
+        // For now, return mock data based on departments
+        List<Department> departments = departmentRepository.findAllByTenantAndStatus(
+            tenantId, DepartmentStatus.ACTIVE);
+
+        List<DepartmentHistoryResponse> histories = new ArrayList<>();
+
+        for (Department dept : departments) {
+            // Create mock history entry for department creation
+            histories.add(DepartmentHistoryResponse.builder()
+                .id(UUID.randomUUID())
+                .type(DepartmentHistoryResponse.EventType.DEPARTMENT_CREATED.name().toLowerCase())
+                .date(dept.getCreatedAt())
+                .title(dept.getName() + " 부서 생성")
+                .description(dept.getName() + " 부서가 생성되었습니다.")
+                .actor(DepartmentHistoryResponse.ActorInfo.builder()
+                    .id(dept.getCreatedBy())
+                    .name("시스템")
+                    .build())
+                .departmentId(dept.getId())
+                .departmentName(dept.getName())
+                .metadata(Map.of("code", dept.getCode()))
+                .build());
+        }
+
+        // Sort by date descending
+        histories.sort((a, b) -> b.getDate().compareTo(a.getDate()));
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), histories.size());
+
+        List<DepartmentHistoryResponse> pageContent = histories.subList(
+            Math.min(start, histories.size()),
+            Math.min(end, histories.size())
+        );
+
+        return new PageImpl<>(pageContent, pageable, histories.size());
+    }
+
+    @Override
+    public List<DepartmentHistoryResponse> getDepartmentHistory(UUID departmentId) {
+        Department department = findById(departmentId);
+
+        List<DepartmentHistoryResponse> histories = new ArrayList<>();
+
+        // TODO: In production, this would query an audit/history table
+        // For now, return mock data for the specific department
+
+        // Department creation event
+        histories.add(DepartmentHistoryResponse.builder()
+            .id(UUID.randomUUID())
+            .type(DepartmentHistoryResponse.EventType.DEPARTMENT_CREATED.name().toLowerCase())
+            .date(department.getCreatedAt())
+            .title(department.getName() + " 부서 생성")
+            .description(department.getName() + " 부서가 생성되었습니다.")
+            .actor(DepartmentHistoryResponse.ActorInfo.builder()
+                .id(department.getCreatedBy())
+                .name("시스템")
+                .build())
+            .departmentId(department.getId())
+            .departmentName(department.getName())
+            .metadata(Map.of("code", department.getCode()))
+            .build());
+
+        // If updated, add update event
+        if (department.getUpdatedAt() != null &&
+            !department.getUpdatedAt().equals(department.getCreatedAt())) {
+            histories.add(DepartmentHistoryResponse.builder()
+                .id(UUID.randomUUID())
+                .type(DepartmentHistoryResponse.EventType.DEPARTMENT_RENAMED.name().toLowerCase())
+                .date(department.getUpdatedAt())
+                .title(department.getName() + " 부서 수정")
+                .description(department.getName() + " 부서 정보가 수정되었습니다.")
+                .actor(DepartmentHistoryResponse.ActorInfo.builder()
+                    .id(department.getUpdatedBy())
+                    .name("관리자")
+                    .build())
+                .departmentId(department.getId())
+                .departmentName(department.getName())
+                .build());
+        }
+
+        // Sort by date descending
+        histories.sort((a, b) -> b.getDate().compareTo(a.getDate()));
+
+        return histories;
     }
 }

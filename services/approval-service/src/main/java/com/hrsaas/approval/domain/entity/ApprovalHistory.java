@@ -1,6 +1,6 @@
 package com.hrsaas.approval.domain.entity;
 
-import com.hrsaas.common.entity.BaseEntity;
+import com.hrsaas.common.entity.AuditableEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -14,7 +14,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class ApprovalHistory extends BaseEntity {
+public class ApprovalHistory extends AuditableEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "document_id", nullable = false)
@@ -43,4 +43,8 @@ public class ApprovalHistory extends BaseEntity {
 
     @Column(name = "ip_address")
     private String ipAddress;
+
+    @Column(name = "step_order")
+    @Builder.Default
+    private int stepOrder = 0;
 }
