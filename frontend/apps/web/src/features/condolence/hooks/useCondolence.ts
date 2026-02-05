@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { condolenceService } from '../services/condolenceService';
+import { condolenceService, CondolencePaymentSearchParams, ProcessPaymentRequest } from '../services/condolenceService';
 import type { CondolenceSearchParams, CreateCondolenceRequest } from '@hr-platform/shared-types';
 
 const condolenceKeys = {
@@ -9,6 +9,9 @@ const condolenceKeys = {
   details: () => [...condolenceKeys.all, 'detail'] as const,
   detail: (id: string) => [...condolenceKeys.details(), id] as const,
   policies: () => [...condolenceKeys.all, 'policies'] as const,
+  payments: () => [...condolenceKeys.all, 'payments'] as const,
+  paymentPending: (params?: CondolencePaymentSearchParams) => [...condolenceKeys.payments(), 'pending', params] as const,
+  paymentHistory: (params?: CondolencePaymentSearchParams) => [...condolenceKeys.payments(), 'history', params] as const,
 };
 
 export function useCondolenceRequests(params?: CondolenceSearchParams) {
@@ -63,5 +66,77 @@ export function useRejectCondolenceRequest() {
       queryClient.invalidateQueries({ queryKey: condolenceKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: condolenceKeys.lists() });
     },
+  });
+}
+
+export function useUpdateCondolenceRequest() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<CreateCondolenceRequest> }) =>
+      condolenceService.updateRequest(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: condolenceKeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: condolenceKeys.lists() });
+    },
+  });
+}
+
+export function useDeleteCondolenceRequest() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => condolenceService.deleteRequest(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: condolenceKeys.lists() });
+    },
+  });
+}
+
+export function useCancelCondolenceRequest() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => condolenceService.cancelRequest(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: condolenceKeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: condolenceKeys.lists() });
+    },
+  });
+}
+
+export function usePaymentPendingList(params?: CondolencePaymentSearchParams) {
+  return useQuery({
+    queryKey: condolenceKeys.paymentPending(params),
+    queryFn: () => condolenceService.getPaymentPendingList(params),
+  });
+}
+
+export function useProcessPayment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: ProcessPaymentRequest }) =>
+      condolenceService.processPayment(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: condolenceKeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: condolenceKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: condolenceKeys.payments() });
+    },
+  });
+}
+
+export function useBulkProcessPayment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ ids, data }: { ids: string[]; data: ProcessPaymentRequest }) =>
+      condolenceService.bulkProcessPayment(ids, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: condolenceKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: condolenceKeys.payments() });
+    },
+  });
+}
+
+export function usePaymentHistory(params?: CondolencePaymentSearchParams) {
+  return useQuery({
+    queryKey: condolenceKeys.paymentHistory(params),
+    queryFn: () => condolenceService.getPaymentHistory(params),
   });
 }
