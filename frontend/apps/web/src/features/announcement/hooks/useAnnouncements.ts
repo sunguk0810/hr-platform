@@ -1,7 +1,13 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { announcementService, type AnnouncementListParams } from '../services/announcementService';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import {
+  announcementService,
+  type AnnouncementListParams,
+  type CreateAnnouncementRequest,
+  type UpdateAnnouncementRequest,
+} from '../services/announcementService';
 
 export const announcementQueryKeys = {
   all: ['announcements'] as const,
@@ -74,10 +80,78 @@ export function useAnnouncementList(params: AnnouncementListParams) {
   });
 }
 
+export function useInfiniteAnnouncementList(params: Omit<AnnouncementListParams, 'page'>) {
+  const infiniteQuery = useInfiniteQuery({
+    queryKey: [...announcementQueryKeys.lists(), 'infinite', params],
+    queryFn: async ({ pageParam = 0 }) => {
+      const response = await announcementService.getList({ ...params, page: pageParam });
+      return response.data;
+    },
+    getNextPageParam: (lastPage) => {
+      if (lastPage.last) return undefined;
+      return lastPage.page + 1;
+    },
+    initialPageParam: 0,
+  });
+
+  const { sentinelRef } = useInfiniteScroll({
+    onLoadMore: () => {
+      if (infiniteQuery.hasNextPage && !infiniteQuery.isFetchingNextPage) {
+        infiniteQuery.fetchNextPage();
+      }
+    },
+    hasMore: !!infiniteQuery.hasNextPage,
+    isLoading: infiniteQuery.isFetchingNextPage,
+  });
+
+  const allItems = infiniteQuery.data?.pages.flatMap((page) => page.content) ?? [];
+
+  return {
+    ...infiniteQuery,
+    sentinelRef,
+    allItems,
+  };
+}
+
 export function useAnnouncement(id: string) {
   return useQuery({
     queryKey: announcementQueryKeys.detail(id),
     queryFn: () => announcementService.getDetail(id),
     enabled: !!id,
+  });
+}
+
+export function useCreateAnnouncement() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateAnnouncementRequest) => announcementService.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: announcementQueryKeys.lists() });
+    },
+  });
+}
+
+export function useUpdateAnnouncement() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateAnnouncementRequest }) =>
+      announcementService.update(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: announcementQueryKeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: announcementQueryKeys.lists() });
+    },
+  });
+}
+
+export function useDeleteAnnouncement() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => announcementService.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: announcementQueryKeys.lists() });
+    },
   });
 }
