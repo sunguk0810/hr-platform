@@ -19,11 +19,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Building2, Plus, Pencil, Trash2, Users, User } from 'lucide-react';
+import { Building2, Plus, Pencil, Trash2, Users, User, Search, RefreshCw } from 'lucide-react';
 import { EmptyState } from '@/components/common/EmptyState';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { usePermission } from '@/components/common/PermissionGate';
 import { OrgTree } from '../components/OrgTree';
+import { DepartmentAccordion, DepartmentDetailSheet } from '../components/mobile';
+import { useIsMobile } from '@/hooks/useMediaQuery';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { cn } from '@/lib/utils';
 import {
   useOrganizationTree,
   useDepartment,
@@ -38,6 +42,10 @@ export default function OrganizationPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [detailSheetOpen, setDetailSheetOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [expandedIds, setExpandedIds] = useState<string[]>([]);
+  const isMobile = useIsMobile();
 
   // 조직 편집 권한 체크
   const canEdit = usePermission({ permissions: ['organization:write'] });
@@ -49,7 +57,7 @@ export default function OrganizationPage() {
     parentId: undefined,
   });
 
-  const { data: treeData, isLoading: isTreeLoading, isError: isTreeError } = useOrganizationTree();
+  const { data: treeData, isLoading: isTreeLoading, isError: isTreeError, refetch } = useOrganizationTree();
   const { data: departmentData } = useDepartment(selectedNode?.id || '');
   const createMutation = useCreateDepartment();
   const updateMutation = useUpdateDepartment();
@@ -57,6 +65,26 @@ export default function OrganizationPage() {
 
   const tree = treeData?.data ?? [];
   const selectedDepartment = departmentData?.data;
+
+  // Pull to refresh for mobile
+  const handleRefresh = async () => {
+    await refetch();
+  };
+
+  const { isPulling, isRefreshing, pullProgress, pullDistance, handlers } = usePullToRefresh({
+    onRefresh: handleRefresh,
+  });
+
+  const handleToggleExpand = (id: string) => {
+    setExpandedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const handleMobileSelect = (node: DepartmentTreeNode) => {
+    setSelectedNode(node);
+    setDetailSheetOpen(true);
+  };
 
   const handleSelect = (node: DepartmentTreeNode) => {
     setSelectedNode(node);
@@ -133,6 +161,195 @@ export default function OrganizationPage() {
   };
   const flatDepartments = flattenTree(tree);
 
+  // Filter tree for search
+  const filterTree = (nodes: DepartmentTreeNode[], query: string): DepartmentTreeNode[] => {
+    if (!query) return nodes;
+
+    return nodes.reduce<DepartmentTreeNode[]>((acc, node) => {
+      const matchesSearch = node.name.toLowerCase().includes(query.toLowerCase()) ||
+        node.code?.toLowerCase().includes(query.toLowerCase());
+
+      const filteredChildren = node.children ? filterTree(node.children, query) : [];
+
+      if (matchesSearch || filteredChildren.length > 0) {
+        acc.push({
+          ...node,
+          children: filteredChildren,
+        });
+      }
+
+      return acc;
+    }, []);
+  };
+
+  const filteredTree = filterTree(tree, searchQuery);
+
+  // Mobile Layout
+  if (isMobile) {
+    return (
+      <div className="min-h-full" {...handlers}>
+        {/* Pull to refresh indicator */}
+        {(isPulling || isRefreshing) && (
+          <div
+            className="flex justify-center items-center py-4"
+            style={{ height: pullDistance }}
+          >
+            <RefreshCw
+              className={cn(
+                'h-6 w-6 text-primary transition-transform',
+                isRefreshing && 'animate-spin',
+                pullProgress >= 1 && !isRefreshing && 'text-green-500'
+              )}
+              style={{
+                transform: `rotate(${pullProgress * 180}deg)`,
+              }}
+            />
+          </div>
+        )}
+
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-xl font-bold">조직관리</h1>
+            <p className="text-sm text-muted-foreground">조직도 및 부서 정보</p>
+          </div>
+          {canEdit && (
+            <Button size="sm" onClick={() => handleCreateOpen()}>
+              <Plus className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+
+        {/* Search */}
+        <div data-tour="department-search" className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="부서명 또는 코드로 검색..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+
+        {/* Department List */}
+        {isTreeLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+          </div>
+        ) : isTreeError ? (
+          <EmptyState
+            icon={Building2}
+            title="조직도를 불러올 수 없습니다"
+            description="잠시 후 다시 시도해주세요."
+          />
+        ) : filteredTree.length === 0 ? (
+          <EmptyState
+            icon={Building2}
+            title={searchQuery ? '검색 결과가 없습니다' : '등록된 부서가 없습니다'}
+            description={searchQuery ? '다른 검색어로 시도해보세요.' : '새 부서를 등록하여 조직을 구성하세요.'}
+            action={
+              !searchQuery && canEdit
+                ? {
+                    label: '부서 추가',
+                    onClick: () => handleCreateOpen(),
+                  }
+                : undefined
+            }
+          />
+        ) : (
+          <div className="bg-card rounded-xl border p-2">
+            <DepartmentAccordion
+              departments={filteredTree}
+              selectedId={selectedNode?.id}
+              onSelect={handleMobileSelect}
+              expandedIds={expandedIds}
+              onToggleExpand={handleToggleExpand}
+            />
+          </div>
+        )}
+
+        {/* Department Detail Sheet */}
+        <DepartmentDetailSheet
+          open={detailSheetOpen}
+          onClose={() => setDetailSheetOpen(false)}
+          department={selectedDepartment || null}
+        />
+
+        {/* Create Dialog */}
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>부서 추가</DialogTitle>
+              <DialogDescription>
+                새로운 부서를 추가합니다.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="parentId">상위부서</Label>
+                <Select
+                  value={formData.parentId || 'none'}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, parentId: value === 'none' ? undefined : value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="상위부서 선택" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">(최상위)</SelectItem>
+                    {flatDepartments.map((dept) => (
+                      <SelectItem key={dept.id} value={dept.id}>
+                        {'　'.repeat(dept.level - 1)}{dept.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="code">부서코드 *</Label>
+                <Input
+                  id="code"
+                  value={formData.code}
+                  onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value.toUpperCase() }))}
+                  placeholder="예: DEV-FE"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="name">부서명 *</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="예: 프론트엔드팀"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="nameEn">영문명</Label>
+                <Input
+                  id="nameEn"
+                  value={formData.nameEn}
+                  onChange={(e) => setFormData(prev => ({ ...prev, nameEn: e.target.value }))}
+                  placeholder="예: Frontend Team"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                취소
+              </Button>
+              <Button
+                onClick={handleCreate}
+                disabled={!formData.code || !formData.name || createMutation.isPending}
+              >
+                {createMutation.isPending ? '저장 중...' : '저장'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+  }
+
+  // Desktop Layout
   return (
     <>
       <PageHeader
@@ -148,8 +365,8 @@ export default function OrganizationPage() {
         }
       />
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-1">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <Card data-tour="org-tree" className="md:col-span-1 lg:col-span-1">
           <CardHeader>
             <CardTitle>조직도</CardTitle>
           </CardHeader>

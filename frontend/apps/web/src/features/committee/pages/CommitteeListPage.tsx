@@ -1,17 +1,20 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { SkeletonTable } from '@/components/common/Skeleton';
 import { Pagination } from '@/components/common/Pagination';
+import { PullToRefreshContainer } from '@/components/mobile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users2, Plus } from 'lucide-react';
+import { Users2, Plus, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useCommittees } from '../hooks/useCommittee';
-import type { CommitteeStatus, CommitteeType } from '@hr-platform/shared-types';
+import type { CommitteeStatus } from '@hr-platform/shared-types';
 import { COMMITTEE_TYPE_LABELS, COMMITTEE_STATUS_LABELS } from '@hr-platform/shared-types';
 
 const STATUS_COLORS: Record<CommitteeStatus, string> = {
@@ -22,6 +25,8 @@ const STATUS_COLORS: Record<CommitteeStatus, string> = {
 
 export default function CommitteeListPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const [status, setStatus] = useState<CommitteeStatus | ''>('');
   const [page, setPage] = useState(0);
 
@@ -34,6 +39,105 @@ export default function CommitteeListPage() {
   const committees = data?.data?.content ?? [];
   const totalPages = data?.data?.totalPages ?? 0;
 
+  const handleRefresh = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['committees'] });
+  };
+
+  // Mobile Layout
+  if (isMobile) {
+    return (
+      <PullToRefreshContainer onRefresh={handleRefresh}>
+        <div className="space-y-4 pb-20">
+          {/* Mobile Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl font-bold">위원회 관리</h1>
+              <p className="text-sm text-muted-foreground">사내 위원회 현황</p>
+            </div>
+            <Button size="sm" onClick={() => navigate('/committee/new')}>
+              <Plus className="mr-1 h-4 w-4" />
+              등록
+            </Button>
+          </div>
+
+          {/* Mobile Tab Filters */}
+          <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
+            {[
+              { value: '', label: '전체' },
+              { value: 'ACTIVE', label: '활동중' },
+              { value: 'INACTIVE', label: '휴면' },
+              { value: 'DISSOLVED', label: '해산' },
+            ].map((item) => (
+              <button
+                key={item.value}
+                onClick={() => { setStatus(item.value as CommitteeStatus | ''); setPage(0); }}
+                className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                  status === item.value
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Mobile Committee List */}
+          {isLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-24 bg-muted animate-pulse rounded-xl" />
+              ))}
+            </div>
+          ) : committees.length === 0 ? (
+            <EmptyState
+              icon={Users2}
+              title="위원회가 없습니다"
+              description="새로운 위원회를 등록하세요."
+              action={{ label: '위원회 등록', onClick: () => navigate('/committee/new') }}
+            />
+          ) : (
+            <div className="space-y-3">
+              {committees.map((committee) => (
+                <button
+                  key={committee.id}
+                  onClick={() => navigate(`/committee/${committee.id}`)}
+                  className="w-full bg-card rounded-xl border p-4 text-left transition-colors active:bg-muted"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge className={cn(STATUS_COLORS[committee.status], 'text-xs')}>
+                          {COMMITTEE_STATUS_LABELS[committee.status]}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {COMMITTEE_TYPE_LABELS[committee.type]}
+                        </span>
+                      </div>
+                      <p className="font-medium text-sm">{committee.name}</p>
+                      <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                        <span className="font-mono">{committee.code}</span>
+                        <span>·</span>
+                        <span>{committee.memberCount}명</span>
+                        <span>·</span>
+                        <span>{committee.startDate}</span>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-1" />
+                  </div>
+                </button>
+              ))}
+              {totalPages > 1 && (
+                <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+              )}
+            </div>
+          )}
+        </div>
+      </PullToRefreshContainer>
+    );
+  }
+
+  // Desktop Layout
   return (
     <>
       <PageHeader

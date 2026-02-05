@@ -45,10 +45,12 @@ export function SidebarItem({
         to={href}
         className={({ isActive: linkActive }) =>
           cn(
-            'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+            'flex items-center rounded-lg text-sm font-medium transition-colors',
             'hover:bg-accent hover:text-accent-foreground',
             linkActive ? 'bg-accent text-accent-foreground' : 'text-muted-foreground',
-            collapsed && 'justify-center px-2'
+            collapsed
+              ? 'justify-center w-10 h-10 mx-auto p-0'
+              : 'gap-3 px-3 py-2'
           )
         }
       >
@@ -85,7 +87,7 @@ export function SidebarItem({
         <TooltipTrigger asChild>
           <button
             className={cn(
-              'flex w-full items-center justify-center rounded-lg px-2 py-2 text-sm font-medium transition-colors',
+              'flex items-center justify-center rounded-lg w-10 h-10 mx-auto text-sm font-medium transition-colors',
               'hover:bg-accent hover:text-accent-foreground',
               isActive ? 'bg-accent text-accent-foreground' : 'text-muted-foreground'
             )}

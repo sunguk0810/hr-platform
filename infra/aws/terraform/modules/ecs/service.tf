@@ -37,7 +37,7 @@ resource "aws_ecs_service" "services" {
   desired_count                      = each.value.desired_count
   launch_type                        = "FARGATE"
   platform_version                   = "LATEST"
-  health_check_grace_period_seconds  = 120
+  health_check_grace_period_seconds  = 300  # Services need ~200s to start
   enable_execute_command             = true
 
   network_configuration {
@@ -56,10 +56,8 @@ resource "aws_ecs_service" "services" {
     registry_arn = aws_service_discovery_service.services[each.key].arn
   }
 
-  deployment_configuration {
-    maximum_percent         = 200
-    minimum_healthy_percent = 100
-  }
+  deployment_maximum_percent         = 200
+  deployment_minimum_healthy_percent = 100
 
   deployment_circuit_breaker {
     enable   = true

@@ -31,11 +31,11 @@ output "rds_storage_alarm_arn" {
 }
 
 output "redis_cpu_alarm_arn" {
-  description = "Redis CPU alarm ARN"
-  value       = aws_cloudwatch_metric_alarm.redis_cpu_high.arn
+  description = "Redis CPU alarm ARN (empty if not using ElastiCache)"
+  value       = length(aws_cloudwatch_metric_alarm.redis_cpu_high) > 0 ? aws_cloudwatch_metric_alarm.redis_cpu_high[0].arn : ""
 }
 
 output "redis_memory_alarm_arn" {
-  description = "Redis memory alarm ARN"
-  value       = aws_cloudwatch_metric_alarm.redis_memory_high.arn
+  description = "Redis memory alarm ARN (empty if not using ElastiCache)"
+  value       = length(aws_cloudwatch_metric_alarm.redis_memory_high) > 0 ? aws_cloudwatch_metric_alarm.redis_memory_high[0].arn : ""
 }

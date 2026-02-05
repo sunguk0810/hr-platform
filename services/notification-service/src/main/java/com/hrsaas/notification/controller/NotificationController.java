@@ -1,7 +1,9 @@
 package com.hrsaas.notification.controller;
 
 import com.hrsaas.notification.domain.dto.request.SendNotificationRequest;
+import com.hrsaas.notification.domain.dto.request.UpdateNotificationSettingsRequest;
 import com.hrsaas.notification.domain.dto.response.NotificationResponse;
+import com.hrsaas.notification.domain.dto.response.NotificationSettingsResponse;
 import com.hrsaas.notification.service.NotificationService;
 import com.hrsaas.common.response.ApiResponse;
 import com.hrsaas.common.response.PageResponse;
@@ -16,6 +18,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -73,5 +76,51 @@ public class NotificationController {
     public ApiResponse<Void> markAllAsRead(@RequestHeader("X-User-ID") UUID userId) {
         notificationService.markAllAsRead(userId);
         return ApiResponse.success(null);
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "알림 상세 조회")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<NotificationResponse> getById(
+            @PathVariable UUID id,
+            @RequestHeader("X-User-ID") UUID userId) {
+        return ApiResponse.success(notificationService.getById(id, userId));
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "알림 삭제")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<Void> delete(
+            @PathVariable UUID id,
+            @RequestHeader("X-User-ID") UUID userId) {
+        notificationService.delete(id, userId);
+        return ApiResponse.success(null, "알림이 삭제되었습니다.");
+    }
+
+    @PostMapping("/bulk-delete")
+    @Operation(summary = "알림 일괄 삭제")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<Map<String, Integer>> bulkDelete(
+            @RequestBody Map<String, List<String>> body,
+            @RequestHeader("X-User-ID") UUID userId) {
+        List<UUID> ids = body.get("ids").stream().map(UUID::fromString).toList();
+        int deleted = notificationService.bulkDelete(ids, userId);
+        return ApiResponse.success(Map.of("deleted", deleted));
+    }
+
+    @GetMapping("/settings")
+    @Operation(summary = "알림 설정 조회")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<NotificationSettingsResponse> getSettings(@RequestHeader("X-User-ID") UUID userId) {
+        return ApiResponse.success(notificationService.getSettings(userId));
+    }
+
+    @PutMapping("/settings")
+    @Operation(summary = "알림 설정 수정")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<NotificationSettingsResponse> updateSettings(
+            @RequestHeader("X-User-ID") UUID userId,
+            @RequestBody UpdateNotificationSettingsRequest request) {
+        return ApiResponse.success(notificationService.updateSettings(userId, request));
     }
 }

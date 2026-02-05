@@ -255,7 +255,7 @@ let todayCheckOutTime: string | undefined;
 
 export const attendanceHandlers = [
   // Get today's attendance
-  http.get('/api/v1/attendance/today', async () => {
+  http.get('/api/v1/attendances/today', async () => {
     await delay(200);
 
     const today: TodayAttendance = {
@@ -274,7 +274,7 @@ export const attendanceHandlers = [
   }),
 
   // Check in
-  http.post('/api/v1/attendance/check-in', async () => {
+  http.post('/api/v1/attendances/check-in', async () => {
     await delay(300);
 
     if (todayCheckedIn) {
@@ -300,7 +300,7 @@ export const attendanceHandlers = [
   }),
 
   // Check out
-  http.post('/api/v1/attendance/check-out', async () => {
+  http.post('/api/v1/attendances/check-out', async () => {
     await delay(300);
 
     if (!todayCheckedIn) {
@@ -337,7 +337,7 @@ export const attendanceHandlers = [
   }),
 
   // Get attendance records
-  http.get('/api/v1/attendance/records', async ({ request }) => {
+  http.get('/api/v1/attendances/my', async ({ request }) => {
     await delay(300);
 
     const url = new URL(request.url);
@@ -382,11 +382,14 @@ export const attendanceHandlers = [
   }),
 
   // Get monthly summary
-  http.get('/api/v1/attendance/summary/:yearMonth', async ({ params }) => {
+  http.get('/api/v1/attendances/my/summary', async ({ request }) => {
     await delay(200);
 
-    const { yearMonth } = params;
-    const records = mockAttendanceRecords.filter(r => r.date.startsWith(yearMonth as string));
+    const url = new URL(request.url);
+    const year = url.searchParams.get('year') || String(new Date().getFullYear());
+    const month = url.searchParams.get('month') || String(new Date().getMonth() + 1).padStart(2, '0');
+    const yearMonth = `${year}-${month.padStart(2, '0')}`;
+    const records = mockAttendanceRecords.filter(r => r.date.startsWith(yearMonth));
 
     const workingRecords = records.filter(r => !['WEEKEND', 'HOLIDAY'].includes(r.status));
     const summary: MonthlyAttendanceSummary = {
@@ -408,7 +411,7 @@ export const attendanceHandlers = [
   }),
 
   // Get leave balance
-  http.get('/api/v1/leaves/balance', async () => {
+  http.get('/api/v1/leaves/my/balances', async () => {
     await delay(200);
 
     const usedDays = mockLeaveRequests
@@ -452,7 +455,7 @@ export const attendanceHandlers = [
   }),
 
   // Get leave requests
-  http.get('/api/v1/leaves', async ({ request }) => {
+  http.get('/api/v1/leaves/my', async ({ request }) => {
     await delay(300);
 
     const url = new URL(request.url);
@@ -598,7 +601,7 @@ export const attendanceHandlers = [
   }),
 
   // Overtime list
-  http.get('/api/v1/overtime', async ({ request }) => {
+  http.get('/api/v1/overtimes/my', async ({ request }) => {
     await delay(300);
 
     const url = new URL(request.url);
@@ -634,15 +637,19 @@ export const attendanceHandlers = [
     });
   }),
 
-  // Overtime summary
-  http.get('/api/v1/overtime/summary/:yearMonth', async ({ params }) => {
+  // Overtime summary (total hours)
+  http.get('/api/v1/overtimes/my/total-hours', async ({ request }) => {
     await delay(200);
 
-    const { yearMonth } = params;
-    const monthRequests = mockOvertimeRequests.filter(o => o.date.startsWith(yearMonth as string));
+    const url = new URL(request.url);
+    const startDate = url.searchParams.get('startDate') || `${new Date().getFullYear()}-01-01`;
+    const endDate = url.searchParams.get('endDate') || format(new Date(), 'yyyy-MM-dd');
+
+    const monthRequests = mockOvertimeRequests.filter(o => o.date >= startDate && o.date <= endDate);
 
     const summary = {
-      yearMonth: yearMonth as string,
+      startDate,
+      endDate,
       totalRequests: monthRequests.length,
       approvedRequests: monthRequests.filter(o => o.status === 'APPROVED').length,
       pendingRequests: monthRequests.filter(o => o.status === 'PENDING').length,
@@ -658,7 +665,7 @@ export const attendanceHandlers = [
   }),
 
   // Create overtime request
-  http.post('/api/v1/overtime', async ({ request }) => {
+  http.post('/api/v1/overtimes', async ({ request }) => {
     await delay(300);
 
     const body = await request.json() as Record<string, unknown>;
@@ -693,7 +700,7 @@ export const attendanceHandlers = [
   }),
 
   // Cancel overtime request
-  http.post('/api/v1/overtime/:id/cancel', async ({ params }) => {
+  http.post('/api/v1/overtimes/:id/cancel', async ({ params }) => {
     await delay(300);
 
     const { id } = params;
@@ -735,7 +742,7 @@ export const attendanceHandlers = [
   // Work Hours Monitoring (주 52시간 모니터링)
   // ============================================
 
-  http.get('/api/v1/attendance/statistics/work-hours', async ({ request }) => {
+  http.get('/api/v1/attendances/statistics/work-hours', async ({ request }) => {
     await delay(300);
 
     const url = new URL(request.url);
@@ -1155,7 +1162,7 @@ export const attendanceHandlers = [
   // ============================================
 
   // Get attendance record detail
-  http.get('/api/v1/attendance/records/:id', async ({ params }) => {
+  http.get('/api/v1/attendances/:id', async ({ params }) => {
     await delay(200);
 
     const { id } = params;
@@ -1185,7 +1192,7 @@ export const attendanceHandlers = [
   }),
 
   // Update attendance record
-  http.put('/api/v1/attendance/records/:id', async ({ params, request }) => {
+  http.put('/api/v1/attendances/:id', async ({ params, request }) => {
     await delay(300);
 
     const { id } = params;

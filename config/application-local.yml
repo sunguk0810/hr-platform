@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/hr_saas
+    url: jdbc:postgresql://localhost:5433/hr_saas
     username: hr_saas
     password: hr_saas_password
     hikari:
@@ -10,11 +10,11 @@ spring:
   data:
     redis:
       host: localhost
-      port: 6379
+      port: 6381
       password: redis_password
 
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: localhost:29092
 
   security:
     oauth2:

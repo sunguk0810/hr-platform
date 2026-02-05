@@ -3,6 +3,8 @@ package com.hrsaas.approval.service.impl;
 import com.hrsaas.approval.domain.dto.request.CreateApprovalRequest;
 import com.hrsaas.approval.domain.dto.request.ProcessApprovalRequest;
 import com.hrsaas.approval.domain.dto.response.ApprovalDocumentResponse;
+import com.hrsaas.approval.domain.dto.response.ApprovalHistoryResponse;
+import com.hrsaas.approval.domain.dto.response.ApprovalSummaryResponse;
 import com.hrsaas.approval.domain.entity.*;
 import com.hrsaas.approval.domain.event.ApprovalCompletedEvent;
 import com.hrsaas.approval.domain.event.ApprovalSubmittedEvent;
@@ -22,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -119,6 +122,70 @@ public class ApprovalServiceImpl implements ApprovalService {
     public long countPendingApprovals(UUID approverId) {
         UUID tenantId = TenantContext.getCurrentTenant();
         return documentRepository.countPendingByApproverId(tenantId, approverId);
+    }
+
+    @Override
+    public PageResponse<ApprovalDocumentResponse> search(String status, String type, UUID requesterId, Pageable pageable) {
+        UUID tenantId = TenantContext.getCurrentTenant();
+        ApprovalStatus approvalStatus = status != null ? ApprovalStatus.valueOf(status.toUpperCase()) : null;
+
+        Page<ApprovalDocument> page = documentRepository.search(tenantId, approvalStatus, type, requesterId, pageable);
+        return PageResponse.from(page, page.getContent().stream()
+            .map(ApprovalDocumentResponse::from)
+            .toList());
+    }
+
+    @Override
+    public ApprovalSummaryResponse getSummary(UUID userId) {
+        UUID tenantId = TenantContext.getCurrentTenant();
+
+        long pending = documentRepository.countPendingByApproverId(tenantId, userId);
+        long approved = documentRepository.countByStatus(tenantId, ApprovalStatus.APPROVED);
+        long rejected = documentRepository.countByStatus(tenantId, ApprovalStatus.REJECTED);
+        long draft = documentRepository.countByDrafterIdAndStatus(tenantId, userId, ApprovalStatus.DRAFT);
+
+        return ApprovalSummaryResponse.builder()
+            .pending(pending)
+            .approved(approved)
+            .rejected(rejected)
+            .draft(draft)
+            .build();
+    }
+
+    @Override
+    public List<ApprovalHistoryResponse> getHistory(UUID documentId) {
+        ApprovalDocument document = findById(documentId);
+
+        return document.getHistories().stream()
+            .map(h -> ApprovalHistoryResponse.builder()
+                .id(h.getId())
+                .documentId(documentId)
+                .stepOrder(h.getStepOrder())
+                .action(h.getActionType().name())
+                .actorId(h.getActorId())
+                .actorName(h.getActorName())
+                .comment(h.getComment())
+                .processedAt(h.getCreatedAt())
+                .build())
+            .toList();
+    }
+
+    @Override
+    @Transactional
+    public ApprovalDocumentResponse approve(UUID documentId, UUID approverId, String comment) {
+        ProcessApprovalRequest request = new ProcessApprovalRequest();
+        request.setActionType(ApprovalActionType.APPROVE);
+        request.setComment(comment);
+        return process(documentId, approverId, request);
+    }
+
+    @Override
+    @Transactional
+    public ApprovalDocumentResponse reject(UUID documentId, UUID approverId, String reason) {
+        ProcessApprovalRequest request = new ProcessApprovalRequest();
+        request.setActionType(ApprovalActionType.REJECT);
+        request.setComment(reason);
+        return process(documentId, approverId, request);
     }
 
     @Override

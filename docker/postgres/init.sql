@@ -7,6 +7,11 @@ CREATE SCHEMA IF NOT EXISTS hr_core;
 CREATE SCHEMA IF NOT EXISTS hr_attendance;
 CREATE SCHEMA IF NOT EXISTS hr_approval;
 CREATE SCHEMA IF NOT EXISTS hr_audit;
+CREATE SCHEMA IF NOT EXISTS hr_notification;
+CREATE SCHEMA IF NOT EXISTS hr_file;
+CREATE SCHEMA IF NOT EXISTS hr_recruitment;
+CREATE SCHEMA IF NOT EXISTS hr_appointment;
+CREATE SCHEMA IF NOT EXISTS hr_certificate;
 
 -- Grant privileges
 GRANT ALL PRIVILEGES ON SCHEMA tenant_common TO hr_saas;
@@ -14,6 +19,11 @@ GRANT ALL PRIVILEGES ON SCHEMA hr_core TO hr_saas;
 GRANT ALL PRIVILEGES ON SCHEMA hr_attendance TO hr_saas;
 GRANT ALL PRIVILEGES ON SCHEMA hr_approval TO hr_saas;
 GRANT ALL PRIVILEGES ON SCHEMA hr_audit TO hr_saas;
+GRANT ALL PRIVILEGES ON SCHEMA hr_notification TO hr_saas;
+GRANT ALL PRIVILEGES ON SCHEMA hr_file TO hr_saas;
+GRANT ALL PRIVILEGES ON SCHEMA hr_recruitment TO hr_saas;
+GRANT ALL PRIVILEGES ON SCHEMA hr_appointment TO hr_saas;
+GRANT ALL PRIVILEGES ON SCHEMA hr_certificate TO hr_saas;
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";

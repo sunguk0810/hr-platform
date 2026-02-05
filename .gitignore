@@ -95,3 +95,25 @@ Desktop.ini
 # VS Code
 .vscode/
 *.code-workspace
+
+# ============================================
+# AWS Infrastructure (Terraform outputs)
+# ============================================
+# DNS validation files (temporary)
+dns-validation.json
+**/dns-validation*.json
+
+# Terraform plan outputs
+*.out
+plan.out
+
+# ============================================
+# Windows artifacts
+# ============================================
+nul
+NUL
+
+# ============================================
+# Claude Code
+# ============================================
+.claude/settings.local.json

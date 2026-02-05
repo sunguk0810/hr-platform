@@ -4,10 +4,15 @@ server:
 spring:
   application:
     name: notification-service
+  config:
+    import: optional:configserver:http://${CONFIG_SERVER_HOST:localhost}:8888
+  cloud:
+    config:
+      enabled: ${SPRING_CLOUD_CONFIG_ENABLED:false}
   datasource:
-    url: jdbc:postgresql://localhost:5432/hr_platform
-    username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:postgres}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/hr_saas
+    username: ${DB_USERNAME:hr_saas}
+    password: ${DB_PASSWORD:hr_saas_password}
     hikari:
       maximum-pool-size: 10
       minimum-idle: 5
@@ -18,11 +23,17 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         default_schema: hr_notification
-  redis:
-    host: ${REDIS_HOST:localhost}
-    port: ${REDIS_PORT:6379}
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    schemas: hr_notification
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6381}
+      password: ${REDIS_PASSWORD:redis_password}
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
@@ -43,6 +54,11 @@ spring:
           auth: true
           starttls:
             enable: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/hr-saas}
 
 logging:
   level:

@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/useToast';
 import { useAuthStore } from '@/stores/authStore';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import {
   MessageCircle,
   Mail,
@@ -72,6 +73,7 @@ const ALLOWED_FILE_TYPES = [
 export default function HelpContactPage() {
   const { user } = useAuthStore();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -254,6 +256,193 @@ export default function HelpContactPage() {
     setAttachments([]);
   };
 
+  // Mobile Layout
+  if (isMobile) {
+    return (
+      <div className="space-y-4 pb-20">
+        {/* Mobile Header */}
+        <div>
+          <h1 className="text-xl font-bold">문의하기</h1>
+          <p className="text-sm text-muted-foreground">궁금한 점을 남겨주세요</p>
+        </div>
+
+        {/* Quick Contact */}
+        <div className="flex gap-3">
+          <a
+            href="mailto:hr-support@company.com"
+            className="flex-1 bg-card rounded-xl border p-4 text-center"
+          >
+            <Mail className="h-5 w-5 text-primary mx-auto mb-2" />
+            <p className="text-xs text-muted-foreground">이메일</p>
+            <p className="text-sm font-medium">문의하기</p>
+          </a>
+          <a
+            href="tel:02-1234-5678"
+            className="flex-1 bg-card rounded-xl border p-4 text-center"
+          >
+            <Phone className="h-5 w-5 text-primary mx-auto mb-2" />
+            <p className="text-xs text-muted-foreground">전화</p>
+            <p className="text-sm font-medium">02-1234-5678</p>
+          </a>
+        </div>
+
+        {/* Operating Hours */}
+        <div className="bg-muted/50 rounded-xl p-4 flex items-center gap-3">
+          <Clock className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+          <div className="text-sm">
+            <p className="font-medium">평일 09:00 - 18:00</p>
+            <p className="text-xs text-muted-foreground">점심시간 12:00 - 13:00 제외</p>
+          </div>
+        </div>
+
+        {/* Contact Form */}
+        <div className="bg-card rounded-xl border p-4">
+          {isSubmitted ? (
+            <div className="flex flex-col items-center justify-center py-8">
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+                <CheckCircle className="h-7 w-7 text-green-600 dark:text-green-400" />
+              </div>
+              <h3 className="mb-2 text-lg font-semibold">문의가 접수되었습니다</h3>
+              <p className="mb-4 text-center text-sm text-muted-foreground">
+                담당자가 확인 후 답변드리겠습니다.
+              </p>
+              <Button onClick={handleReset} size="sm">새 문의 작성</Button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <h3 className="font-medium flex items-center gap-2">
+                <MessageCircle className="h-4 w-4" />
+                문의 작성
+              </h3>
+
+              {/* User Info */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-2">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm truncate">{user?.name || '-'}</span>
+                </div>
+                <div className="flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-2">
+                  <Building className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm truncate">{user?.departmentName || '-'}</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="mobile-category">문의 유형 *</Label>
+                <Select
+                  value={form.category}
+                  onValueChange={(value) =>
+                    setForm({ ...form, category: value as ContactCategory })
+                  }
+                >
+                  <SelectTrigger id="mobile-category">
+                    <SelectValue placeholder="유형 선택" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {contactCategories.map((category) => (
+                      <SelectItem key={category.value} value={category.value}>
+                        {category.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="mobile-subject">제목 *</Label>
+                <Input
+                  id="mobile-subject"
+                  placeholder="문의 제목"
+                  value={form.subject}
+                  onChange={(e) => setForm({ ...form, subject: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="mobile-message">문의 내용 *</Label>
+                <Textarea
+                  id="mobile-message"
+                  placeholder="문의 내용을 상세히 입력해 주세요"
+                  rows={5}
+                  value={form.message}
+                  onChange={(e) => setForm({ ...form, message: e.target.value })}
+                />
+              </div>
+
+              {/* Attachments */}
+              <div className="space-y-2">
+                <Label>첨부파일</Label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept={ALLOWED_FILE_TYPES.join(',')}
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+
+                {attachments.length > 0 && (
+                  <div className="space-y-2 mb-2">
+                    {attachments.map((att) => (
+                      <div
+                        key={att.id}
+                        className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          <span className="text-sm truncate">{att.filename}</span>
+                          {att.isUploading && (
+                            <Loader2 className="h-3 w-3 animate-spin text-primary flex-shrink-0" />
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveAttachment(att.id)}
+                          className="text-muted-foreground hover:text-destructive flex-shrink-0"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={attachments.length >= MAX_FILES}
+                >
+                  <Paperclip className="mr-2 h-4 w-4" />
+                  파일 첨부
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  최대 {MAX_FILES}개, 10MB/파일
+                </p>
+              </div>
+
+              <Button type="submit" disabled={isSubmitting} className="w-full">
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    접수 중...
+                  </>
+                ) : (
+                  <>
+                    <Send className="mr-2 h-4 w-4" />
+                    문의 접수
+                  </>
+                )}
+              </Button>
+            </form>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop Layout
   return (
     <>
       <PageHeader

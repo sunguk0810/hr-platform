@@ -54,6 +54,11 @@ import {
   LayoutGrid,
   Eye,
   EyeOff,
+  Building2,
+  BarChart3,
+  Megaphone,
+  Cake,
+  CalendarDays,
 } from 'lucide-react';
 import {
   useDashboardStore,
@@ -66,8 +71,13 @@ const widgetIcons: Record<WidgetType, React.ComponentType<{ className?: string }
   leaveBalance: Calendar,
   pendingApprovals: FileCheck,
   recentNotifications: Bell,
-  teamCalendar: Users,
+  teamCalendar: CalendarDays,
   quickLinks: Link2,
+  orgSummary: Building2,
+  statistics: BarChart3,
+  announcements: Megaphone,
+  birthdays: Cake,
+  teamLeave: Users,
 };
 
 const widgetDescriptions: Record<WidgetType, string> = {
@@ -77,6 +87,11 @@ const widgetDescriptions: Record<WidgetType, string> = {
   recentNotifications: '최근 알림 목록',
   teamCalendar: '팀원 휴가/일정 캘린더',
   quickLinks: '자주 사용하는 기능 바로가기',
+  orgSummary: '조직 현황 요약 (관리자 전용)',
+  statistics: 'HR 통계 및 지표 (관리자 전용)',
+  announcements: '최근 공지사항 목록',
+  birthdays: '오늘의 생일 축하',
+  teamLeave: '팀원 휴가 현황',
 };
 
 const sizeLabels: Record<WidgetConfig['size'], string> = {

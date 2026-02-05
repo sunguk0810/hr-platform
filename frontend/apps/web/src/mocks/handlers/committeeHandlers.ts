@@ -45,25 +45,19 @@ const mockCommittees: CommitteeListItem[] = [
 ];
 
 export const committeeHandlers = [
+  // Backend returns List (array), not Page - hook handles client-side pagination
   http.get('/api/v1/committees', async ({ request }) => {
     await delay(300);
     const url = new URL(request.url);
-    const page = parseInt(url.searchParams.get('page') || '0');
-    const size = parseInt(url.searchParams.get('size') || '10');
     const status = url.searchParams.get('status') as CommitteeStatus | null;
 
     let filtered = [...mockCommittees];
     if (status) filtered = filtered.filter((c) => c.status === status);
 
+    // Return array directly - hook handles pagination client-side
     return HttpResponse.json({
       success: true,
-      data: {
-        content: filtered.slice(page * size, (page + 1) * size),
-        page,
-        size,
-        totalElements: filtered.length,
-        totalPages: Math.ceil(filtered.length / size),
-      },
+      data: filtered,
     });
   }),
 

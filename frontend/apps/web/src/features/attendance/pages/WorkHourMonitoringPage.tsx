@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   ChevronLeft,
   ChevronRight,
@@ -8,10 +10,12 @@ import {
   Clock,
   Download,
   RotateCcw,
+  Filter,
 } from 'lucide-react';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
-import { SkeletonTable } from '@/components/common/Skeleton';
+import { SkeletonTable, SkeletonCard } from '@/components/common/Skeleton';
+import { PullToRefreshContainer } from '@/components/mobile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -28,6 +32,7 @@ import {
   useWorkHoursStatistics,
   useWorkHoursSearchParams,
 } from '../hooks/useAttendance';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import type { WorkHourStatus, EmployeeWorkHours } from '@hr-platform/shared-types';
 
 const STATUS_CONFIG: Record<WorkHourStatus, { label: string; color: string; bgColor: string }> = {
@@ -84,6 +89,10 @@ function WorkHourProgressBar({ employee }: { employee: EmployeeWorkHours }) {
 }
 
 export default function WorkHourMonitoringPage() {
+  const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
+  const [showFilters, setShowFilters] = useState(false);
+
   const {
     params,
     searchState,
@@ -103,6 +112,10 @@ export default function WorkHourMonitoringPage() {
   const summary = statistics?.summary;
 
   const exceededEmployees = employees.filter(e => e.status === 'EXCEEDED');
+
+  const handleRefresh = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['workHoursStatistics'] });
+  };
 
   const handleExport = () => {
     // CSV export logic would go here
@@ -130,6 +143,209 @@ export default function WorkHourMonitoringPage() {
     URL.revokeObjectURL(url);
   };
 
+  // 모바일 레이아웃
+  if (isMobile) {
+    return (
+      <PullToRefreshContainer onRefresh={handleRefresh}>
+        <div className="space-y-4 pb-20">
+          {/* 모바일 헤더 */}
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-bold">주 52시간 모니터링</h1>
+            <Button variant="outline" size="sm" onClick={handleExport}>
+              <Download className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* 초과 경고 알림 */}
+          {exceededEmployees.length > 0 && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>주 52시간 초과</AlertTitle>
+              <AlertDescription>
+                {exceededEmployees.length}명 초과
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* 주간 네비게이터 - 컴팩트 */}
+          <Card>
+            <CardContent className="flex items-center justify-between py-3 px-4">
+              <Button variant="ghost" size="icon" onClick={goToPreviousWeek}>
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+              <div className="text-center flex-1">
+                <p className="font-semibold">{searchState.weekPeriod}</p>
+                {statistics && (
+                  <p className="text-xs text-muted-foreground">
+                    {format(new Date(statistics.weekStartDate), 'M/d', { locale: ko })} ~{' '}
+                    {format(new Date(statistics.weekEndDate), 'M/d', { locale: ko })}
+                  </p>
+                )}
+              </div>
+              <Button variant="ghost" size="icon" onClick={goToNextWeek}>
+                <ChevronRight className="h-5 w-5" />
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* 2x2 요약 그리드 */}
+          <div className="grid grid-cols-2 gap-3">
+            <Card>
+              <CardContent className="p-3 text-center">
+                <Users className="mx-auto h-5 w-5 text-muted-foreground mb-1" />
+                <p className="text-2xl font-bold">{summary?.totalEmployees ?? 0}</p>
+                <p className="text-xs text-muted-foreground">전체</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-3 text-center">
+                <Clock className="mx-auto h-5 w-5 text-green-600 mb-1" />
+                <p className="text-2xl font-bold text-green-600">{summary?.normalCount ?? 0}</p>
+                <p className="text-xs text-muted-foreground">정상</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-3 text-center">
+                <Clock className="mx-auto h-5 w-5 text-yellow-600 mb-1" />
+                <p className="text-2xl font-bold text-yellow-600">{summary?.warningCount ?? 0}</p>
+                <p className="text-xs text-muted-foreground">주의</p>
+              </CardContent>
+            </Card>
+            <Card className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
+              <CardContent className="p-3 text-center">
+                <AlertTriangle className="mx-auto h-5 w-5 text-red-600 mb-1" />
+                <p className="text-2xl font-bold text-red-600">{summary?.exceededCount ?? 0}</p>
+                <p className="text-xs text-muted-foreground">초과</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* 필터 토글 */}
+          <div className="flex items-center justify-between">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowFilters(!showFilters)}
+              className="gap-2"
+            >
+              <Filter className="h-4 w-4" />
+              필터
+              {(searchState.departmentId || searchState.status) && (
+                <Badge variant="secondary" className="ml-1">적용됨</Badge>
+              )}
+            </Button>
+            {!isCurrentWeek && (
+              <Button variant="outline" size="sm" onClick={goToCurrentWeek}>
+                <RotateCcw className="mr-1 h-3 w-3" />
+                이번 주
+              </Button>
+            )}
+          </div>
+
+          {/* 필터 패널 */}
+          {showFilters && (
+            <Card>
+              <CardContent className="p-4 space-y-3">
+                <Select
+                  value={searchState.departmentId || 'all'}
+                  onValueChange={(value) => setDepartmentId(value === 'all' ? '' : value)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="전체 부서" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DEPARTMENTS.map((dept) => (
+                      <SelectItem key={dept.id} value={dept.id}>
+                        {dept.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <div className="flex gap-2 overflow-x-auto py-1">
+                  {[
+                    { value: '', label: '전체' },
+                    { value: 'NORMAL', label: '정상' },
+                    { value: 'WARNING', label: '주의' },
+                    { value: 'EXCEEDED', label: '초과' },
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => setStatus(option.value as WorkHourStatus | '')}
+                      className={`flex-shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                        (searchState.status || '') === option.value
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+                {(searchState.departmentId || searchState.status) && (
+                  <Button variant="ghost" size="sm" onClick={resetFilters} className="w-full">
+                    필터 초기화
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* 직원 카드 목록 */}
+          {isLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <SkeletonCard key={i} />
+              ))}
+            </div>
+          ) : employees.length === 0 ? (
+            <EmptyState
+              icon={Users}
+              title="데이터가 없습니다"
+              description="해당 기간의 근무 데이터가 없습니다."
+            />
+          ) : (
+            <div className="space-y-3">
+              {employees.map((employee) => (
+                <Card
+                  key={employee.employeeId}
+                  className={
+                    employee.status === 'EXCEEDED'
+                      ? 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/10'
+                      : ''
+                  }
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <p className="font-medium">{employee.employeeName}</p>
+                        <p className="text-sm text-muted-foreground">{employee.department}</p>
+                      </div>
+                      <WorkHourStatusBadge status={employee.status} />
+                    </div>
+                    <div className="mb-2">
+                      <WorkHourProgressBar employee={employee} />
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">
+                        기본 {employee.regularHours}h + 초과 {employee.overtimeHours}h
+                      </span>
+                      {employee.exceededHours > 0 && (
+                        <span className="font-medium text-red-600">
+                          +{employee.exceededHours}h 초과
+                        </span>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      </PullToRefreshContainer>
+    );
+  }
+
+  // 데스크톱 레이아웃
   return (
     <>
       <PageHeader

@@ -4,6 +4,7 @@ import com.hrsaas.attendance.domain.dto.request.CheckInRequest;
 import com.hrsaas.attendance.domain.dto.request.CheckOutRequest;
 import com.hrsaas.attendance.domain.dto.response.AttendanceRecordResponse;
 import com.hrsaas.attendance.domain.dto.response.AttendanceSummaryResponse;
+import com.hrsaas.attendance.domain.dto.response.WorkHoursStatisticsResponse;
 import com.hrsaas.attendance.service.AttendanceService;
 import com.hrsaas.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -77,5 +78,15 @@ public class AttendanceController {
     @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
     public ApiResponse<AttendanceRecordResponse> getById(@PathVariable UUID id) {
         return ApiResponse.success(attendanceService.getById(id));
+    }
+
+    @Operation(summary = "주간 근로시간 통계 조회 (52시간 모니터링)")
+    @GetMapping("/statistics/work-hours")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
+    public ApiResponse<WorkHoursStatisticsResponse> getWorkHoursStatistics(
+            @RequestParam(required = false) String weekPeriod,
+            @RequestParam(required = false) UUID departmentId,
+            @RequestParam(required = false) String status) {
+        return ApiResponse.success(attendanceService.getWorkHoursStatistics(weekPeriod, departmentId, status));
     }
 }

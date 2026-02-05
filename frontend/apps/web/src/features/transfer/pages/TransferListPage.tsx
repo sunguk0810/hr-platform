@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { SkeletonTable } from '@/components/common/Skeleton';
 import { Pagination } from '@/components/common/Pagination';
+import { PullToRefreshContainer } from '@/components/mobile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,7 +27,9 @@ import {
   ArrowRight,
   ArrowLeft,
   RefreshCw,
+  ChevronRight,
 } from 'lucide-react';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import {
   useTransfers,
   useTransferSummary,
@@ -53,6 +57,8 @@ const TYPE_ICONS: Record<TransferType, React.ReactNode> = {
 
 export default function TransferListPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const [searchInput, setSearchInput] = useState('');
 
   const {
@@ -94,6 +100,166 @@ export default function TransferListPage() {
     }
   };
 
+  const handleRefresh = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['transfers'] });
+    await queryClient.invalidateQueries({ queryKey: ['transfer-summary'] });
+  };
+
+  // Mobile Layout
+  if (isMobile) {
+    return (
+      <PullToRefreshContainer onRefresh={handleRefresh}>
+        <div className="space-y-4 pb-20">
+          {/* Mobile Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl font-bold">계열사 인사이동</h1>
+              <p className="text-sm text-muted-foreground">전출/전입 및 파견 현황</p>
+            </div>
+            <Button size="sm" onClick={() => navigate('/transfer/new')}>
+              <Plus className="mr-1 h-4 w-4" />
+              요청
+            </Button>
+          </div>
+
+          {/* Summary Cards (2x2 Grid) */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-card rounded-xl border p-4 text-center">
+              <p className="text-xs text-muted-foreground mb-1">전출 승인대기</p>
+              <p className="text-2xl font-bold text-orange-500">
+                {isSummaryLoading ? '-' : summary?.pendingSourceCount ?? 0}
+              </p>
+            </div>
+            <div className="bg-card rounded-xl border p-4 text-center">
+              <p className="text-xs text-muted-foreground mb-1">전입 승인대기</p>
+              <p className="text-2xl font-bold text-yellow-500">
+                {isSummaryLoading ? '-' : summary?.pendingTargetCount ?? 0}
+              </p>
+            </div>
+            <div className="bg-card rounded-xl border p-4 text-center">
+              <p className="text-xs text-muted-foreground mb-1">승인완료</p>
+              <p className="text-2xl font-bold text-blue-500">
+                {isSummaryLoading ? '-' : summary?.approvedCount ?? 0}
+              </p>
+            </div>
+            <div className="bg-card rounded-xl border p-4 text-center">
+              <p className="text-xs text-muted-foreground mb-1">이번달 완료</p>
+              <p className="text-2xl font-bold text-green-500">
+                {isSummaryLoading ? '-' : summary?.completedThisMonth ?? 0}
+              </p>
+            </div>
+          </div>
+
+          {/* Mobile Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="이름, 사번 검색..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="pl-9"
+            />
+          </div>
+
+          {/* Mobile Tab Filters */}
+          <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
+            {[
+              { value: '', label: '전체' },
+              { value: 'PENDING_SOURCE', label: '전출대기' },
+              { value: 'PENDING_TARGET', label: '전입대기' },
+              { value: 'APPROVED', label: '승인' },
+              { value: 'COMPLETED', label: '완료' },
+            ].map((item) => (
+              <button
+                key={item.value}
+                onClick={() => handleTabChange(item.value || 'all')}
+                className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                  (searchState.status || '') === item.value
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Mobile Transfer List */}
+          {isLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-28 bg-muted animate-pulse rounded-xl" />
+              ))}
+            </div>
+          ) : transfers.length === 0 ? (
+            <EmptyState
+              icon={ArrowLeftRight}
+              title={
+                searchState.status || searchState.keyword || searchState.type
+                  ? '검색 결과가 없습니다'
+                  : '인사이동 요청이 없습니다'
+              }
+              description={
+                searchState.status || searchState.keyword || searchState.type
+                  ? '다른 검색 조건을 시도해 보세요.'
+                  : '새 인사이동 요청을 등록하세요.'
+              }
+              action={
+                searchState.status || searchState.keyword || searchState.type
+                  ? { label: '필터 초기화', onClick: resetFilters }
+                  : { label: '인사이동 요청', onClick: () => navigate('/transfer/new') }
+              }
+            />
+          ) : (
+            <div className="space-y-3">
+              {transfers.map((transfer) => (
+                <button
+                  key={transfer.id}
+                  onClick={() => handleRowClick(transfer.id)}
+                  className="w-full bg-card rounded-xl border p-4 text-left transition-colors active:bg-muted"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge className={cn(STATUS_COLORS[transfer.status], 'text-xs')}>
+                          {TRANSFER_STATUS_LABELS[transfer.status]}
+                        </Badge>
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          {TYPE_ICONS[transfer.type]}
+                          <span>{TRANSFER_TYPE_LABELS[transfer.type]}</span>
+                        </div>
+                      </div>
+                      <p className="font-medium text-sm">{transfer.employeeName}</p>
+                      <p className="text-xs text-muted-foreground font-mono">{transfer.employeeNumber}</p>
+                      <div className="flex items-center gap-1 mt-2 text-xs">
+                        <span className="text-muted-foreground truncate max-w-[80px]">{transfer.sourceTenantName}</span>
+                        <ArrowRight className="h-3 w-3 text-primary flex-shrink-0" />
+                        <span className="text-muted-foreground truncate max-w-[80px]">{transfer.targetTenantName}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        발령일: {format(new Date(transfer.effectiveDate), 'yyyy.MM.dd', { locale: ko })}
+                      </p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-1" />
+                  </div>
+                </button>
+              ))}
+              {totalPages > 1 && (
+                <Pagination
+                  page={searchState.page}
+                  totalPages={totalPages}
+                  onPageChange={setPage}
+                />
+              )}
+            </div>
+          )}
+        </div>
+      </PullToRefreshContainer>
+    );
+  }
+
+  // Desktop Layout
   return (
     <>
       <PageHeader

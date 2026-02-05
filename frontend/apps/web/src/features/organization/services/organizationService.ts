@@ -54,92 +54,92 @@ export interface OrgHistorySearchParams extends PageRequest {
 }
 
 export const organizationService = {
-  // Organization Tree
+  // Organization Tree - Backend uses /departments/tree
   async getOrganizationTree(): Promise<ApiResponse<DepartmentTreeNode[]>> {
-    const response = await apiClient.get<ApiResponse<DepartmentTreeNode[]>>('/organizations/tree');
+    const response = await apiClient.get<ApiResponse<DepartmentTreeNode[]>>('/departments/tree');
     return response.data;
   },
 
-  // Departments
+  // Departments - Backend uses /departments (not nested under /organizations)
   async getDepartments(params?: DepartmentSearchParams): Promise<ApiResponse<PageResponse<Department>>> {
-    const response = await apiClient.get<ApiResponse<PageResponse<Department>>>('/organizations/departments', {
+    const response = await apiClient.get<ApiResponse<PageResponse<Department>>>('/departments', {
       params,
     });
     return response.data;
   },
 
   async getDepartment(id: string): Promise<ApiResponse<Department>> {
-    const response = await apiClient.get<ApiResponse<Department>>(`/organizations/departments/${id}`);
+    const response = await apiClient.get<ApiResponse<Department>>(`/departments/${id}`);
     return response.data;
   },
 
   async createDepartment(data: CreateDepartmentRequest): Promise<ApiResponse<Department>> {
-    const response = await apiClient.post<ApiResponse<Department>>('/organizations/departments', data);
+    const response = await apiClient.post<ApiResponse<Department>>('/departments', data);
     return response.data;
   },
 
   async updateDepartment(id: string, data: UpdateDepartmentRequest): Promise<ApiResponse<Department>> {
-    const response = await apiClient.put<ApiResponse<Department>>(`/organizations/departments/${id}`, data);
+    const response = await apiClient.put<ApiResponse<Department>>(`/departments/${id}`, data);
     return response.data;
   },
 
   async deleteDepartment(id: string): Promise<ApiResponse<null>> {
-    const response = await apiClient.delete<ApiResponse<null>>(`/organizations/departments/${id}`);
+    const response = await apiClient.delete<ApiResponse<null>>(`/departments/${id}`);
     return response.data;
   },
 
-  // Positions
+  // Positions - Backend uses /positions
   async getPositions(): Promise<ApiResponse<Position[]>> {
-    const response = await apiClient.get<ApiResponse<Position[]>>('/organizations/positions');
+    const response = await apiClient.get<ApiResponse<Position[]>>('/positions');
     return response.data;
   },
 
   async createPosition(data: CreatePositionRequest): Promise<ApiResponse<Position>> {
-    const response = await apiClient.post<ApiResponse<Position>>('/organizations/positions', data);
+    const response = await apiClient.post<ApiResponse<Position>>('/positions', data);
     return response.data;
   },
 
   async updatePosition(id: string, data: UpdatePositionRequest): Promise<ApiResponse<Position>> {
-    const response = await apiClient.put<ApiResponse<Position>>(`/organizations/positions/${id}`, data);
+    const response = await apiClient.put<ApiResponse<Position>>(`/positions/${id}`, data);
     return response.data;
   },
 
   async deletePosition(id: string): Promise<ApiResponse<null>> {
-    const response = await apiClient.delete<ApiResponse<null>>(`/organizations/positions/${id}`);
+    const response = await apiClient.delete<ApiResponse<null>>(`/positions/${id}`);
     return response.data;
   },
 
-  // Grades
+  // Grades - Backend uses /grades
   async getGrades(): Promise<ApiResponse<Grade[]>> {
-    const response = await apiClient.get<ApiResponse<Grade[]>>('/organizations/grades');
+    const response = await apiClient.get<ApiResponse<Grade[]>>('/grades');
     return response.data;
   },
 
   async createGrade(data: CreateGradeRequest): Promise<ApiResponse<Grade>> {
-    const response = await apiClient.post<ApiResponse<Grade>>('/organizations/grades', data);
+    const response = await apiClient.post<ApiResponse<Grade>>('/grades', data);
     return response.data;
   },
 
   async updateGrade(id: string, data: UpdateGradeRequest): Promise<ApiResponse<Grade>> {
-    const response = await apiClient.put<ApiResponse<Grade>>(`/organizations/grades/${id}`, data);
+    const response = await apiClient.put<ApiResponse<Grade>>(`/grades/${id}`, data);
     return response.data;
   },
 
   async deleteGrade(id: string): Promise<ApiResponse<null>> {
-    const response = await apiClient.delete<ApiResponse<null>>(`/organizations/grades/${id}`);
+    const response = await apiClient.delete<ApiResponse<null>>(`/grades/${id}`);
     return response.data;
   },
 
-  // Organization History
+  // Organization History - TODO: Backend needs to implement this endpoint
   async getOrganizationHistory(params?: OrgHistorySearchParams): Promise<ApiResponse<PageResponse<OrgHistoryEvent>>> {
-    const response = await apiClient.get<ApiResponse<PageResponse<OrgHistoryEvent>>>('/organizations/history', {
+    const response = await apiClient.get<ApiResponse<PageResponse<OrgHistoryEvent>>>('/departments/history', {
       params,
     });
     return response.data;
   },
 
   async getDepartmentHistory(departmentId: string, params?: OrgHistorySearchParams): Promise<ApiResponse<OrgHistoryEvent[]>> {
-    const response = await apiClient.get<ApiResponse<OrgHistoryEvent[]>>(`/organizations/departments/${departmentId}/history`, {
+    const response = await apiClient.get<ApiResponse<OrgHistoryEvent[]>>(`/departments/${departmentId}/history`, {
       params,
     });
     return response.data;

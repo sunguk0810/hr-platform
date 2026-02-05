@@ -164,8 +164,10 @@ resource "aws_cloudwatch_metric_alarm" "rds_connections_high" {
   })
 }
 
-# ElastiCache CPU High Alarm
+# ElastiCache CPU High Alarm (only when using ElastiCache)
 resource "aws_cloudwatch_metric_alarm" "redis_cpu_high" {
+  count = var.enable_redis_alarms ? 1 : 0
+
   alarm_name          = "${var.project}-${var.environment}-redis-cpu-high"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 2
@@ -187,8 +189,10 @@ resource "aws_cloudwatch_metric_alarm" "redis_cpu_high" {
   })
 }
 
-# ElastiCache Memory High Alarm
+# ElastiCache Memory High Alarm (only when using ElastiCache)
 resource "aws_cloudwatch_metric_alarm" "redis_memory_high" {
+  count = var.enable_redis_alarms ? 1 : 0
+
   alarm_name          = "${var.project}-${var.environment}-redis-memory-high"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 2
@@ -323,8 +327,8 @@ resource "aws_cloudwatch_dashboard" "main" {
           }
         }
       ],
-      # ElastiCache Metrics
-      [
+      # ElastiCache Metrics (only if using ElastiCache)
+      var.redis_cluster_id != "" ? [
         {
           type   = "metric"
           x      = 12
@@ -342,7 +346,7 @@ resource "aws_cloudwatch_dashboard" "main" {
             view   = "timeSeries"
           }
         }
-      ],
+      ] : [],
       # ALB HTTP Error Codes
       [
         {

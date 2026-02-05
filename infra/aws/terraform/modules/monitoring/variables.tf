@@ -35,6 +35,12 @@ variable "redis_cluster_id" {
   type        = string
 }
 
+variable "enable_redis_alarms" {
+  description = "Enable Redis CloudWatch alarms (set to true when using ElastiCache)"
+  type        = bool
+  default     = false
+}
+
 variable "services" {
   description = "Service configurations"
   type = map(object({

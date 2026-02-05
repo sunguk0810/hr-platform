@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { SkeletonTable } from '@/components/common/Skeleton';
 import { Pagination } from '@/components/common/Pagination';
+import { PullToRefreshContainer } from '@/components/mobile';
 import {
   JobStatusBadge,
   RecruitmentEmploymentTypeBadge,
@@ -14,7 +16,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Briefcase, Plus, Search, Users } from 'lucide-react';
+import { useIsMobile } from '@/hooks/useMediaQuery';
+import { Briefcase, Plus, Search, Users, ChevronRight, Calendar } from 'lucide-react';
 import { useDebounce } from '@/hooks/useDebounce';
 import {
   useJobPostings,
@@ -25,6 +28,8 @@ import type { JobStatus } from '@hr-platform/shared-types';
 
 export default function JobPostingListPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const [searchInput, setSearchInput] = useState('');
   const debouncedKeyword = useDebounce(searchInput, 300);
 
@@ -53,6 +58,190 @@ export default function JobPostingListPage() {
     }
   };
 
+  const handleRefresh = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['job-postings'] });
+    await queryClient.invalidateQueries({ queryKey: ['job-posting-summary'] });
+  };
+
+  // Mobile Layout
+  if (isMobile) {
+    return (
+      <PullToRefreshContainer onRefresh={handleRefresh}>
+        <div className="space-y-4 pb-20">
+          {/* Mobile Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl font-bold">채용공고</h1>
+              <p className="text-sm text-muted-foreground">총 {summary.total}개 공고</p>
+            </div>
+            <Button size="sm" onClick={() => navigate('/recruitment/jobs/new')}>
+              <Plus className="mr-1 h-4 w-4" />
+              등록
+            </Button>
+          </div>
+
+          {/* Summary Cards - 2x2 */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-card rounded-xl border p-4">
+              <p className="text-xs text-muted-foreground">진행중</p>
+              <p className="text-2xl font-bold text-green-500">{summary.open}</p>
+            </div>
+            <div className="bg-card rounded-xl border p-4">
+              <p className="text-xs text-muted-foreground">마감</p>
+              <p className="text-2xl font-bold text-orange-500">{summary.closed}</p>
+            </div>
+            <div className="bg-card rounded-xl border p-4">
+              <p className="text-xs text-muted-foreground">완료</p>
+              <p className="text-2xl font-bold text-blue-500">{summary.completed}</p>
+            </div>
+            <div className="bg-card rounded-xl border p-4">
+              <p className="text-xs text-muted-foreground">임시저장</p>
+              <p className="text-2xl font-bold text-gray-500">{summary.draft}</p>
+            </div>
+          </div>
+
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="공고 제목, 부서..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+
+          {/* Status Filter Chips */}
+          <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
+            <button
+              onClick={() => handleTabChange('all')}
+              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                !searchState.status
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              전체
+            </button>
+            <button
+              onClick={() => handleTabChange('OPEN')}
+              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                searchState.status === 'OPEN'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              진행중 {summary.open > 0 && `(${summary.open})`}
+            </button>
+            <button
+              onClick={() => handleTabChange('CLOSED')}
+              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                searchState.status === 'CLOSED'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              마감
+            </button>
+            <button
+              onClick={() => handleTabChange('COMPLETED')}
+              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                searchState.status === 'COMPLETED'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              완료
+            </button>
+            <button
+              onClick={() => handleTabChange('DRAFT')}
+              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                searchState.status === 'DRAFT'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              임시저장
+            </button>
+          </div>
+
+          {/* Job List */}
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            </div>
+          ) : isError ? (
+            <div className="bg-card rounded-xl border p-8 text-center">
+              <Briefcase className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+              <p className="font-medium">데이터를 불러올 수 없습니다</p>
+              <p className="text-sm text-muted-foreground mt-1">잠시 후 다시 시도해주세요.</p>
+            </div>
+          ) : jobs.length === 0 ? (
+            <div className="bg-card rounded-xl border p-8 text-center">
+              <Briefcase className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+              <p className="font-medium">채용공고가 없습니다</p>
+              <p className="text-sm text-muted-foreground mt-1">새 채용공고를 등록해보세요.</p>
+              <Button className="mt-4" onClick={() => navigate('/recruitment/jobs/new')}>
+                <Plus className="mr-2 h-4 w-4" />
+                새 공고 등록
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {jobs.map((job) => (
+                <div
+                  key={job.id}
+                  className="bg-card rounded-xl border p-4"
+                  onClick={() => handleRowClick(job.id)}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs font-mono text-muted-foreground">{job.jobCode}</span>
+                        <JobStatusBadge status={job.status} />
+                      </div>
+                      <p className="font-medium line-clamp-1">{job.title}</p>
+                      <p className="text-sm text-muted-foreground">{job.departmentName || '-'}</p>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                  </div>
+
+                  <div className="flex items-center justify-between text-sm mt-3 pt-3 border-t">
+                    <div className="flex items-center gap-3">
+                      <RecruitmentEmploymentTypeBadge type={job.employmentType} />
+                      <div className="flex items-center gap-1 text-muted-foreground">
+                        <Users className="h-3.5 w-3.5" />
+                        <span className="font-medium text-foreground">{job.applicationCount}</span>
+                        <span>/ {job.headcount}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Calendar className="h-3.5 w-3.5" />
+                      <span>
+                        {format(new Date(job.postingStartDate), 'M/d', { locale: ko })}
+                        {' - '}
+                        {format(new Date(job.postingEndDate), 'M/d', { locale: ko })}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {totalPages > 1 && (
+                <Pagination
+                  page={searchState.page}
+                  totalPages={totalPages}
+                  onPageChange={setPage}
+                />
+              )}
+            </div>
+          )}
+        </div>
+      </PullToRefreshContainer>
+    );
+  }
+
+  // Desktop Layout
   return (
     <>
       <PageHeader

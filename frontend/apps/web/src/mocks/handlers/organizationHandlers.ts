@@ -233,7 +233,7 @@ function buildDepartmentTree(departments: Department[]): DepartmentTreeNode[] {
 
 export const organizationHandlers = [
   // Get organization tree
-  http.get('/api/v1/organizations/tree', async () => {
+  http.get('/api/v1/departments/tree', async () => {
     await delay(300);
 
     const tree = buildDepartmentTree(mockDepartments);
@@ -246,7 +246,7 @@ export const organizationHandlers = [
   }),
 
   // Get departments list
-  http.get('/api/v1/organizations/departments', async ({ request }) => {
+  http.get('/api/v1/departments', async ({ request }) => {
     await delay(300);
 
     const url = new URL(request.url);
@@ -290,7 +290,7 @@ export const organizationHandlers = [
   }),
 
   // Get department detail
-  http.get('/api/v1/organizations/departments/:id', async ({ params }) => {
+  http.get('/api/v1/departments/:id', async ({ params }) => {
     await delay(200);
 
     const { id } = params;
@@ -315,7 +315,7 @@ export const organizationHandlers = [
   }),
 
   // Create department
-  http.post('/api/v1/organizations/departments', async ({ request }) => {
+  http.post('/api/v1/departments', async ({ request }) => {
     await delay(300);
 
     const body = await request.json() as Record<string, unknown>;
@@ -349,7 +349,7 @@ export const organizationHandlers = [
   }),
 
   // Update department
-  http.put('/api/v1/organizations/departments/:id', async ({ params, request }) => {
+  http.put('/api/v1/departments/:id', async ({ params, request }) => {
     await delay(300);
 
     const { id } = params;
@@ -381,7 +381,7 @@ export const organizationHandlers = [
   }),
 
   // Delete department
-  http.delete('/api/v1/organizations/departments/:id', async ({ params }) => {
+  http.delete('/api/v1/departments/:id', async ({ params }) => {
     await delay(300);
 
     const { id } = params;
@@ -421,7 +421,7 @@ export const organizationHandlers = [
   }),
 
   // Get positions
-  http.get('/api/v1/organizations/positions', async () => {
+  http.get('/api/v1/positions', async () => {
     await delay(200);
 
     return HttpResponse.json({
@@ -432,7 +432,7 @@ export const organizationHandlers = [
   }),
 
   // Create position
-  http.post('/api/v1/organizations/positions', async ({ request }) => {
+  http.post('/api/v1/positions', async ({ request }) => {
     await delay(300);
 
     const body = await request.json() as Record<string, unknown>;
@@ -459,7 +459,7 @@ export const organizationHandlers = [
   }),
 
   // Update position
-  http.put('/api/v1/organizations/positions/:id', async ({ params, request }) => {
+  http.put('/api/v1/positions/:id', async ({ params, request }) => {
     await delay(300);
 
     const { id } = params;
@@ -491,7 +491,7 @@ export const organizationHandlers = [
   }),
 
   // Delete position
-  http.delete('/api/v1/organizations/positions/:id', async ({ params }) => {
+  http.delete('/api/v1/positions/:id', async ({ params }) => {
     await delay(300);
 
     const { id } = params;
@@ -518,7 +518,7 @@ export const organizationHandlers = [
   }),
 
   // Get grades
-  http.get('/api/v1/organizations/grades', async () => {
+  http.get('/api/v1/grades', async () => {
     await delay(200);
 
     return HttpResponse.json({
@@ -529,7 +529,7 @@ export const organizationHandlers = [
   }),
 
   // Create grade
-  http.post('/api/v1/organizations/grades', async ({ request }) => {
+  http.post('/api/v1/grades', async ({ request }) => {
     await delay(300);
 
     const body = await request.json() as Record<string, unknown>;
@@ -557,7 +557,7 @@ export const organizationHandlers = [
   }),
 
   // Update grade
-  http.put('/api/v1/organizations/grades/:id', async ({ params, request }) => {
+  http.put('/api/v1/grades/:id', async ({ params, request }) => {
     await delay(300);
 
     const { id } = params;
@@ -589,7 +589,7 @@ export const organizationHandlers = [
   }),
 
   // Delete grade
-  http.delete('/api/v1/organizations/grades/:id', async ({ params }) => {
+  http.delete('/api/v1/grades/:id', async ({ params }) => {
     await delay(300);
 
     const { id } = params;
@@ -616,7 +616,7 @@ export const organizationHandlers = [
   }),
 
   // Organization History
-  http.get('/api/v1/organizations/history', async ({ request }) => {
+  http.get('/api/v1/departments/history', async ({ request }) => {
     await delay(300);
 
     const url = new URL(request.url);
@@ -726,7 +726,7 @@ export const organizationHandlers = [
   }),
 
   // Department History
-  http.get('/api/v1/organizations/departments/:id/history', async ({ params }) => {
+  http.get('/api/v1/departments/:id/history', async ({ params }) => {
     await delay(200);
 
     const { id } = params;

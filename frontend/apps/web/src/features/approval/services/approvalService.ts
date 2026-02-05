@@ -94,33 +94,33 @@ export const approvalService = {
     return response.data;
   },
 
-  // SDD 3.3.4 결재 양식 목록
+  // SDD 3.3.4 결재 양식 목록 - Backend uses /approvals/templates
   async getTemplates(params?: { category?: string; isActive?: boolean }): Promise<ApiResponse<ApprovalTemplate[]>> {
-    const response = await apiClient.get<ApiResponse<ApprovalTemplate[]>>('/approval-templates', { params });
+    const response = await apiClient.get<ApiResponse<ApprovalTemplate[]>>('/approvals/templates', { params });
     return response.data;
   },
 
   // SDD 3.3.4 결재 양식 상세
   async getTemplate(id: string): Promise<ApiResponse<ApprovalTemplate>> {
-    const response = await apiClient.get<ApiResponse<ApprovalTemplate>>(`/approval-templates/${id}`);
+    const response = await apiClient.get<ApiResponse<ApprovalTemplate>>(`/approvals/templates/${id}`);
     return response.data;
   },
 
   // SDD 3.3.4 결재 양식 생성
   async createTemplate(data: Partial<ApprovalTemplate>): Promise<ApiResponse<ApprovalTemplate>> {
-    const response = await apiClient.post<ApiResponse<ApprovalTemplate>>('/approval-templates', data);
+    const response = await apiClient.post<ApiResponse<ApprovalTemplate>>('/approvals/templates', data);
     return response.data;
   },
 
   // SDD 3.3.4 결재 양식 수정
   async updateTemplate(id: string, data: Partial<ApprovalTemplate>): Promise<ApiResponse<ApprovalTemplate>> {
-    const response = await apiClient.put<ApiResponse<ApprovalTemplate>>(`/approval-templates/${id}`, data);
+    const response = await apiClient.put<ApiResponse<ApprovalTemplate>>(`/approvals/templates/${id}`, data);
     return response.data;
   },
 
   // SDD 3.3.4 결재 양식 삭제
   async deleteTemplate(id: string): Promise<ApiResponse<void>> {
-    const response = await apiClient.delete<ApiResponse<void>>(`/approval-templates/${id}`);
+    const response = await apiClient.delete<ApiResponse<void>>(`/approvals/templates/${id}`);
     return response.data;
   },
 
@@ -149,36 +149,40 @@ export const approvalService = {
   },
 
   // ===== PRD FR-APR-003: 위임전결 규칙 =====
+  // Backend uses /approvals/delegations for both delegations and delegation rules
 
   async getDelegationRules(params?: DelegationRuleSearchParams): Promise<ApiResponse<PageResponse<DelegationRuleListItem>>> {
-    const response = await apiClient.get<ApiResponse<PageResponse<DelegationRuleListItem>>>('/approvals/delegation-rules', {
+    // Backend returns paginated response
+    const response = await apiClient.get<ApiResponse<PageResponse<DelegationRuleListItem>>>('/approvals/delegations', {
       params,
     });
     return response.data;
   },
 
   async getDelegationRule(id: string): Promise<ApiResponse<DelegationRule>> {
-    const response = await apiClient.get<ApiResponse<DelegationRule>>(`/approvals/delegation-rules/${id}`);
+    const response = await apiClient.get<ApiResponse<DelegationRule>>(`/approvals/delegations/${id}`);
     return response.data;
   },
 
   async createDelegationRule(data: CreateDelegationRuleRequest): Promise<ApiResponse<DelegationRule>> {
-    const response = await apiClient.post<ApiResponse<DelegationRule>>('/approvals/delegation-rules', data);
+    const response = await apiClient.post<ApiResponse<DelegationRule>>('/approvals/delegations', data);
     return response.data;
   },
 
   async updateDelegationRule(id: string, data: UpdateDelegationRuleRequest): Promise<ApiResponse<DelegationRule>> {
-    const response = await apiClient.put<ApiResponse<DelegationRule>>(`/approvals/delegation-rules/${id}`, data);
+    // TODO: Backend needs to implement PUT endpoint for delegation update
+    const response = await apiClient.put<ApiResponse<DelegationRule>>(`/approvals/delegations/${id}`, data);
     return response.data;
   },
 
   async deleteDelegationRule(id: string): Promise<ApiResponse<void>> {
-    const response = await apiClient.delete<ApiResponse<void>>(`/approvals/delegation-rules/${id}`);
+    const response = await apiClient.delete<ApiResponse<void>>(`/approvals/delegations/${id}`);
     return response.data;
   },
 
   async toggleDelegationRuleStatus(id: string): Promise<ApiResponse<DelegationRule>> {
-    const response = await apiClient.post<ApiResponse<DelegationRule>>(`/approvals/delegation-rules/${id}/toggle-status`);
+    // TODO: Backend needs to implement toggle-status endpoint
+    const response = await apiClient.post<ApiResponse<DelegationRule>>(`/approvals/delegations/${id}/toggle-status`);
     return response.data;
   },
 };

@@ -165,8 +165,8 @@ let mockSettings: NotificationSettings = {
 };
 
 export const notificationHandlers = [
-  // Get notifications list
-  http.get('/api/v1/notifications', async ({ request }) => {
+  // Get notifications list - Backend uses /notifications/my
+  http.get('/api/v1/notifications/my', async ({ request }) => {
     await delay(200);
 
     const url = new URL(request.url);
@@ -207,8 +207,8 @@ export const notificationHandlers = [
     });
   }),
 
-  // Mark notification as read
-  http.patch('/api/v1/notifications/:id/read', async ({ params }) => {
+  // Mark notification as read - Backend uses POST
+  http.post('/api/v1/notifications/:id/read', async ({ params }) => {
     await delay(100);
 
     const { id } = params;
@@ -234,8 +234,8 @@ export const notificationHandlers = [
     });
   }),
 
-  // Mark all notifications as read
-  http.patch('/api/v1/notifications/read-all', async () => {
+  // Mark all notifications as read - Backend uses POST /notifications/my/read-all
+  http.post('/api/v1/notifications/my/read-all', async () => {
     await delay(200);
 
     mockNotifications.forEach(n => {
@@ -304,15 +304,15 @@ export const notificationHandlers = [
     });
   }),
 
-  // Get unread count
-  http.get('/api/v1/notifications/unread-count', async () => {
+  // Get unread count - Backend returns Long directly, not wrapped in object
+  http.get('/api/v1/notifications/my/unread/count', async () => {
     await delay(100);
 
     const unreadCount = mockNotifications.filter(n => !n.isRead).length;
 
     return HttpResponse.json({
       success: true,
-      data: { count: unreadCount },
+      data: unreadCount,
       timestamp: new Date().toISOString(),
     });
   }),

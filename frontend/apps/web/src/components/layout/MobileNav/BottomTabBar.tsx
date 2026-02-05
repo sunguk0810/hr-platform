@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   Home,
@@ -9,6 +10,9 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNotificationStore } from '@/stores/notificationStore';
+import { useMenuStore } from '@/stores/menuStore';
+import { useAuthStore } from '@/stores/authStore';
+import { getIconWithFallback } from '@/utils/iconMap';
 
 interface TabItem {
   icon: LucideIcon;
@@ -17,21 +21,45 @@ interface TabItem {
   badge?: number;
 }
 
+// Default tabs as fallback
+const defaultTabs: TabItem[] = [
+  { icon: Home, label: '홈', href: '/' },
+  { icon: Users, label: '조직', href: '/organization' },
+  { icon: Calendar, label: '근태', href: '/attendance' },
+  { icon: FileCheck, label: '결재', href: '/approvals' },
+  { icon: Bell, label: '알림', href: '/notifications' },
+];
+
 export function BottomTabBar() {
   const location = useLocation();
   const { unreadCount } = useNotificationStore();
+  const { mobileMenus, fetchMenus } = useMenuStore();
+  const { isAuthenticated } = useAuthStore();
 
-  const tabs: TabItem[] = [
-    { icon: Home, label: '홈', href: '/' },
-    { icon: Users, label: '조직', href: '/organization' },
-    { icon: Calendar, label: '근태', href: '/attendance' },
-    { icon: FileCheck, label: '결재', href: '/approvals' },
-    { icon: Bell, label: '알림', href: '/notifications', badge: unreadCount > 0 ? unreadCount : undefined },
-  ];
+  // Fetch menus on mount if authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchMenus();
+    }
+  }, [isAuthenticated, fetchMenus]);
+
+  // Build tabs from dynamic menus or use defaults
+  const tabs: TabItem[] = mobileMenus.length > 0
+    ? mobileMenus.map((menu) => ({
+        icon: getIconWithFallback(menu.icon, Home),
+        label: menu.name,
+        href: menu.path || '/',
+        // Add notification badge for notifications menu
+        badge: menu.code === 'NOTIFICATIONS' && unreadCount > 0 ? unreadCount : undefined,
+      }))
+    : defaultTabs.map((tab) => ({
+        ...tab,
+        badge: tab.href === '/notifications' && unreadCount > 0 ? unreadCount : undefined,
+      }));
 
   const isActive = (href: string) => {
     if (href === '/') {
-      return location.pathname === '/';
+      return location.pathname === '/' || location.pathname === '/dashboard';
     }
     return location.pathname.startsWith(href);
   };

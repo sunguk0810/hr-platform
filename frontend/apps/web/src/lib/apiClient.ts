@@ -1,7 +1,9 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@/stores/authStore';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
+// Mock 모드에서는 상대 경로 사용 (MSW가 인터셉트할 수 있도록)
+const isMockMode = import.meta.env.VITE_ENABLE_MOCK === 'true';
+const API_BASE_URL = isMockMode ? '/api/v1' : (import.meta.env.VITE_API_BASE_URL || '/api/v1');
 
 export const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -42,7 +44,7 @@ apiClient.interceptors.response.use(
 
       if (refreshToken) {
         try {
-          const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+          const response = await axios.post(`${API_BASE_URL}/auth/token/refresh`, {
             refreshToken,
           });
 

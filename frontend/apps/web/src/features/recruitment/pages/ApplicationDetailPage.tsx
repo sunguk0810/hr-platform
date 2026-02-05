@@ -25,6 +25,14 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useIsMobile } from '@/hooks/useMediaQuery';
+import {
   ArrowLeft,
   Loader2,
   FileCheck,
@@ -35,6 +43,7 @@ import {
   Download,
   Mail,
   Phone,
+  MoreVertical,
 } from 'lucide-react';
 import {
   useApplication,
@@ -61,6 +70,7 @@ export default function ApplicationDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const [activeTab, setActiveTab] = useState('info');
   const [isScreenDialogOpen, setIsScreenDialogOpen] = useState(false);
@@ -180,6 +190,364 @@ export default function ApplicationDetailPage() {
   const currentStageIndex = STAGE_OPTIONS.findIndex((s) => s.value === application.currentStage);
   const availableNextStages = STAGE_OPTIONS.slice(currentStageIndex + 1);
 
+  const renderDialogs = () => (
+    <>
+      {/* Screen Dialog */}
+      <Dialog open={isScreenDialogOpen} onOpenChange={setIsScreenDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>서류 심사 합격</DialogTitle>
+            <DialogDescription>
+              {application.applicantName}님의 서류 심사를 합격 처리하시겠습니까?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Label>심사 의견 (선택)</Label>
+            <Textarea
+              className="mt-2"
+              value={screeningComment}
+              onChange={(e) => setScreeningComment(e.target.value)}
+              placeholder="서류 심사 의견을 입력하세요."
+              rows={3}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsScreenDialogOpen(false)}>
+              취소
+            </Button>
+            <Button onClick={handleScreenPass} disabled={screenMutation.isPending}>
+              {screenMutation.isPending ? '처리 중...' : '합격 처리'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reject Dialog */}
+      <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>불합격 처리</DialogTitle>
+            <DialogDescription>
+              {application.applicantName}님을 불합격 처리하시겠습니까?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Label>불합격 사유 *</Label>
+            <Textarea
+              className="mt-2"
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="불합격 사유를 입력하세요."
+              rows={3}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>
+              취소
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleReject}
+              disabled={!rejectReason || rejectMutation.isPending}
+            >
+              {rejectMutation.isPending ? '처리 중...' : '불합격 처리'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Next Stage Dialog */}
+      <Dialog open={isNextStageDialogOpen} onOpenChange={setIsNextStageDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>다음 단계로 이동</DialogTitle>
+            <DialogDescription>진행할 다음 단계를 선택하세요.</DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Label>다음 단계</Label>
+            <select
+              className="w-full h-10 mt-2 rounded-md border border-input bg-background px-3 py-2 text-sm"
+              value={nextStage}
+              onChange={(e) => setNextStage(e.target.value as ApplicationStage)}
+            >
+              {availableNextStages.map((stage) => (
+                <option key={stage.value} value={stage.value}>
+                  {stage.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsNextStageDialogOpen(false)}>
+              취소
+            </Button>
+            <Button onClick={handleMoveToNextStage} disabled={nextStageMutation.isPending}>
+              {nextStageMutation.isPending ? '처리 중...' : '이동'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Hire Dialog */}
+      <Dialog open={isHireDialogOpen} onOpenChange={setIsHireDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>채용 확정</DialogTitle>
+            <DialogDescription>
+              {application.applicantName}님의 채용을 확정합니다.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div>
+              <Label>입사일 *</Label>
+              <input
+                type="date"
+                className="w-full h-10 mt-2 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={hireDate}
+                onChange={(e) => setHireDate(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label>배치 부서 *</Label>
+              <select
+                className="w-full h-10 mt-2 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={hireDepartmentId}
+                onChange={(e) => setHireDepartmentId(e.target.value)}
+              >
+                <option value="">선택</option>
+                <option value="dept-001">개발팀</option>
+                <option value="dept-002">인사팀</option>
+                <option value="dept-003">재무팀</option>
+                <option value="dept-004">마케팅팀</option>
+                <option value="dept-005">디자인팀</option>
+                <option value="dept-006">영업팀</option>
+              </select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsHireDialogOpen(false)}>
+              취소
+            </Button>
+            <Button
+              className="bg-green-600 hover:bg-green-700"
+              onClick={handleHire}
+              disabled={!hireDepartmentId || !hireDate || hireMutation.isPending}
+            >
+              {hireMutation.isPending ? '처리 중...' : '채용 확정'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Interview Schedule Dialog */}
+      <Dialog open={isInterviewDialogOpen} onOpenChange={setIsInterviewDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>면접 일정 등록</DialogTitle>
+          </DialogHeader>
+          <InterviewScheduleForm
+            applicationId={id || ''}
+            applicantName={application.applicantName}
+            onSubmit={handleCreateInterview}
+            onCancel={() => setIsInterviewDialogOpen(false)}
+            isSubmitting={createInterviewMutation.isPending}
+          />
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+
+  // 모바일 레이아웃
+  if (isMobile) {
+    return (
+      <div className="pb-24">
+        {/* 모바일 헤더 */}
+        <div className="flex items-center justify-between mb-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/recruitment/applications')}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="font-semibold truncate flex-1 mx-2">지원서 상세</h1>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <MoreVertical className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {canScheduleInterview && (
+                <DropdownMenuItem onClick={() => setIsInterviewDialogOpen(true)}>
+                  <Calendar className="mr-2 h-4 w-4" />
+                  면접 일정
+                </DropdownMenuItem>
+              )}
+              {canScreen && (
+                <DropdownMenuItem onClick={() => setIsScreenDialogOpen(true)}>
+                  <FileCheck className="mr-2 h-4 w-4" />
+                  서류 합격
+                </DropdownMenuItem>
+              )}
+              {canMoveNext && availableNextStages.length > 0 && (
+                <DropdownMenuItem onClick={() => setIsNextStageDialogOpen(true)}>
+                  <ArrowRight className="mr-2 h-4 w-4" />
+                  다음 단계
+                </DropdownMenuItem>
+              )}
+              {canHire && (
+                <DropdownMenuItem onClick={() => setIsHireDialogOpen(true)}>
+                  <UserCheck className="mr-2 h-4 w-4" />
+                  채용 확정
+                </DropdownMenuItem>
+              )}
+              {canReject && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => setIsRejectDialogOpen(true)}
+                    className="text-destructive"
+                  >
+                    <FileX className="mr-2 h-4 w-4" />
+                    불합격
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* 지원자 기본 정보 */}
+        <Card className="mb-4">
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <h2 className="text-lg font-semibold">{application.applicantName}</h2>
+                <p className="text-sm text-muted-foreground">{application.applicationNumber}</p>
+              </div>
+              <ApplicationStatusBadge status={application.status} />
+            </div>
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <span>{application.applicantEmail}</span>
+              </div>
+              {application.applicantPhone && (
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <span>{application.applicantPhone}</span>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 진행 상태 */}
+        <Card className="mb-4">
+          <CardHeader className="p-4 pb-2">
+            <CardTitle className="text-base">진행 상태</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            <StageProgressBar currentStage={application.currentStage} />
+            <div className="mt-3 text-sm text-muted-foreground">
+              현재: {STAGE_OPTIONS.find((s) => s.value === application.currentStage)?.label}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 지원 공고 */}
+        <Card className="mb-4">
+          <CardHeader className="p-4 pb-2">
+            <CardTitle className="text-base">지원 공고</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            <p className="text-sm">
+              {application.jobCode && `[${application.jobCode}] `}
+              {application.jobTitle}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              지원일: {format(new Date(application.appliedAt), 'yyyy년 M월 d일', { locale: ko })}
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* 이력서 */}
+        {application.resumeFileId && (
+          <Card className="mb-4">
+            <CardContent className="p-4">
+              <Button variant="outline" className="w-full">
+                <Download className="mr-2 h-4 w-4" />
+                {application.resumeFileName || '이력서 다운로드'}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* 자기소개서 */}
+        {application.coverLetter && (
+          <Card className="mb-4">
+            <CardHeader className="p-4 pb-2">
+              <CardTitle className="text-base">자기소개서</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+              <div className="text-sm whitespace-pre-wrap">{application.coverLetter}</div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* 서류 심사 의견 */}
+        {application.screeningComment && (
+          <Card className="mb-4 border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/20">
+            <CardHeader className="p-4 pb-2">
+              <CardTitle className="text-base text-blue-800 dark:text-blue-200">서류 심사 의견</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+              <p className="text-sm text-blue-800 dark:text-blue-200">{application.screeningComment}</p>
+              {application.screenedByName && (
+                <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
+                  - {application.screenedByName},{' '}
+                  {application.screenedAt && format(new Date(application.screenedAt), 'M/d HH:mm')}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* 불합격 사유 */}
+        {application.rejectionReason && (
+          <Card className="mb-4 border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
+            <CardHeader className="p-4 pb-2">
+              <CardTitle className="text-base text-red-800 dark:text-red-200">불합격 사유</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+              <p className="text-sm text-red-800 dark:text-red-200">{application.rejectionReason}</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* 면접 이력 */}
+        <Card className="mb-4">
+          <CardHeader className="p-4 pb-2">
+            <CardTitle className="text-base">면접 ({interviews.length})</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            {interviews.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                등록된 면접이 없습니다.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {interviews.map((interview) => (
+                  <InterviewCard key={interview.id} interview={interview} />
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {renderDialogs()}
+      </div>
+    );
+  }
+
+  // 데스크톱 레이아웃
   return (
     <>
       <PageHeader
@@ -393,168 +761,7 @@ export default function ApplicationDetailPage() {
         </div>
       </div>
 
-      {/* Screen Dialog */}
-      <Dialog open={isScreenDialogOpen} onOpenChange={setIsScreenDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>서류 심사 합격</DialogTitle>
-            <DialogDescription>
-              {application.applicantName}님의 서류 심사를 합격 처리하시겠습니까?
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <Label>심사 의견 (선택)</Label>
-            <Textarea
-              className="mt-2"
-              value={screeningComment}
-              onChange={(e) => setScreeningComment(e.target.value)}
-              placeholder="서류 심사 의견을 입력하세요."
-              rows={3}
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsScreenDialogOpen(false)}>
-              취소
-            </Button>
-            <Button onClick={handleScreenPass} disabled={screenMutation.isPending}>
-              {screenMutation.isPending ? '처리 중...' : '합격 처리'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Reject Dialog */}
-      <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>불합격 처리</DialogTitle>
-            <DialogDescription>
-              {application.applicantName}님을 불합격 처리하시겠습니까?
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <Label>불합격 사유 *</Label>
-            <Textarea
-              className="mt-2"
-              value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
-              placeholder="불합격 사유를 입력하세요."
-              rows={3}
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>
-              취소
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleReject}
-              disabled={!rejectReason || rejectMutation.isPending}
-            >
-              {rejectMutation.isPending ? '처리 중...' : '불합격 처리'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Next Stage Dialog */}
-      <Dialog open={isNextStageDialogOpen} onOpenChange={setIsNextStageDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>다음 단계로 이동</DialogTitle>
-            <DialogDescription>진행할 다음 단계를 선택하세요.</DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <Label>다음 단계</Label>
-            <select
-              className="w-full h-10 mt-2 rounded-md border border-input bg-background px-3 py-2 text-sm"
-              value={nextStage}
-              onChange={(e) => setNextStage(e.target.value as ApplicationStage)}
-            >
-              {availableNextStages.map((stage) => (
-                <option key={stage.value} value={stage.value}>
-                  {stage.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsNextStageDialogOpen(false)}>
-              취소
-            </Button>
-            <Button onClick={handleMoveToNextStage} disabled={nextStageMutation.isPending}>
-              {nextStageMutation.isPending ? '처리 중...' : '이동'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Hire Dialog */}
-      <Dialog open={isHireDialogOpen} onOpenChange={setIsHireDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>채용 확정</DialogTitle>
-            <DialogDescription>
-              {application.applicantName}님의 채용을 확정합니다.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4 space-y-4">
-            <div>
-              <Label>입사일 *</Label>
-              <input
-                type="date"
-                className="w-full h-10 mt-2 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                value={hireDate}
-                onChange={(e) => setHireDate(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label>배치 부서 *</Label>
-              <select
-                className="w-full h-10 mt-2 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                value={hireDepartmentId}
-                onChange={(e) => setHireDepartmentId(e.target.value)}
-              >
-                <option value="">선택</option>
-                <option value="dept-001">개발팀</option>
-                <option value="dept-002">인사팀</option>
-                <option value="dept-003">재무팀</option>
-                <option value="dept-004">마케팅팀</option>
-                <option value="dept-005">디자인팀</option>
-                <option value="dept-006">영업팀</option>
-              </select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsHireDialogOpen(false)}>
-              취소
-            </Button>
-            <Button
-              className="bg-green-600 hover:bg-green-700"
-              onClick={handleHire}
-              disabled={!hireDepartmentId || !hireDate || hireMutation.isPending}
-            >
-              {hireMutation.isPending ? '처리 중...' : '채용 확정'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Interview Schedule Dialog */}
-      <Dialog open={isInterviewDialogOpen} onOpenChange={setIsInterviewDialogOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>면접 일정 등록</DialogTitle>
-          </DialogHeader>
-          <InterviewScheduleForm
-            applicationId={id || ''}
-            applicantName={application.applicantName}
-            onSubmit={handleCreateInterview}
-            onCancel={() => setIsInterviewDialogOpen(false)}
-            isSubmitting={createInterviewMutation.isPending}
-          />
-        </DialogContent>
-      </Dialog>
+      {renderDialogs()}
     </>
   );
 }

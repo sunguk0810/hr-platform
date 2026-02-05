@@ -61,6 +61,9 @@ public class Employee extends TenantAwareEntity {
     @Column(name = "user_id")
     private UUID userId;
 
+    @Column(name = "resident_number", length = 20)
+    private String residentNumber;
+
     @Builder
     public Employee(String employeeNumber, String name, String nameEn, String email,
                     String phone, String mobile, UUID departmentId, String positionCode,
@@ -89,6 +92,11 @@ public class Employee extends TenantAwareEntity {
     public void resign(LocalDate resignDate) {
         this.resignDate = resignDate;
         this.status = EmployeeStatus.RESIGNED;
+    }
+
+    public void cancelResign() {
+        this.resignDate = null;
+        this.status = EmployeeStatus.ACTIVE;
     }
 
     public void activate() {

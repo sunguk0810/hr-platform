@@ -1,0 +1,43 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+*.iml
+.vscode
+
+# Build outputs
+**/build
+**/out
+**/target
+
+# Gradle
+.gradle
+!gradle/wrapper/gradle-wrapper.jar
+
+# Frontend
+frontend
+
+# Docker
+**/Dockerfile
+**/.dockerignore
+
+# Logs
+**/*.log
+
+# Test files
+**/src/test
+
+# Documentation
+*.md
+docs
+
+# Terraform (exclude terraform files but keep config-server)
+infra/aws
+infra/terraform
+!infra/config-server
+
+# Local configs
+*.local.*
+.env*

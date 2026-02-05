@@ -6,6 +6,7 @@ import com.hrsaas.common.security.SecurityContextHolder;
 import com.hrsaas.employee.domain.dto.request.CreateEmployeeRequest;
 import com.hrsaas.employee.domain.dto.request.EmployeeSearchCondition;
 import com.hrsaas.employee.domain.dto.request.UpdateEmployeeRequest;
+import com.hrsaas.employee.domain.dto.response.BulkImportResultResponse;
 import com.hrsaas.employee.domain.dto.response.EmployeeResponse;
 import com.hrsaas.employee.service.EmployeeService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,11 +15,16 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -96,6 +102,70 @@ public class EmployeeController {
             @RequestParam String resignDate) {
         EmployeeResponse response = employeeService.resign(id, resignDate);
         return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PostMapping("/{id}/resign/cancel")
+    @Operation(summary = "직원 퇴사 취소")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<EmployeeResponse>> cancelResign(
+            @PathVariable UUID id,
+            @RequestBody Map<String, String> body) {
+        String reason = body.getOrDefault("reason", "");
+        EmployeeResponse response = employeeService.cancelResign(id, reason);
+        return ResponseEntity.ok(ApiResponse.success(response, "퇴사가 취소되었습니다."));
+    }
+
+    @PostMapping("/{id}/unmask")
+    @Operation(summary = "개인정보 마스킹 해제")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<Map<String, String>>> unmask(
+            @PathVariable UUID id,
+            @RequestBody Map<String, String> body) {
+        String field = body.get("field");
+        String reason = body.get("reason");
+        String value = employeeService.unmask(id, field, reason);
+        return ResponseEntity.ok(ApiResponse.success(Map.of("value", value)));
+    }
+
+    @GetMapping("/export")
+    @Operation(summary = "직원 목록 엑셀 내보내기")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<byte[]> exportToExcel(@ModelAttribute EmployeeSearchCondition condition) {
+        byte[] excelData = employeeService.exportToExcel(condition);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setContentDispositionFormData("attachment", "employees.xlsx");
+        return ResponseEntity.ok().headers(headers).body(excelData);
+    }
+
+    @PostMapping("/import")
+    @Operation(summary = "직원 목록 엑셀 가져오기")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<BulkImportResultResponse>> importFromExcel(
+            @RequestParam("file") MultipartFile file) {
+        BulkImportResultResponse result = employeeService.importFromExcel(file);
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    @GetMapping("/import/template")
+    @Operation(summary = "직원 일괄등록 템플릿 다운로드")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<byte[]> getImportTemplate() {
+        byte[] template = employeeService.getImportTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setContentDispositionFormData("attachment", "employee_import_template.xlsx");
+        return ResponseEntity.ok().headers(headers).body(template);
+    }
+
+    @PostMapping("/bulk-delete")
+    @Operation(summary = "직원 일괄 삭제")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<Map<String, Integer>>> bulkDelete(
+            @RequestBody Map<String, List<String>> body) {
+        List<UUID> ids = body.get("ids").stream().map(UUID::fromString).toList();
+        int deleted = employeeService.bulkDelete(ids);
+        return ResponseEntity.ok(ApiResponse.success(Map.of("deleted", deleted)));
     }
 
     @DeleteMapping("/{id}")

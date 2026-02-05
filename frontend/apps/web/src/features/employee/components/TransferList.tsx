@@ -18,13 +18,13 @@ import {
 import { StatusBadge, StatusType } from '@/components/common/StatusBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useTransferList, useApproveTransfer, useCancelTransfer, useTransferSearchParams } from '../hooks/useEmployees';
+import { useTransferList, useApproveTransferSource, useApproveTransferTarget, useRejectTransfer, useCancelTransfer, useTransferSearchParams } from '../hooks/useEmployees';
 import { useToast } from '@/hooks/useToast';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
-import type { TransferStatus, EmployeeTransfer, TransferApprovalRequest } from '@hr-platform/shared-types';
+import type { EmployeeTransferStatus, EmployeeTransfer } from '@hr-platform/shared-types';
 import { Check, X, Eye, ArrowRightLeft, RefreshCw } from 'lucide-react';
 
-const statusOptions: { value: TransferStatus | ''; label: string }[] = [
+const statusOptions: { value: EmployeeTransferStatus | ''; label: string }[] = [
   { value: '', label: '전체' },
   { value: 'PENDING_SOURCE_APPROVAL', label: '전출승인대기' },
   { value: 'PENDING_TARGET_APPROVAL', label: '전입승인대기' },
@@ -39,8 +39,8 @@ const transferTypeLabels: Record<string, string> = {
   DISPATCH: '파견',
 };
 
-function getStatusBadgeProps(status: TransferStatus): { type: StatusType; label: string } {
-  const statusMap: Record<TransferStatus, { type: StatusType; label: string }> = {
+function getStatusBadgeProps(status: EmployeeTransferStatus): { type: StatusType; label: string } {
+  const statusMap: Record<EmployeeTransferStatus, { type: StatusType; label: string }> = {
     PENDING_SOURCE_APPROVAL: { type: 'pending', label: '전출승인대기' },
     PENDING_TARGET_APPROVAL: { type: 'warning', label: '전입승인대기' },
     COMPLETED: { type: 'success', label: '완료' },
@@ -58,7 +58,9 @@ export function TransferList({ showActions = true }: TransferListProps) {
   const { toast } = useToast();
   const { params, searchState, setStatus, setPage } = useTransferSearchParams();
   const { data, isLoading, refetch } = useTransferList(params);
-  const approveMutation = useApproveTransfer();
+  const approveSourceMutation = useApproveTransferSource();
+  const approveTargetMutation = useApproveTransferTarget();
+  const rejectMutation = useRejectTransfer();
   const cancelMutation = useCancelTransfer();
 
   const [selectedTransfer, setSelectedTransfer] = useState<EmployeeTransfer | null>(null);
@@ -67,15 +69,18 @@ export function TransferList({ showActions = true }: TransferListProps) {
   const transfers = data?.data?.content ?? [];
   const totalPages = data?.data?.totalPages ?? 0;
 
+  const isApproving = approveSourceMutation.isPending || approveTargetMutation.isPending;
+
   const handleApprove = async () => {
     if (!selectedTransfer) return;
 
-    const request: TransferApprovalRequest = {
-      approved: true,
-    };
-
     try {
-      await approveMutation.mutateAsync({ transferId: selectedTransfer.id, data: request });
+      // Use the appropriate approval mutation based on current status
+      if (selectedTransfer.status === 'PENDING_SOURCE_APPROVAL') {
+        await approveSourceMutation.mutateAsync({ transferId: selectedTransfer.id });
+      } else if (selectedTransfer.status === 'PENDING_TARGET_APPROVAL') {
+        await approveTargetMutation.mutateAsync({ transferId: selectedTransfer.id });
+      }
       toast({
         title: '승인 완료',
         description: '전출 요청이 승인되었습니다.',
@@ -95,13 +100,8 @@ export function TransferList({ showActions = true }: TransferListProps) {
   const handleReject = async () => {
     if (!selectedTransfer) return;
 
-    const request: TransferApprovalRequest = {
-      approved: false,
-      remarks: '반려 처리됨',
-    };
-
     try {
-      await approveMutation.mutateAsync({ transferId: selectedTransfer.id, data: request });
+      await rejectMutation.mutateAsync({ transferId: selectedTransfer.id, reason: '반려 처리됨' });
       toast({
         title: '반려 완료',
         description: '전출 요청이 반려되었습니다.',
@@ -180,7 +180,7 @@ export function TransferList({ showActions = true }: TransferListProps) {
             <div className="flex items-center gap-2">
               <Select
                 value={searchState.status}
-                onValueChange={(value) => setStatus(value as TransferStatus | '')}
+                onValueChange={(value) => setStatus(value as EmployeeTransferStatus | '')}
               >
                 <SelectTrigger className="w-[160px]">
                   <SelectValue placeholder="상태 필터" />
@@ -344,7 +344,7 @@ export function TransferList({ showActions = true }: TransferListProps) {
         description={`${selectedTransfer?.employeeName}님의 전출 요청을 승인하시겠습니까?`}
         confirmLabel="승인"
         onConfirm={handleApprove}
-        isLoading={approveMutation.isPending}
+        isLoading={isApproving}
       />
 
       {/* Reject Dialog */}
@@ -356,7 +356,7 @@ export function TransferList({ showActions = true }: TransferListProps) {
         confirmLabel="반려"
         variant="destructive"
         onConfirm={handleReject}
-        isLoading={approveMutation.isPending}
+        isLoading={rejectMutation.isPending}
       />
 
       {/* Cancel Dialog */}

@@ -48,6 +48,22 @@ export interface AnnouncementListResponse {
   last: boolean;
 }
 
+export interface CreateAnnouncementRequest {
+  title: string;
+  content: string;
+  category: 'NOTICE' | 'EVENT' | 'UPDATE' | 'URGENT';
+  isPinned?: boolean;
+  attachmentIds?: string[];
+}
+
+export interface UpdateAnnouncementRequest {
+  title?: string;
+  content?: string;
+  category?: 'NOTICE' | 'EVENT' | 'UPDATE' | 'URGENT';
+  isPinned?: boolean;
+  attachmentIds?: string[];
+}
+
 export const announcementService = {
   getList: async (params: AnnouncementListParams = {}) => {
     const response = await apiClient.get<{ data: AnnouncementListResponse }>(
@@ -59,6 +75,29 @@ export const announcementService = {
 
   getDetail: async (id: string) => {
     const response = await apiClient.get<{ data: Announcement }>(
+      `/announcements/${id}`
+    );
+    return response.data;
+  },
+
+  create: async (data: CreateAnnouncementRequest) => {
+    const response = await apiClient.post<{ data: Announcement }>(
+      '/announcements',
+      data
+    );
+    return response.data;
+  },
+
+  update: async (id: string, data: UpdateAnnouncementRequest) => {
+    const response = await apiClient.put<{ data: Announcement }>(
+      `/announcements/${id}`,
+      data
+    );
+    return response.data;
+  },
+
+  delete: async (id: string) => {
+    const response = await apiClient.delete<{ data: void }>(
       `/announcements/${id}`
     );
     return response.data;

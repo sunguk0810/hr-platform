@@ -49,7 +49,7 @@ export const dashboardHandlers = [
   }),
 
   // Check in
-  http.post('/api/v1/attendance/check-in', async () => {
+  http.post('/api/v1/attendances/check-in', async () => {
     await delay(300);
 
     attendanceState.status = 'WORKING';
@@ -69,7 +69,7 @@ export const dashboardHandlers = [
   }),
 
   // Check out
-  http.post('/api/v1/attendance/check-out', async () => {
+  http.post('/api/v1/attendances/check-out', async () => {
     await delay(300);
 
     attendanceState.status = 'CHECKED_OUT';

@@ -10,6 +10,7 @@ import type {
   HeadcountStatus,
   HeadcountRequestStatus,
   HeadcountRequestType,
+  HeadcountPlanListItem,
 } from '@hr-platform/shared-types';
 
 const headcountKeys = {
@@ -23,12 +24,48 @@ const headcountKeys = {
   requestDetail: (id: string) => [...headcountKeys.requests(), 'detail', id] as const,
 };
 
-// 정현원 계획 목록 조회
+// 정현원 계획 목록 조회 - Backend returns List, implement client-side pagination
 export function useHeadcountPlans(params?: HeadcountPlanSearchParams) {
-  return useQuery({
+  const { page = 0, size = 10, status, year, departmentId, ...otherParams } = params || {};
+
+  const query = useQuery({
     queryKey: headcountKeys.planList(params),
-    queryFn: () => headcountService.getPlans(params),
+    queryFn: () => headcountService.getPlans({ year, departmentId, ...otherParams }),
   });
+
+  // Transform to PageResponse-like structure for component compatibility
+  const paginatedData = useMemo(() => {
+    if (!query.data) return query.data;
+
+    const allItems = query.data.data ?? [];
+    // Filter by status if provided
+    const filteredItems = status
+      ? allItems.filter((item: HeadcountPlanListItem) => item.status === status)
+      : allItems;
+    const totalElements = filteredItems.length;
+    const totalPages = Math.ceil(totalElements / size);
+    const start = page * size;
+    const end = start + size;
+    const content = filteredItems.slice(start, end);
+
+    return {
+      ...query.data,
+      data: {
+        content,
+        totalElements,
+        totalPages,
+        size,
+        number: page,
+        first: page === 0,
+        last: page >= totalPages - 1,
+      },
+    };
+  }, [query.data, page, size, status]);
+
+  return {
+    ...query,
+    data: paginatedData,
+  };
 }
 
 // 정현원 계획 상세 조회

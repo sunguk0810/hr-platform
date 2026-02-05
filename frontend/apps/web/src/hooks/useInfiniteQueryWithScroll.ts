@@ -1,4 +1,4 @@
-import { useInfiniteQuery, UseInfiniteQueryOptions, QueryKey } from '@tanstack/react-query';
+import { useInfiniteQuery, QueryKey } from '@tanstack/react-query';
 import { PageResponse } from '@/lib/apiClient';
 import { useInfiniteScroll } from './useInfiniteScroll';
 
@@ -19,13 +19,13 @@ export function useInfiniteQueryWithScroll<T, TQueryKey extends QueryKey = Query
   staleTime,
   gcTime,
 }: UseInfiniteQueryWithScrollOptions<T, TQueryKey>) {
-  const infiniteQuery = useInfiniteQuery({
+  const infiniteQuery = useInfiniteQuery<PageResponse<T>, Error, { pages: PageResponse<T>[] }, TQueryKey, number>({
     queryKey,
-    queryFn: async ({ pageParam = 0 }) => {
+    queryFn: async ({ pageParam }) => {
       const response = await queryFn({ page: pageParam, size });
       return response.data;
     },
-    getNextPageParam: (lastPage) => {
+    getNextPageParam: (lastPage: PageResponse<T>) => {
       if (lastPage.last) return undefined;
       return lastPage.page + 1;
     },
@@ -33,7 +33,7 @@ export function useInfiniteQueryWithScroll<T, TQueryKey extends QueryKey = Query
     enabled,
     staleTime,
     gcTime,
-  } as UseInfiniteQueryOptions<PageResponse<T>, Error, { pages: PageResponse<T>[] }, PageResponse<T>, TQueryKey, number>);
+  });
 
   const { sentinelRef } = useInfiniteScroll({
     onLoadMore: () => {
@@ -46,7 +46,7 @@ export function useInfiniteQueryWithScroll<T, TQueryKey extends QueryKey = Query
   });
 
   // Flatten all pages into a single array
-  const allItems = infiniteQuery.data?.pages.flatMap((page) => page.content) ?? [];
+  const allItems = infiniteQuery.data?.pages.flatMap((page: PageResponse<T>) => page.content) ?? [];
 
   // Get total count from the first page
   const totalElements = infiniteQuery.data?.pages[0]?.totalElements ?? 0;

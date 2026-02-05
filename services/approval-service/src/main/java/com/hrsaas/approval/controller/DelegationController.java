@@ -102,4 +102,13 @@ public class DelegationController {
         delegationService.delete(id);
         return ResponseEntity.ok(ApiResponse.success(null, "대결 설정이 삭제되었습니다."));
     }
+
+    @PostMapping("/{id}/toggle-status")
+    @Operation(summary = "위임 규칙 활성화 상태 토글")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<DelegationRuleResponse>> toggleStatus(@PathVariable UUID id) {
+        DelegationRuleResponse response = delegationService.toggleStatus(id);
+        String message = response.getIsActive() ? "위임 규칙이 활성화되었습니다." : "위임 규칙이 비활성화되었습니다.";
+        return ResponseEntity.ok(ApiResponse.success(response, message));
+    }
 }

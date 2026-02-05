@@ -3,9 +3,12 @@ package com.hrsaas.approval.service;
 import com.hrsaas.approval.domain.dto.request.CreateApprovalRequest;
 import com.hrsaas.approval.domain.dto.request.ProcessApprovalRequest;
 import com.hrsaas.approval.domain.dto.response.ApprovalDocumentResponse;
+import com.hrsaas.approval.domain.dto.response.ApprovalHistoryResponse;
+import com.hrsaas.approval.domain.dto.response.ApprovalSummaryResponse;
 import com.hrsaas.common.response.PageResponse;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface ApprovalService {
@@ -23,11 +26,21 @@ public interface ApprovalService {
 
     PageResponse<ApprovalDocumentResponse> getProcessedApprovals(UUID approverId, Pageable pageable);
 
+    PageResponse<ApprovalDocumentResponse> search(String status, String type, UUID requesterId, Pageable pageable);
+
     long countPendingApprovals(UUID approverId);
+
+    ApprovalSummaryResponse getSummary(UUID userId);
+
+    List<ApprovalHistoryResponse> getHistory(UUID documentId);
 
     ApprovalDocumentResponse submit(UUID documentId);
 
     ApprovalDocumentResponse process(UUID documentId, UUID approverId, ProcessApprovalRequest request);
+
+    ApprovalDocumentResponse approve(UUID documentId, UUID approverId, String comment);
+
+    ApprovalDocumentResponse reject(UUID documentId, UUID approverId, String reason);
 
     ApprovalDocumentResponse recall(UUID documentId, UUID drafterId);
 

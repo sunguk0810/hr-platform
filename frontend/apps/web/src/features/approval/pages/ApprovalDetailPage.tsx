@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { useQueryClient } from '@tanstack/react-query';
 import { PageHeader } from '@/components/common/PageHeader';
 import { ApprovalStatusBadge } from '@/components/common/StatusBadge';
+import { PullToRefreshContainer } from '@/components/mobile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -28,7 +30,13 @@ import {
   FastForward,
   History,
   FileText,
+  ChevronDown,
+  ChevronUp,
+  MoreHorizontal,
+  Paperclip,
 } from 'lucide-react';
+import { useIsMobile } from '@/hooks/useMediaQuery';
+import { queryKeys } from '@/lib/queryClient';
 import { ApprovalLine } from '../components/ApprovalLine';
 import { ApprovalHistory } from '../components/ApprovalHistory';
 import { RecallDialog } from '../components/RecallDialog';
@@ -60,6 +68,8 @@ const CURRENT_USER_ID = 'emp-001';
 export default function ApprovalDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
 
   const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
@@ -69,6 +79,8 @@ export default function ApprovalDetailPage() {
   const [isDirectApproveDialogOpen, setIsDirectApproveDialogOpen] = useState(false);
   const [comment, setComment] = useState('');
   const [activeTab, setActiveTab] = useState('document');
+  const [isContentExpanded, setIsContentExpanded] = useState(false);
+  const [showMobileActions, setShowMobileActions] = useState(false);
 
   const { data, isLoading, isError } = useApproval(id || '');
   const { data: historyData, isLoading: isHistoryLoading } = useApprovalHistory(id || '');
@@ -155,6 +167,10 @@ export default function ApprovalDetailPage() {
     }
   };
 
+  const handleRefresh = async () => {
+    await queryClient.invalidateQueries({ queryKey: queryKeys.approvals.detail(id || '') });
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -188,6 +204,429 @@ export default function ApprovalDetailPage() {
   const canDelegate = approval.status === 'PENDING' && isCurrentApprover;
   const canDirectApprove = approval.status === 'PENDING' && isCurrentApprover; // 실제로는 권한 체크 필요
 
+  // Dialogs render function (shared between mobile and desktop)
+  const renderDialogs = () => (
+    <>
+      {/* Approve Dialog */}
+      <Dialog open={isApproveDialogOpen} onOpenChange={setIsApproveDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>결재 승인</DialogTitle>
+            <DialogDescription>이 문서를 승인하시겠습니까?</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label>의견 (선택)</Label>
+              <Textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="승인 의견을 입력하세요."
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsApproveDialogOpen(false)}>
+              취소
+            </Button>
+            <Button onClick={handleApprove} disabled={approveMutation.isPending}>
+              {approveMutation.isPending ? '처리 중...' : '승인'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reject Dialog */}
+      <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>결재 반려</DialogTitle>
+            <DialogDescription>
+              이 문서를 반려하시겠습니까? 반려 사유를 입력해주세요.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label>반려 사유 *</Label>
+              <Textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="반려 사유를 입력하세요."
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>
+              취소
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleReject}
+              disabled={!comment || rejectMutation.isPending}
+            >
+              {rejectMutation.isPending ? '처리 중...' : '반려'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cancel Dialog */}
+      <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>결재 취소</DialogTitle>
+            <DialogDescription>
+              정말로 이 결재를 취소하시겠습니까?
+              <br />
+              <span className="text-destructive">이 작업은 되돌릴 수 없습니다.</span>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCancelDialogOpen(false)}>
+              닫기
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleCancel}
+              disabled={cancelMutation.isPending}
+            >
+              {cancelMutation.isPending ? '처리 중...' : '취소하기'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Recall Dialog */}
+      <RecallDialog
+        open={isRecallDialogOpen}
+        onOpenChange={setIsRecallDialogOpen}
+        onConfirm={handleRecall}
+        isLoading={recallMutation.isPending}
+        documentTitle={approval.title}
+      />
+
+      {/* Delegate Dialog */}
+      <DelegateDialog
+        open={isDelegateDialogOpen}
+        onOpenChange={setIsDelegateDialogOpen}
+        onConfirm={handleDelegate}
+        isLoading={delegateMutation.isPending}
+        currentApproverName={currentStep?.approverName}
+      />
+
+      {/* Direct Approve Dialog */}
+      <DirectApproveDialog
+        open={isDirectApproveDialogOpen}
+        onOpenChange={setIsDirectApproveDialogOpen}
+        onConfirm={handleDirectApprove}
+        isLoading={directApproveMutation.isPending}
+        steps={approval.steps}
+        currentStepOrder={currentStepOrder}
+      />
+    </>
+  );
+
+  // Mobile Layout
+  if (isMobile) {
+    return (
+      <PullToRefreshContainer onRefresh={handleRefresh}>
+        <div className="space-y-4 pb-32">
+          {/* Mobile Header */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate(-1)}
+              className="p-2 -ml-2 rounded-full hover:bg-muted"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">{APPROVAL_TYPE_LABELS[approval.type]}</span>
+                <ApprovalStatusBadge status={approval.status} />
+                {approval.urgency === 'HIGH' && (
+                  <span className="text-xs text-red-500 flex items-center gap-0.5">
+                    <AlertCircle className="h-3 w-3" />
+                    긴급
+                  </span>
+                )}
+              </div>
+              <h1 className="text-lg font-bold truncate">{approval.title}</h1>
+              <p className="text-xs text-muted-foreground font-mono">{approval.documentNumber}</p>
+            </div>
+          </div>
+
+          {/* Document Info Card */}
+          <div className="bg-card rounded-2xl border p-4">
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <p className="text-xs text-muted-foreground">기안자</p>
+                <p className="font-medium">{approval.requesterName}</p>
+                <p className="text-xs text-muted-foreground">{approval.requesterDepartment}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">기안일</p>
+                <p className="font-medium">{format(new Date(approval.createdAt), 'M월 d일', { locale: ko })}</p>
+                <p className="text-xs text-muted-foreground">{format(new Date(approval.createdAt), 'HH:mm')}</p>
+              </div>
+              {approval.dueDate && (
+                <div>
+                  <p className="text-xs text-muted-foreground">처리기한</p>
+                  <p className="font-medium">{format(new Date(approval.dueDate), 'M월 d일', { locale: ko })}</p>
+                </div>
+              )}
+              {approval.completedAt && (
+                <div>
+                  <p className="text-xs text-muted-foreground">완료일</p>
+                  <p className="font-medium text-green-600">{format(new Date(approval.completedAt), 'M월 d일', { locale: ko })}</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Recall Reason Alert */}
+          {approval.recallReason && (
+            <div className="bg-orange-50 dark:bg-orange-950 rounded-xl border border-orange-200 dark:border-orange-800 p-3">
+              <div className="flex items-center gap-2 text-orange-700 dark:text-orange-300 mb-1">
+                <Undo2 className="h-4 w-4" />
+                <span className="text-sm font-medium">회수 사유</span>
+              </div>
+              <p className="text-sm text-orange-800 dark:text-orange-200">{approval.recallReason}</p>
+            </div>
+          )}
+
+          {/* Approval Line (Horizontal Scroll) */}
+          <div className="bg-card rounded-2xl border p-4">
+            <h3 className="text-sm font-semibold mb-3">결재선</h3>
+            <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+              {/* Requester */}
+              <div className="flex-shrink-0 text-center">
+                <div className="w-12 h-12 mx-auto rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-sm font-semibold text-blue-700 dark:text-blue-300">
+                  {approval.requesterName.slice(0, 1)}
+                </div>
+                <p className="text-xs font-medium mt-1">{approval.requesterName}</p>
+                <p className="text-[10px] text-muted-foreground">기안자</p>
+              </div>
+              {/* Arrow */}
+              <div className="flex-shrink-0 flex items-center text-muted-foreground">→</div>
+              {/* Approvers */}
+              {approval.steps.map((step, idx) => (
+                <div key={step.id} className="flex items-center gap-2">
+                  <div className="flex-shrink-0 text-center">
+                    <div className={`w-12 h-12 mx-auto rounded-full flex items-center justify-center text-sm font-semibold ${
+                      step.status === 'APPROVED' ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300' :
+                      step.status === 'REJECTED' ? 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300' :
+                      step.status === 'PENDING' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300' :
+                      'bg-muted text-muted-foreground'
+                    }`}>
+                      {step.status === 'APPROVED' ? <Check className="h-5 w-5" /> :
+                       step.status === 'REJECTED' ? <X className="h-5 w-5" /> :
+                       step.approverName?.slice(0, 1) || '?'}
+                    </div>
+                    <p className="text-xs font-medium mt-1">{step.approverName}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {step.status === 'APPROVED' ? '승인' :
+                       step.status === 'REJECTED' ? '반려' :
+                       step.status === 'PENDING' ? '대기' : '건너뜀'}
+                    </p>
+                  </div>
+                  {idx < approval.steps.length - 1 && (
+                    <span className="flex-shrink-0 text-muted-foreground">→</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Document Content (Collapsible) */}
+          <div className="bg-card rounded-2xl border overflow-hidden">
+            <button
+              onClick={() => setIsContentExpanded(!isContentExpanded)}
+              className="w-full flex items-center justify-between p-4 text-left"
+            >
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-muted-foreground" />
+                <span className="font-semibold text-sm">문서 내용</span>
+              </div>
+              {isContentExpanded ? (
+                <ChevronUp className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              )}
+            </button>
+            {isContentExpanded && (
+              <div className="px-4 pb-4 border-t">
+                <div className="mt-3 whitespace-pre-wrap text-sm text-muted-foreground">
+                  {approval.content}
+                </div>
+                {/* Attachments */}
+                {approval.attachments && approval.attachments.length > 0 && (
+                  <div className="mt-4 pt-3 border-t">
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
+                      <Paperclip className="h-3 w-3" />
+                      첨부파일 ({approval.attachments.length})
+                    </div>
+                    <div className="space-y-2">
+                      {approval.attachments.map((file) => (
+                        <div
+                          key={file.id}
+                          className="flex items-center justify-between p-2 rounded-lg bg-muted/50 text-xs"
+                        >
+                          <span className="truncate">{file.fileName}</span>
+                          <span className="text-muted-foreground flex-shrink-0 ml-2">
+                            {(file.fileSize / 1024).toFixed(1)} KB
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Recent History */}
+          <div className="bg-card rounded-2xl border p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <History className="h-4 w-4 text-muted-foreground" />
+                <span className="font-semibold text-sm">처리 이력</span>
+              </div>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-start gap-3 text-sm">
+                <div className="w-14 flex-shrink-0 text-xs text-muted-foreground">
+                  {format(new Date(approval.createdAt), 'M/d HH:mm')}
+                </div>
+                <div className="flex-1">
+                  <span className="font-medium">{approval.requesterName}</span>
+                  <span className="text-muted-foreground"> 기안</span>
+                </div>
+              </div>
+              {approval.steps
+                .filter((step) => step.processedAt)
+                .slice(0, 5)
+                .map((step) => (
+                  <div key={step.id} className="flex items-start gap-3 text-sm">
+                    <div className="w-14 flex-shrink-0 text-xs text-muted-foreground">
+                      {format(new Date(step.processedAt!), 'M/d HH:mm')}
+                    </div>
+                    <div className="flex-1">
+                      <span className="font-medium">{step.approverName}</span>
+                      <span className={
+                        step.status === 'APPROVED' ? 'text-green-600' :
+                        step.status === 'REJECTED' ? 'text-red-600' :
+                        'text-muted-foreground'
+                      }>
+                        {' '}
+                        {step.status === 'APPROVED' ? '승인' :
+                         step.status === 'REJECTED' ? '반려' :
+                         step.status === 'SKIPPED' ? '건너뜀' : '대기'}
+                      </span>
+                      {step.delegatorName && (
+                        <span className="text-xs text-indigo-600 ml-1">(대결)</span>
+                      )}
+                      {step.comment && (
+                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">"{step.comment}"</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+
+          {/* Mobile Bottom Actions */}
+          {(canApproveOrReject || canCancel || canRecall || canDelegate || canDirectApprove) && (
+            <div className="fixed bottom-0 left-0 right-0 bg-background border-t p-4 pb-safe z-50">
+              {/* More Actions Sheet Toggle */}
+              {(canRecall || canCancel || canDelegate || canDirectApprove) && (
+                <button
+                  onClick={() => setShowMobileActions(!showMobileActions)}
+                  className="w-full flex items-center justify-center gap-2 py-2 text-sm text-muted-foreground mb-2"
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                  {showMobileActions ? '추가 작업 닫기' : '추가 작업'}
+                </button>
+              )}
+
+              {/* Additional Actions */}
+              {showMobileActions && (
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  {canRecall && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsRecallDialogOpen(true)}
+                      className="text-orange-600"
+                    >
+                      <Undo2 className="mr-1 h-4 w-4" />
+                      회수
+                    </Button>
+                  )}
+                  {canCancel && !canRecall && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsCancelDialogOpen(true)}
+                    >
+                      취소
+                    </Button>
+                  )}
+                  {canDelegate && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsDelegateDialogOpen(true)}
+                      className="text-indigo-600"
+                    >
+                      <UserCheck className="mr-1 h-4 w-4" />
+                      대결
+                    </Button>
+                  )}
+                  {canDirectApprove && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsDirectApproveDialogOpen(true)}
+                      className="text-teal-600"
+                    >
+                      <FastForward className="mr-1 h-4 w-4" />
+                      전결
+                    </Button>
+                  )}
+                </div>
+              )}
+
+              {/* Primary Actions */}
+              {canApproveOrReject && (
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1 h-12 text-destructive hover:text-destructive"
+                    onClick={() => setIsRejectDialogOpen(true)}
+                  >
+                    <X className="mr-2 h-5 w-5" />
+                    반려
+                  </Button>
+                  <Button
+                    className="flex-1 h-12"
+                    onClick={() => setIsApproveDialogOpen(true)}
+                  >
+                    <Check className="mr-2 h-5 w-5" />
+                    승인
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {renderDialogs()}
+      </PullToRefreshContainer>
+    );
+  }
+
+  // Desktop Layout
   return (
     <>
       <PageHeader
@@ -468,123 +907,7 @@ export default function ApprovalDetailPage() {
         </div>
       </div>
 
-      {/* Approve Dialog */}
-      <Dialog open={isApproveDialogOpen} onOpenChange={setIsApproveDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>결재 승인</DialogTitle>
-            <DialogDescription>이 문서를 승인하시겠습니까?</DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label>의견 (선택)</Label>
-              <Textarea
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder="승인 의견을 입력하세요."
-                rows={3}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsApproveDialogOpen(false)}>
-              취소
-            </Button>
-            <Button onClick={handleApprove} disabled={approveMutation.isPending}>
-              {approveMutation.isPending ? '처리 중...' : '승인'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Reject Dialog */}
-      <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>결재 반려</DialogTitle>
-            <DialogDescription>
-              이 문서를 반려하시겠습니까? 반려 사유를 입력해주세요.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label>반려 사유 *</Label>
-              <Textarea
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder="반려 사유를 입력하세요."
-                rows={3}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>
-              취소
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleReject}
-              disabled={!comment || rejectMutation.isPending}
-            >
-              {rejectMutation.isPending ? '처리 중...' : '반려'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Cancel Dialog */}
-      <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>결재 취소</DialogTitle>
-            <DialogDescription>
-              정말로 이 결재를 취소하시겠습니까?
-              <br />
-              <span className="text-destructive">이 작업은 되돌릴 수 없습니다.</span>
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCancelDialogOpen(false)}>
-              닫기
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleCancel}
-              disabled={cancelMutation.isPending}
-            >
-              {cancelMutation.isPending ? '처리 중...' : '취소하기'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Recall Dialog */}
-      <RecallDialog
-        open={isRecallDialogOpen}
-        onOpenChange={setIsRecallDialogOpen}
-        onConfirm={handleRecall}
-        isLoading={recallMutation.isPending}
-        documentTitle={approval.title}
-      />
-
-      {/* Delegate Dialog */}
-      <DelegateDialog
-        open={isDelegateDialogOpen}
-        onOpenChange={setIsDelegateDialogOpen}
-        onConfirm={handleDelegate}
-        isLoading={delegateMutation.isPending}
-        currentApproverName={currentStep?.approverName}
-      />
-
-      {/* Direct Approve Dialog */}
-      <DirectApproveDialog
-        open={isDirectApproveDialogOpen}
-        onOpenChange={setIsDirectApproveDialogOpen}
-        onConfirm={handleDirectApprove}
-        isLoading={directApproveMutation.isPending}
-        steps={approval.steps}
-        currentStepOrder={currentStepOrder}
-      />
+      {renderDialogs()}
     </>
   );
 }

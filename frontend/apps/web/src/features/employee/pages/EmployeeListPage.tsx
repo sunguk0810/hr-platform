@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { format } from 'date-fns';
+import { ko } from 'date-fns/locale';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { EmploymentStatusBadge } from '@/components/common/StatusBadge';
 import { SkeletonTable } from '@/components/common/Skeleton';
 import { Pagination } from '@/components/common/Pagination';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
+import { SplitView, SplitViewPanel } from '@/components/layout/SplitView';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -31,12 +34,16 @@ import {
   LayoutList,
   FileSpreadsheet,
   ChevronDown,
+  Phone,
+  Building2,
+  Calendar,
 } from 'lucide-react';
-import { useEmployeeList, useEmployeeSearchParams } from '../hooks/useEmployees';
-import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useEmployeeList, useEmployeeSearchParams, useEmployee } from '../hooks/useEmployees';
+import { useIsMobile, useIsTablet } from '@/hooks/useMediaQuery';
 import { useToast } from '@/hooks/useToast';
 import { employeeService } from '../services/employeeService';
 import { EmployeeImportDialog } from '../components/EmployeeImportDialog';
+import { cn } from '@/lib/utils';
 import type { EmploymentStatus, EmployeeListItem } from '@hr-platform/shared-types';
 
 function useDebounce<T>(value: T, delay: number): T {
@@ -136,14 +143,20 @@ function EmployeeCard({ employee, isSelected, onSelect, onClick }: EmployeeCardP
 export default function EmployeeListPage() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const isTablet = useIsTablet();
   const { toast } = useToast();
 
   const [searchInput, setSearchInput] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'table' | 'card'>(isMobile ? 'card' : 'table');
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Fetch selected employee detail for tablet split view
+  const { data: selectedEmployeeData } = useEmployee(selectedEmployeeId || '');
+  const selectedEmployee = selectedEmployeeData?.data;
 
   const debouncedKeyword = useDebounce(searchInput, 300);
 
@@ -256,6 +269,228 @@ export default function EmployeeListPage() {
     }
   };
 
+  // Tablet Layout - Split View
+  if (isTablet) {
+    return (
+      <div className="h-[calc(100vh-8rem)]">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-2xl font-bold">인사정보</h1>
+            <p className="text-sm text-muted-foreground">총 {totalElements}명</p>
+          </div>
+          <Button size="sm" onClick={() => navigate('/employees/new')}>
+            <Plus className="mr-2 h-4 w-4" />
+            신규 등록
+          </Button>
+        </div>
+
+        {/* Split View */}
+        <SplitView
+          showRight={!!selectedEmployee}
+          left={
+            <SplitViewPanel
+              header={
+                <div className="space-y-3">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      placeholder="이름, 사번 검색..."
+                      value={searchInput}
+                      onChange={(e) => setSearchInput(e.target.value)}
+                      className="pl-9"
+                    />
+                  </div>
+                  <div className="flex gap-2 overflow-x-auto pb-1">
+                    {[
+                      { value: '', label: '전체' },
+                      { value: 'ACTIVE', label: '재직' },
+                      { value: 'ON_LEAVE', label: '휴직' },
+                      { value: 'RESIGNED', label: '퇴직' },
+                    ].map((status) => (
+                      <button
+                        key={status.value}
+                        onClick={() => setEmploymentStatus(status.value as EmploymentStatus | '')}
+                        className={cn(
+                          'flex-shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors',
+                          searchState.employmentStatus === status.value
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                        )}
+                      >
+                        {status.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              }
+            >
+              {isLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className="h-20 bg-muted animate-pulse rounded-lg" />
+                  ))}
+                </div>
+              ) : employees.length === 0 ? (
+                <EmptyState
+                  icon={Users}
+                  title="직원이 없습니다"
+                  description="검색 조건을 변경해보세요."
+                />
+              ) : (
+                <div className="space-y-2">
+                  {employees.map((employee) => (
+                    <div
+                      key={employee.id}
+                      className={cn(
+                        'flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors',
+                        selectedEmployeeId === employee.id
+                          ? 'border border-primary bg-primary/5'
+                          : 'hover:bg-muted/50'
+                      )}
+                      onClick={() => setSelectedEmployeeId(employee.id)}
+                    >
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={employee.profileImageUrl} alt={employee.name} />
+                        <AvatarFallback>{employee.name.slice(0, 2)}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium truncate">{employee.name}</span>
+                          <EmploymentStatusBadge status={employee.employmentStatus} />
+                        </div>
+                        <div className="text-sm text-muted-foreground truncate">
+                          {employee.departmentName} · {employee.positionName || '-'}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <Pagination
+                    page={searchState.page}
+                    totalPages={totalPages}
+                    onPageChange={setPage}
+                  />
+                </div>
+              )}
+            </SplitViewPanel>
+          }
+          right={
+            selectedEmployee ? (
+              <SplitViewPanel
+                header={
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold">직원 상세</h3>
+                    <Button size="sm" onClick={() => navigate(`/employees/${selectedEmployee.id}`)}>
+                      전체 보기
+                    </Button>
+                  </div>
+                }
+              >
+                <div className="space-y-4">
+                  {/* Profile */}
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-16 w-16">
+                      <AvatarImage src={selectedEmployee.profileImageUrl} alt={selectedEmployee.name} />
+                      <AvatarFallback className="text-xl">{selectedEmployee.name.slice(0, 2)}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h2 className="text-xl font-semibold">{selectedEmployee.name}</h2>
+                      <p className="text-sm text-muted-foreground">{selectedEmployee.employeeNumber}</p>
+                      <EmploymentStatusBadge status={selectedEmployee.employmentStatus} />
+                    </div>
+                  </div>
+
+                  {/* Info Grid */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3 bg-muted/50 rounded-lg">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                        <Building2 className="h-3 w-3" />
+                        부서
+                      </div>
+                      <p className="text-sm font-medium">{selectedEmployee.departmentName}</p>
+                    </div>
+                    <div className="p-3 bg-muted/50 rounded-lg">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                        <Users className="h-3 w-3" />
+                        직책
+                      </div>
+                      <p className="text-sm font-medium">{selectedEmployee.positionName || '-'}</p>
+                    </div>
+                    <div className="p-3 bg-muted/50 rounded-lg">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                        <Mail className="h-3 w-3" />
+                        이메일
+                      </div>
+                      <p className="text-sm font-medium truncate">{selectedEmployee.email}</p>
+                    </div>
+                    <div className="p-3 bg-muted/50 rounded-lg">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                        <Phone className="h-3 w-3" />
+                        연락처
+                      </div>
+                      <p className="text-sm font-medium">{selectedEmployee.mobile || '-'}</p>
+                    </div>
+                    <div className="p-3 bg-muted/50 rounded-lg col-span-2">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                        <Calendar className="h-3 w-3" />
+                        입사일
+                      </div>
+                      <p className="text-sm font-medium">
+                        {format(new Date(selectedEmployee.hireDate), 'yyyy년 M월 d일', { locale: ko })}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2 pt-4 border-t">
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => window.location.href = `mailto:${selectedEmployee.email}`}
+                    >
+                      <Mail className="mr-2 h-4 w-4" />
+                      이메일
+                    </Button>
+                    <Button
+                      className="flex-1"
+                      onClick={() => navigate(`/employees/${selectedEmployee.id}`)}
+                    >
+                      상세 보기
+                    </Button>
+                  </div>
+                </div>
+              </SplitViewPanel>
+            ) : (
+              <div className="flex items-center justify-center h-full text-muted-foreground">
+                좌측에서 직원을 선택하세요
+              </div>
+            )
+          }
+        />
+
+        {/* Import Dialog */}
+        <EmployeeImportDialog
+          open={importDialogOpen}
+          onOpenChange={setImportDialogOpen}
+          onSuccess={handleImportSuccess}
+        />
+
+        {/* Delete Confirmation Dialog */}
+        <ConfirmDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          title="직원 삭제"
+          description={`선택한 ${selectedIds.size}명의 직원 정보를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`}
+          confirmLabel="삭제"
+          variant="destructive"
+          isLoading={isDeleting}
+          onConfirm={handleBulkDelete}
+        />
+      </div>
+    );
+  }
+
+  // Desktop Layout
   return (
     <>
       <PageHeader

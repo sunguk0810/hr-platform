@@ -28,7 +28,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import {
   Heart,
-  ArrowLeft,
   User,
   Building2,
   Calendar,
@@ -186,10 +185,6 @@ export default function CondolenceDetailPage() {
       <PageHeader
         title="경조비 상세"
         description={`요청번호: ${request.requestNumber}`}
-        backButton={{
-          label: '목록으로',
-          onClick: () => navigate('/condolence'),
-        }}
         actions={
           <div className="flex gap-2">
             {canEdit && (
@@ -306,14 +301,14 @@ export default function CondolenceDetailPage() {
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground mb-3">첨부 서류</h3>
                   <div className="space-y-2">
-                    {request.attachments.map((file, index) => (
+                    {request.attachments.map((_fileId, index) => (
                       <div
                         key={index}
                         className="flex items-center justify-between p-3 border rounded-lg"
                       >
                         <div className="flex items-center gap-2">
                           <FileText className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">{file.name}</span>
+                          <span className="text-sm">첨부파일 {index + 1}</span>
                         </div>
                         <Button variant="ghost" size="icon">
                           <Download className="h-4 w-4" />
@@ -369,7 +364,7 @@ export default function CondolenceDetailPage() {
                     </div>
                     <div className="flex-1">
                       <p className="font-medium">반려</p>
-                      <p className="text-sm text-muted-foreground">{request.rejectReason}</p>
+                      <p className="text-sm text-muted-foreground">{request.rejectionReason}</p>
                     </div>
                   </div>
                 ) : request.status === 'CANCELLED' ? (

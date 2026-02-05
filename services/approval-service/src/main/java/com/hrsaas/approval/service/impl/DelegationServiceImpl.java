@@ -110,4 +110,21 @@ public class DelegationServiceImpl implements DelegationService {
         return delegationRuleRepository.findById(id)
             .orElseThrow(() -> new NotFoundException("APV_005", "대결 설정을 찾을 수 없습니다: " + id));
     }
+
+    @Override
+    @Transactional
+    public DelegationRuleResponse toggleStatus(UUID id) {
+        DelegationRule rule = findById(id);
+
+        if (rule.getIsActive()) {
+            rule.deactivate();
+        } else {
+            rule.activate();
+        }
+
+        DelegationRule saved = delegationRuleRepository.save(rule);
+        log.info("Delegation rule status toggled: id={}, newStatus={}", id, saved.getIsActive());
+
+        return DelegationRuleResponse.from(saved);
+    }
 }

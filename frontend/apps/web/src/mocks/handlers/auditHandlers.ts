@@ -233,4 +233,39 @@ export const auditHandlers = [
       data: log,
     });
   }),
+
+  // Export audit logs
+  http.get('/api/v1/audit/logs/export', async ({ request }) => {
+    const url = new URL(request.url);
+    const action = url.searchParams.get('action');
+    const result = url.searchParams.get('result');
+
+    let filteredLogs = [...mockAuditLogs];
+
+    if (action) {
+      filteredLogs = filteredLogs.filter((log) => log.action === action);
+    }
+    if (result) {
+      filteredLogs = filteredLogs.filter((log) => log.result === result);
+    }
+
+    // Generate CSV content
+    const headers = ['ID', 'User', 'Action', 'Target', 'Result', 'Timestamp'];
+    const rows = filteredLogs.map((log) => [
+      log.id,
+      log.userName,
+      log.action,
+      log.targetName || '',
+      log.result,
+      log.createdAt,
+    ]);
+    const csvContent = [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
+
+    return new HttpResponse(csvContent, {
+      headers: {
+        'Content-Type': 'text/csv',
+        'Content-Disposition': `attachment; filename="audit_logs_${new Date().toISOString().slice(0, 10)}.csv"`,
+      },
+    });
+  }),
 ];

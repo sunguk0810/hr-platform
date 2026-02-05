@@ -91,10 +91,10 @@ resource "aws_security_group" "rds" {
   })
 }
 
-# ElastiCache Redis Security Group
+# ElastiCache Redis / Redis Fargate Security Group
 resource "aws_security_group" "redis" {
   name        = "${var.project}-${var.environment}-redis-sg"
-  description = "Security group for ElastiCache Redis"
+  description = "Security group for Redis (ElastiCache or Fargate)"
   vpc_id      = aws_vpc.main.id
 
   ingress {
@@ -103,6 +103,15 @@ resource "aws_security_group" "redis" {
     protocol        = "tcp"
     security_groups = [aws_security_group.ecs_tasks.id]
     description     = "Redis from ECS tasks"
+  }
+
+  # Egress for Redis Fargate to access CloudWatch Logs via VPC Endpoints
+  egress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+    description = "HTTPS to VPC Endpoints (CloudWatch Logs)"
   }
 
   tags = merge(var.tags, {

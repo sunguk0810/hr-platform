@@ -65,6 +65,7 @@ export function PendingApprovalsWidget() {
 
   return (
     <WidgetContainer
+      data-tour="pending-approvals-widget"
       title="결재 대기"
       description={`${data?.total || 0}건의 결재가 대기 중입니다`}
       isLoading={isLoading}

@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { useState, useMemo, useCallback } from 'react';
 import { queryKeys } from '@/lib/queryClient';
 import { approvalService, ApprovalListParams } from '../services/approvalService';
@@ -23,6 +23,23 @@ export function useApprovalList(params?: ApprovalListParams) {
   return useQuery({
     queryKey: queryKeys.approvals.list(params as Record<string, unknown> | undefined),
     queryFn: () => approvalService.getApprovals(params),
+  });
+}
+
+/**
+ * 무한 스크롤용 결재 목록 조회 hook
+ */
+export function useInfiniteApprovalList(params?: Omit<ApprovalListParams, 'page'>) {
+  return useInfiniteQuery({
+    queryKey: [...queryKeys.approvals.all, 'infinite', params],
+    queryFn: ({ pageParam = 0 }) =>
+      approvalService.getApprovals({ ...params, page: pageParam }),
+    getNextPageParam: (lastPage) => {
+      const data = lastPage?.data;
+      if (!data) return undefined;
+      return data.last ? undefined : data.page + 1;
+    },
+    initialPageParam: 0,
   });
 }
 

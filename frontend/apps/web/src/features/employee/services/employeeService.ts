@@ -7,10 +7,10 @@ import type {
   UpdateEmployeeRequest,
   ResignationRequest,
   ResignationCancelRequest,
-  TransferRequest,
-  TransferApprovalRequest,
+  EmployeeTransferRequest,
+  EmployeeTransferApprovalRequest,
   EmployeeTransfer,
-  TransferSearchParams,
+  EmployeeTransferSearchParams,
   UnmaskRequest,
   UnmaskResponse,
   RecordCard,
@@ -97,46 +97,80 @@ export const employeeService = {
   // ===== 퇴직 처리 (SDD 4.3) =====
 
   async resignation(id: string, data: ResignationRequest): Promise<ApiResponse<Employee>> {
-    const response = await apiClient.post<ApiResponse<Employee>>(`/employees/${id}/resignation`, data);
+    // Backend expects resignDate as query parameter
+    const response = await apiClient.post<ApiResponse<Employee>>(`/employees/${id}/resign`, null, {
+      params: { resignDate: data.resignationDate }
+    });
     return response.data;
   },
 
   async resignationCancel(id: string, data: ResignationCancelRequest): Promise<ApiResponse<Employee>> {
-    const response = await apiClient.post<ApiResponse<Employee>>(`/employees/${id}/resignation/cancel`, data);
+    // TODO: Backend needs to implement resignation cancel endpoint
+    const response = await apiClient.post<ApiResponse<Employee>>(`/employees/${id}/resign/cancel`, data);
     return response.data;
   },
 
   // ===== 계열사 전출/전입 (SDD 4.4) =====
+  // Backend uses /transfers/** (separate controller)
 
-  async requestTransfer(id: string, data: TransferRequest): Promise<ApiResponse<EmployeeTransfer>> {
-    const response = await apiClient.post<ApiResponse<EmployeeTransfer>>(`/employees/${id}/transfer/request`, data);
+  async requestTransfer(id: string, data: EmployeeTransferRequest): Promise<ApiResponse<EmployeeTransfer>> {
+    // Backend expects employeeId in request body, not in path
+    const response = await apiClient.post<ApiResponse<EmployeeTransfer>>('/transfers', {
+      ...data,
+      employeeId: id,
+    });
     return response.data;
   },
 
-  async approveTransfer(transferId: string, data: TransferApprovalRequest): Promise<ApiResponse<EmployeeTransfer>> {
+  async approveTransferSource(transferId: string, data?: EmployeeTransferApprovalRequest): Promise<ApiResponse<EmployeeTransfer>> {
     const response = await apiClient.post<ApiResponse<EmployeeTransfer>>(
-      `/employees/transfers/${transferId}/approve`,
+      `/transfers/${transferId}/approve-source`,
       data
     );
     return response.data;
   },
 
-  async getTransfers(params?: TransferSearchParams): Promise<ApiResponse<PageResponse<EmployeeTransfer>>> {
-    const response = await apiClient.get<ApiResponse<PageResponse<EmployeeTransfer>>>('/employees/transfers', {
+  async approveTransferTarget(transferId: string, data?: EmployeeTransferApprovalRequest): Promise<ApiResponse<EmployeeTransfer>> {
+    const response = await apiClient.post<ApiResponse<EmployeeTransfer>>(
+      `/transfers/${transferId}/approve-target`,
+      data
+    );
+    return response.data;
+  },
+
+  async getTransfers(params?: EmployeeTransferSearchParams): Promise<ApiResponse<PageResponse<EmployeeTransfer>>> {
+    const response = await apiClient.get<ApiResponse<PageResponse<EmployeeTransfer>>>('/transfers', {
       params,
     });
     return response.data;
   },
 
   async getTransfer(transferId: string): Promise<ApiResponse<EmployeeTransfer>> {
-    const response = await apiClient.get<ApiResponse<EmployeeTransfer>>(`/employees/transfers/${transferId}`);
+    const response = await apiClient.get<ApiResponse<EmployeeTransfer>>(`/transfers/${transferId}`);
     return response.data;
   },
 
   async cancelTransfer(transferId: string, reason: string): Promise<ApiResponse<EmployeeTransfer>> {
-    const response = await apiClient.post<ApiResponse<EmployeeTransfer>>(`/employees/transfers/${transferId}/cancel`, {
+    const response = await apiClient.post<ApiResponse<EmployeeTransfer>>(`/transfers/${transferId}/cancel`, {
       reason,
     });
+    return response.data;
+  },
+
+  async submitTransfer(transferId: string): Promise<ApiResponse<EmployeeTransfer>> {
+    const response = await apiClient.post<ApiResponse<EmployeeTransfer>>(`/transfers/${transferId}/submit`);
+    return response.data;
+  },
+
+  async rejectTransfer(transferId: string, reason: string): Promise<ApiResponse<EmployeeTransfer>> {
+    const response = await apiClient.post<ApiResponse<EmployeeTransfer>>(`/transfers/${transferId}/reject`, {
+      reason,
+    });
+    return response.data;
+  },
+
+  async completeTransfer(transferId: string): Promise<ApiResponse<EmployeeTransfer>> {
+    const response = await apiClient.post<ApiResponse<EmployeeTransfer>>(`/transfers/${transferId}/complete`);
     return response.data;
   },
 
@@ -167,7 +201,8 @@ export const employeeService = {
     id: string,
     params?: EmployeeHistorySearchParams
   ): Promise<ApiResponse<PageResponse<EmployeeHistory>>> {
-    const response = await apiClient.get<ApiResponse<PageResponse<EmployeeHistory>>>(`/employees/${id}/history`, {
+    // Backend returns paginated response
+    const response = await apiClient.get<ApiResponse<PageResponse<EmployeeHistory>>>(`/employees/${id}/histories`, {
       params,
     });
     return response.data;

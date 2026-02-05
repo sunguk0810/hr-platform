@@ -38,27 +38,32 @@ public interface InterviewRepository extends JpaRepository<Interview, UUID> {
     /**
      * 면접관별 면접 목록
      */
-    @Query("SELECT i FROM Interview i WHERE " +
-           "jsonb_path_exists(i.interviewers, '$[*] \\? (@.id == :interviewerId)') = true " +
-           "ORDER BY i.scheduledDate ASC, i.scheduledTime ASC")
+    @Query(value = "SELECT * FROM hr_recruitment.interview i WHERE " +
+           "jsonb_path_exists(i.interviewers, CAST('$[*] ? (@.id == \"' || :interviewerId || '\")' AS jsonpath)) " +
+           "ORDER BY i.scheduled_date ASC, i.scheduled_time ASC",
+           countQuery = "SELECT COUNT(*) FROM hr_recruitment.interview i WHERE " +
+           "jsonb_path_exists(i.interviewers, CAST('$[*] ? (@.id == \"' || :interviewerId || '\")' AS jsonpath))",
+           nativeQuery = true)
     Page<Interview> findByInterviewerId(@Param("interviewerId") String interviewerId, Pageable pageable);
 
     /**
      * 기간별 예정 면접 목록
      */
-    @Query("SELECT i FROM Interview i WHERE " +
-           "i.scheduledDate BETWEEN :startDate AND :endDate " +
-           "AND i.status IN ('SCHEDULED', 'IN_PROGRESS') " +
-           "ORDER BY i.scheduledDate ASC, i.scheduledTime ASC")
+    @Query(value = "SELECT * FROM hr_recruitment.interview WHERE " +
+           "scheduled_date BETWEEN :startDate AND :endDate " +
+           "AND status IN ('SCHEDULED', 'IN_PROGRESS') " +
+           "ORDER BY scheduled_date ASC, scheduled_time ASC",
+           nativeQuery = true)
     List<Interview> findScheduledInterviews(@Param("startDate") LocalDate startDate,
                                              @Param("endDate") LocalDate endDate);
 
     /**
      * 피드백 기한 초과 면접 목록
      */
-    @Query("SELECT i FROM Interview i WHERE " +
-           "i.status = 'COMPLETED' AND i.result IS NULL " +
-           "AND i.feedbackDeadline < :today")
+    @Query(value = "SELECT * FROM hr_recruitment.interview WHERE " +
+           "status = 'COMPLETED' AND result IS NULL " +
+           "AND feedback_deadline < :today",
+           nativeQuery = true)
     List<Interview> findOverdueFeedback(@Param("today") LocalDate today);
 
     /**
@@ -89,8 +94,9 @@ public interface InterviewRepository extends JpaRepository<Interview, UUID> {
     /**
      * 오늘 예정된 면접 목록
      */
-    @Query("SELECT i FROM Interview i WHERE " +
-           "i.scheduledDate = :today AND i.status = 'SCHEDULED' " +
-           "ORDER BY i.scheduledTime ASC")
+    @Query(value = "SELECT * FROM hr_recruitment.interview WHERE " +
+           "scheduled_date = :today AND status = 'SCHEDULED' " +
+           "ORDER BY scheduled_time ASC",
+           nativeQuery = true)
     List<Interview> findTodayScheduledInterviews(@Param("today") LocalDate today);
 }

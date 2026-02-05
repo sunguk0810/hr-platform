@@ -9,7 +9,7 @@ import { SkeletonTable } from '@/components/common/Skeleton';
 import { Pagination } from '@/components/common/Pagination';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Clock, LogIn, LogOut, Calendar, CheckCircle2, CalendarDays, Plus, Pencil } from 'lucide-react';
+import { Clock, LogIn, LogOut, Calendar, CheckCircle2, CalendarDays, Plus, Pencil, RefreshCw } from 'lucide-react';
 import {
   useTodayAttendance,
   useCheckIn,
@@ -19,7 +19,16 @@ import {
   useAttendanceSearchParams,
 } from '../hooks/useAttendance';
 import { EditAttendanceDialog } from '../components/EditAttendanceDialog';
+import {
+  AttendanceButtonGroup,
+  AttendanceCard,
+  MonthlySummaryCard,
+  WeeklyAttendanceList,
+} from '../components/mobile';
 import { useAuthStore } from '@/stores/authStore';
+import { useIsMobile, useIsTablet } from '@/hooks/useMediaQuery';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { cn } from '@/lib/utils';
 import type { AttendanceStatus, AttendanceRecord } from '@hr-platform/shared-types';
 
 export default function AttendancePage() {
@@ -33,6 +42,8 @@ export default function AttendancePage() {
 
   const { hasAnyRole } = useAuthStore();
   const isAdmin = hasAnyRole(['HR_ADMIN', 'SUPER_ADMIN', 'TENANT_ADMIN']);
+  const isMobile = useIsMobile();
+  const isTablet = useIsTablet();
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -40,12 +51,21 @@ export default function AttendancePage() {
   }, []);
 
   const { params, searchState, setStatus, setPage } = useAttendanceSearchParams();
-  const { data: todayData, isLoading: isTodayLoading } = useTodayAttendance();
-  const { data: summaryData } = useMonthlySummary(currentYearMonth);
-  const { data: recordsData, isLoading: isRecordsLoading } = useAttendanceRecords(params);
+  const { data: todayData, isLoading: isTodayLoading, refetch: refetchToday } = useTodayAttendance();
+  const { data: summaryData, refetch: refetchSummary } = useMonthlySummary(currentYearMonth);
+  const { data: recordsData, isLoading: isRecordsLoading, refetch: refetchRecords } = useAttendanceRecords(params);
 
   const checkInMutation = useCheckIn();
   const checkOutMutation = useCheckOut();
+
+  // Pull to refresh for mobile
+  const handleRefresh = async () => {
+    await Promise.all([refetchToday(), refetchSummary(), refetchRecords()]);
+  };
+
+  const { isPulling, isRefreshing, pullProgress, pullDistance, handlers } = usePullToRefresh({
+    onRefresh: handleRefresh,
+  });
 
   const today = todayData?.data;
   const summary = summaryData?.data;
@@ -74,6 +94,288 @@ export default function AttendancePage() {
   const isCheckedIn = !!today?.checkInTime;
   const isCheckedOut = !!today?.checkOutTime;
 
+  // Mobile Layout
+  if (isMobile) {
+    return (
+      <div
+        className="min-h-full"
+        {...handlers}
+      >
+        {/* Pull to refresh indicator */}
+        {(isPulling || isRefreshing) && (
+          <div
+            className="flex justify-center items-center py-4"
+            style={{ height: pullDistance }}
+          >
+            <RefreshCw
+              className={cn(
+                'h-6 w-6 text-primary transition-transform',
+                isRefreshing && 'animate-spin',
+                pullProgress >= 1 && !isRefreshing && 'text-green-500'
+              )}
+              style={{
+                transform: `rotate(${pullProgress * 180}deg)`,
+              }}
+            />
+          </div>
+        )}
+
+        {/* Mobile Header */}
+        <div className="mb-6">
+          <h1 className="text-xl font-bold">근태 관리</h1>
+          <p className="text-sm text-muted-foreground">출퇴근 기록 및 근태 현황</p>
+        </div>
+
+        {/* Check In/Out Section */}
+        <div className="bg-card rounded-2xl p-4 mb-4 border">
+          <AttendanceButtonGroup
+            checkInTime={today?.checkInTime}
+            checkOutTime={today?.checkOutTime}
+            isCheckingIn={checkInMutation.isPending}
+            isCheckingOut={checkOutMutation.isPending}
+            onCheckIn={handleCheckIn}
+            onCheckOut={handleCheckOut}
+          />
+        </div>
+
+        {/* Monthly Summary */}
+        <div className="mb-4">
+          <MonthlySummaryCard
+            attendedDays={summary?.attendedDays}
+            totalWorkingHours={summary?.totalWorkingHours}
+            lateDays={summary?.lateDays}
+            earlyLeaveDays={summary?.earlyLeaveDays}
+            totalOvertimeHours={summary?.totalOvertimeHours}
+          />
+        </div>
+
+        {/* Weekly Attendance */}
+        <div className="bg-card rounded-2xl p-4 mb-4 border">
+          <WeeklyAttendanceList records={records} />
+        </div>
+
+        {/* Quick Actions */}
+        <div className="flex gap-2 mb-4">
+          <Button
+            variant="outline"
+            className="flex-1"
+            onClick={() => navigate('/attendance/leave/calendar')}
+          >
+            <CalendarDays className="mr-2 h-4 w-4" />
+            휴가 캘린더
+          </Button>
+          <Button
+            className="flex-1"
+            onClick={() => navigate('/attendance/leave')}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            휴가 신청
+          </Button>
+        </div>
+
+        {/* Recent Records */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium text-muted-foreground">최근 근태 기록</h3>
+            <select
+              value={searchState.status}
+              onChange={(e) => setStatus(e.target.value as AttendanceStatus | '')}
+              className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+            >
+              <option value="">전체</option>
+              <option value="NORMAL">정상</option>
+              <option value="LATE">지각</option>
+              <option value="EARLY_LEAVE">조퇴</option>
+              <option value="ABSENT">결근</option>
+            </select>
+          </div>
+
+          {isRecordsLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-20 bg-muted animate-pulse rounded-xl" />
+              ))}
+            </div>
+          ) : records.length === 0 ? (
+            <EmptyState
+              icon={Calendar}
+              title="근태 기록이 없습니다"
+              description="출퇴근 기록이 여기에 표시됩니다."
+            />
+          ) : (
+            <>
+              {records.map((record) => (
+                <AttendanceCard
+                  key={record.id}
+                  record={record}
+                  onClick={
+                    isAdmin
+                      ? () => setEditDialog({ open: true, record })
+                      : undefined
+                  }
+                />
+              ))}
+              <Pagination
+                page={searchState.page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+              />
+            </>
+          )}
+        </div>
+
+        {/* Edit Dialog */}
+        {isAdmin && (
+          <EditAttendanceDialog
+            open={editDialog.open}
+            onOpenChange={(open) => setEditDialog({ open, record: open ? editDialog.record : null })}
+            record={editDialog.record}
+          />
+        )}
+      </div>
+    );
+  }
+
+  // Tablet Layout - 2 Column Grid
+  if (isTablet) {
+    return (
+      <div className="min-h-full">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-2xl font-bold">근태 관리</h1>
+            <p className="text-sm text-muted-foreground">출퇴근 기록 및 근태 현황</p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => navigate('/attendance/leave/calendar')}>
+              <CalendarDays className="mr-2 h-4 w-4" />
+              휴가 캘린더
+            </Button>
+            <Button size="sm" onClick={() => navigate('/attendance/leave')}>
+              <Plus className="mr-2 h-4 w-4" />
+              휴가 신청
+            </Button>
+          </div>
+        </div>
+
+        {/* Top Section - 2 Column Grid */}
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          {/* Check In/Out */}
+          <Card>
+            <CardContent className="pt-6">
+              <AttendanceButtonGroup
+                checkInTime={today?.checkInTime}
+                checkOutTime={today?.checkOutTime}
+                isCheckingIn={checkInMutation.isPending}
+                isCheckingOut={checkOutMutation.isPending}
+                onCheckIn={handleCheckIn}
+                onCheckOut={handleCheckOut}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Monthly Summary */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">이번 달 현황</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="text-center p-2 bg-muted/50 rounded-lg">
+                  <p className="text-xs text-muted-foreground">총 근무일</p>
+                  <p className="text-xl font-bold">{summary?.attendedDays ?? 0}일</p>
+                </div>
+                <div className="text-center p-2 bg-muted/50 rounded-lg">
+                  <p className="text-xs text-muted-foreground">근무시간</p>
+                  <p className="text-xl font-bold">{summary?.totalWorkingHours ? Math.round(summary.totalWorkingHours) : 0}h</p>
+                </div>
+                <div className="text-center p-2 bg-yellow-50 dark:bg-yellow-950 rounded-lg">
+                  <p className="text-xs text-muted-foreground">지각</p>
+                  <p className="text-xl font-bold text-yellow-600">{summary?.lateDays ?? 0}회</p>
+                </div>
+                <div className="text-center p-2 bg-orange-50 dark:bg-orange-950 rounded-lg">
+                  <p className="text-xs text-muted-foreground">조퇴</p>
+                  <p className="text-xl font-bold text-orange-600">{summary?.earlyLeaveDays ?? 0}회</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Weekly View */}
+        <Card className="mb-4">
+          <CardContent className="pt-6">
+            <WeeklyAttendanceList records={records} />
+          </CardContent>
+        </Card>
+
+        {/* Recent Records */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-base">근태 기록</CardTitle>
+            <select
+              value={searchState.status}
+              onChange={(e) => setStatus(e.target.value as AttendanceStatus | '')}
+              className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+            >
+              <option value="">전체</option>
+              <option value="NORMAL">정상</option>
+              <option value="LATE">지각</option>
+              <option value="EARLY_LEAVE">조퇴</option>
+              <option value="ABSENT">결근</option>
+            </select>
+          </CardHeader>
+          <CardContent>
+            {isRecordsLoading ? (
+              <div className="space-y-2">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-16 bg-muted animate-pulse rounded-lg" />
+                ))}
+              </div>
+            ) : records.length === 0 ? (
+              <EmptyState
+                icon={Calendar}
+                title="근태 기록이 없습니다"
+                description="출퇴근 기록이 여기에 표시됩니다."
+              />
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                {records.map((record) => (
+                  <AttendanceCard
+                    key={record.id}
+                    record={record}
+                    onClick={
+                      isAdmin
+                        ? () => setEditDialog({ open: true, record })
+                        : undefined
+                    }
+                  />
+                ))}
+              </div>
+            )}
+            {totalPages > 1 && (
+              <Pagination
+                page={searchState.page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+              />
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Edit Dialog */}
+        {isAdmin && (
+          <EditAttendanceDialog
+            open={editDialog.open}
+            onOpenChange={(open) => setEditDialog({ open, record: open ? editDialog.record : null })}
+            record={editDialog.record}
+          />
+        )}
+      </div>
+    );
+  }
+
+  // Desktop Layout
   return (
     <>
       <PageHeader
@@ -85,7 +387,7 @@ export default function AttendancePage() {
               <CalendarDays className="mr-2 h-4 w-4" />
               휴가 캘린더
             </Button>
-            <Button onClick={() => navigate('/attendance/leave')}>
+            <Button data-tour="leave-request" onClick={() => navigate('/attendance/leave')}>
               <Plus className="mr-2 h-4 w-4" />
               휴가 신청
             </Button>
@@ -95,7 +397,7 @@ export default function AttendancePage() {
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* Clock In/Out Card */}
-        <Card className="lg:col-span-1">
+        <Card data-tour="clock-in-out" className="lg:col-span-1">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="h-5 w-5" />
@@ -191,7 +493,7 @@ export default function AttendancePage() {
         </Card>
 
         {/* Monthly Summary */}
-        <Card>
+        <Card data-tour="attendance-calendar">
           <CardHeader>
             <CardTitle>이번 달 현황</CardTitle>
           </CardHeader>

@@ -169,6 +169,24 @@ cd docker && docker-compose up -d
 ./gradlew jacocoTestReport
 ```
 
+## Frontend Development
+
+**IMPORTANT: Use pnpm for frontend package management, NOT npm or yarn.**
+
+```bash
+# Install dependencies
+cd frontend && pnpm install
+
+# Add a package
+cd frontend/apps/web && pnpm add <package-name>
+
+# Run development server
+cd frontend/apps/web && pnpm dev
+
+# Build frontend
+cd frontend/apps/web && pnpm build
+```
+
 ## Port Assignments
 
 | Service | Port |

@@ -14,7 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, Send, Plus, X, User } from 'lucide-react';
+import { ArrowLeft, Send, Plus, X, User, ChevronRight, Users, FileText, AlertCircle } from 'lucide-react';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import { format } from 'date-fns';
 import { useCreateApproval } from '../hooks/useApprovals';
 import type { ApprovalType, ApprovalUrgency, CreateApprovalRequest } from '@hr-platform/shared-types';
@@ -50,7 +51,9 @@ interface Approver {
 
 export default function ApprovalCreatePage() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
+  const [mobileStep, setMobileStep] = useState<'form' | 'approvers'>('form');
   const [formData, setFormData] = useState<{
     type: ApprovalType | '';
     title: string;
@@ -107,6 +110,274 @@ export default function ApprovalCreatePage() {
     a => !selectedApprovers.find(s => s.id === a.id)
   );
 
+  // Mobile Layout
+  if (isMobile) {
+    return (
+      <div className="pb-24">
+        {/* Mobile Header */}
+        <div className="flex items-center gap-3 mb-4">
+          <button
+            onClick={() => {
+              if (mobileStep === 'approvers') {
+                setMobileStep('form');
+              } else {
+                navigate(-1);
+              }
+            }}
+            className="p-2 -ml-2 rounded-full hover:bg-muted"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <div className="flex-1">
+            <h1 className="text-lg font-bold">
+              {mobileStep === 'form' ? '결재 작성' : '결재선 설정'}
+            </h1>
+            <p className="text-xs text-muted-foreground">
+              {mobileStep === 'form' ? '문서 내용을 입력하세요' : '결재자를 추가하세요'}
+            </p>
+          </div>
+        </div>
+
+        {/* Mobile Step Indicator */}
+        <div className="flex items-center gap-2 mb-4">
+          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm ${
+            mobileStep === 'form' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+          }`}>
+            <FileText className="h-4 w-4" />
+            <span>1. 문서</span>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm ${
+            mobileStep === 'approvers' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+          }`}>
+            <Users className="h-4 w-4" />
+            <span>2. 결재선</span>
+          </div>
+        </div>
+
+        {/* Mobile Form Step */}
+        {mobileStep === 'form' && (
+          <div className="space-y-4">
+            {/* Document Type & Urgency */}
+            <div className="bg-card rounded-2xl border p-4 space-y-4">
+              <div className="grid gap-2">
+                <Label className="text-sm">문서 유형 *</Label>
+                <Select
+                  value={formData.type}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, type: value as ApprovalType }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="유형 선택" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {APPROVAL_TYPES.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label className="text-sm">긴급도</Label>
+                <div className="flex gap-2">
+                  {URGENCY_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setFormData(prev => ({ ...prev, urgency: opt.value }))}
+                      className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        formData.urgency === opt.value
+                          ? opt.value === 'HIGH'
+                            ? 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-700'
+                            : 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-muted-foreground'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid gap-2">
+                <Label className="text-sm">처리기한</Label>
+                <DatePicker
+                  value={formData.dueDate}
+                  onChange={(date) => setFormData(prev => ({ ...prev, dueDate: date }))}
+                  disabledDates={(date) => date < new Date()}
+                  placeholder="선택 (선택사항)"
+                />
+              </div>
+            </div>
+
+            {/* Title & Content */}
+            <div className="bg-card rounded-2xl border p-4 space-y-4">
+              <div className="grid gap-2">
+                <Label className="text-sm">제목 *</Label>
+                <Input
+                  value={formData.title}
+                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="문서 제목을 입력하세요"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label className="text-sm">내용 *</Label>
+                <Textarea
+                  value={formData.content}
+                  onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
+                  placeholder="문서 내용을 입력하세요"
+                  rows={8}
+                  className="resize-none"
+                />
+              </div>
+            </div>
+
+            {/* Preview Selected Approvers */}
+            {selectedApprovers.length > 0 && (
+              <div className="bg-card rounded-2xl border p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">결재선</span>
+                  </div>
+                  <span className="text-xs text-primary">{selectedApprovers.length}명 선택됨</span>
+                </div>
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {selectedApprovers.map((approver, idx) => (
+                    <div
+                      key={approver.id}
+                      className="flex-shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted text-sm"
+                    >
+                      <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs">
+                        {idx + 1}
+                      </span>
+                      {approver.name}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Mobile Approvers Step */}
+        {mobileStep === 'approvers' && (
+          <div className="space-y-4">
+            {/* Selected Approvers */}
+            <div className="bg-card rounded-2xl border p-4">
+              <p className="text-sm font-medium mb-3">선택된 결재자 ({selectedApprovers.length}명)</p>
+              {selectedApprovers.length === 0 ? (
+                <div className="py-8 text-center text-sm text-muted-foreground">
+                  <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  아래에서 결재자를 선택해주세요
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {selectedApprovers.map((approver, index) => (
+                    <div
+                      key={approver.id}
+                      className="flex items-center gap-3 p-3 rounded-xl bg-muted/50"
+                    >
+                      <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">
+                        {index + 1}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">{approver.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {approver.department} / {approver.position}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => handleRemoveApprover(approver.id)}
+                        className="p-2 rounded-full hover:bg-muted active:bg-muted/80"
+                      >
+                        <X className="h-4 w-4 text-muted-foreground" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Available Approvers */}
+            {availableApprovers.length > 0 && (
+              <div className="bg-card rounded-2xl border p-4">
+                <p className="text-sm font-medium mb-3">결재자 추가</p>
+                <div className="space-y-2">
+                  {availableApprovers.map((approver) => (
+                    <button
+                      key={approver.id}
+                      onClick={() => handleAddApprover(approver)}
+                      className="w-full flex items-center gap-3 p-3 rounded-xl bg-muted/30 active:bg-muted transition-colors"
+                    >
+                      <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+                        <User className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <p className="text-sm font-medium">{approver.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {approver.department} / {approver.position}
+                        </p>
+                      </div>
+                      <Plus className="h-5 w-5 text-primary" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Info */}
+            <div className="flex items-start gap-2 p-3 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 text-xs">
+              <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+              <p>결재선은 순서대로 진행됩니다. 첫 번째 결재자가 승인하면 다음 결재자에게 전달됩니다.</p>
+            </div>
+          </div>
+        )}
+
+        {/* Mobile Bottom Actions */}
+        <div className="fixed bottom-0 left-0 right-0 bg-background border-t p-4 pb-safe z-50">
+          {mobileStep === 'form' ? (
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1 h-12"
+                onClick={() => navigate(-1)}
+              >
+                취소
+              </Button>
+              <Button
+                className="flex-1 h-12"
+                onClick={() => setMobileStep('approvers')}
+                disabled={!formData.type || !formData.title || !formData.content}
+              >
+                다음
+                <ChevronRight className="ml-1 h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <Button
+              className="w-full h-12"
+              onClick={handleSubmit}
+              disabled={selectedApprovers.length === 0 || createMutation.isPending}
+            >
+              {createMutation.isPending ? (
+                '요청 중...'
+              ) : (
+                <>
+                  <Send className="mr-2 h-5 w-5" />
+                  결재 요청
+                </>
+              )}
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop Layout
   return (
     <>
       <PageHeader

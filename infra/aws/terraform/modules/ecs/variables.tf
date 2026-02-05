@@ -82,6 +82,12 @@ variable "redis_port" {
   default     = 6379
 }
 
+variable "redis_ssl_enabled" {
+  description = "Enable SSL for Redis connection (required for ElastiCache with TLS)"
+  type        = bool
+  default     = true
+}
+
 variable "services" {
   description = "Service configurations"
   type = map(object({
@@ -103,4 +109,31 @@ variable "tags" {
   description = "Additional tags for resources"
   type        = map(string)
   default     = {}
+}
+
+variable "kafka_bootstrap_servers" {
+  description = "Kafka/MSK bootstrap servers"
+  type        = string
+  default     = ""
+}
+
+variable "keycloak_issuer_uri" {
+  description = "Keycloak issuer URI"
+  type        = string
+}
+
+variable "keycloak_client_id" {
+  description = "Keycloak client ID"
+  type        = string
+  default     = "hr-saas-api"
+}
+
+variable "keycloak_secret_arn" {
+  description = "ARN of Keycloak client secret in Secrets Manager"
+  type        = string
+}
+
+variable "cors_allowed_origins" {
+  description = "CORS allowed origins for frontend domains"
+  type        = string
 }

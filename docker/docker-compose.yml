@@ -1,4 +1,25 @@
+# Common environment variables for all application services
+x-common-env: &common-env
+  SPRING_PROFILES_ACTIVE: docker
+  SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+  SPRING_CLOUD_CONFIG_ENABLED: "true"
+  DB_HOST: postgres
+  DB_PORT: "5432"
+  DB_USERNAME: hr_saas
+  DB_PASSWORD: hr_saas_password
+  REDIS_HOST: redis
+  REDIS_PORT: "6379"
+  REDIS_PASSWORD: redis_password
+  SPRING_DATA_REDIS_SSL_ENABLED: "false"
+  KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  KAFKA_SERVERS: kafka:9092
+  KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/hr-saas
+  KEYCLOAK_URL: http://keycloak:8080
+
 services:
+  # ===========================================
+  # Infrastructure Services
+  # ===========================================
   postgres:
     image: postgres:15-alpine
     container_name: hr-saas-postgres
@@ -11,6 +32,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ../scripts/sample-data:/sample-data:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U hr_saas"]
       interval: 10s
@@ -18,7 +40,6 @@ services:
       retries: 5
     networks:
       - hr-saas-network
-
   redis:
     image: redis:7-alpine
     container_name: hr-saas-redis
@@ -34,25 +55,25 @@ services:
       retries: 5
     networks:
       - hr-saas-network
-
   kafka:
     image: apache/kafka:3.7.0
     container_name: hr-saas-kafka
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
     ports:
-      - "9093:9092"
+      - "29092:29092"
     volumes:
       - kafka_data:/var/lib/kafka/data
     healthcheck:
@@ -62,7 +83,6 @@ services:
       retries: 5
     networks:
       - hr-saas-network
-
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: hr-saas-kafka-ui
@@ -70,12 +90,11 @@ services:
       - KAFKA_CLUSTERS_0_NAME=local
       - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
     ports:
-      - "8090:8080"
+      - "9091:8080"
     depends_on:
       - kafka
     networks:
       - hr-saas-network
-
   keycloak:
     image: quay.io/keycloak/keycloak:23.0
     container_name: hr-saas-keycloak
@@ -96,7 +115,6 @@ services:
         condition: service_healthy
     networks:
       - hr-saas-network
-
   jaeger:
     image: jaegertracing/all-in-one:1.52
     container_name: hr-saas-jaeger
@@ -108,7 +126,6 @@ services:
       - "4318:4318"
     networks:
       - hr-saas-network
-
   prometheus:
     image: prom/prometheus:v2.48.0
     container_name: hr-saas-prometheus
@@ -116,13 +133,12 @@ services:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
     ports:
-      - "9090:9090"
+      - "9009:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     networks:
       - hr-saas-network
-
   grafana:
     image: grafana/grafana:10.2.0
     container_name: hr-saas-grafana
@@ -139,14 +155,302 @@ services:
       - prometheus
     networks:
       - hr-saas-network
-
+  # ===========================================
+  # Config Server
+  # ===========================================
+  config-server:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.config-server
+    container_name: hr-saas-config-server
+    ports:
+      - "8888:8888"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker,native
+      - SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCH_LOCATIONS=file:/config
+    volumes:
+      - ../config:/config:ro
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8888/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - hr-saas-network
+  # ===========================================
+  # Application Services
+  # ===========================================
+  gateway-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.gateway
+    container_name: hr-saas-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      <<: *common-env
+    depends_on:
+      config-server:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - hr-saas-network
+  auth-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.service
+      args:
+        SERVICE_NAME: auth-service
+    container_name: hr-saas-auth
+    ports:
+      - "8081:8081"
+    environment:
+      <<: *common-env
+    depends_on:
+      config-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - hr-saas-network
+  tenant-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.service
+      args:
+        SERVICE_NAME: tenant-service
+    container_name: hr-saas-tenant
+    ports:
+      - "8082:8082"
+    environment:
+      <<: *common-env
+    depends_on:
+      config-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - hr-saas-network
+  organization-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.service
+      args:
+        SERVICE_NAME: organization-service
+    container_name: hr-saas-organization
+    ports:
+      - "8083:8083"
+    environment:
+      <<: *common-env
+    depends_on:
+      config-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - hr-saas-network
+  employee-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.service
+      args:
+        SERVICE_NAME: employee-service
+    container_name: hr-saas-employee
+    ports:
+      - "8084:8084"
+    environment:
+      <<: *common-env
+    depends_on:
+      config-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - hr-saas-network
+  attendance-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.service
+      args:
+        SERVICE_NAME: attendance-service
+    container_name: hr-saas-attendance
+    ports:
+      - "8085:8085"
+    environment:
+      <<: *common-env
+    depends_on:
+      config-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - hr-saas-network
+  approval-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.service
+      args:
+        SERVICE_NAME: approval-service
+    container_name: hr-saas-approval
+    ports:
+      - "8086:8086"
+    environment:
+      <<: *common-env
+    depends_on:
+      config-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - hr-saas-network
+  mdm-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.service
+      args:
+        SERVICE_NAME: mdm-service
+    container_name: hr-saas-mdm
+    ports:
+      - "8087:8087"
+    environment:
+      <<: *common-env
+    depends_on:
+      config-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - hr-saas-network
+  notification-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.service
+      args:
+        SERVICE_NAME: notification-service
+    container_name: hr-saas-notification
+    ports:
+      - "8088:8088"
+    environment:
+      <<: *common-env
+    depends_on:
+      config-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - hr-saas-network
+  file-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.service
+      args:
+        SERVICE_NAME: file-service
+    container_name: hr-saas-file
+    ports:
+      - "8089:8089"
+    environment:
+      <<: *common-env
+    volumes:
+      - file_storage:/app/storage
+    depends_on:
+      config-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - hr-saas-network
+  appointment-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.service
+      args:
+        SERVICE_NAME: appointment-service
+    container_name: hr-saas-appointment
+    ports:
+      - "8091:8091"
+    environment:
+      <<: *common-env
+    depends_on:
+      config-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - hr-saas-network
+  certificate-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.service
+      args:
+        SERVICE_NAME: certificate-service
+    container_name: hr-saas-certificate
+    ports:
+      - "8092:8092"
+    environment:
+      <<: *common-env
+    depends_on:
+      config-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - hr-saas-network
+  recruitment-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.service
+      args:
+        SERVICE_NAME: recruitment-service
+    container_name: hr-saas-recruitment
+    ports:
+      - "8093:8093"
+    environment:
+      <<: *common-env
+    depends_on:
+      config-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - hr-saas-network
 volumes:
   postgres_data:
   redis_data:
   kafka_data:
   prometheus_data:
   grafana_data:
-
+  file_storage:
 networks:
   hr-saas-network:
     name: hr-saas-network

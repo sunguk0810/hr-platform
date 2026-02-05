@@ -3,6 +3,8 @@ package com.hrsaas.approval.controller;
 import com.hrsaas.approval.domain.dto.request.CreateApprovalRequest;
 import com.hrsaas.approval.domain.dto.request.ProcessApprovalRequest;
 import com.hrsaas.approval.domain.dto.response.ApprovalDocumentResponse;
+import com.hrsaas.approval.domain.dto.response.ApprovalHistoryResponse;
+import com.hrsaas.approval.domain.dto.response.ApprovalSummaryResponse;
 import com.hrsaas.approval.service.ApprovalService;
 import com.hrsaas.common.response.ApiResponse;
 import com.hrsaas.common.response.PageResponse;
@@ -16,6 +18,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -85,6 +89,53 @@ public class ApprovalController {
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<Long> countPendingApprovals(@RequestHeader("X-User-ID") UUID userId) {
         return ApiResponse.success(approvalService.countPendingApprovals(userId));
+    }
+
+    @GetMapping("/summary")
+    @Operation(summary = "결재 요약 정보")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<ApprovalSummaryResponse> getSummary(@RequestHeader("X-User-ID") UUID userId) {
+        return ApiResponse.success(approvalService.getSummary(userId));
+    }
+
+    @GetMapping("/{id}/history")
+    @Operation(summary = "결재 이력 조회")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<List<ApprovalHistoryResponse>> getHistory(@PathVariable UUID id) {
+        return ApiResponse.success(approvalService.getHistory(id));
+    }
+
+    @GetMapping
+    @Operation(summary = "결재 문서 목록 조회")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<PageResponse<ApprovalDocumentResponse>> getApprovals(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String type,
+            @RequestHeader(value = "X-User-ID", required = false) UUID userId,
+            @PageableDefault(size = 20) Pageable pageable) {
+        return ApiResponse.success(approvalService.search(status, type, userId, pageable));
+    }
+
+    @PostMapping("/{id}/approve")
+    @Operation(summary = "결재 승인")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<ApprovalDocumentResponse> approve(
+            @PathVariable UUID id,
+            @RequestHeader("X-User-ID") UUID userId,
+            @RequestBody(required = false) Map<String, String> body) {
+        String comment = body != null ? body.get("comment") : null;
+        return ApiResponse.success(approvalService.approve(id, userId, comment));
+    }
+
+    @PostMapping("/{id}/reject")
+    @Operation(summary = "결재 반려")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<ApprovalDocumentResponse> reject(
+            @PathVariable UUID id,
+            @RequestHeader("X-User-ID") UUID userId,
+            @RequestBody Map<String, String> body) {
+        String reason = body.get("reason");
+        return ApiResponse.success(approvalService.reject(id, userId, reason));
     }
 
     @PostMapping("/{id}/submit")

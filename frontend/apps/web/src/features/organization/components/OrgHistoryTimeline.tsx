@@ -11,28 +11,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-
-export type OrgHistoryEventType =
-  | 'department_created'
-  | 'department_deleted'
-  | 'department_renamed'
-  | 'department_moved'
-  | 'employee_joined'
-  | 'employee_left'
-  | 'employee_transferred';
-
-export interface OrgHistoryEvent {
-  id: string;
-  type: OrgHistoryEventType;
-  date: Date;
-  title: string;
-  description?: string;
-  actor?: {
-    name: string;
-    profileImage?: string;
-  };
-  metadata?: Record<string, unknown>;
-}
+import type { OrgHistoryEvent, OrgHistoryEventType } from '../services/organizationService';
 
 interface OrgHistoryTimelineProps {
   events: OrgHistoryEvent[];

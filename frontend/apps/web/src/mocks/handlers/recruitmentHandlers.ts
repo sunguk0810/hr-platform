@@ -1067,4 +1067,293 @@ export const recruitmentHandlers = [
 
     return HttpResponse.json({ success: true, data: myScore || null, timestamp: new Date().toISOString() });
   }),
+
+  // Withdraw application
+  http.post('/api/v1/applications/:id/withdraw', async ({ params, request }) => {
+    await delay(300);
+
+    const index = mockApplications.findIndex((a) => a.id === params.id);
+    if (index === -1) {
+      return HttpResponse.json(
+        { success: false, error: { code: 'APP_001', message: '지원서를 찾을 수 없습니다.' }, timestamp: new Date().toISOString() },
+        { status: 404 }
+      );
+    }
+
+    const body = (await request.json()) as { reason?: string };
+    mockApplications[index] = {
+      ...mockApplications[index],
+      status: 'WITHDRAWN',
+      withdrawnAt: new Date().toISOString(),
+      withdrawnReason: body.reason,
+      updatedAt: new Date().toISOString(),
+    };
+
+    return HttpResponse.json({ success: true, data: mockApplications[index], timestamp: new Date().toISOString() });
+  }),
+
+  // Update interview
+  http.put('/api/v1/interviews/:id', async ({ params, request }) => {
+    await delay(300);
+
+    const index = mockInterviews.findIndex((i) => i.id === params.id);
+    if (index === -1) {
+      return HttpResponse.json(
+        { success: false, error: { code: 'INT_001', message: '면접을 찾을 수 없습니다.' }, timestamp: new Date().toISOString() },
+        { status: 404 }
+      );
+    }
+
+    const body = (await request.json()) as Record<string, unknown>;
+    mockInterviews[index] = { ...mockInterviews[index], ...body, updatedAt: new Date().toISOString() };
+
+    return HttpResponse.json({ success: true, data: mockInterviews[index], timestamp: new Date().toISOString() });
+  }),
+
+  // Update interview status
+  http.patch('/api/v1/interviews/:id/status', async ({ params, request }) => {
+    await delay(200);
+
+    const index = mockInterviews.findIndex((i) => i.id === params.id);
+    if (index === -1) {
+      return HttpResponse.json(
+        { success: false, error: { code: 'INT_001', message: '면접을 찾을 수 없습니다.' }, timestamp: new Date().toISOString() },
+        { status: 404 }
+      );
+    }
+
+    const body = (await request.json()) as { status: InterviewStatus };
+    mockInterviews[index] = { ...mockInterviews[index], status: body.status, updatedAt: new Date().toISOString() };
+
+    return HttpResponse.json({ success: true, data: mockInterviews[index], timestamp: new Date().toISOString() });
+  }),
+
+  // Cancel interview
+  http.post('/api/v1/interviews/:id/cancel', async ({ params, request }) => {
+    await delay(200);
+
+    const index = mockInterviews.findIndex((i) => i.id === params.id);
+    if (index === -1) {
+      return HttpResponse.json(
+        { success: false, error: { code: 'INT_001', message: '면접을 찾을 수 없습니다.' }, timestamp: new Date().toISOString() },
+        { status: 404 }
+      );
+    }
+
+    const body = (await request.json()) as { reason?: string };
+    mockInterviews[index] = {
+      ...mockInterviews[index],
+      status: 'CANCELLED',
+      cancelledAt: new Date().toISOString(),
+      cancelReason: body.reason,
+      updatedAt: new Date().toISOString(),
+    };
+
+    return HttpResponse.json({ success: true, data: mockInterviews[index], message: '면접이 취소되었습니다.', timestamp: new Date().toISOString() });
+  }),
+
+  // Confirm interview
+  http.post('/api/v1/interviews/:id/confirm', async ({ params }) => {
+    await delay(200);
+
+    const index = mockInterviews.findIndex((i) => i.id === params.id);
+    if (index === -1) {
+      return HttpResponse.json(
+        { success: false, error: { code: 'INT_001', message: '면접을 찾을 수 없습니다.' }, timestamp: new Date().toISOString() },
+        { status: 404 }
+      );
+    }
+
+    mockInterviews[index] = { ...mockInterviews[index], status: 'CONFIRMED', updatedAt: new Date().toISOString() };
+
+    return HttpResponse.json({ success: true, data: mockInterviews[index], message: '면접이 확정되었습니다.', timestamp: new Date().toISOString() });
+  }),
+
+  // Complete interview
+  http.post('/api/v1/interviews/:id/complete', async ({ params }) => {
+    await delay(200);
+
+    const index = mockInterviews.findIndex((i) => i.id === params.id);
+    if (index === -1) {
+      return HttpResponse.json(
+        { success: false, error: { code: 'INT_001', message: '면접을 찾을 수 없습니다.' }, timestamp: new Date().toISOString() },
+        { status: 404 }
+      );
+    }
+
+    mockInterviews[index] = { ...mockInterviews[index], status: 'COMPLETED', completedAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+
+    return HttpResponse.json({ success: true, data: mockInterviews[index], message: '면접이 완료되었습니다.', timestamp: new Date().toISOString() });
+  }),
+
+  // Update interview score
+  http.put('/api/v1/interviews/:interviewId/scores/:scoreId', async ({ params, request }) => {
+    await delay(300);
+
+    const scores = mockInterviewScores[params.interviewId as string] || [];
+    const scoreIndex = scores.findIndex((s) => s.id === params.scoreId);
+
+    if (scoreIndex === -1) {
+      return HttpResponse.json(
+        { success: false, error: { code: 'SCORE_001', message: '평가를 찾을 수 없습니다.' }, timestamp: new Date().toISOString() },
+        { status: 404 }
+      );
+    }
+
+    const body = (await request.json()) as Record<string, unknown>;
+    scores[scoreIndex] = { ...scores[scoreIndex], ...body, updatedAt: new Date().toISOString() };
+
+    return HttpResponse.json({ success: true, data: scores[scoreIndex], timestamp: new Date().toISOString() });
+  }),
+
+  // ===== Offers =====
+
+  // Get offers list
+  http.get('/api/v1/offers', async ({ request }) => {
+    await delay(300);
+
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '0', 10);
+    const size = parseInt(url.searchParams.get('size') || '10', 10);
+
+    // Mock offers data
+    const mockOffers = [
+      {
+        id: 'offer-001',
+        applicationId: 'app-004',
+        applicantName: '최현우',
+        applicantEmail: 'choi.hw@email.com',
+        jobTitle: '프론트엔드 개발자 (React)',
+        salary: 55000000,
+        startDate: '2024-04-01',
+        status: 'SENT',
+        sentAt: '2024-02-25T10:00:00Z',
+        createdAt: '2024-02-20T10:00:00Z',
+      },
+    ];
+
+    return HttpResponse.json({
+      success: true,
+      data: { content: mockOffers, page, size, totalElements: 1, totalPages: 1, first: true, last: true },
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // Get offer detail
+  http.get('/api/v1/offers/:id', async ({ params }) => {
+    await delay(200);
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        id: params.id,
+        applicationId: 'app-004',
+        applicantName: '최현우',
+        applicantEmail: 'choi.hw@email.com',
+        jobTitle: '프론트엔드 개발자 (React)',
+        salary: 55000000,
+        bonus: 5000000,
+        benefits: '4대보험, 연차, 교육비 지원',
+        startDate: '2024-04-01',
+        expiresAt: '2024-03-15T23:59:59Z',
+        status: 'SENT',
+        sentAt: '2024-02-25T10:00:00Z',
+        createdAt: '2024-02-20T10:00:00Z',
+        updatedAt: '2024-02-25T10:00:00Z',
+      },
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // Get offer summary
+  http.get('/api/v1/offers/summary', async () => {
+    await delay(200);
+
+    return HttpResponse.json({
+      success: true,
+      data: { total: 5, draft: 1, sent: 2, accepted: 1, declined: 1, withdrawn: 0 },
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // Get offer by application
+  http.get('/api/v1/applications/:applicationId/offer', async () => {
+    await delay(200);
+
+    return HttpResponse.json({
+      success: true,
+      data: null, // or offer object if exists
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // Create offer
+  http.post('/api/v1/offers', async ({ request }) => {
+    await delay(300);
+
+    const body = (await request.json()) as Record<string, unknown>;
+    const newOffer = {
+      id: `offer-${Date.now()}`,
+      ...body,
+      status: 'DRAFT',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    return HttpResponse.json({ success: true, data: newOffer, message: '채용 제안이 생성되었습니다.', timestamp: new Date().toISOString() }, { status: 201 });
+  }),
+
+  // Update offer
+  http.put('/api/v1/offers/:id', async ({ params, request }) => {
+    await delay(300);
+
+    const body = (await request.json()) as Record<string, unknown>;
+
+    return HttpResponse.json({
+      success: true,
+      data: { id: params.id, ...body, updatedAt: new Date().toISOString() },
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // Send offer
+  http.post('/api/v1/offers/:id/send', async ({ params }) => {
+    await delay(300);
+
+    return HttpResponse.json({
+      success: true,
+      data: { id: params.id, status: 'SENT', sentAt: new Date().toISOString() },
+      message: '채용 제안이 발송되었습니다.',
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // Respond to offer
+  http.post('/api/v1/offers/:id/respond', async ({ params, request }) => {
+    await delay(300);
+
+    const body = (await request.json()) as { accepted: boolean; reason?: string };
+    const status = body.accepted ? 'ACCEPTED' : 'DECLINED';
+
+    return HttpResponse.json({
+      success: true,
+      data: { id: params.id, status, respondedAt: new Date().toISOString() },
+      message: body.accepted ? '채용 제안을 수락하셨습니다.' : '채용 제안을 거절하셨습니다.',
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // Withdraw offer
+  http.post('/api/v1/offers/:id/withdraw', async ({ params, request }) => {
+    await delay(300);
+
+    const body = (await request.json()) as { reason?: string };
+
+    return HttpResponse.json({
+      success: true,
+      data: { id: params.id, status: 'WITHDRAWN', withdrawnAt: new Date().toISOString(), withdrawnReason: body.reason },
+      message: '채용 제안이 철회되었습니다.',
+      timestamp: new Date().toISOString(),
+    });
+  }),
 ];

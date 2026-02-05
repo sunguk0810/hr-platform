@@ -28,7 +28,7 @@ export function AttendanceWidget() {
 
   const checkInMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiClient.post('/attendance/check-in');
+      const response = await apiClient.post('/attendances/check-in');
       return response.data;
     },
     onSuccess: () => {
@@ -38,7 +38,7 @@ export function AttendanceWidget() {
 
   const checkOutMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiClient.post('/attendance/check-out');
+      const response = await apiClient.post('/attendances/check-out');
       return response.data;
     },
     onSuccess: () => {
@@ -82,7 +82,7 @@ export function AttendanceWidget() {
   };
 
   return (
-    <WidgetContainer title="출퇴근" description="오늘의 근무 현황" isLoading={isLoading}>
+    <WidgetContainer data-tour="attendance-widget" title="출퇴근" description="오늘의 근무 현황" isLoading={isLoading}>
       <div className="space-y-4">
         {/* Status */}
         <div className="flex items-center justify-between">

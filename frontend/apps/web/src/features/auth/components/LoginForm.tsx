@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Eye, EyeOff, Loader2, Shield, Users, Briefcase, User } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Shield, Users, Briefcase, User, Building2, Crown, UserCog } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,8 +27,11 @@ const isDevelopment = import.meta.env.DEV || import.meta.env.VITE_ENABLE_MOCK ==
 
 // 역할별 아이콘
 const roleIcons: Record<string, React.ReactNode> = {
-  SYSTEM_ADMIN: <Shield className="h-4 w-4 text-red-500" />,
-  HR_MANAGER: <Users className="h-4 w-4 text-blue-500" />,
+  SUPER_ADMIN: <Shield className="h-4 w-4 text-red-500" />,
+  GROUP_ADMIN: <Crown className="h-4 w-4 text-purple-500" />,
+  TENANT_ADMIN: <Building2 className="h-4 w-4 text-indigo-500" />,
+  HR_ADMIN: <UserCog className="h-4 w-4 text-blue-500" />,
+  HR_MANAGER: <Users className="h-4 w-4 text-cyan-500" />,
   MANAGER: <Briefcase className="h-4 w-4 text-amber-500" />,
   EMPLOYEE: <User className="h-4 w-4 text-green-500" />,
 };
@@ -170,16 +173,20 @@ export function LoginForm() {
               </div>
               <div className="mt-3 rounded-md bg-muted/50 p-3">
                 <p className="text-xs text-muted-foreground">
-                  <strong>권한 설명:</strong>
+                  <strong>한성그룹 테스트 계정 (샘플 데이터)</strong>
                 </p>
                 <ul className="text-xs text-muted-foreground mt-1 space-y-1">
                   <li className="flex items-center gap-2">
                     <Shield className="h-3 w-3 text-red-500" />
-                    시스템 관리자: 모든 기능 접근 가능
+                    시스템 관리자: 전체 시스템 관리
                   </li>
                   <li className="flex items-center gap-2">
-                    <Users className="h-3 w-3 text-blue-500" />
-                    HR 관리자: 인사/근태/조직 관리
+                    <Building2 className="h-3 w-3 text-indigo-500" />
+                    CEO: 계열사 전체 관리 (테넌트 관리자)
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <UserCog className="h-3 w-3 text-blue-500" />
+                    HR 관리자: 인사/근태/조직 관리 (인사팀장)
                   </li>
                   <li className="flex items-center gap-2">
                     <Briefcase className="h-3 w-3 text-amber-500" />

@@ -15,7 +15,6 @@ import type {
   DelegationRuleListItem,
   DelegationRuleStatus,
   DelegationRuleConditionType,
-  DelegationRuleTargetType,
 } from '@hr-platform/shared-types';
 
 const createApprovalStep = (
@@ -411,7 +410,7 @@ function toRuleListItem(rule: DelegationRule): DelegationRuleListItem {
 
 const delegationRuleHandlers = [
   // Get delegation rules list
-  http.get('/api/v1/approvals/delegation-rules', async ({ request }) => {
+  http.get('/api/v1/approvals/delegations', async ({ request }) => {
     await delay(300);
 
     const url = new URL(request.url);
@@ -453,7 +452,7 @@ const delegationRuleHandlers = [
   }),
 
   // Get delegation rule detail
-  http.get('/api/v1/approvals/delegation-rules/:id', async ({ params }) => {
+  http.get('/api/v1/approvals/delegations/:id', async ({ params }) => {
     await delay(200);
 
     const { id } = params;
@@ -478,7 +477,7 @@ const delegationRuleHandlers = [
   }),
 
   // Create delegation rule
-  http.post('/api/v1/approvals/delegation-rules', async ({ request }) => {
+  http.post('/api/v1/approvals/delegations', async ({ request }) => {
     await delay(300);
 
     const body = await request.json() as Record<string, unknown>;
@@ -515,7 +514,7 @@ const delegationRuleHandlers = [
   }),
 
   // Update delegation rule
-  http.put('/api/v1/approvals/delegation-rules/:id', async ({ params, request }) => {
+  http.put('/api/v1/approvals/delegations/:id', async ({ params, request }) => {
     await delay(300);
 
     const { id } = params;
@@ -554,7 +553,7 @@ const delegationRuleHandlers = [
   }),
 
   // Delete delegation rule
-  http.delete('/api/v1/approvals/delegation-rules/:id', async ({ params }) => {
+  http.delete('/api/v1/approvals/delegations/:id', async ({ params }) => {
     await delay(300);
 
     const { id } = params;
@@ -581,7 +580,7 @@ const delegationRuleHandlers = [
   }),
 
   // Toggle delegation rule status
-  http.post('/api/v1/approvals/delegation-rules/:id/toggle-status', async ({ params }) => {
+  http.post('/api/v1/approvals/delegations/:id/toggle-status', async ({ params }) => {
     await delay(300);
 
     const { id } = params;
@@ -1410,7 +1409,7 @@ export const approvalHandlers = [
   }),
 
   // SDD 3.3.4 결재 양식 목록
-  http.get('/api/v1/approval-templates', async ({ request }) => {
+  http.get('/api/v1/approvals/templates', async ({ request }) => {
     await delay(200);
 
     const url = new URL(request.url);
@@ -1436,7 +1435,7 @@ export const approvalHandlers = [
   }),
 
   // SDD 3.3.4 결재 양식 상세
-  http.get('/api/v1/approval-templates/:id', async ({ params }) => {
+  http.get('/api/v1/approvals/templates/:id', async ({ params }) => {
     await delay(200);
 
     const { id } = params;
@@ -1461,7 +1460,7 @@ export const approvalHandlers = [
   }),
 
   // 결재 양식 생성
-  http.post('/api/v1/approval-templates', async ({ request }) => {
+  http.post('/api/v1/approvals/templates', async ({ request }) => {
     await delay(300);
 
     const body = await request.json() as Record<string, unknown>;
@@ -1491,7 +1490,7 @@ export const approvalHandlers = [
   }),
 
   // 결재 양식 수정
-  http.put('/api/v1/approval-templates/:id', async ({ params, request }) => {
+  http.put('/api/v1/approvals/templates/:id', async ({ params, request }) => {
     await delay(300);
 
     const { id } = params;
@@ -1528,7 +1527,7 @@ export const approvalHandlers = [
   }),
 
   // 결재 양식 삭제
-  http.delete('/api/v1/approval-templates/:id', async ({ params }) => {
+  http.delete('/api/v1/approvals/templates/:id', async ({ params }) => {
     await delay(300);
 
     const { id } = params;

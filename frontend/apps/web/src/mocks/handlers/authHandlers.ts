@@ -456,7 +456,7 @@ export const authHandlers = [
   }),
 
   // Refresh token
-  http.post('/api/v1/auth/refresh', async ({ request }) => {
+  http.post('/api/v1/auth/token/refresh', async ({ request }) => {
     await delay(200);
 
     const body = await request.json() as { refreshToken?: string };

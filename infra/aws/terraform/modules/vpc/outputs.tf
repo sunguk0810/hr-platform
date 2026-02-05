@@ -22,7 +22,7 @@ output "private_subnet_ids" {
 
 output "nat_gateway_id" {
   description = "NAT Gateway ID"
-  value       = aws_nat_gateway.main.id
+  value       = var.enable_nat_gateway ? aws_nat_gateway.main[0].id : null
 }
 
 output "internet_gateway_id" {
@@ -48,4 +48,14 @@ output "rds_security_group_id" {
 output "redis_security_group_id" {
   description = "Redis Security Group ID"
   value       = aws_security_group.redis.id
+}
+
+output "vpc_endpoints_security_group_id" {
+  description = "VPC Endpoints Security Group ID"
+  value       = var.enable_vpc_endpoints ? aws_security_group.vpc_endpoints[0].id : null
+}
+
+output "private_route_table_id" {
+  description = "Private Route Table ID"
+  value       = aws_route_table.private.id
 }

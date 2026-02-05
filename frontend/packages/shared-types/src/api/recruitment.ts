@@ -117,6 +117,8 @@ export interface Application extends TenantAwareEntity {
   hiredAt?: string;
   hiredBy?: string;
   hiredByName?: string;
+  withdrawnAt?: string;
+  withdrawnReason?: string;
 }
 
 export interface ApplicationListItem {
@@ -169,6 +171,7 @@ export interface Interview extends TenantAwareEntity {
   cancelReason?: string;
   confirmedAt?: string;
   completedAt?: string;
+  cancelledAt?: string;
 }
 
 export interface InterviewListItem {

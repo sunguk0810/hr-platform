@@ -485,7 +485,7 @@ export const mdmHandlers = [
   }),
 
   // Get codes by group (for dropdowns)
-  http.get('/api/v1/mdm/codes/:groupCode', async ({ params }) => {
+  http.get('/api/v1/mdm/common-codes/group/:groupCode', async ({ params }) => {
     await delay(200);
 
     const { groupCode } = params;
@@ -979,10 +979,11 @@ export const mdmHandlers = [
   }),
 
   // Get code tree (hierarchical)
-  http.get('/api/v1/mdm/code-groups/:groupCode/tree', async ({ params }) => {
+  http.get('/api/v1/mdm/common-codes/tree', async ({ request }) => {
     await delay(300);
 
-    const { groupCode } = params;
+    const url = new URL(request.url);
+    const groupCode = url.searchParams.get('groupCode') || '';
     const codes = mockCommonCodes.filter(c => c.groupCode === groupCode);
 
     // Build tree structure

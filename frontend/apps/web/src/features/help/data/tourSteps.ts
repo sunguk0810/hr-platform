@@ -106,18 +106,13 @@ export const organizationTour: TourConfig = {
   steps: [
     {
       target: '[data-tour="org-tree"]',
-      content: '트리 형태로 조직 구조를 확인합니다.',
+      content: '트리 형태로 조직 구조를 확인합니다. 부서를 클릭하여 상세 정보를 확인하세요.',
       placement: 'right',
       disableBeacon: true,
     },
     {
-      target: '[data-tour="org-chart"]',
-      content: '시각적인 조직도를 확인할 수 있습니다.',
-      placement: 'bottom',
-    },
-    {
       target: '[data-tour="department-search"]',
-      content: '부서명 또는 직원명으로 검색할 수 있습니다.',
+      content: '부서명 또는 코드로 검색하여 원하는 부서를 빠르게 찾을 수 있습니다.',
       placement: 'bottom',
     },
   ],

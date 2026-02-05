@@ -56,9 +56,12 @@ public interface ApplicantRepository extends JpaRepository<Applicant, UUID> {
     /**
      * 스킬로 지원자 검색
      */
-    @Query("SELECT a FROM Applicant a WHERE " +
-           "jsonb_exists(a.skills, :skill) = true " +
-           "ORDER BY a.createdAt DESC")
+    @Query(value = "SELECT * FROM hr_recruitment.applicant a WHERE " +
+           "a.skills @> CAST(:skill AS jsonb) " +
+           "ORDER BY a.created_at DESC",
+           countQuery = "SELECT COUNT(*) FROM hr_recruitment.applicant a WHERE " +
+           "a.skills @> CAST(:skill AS jsonb)",
+           nativeQuery = true)
     Page<Applicant> findBySkill(@Param("skill") String skill, Pageable pageable);
 
     /**

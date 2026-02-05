@@ -33,10 +33,27 @@ output "rds_host" {
   value       = module.rds.db_host
 }
 
-# ElastiCache Outputs
+# Redis Outputs
 output "redis_endpoint" {
-  description = "Redis endpoint"
-  value       = module.elasticache.redis_endpoint
+  description = "Redis endpoint (ElastiCache or Fargate)"
+  value       = var.use_elasticache ? module.elasticache[0].redis_endpoint : (length(module.redis_fargate) > 0 ? module.redis_fargate[0].redis_endpoint : "")
+}
+
+# Kafka Outputs
+output "kafka_bootstrap_servers" {
+  description = "Kafka bootstrap servers"
+  value       = var.enable_kafka ? module.kafka[0].bootstrap_servers : var.kafka_bootstrap_servers
+}
+
+output "kafka_instance_id" {
+  description = "Kafka EC2 instance ID"
+  value       = var.enable_kafka ? module.kafka[0].instance_id : ""
+}
+
+# Keycloak Outputs
+output "keycloak_internal_url" {
+  description = "Internal Keycloak URL (via Service Discovery)"
+  value       = var.enable_internal_keycloak && length(module.keycloak) > 0 ? module.keycloak[0].internal_url : var.keycloak_issuer_uri
 }
 
 # ALB Outputs
@@ -70,4 +87,26 @@ output "db_credentials_secret_name" {
 output "redis_credentials_secret_name" {
   description = "Redis credentials secret name"
   value       = module.secrets.redis_credentials_secret_name
+}
+
+# Frontend Outputs
+output "frontend_s3_bucket" {
+  description = "Frontend S3 bucket name"
+  value       = module.frontend.s3_bucket_name
+}
+
+output "frontend_cloudfront_id" {
+  description = "Frontend CloudFront distribution ID"
+  value       = module.frontend.cloudfront_distribution_id
+}
+
+output "frontend_url" {
+  description = "Frontend website URL"
+  value       = module.frontend.website_url
+}
+
+# API Gateway Outputs
+output "api_gateway_endpoint" {
+  description = "API Gateway endpoint URL (CORS enabled)"
+  value       = module.api_gateway.api_endpoint
 }

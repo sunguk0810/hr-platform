@@ -31,8 +31,4 @@ CREATE POLICY certificate_issue_tenant_isolation ON hr_certificate.certificate_i
     USING (get_current_tenant_safe() IS NULL OR tenant_id = get_current_tenant_safe())
     WITH CHECK (get_current_tenant_safe() IS NULL OR tenant_id = get_current_tenant_safe());
 
-DROP POLICY IF EXISTS verification_log_tenant_isolation ON hr_certificate.verification_log;
-CREATE POLICY verification_log_tenant_isolation ON hr_certificate.verification_log
-    FOR ALL
-    USING (get_current_tenant_safe() IS NULL OR tenant_id = get_current_tenant_safe())
-    WITH CHECK (get_current_tenant_safe() IS NULL OR tenant_id = get_current_tenant_safe());
+-- verification_log 테이블은 tenant_id 없음 (외부 검증용)

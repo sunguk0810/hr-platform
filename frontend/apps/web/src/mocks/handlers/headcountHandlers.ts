@@ -234,16 +234,14 @@ function toRequestListItem(request: HeadcountRequest): HeadcountRequestListItem 
 }
 
 export const headcountHandlers = [
-  // Get headcount plans
-  http.get('/api/v1/headcount/plans', async ({ request }) => {
+  // Get headcount plans - Backend returns List (array), not Page
+  // Hook does client-side pagination
+  http.get('/api/v1/headcounts/plans', async ({ request }) => {
     await delay(300);
 
     const url = new URL(request.url);
-    const page = parseInt(url.searchParams.get('page') || '0');
-    const size = parseInt(url.searchParams.get('size') || '10');
     const year = url.searchParams.get('year');
     const departmentId = url.searchParams.get('departmentId');
-    const status = url.searchParams.get('status') as HeadcountStatus | null;
 
     let filtered = [...mockPlans];
 
@@ -255,29 +253,17 @@ export const headcountHandlers = [
       filtered = filtered.filter((p) => p.departmentId === departmentId);
     }
 
-    if (status) {
-      filtered = filtered.filter((p) => p.status === status);
-    }
-
     filtered.sort((a, b) => a.departmentName.localeCompare(b.departmentName));
 
-    const start = page * size;
-    const paged = filtered.slice(start, start + size);
-
+    // Return array directly - hook handles pagination client-side
     return HttpResponse.json({
       success: true,
-      data: {
-        content: paged.map(toPlanListItem),
-        page,
-        size,
-        totalElements: filtered.length,
-        totalPages: Math.ceil(filtered.length / size),
-      },
+      data: filtered.map(toPlanListItem),
     });
   }),
 
   // Get headcount plan detail
-  http.get('/api/v1/headcount/plans/:id', async ({ params }) => {
+  http.get('/api/v1/headcounts/plans/:id', async ({ params }) => {
     await delay(200);
 
     const { id } = params;
@@ -297,7 +283,7 @@ export const headcountHandlers = [
   }),
 
   // Create headcount plan
-  http.post('/api/v1/headcount/plans', async ({ request }) => {
+  http.post('/api/v1/headcounts/plans', async ({ request }) => {
     await delay(400);
 
     const body = await request.json() as any;
@@ -330,7 +316,7 @@ export const headcountHandlers = [
   }),
 
   // Update headcount plan
-  http.put('/api/v1/headcount/plans/:id', async ({ params, request }) => {
+  http.put('/api/v1/headcounts/plans/:id', async ({ params, request }) => {
     await delay(300);
 
     const { id } = params;
@@ -361,7 +347,7 @@ export const headcountHandlers = [
   }),
 
   // Delete headcount plan
-  http.delete('/api/v1/headcount/plans/:id', async ({ params }) => {
+  http.delete('/api/v1/headcounts/plans/:id', async ({ params }) => {
     await delay(200);
 
     const { id } = params;
@@ -383,7 +369,7 @@ export const headcountHandlers = [
   }),
 
   // Approve headcount plan
-  http.post('/api/v1/headcount/plans/:id/approve', async ({ params }) => {
+  http.post('/api/v1/headcounts/plans/:id/approve', async ({ params }) => {
     await delay(300);
 
     const { id } = params;
@@ -413,7 +399,7 @@ export const headcountHandlers = [
   }),
 
   // Get headcount summary
-  http.get('/api/v1/headcount/summary', async ({ request }) => {
+  http.get('/api/v1/headcounts/summary', async ({ request }) => {
     await delay(200);
 
     const url = new URL(request.url);
@@ -462,7 +448,7 @@ export const headcountHandlers = [
   }),
 
   // Get headcount requests
-  http.get('/api/v1/headcount/requests', async ({ request }) => {
+  http.get('/api/v1/headcounts/requests', async ({ request }) => {
     await delay(300);
 
     const url = new URL(request.url);
@@ -504,7 +490,7 @@ export const headcountHandlers = [
   }),
 
   // Get headcount request detail
-  http.get('/api/v1/headcount/requests/:id', async ({ params }) => {
+  http.get('/api/v1/headcounts/requests/:id', async ({ params }) => {
     await delay(200);
 
     const { id } = params;
@@ -524,7 +510,7 @@ export const headcountHandlers = [
   }),
 
   // Create headcount request
-  http.post('/api/v1/headcount/requests', async ({ request }) => {
+  http.post('/api/v1/headcounts/requests', async ({ request }) => {
     await delay(400);
 
     const body = await request.json() as any;
@@ -561,7 +547,7 @@ export const headcountHandlers = [
   }),
 
   // Approve headcount request
-  http.post('/api/v1/headcount/requests/:id/approve', async ({ params }) => {
+  http.post('/api/v1/headcounts/requests/:id/approve', async ({ params }) => {
     await delay(300);
 
     const { id } = params;
@@ -591,7 +577,7 @@ export const headcountHandlers = [
   }),
 
   // Reject headcount request
-  http.post('/api/v1/headcount/requests/:id/reject', async ({ params, request }) => {
+  http.post('/api/v1/headcounts/requests/:id/reject', async ({ params, request }) => {
     await delay(300);
 
     const { id } = params;
@@ -620,7 +606,7 @@ export const headcountHandlers = [
   }),
 
   // Cancel headcount request
-  http.post('/api/v1/headcount/requests/:id/cancel', async ({ params }) => {
+  http.post('/api/v1/headcounts/requests/:id/cancel', async ({ params }) => {
     await delay(300);
 
     const { id } = params;

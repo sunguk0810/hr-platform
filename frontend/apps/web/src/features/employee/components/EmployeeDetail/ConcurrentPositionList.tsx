@@ -26,7 +26,6 @@ import {
   MoreHorizontal,
   Building2,
   Star,
-  StarOff,
   Edit,
   XCircle,
   Trash2,
@@ -278,12 +277,10 @@ export function ConcurrentPositionList({
               title="소속 정보 없음"
               description="등록된 소속 정보가 없습니다."
               action={
-                editable ? (
-                  <Button onClick={() => setIsAddDialogOpen(true)}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    소속 추가
-                  </Button>
-                ) : undefined
+                editable ? {
+                  label: '소속 추가',
+                  onClick: () => setIsAddDialogOpen(true)
+                } : undefined
               }
             />
           ) : (

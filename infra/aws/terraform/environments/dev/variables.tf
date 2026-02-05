@@ -63,12 +63,90 @@ variable "redis_node_type" {
   default     = "cache.t3.micro"
 }
 
+# VPC Configuration Options
+variable "enable_nat_gateway" {
+  description = "Enable NAT Gateway (set to false to use VPC Endpoints instead for cost savings)"
+  type        = bool
+  default     = false
+}
+
+variable "enable_vpc_endpoints" {
+  description = "Enable VPC Endpoints for private subnet access to AWS services"
+  type        = bool
+  default     = true
+}
+
+# Redis Configuration Options
+variable "use_elasticache" {
+  description = "Use ElastiCache instead of Redis Fargate (ElastiCache is more robust but more expensive)"
+  type        = bool
+  default     = false
+}
+
+# Kafka Configuration Options
+variable "enable_kafka" {
+  description = "Enable Kafka EC2 instance (KRaft mode)"
+  type        = bool
+  default     = true
+}
+
+variable "kafka_instance_type" {
+  description = "EC2 instance type for Kafka"
+  type        = string
+  default     = "t3.small"
+}
+
+variable "kafka_data_volume_size" {
+  description = "Kafka data EBS volume size in GB"
+  type        = number
+  default     = 50
+}
+
+# Keycloak Configuration Options
+variable "enable_internal_keycloak" {
+  description = "Enable internal Keycloak on Fargate (for VPC-only access)"
+  type        = bool
+  default     = false
+}
+
 # Keycloak Configuration
 variable "keycloak_client_secret" {
   description = "Keycloak client secret"
   type        = string
   default     = ""
   sensitive   = true
+}
+
+variable "keycloak_issuer_uri" {
+  description = "Keycloak issuer URI (e.g., https://keycloak.example.com/realms/hr-saas)"
+  type        = string
+  default     = ""
+}
+
+variable "keycloak_hostname" {
+  description = "Public hostname for Keycloak Admin Console (e.g., auth.port-sw.com)"
+  type        = string
+  default     = ""
+}
+
+variable "keycloak_client_id" {
+  description = "Keycloak client ID"
+  type        = string
+  default     = "hr-saas-api"
+}
+
+# Kafka/MSK Configuration
+variable "kafka_bootstrap_servers" {
+  description = "Kafka/MSK bootstrap servers"
+  type        = string
+  default     = ""
+}
+
+# CORS Configuration
+variable "cors_allowed_origins" {
+  description = "CORS allowed origins (comma-separated)"
+  type        = string
+  default     = "https://app.example.com"
 }
 
 # SSL Certificate
@@ -105,57 +183,57 @@ variable "services" {
   default = {
     "gateway-service" = {
       port          = 8080
-      cpu           = 256
-      memory        = 512
+      cpu           = 512
+      memory        = 1024
       desired_count = 1
       path_patterns = ["/api/*", "/actuator/*"]
     }
     "auth-service" = {
       port          = 8081
-      cpu           = 256
-      memory        = 512
+      cpu           = 512
+      memory        = 1024
       desired_count = 1
       path_patterns = ["/api/v1/auth/*"]
     }
     "tenant-service" = {
       port          = 8082
-      cpu           = 256
-      memory        = 512
+      cpu           = 512
+      memory        = 1024
       desired_count = 1
       path_patterns = ["/api/v1/tenants/*"]
     }
     "organization-service" = {
       port          = 8083
-      cpu           = 256
-      memory        = 512
+      cpu           = 512
+      memory        = 1024
       desired_count = 1
       path_patterns = ["/api/v1/organizations/*", "/api/v1/departments/*"]
     }
     "employee-service" = {
       port          = 8084
-      cpu           = 256
-      memory        = 512
+      cpu           = 512
+      memory        = 1024
       desired_count = 1
       path_patterns = ["/api/v1/employees/*"]
     }
     "attendance-service" = {
       port          = 8085
-      cpu           = 256
-      memory        = 512
+      cpu           = 512
+      memory        = 1024
       desired_count = 1
       path_patterns = ["/api/v1/attendance/*", "/api/v1/leaves/*"]
     }
     "approval-service" = {
       port          = 8086
-      cpu           = 256
-      memory        = 512
+      cpu           = 512
+      memory        = 1024
       desired_count = 1
       path_patterns = ["/api/v1/approvals/*"]
     }
     "mdm-service" = {
       port          = 8087
-      cpu           = 256
-      memory        = 512
+      cpu           = 512
+      memory        = 1024
       desired_count = 1
       path_patterns = ["/api/v1/codes/*", "/api/v1/menus/*"]
     }
@@ -170,4 +248,15 @@ variable "tags" {
     CostCenter = "engineering"
     Team       = "platform"
   }
+}
+
+# Frontend Configuration
+variable "frontend_domain" {
+  description = "Frontend domain name (e.g., app.example.com)"
+  type        = string
+}
+
+variable "hosted_zone_id" {
+  description = "Route53 hosted zone ID for DNS records"
+  type        = string
 }

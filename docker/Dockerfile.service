@@ -4,12 +4,13 @@
 # ============================================
 
 # Stage 1: Build Stage
-FROM eclipse-temurin:17-jdk-alpine AS builder
+# Use multi-platform build for ARM64 (Graviton) support
+FROM --platform=$BUILDPLATFORM amazoncorretto:17-alpine3.18 AS builder
 
 WORKDIR /app
 
-# Install required tools
-RUN apk add --no-cache bash
+# Install required tools including dos2unix for line ending conversion
+RUN apk add --no-cache bash dos2unix
 
 # Copy Gradle wrapper and build files
 COPY gradlew .
@@ -22,8 +23,8 @@ COPY common/ common/
 # Copy all services (needed for dependencies)
 COPY services/ services/
 
-# Make gradlew executable
-RUN chmod +x gradlew
+# Convert line endings and make executable
+RUN dos2unix gradlew && chmod +x gradlew
 
 # Build argument for service name
 ARG SERVICE_NAME
@@ -34,14 +35,15 @@ RUN ./gradlew :services:${SERVICE_NAME}:dependencies --no-daemon || true
 # Build the specific service
 RUN ./gradlew :services:${SERVICE_NAME}:bootJar --no-daemon -x test
 
-# Extract layers for efficient caching
+# Extract layers for efficient caching (exclude -plain.jar)
 WORKDIR /app/services/${SERVICE_NAME}/build/libs
-RUN java -Djarmode=layertools -jar *.jar extract
+RUN JAR_FILE=$(ls *.jar | grep -v plain | head -1) && java -Djarmode=layertools -jar $JAR_FILE extract
 
 # ============================================
 # Stage 2: Runtime Stage
+# Target ARM64 for AWS Graviton (Fargate)
 # ============================================
-FROM eclipse-temurin:17-jre-alpine AS runtime
+FROM --platform=linux/arm64 amazoncorretto:17-alpine3.18 AS runtime
 
 # Security: Run as non-root user
 RUN addgroup -g 1001 -S appgroup && \

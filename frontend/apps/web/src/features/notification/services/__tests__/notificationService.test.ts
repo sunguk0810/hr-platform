@@ -103,24 +103,18 @@ describe('notificationService', () => {
       const mockResponse = {
         data: {
           success: true,
-          data: {
-            id: '1',
-            type: 'APPROVAL',
-            title: 'Test',
-            message: 'Test',
-            isRead: true,
-            createdAt: '2024-01-01T00:00:00Z',
-          },
+          data: null,
+          message: '알림이 읽음 처리되었습니다.',
           timestamp: '2024-01-01T00:00:00Z',
         },
       };
 
-      vi.mocked(apiClient.patch).mockResolvedValue(mockResponse);
+      vi.mocked(apiClient.post).mockResolvedValue(mockResponse);
 
       const result = await notificationService.markAsRead('1');
 
-      expect(apiClient.patch).toHaveBeenCalledWith('/notifications/1/read');
-      expect(result.data.isRead).toBe(true);
+      expect(apiClient.post).toHaveBeenCalledWith('/notifications/1/read');
+      expect(result.success).toBe(true);
     });
   });
 
@@ -250,7 +244,7 @@ describe('notificationService', () => {
       const mockResponse = {
         data: {
           success: true,
-          data: { count: 5 },
+          data: 5,
           timestamp: '2024-01-01T00:00:00Z',
         },
       };
@@ -259,8 +253,8 @@ describe('notificationService', () => {
 
       const result = await notificationService.getUnreadCount();
 
-      expect(apiClient.get).toHaveBeenCalledWith('/notifications/unread-count');
-      expect(result.data.count).toBe(5);
+      expect(apiClient.get).toHaveBeenCalledWith('/notifications/my/unread/count');
+      expect(result.data).toBe(5);
     });
   });
 

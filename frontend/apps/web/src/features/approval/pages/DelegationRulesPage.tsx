@@ -1,12 +1,15 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { Pagination } from '@/components/common/Pagination';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
+import { PullToRefreshContainer } from '@/components/mobile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import {
   Table,
   TableBody,
@@ -64,6 +67,8 @@ const STATUS_COLORS: Record<DelegationRuleStatus, string> = {
 
 export default function DelegationRulesPage() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const [showFilters, setShowFilters] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<DelegationRuleListItem | null>(null);
@@ -130,6 +135,183 @@ export default function DelegationRulesPage() {
     setEditingRule(null);
   };
 
+  const handleRefresh = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['delegation-rules'] });
+  };
+
+  // Shared dialogs render function
+  const renderDialogs = () => (
+    <>
+      {/* Add/Edit Dialog */}
+      <DelegationRuleDialog
+        open={isDialogOpen}
+        onOpenChange={handleDialogClose}
+        editingRuleId={editingRule?.id}
+      />
+
+      {/* Delete Confirmation */}
+      <ConfirmDialog
+        open={!!deletingRule}
+        onOpenChange={(open) => !open && setDeletingRule(null)}
+        title="위임전결 규칙 삭제"
+        description={`"${deletingRule?.name}" 규칙을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`}
+        confirmLabel="삭제"
+        variant="destructive"
+        onConfirm={handleDelete}
+        isLoading={deleteMutation.isPending}
+      />
+    </>
+  );
+
+  // Mobile Layout
+  if (isMobile) {
+    return (
+      <PullToRefreshContainer onRefresh={handleRefresh}>
+        <div className="space-y-4 pb-20">
+          {/* Mobile Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl font-bold">위임전결 규칙</h1>
+              <p className="text-sm text-muted-foreground">결재 위임 및 전결 규칙 설정</p>
+            </div>
+            <Button size="sm" onClick={() => setIsDialogOpen(true)}>
+              <Plus className="mr-1 h-4 w-4" />
+              추가
+            </Button>
+          </div>
+
+          {/* Filter Chips */}
+          <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
+            <button
+              onClick={() => setStatus('')}
+              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                !searchState.status
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              전체
+            </button>
+            <button
+              onClick={() => setStatus('ACTIVE')}
+              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                searchState.status === 'ACTIVE'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              활성
+            </button>
+            <button
+              onClick={() => setStatus('INACTIVE')}
+              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                searchState.status === 'INACTIVE'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              비활성
+            </button>
+          </div>
+
+          {/* Rules List */}
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            </div>
+          ) : rules.length === 0 ? (
+            <div className="bg-card rounded-xl border p-8 text-center">
+              <Scale className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+              <p className="font-medium">위임전결 규칙 없음</p>
+              <p className="text-sm text-muted-foreground mt-1">등록된 규칙이 없습니다.</p>
+              <Button className="mt-4" onClick={() => setIsDialogOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                규칙 추가
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {rules.map((rule) => (
+                <div key={rule.id} className="bg-card rounded-xl border p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs text-muted-foreground">#{rule.priority}</span>
+                        <Badge className={cn(STATUS_COLORS[rule.status], 'text-xs')}>
+                          {rule.status === 'ACTIVE' ? '활성' : '비활성'}
+                        </Badge>
+                      </div>
+                      <p className="font-medium">{rule.name}</p>
+                    </div>
+                    <Switch
+                      checked={rule.status === 'ACTIVE'}
+                      onCheckedChange={() => handleToggleStatus(rule)}
+                      disabled={toggleStatusMutation.isPending}
+                    />
+                  </div>
+
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground">위임자:</span>
+                      <span>{rule.delegatorName}</span>
+                      {rule.delegatorDepartment && (
+                        <span className="text-muted-foreground">({rule.delegatorDepartment})</span>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant="outline" className="text-xs">
+                        {DELEGATION_RULE_CONDITION_LABELS[rule.conditionType]}
+                      </Badge>
+                      <Badge variant="secondary" className="text-xs">
+                        {DELEGATION_RULE_TARGET_LABELS[rule.targetType]}
+                      </Badge>
+                    </div>
+                    {(rule.validFrom || rule.validTo) && (
+                      <p className="text-xs text-muted-foreground">
+                        기간: {rule.validFrom || '-'} ~ {rule.validTo || '-'}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2 mt-3 pt-3 border-t">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => handleEdit(rule)}
+                    >
+                      <Edit className="mr-1 h-4 w-4" />
+                      수정
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-destructive"
+                      onClick={() => setDeletingRule(rule)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+
+              {totalPages > 1 && (
+                <Pagination
+                  page={searchState.page}
+                  totalPages={totalPages}
+                  onPageChange={setPage}
+                />
+              )}
+            </div>
+          )}
+
+          {renderDialogs()}
+        </div>
+      </PullToRefreshContainer>
+    );
+  }
+
+  // Desktop Layout
   return (
     <>
       <PageHeader
@@ -233,12 +415,10 @@ export default function DelegationRulesPage() {
               icon={Scale}
               title="위임전결 규칙 없음"
               description="등록된 위임전결 규칙이 없습니다."
-              action={
-                <Button onClick={() => setIsDialogOpen(true)}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  규칙 추가
-                </Button>
-              }
+              action={{
+                label: '규칙 추가',
+                onClick: () => setIsDialogOpen(true)
+              }}
             />
           ) : (
             <>
@@ -353,24 +533,7 @@ export default function DelegationRulesPage() {
         </CardContent>
       </Card>
 
-      {/* Add/Edit Dialog */}
-      <DelegationRuleDialog
-        open={isDialogOpen}
-        onOpenChange={handleDialogClose}
-        editingRuleId={editingRule?.id}
-      />
-
-      {/* Delete Confirmation */}
-      <ConfirmDialog
-        open={!!deletingRule}
-        onOpenChange={(open) => !open && setDeletingRule(null)}
-        title="위임전결 규칙 삭제"
-        description={`"${deletingRule?.name}" 규칙을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`}
-        confirmLabel="삭제"
-        variant="destructive"
-        onConfirm={handleDelete}
-        isLoading={deleteMutation.isPending}
-      />
+      {renderDialogs()}
     </>
   );
 }

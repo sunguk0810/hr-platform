@@ -160,25 +160,26 @@ export interface ResignationCancelRequest {
   approvalId?: string;
 }
 
-// ===== SDD 4.4 기준: 계열사 전출/전입 =====
+// ===== SDD 4.4 기준: 계열사 전출/전입 (Employee 모듈용) =====
+// Note: 전체 Transfer 기능은 transfer.ts 참조
 
-export type TransferType = 'PERMANENT' | 'TEMPORARY' | 'DISPATCH';
-export type TransferStatus =
+export type EmployeeTransferType = 'PERMANENT' | 'TEMPORARY' | 'DISPATCH';
+export type EmployeeTransferStatus =
   | 'PENDING_SOURCE_APPROVAL'
   | 'PENDING_TARGET_APPROVAL'
   | 'COMPLETED'
   | 'REJECTED'
   | 'CANCELLED';
 
-export interface TransferRequest {
+export interface EmployeeTransferRequest {
   targetTenantId: string;
   targetDepartmentId: string;
   effectiveDate: string;
-  transferType: TransferType;
+  transferType: EmployeeTransferType;
   reason?: string;
 }
 
-export interface TransferApprovalRequest {
+export interface EmployeeTransferApprovalRequest {
   approved: boolean;
   targetGradeId?: string;
   targetPositionId?: string;
@@ -203,8 +204,8 @@ export interface EmployeeTransfer {
   targetPositionId?: string;
   targetPositionName?: string;
   effectiveDate: string;
-  transferType: TransferType;
-  status: TransferStatus;
+  transferType: EmployeeTransferType;
+  status: EmployeeTransferStatus;
   reason?: string;
   requestedBy: string;
   requestedByName: string;
@@ -219,9 +220,9 @@ export interface EmployeeTransfer {
   targetRemarks?: string;
 }
 
-export interface TransferSearchParams extends PageRequest {
-  status?: TransferStatus;
-  transferType?: TransferType;
+export interface EmployeeTransferSearchParams extends PageRequest {
+  status?: EmployeeTransferStatus;
+  transferType?: EmployeeTransferType;
   sourceTenantId?: string;
   targetTenantId?: string;
 }

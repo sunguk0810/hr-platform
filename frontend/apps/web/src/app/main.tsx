@@ -4,7 +4,8 @@ import { App } from './App';
 import '@/styles/globals.css';
 
 async function enableMocking() {
-  if (import.meta.env.DEV) {
+  // Only enable mocking if VITE_ENABLE_MOCK is explicitly set to 'true'
+  if (import.meta.env.VITE_ENABLE_MOCK === 'true') {
     try {
       const { worker } = await import('@/mocks/browser');
 
@@ -20,6 +21,8 @@ async function enableMocking() {
     } catch (error) {
       console.error('[MSW] Failed to enable mocking:', error);
     }
+  } else {
+    console.log('[API] Using real backend APIs at', import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api');
   }
 }
 

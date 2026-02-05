@@ -18,6 +18,9 @@ import { headcountHandlers } from './headcountHandlers';
 import { condolenceHandlers } from './condolenceHandlers';
 import { committeeHandlers } from './committeeHandlers';
 import { employeeCardHandlers } from './employeeCardHandlers';
+import { menuHandlers } from './menuHandlers';
+import { profileHandlers } from './profileHandlers';
+import { helpHandlers } from './helpHandlers';
 
 export const handlers = [
   ...authHandlers,
@@ -40,4 +43,7 @@ export const handlers = [
   ...condolenceHandlers,
   ...committeeHandlers,
   ...employeeCardHandlers,
+  ...menuHandlers,
+  ...profileHandlers,
+  ...helpHandlers,
 ];

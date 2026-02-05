@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
@@ -21,7 +21,7 @@ import {
   useAnnouncementSearchParams,
 } from '../hooks/useAnnouncements';
 import { InfiniteList } from '@/components/ui/InfiniteList';
-import type { AnnouncementListItem } from '@hr-platform/shared-types';
+import type { AnnouncementListItem } from '../services/announcementService';
 
 const ADMIN_ROLES = ['SUPER_ADMIN', 'GROUP_ADMIN', 'TENANT_ADMIN', 'HR_MANAGER'];
 

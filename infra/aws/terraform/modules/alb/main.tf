@@ -134,3 +134,50 @@ resource "aws_lb_listener_rule" "services_http" {
     }
   }
 }
+
+# Keycloak Target Group (optional)
+resource "aws_lb_target_group" "keycloak" {
+  count = var.enable_keycloak ? 1 : 0
+
+  name        = "${var.project}-${var.environment}-keycloak"
+  port        = 8080
+  protocol    = "HTTP"
+  vpc_id      = var.vpc_id
+  target_type = "ip"
+
+  health_check {
+    enabled             = true
+    healthy_threshold   = 2
+    interval            = 30
+    matcher             = "200"
+    path                = "/health/ready"
+    port                = "traffic-port"
+    protocol            = "HTTP"
+    timeout             = 10
+    unhealthy_threshold = 3
+  }
+
+  tags = merge(var.tags, {
+    Name    = "${var.project}-${var.environment}-keycloak-tg"
+    Service = "keycloak"
+  })
+}
+
+# Keycloak Listener Rule (Host-based routing)
+resource "aws_lb_listener_rule" "keycloak_https" {
+  count = var.enable_keycloak && var.certificate_arn != "" ? 1 : 0
+
+  listener_arn = aws_lb_listener.https[0].arn
+  priority     = 100  # Higher priority for host-based rule
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.keycloak[0].arn
+  }
+
+  condition {
+    host_header {
+      values = [var.keycloak_hostname]
+    }
+  }
+}

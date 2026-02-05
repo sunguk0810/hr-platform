@@ -3,15 +3,19 @@ package com.hrsaas.auth.service.impl;
 import com.hrsaas.auth.domain.dto.request.LoginRequest;
 import com.hrsaas.auth.domain.dto.request.RefreshTokenRequest;
 import com.hrsaas.auth.domain.dto.response.TokenResponse;
+import com.hrsaas.auth.domain.dto.response.UserResponse;
 import com.hrsaas.auth.infrastructure.keycloak.KeycloakClient;
 import com.hrsaas.auth.service.AuthService;
 import com.hrsaas.common.core.exception.BusinessException;
+import com.hrsaas.common.security.SecurityContextHolder;
+import com.hrsaas.common.security.UserContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -76,5 +80,29 @@ public class AuthServiceImpl implements AuthService {
         } catch (Exception e) {
             log.warn("Logout from Keycloak failed: {}", e.getMessage());
         }
+    }
+
+    @Override
+    public UserResponse getCurrentUser() {
+        UserContext context = SecurityContextHolder.getCurrentUser();
+
+        if (context == null) {
+            throw new BusinessException("AUTH_003", "인증 정보를 찾을 수 없습니다.", HttpStatus.UNAUTHORIZED);
+        }
+
+        return UserResponse.builder()
+            .id(context.getUserId() != null ? context.getUserId().toString() : null)
+            .employeeId(context.getEmployeeId() != null ? context.getEmployeeId().toString() : null)
+            .employeeNumber(null) // Not available in JWT
+            .name(context.getUsername())
+            .email(context.getEmail())
+            .departmentId(context.getDepartmentId() != null ? context.getDepartmentId().toString() : null)
+            .departmentName(null) // Not available in JWT, can be fetched from employee-service
+            .positionName(null) // Not available in JWT
+            .gradeName(null) // Not available in JWT
+            .profileImageUrl(null) // Not available in JWT
+            .roles(context.getRoles() != null ? new ArrayList<>(context.getRoles()) : new ArrayList<>())
+            .permissions(context.getPermissions() != null ? new ArrayList<>(context.getPermissions()) : new ArrayList<>())
+            .build();
     }
 }

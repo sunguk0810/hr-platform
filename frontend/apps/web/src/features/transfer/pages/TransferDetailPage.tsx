@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { PageHeader } from '@/components/common/PageHeader';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
+import { PullToRefreshContainer } from '@/components/mobile';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,18 +22,20 @@ import {
 import {
   ArrowLeftRight,
   ArrowRight,
-  ArrowLeft,
+  ArrowLeft as ArrowLeftIcon,
   RefreshCw,
   Check,
   X,
   Loader2,
   Building2,
   User,
-  Calendar,
   FileText,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import {
   useTransfer,
   useApproveSource,
@@ -58,7 +62,7 @@ const STATUS_COLORS: Record<TransferStatus, string> = {
 
 const TYPE_ICONS: Record<TransferType, React.ReactNode> = {
   TRANSFER_OUT: <ArrowRight className="h-5 w-5" aria-hidden="true" />,
-  TRANSFER_IN: <ArrowLeft className="h-5 w-5" aria-hidden="true" />,
+  TRANSFER_IN: <ArrowLeftIcon className="h-5 w-5" aria-hidden="true" />,
   SECONDMENT: <RefreshCw className="h-5 w-5" aria-hidden="true" />,
 };
 
@@ -66,11 +70,14 @@ export default function TransferDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
 
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [rejectComment, setRejectComment] = useState('');
   const [cancelReason, setCancelReason] = useState('');
+  const [expandedSection, setExpandedSection] = useState<string | null>('info');
 
   const { data: transferData, isLoading } = useTransfer(id || '');
   const { data: handoverData } = useHandoverItems(id || '');
@@ -222,6 +229,305 @@ export default function TransferDetailPage() {
     completeMutation.isPending ||
     cancelMutation.isPending;
 
+  const handleRefresh = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['transfer', id] });
+    await queryClient.invalidateQueries({ queryKey: ['handover-items', id] });
+  };
+
+  // Shared Dialogs
+  const renderDialogs = () => (
+    <>
+      {/* Reject Dialog */}
+      <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>인사이동 거부</DialogTitle>
+            <DialogDescription>거부 사유를 입력해주세요.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <Textarea
+              value={rejectComment}
+              onChange={(e) => setRejectComment(e.target.value)}
+              placeholder="거부 사유를 입력하세요"
+              rows={4}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>
+              취소
+            </Button>
+            <Button variant="destructive" onClick={handleReject} disabled={rejectMutation.isPending}>
+              {rejectMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
+              거부
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cancel Dialog */}
+      <ConfirmDialog
+        open={isCancelDialogOpen}
+        onOpenChange={setIsCancelDialogOpen}
+        title="인사이동 취소"
+        description="정말로 이 인사이동 요청을 취소하시겠습니까?"
+        confirmLabel="취소하기"
+        variant="destructive"
+        isLoading={cancelMutation.isPending}
+        onConfirm={handleCancel}
+      />
+    </>
+  );
+
+  const MobileSection = ({
+    id: sectionId,
+    title,
+    icon: Icon,
+    children
+  }: {
+    id: string;
+    title: string;
+    icon: React.ElementType;
+    children: React.ReactNode
+  }) => {
+    const isExpanded = expandedSection === sectionId;
+    return (
+      <div className="bg-card rounded-xl border overflow-hidden">
+        <button
+          onClick={() => setExpandedSection(isExpanded ? null : sectionId)}
+          className="w-full flex items-center justify-between p-4"
+        >
+          <div className="flex items-center gap-2">
+            <Icon className="h-4 w-4" />
+            <span className="font-medium text-sm">{title}</span>
+          </div>
+          {isExpanded ? (
+            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+          ) : (
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          )}
+        </button>
+        {isExpanded && <div className="px-4 pb-4 space-y-3">{children}</div>}
+      </div>
+    );
+  };
+
+  // Mobile Layout
+  if (isMobile) {
+    return (
+      <PullToRefreshContainer onRefresh={handleRefresh}>
+        <div className="space-y-4 pb-24">
+          {/* Mobile Header */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate('/transfer')}
+              className="p-2 -ml-2 rounded-full hover:bg-muted"
+            >
+              <ArrowLeftIcon className="h-5 w-5" />
+            </button>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-lg font-bold truncate">{transfer.requestNumber}</h1>
+              <p className="text-sm text-muted-foreground">인사이동 상세</p>
+            </div>
+            <Badge className={cn(STATUS_COLORS[transfer.status])}>
+              {TRANSFER_STATUS_LABELS[transfer.status]}
+            </Badge>
+          </div>
+
+          {/* Transfer Flow Visual */}
+          <div className="bg-card rounded-xl border p-4">
+            <div className="flex items-center justify-center gap-2">
+              <div className="text-center">
+                <p className="text-xs text-muted-foreground">전출</p>
+                <p className="font-medium text-sm">{transfer.sourceTenantName}</p>
+              </div>
+              <ArrowRight className="h-5 w-5 text-primary flex-shrink-0" />
+              <div className="text-center">
+                <p className="text-xs text-muted-foreground">전입</p>
+                <p className="font-medium text-sm">{transfer.targetTenantName}</p>
+              </div>
+            </div>
+            <div className="flex justify-center mt-3">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                {TYPE_ICONS[transfer.type]}
+                <span>{TRANSFER_TYPE_LABELS[transfer.type]}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Collapsible Sections */}
+          <div className="space-y-3">
+            <MobileSection id="info" title="요청 정보" icon={ArrowLeftRight}>
+              <InfoRow label="요청번호" value={transfer.requestNumber} mono />
+              <InfoRow label="요청일" value={format(new Date(transfer.requestedDate), 'yyyy-MM-dd', { locale: ko })} />
+              <InfoRow label="발령 예정일" value={format(new Date(transfer.effectiveDate), 'yyyy-MM-dd', { locale: ko })} highlight />
+              {transfer.returnDate && (
+                <InfoRow label="복귀 예정일" value={format(new Date(transfer.returnDate), 'yyyy-MM-dd', { locale: ko })} />
+              )}
+            </MobileSection>
+
+            <MobileSection id="employee" title="대상 직원" icon={User}>
+              <InfoRow label="이름" value={transfer.employeeName} highlight />
+              <InfoRow label="사번" value={transfer.employeeNumber} mono />
+              <InfoRow label="현재 부서" value={transfer.currentDepartment} />
+              <InfoRow label="현재 직책" value={transfer.currentPosition} />
+              <InfoRow label="현재 직급" value={transfer.currentGrade} />
+            </MobileSection>
+
+            <MobileSection id="source" title="전출 테넌트" icon={Building2}>
+              <InfoRow label="테넌트" value={transfer.sourceTenantName} highlight />
+              {transfer.sourceDepartmentName && (
+                <InfoRow label="부서" value={transfer.sourceDepartmentName} />
+              )}
+              {transfer.sourceApprovedAt && (
+                <div className="mt-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                  <p className="text-xs font-medium text-green-600">전출 승인됨</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {transfer.sourceApproverName} · {format(new Date(transfer.sourceApprovedAt), 'M/d HH:mm', { locale: ko })}
+                  </p>
+                </div>
+              )}
+            </MobileSection>
+
+            <MobileSection id="target" title="전입 테넌트" icon={Building2}>
+              <InfoRow label="테넌트" value={transfer.targetTenantName} highlight />
+              {transfer.targetDepartmentName && (
+                <InfoRow label="부서" value={transfer.targetDepartmentName} />
+              )}
+              {transfer.targetPositionName && (
+                <InfoRow label="직책" value={transfer.targetPositionName} />
+              )}
+              {transfer.targetGradeName && (
+                <InfoRow label="직급" value={transfer.targetGradeName} />
+              )}
+              {transfer.targetApprovedAt && (
+                <div className="mt-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                  <p className="text-xs font-medium text-green-600">전입 승인됨</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {transfer.targetApproverName} · {format(new Date(transfer.targetApprovedAt), 'M/d HH:mm', { locale: ko })}
+                  </p>
+                </div>
+              )}
+            </MobileSection>
+
+            <MobileSection id="reason" title="이동 사유" icon={FileText}>
+              <p className="text-sm whitespace-pre-wrap">{transfer.reason}</p>
+              {transfer.handoverItems && (
+                <div className="mt-3 pt-3 border-t">
+                  <p className="text-xs text-muted-foreground mb-1">인수인계 항목</p>
+                  <p className="text-sm whitespace-pre-wrap">{transfer.handoverItems}</p>
+                </div>
+              )}
+              {transfer.remarks && (
+                <div className="mt-3 pt-3 border-t">
+                  <p className="text-xs text-muted-foreground mb-1">비고</p>
+                  <p className="text-sm whitespace-pre-wrap">{transfer.remarks}</p>
+                </div>
+              )}
+            </MobileSection>
+
+            {handoverItems.length > 0 && (
+              <MobileSection id="handover" title={`인수인계 (${handoverItems.filter(i => i.isCompleted).length}/${handoverItems.length})`} icon={CheckCircle2}>
+                <div className="space-y-2">
+                  {handoverItems.map((item) => (
+                    <div key={item.id} className="flex items-start gap-3 p-2 border rounded-lg">
+                      <input
+                        type="checkbox"
+                        checked={item.isCompleted}
+                        onChange={() => !item.isCompleted && handleCompleteHandoverItem(item.id)}
+                        disabled={item.isCompleted || completeHandoverMutation.isPending}
+                        className="h-4 w-4 mt-0.5"
+                      />
+                      <div className="flex-1">
+                        <p className={cn('text-sm', item.isCompleted && 'line-through text-muted-foreground')}>
+                          {item.title}
+                        </p>
+                        {item.description && (
+                          <p className="text-xs text-muted-foreground">{item.description}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </MobileSection>
+            )}
+          </div>
+
+          {/* Fixed Bottom Actions */}
+          {(canApproveSource || canApproveTarget || canComplete || canCancel) && (
+            <div className="fixed bottom-0 left-0 right-0 bg-background border-t p-4 pb-safe z-50">
+              <div className="flex gap-2">
+                {canCancel && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsCancelDialogOpen(true)}
+                    disabled={isPending}
+                    className="flex-1"
+                  >
+                    취소
+                  </Button>
+                )}
+                {(canApproveSource || canApproveTarget) && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsRejectDialogOpen(true)}
+                    disabled={isPending}
+                    className="flex-1"
+                  >
+                    <X className="mr-1 h-4 w-4" />
+                    거부
+                  </Button>
+                )}
+                {canApproveSource && (
+                  <Button onClick={handleApproveSource} disabled={isPending} className="flex-1">
+                    {approveSourceMutation.isPending ? (
+                      <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Check className="mr-1 h-4 w-4" />
+                    )}
+                    전출 승인
+                  </Button>
+                )}
+                {canApproveTarget && (
+                  <Button onClick={handleApproveTarget} disabled={isPending} className="flex-1">
+                    {approveTargetMutation.isPending ? (
+                      <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Check className="mr-1 h-4 w-4" />
+                    )}
+                    전입 승인
+                  </Button>
+                )}
+                {canComplete && (
+                  <Button onClick={handleComplete} disabled={isPending} className="flex-1">
+                    {completeMutation.isPending ? (
+                      <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                    ) : (
+                      <CheckCircle2 className="mr-1 h-4 w-4" />
+                    )}
+                    완료 처리
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {renderDialogs()}
+        </div>
+      </PullToRefreshContainer>
+    );
+  }
+
+  // Helper component for mobile info rows
+  function InfoRow({ label, value, mono, highlight }: { label: string; value: string; mono?: boolean; highlight?: boolean }) {
+    return (
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-muted-foreground">{label}</span>
+        <span className={cn('text-sm', mono && 'font-mono', highlight && 'font-medium')}>{value}</span>
+      </div>
+    );
+  }
+
+  // Desktop Layout
   return (
     <>
       <PageHeader
@@ -518,44 +824,7 @@ export default function TransferDetailPage() {
         )}
       </div>
 
-      {/* Reject Dialog */}
-      <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>인사이동 거부</DialogTitle>
-            <DialogDescription>거부 사유를 입력해주세요.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <Textarea
-              value={rejectComment}
-              onChange={(e) => setRejectComment(e.target.value)}
-              placeholder="거부 사유를 입력하세요"
-              rows={4}
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>
-              취소
-            </Button>
-            <Button variant="destructive" onClick={handleReject} disabled={rejectMutation.isPending}>
-              {rejectMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
-              거부
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Cancel Dialog */}
-      <ConfirmDialog
-        open={isCancelDialogOpen}
-        onOpenChange={setIsCancelDialogOpen}
-        title="인사이동 취소"
-        description="정말로 이 인사이동 요청을 취소하시겠습니까?"
-        confirmLabel="취소하기"
-        variant="destructive"
-        isLoading={cancelMutation.isPending}
-        onConfirm={handleCancel}
-      />
+      {renderDialogs()}
     </>
   );
 }

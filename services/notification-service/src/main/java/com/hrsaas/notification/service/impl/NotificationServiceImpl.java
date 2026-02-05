@@ -1,7 +1,9 @@
 package com.hrsaas.notification.service.impl;
 
 import com.hrsaas.notification.domain.dto.request.SendNotificationRequest;
+import com.hrsaas.notification.domain.dto.request.UpdateNotificationSettingsRequest;
 import com.hrsaas.notification.domain.dto.response.NotificationResponse;
+import com.hrsaas.notification.domain.dto.response.NotificationSettingsResponse;
 import com.hrsaas.notification.domain.entity.Notification;
 import com.hrsaas.notification.domain.entity.NotificationChannel;
 import com.hrsaas.notification.repository.NotificationRepository;
@@ -115,5 +117,91 @@ public class NotificationServiceImpl implements NotificationService {
         UUID tenantId = TenantContext.getCurrentTenant();
         int updated = notificationRepository.markAllAsRead(tenantId, recipientId);
         log.info("All notifications marked as read: recipientId={}, count={}", recipientId, updated);
+    }
+
+    @Override
+    public NotificationResponse getById(UUID notificationId, UUID recipientId) {
+        Notification notification = notificationRepository.findById(notificationId)
+            .orElseThrow(() -> new NotFoundException("NTF_001", "알림을 찾을 수 없습니다: " + notificationId));
+
+        if (!notification.getRecipientId().equals(recipientId)) {
+            throw new ForbiddenException("NTF_002", "본인의 알림만 조회할 수 있습니다");
+        }
+
+        return NotificationResponse.from(notification);
+    }
+
+    @Override
+    @Transactional
+    public void delete(UUID notificationId, UUID recipientId) {
+        Notification notification = notificationRepository.findById(notificationId)
+            .orElseThrow(() -> new NotFoundException("NTF_001", "알림을 찾을 수 없습니다: " + notificationId));
+
+        if (!notification.getRecipientId().equals(recipientId)) {
+            throw new ForbiddenException("NTF_002", "본인의 알림만 삭제할 수 있습니다");
+        }
+
+        notificationRepository.delete(notification);
+        log.info("Notification deleted: id={}", notificationId);
+    }
+
+    @Override
+    @Transactional
+    public int bulkDelete(List<UUID> notificationIds, UUID recipientId) {
+        int deleted = 0;
+        for (UUID id : notificationIds) {
+            try {
+                Notification notification = notificationRepository.findById(id).orElse(null);
+                if (notification != null && notification.getRecipientId().equals(recipientId)) {
+                    notificationRepository.delete(notification);
+                    deleted++;
+                }
+            } catch (Exception e) {
+                log.warn("Failed to delete notification: id={}", id);
+            }
+        }
+        log.info("Bulk delete completed: requested={}, deleted={}", notificationIds.size(), deleted);
+        return deleted;
+    }
+
+    @Override
+    public NotificationSettingsResponse getSettings(UUID userId) {
+        // TODO: Implement settings retrieval from database
+        // For now, return default settings
+        return NotificationSettingsResponse.builder()
+            .emailEnabled(true)
+            .pushEnabled(true)
+            .browserEnabled(true)
+            .smsEnabled(false)
+            .approvalNotifications(true)
+            .leaveNotifications(true)
+            .announcementNotifications(true)
+            .reminderNotifications(true)
+            .systemNotifications(true)
+            .digestEnabled(false)
+            .quietHoursEnabled(false)
+            .build();
+    }
+
+    @Override
+    @Transactional
+    public NotificationSettingsResponse updateSettings(UUID userId, UpdateNotificationSettingsRequest request) {
+        // TODO: Implement settings persistence to database
+        // For now, return the updated settings
+        log.info("Notification settings updated: userId={}", userId);
+
+        return NotificationSettingsResponse.builder()
+            .emailEnabled(request.getEmailEnabled() != null ? request.getEmailEnabled() : true)
+            .pushEnabled(request.getPushEnabled() != null ? request.getPushEnabled() : true)
+            .browserEnabled(request.getBrowserEnabled() != null ? request.getBrowserEnabled() : true)
+            .smsEnabled(request.getSmsEnabled() != null ? request.getSmsEnabled() : false)
+            .approvalNotifications(request.getApprovalNotifications() != null ? request.getApprovalNotifications() : true)
+            .leaveNotifications(request.getLeaveNotifications() != null ? request.getLeaveNotifications() : true)
+            .announcementNotifications(request.getAnnouncementNotifications() != null ? request.getAnnouncementNotifications() : true)
+            .reminderNotifications(request.getReminderNotifications() != null ? request.getReminderNotifications() : true)
+            .systemNotifications(request.getSystemNotifications() != null ? request.getSystemNotifications() : true)
+            .digestEnabled(request.getDigestEnabled() != null ? request.getDigestEnabled() : false)
+            .quietHoursEnabled(request.getQuietHoursEnabled() != null ? request.getQuietHoursEnabled() : false)
+            .build();
     }
 }

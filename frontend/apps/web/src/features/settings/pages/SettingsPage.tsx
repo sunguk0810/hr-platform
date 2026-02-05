@@ -11,6 +11,7 @@ import { useUIStore } from '@/stores/uiStore';
 import { useAuthStore } from '@/stores/authStore';
 import { authService, type Session } from '@/features/auth/services/authService';
 import { useToast } from '@/hooks/useToast';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import {
   Moon,
   Sun,
@@ -24,6 +25,7 @@ import {
   LogOut,
   Laptop,
   Globe,
+  ChevronRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -32,7 +34,9 @@ export default function SettingsPage() {
   const { theme, setTheme } = useUIStore();
   const { user } = useAuthStore();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState('profile');
+  const [mobileSection, setMobileSection] = useState<string | null>(null);
 
   // Password form state
   const [passwordForm, setPasswordForm] = useState({
@@ -167,6 +171,268 @@ export default function SettingsPage() {
     }
   };
 
+  const settingsSections = [
+    { id: 'profile', label: '프로필', description: '기본 프로필 정보 관리', icon: User },
+    { id: 'security', label: '보안', description: '비밀번호 및 세션 관리', icon: Shield },
+    { id: 'notifications', label: '알림', description: '알림 설정', icon: Bell },
+    { id: 'appearance', label: '외관', description: '테마 설정', icon: Sun },
+  ];
+
+  // Mobile Layout
+  if (isMobile) {
+    // Mobile section detail view
+    if (mobileSection) {
+      return (
+        <div className="space-y-4 pb-20">
+          <button
+            onClick={() => setMobileSection(null)}
+            className="flex items-center gap-2 text-sm text-muted-foreground"
+          >
+            <ChevronRight className="h-4 w-4 rotate-180" />
+            설정으로 돌아가기
+          </button>
+
+          {mobileSection === 'profile' && (
+            <div className="space-y-4">
+              <h1 className="text-xl font-bold">프로필</h1>
+              <div className="bg-card rounded-2xl border p-4">
+                <div className="flex items-center gap-4 mb-4">
+                  <Avatar className="h-16 w-16">
+                    <AvatarImage src={user?.profileImageUrl} />
+                    <AvatarFallback className="text-lg">{user?.name?.slice(0, 2) || 'U'}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <Button variant="outline" size="sm">
+                      <Upload className="h-4 w-4 mr-2" />
+                      사진 변경
+                    </Button>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">이름</Label>
+                    <p className="text-sm font-medium">{user?.name || '-'}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">이메일</Label>
+                    <p className="text-sm font-medium">{user?.email || '-'}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">부서</Label>
+                    <p className="text-sm font-medium">{user?.departmentName || '-'}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">직급</Label>
+                    <p className="text-sm font-medium">{user?.gradeName || '-'}</p>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-4">
+                  * 프로필 정보 변경은 인사팀에 문의해주세요.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {mobileSection === 'security' && (
+            <div className="space-y-4">
+              <h1 className="text-xl font-bold">보안</h1>
+              <div className="bg-card rounded-2xl border p-4 space-y-4">
+                <h3 className="font-medium text-sm">비밀번호 변경</h3>
+                <form onSubmit={handlePasswordChange} className="space-y-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="m-currentPassword" className="text-sm">현재 비밀번호</Label>
+                    <Input
+                      id="m-currentPassword"
+                      type="password"
+                      value={passwordForm.currentPassword}
+                      onChange={(e) => setPasswordForm((prev) => ({ ...prev, currentPassword: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="m-newPassword" className="text-sm">새 비밀번호</Label>
+                    <Input
+                      id="m-newPassword"
+                      type="password"
+                      value={passwordForm.newPassword}
+                      onChange={(e) => setPasswordForm((prev) => ({ ...prev, newPassword: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="m-confirmPassword" className="text-sm">새 비밀번호 확인</Label>
+                    <Input
+                      id="m-confirmPassword"
+                      type="password"
+                      value={passwordForm.confirmPassword}
+                      onChange={(e) => setPasswordForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isChangingPassword}>
+                    {isChangingPassword ? '변경 중...' : '비밀번호 변경'}
+                  </Button>
+                </form>
+              </div>
+
+              <div className="bg-card rounded-2xl border p-4 space-y-3">
+                <h3 className="font-medium text-sm">활성 세션</h3>
+                {isLoadingSessions ? (
+                  <div className="py-4 flex justify-center">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+                  </div>
+                ) : sessions.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">활성 세션이 없습니다</p>
+                ) : (
+                  <div className="space-y-2">
+                    {sessions.map((session) => (
+                      <div key={session.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-full bg-background flex items-center justify-center">
+                            {session.device.includes('iPhone') ? <Smartphone className="h-4 w-4" /> : <Laptop className="h-4 w-4" />}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">{session.device}</p>
+                            {session.current && <span className="text-xs text-green-600">현재 세션</span>}
+                          </div>
+                        </div>
+                        {!session.current && (
+                          <Button variant="ghost" size="sm" className="text-destructive h-8" onClick={() => handleLogoutSession(session.id)}>
+                            <LogOut className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {mobileSection === 'notifications' && (
+            <div className="space-y-4">
+              <h1 className="text-xl font-bold">알림</h1>
+              <div className="bg-card rounded-2xl border overflow-hidden">
+                <div className="p-4 border-b">
+                  <h3 className="font-medium text-sm">알림 채널</h3>
+                </div>
+                <div className="divide-y">
+                  <div className="flex items-center justify-between p-4">
+                    <div className="flex items-center gap-3">
+                      <Mail className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">이메일 알림</p>
+                        <p className="text-xs text-muted-foreground">중요 알림을 이메일로 받습니다</p>
+                      </div>
+                    </div>
+                    <Switch checked={notifications.email} onCheckedChange={(checked) => setNotifications((prev) => ({ ...prev, email: checked }))} />
+                  </div>
+                  <div className="flex items-center justify-between p-4">
+                    <div className="flex items-center gap-3">
+                      <Smartphone className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">푸시 알림</p>
+                        <p className="text-xs text-muted-foreground">브라우저 푸시 알림을 받습니다</p>
+                      </div>
+                    </div>
+                    <Switch checked={notifications.push} onCheckedChange={(checked) => setNotifications((prev) => ({ ...prev, push: checked }))} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-card rounded-2xl border overflow-hidden">
+                <div className="p-4 border-b">
+                  <h3 className="font-medium text-sm">알림 유형</h3>
+                </div>
+                <div className="divide-y">
+                  {[
+                    { key: 'approvalRequest', label: '결재 요청', desc: '결재 요청이 들어왔을 때' },
+                    { key: 'approvalComplete', label: '결재 완료', desc: '내 결재가 승인/반려되었을 때' },
+                    { key: 'leaveApproval', label: '휴가 승인', desc: '휴가가 승인/반려되었을 때' },
+                    { key: 'announcement', label: '공지사항', desc: '새 공지사항이 등록되었을 때' },
+                  ].map((item) => (
+                    <div key={item.key} className="flex items-center justify-between p-4">
+                      <div>
+                        <p className="text-sm font-medium">{item.label}</p>
+                        <p className="text-xs text-muted-foreground">{item.desc}</p>
+                      </div>
+                      <Switch
+                        checked={notifications[item.key as keyof typeof notifications]}
+                        onCheckedChange={(checked) => setNotifications((prev) => ({ ...prev, [item.key]: checked }))}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {mobileSection === 'appearance' && (
+            <div className="space-y-4">
+              <h1 className="text-xl font-bold">외관</h1>
+              <div className="bg-card rounded-2xl border p-4">
+                <h3 className="font-medium text-sm mb-3">테마</h3>
+                <div className="grid grid-cols-3 gap-2">
+                  {themeOptions.map((option) => {
+                    const Icon = option.icon;
+                    return (
+                      <button
+                        key={option.value}
+                        onClick={() => setTheme(option.value)}
+                        className={cn(
+                          'flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-colors',
+                          theme === option.value ? 'border-primary bg-primary/5' : 'border-transparent bg-muted/50'
+                        )}
+                      >
+                        <Icon className="h-6 w-6" />
+                        <span className="text-sm font-medium">{option.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Mobile main settings list
+    return (
+      <div className="space-y-4 pb-20">
+        <div>
+          <h1 className="text-xl font-bold">설정</h1>
+          <p className="text-sm text-muted-foreground">앱 설정을 관리합니다</p>
+        </div>
+
+        <div className="bg-card rounded-2xl border overflow-hidden">
+          {settingsSections.map((section, index) => {
+            const Icon = section.icon;
+            return (
+              <button
+                key={section.id}
+                onClick={() => setMobileSection(section.id)}
+                className={cn(
+                  'w-full flex items-center justify-between p-4 text-left transition-colors active:bg-muted',
+                  index < settingsSections.length - 1 && 'border-b'
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+                    <Icon className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">{section.label}</p>
+                    <p className="text-xs text-muted-foreground">{section.description}</p>
+                  </div>
+                </div>
+                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop Layout
   return (
     <>
       <PageHeader title="설정" description="앱 설정을 관리합니다." />

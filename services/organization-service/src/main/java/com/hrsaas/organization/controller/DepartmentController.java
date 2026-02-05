@@ -3,9 +3,13 @@ package com.hrsaas.organization.controller;
 import com.hrsaas.common.response.ApiResponse;
 import com.hrsaas.organization.domain.dto.request.CreateDepartmentRequest;
 import com.hrsaas.organization.domain.dto.request.UpdateDepartmentRequest;
+import com.hrsaas.organization.domain.dto.response.DepartmentHistoryResponse;
 import com.hrsaas.organization.domain.dto.response.DepartmentResponse;
 import com.hrsaas.organization.domain.dto.response.DepartmentTreeResponse;
 import com.hrsaas.organization.service.DepartmentService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -76,5 +80,23 @@ public class DepartmentController {
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable UUID id) {
         departmentService.delete(id);
         return ResponseEntity.ok(ApiResponse.success(null, "부서가 삭제되었습니다."));
+    }
+
+    @GetMapping("/history")
+    @Operation(summary = "조직 변경 이력 조회")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<Page<DepartmentHistoryResponse>>> getOrganizationHistory(
+            @PageableDefault(size = 20) Pageable pageable) {
+        Page<DepartmentHistoryResponse> response = departmentService.getOrganizationHistory(pageable);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @GetMapping("/{id}/history")
+    @Operation(summary = "부서 변경 이력 조회")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<List<DepartmentHistoryResponse>>> getDepartmentHistory(
+            @PathVariable UUID id) {
+        List<DepartmentHistoryResponse> response = departmentService.getDepartmentHistory(id);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

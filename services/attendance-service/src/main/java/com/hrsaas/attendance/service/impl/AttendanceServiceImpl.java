@@ -4,9 +4,13 @@ import com.hrsaas.attendance.domain.dto.request.CheckInRequest;
 import com.hrsaas.attendance.domain.dto.request.CheckOutRequest;
 import com.hrsaas.attendance.domain.dto.response.AttendanceRecordResponse;
 import com.hrsaas.attendance.domain.dto.response.AttendanceSummaryResponse;
+import com.hrsaas.attendance.domain.dto.response.WorkHoursStatisticsResponse;
 import com.hrsaas.attendance.domain.entity.AttendanceRecord;
 import com.hrsaas.attendance.domain.entity.AttendanceStatus;
+import com.hrsaas.attendance.domain.entity.OvertimeRequest;
+import com.hrsaas.attendance.domain.entity.OvertimeStatus;
 import com.hrsaas.attendance.repository.AttendanceRecordRepository;
+import com.hrsaas.attendance.repository.OvertimeRequestRepository;
 import com.hrsaas.attendance.service.AttendanceService;
 import com.hrsaas.common.core.exception.BusinessException;
 import com.hrsaas.common.core.exception.NotFoundException;
@@ -17,10 +21,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.YearMonth;
+import java.time.temporal.WeekFields;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -30,6 +39,7 @@ import java.util.UUID;
 public class AttendanceServiceImpl implements AttendanceService {
 
     private final AttendanceRecordRepository attendanceRecordRepository;
+    private final OvertimeRequestRepository overtimeRequestRepository;
 
     @Override
     @Transactional
@@ -195,5 +205,175 @@ public class AttendanceServiceImpl implements AttendanceService {
         }
 
         return workDays;
+    }
+
+    @Override
+    public WorkHoursStatisticsResponse getWorkHoursStatistics(String weekPeriod, UUID departmentId, String status) {
+        UUID tenantId = TenantContext.getCurrentTenant();
+
+        // Parse ISO week period or use current week
+        LocalDate weekStart;
+        LocalDate weekEnd;
+        String period;
+
+        if (weekPeriod != null && weekPeriod.matches("\\d{4}-W\\d{2}")) {
+            String[] parts = weekPeriod.split("-W");
+            int year = Integer.parseInt(parts[0]);
+            int week = Integer.parseInt(parts[1]);
+
+            WeekFields weekFields = WeekFields.ISO;
+            LocalDate jan4 = LocalDate.of(year, 1, 4);
+            int dayOfWeek = jan4.getDayOfWeek().getValue();
+            weekStart = jan4.minusDays(dayOfWeek - 1).plusWeeks(week - 1);
+            weekEnd = weekStart.plusDays(6);
+            period = weekPeriod;
+        } else {
+            LocalDate now = LocalDate.now();
+            WeekFields weekFields = WeekFields.ISO;
+            weekStart = now.with(weekFields.dayOfWeek(), 1); // Monday
+            weekEnd = weekStart.plusDays(6); // Sunday
+            period = String.format("%d-W%02d", now.get(weekFields.weekBasedYear()), now.get(weekFields.weekOfWeekBasedYear()));
+        }
+
+        log.debug("Fetching work hours statistics for tenant: {}, period: {}, weekStart: {}, weekEnd: {}",
+            tenantId, period, weekStart, weekEnd);
+
+        // Query real data from database
+        List<WorkHoursStatisticsResponse.EmployeeWorkHoursResponse> employees =
+            queryWorkHoursFromDatabase(tenantId, weekStart, weekEnd, departmentId);
+
+        // Apply status filter if provided
+        List<WorkHoursStatisticsResponse.EmployeeWorkHoursResponse> filteredEmployees = employees;
+        if (status != null && !status.isBlank()) {
+            filteredEmployees = employees.stream()
+                .filter(e -> e.getStatus().equalsIgnoreCase(status))
+                .toList();
+        }
+
+        // Calculate summary
+        int normalCount = (int) filteredEmployees.stream()
+            .filter(e -> "NORMAL".equals(e.getStatus()))
+            .count();
+        int warningCount = (int) filteredEmployees.stream()
+            .filter(e -> "WARNING".equals(e.getStatus()))
+            .count();
+        int exceededCount = (int) filteredEmployees.stream()
+            .filter(e -> "EXCEEDED".equals(e.getStatus()))
+            .count();
+
+        WorkHoursStatisticsResponse.WorkHoursSummaryResponse summary =
+            WorkHoursStatisticsResponse.WorkHoursSummaryResponse.builder()
+                .totalEmployees(filteredEmployees.size())
+                .normalCount(normalCount)
+                .warningCount(warningCount)
+                .exceededCount(exceededCount)
+                .build();
+
+        log.info("Work hours statistics: period={}, total={}, normal={}, warning={}, exceeded={}",
+            period, filteredEmployees.size(), normalCount, warningCount, exceededCount);
+
+        return WorkHoursStatisticsResponse.builder()
+            .period(period)
+            .weekStartDate(weekStart)
+            .weekEndDate(weekEnd)
+            .employees(filteredEmployees)
+            .summary(summary)
+            .build();
+    }
+
+    /**
+     * Query work hours data from database
+     * Aggregates attendance records and approved overtime requests
+     */
+    private List<WorkHoursStatisticsResponse.EmployeeWorkHoursResponse> queryWorkHoursFromDatabase(
+            UUID tenantId, LocalDate weekStart, LocalDate weekEnd, UUID departmentIdFilter) {
+
+        // 1. Get all attendance records for the week
+        List<AttendanceRecord> attendanceRecords =
+            attendanceRecordRepository.findByTenantIdAndDateRange(tenantId, weekStart, weekEnd);
+
+        // 2. Get all approved/completed overtime requests for the week
+        List<OvertimeRequest> overtimeRequests =
+            overtimeRequestRepository.findByDateRange(tenantId, weekStart, weekEnd).stream()
+                .filter(o -> o.getStatus() == OvertimeStatus.APPROVED || o.getStatus() == OvertimeStatus.COMPLETED)
+                .toList();
+
+        // 3. Build a map of overtime info by employee (for employee name and department)
+        Map<UUID, OvertimeRequest> employeeOvertimeInfo = new HashMap<>();
+        Map<UUID, Double> employeeOvertimeHours = new HashMap<>();
+
+        for (OvertimeRequest ot : overtimeRequests) {
+            employeeOvertimeInfo.putIfAbsent(ot.getEmployeeId(), ot);
+            double hours = ot.getActualHours() != null
+                ? ot.getActualHours().doubleValue()
+                : ot.getPlannedHours().doubleValue();
+            employeeOvertimeHours.merge(ot.getEmployeeId(), hours, Double::sum);
+        }
+
+        // 4. Aggregate attendance by employee
+        Map<UUID, Double> employeeRegularHours = new HashMap<>();
+        Map<UUID, Integer> employeeOvertimeMinutesFromAttendance = new HashMap<>();
+
+        for (AttendanceRecord record : attendanceRecords) {
+            UUID empId = record.getEmployeeId();
+            double workHours = record.getWorkHours() != null ? record.getWorkHours() : 0;
+            int overtimeMinutes = record.getOvertimeMinutes() != null ? record.getOvertimeMinutes() : 0;
+
+            // Regular hours are capped at 8 per day
+            double regularHours = Math.min(workHours, 8.0);
+            employeeRegularHours.merge(empId, regularHours, Double::sum);
+            employeeOvertimeMinutesFromAttendance.merge(empId, overtimeMinutes, Integer::sum);
+        }
+
+        // 5. Build the response list
+        List<WorkHoursStatisticsResponse.EmployeeWorkHoursResponse> result = new ArrayList<>();
+
+        // Combine all employee IDs
+        java.util.Set<UUID> allEmployeeIds = new java.util.HashSet<>();
+        allEmployeeIds.addAll(employeeRegularHours.keySet());
+        allEmployeeIds.addAll(employeeOvertimeHours.keySet());
+
+        for (UUID employeeId : allEmployeeIds) {
+            double regularHours = employeeRegularHours.getOrDefault(employeeId, 0.0);
+
+            // Overtime: use approved OT request hours, or attendance overtime minutes as fallback
+            double overtimeHours = employeeOvertimeHours.getOrDefault(employeeId, 0.0);
+            if (overtimeHours == 0 && employeeOvertimeMinutesFromAttendance.containsKey(employeeId)) {
+                overtimeHours = employeeOvertimeMinutesFromAttendance.get(employeeId) / 60.0;
+            }
+
+            double totalHours = regularHours + overtimeHours;
+            double exceededHours = Math.max(0, totalHours - 52);
+
+            // Get employee info from overtime request if available
+            OvertimeRequest otInfo = employeeOvertimeInfo.get(employeeId);
+            String employeeName = otInfo != null ? otInfo.getEmployeeName() : "직원-" + employeeId.toString().substring(0, 8);
+            String departmentName = otInfo != null ? otInfo.getDepartmentName() : "미지정";
+            String departmentIdStr = otInfo != null && otInfo.getDepartmentId() != null
+                ? otInfo.getDepartmentId().toString() : null;
+
+            // Apply department filter
+            if (departmentIdFilter != null && departmentIdStr != null
+                && !departmentIdStr.equals(departmentIdFilter.toString())) {
+                continue;
+            }
+
+            result.add(WorkHoursStatisticsResponse.EmployeeWorkHoursResponse.builder()
+                .employeeId(employeeId.toString())
+                .employeeName(employeeName)
+                .department(departmentName)
+                .departmentId(departmentIdStr)
+                .regularHours(Math.round(regularHours * 10) / 10.0)
+                .overtimeHours(Math.round(overtimeHours * 10) / 10.0)
+                .totalHours(Math.round(totalHours * 10) / 10.0)
+                .status(WorkHoursStatisticsResponse.determineStatus(totalHours))
+                .exceededHours(Math.round(exceededHours * 10) / 10.0)
+                .build());
+        }
+
+        // Sort by total hours descending (show exceeded first)
+        result.sort((a, b) -> Double.compare(b.getTotalHours(), a.getTotalHours()));
+
+        return result;
     }
 }

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -48,7 +47,6 @@ import { ProcessPaymentRequest } from '../services/condolenceService';
 import { CONDOLENCE_TYPE_LABELS } from '@hr-platform/shared-types';
 
 export default function CondolencePaymentPage() {
-  const queryClient = useQueryClient();
   const { toast } = useToast();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(0);

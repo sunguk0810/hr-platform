@@ -47,3 +47,16 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+# Keycloak Configuration
+variable "enable_keycloak" {
+  description = "Enable Keycloak target group and routing"
+  type        = bool
+  default     = false
+}
+
+variable "keycloak_hostname" {
+  description = "Hostname for Keycloak (e.g., auth.port-sw.com)"
+  type        = string
+  default     = ""
+}

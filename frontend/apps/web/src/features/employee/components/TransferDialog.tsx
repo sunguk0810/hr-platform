@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/select';
 import { useRequestTransfer } from '../hooks/useEmployees';
 import { useToast } from '@/hooks/useToast';
-import type { TransferType, TransferRequest, Employee } from '@hr-platform/shared-types';
+import type { EmployeeTransferType, EmployeeTransferRequest, Employee } from '@hr-platform/shared-types';
 
 interface TransferDialogProps {
   open: boolean;
@@ -35,7 +35,7 @@ interface FormData {
   targetTenantId: string;
   targetDepartmentId: string;
   effectiveDate: string;
-  transferType: TransferType;
+  transferType: EmployeeTransferType;
   reason: string;
 }
 
@@ -55,7 +55,7 @@ const mockDepartments = [
   { id: 'dept-004', name: '경영지원본부 > 재무팀' },
 ];
 
-const transferTypeOptions: { value: TransferType; label: string; description: string }[] = [
+const transferTypeOptions: { value: EmployeeTransferType; label: string; description: string }[] = [
   { value: 'PERMANENT', label: '영구 전출', description: '완전한 소속 변경' },
   { value: 'TEMPORARY', label: '임시 전출', description: '일정 기간 후 복귀 예정' },
   { value: 'DISPATCH', label: '파견', description: '소속은 유지하며 파견 근무' },
@@ -71,7 +71,7 @@ export function TransferDialog({
   const transferMutation = useRequestTransfer();
   const [selectedTenant, setSelectedTenant] = useState<string>('');
   const [selectedDepartment, setSelectedDepartment] = useState<string>('');
-  const [transferType, setTransferType] = useState<TransferType>('PERMANENT');
+  const [transferType, setTransferType] = useState<EmployeeTransferType>('PERMANENT');
 
   const {
     register,
@@ -95,7 +95,7 @@ export function TransferDialog({
       return;
     }
 
-    const request: TransferRequest = {
+    const request: EmployeeTransferRequest = {
       targetTenantId: selectedTenant,
       targetDepartmentId: selectedDepartment,
       effectiveDate: data.effectiveDate,
@@ -191,7 +191,7 @@ export function TransferDialog({
             <Label>전출 유형 *</Label>
             <RadioGroup
               value={transferType}
-              onValueChange={(value: string) => setTransferType(value as TransferType)}
+              onValueChange={(value: string) => setTransferType(value as EmployeeTransferType)}
               className="space-y-2"
             >
               {transferTypeOptions.map((option) => (

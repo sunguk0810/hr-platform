@@ -4,9 +4,12 @@ import com.hrsaas.common.response.PageResponse;
 import com.hrsaas.employee.domain.dto.request.CreateEmployeeRequest;
 import com.hrsaas.employee.domain.dto.request.EmployeeSearchCondition;
 import com.hrsaas.employee.domain.dto.request.UpdateEmployeeRequest;
+import com.hrsaas.employee.domain.dto.response.BulkImportResultResponse;
 import com.hrsaas.employee.domain.dto.response.EmployeeResponse;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface EmployeeService {
@@ -23,5 +26,17 @@ public interface EmployeeService {
 
     EmployeeResponse resign(UUID id, String resignDate);
 
+    EmployeeResponse cancelResign(UUID id, String reason);
+
     void delete(UUID id);
+
+    int bulkDelete(List<UUID> ids);
+
+    byte[] exportToExcel(EmployeeSearchCondition condition);
+
+    BulkImportResultResponse importFromExcel(MultipartFile file);
+
+    byte[] getImportTemplate();
+
+    String unmask(UUID id, String field, String reason);
 }

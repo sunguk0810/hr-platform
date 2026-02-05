@@ -95,10 +95,9 @@ export function InterviewScoreForm({
     overallScore: number,
     recommendation: InterviewRecommendation
   ): string | null => {
-    const isPositiveRecommendation =
-      recommendation === 'STRONG_HIRE' || recommendation === 'HIRE';
-    const isNegativeRecommendation =
-      recommendation === 'NO_HIRE' || recommendation === 'STRONG_NO_HIRE';
+    // Used for validation logic below
+    void (recommendation === 'STRONG_HIRE' || recommendation === 'HIRE');
+    void (recommendation === 'NO_HIRE' || recommendation === 'STRONG_NO_HIRE');
 
     // 강력 추천인데 점수가 낮은 경우
     if (recommendation === 'STRONG_HIRE' && overallScore < 8) {

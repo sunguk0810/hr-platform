@@ -44,3 +44,8 @@ output "http_listener_arn" {
   description = "HTTP listener ARN"
   value       = aws_lb_listener.http.arn
 }
+
+output "keycloak_target_group_arn" {
+  description = "Keycloak target group ARN"
+  value       = length(aws_lb_target_group.keycloak) > 0 ? aws_lb_target_group.keycloak[0].arn : ""
+}

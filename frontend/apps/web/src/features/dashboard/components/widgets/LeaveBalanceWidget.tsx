@@ -47,6 +47,7 @@ export function LeaveBalanceWidget() {
 
   return (
     <WidgetContainer
+      data-tour="leave-balance-widget"
       title="연차 현황"
       description="남은 휴가 일수"
       isLoading={isLoading}

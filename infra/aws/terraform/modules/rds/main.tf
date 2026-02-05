@@ -24,13 +24,14 @@ resource "aws_db_parameter_group" "main" {
   family = "postgres15"
   name   = "${var.project}-${var.environment}-pg15-params"
 
-  # Enable SSL
+  # Enable SSL (static parameter - requires reboot)
   parameter {
-    name  = "rds.force_ssl"
-    value = "1"
+    name         = "rds.force_ssl"
+    value        = "1"
+    apply_method = "pending-reboot"
   }
 
-  # Logging configuration
+  # Logging configuration (dynamic parameters)
   parameter {
     name  = "log_statement"
     value = "ddl"
@@ -41,15 +42,20 @@ resource "aws_db_parameter_group" "main" {
     value = "1000"  # Log queries > 1 second
   }
 
-  # Connection settings
+  # Connection settings (static parameter - requires reboot)
   parameter {
-    name  = "max_connections"
-    value = "100"
+    name         = "max_connections"
+    value        = "100"
+    apply_method = "pending-reboot"
   }
 
   tags = merge(var.tags, {
     Name = "${var.project}-${var.environment}-pg15-params"
   })
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # RDS Instance
@@ -58,7 +64,7 @@ resource "aws_db_instance" "main" {
 
   # Engine Configuration
   engine               = "postgres"
-  engine_version       = "15.4"
+  engine_version       = "15"  # Use latest PostgreSQL 15.x
   instance_class       = var.instance_class
 
   # Storage Configuration

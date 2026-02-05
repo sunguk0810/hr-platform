@@ -5,7 +5,7 @@ spring:
       on-profile: aws
 
   datasource:
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT:5432}/hr_saas?currentSchema=hr_auth
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT:5432}/hr_saas?currentSchema=hr_auth&sslmode=require
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
@@ -22,13 +22,23 @@ spring:
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD}
       ssl:
-        enabled: true
+        enabled: ${REDIS_SSL_ENABLED:false}
 
   security:
     oauth2:
       resourceserver:
         jwt:
           issuer-uri: ${KEYCLOAK_ISSUER_URI:}
+
+# Keycloak Configuration
+keycloak:
+  server-url: ${KEYCLOAK_SERVER_URL:}
+  realm: ${KEYCLOAK_REALM:hr-saas}
+  client-id: ${KEYCLOAK_CLIENT_ID:hr-saas-api}
+  client-secret: ${KEYCLOAK_CLIENT_SECRET:}
+  admin:
+    username: ${KEYCLOAK_ADMIN_USERNAME:}
+    password: ${KEYCLOAK_ADMIN_PASSWORD:}
 
 management:
   endpoints:

@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PullToRefreshContainer } from '@/components/mobile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,7 +12,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, ChevronLeft, ChevronRight, Calendar, BarChart3 } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Calendar, BarChart3, Users } from 'lucide-react';
+import { useIsMobile } from '@/hooks/useMediaQuery';
+import { queryKeys } from '@/lib/queryClient';
 import {
   format,
   startOfMonth,
@@ -145,6 +149,8 @@ function GanttRow({ event, startDate, endDate }: GanttRowProps) {
 
 export default function LeaveCalendarPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('month');
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
@@ -189,6 +195,171 @@ export default function LeaveCalendarPage() {
     { id: 'dept-005', name: '인사팀' },
   ];
 
+  const handleRefresh = async () => {
+    await queryClient.invalidateQueries({ queryKey: queryKeys.leaves.all });
+  };
+
+  // Get today's leaves for mobile view
+  const todayEvents = events.filter((event) => {
+    const today = new Date();
+    const eventStart = new Date(event.startDate);
+    const eventEnd = new Date(event.endDate);
+    return today >= eventStart && today <= eventEnd;
+  });
+
+  // Mobile Layout
+  if (isMobile) {
+    return (
+      <PullToRefreshContainer onRefresh={handleRefresh}>
+        <div className="space-y-4 pb-20">
+          {/* Mobile Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl font-bold">휴가 캘린더</h1>
+              <p className="text-sm text-muted-foreground">팀 휴가 일정</p>
+            </div>
+          </div>
+
+          {/* Month Navigation */}
+          <div className="bg-card rounded-2xl border p-4">
+            <div className="flex items-center justify-between mb-4">
+              <Button variant="ghost" size="icon" onClick={handlePrevMonth}>
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+              <h2 className="text-lg font-semibold">
+                {format(currentDate, 'yyyy년 M월', { locale: ko })}
+              </h2>
+              <Button variant="ghost" size="icon" onClick={handleNextMonth}>
+                <ChevronRight className="h-5 w-5" />
+              </Button>
+            </div>
+            <Button variant="outline" size="sm" className="w-full" onClick={handleToday}>
+              오늘
+            </Button>
+          </div>
+
+          {/* Department Filter */}
+          <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="부서 선택" />
+            </SelectTrigger>
+            <SelectContent>
+              {departments.map((dept) => (
+                <SelectItem key={dept.id} value={dept.id}>
+                  {dept.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Today's Leave Summary */}
+          <div className="bg-card rounded-2xl border p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Users className="h-4 w-4 text-primary" />
+              <h3 className="font-semibold text-sm">오늘 휴가자</h3>
+              <span className="ml-auto text-lg font-bold text-primary">{todayEvents.length}명</span>
+            </div>
+            {todayEvents.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                오늘 휴가자가 없습니다
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {todayEvents.slice(0, 5).map((event) => (
+                  <div key={event.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+                    <div>
+                      <p className="text-sm font-medium">{event.employeeName}</p>
+                      <p className="text-xs text-muted-foreground">{event.departmentName}</p>
+                    </div>
+                    <span className={`text-xs px-2 py-1 rounded ${LEAVE_TYPE_COLORS[event.leaveType]}`}>
+                      {LEAVE_TYPE_LABELS[event.leaveType]}
+                    </span>
+                  </div>
+                ))}
+                {todayEvents.length > 5 && (
+                  <p className="text-xs text-muted-foreground text-center">
+                    +{todayEvents.length - 5}명 더
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Monthly Stats */}
+          <div className="bg-card rounded-2xl border p-4">
+            <h3 className="font-semibold text-sm mb-3">이번 달 현황</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="text-center p-3 bg-muted/50 rounded-xl">
+                <p className="text-2xl font-bold text-primary">{events.length}</p>
+                <p className="text-xs text-muted-foreground">총 휴가</p>
+              </div>
+              <div className="text-center p-3 bg-blue-50 dark:bg-blue-950 rounded-xl">
+                <p className="text-2xl font-bold text-blue-600">{events.filter((e) => e.leaveType === 'ANNUAL').length}</p>
+                <p className="text-xs text-muted-foreground">연차</p>
+              </div>
+              <div className="text-center p-3 bg-red-50 dark:bg-red-950 rounded-xl">
+                <p className="text-2xl font-bold text-red-600">{events.filter((e) => e.leaveType === 'SICK').length}</p>
+                <p className="text-xs text-muted-foreground">병가</p>
+              </div>
+              <div className="text-center p-3 bg-purple-50 dark:bg-purple-950 rounded-xl">
+                <p className="text-2xl font-bold text-purple-600">{events.filter((e) => e.leaveType === 'SPECIAL').length}</p>
+                <p className="text-xs text-muted-foreground">특별휴가</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile Calendar - Simplified List View */}
+          <div className="bg-card rounded-2xl border">
+            <div className="p-4 border-b">
+              <h3 className="font-semibold text-sm">휴가 일정</h3>
+            </div>
+            {isLoading ? (
+              <div className="p-8 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+              </div>
+            ) : events.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground text-sm">
+                이번 달 휴가 일정이 없습니다
+              </div>
+            ) : (
+              <div className="divide-y max-h-[400px] overflow-y-auto">
+                {events.map((event) => (
+                  <div key={event.id} className="p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium">
+                        {event.employeeName.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">{event.employeeName}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {format(new Date(event.startDate), 'M/d')} - {format(new Date(event.endDate), 'M/d')}
+                        </p>
+                      </div>
+                    </div>
+                    <span className={`text-xs px-2 py-1 rounded ${LEAVE_TYPE_COLORS[event.leaveType]}`}>
+                      {LEAVE_TYPE_LABELS[event.leaveType]}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Legend */}
+          <div className="flex flex-wrap gap-2 px-1">
+            {Object.entries(LEAVE_TYPE_LABELS).slice(0, 4).map(([type, label]) => (
+              <div key={type} className="flex items-center gap-1">
+                <div className={`w-2.5 h-2.5 rounded ${LEAVE_TYPE_COLORS[type as LeaveType]}`} />
+                <span className="text-xs text-muted-foreground">{label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </PullToRefreshContainer>
+    );
+  }
+
+  // Desktop Layout
   return (
     <>
       <PageHeader

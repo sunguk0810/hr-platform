@@ -14,7 +14,6 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
-import java.util.UUID;
 
 /**
  * Entity with audit fields (created/updated timestamps and actors).
@@ -36,10 +35,10 @@ public abstract class AuditableEntity extends BaseEntity {
     private Instant updatedAt;
 
     @CreatedBy
-    @Column(name = "created_by", updatable = false)
-    private UUID createdBy;
+    @Column(name = "created_by", length = 100, updatable = false)
+    private String createdBy;
 
     @LastModifiedBy
-    @Column(name = "updated_by")
-    private UUID updatedBy;
+    @Column(name = "updated_by", length = 100)
+    private String updatedBy;
 }

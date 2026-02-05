@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import { committeeService } from '../services/committeeService';
-import type { CommitteeSearchParams, CreateCommitteeRequest, AddCommitteeMemberRequest } from '@hr-platform/shared-types';
+import type { CommitteeSearchParams, CreateCommitteeRequest, AddCommitteeMemberRequest, CommitteeListItem } from '@hr-platform/shared-types';
 
 const committeeKeys = {
   all: ['committees'] as const,
@@ -11,11 +12,47 @@ const committeeKeys = {
   members: (id: string) => [...committeeKeys.all, id, 'members'] as const,
 };
 
+// Backend returns List, implement client-side pagination
 export function useCommittees(params?: CommitteeSearchParams) {
-  return useQuery({
+  const { page = 0, size = 10, status, ...otherParams } = params || {};
+
+  const query = useQuery({
     queryKey: committeeKeys.list(params),
-    queryFn: () => committeeService.getCommittees(params),
+    queryFn: () => committeeService.getCommittees({ status, ...otherParams }),
   });
+
+  // Transform to PageResponse-like structure for component compatibility
+  const paginatedData = useMemo(() => {
+    if (!query.data) return query.data;
+
+    const allItems = query.data.data ?? [];
+    const filteredItems = status
+      ? allItems.filter((item: CommitteeListItem) => item.status === status)
+      : allItems;
+    const totalElements = filteredItems.length;
+    const totalPages = Math.ceil(totalElements / size);
+    const start = page * size;
+    const end = start + size;
+    const content = filteredItems.slice(start, end);
+
+    return {
+      ...query.data,
+      data: {
+        content,
+        totalElements,
+        totalPages,
+        size,
+        number: page,
+        first: page === 0,
+        last: page >= totalPages - 1,
+      },
+    };
+  }, [query.data, page, size, status]);
+
+  return {
+    ...query,
+    data: paginatedData,
+  };
 }
 
 export function useCommittee(id: string) {

@@ -1,9 +1,10 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { SkeletonTable } from '@/components/common/Skeleton';
 import { Pagination } from '@/components/common/Pagination';
+import { PullToRefreshContainer } from '@/components/mobile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -15,8 +16,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Users, Plus, TrendingUp, TrendingDown, Minus, BarChart3 } from 'lucide-react';
+import { Users, Plus, TrendingUp, TrendingDown, Minus, BarChart3, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import {
   useHeadcountPlans,
   useHeadcountSummary,
@@ -34,6 +36,8 @@ const STATUS_COLORS: Record<HeadcountStatus, string> = {
 
 export default function HeadcountPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const currentYear = new Date().getFullYear();
   const years = [currentYear + 1, currentYear, currentYear - 1, currentYear - 2];
 
@@ -61,6 +65,210 @@ export default function HeadcountPage() {
     }
   };
 
+  const handleRefresh = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['headcount-plans'] });
+    await queryClient.invalidateQueries({ queryKey: ['headcount-summary'] });
+  };
+
+  // Mobile Layout
+  if (isMobile) {
+    return (
+      <PullToRefreshContainer onRefresh={handleRefresh}>
+        <div className="space-y-4 pb-20">
+          {/* Mobile Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl font-bold">정현원 관리</h1>
+              <p className="text-sm text-muted-foreground">부서별 정현원 현황</p>
+            </div>
+            <Button size="sm" onClick={() => navigate('/headcount/plans/new')}>
+              <Plus className="mr-1 h-4 w-4" />
+              등록
+            </Button>
+          </div>
+
+          {/* Summary Cards - 2x2 Grid */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-card rounded-xl border p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                  <Users className="h-4 w-4 text-blue-600" />
+                </div>
+                <span className="text-xs text-muted-foreground">정현원</span>
+              </div>
+              <p className="text-2xl font-bold">
+                {isSummaryLoading ? '-' : (summary?.totalPlanned ?? 0).toLocaleString()}
+              </p>
+            </div>
+            <div className="bg-card rounded-xl border p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900/30">
+                  <Users className="h-4 w-4 text-green-600" />
+                </div>
+                <span className="text-xs text-muted-foreground">실현원</span>
+              </div>
+              <p className="text-2xl font-bold">
+                {isSummaryLoading ? '-' : (summary?.totalActual ?? 0).toLocaleString()}
+              </p>
+            </div>
+            <div className="bg-card rounded-xl border p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className={cn(
+                  'flex h-8 w-8 items-center justify-center rounded-lg',
+                  (summary?.totalVariance ?? 0) >= 0
+                    ? 'bg-amber-100 dark:bg-amber-900/30'
+                    : 'bg-red-100 dark:bg-red-900/30'
+                )}>
+                  {(summary?.totalVariance ?? 0) > 0 ? (
+                    <TrendingUp className="h-4 w-4 text-amber-600" />
+                  ) : (summary?.totalVariance ?? 0) < 0 ? (
+                    <TrendingDown className="h-4 w-4 text-red-600" />
+                  ) : (
+                    <Minus className="h-4 w-4 text-gray-600" />
+                  )}
+                </div>
+                <span className="text-xs text-muted-foreground">정실 차이</span>
+              </div>
+              <p className={cn(
+                'text-2xl font-bold',
+                (summary?.totalVariance ?? 0) > 0 && 'text-amber-600',
+                (summary?.totalVariance ?? 0) < 0 && 'text-red-600'
+              )}>
+                {isSummaryLoading ? '-' : (
+                  <>
+                    {(summary?.totalVariance ?? 0) > 0 && '+'}
+                    {(summary?.totalVariance ?? 0).toLocaleString()}
+                  </>
+                )}
+              </p>
+            </div>
+            <div className="bg-card rounded-xl border p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900/30">
+                  <BarChart3 className="h-4 w-4 text-purple-600" />
+                </div>
+                <span className="text-xs text-muted-foreground">충원율</span>
+              </div>
+              <p className="text-2xl font-bold">
+                {isSummaryLoading ? '-' : (
+                  summary?.totalPlanned
+                    ? `${Math.round((summary.totalActual / summary.totalPlanned) * 100)}%`
+                    : '-'
+                )}
+              </p>
+            </div>
+          </div>
+
+          {/* Year Selector */}
+          <div className="flex items-center gap-2">
+            <Select
+              value={String(searchState.year)}
+              onValueChange={(value) => setYear(Number(value))}
+            >
+              <SelectTrigger className="w-[120px]">
+                <SelectValue placeholder="연도" />
+              </SelectTrigger>
+              <SelectContent>
+                {years.map((year) => (
+                  <SelectItem key={year} value={String(year)}>
+                    {year}년
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Mobile Tab Filters */}
+          <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
+            {[
+              { value: '', label: '전체' },
+              { value: 'DRAFT', label: '초안' },
+              { value: 'APPROVED', label: '승인됨' },
+              { value: 'ACTIVE', label: '적용중' },
+            ].map((item) => (
+              <button
+                key={item.value}
+                onClick={() => handleTabChange(item.value || 'all')}
+                className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                  (searchState.status || '') === item.value
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Plans List */}
+          {isLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-24 bg-muted animate-pulse rounded-xl" />
+              ))}
+            </div>
+          ) : plans.length === 0 ? (
+            <EmptyState
+              icon={Users}
+              title={searchState.status ? '검색 결과가 없습니다' : '정현원 계획이 없습니다'}
+              description={searchState.status ? '다른 필터를 선택해 보세요.' : '새로운 정현원 계획을 등록하세요.'}
+              action={
+                searchState.status
+                  ? { label: '필터 초기화', onClick: resetFilters }
+                  : { label: '계획 등록', onClick: () => navigate('/headcount/plans/new') }
+              }
+            />
+          ) : (
+            <div className="space-y-3">
+              {plans.map((plan) => (
+                <button
+                  key={plan.id}
+                  onClick={() => navigate(`/headcount/plans/${plan.id}`)}
+                  className="w-full bg-card rounded-xl border p-4 text-left transition-colors active:bg-muted"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge className={cn(STATUS_COLORS[plan.status], 'text-xs')}>
+                          {HEADCOUNT_STATUS_LABELS[plan.status]}
+                        </Badge>
+                      </div>
+                      <p className="font-medium text-sm">{plan.departmentName}</p>
+                      <p className="text-xs text-muted-foreground">{plan.gradeName}</p>
+                      <div className="flex items-center gap-4 mt-2">
+                        <div className="text-xs">
+                          <span className="text-muted-foreground">정현원</span>
+                          <span className="ml-1 font-medium">{plan.plannedCount}</span>
+                        </div>
+                        <div className="text-xs">
+                          <span className="text-muted-foreground">실현원</span>
+                          <span className="ml-1 font-medium">{plan.actualCount}</span>
+                        </div>
+                        <div className={cn(
+                          'text-xs font-medium',
+                          plan.variance > 0 && 'text-amber-600',
+                          plan.variance < 0 && 'text-red-600'
+                        )}>
+                          {plan.variance > 0 && '+'}
+                          {plan.variance}
+                        </div>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-1" />
+                  </div>
+                </button>
+              ))}
+              {totalPages > 1 && (
+                <Pagination page={searchState.page} totalPages={totalPages} onPageChange={setPage} />
+              )}
+            </div>
+          )}
+        </div>
+      </PullToRefreshContainer>
+    );
+  }
+
+  // Desktop Layout
   return (
     <>
       <PageHeader

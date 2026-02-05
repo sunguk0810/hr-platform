@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { apiClient, ApiResponse } from '@/lib/apiClient';
 import { User } from '@/stores/authStore';
 import { Tenant } from '@/stores/tenantStore';
@@ -13,6 +14,31 @@ export interface LoginRequest {
   username: string;
   password: string;
   tenantCode?: string;
+}
+
+// 백엔드 TokenResponse 매핑
+export interface BackendTokenResponse {
+  accessToken: string;
+  refreshToken: string;
+  tokenType: string;
+  expiresIn: number;
+  refreshExpiresIn: number;
+}
+
+// 백엔드 UserResponse 매핑
+export interface BackendUserResponse {
+  id: string;
+  employeeId: string;
+  employeeNumber: string;
+  name: string;
+  email: string;
+  departmentId: string;
+  departmentName: string;
+  positionName: string;
+  gradeName: string;
+  profileImageUrl?: string;
+  roles: string[];
+  permissions: string[];
 }
 
 export interface LoginResponse {
@@ -41,8 +67,11 @@ export interface Session {
   current: boolean;
 }
 
-// 개발 모드 여부 확인
-const isDevelopment = import.meta.env.DEV || import.meta.env.VITE_ENABLE_MOCK === 'true';
+// Mock 모드 여부 확인 (VITE_ENABLE_MOCK=true 또는 MSW 활성화 시)
+const isMockMode = import.meta.env.VITE_ENABLE_MOCK === 'true';
+
+// API 기본 URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 
 // Mock 로그인 처리
 async function mockLogin(data: LoginRequest): Promise<ApiResponse<LoginResponse>> {
@@ -193,50 +222,135 @@ async function mockLogoutAllSessions(): Promise<ApiResponse<null>> {
   };
 }
 
+// 실제 백엔드 로그인 처리
+async function realLogin(data: LoginRequest): Promise<ApiResponse<LoginResponse>> {
+  // 1. 먼저 토큰 발급
+  const tokenResponse = await axios.post<ApiResponse<BackendTokenResponse>>(
+    `${API_BASE_URL}/auth/login`,
+    {
+      username: data.username,
+      password: data.password,
+    }
+  );
+
+  const tokens = tokenResponse.data.data;
+
+  // 2. 토큰으로 사용자 정보 조회
+  const userResponse = await axios.get<ApiResponse<BackendUserResponse>>(
+    `${API_BASE_URL}/auth/me`,
+    {
+      headers: {
+        Authorization: `Bearer ${tokens.accessToken}`,
+      },
+    }
+  );
+
+  const backendUser = userResponse.data.data;
+
+  // 3. User 객체로 변환
+  const user: User = {
+    id: backendUser.id,
+    employeeId: backendUser.employeeId,
+    employeeNumber: backendUser.employeeNumber || '',
+    name: backendUser.name,
+    email: backendUser.email,
+    departmentId: backendUser.departmentId,
+    departmentName: backendUser.departmentName || '',
+    positionName: backendUser.positionName || '',
+    gradeName: backendUser.gradeName || '',
+    profileImageUrl: backendUser.profileImageUrl,
+    roles: backendUser.roles || [],
+    permissions: backendUser.permissions || [],
+  };
+
+  // 4. 테넌트 정보 구성 (TODO: 실제 테넌트 API 연동 시 수정 필요)
+  const defaultTenant: Tenant = {
+    id: 'tenant-001',
+    code: 'HANSUNG_ELEC',
+    name: '한성전자',
+    status: 'ACTIVE',
+  };
+
+  return {
+    success: true,
+    data: {
+      user,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      tenant: defaultTenant,
+      availableTenants: [defaultTenant],
+    },
+    message: '로그인 성공',
+    timestamp: new Date().toISOString(),
+  };
+}
+
 export const authService = {
   async login(data: LoginRequest): Promise<ApiResponse<LoginResponse>> {
-    if (isDevelopment) {
+    if (isMockMode) {
       return mockLogin(data);
     }
-    const response = await apiClient.post<ApiResponse<LoginResponse>>('/auth/login', data);
-    return response.data;
+    return realLogin(data);
   },
 
   async logout(): Promise<void> {
-    if (isDevelopment) {
+    if (isMockMode) {
       return mockLogout();
     }
     await apiClient.post('/auth/logout');
   },
 
   async refreshToken(refreshToken: string): Promise<ApiResponse<RefreshTokenResponse>> {
-    if (isDevelopment) {
+    if (isMockMode) {
       return mockRefreshToken(refreshToken);
     }
-    const response = await apiClient.post<ApiResponse<RefreshTokenResponse>>('/auth/refresh', {
+    const response = await apiClient.post<ApiResponse<RefreshTokenResponse>>('/auth/token/refresh', {
       refreshToken,
     });
     return response.data;
   },
 
   async getCurrentUser(): Promise<ApiResponse<User>> {
-    if (isDevelopment) {
+    if (isMockMode) {
       return mockGetCurrentUser();
     }
-    const response = await apiClient.get<ApiResponse<User>>('/auth/me');
-    return response.data;
+    const response = await apiClient.get<ApiResponse<BackendUserResponse>>('/auth/me');
+    const backendUser = response.data.data;
+
+    // BackendUserResponse -> User 변환
+    const user: User = {
+      id: backendUser.id,
+      employeeId: backendUser.employeeId,
+      employeeNumber: backendUser.employeeNumber || '',
+      name: backendUser.name,
+      email: backendUser.email,
+      departmentId: backendUser.departmentId,
+      departmentName: backendUser.departmentName || '',
+      positionName: backendUser.positionName || '',
+      gradeName: backendUser.gradeName || '',
+      profileImageUrl: backendUser.profileImageUrl,
+      roles: backendUser.roles || [],
+      permissions: backendUser.permissions || [],
+    };
+
+    return {
+      success: true,
+      data: user,
+      message: response.data.message,
+      timestamp: response.data.timestamp,
+    };
   },
 
   async changePassword(data: PasswordChangeRequest): Promise<ApiResponse<null>> {
-    if (isDevelopment) {
+    if (isMockMode) {
       return mockChangePassword(data);
     }
-    const response = await apiClient.post<ApiResponse<null>>('/auth/change-password', data);
+    const response = await apiClient.post<ApiResponse<null>>('/auth/password/change', data);
     return response.data;
   },
 
   async getSessions(): Promise<ApiResponse<Session[]>> {
-    if (isDevelopment) {
+    if (isMockMode) {
       return mockGetSessions();
     }
     const response = await apiClient.get<ApiResponse<Session[]>>('/auth/sessions');
@@ -244,18 +358,18 @@ export const authService = {
   },
 
   async logoutSession(sessionId: string): Promise<ApiResponse<null>> {
-    if (isDevelopment) {
+    if (isMockMode) {
       return mockLogoutSession(sessionId);
     }
-    const response = await apiClient.post<ApiResponse<null>>(`/auth/sessions/${sessionId}/logout`);
+    const response = await apiClient.delete<ApiResponse<null>>(`/auth/sessions/${sessionId}`);
     return response.data;
   },
 
   async logoutAllSessions(): Promise<ApiResponse<null>> {
-    if (isDevelopment) {
+    if (isMockMode) {
       return mockLogoutAllSessions();
     }
-    const response = await apiClient.post<ApiResponse<null>>('/auth/sessions/logout-all');
+    const response = await apiClient.delete<ApiResponse<null>>('/auth/sessions');
     return response.data;
   },
 };

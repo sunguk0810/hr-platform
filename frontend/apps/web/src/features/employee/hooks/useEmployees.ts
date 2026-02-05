@@ -9,10 +9,10 @@ import type {
   UpdateEmployeeRequest,
   ResignationRequest,
   ResignationCancelRequest,
-  TransferRequest,
-  TransferApprovalRequest,
-  TransferSearchParams,
-  TransferStatus,
+  EmployeeTransferRequest,
+  EmployeeTransferApprovalRequest,
+  EmployeeTransferSearchParams,
+  EmployeeTransferStatus,
   UnmaskRequest,
   EmployeeHistorySearchParams,
   HistoryType,
@@ -163,7 +163,7 @@ export function useRequestTransfer() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: TransferRequest }) =>
+    mutationFn: ({ id, data }: { id: string; data: EmployeeTransferRequest }) =>
       employeeService.requestTransfer(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transfers'] });
@@ -171,12 +171,60 @@ export function useRequestTransfer() {
   });
 }
 
-export function useApproveTransfer() {
+export function useApproveTransferSource() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ transferId, data }: { transferId: string; data: TransferApprovalRequest }) =>
-      employeeService.approveTransfer(transferId, data),
+    mutationFn: ({ transferId, data }: { transferId: string; data?: EmployeeTransferApprovalRequest }) =>
+      employeeService.approveTransferSource(transferId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transfers'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.employees.all });
+    },
+  });
+}
+
+export function useApproveTransferTarget() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ transferId, data }: { transferId: string; data?: EmployeeTransferApprovalRequest }) =>
+      employeeService.approveTransferTarget(transferId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transfers'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.employees.all });
+    },
+  });
+}
+
+export function useSubmitTransfer() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (transferId: string) => employeeService.submitTransfer(transferId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transfers'] });
+    },
+  });
+}
+
+export function useRejectTransfer() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ transferId, reason }: { transferId: string; reason: string }) =>
+      employeeService.rejectTransfer(transferId, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transfers'] });
+    },
+  });
+}
+
+export function useCompleteTransfer() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (transferId: string) => employeeService.completeTransfer(transferId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transfers'] });
       queryClient.invalidateQueries({ queryKey: queryKeys.employees.all });
@@ -196,7 +244,7 @@ export function useCancelTransfer() {
   });
 }
 
-export function useTransferList(params?: TransferSearchParams) {
+export function useTransferList(params?: EmployeeTransferSearchParams) {
   return useQuery({
     queryKey: ['transfers', params],
     queryFn: () => employeeService.getTransfers(params),
@@ -212,7 +260,7 @@ export function useTransfer(transferId: string) {
 }
 
 interface TransferSearchState {
-  status: TransferStatus | '';
+  status: EmployeeTransferStatus | '';
   page: number;
   size: number;
 }
@@ -224,13 +272,13 @@ export function useTransferSearchParams(initialSize = 10) {
     size: initialSize,
   });
 
-  const params = useMemo<TransferSearchParams>(() => ({
+  const params = useMemo<EmployeeTransferSearchParams>(() => ({
     page: searchState.page,
     size: searchState.size,
     ...(searchState.status && { status: searchState.status }),
   }), [searchState]);
 
-  const setStatus = useCallback((status: TransferStatus | '') => {
+  const setStatus = useCallback((status: EmployeeTransferStatus | '') => {
     setSearchState(prev => ({ ...prev, status, page: 0 }));
   }, []);
 

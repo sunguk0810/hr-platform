@@ -9,12 +9,14 @@ import {
   useUpdateJobPosting,
 } from '../hooks/useRecruitment';
 import { useToast } from '@/hooks/useToast';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import type { CreateJobPostingRequest, UpdateJobPostingRequest } from '@hr-platform/shared-types';
 
 export default function JobPostingCreatePage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const isEditMode = !!id;
   const { data, isLoading } = useJobPosting(id || '');
@@ -63,6 +65,31 @@ export default function JobPostingCreatePage() {
     );
   }
 
+  // 모바일 레이아웃
+  if (isMobile) {
+    return (
+      <div className="pb-20">
+        {/* 모바일 헤더 */}
+        <div className="flex items-center mb-4">
+          <Button variant="ghost" size="icon" onClick={handleCancel}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="font-semibold ml-2">
+            {isEditMode ? '채용공고 수정' : '새 채용공고'}
+          </h1>
+        </div>
+
+        <JobPostingForm
+          initialData={job}
+          onSubmit={handleSubmit}
+          onCancel={handleCancel}
+          isSubmitting={createMutation.isPending || updateMutation.isPending}
+        />
+      </div>
+    );
+  }
+
+  // 데스크톱 레이아웃
   return (
     <>
       <PageHeader

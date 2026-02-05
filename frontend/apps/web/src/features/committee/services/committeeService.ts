@@ -1,4 +1,4 @@
-import { apiClient, ApiResponse, PageResponse } from '@/lib/apiClient';
+import { apiClient, ApiResponse } from '@/lib/apiClient';
 import type {
   Committee,
   CommitteeListItem,
@@ -9,8 +9,9 @@ import type {
 } from '@hr-platform/shared-types';
 
 export const committeeService = {
-  async getCommittees(params?: CommitteeSearchParams): Promise<ApiResponse<PageResponse<CommitteeListItem>>> {
-    const response = await apiClient.get<ApiResponse<PageResponse<CommitteeListItem>>>('/committees', { params });
+  // Backend returns List, not Page
+  async getCommittees(params?: CommitteeSearchParams): Promise<ApiResponse<CommitteeListItem[]>> {
+    const response = await apiClient.get<ApiResponse<CommitteeListItem[]>>('/committees', { params });
     return response.data;
   },
 

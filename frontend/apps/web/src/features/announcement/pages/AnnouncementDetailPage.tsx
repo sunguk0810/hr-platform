@@ -1,12 +1,27 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { PageHeader } from '@/components/common/PageHeader';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
+import { PullToRefreshContainer } from '@/components/mobile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Loader2, Pin, Eye, FileText, Download } from 'lucide-react';
-import { useAnnouncement } from '../hooks/useAnnouncements';
+import { ArrowLeft, Loader2, Pin, Eye, FileText, Download, Edit, Trash2, MoreVertical } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useAuthStore } from '@/stores/authStore';
+import { useToast } from '@/hooks/useToast';
+import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useAnnouncement, useDeleteAnnouncement } from '../hooks/useAnnouncements';
+
+const ADMIN_ROLES = ['SUPER_ADMIN', 'GROUP_ADMIN', 'TENANT_ADMIN', 'HR_MANAGER'];
 
 const CATEGORY_LABELS: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   NOTICE: { label: '공지', variant: 'default' },
@@ -18,10 +33,36 @@ const CATEGORY_LABELS: Record<string, { label: string; variant: 'default' | 'sec
 export default function AnnouncementDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const { hasAnyRole } = useAuthStore();
+  const isMobile = useIsMobile();
+  const canWrite = hasAnyRole(ADMIN_ROLES);
+
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const { data, isLoading, isError } = useAnnouncement(id || '');
+  const deleteMutation = useDeleteAnnouncement();
 
   const announcement = data?.data;
+
+  const handleDelete = async () => {
+    if (!id) return;
+    try {
+      await deleteMutation.mutateAsync(id);
+      toast({
+        title: '삭제 완료',
+        description: '공지사항이 삭제되었습니다.',
+      });
+      navigate('/announcements');
+    } catch {
+      toast({
+        title: '삭제 실패',
+        description: '공지사항 삭제 중 오류가 발생했습니다.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -45,16 +86,159 @@ export default function AnnouncementDetailPage() {
 
   const categoryInfo = CATEGORY_LABELS[announcement.category] || { label: announcement.category, variant: 'outline' as const };
 
+  const handleRefresh = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['announcements', id] });
+  };
+
+  // Mobile Layout
+  if (isMobile) {
+    return (
+      <PullToRefreshContainer onRefresh={handleRefresh}>
+        <div className="space-y-4 pb-20">
+          {/* Mobile Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate(-1)}
+                className="p-2 -ml-2 rounded-full hover:bg-muted"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+              <h1 className="text-lg font-bold">공지사항</h1>
+            </div>
+            {canWrite && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="p-2 rounded-full hover:bg-muted">
+                    <MoreVertical className="h-5 w-5" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => navigate(`/announcements/${id}/edit`)}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    수정
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setShowDeleteDialog(true)}
+                    className="text-destructive"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    삭제
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
+
+          {/* Category & Title */}
+          <div className="bg-card rounded-2xl border p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant={categoryInfo.variant}>
+                {categoryInfo.label}
+              </Badge>
+              {announcement.isPinned && (
+                <Badge variant="outline" className="gap-1">
+                  <Pin className="h-3 w-3" />
+                  고정
+                </Badge>
+              )}
+            </div>
+            <h2 className="text-xl font-bold mb-3">{announcement.title}</h2>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>{announcement.authorName}</span>
+              <span>·</span>
+              <span>{announcement.authorDepartment}</span>
+            </div>
+            <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+              <span>{format(new Date(announcement.createdAt), 'yyyy.MM.dd HH:mm', { locale: ko })}</span>
+              <span className="flex items-center gap-1">
+                <Eye className="h-3 w-3" />
+                {announcement.viewCount}
+              </span>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="bg-card rounded-2xl border p-4">
+            <div className="prose prose-sm max-w-none dark:prose-invert">
+              <div className="whitespace-pre-wrap text-sm">
+                {announcement.content}
+              </div>
+            </div>
+          </div>
+
+          {/* Attachments */}
+          {announcement.attachments && announcement.attachments.length > 0 && (
+            <div className="bg-card rounded-2xl border p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <FileText className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">첨부파일 ({announcement.attachments.length})</span>
+              </div>
+              <div className="space-y-2">
+                {announcement.attachments.map((file) => (
+                  <a
+                    key={file.id}
+                    href={file.fileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between p-3 rounded-xl bg-muted/50 active:bg-muted transition-colors"
+                  >
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <span className="text-sm truncate">{file.fileName}</span>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className="text-xs text-muted-foreground">
+                        {(file.fileSize / 1024).toFixed(1)} KB
+                      </span>
+                      <Download className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <ConfirmDialog
+          open={showDeleteDialog}
+          onOpenChange={setShowDeleteDialog}
+          title="공지사항 삭제"
+          description="이 공지사항을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+          confirmLabel="삭제"
+          variant="destructive"
+          onConfirm={handleDelete}
+          isLoading={deleteMutation.isPending}
+        />
+      </PullToRefreshContainer>
+    );
+  }
+
+  // Desktop Layout
   return (
     <>
       <PageHeader
         title="공지사항"
         description="공지사항 상세 내용"
         actions={
-          <Button variant="outline" onClick={() => navigate('/announcements')}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            목록으로
-          </Button>
+          <div className="flex gap-2">
+            {canWrite && (
+              <>
+                <Button variant="outline" onClick={() => navigate(`/announcements/${id}/edit`)}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  수정
+                </Button>
+                <Button variant="destructive" onClick={() => setShowDeleteDialog(true)}>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  삭제
+                </Button>
+              </>
+            )}
+            <Button variant="outline" onClick={() => navigate('/announcements')}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              목록으로
+            </Button>
+          </div>
         }
       />
 
@@ -125,6 +309,17 @@ export default function AnnouncementDetailPage() {
           )}
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        title="공지사항 삭제"
+        description="이 공지사항을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+        confirmLabel="삭제"
+        variant="destructive"
+        onConfirm={handleDelete}
+        isLoading={deleteMutation.isPending}
+      />
     </>
   );
 }

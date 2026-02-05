@@ -24,4 +24,9 @@ public interface DelegationService {
     void cancel(UUID id);
 
     void delete(UUID id);
+
+    /**
+     * 대결 규칙 활성화 상태 토글
+     */
+    DelegationRuleResponse toggleStatus(UUID id);
 }

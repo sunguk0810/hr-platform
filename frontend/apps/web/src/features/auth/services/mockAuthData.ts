@@ -3,7 +3,8 @@ import { Tenant } from '@/stores/tenantStore';
 
 /**
  * Mock Users for Testing
- * 테스트용 Mock 사용자 데이터
+ * 한성그룹 샘플 데이터 기준 테스트 계정
+ * @see scripts/sample-data/README.md
  */
 
 export interface MockUser extends User {
@@ -14,47 +15,68 @@ export interface MockTenant extends Tenant {
   code: string;
 }
 
-// 멀티 테넌트 (계열사) 목록
+// 한성그룹 계열사 목록 (8개)
 export const mockTenants: MockTenant[] = [
   {
-    id: 'tenant-001',
-    code: 'HOLDINGS',
-    name: 'HR그룹 지주회사',
+    id: 'tenant-hansung-hd',
+    code: 'HANSUNG_HD',
+    name: '한성홀딩스',
     logoUrl: undefined,
     status: 'ACTIVE',
   },
   {
-    id: 'tenant-002',
-    code: 'TECH',
-    name: 'HR테크',
+    id: 'tenant-hansung-elec',
+    code: 'HANSUNG_ELEC',
+    name: '한성전자',
     logoUrl: undefined,
     status: 'ACTIVE',
   },
   {
-    id: 'tenant-003',
-    code: 'CONSULTING',
-    name: 'HR컨설팅',
+    id: 'tenant-hansung-sdi',
+    code: 'HANSUNG_SDI',
+    name: '한성SDI',
     logoUrl: undefined,
     status: 'ACTIVE',
   },
   {
-    id: 'tenant-004',
-    code: 'ACADEMY',
-    name: 'HR아카데미',
+    id: 'tenant-hansung-eng',
+    code: 'HANSUNG_ENG',
+    name: '한성엔지니어링',
     logoUrl: undefined,
     status: 'ACTIVE',
   },
   {
-    id: 'tenant-005',
-    code: 'PARTNERS',
-    name: 'HR파트너스',
+    id: 'tenant-hansung-bio',
+    code: 'HANSUNG_BIO',
+    name: '한성바이오',
+    logoUrl: undefined,
+    status: 'ACTIVE',
+  },
+  {
+    id: 'tenant-hansung-chem',
+    code: 'HANSUNG_CHEM',
+    name: '한성화학',
+    logoUrl: undefined,
+    status: 'ACTIVE',
+  },
+  {
+    id: 'tenant-hansung-it',
+    code: 'HANSUNG_IT',
+    name: '한성IT서비스',
+    logoUrl: undefined,
+    status: 'ACTIVE',
+  },
+  {
+    id: 'tenant-hansung-life',
+    code: 'HANSUNG_LIFE',
+    name: '한성생명',
     logoUrl: undefined,
     status: 'ACTIVE',
   },
 ];
 
-// 기본 테넌트 (단일 테넌트 사용자용)
-export const mockTenant: MockTenant = mockTenants[1]; // HR테크
+// 기본 테넌트: 한성전자 (주력 테스트 계열사)
+export const mockTenant: MockTenant = mockTenants[1]; // HANSUNG_ELEC
 
 // 역할에 따른 접근 가능 테넌트 반환
 export function getAvailableTenants(roles: string[]): MockTenant[] {
@@ -62,7 +84,7 @@ export function getAvailableTenants(roles: string[]): MockTenant[] {
   if (roles.includes('SUPER_ADMIN') || roles.includes('GROUP_ADMIN')) {
     return mockTenants;
   }
-  // 그 외는 단일 테넌트만 접근
+  // 그 외는 한성전자만 접근 (테스트용)
   return [mockTenant];
 }
 
@@ -70,33 +92,34 @@ export function getAvailableTenants(roles: string[]): MockTenant[] {
 export function getDefaultTenant(roles: string[]): MockTenant {
   // 시스템 관리자 또는 그룹 HR 총괄은 지주회사가 기본
   if (roles.includes('SUPER_ADMIN') || roles.includes('GROUP_ADMIN')) {
-    return mockTenants[0]; // HR그룹 지주회사
+    return mockTenants[0]; // 한성홀딩스
   }
-  // 그 외는 HR테크가 기본
+  // 그 외는 한성전자가 기본
   return mockTenant;
 }
 
 /**
- * PRD 4.1 기준 역할 정의 Mock 사용자
- * - SUPER_ADMIN: 시스템 관리자
- * - GROUP_ADMIN: 그룹 HR 총괄 (계열사 전체 관리)
- * - TENANT_ADMIN: 테넌트 관리자 (단일 계열사 관리)
- * - HR_ADMIN: HR 관리자
- * - HR_MANAGER: HR 담당자
- * - DEPT_MANAGER: 부서장
- * - TEAM_LEADER: 팀장
+ * 한성그룹 샘플 데이터 테스트 계정
+ * 비밀번호: scripts/sample-data/README.md 참조
+ *
+ * 역할 정의:
+ * - SUPER_ADMIN: 시스템 관리자 (전체 시스템 관리)
+ * - TENANT_ADMIN: 테넌트 관리자 (단일 계열사 관리, CEO)
+ * - HR_ADMIN: HR 관리자 (인사팀장)
+ * - HR_MANAGER: HR 담당자 (인사과장/책임)
+ * - MANAGER: 부서장/팀장
  * - EMPLOYEE: 일반 직원
  */
 export const mockUsers: MockUser[] = [
-  // 시스템 관리자
+  // 시스템 관리자 (전체 시스템)
   {
-    id: 'user-admin-001',
-    employeeId: 'emp-admin-001',
+    id: 'user-superadmin',
+    employeeId: 'emp-superadmin',
     employeeNumber: 'SYS001',
     name: '시스템관리자',
-    email: 'admin@demo.com',
-    password: 'admin1234',
-    departmentId: 'dept-001',
+    email: 'superadmin@hansung.com',
+    password: 'Admin@2025!',
+    departmentId: 'dept-sys',
     departmentName: '시스템운영팀',
     positionName: '팀장',
     gradeName: '1급',
@@ -115,7 +138,6 @@ export const mockUsers: MockUser[] = [
       'settings:read', 'settings:write',
       'appointment:read', 'appointment:write',
       'recruitment:read', 'recruitment:write',
-      // P2 기능 권한
       'transfer:read', 'transfer:write',
       'headcount:read', 'headcount:write',
       'condolence:read', 'condolence:write',
@@ -123,50 +145,20 @@ export const mockUsers: MockUser[] = [
       'employee-card:read', 'employee-card:write',
     ],
   },
-  // 그룹 HR 총괄
+
+  // ========== 한성전자 계정 ==========
+  // CEO (테넌트 관리자)
   {
-    id: 'user-group-001',
-    employeeId: 'emp-group-001',
-    employeeNumber: 'GRP001',
-    name: '최그룹',
-    email: 'group@demo.com',
-    password: 'group1234',
-    departmentId: 'dept-001',
-    departmentName: '그룹HR팀',
-    positionName: '본부장',
-    gradeName: '1급',
-    profileImageUrl: undefined,
-    roles: ['GROUP_ADMIN'],
-    permissions: [
-      'tenant:read', 'tenant:write',
-      'employee:read', 'employee:write', 'employee:read:sensitive',
-      'organization:read', 'organization:write',
-      'attendance:read', 'attendance:write', 'attendance:admin', 'attendance:approve',
-      'leave:read', 'leave:write', 'leave:approve',
-      'approval:read', 'approval:write', 'approval:approve',
-      'mdm:read', 'mdm:write',
-      'audit:read',
-      'appointment:read', 'appointment:write',
-      // P2 기능 권한
-      'transfer:read', 'transfer:write',
-      'headcount:read', 'headcount:write',
-      'condolence:read', 'condolence:write',
-      'committee:read', 'committee:write',
-      'employee-card:read', 'employee-card:write',
-    ],
-  },
-  // 테넌트 관리자
-  {
-    id: 'user-tenant-001',
-    employeeId: 'emp-tenant-001',
-    employeeNumber: 'TNT001',
-    name: '정테넌트',
-    email: 'tenant@demo.com',
-    password: 'tenant1234',
-    departmentId: 'dept-002',
-    departmentName: '경영지원팀',
-    positionName: '이사',
-    gradeName: '임원',
+    id: 'user-ceo-elec',
+    employeeId: 'emp-ceo-elec',
+    employeeNumber: 'ELEC001',
+    name: '김대표',
+    email: 'ceo.elec@hansung.com',
+    password: 'Ceo@2025!',
+    departmentId: 'dept-exec-elec',
+    departmentName: '경영진',
+    positionName: '대표이사',
+    gradeName: '사장',
     profileImageUrl: undefined,
     roles: ['TENANT_ADMIN'],
     permissions: [
@@ -179,7 +171,7 @@ export const mockUsers: MockUser[] = [
       'mdm:read', 'mdm:write',
       'audit:read',
       'appointment:read', 'appointment:write',
-      // P2 기능 권한
+      'recruitment:read', 'recruitment:write',
       'transfer:read', 'transfer:write',
       'headcount:read', 'headcount:write',
       'condolence:read', 'condolence:write',
@@ -187,18 +179,18 @@ export const mockUsers: MockUser[] = [
       'employee-card:read', 'employee-card:write',
     ],
   },
-  // HR 관리자
+  // HR 관리자 (인사팀장)
   {
-    id: 'user-hradmin-001',
-    employeeId: 'emp-hradmin-001',
-    employeeNumber: 'HRA001',
-    name: '강HR관리',
-    email: 'hradmin@demo.com',
-    password: 'hradmin1234',
-    departmentId: 'dept-002',
+    id: 'user-hr-admin-elec',
+    employeeId: 'emp-hr-admin-elec',
+    employeeNumber: 'ELEC002',
+    name: '이인사',
+    email: 'hr.admin.elec@hansung.com',
+    password: 'HrAdmin@2025!',
+    departmentId: 'dept-hr-elec',
     departmentName: '인사팀',
     positionName: '팀장',
-    gradeName: '2급',
+    gradeName: '부장',
     profileImageUrl: undefined,
     roles: ['HR_ADMIN'],
     permissions: [
@@ -210,7 +202,7 @@ export const mockUsers: MockUser[] = [
       'mdm:read', 'mdm:write',
       'audit:read',
       'appointment:read', 'appointment:write',
-      // P2 기능 권한
+      'recruitment:read', 'recruitment:write',
       'transfer:read', 'transfer:write',
       'headcount:read', 'headcount:write',
       'condolence:read', 'condolence:write',
@@ -218,18 +210,18 @@ export const mockUsers: MockUser[] = [
       'employee-card:read', 'employee-card:write',
     ],
   },
-  // HR 담당자
+  // HR 담당자 (인사 과장/책임)
   {
-    id: 'user-hr-001',
-    employeeId: 'emp-hr-001',
-    employeeNumber: 'HR001',
-    name: '김인사',
-    email: 'hr@demo.com',
-    password: 'hr1234',
-    departmentId: 'dept-002',
+    id: 'user-hr-manager-elec',
+    employeeId: 'emp-hr-manager-elec',
+    employeeNumber: 'ELEC003',
+    name: '박인사',
+    email: 'hr.manager.elec@hansung.com',
+    password: 'HrMgr@2025!',
+    departmentId: 'dept-hr-elec',
     departmentName: '인사팀',
-    positionName: '과장',
-    gradeName: '3급',
+    positionName: '책임',
+    gradeName: '과장',
     profileImageUrl: undefined,
     roles: ['HR_MANAGER'],
     permissions: [
@@ -240,7 +232,7 @@ export const mockUsers: MockUser[] = [
       'approval:read', 'approval:write',
       'mdm:read',
       'appointment:read', 'appointment:write',
-      // P2 기능 권한
+      'recruitment:read', 'recruitment:write',
       'transfer:read', 'transfer:write',
       'headcount:read', 'headcount:write',
       'condolence:read', 'condolence:write',
@@ -248,68 +240,42 @@ export const mockUsers: MockUser[] = [
       'employee-card:read', 'employee-card:write',
     ],
   },
-  // 부서장
+  // 부서장/팀장 (DRAM개발팀장)
   {
-    id: 'user-dept-001',
-    employeeId: 'emp-dept-001',
-    employeeNumber: 'DEPT001',
-    name: '박부장',
-    email: 'deptmgr@demo.com',
-    password: 'deptmgr1234',
-    departmentId: 'dept-003',
-    departmentName: '개발팀',
-    positionName: '부장',
-    gradeName: '2급',
+    id: 'user-dev-manager-elec',
+    employeeId: 'emp-dev-manager-elec',
+    employeeNumber: 'ELEC004',
+    name: '최개발',
+    email: 'dev.manager.elec@hansung.com',
+    password: 'DevMgr@2025!',
+    departmentId: 'dept-dram-elec',
+    departmentName: 'DRAM개발팀',
+    positionName: '팀장',
+    gradeName: '차장',
     profileImageUrl: undefined,
-    roles: ['DEPT_MANAGER'],
+    roles: ['MANAGER'],
     permissions: [
       'employee:read',
       'organization:read',
       'attendance:read', 'attendance:write', 'attendance:approve',
       'leave:read', 'leave:approve',
       'approval:read', 'approval:write', 'approval:approve',
-      // P2 기능 권한 (일부)
       'condolence:read', 'condolence:write',
       'employee-card:read',
     ],
   },
-  // 팀장
+  // 선임/대리 (DRAM개발팀)
   {
-    id: 'user-team-001',
-    employeeId: 'emp-team-001',
-    employeeNumber: 'TEAM001',
-    name: '조팀장',
-    email: 'teamlead@demo.com',
-    password: 'teamlead1234',
-    departmentId: 'dept-003',
-    departmentName: '개발팀',
-    positionName: '팀장',
-    gradeName: '3급',
-    profileImageUrl: undefined,
-    roles: ['TEAM_LEADER'],
-    permissions: [
-      'employee:read',
-      'organization:read',
-      'attendance:read', 'attendance:write',
-      'leave:read', 'leave:approve',
-      'approval:read', 'approval:write', 'approval:approve',
-      // P2 기능 권한 (일부)
-      'condolence:read', 'condolence:write',
-      'employee-card:read',
-    ],
-  },
-  // 일반 직원
-  {
-    id: 'user-emp-001',
-    employeeId: 'emp-emp-001',
-    employeeNumber: 'EMP001',
-    name: '이직원',
-    email: 'employee@demo.com',
-    password: 'employee1234',
-    departmentId: 'dept-003',
-    departmentName: '개발팀',
-    positionName: '사원',
-    gradeName: '5급',
+    id: 'user-dev-senior-elec',
+    employeeId: 'emp-dev-senior-elec',
+    employeeNumber: 'ELEC005',
+    name: '정개발',
+    email: 'dev.senior.elec@hansung.com',
+    password: 'DevSr@2025!',
+    departmentId: 'dept-dram-elec',
+    departmentName: 'DRAM개발팀',
+    positionName: '선임',
+    gradeName: '대리',
     profileImageUrl: undefined,
     roles: ['EMPLOYEE'],
     permissions: [
@@ -317,59 +283,91 @@ export const mockUsers: MockUser[] = [
       'attendance:read:self', 'attendance:write:self',
       'leave:read:self', 'leave:write:self',
       'approval:read:self', 'approval:write:self',
-      // P2 기능 권한 (일부)
       'condolence:read', 'condolence:write',
       'employee-card:read',
     ],
   },
-  // 기존 데모 계정 (하위 호환 - DEPT_MANAGER로 매핑)
+  // 일반 직원/사원 (DRAM개발팀)
   {
-    id: 'user-demo-001',
-    employeeId: 'emp-demo-001',
-    employeeNumber: 'DEMO001',
-    name: '데모사용자',
-    email: 'demo@demo.com',
-    password: 'demo1234',
-    departmentId: 'dept-003',
-    departmentName: '개발팀',
-    positionName: '과장',
-    gradeName: '4급',
+    id: 'user-dev-staff-elec',
+    employeeId: 'emp-dev-staff-elec',
+    employeeNumber: 'ELEC006',
+    name: '강개발',
+    email: 'dev.staff.elec@hansung.com',
+    password: 'DevStaff@2025!',
+    departmentId: 'dept-dram-elec',
+    departmentName: 'DRAM개발팀',
+    positionName: '팀원',
+    gradeName: '사원',
     profileImageUrl: undefined,
-    roles: ['DEPT_MANAGER', 'EMPLOYEE'],
+    roles: ['EMPLOYEE'],
     permissions: [
-      'employee:read',
-      'organization:read',
-      'attendance:read', 'attendance:write', 'attendance:approve',
+      'employee:read:self',
+      'attendance:read:self', 'attendance:write:self',
+      'leave:read:self', 'leave:write:self',
+      'approval:read:self', 'approval:write:self',
+      'condolence:read', 'condolence:write',
+      'employee-card:read',
+    ],
+  },
+
+  // ========== 기타 계열사 CEO 계정 ==========
+  // 한성홀딩스 CEO
+  {
+    id: 'user-ceo-hd',
+    employeeId: 'emp-ceo-hd',
+    employeeNumber: 'HD001',
+    name: '한성회장',
+    email: 'ceo.hansung@hansung.com',
+    password: 'Ceo@2025!',
+    departmentId: 'dept-exec-hd',
+    departmentName: '경영진',
+    positionName: '회장',
+    gradeName: '회장',
+    profileImageUrl: undefined,
+    roles: ['GROUP_ADMIN', 'TENANT_ADMIN'],
+    permissions: [
+      'tenant:read', 'tenant:write',
+      'employee:read', 'employee:write', 'employee:read:sensitive',
+      'organization:read', 'organization:write',
+      'attendance:read', 'attendance:write', 'attendance:admin', 'attendance:approve',
       'leave:read', 'leave:write', 'leave:approve',
-      'approval:read', 'approval:write', 'approval:approve',
-      // P2 기능 권한 (일부)
+      'approval:read', 'approval:write', 'approval:admin', 'approval:approve',
+      'mdm:read', 'mdm:write',
+      'audit:read',
+      'appointment:read', 'appointment:write',
+      'recruitment:read', 'recruitment:write',
+      'transfer:read', 'transfer:write',
+      'headcount:read', 'headcount:write',
       'condolence:read', 'condolence:write',
-      'employee-card:read',
+      'committee:read', 'committee:write',
+      'employee-card:read', 'employee-card:write',
     ],
   },
-  // Legacy manager 계정 (하위 호환)
+  // 한성SDI CEO
   {
-    id: 'user-mgr-001',
-    employeeId: 'emp-mgr-001',
-    employeeNumber: 'MGR001',
-    name: '홍매니저',
-    email: 'manager@demo.com',
-    password: 'manager1234',
-    departmentId: 'dept-003',
-    departmentName: '개발팀',
-    positionName: '부장',
-    gradeName: '2급',
+    id: 'user-ceo-sdi',
+    employeeId: 'emp-ceo-sdi',
+    employeeNumber: 'SDI001',
+    name: '배대표',
+    email: 'ceo.sdi@hansung.com',
+    password: 'Ceo@2025!',
+    departmentId: 'dept-exec-sdi',
+    departmentName: '경영진',
+    positionName: '대표이사',
+    gradeName: '사장',
     profileImageUrl: undefined,
-    roles: ['DEPT_MANAGER'],
+    roles: ['TENANT_ADMIN'],
     permissions: [
-      'employee:read',
-      'organization:read',
-      'attendance:read', 'attendance:write', 'attendance:approve',
-      'leave:read', 'leave:approve',
-      'approval:read', 'approval:write', 'approval:approve',
-      // P2 기능 권한 (일부)
-      'condolence:read', 'condolence:write',
-      'employee-card:read',
+      'tenant:read',
+      'employee:read', 'employee:write', 'employee:read:sensitive',
+      'organization:read', 'organization:write',
+      'attendance:read', 'attendance:write', 'attendance:admin', 'attendance:approve',
+      'leave:read', 'leave:write', 'leave:approve',
+      'approval:read', 'approval:write', 'approval:admin', 'approval:approve',
+      'mdm:read', 'mdm:write',
+      'audit:read',
+      'appointment:read', 'appointment:write',
     ],
   },
 ];
@@ -385,62 +383,55 @@ export function findMockUser(username: string, password: string): MockUser | nul
   return user || null;
 }
 
-// 빠른 로그인용 계정 목록 (비밀번호 표시용)
+// 빠른 로그인용 계정 목록 (개발/테스트용)
 export const quickLoginAccounts = [
   {
     label: '시스템 관리자',
-    username: 'admin',
-    password: 'admin1234',
-    description: '모든 권한 보유',
+    username: 'superadmin',
+    password: 'Admin@2025!',
+    description: '전체 시스템 관리',
     roles: ['SUPER_ADMIN'],
   },
   {
-    label: '그룹 HR 총괄',
-    username: 'group',
-    password: 'group1234',
-    description: '계열사 전체 관리',
-    roles: ['GROUP_ADMIN'],
-  },
-  {
-    label: '테넌트 관리자',
-    username: 'tenant',
-    password: 'tenant1234',
-    description: '단일 계열사 관리',
+    label: 'CEO (한성전자)',
+    username: 'ceo.elec',
+    password: 'Ceo@2025!',
+    description: '테넌트 관리자',
     roles: ['TENANT_ADMIN'],
   },
   {
     label: 'HR 관리자',
-    username: 'hradmin',
-    password: 'hradmin1234',
-    description: 'HR 전체 관리',
+    username: 'hr.admin.elec',
+    password: 'HrAdmin@2025!',
+    description: '인사팀장 (HR 전체 관리)',
     roles: ['HR_ADMIN'],
   },
   {
     label: 'HR 담당자',
-    username: 'hr',
-    password: 'hr1234',
-    description: '인사/근태 담당',
+    username: 'hr.manager.elec',
+    password: 'HrMgr@2025!',
+    description: '인사 과장/책임',
     roles: ['HR_MANAGER'],
   },
   {
-    label: '부서장',
-    username: 'deptmgr',
-    password: 'deptmgr1234',
-    description: '부서 결재 권한',
-    roles: ['DEPT_MANAGER'],
+    label: '부서장 (개발)',
+    username: 'dev.manager.elec',
+    password: 'DevMgr@2025!',
+    description: 'DRAM개발팀장',
+    roles: ['MANAGER'],
   },
   {
-    label: '팀장',
-    username: 'teamlead',
-    password: 'teamlead1234',
-    description: '팀 결재 권한',
-    roles: ['TEAM_LEADER'],
+    label: '선임 (개발)',
+    username: 'dev.senior.elec',
+    password: 'DevSr@2025!',
+    description: '개발팀 대리',
+    roles: ['EMPLOYEE'],
   },
   {
-    label: '일반 직원',
-    username: 'employee',
-    password: 'employee1234',
-    description: '기본 직원 권한',
+    label: '사원 (개발)',
+    username: 'dev.staff.elec',
+    password: 'DevStaff@2025!',
+    description: '개발팀 신입사원',
     roles: ['EMPLOYEE'],
   },
 ];

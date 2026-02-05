@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import {
@@ -7,17 +8,20 @@ import {
   Clock,
   AlertCircle,
   FileCheck,
+  Check,
 } from 'lucide-react';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { SkeletonTable } from '@/components/common/Skeleton';
 import { Pagination } from '@/components/common/Pagination';
+import { PullToRefreshContainer } from '@/components/mobile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import {
   Dialog,
   DialogContent,
@@ -67,6 +71,8 @@ function LeaveTypeBadge({ type }: { type: LeaveType }) {
 }
 
 export default function LeaveApprovalPage() {
+  const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const { toast } = useToast();
 
   const {
@@ -107,6 +113,7 @@ export default function LeaveApprovalPage() {
 
   const [comment, setComment] = useState('');
   const [rejectReason, setRejectReason] = useState('');
+  const [mobileSelectionMode, setMobileSelectionMode] = useState(false);
 
   const requests = listData?.data?.content ?? [];
   const totalPages = listData?.data?.totalPages ?? 0;
@@ -226,6 +233,385 @@ export default function LeaveApprovalPage() {
     }
   };
 
+  const handleRefresh = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['pending-leave-requests'] });
+    await queryClient.invalidateQueries({ queryKey: ['pending-leave-summary'] });
+  };
+
+  const toggleMobileSelection = (id: string) => {
+    toggleSelection(id);
+  };
+
+  // Mobile Layout
+  if (isMobile) {
+    return (
+      <PullToRefreshContainer onRefresh={handleRefresh}>
+        <div className="space-y-4 pb-32">
+          {/* Mobile Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl font-bold">휴가 승인</h1>
+              <p className="text-sm text-muted-foreground">대기 중인 휴가 신청 검토</p>
+            </div>
+            <button
+              onClick={() => {
+                if (mobileSelectionMode) {
+                  clearSelection();
+                }
+                setMobileSelectionMode(!mobileSelectionMode);
+              }}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                mobileSelectionMode
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              {mobileSelectionMode ? '선택 취소' : '선택'}
+            </button>
+          </div>
+
+          {/* Summary Cards */}
+          <div className="grid grid-cols-3 gap-2">
+            <div className="bg-card rounded-xl border p-3 text-center">
+              <Clock className="h-4 w-4 text-muted-foreground mx-auto mb-1" />
+              <p className="text-lg font-bold">{summary?.totalPending ?? 0}</p>
+              <p className="text-xs text-muted-foreground">대기</p>
+            </div>
+            <div className="bg-card rounded-xl border p-3 text-center">
+              <FileCheck className="h-4 w-4 text-blue-500 mx-auto mb-1" />
+              <p className="text-lg font-bold text-blue-600">{selectedCount}</p>
+              <p className="text-xs text-muted-foreground">선택</p>
+            </div>
+            <div className={`rounded-xl border p-3 text-center ${summary?.urgentCount ? 'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800' : 'bg-card'}`}>
+              <AlertCircle className="h-4 w-4 text-red-500 mx-auto mb-1" />
+              <p className="text-lg font-bold text-red-600">{summary?.urgentCount ?? 0}</p>
+              <p className="text-xs text-muted-foreground">긴급</p>
+            </div>
+          </div>
+
+          {/* Mobile Pending Leave List */}
+          {isLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-32 bg-muted animate-pulse rounded-xl" />
+              ))}
+            </div>
+          ) : requests.length === 0 ? (
+            <EmptyState
+              icon={FileCheck}
+              title="대기 중인 휴가 신청이 없습니다"
+              description="모든 휴가 신청이 처리되었습니다."
+            />
+          ) : (
+            <div className="space-y-3">
+              {requests.map((request) => (
+                <div
+                  key={request.id}
+                  className={`bg-card rounded-xl border p-4 transition-colors ${
+                    request.isUrgent ? 'border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-950/50' : ''
+                  } ${isSelected(request.id) ? 'ring-2 ring-primary' : ''}`}
+                >
+                  <div className="flex items-start gap-3">
+                    {/* Selection Checkbox */}
+                    {mobileSelectionMode && (
+                      <button
+                        onClick={() => toggleMobileSelection(request.id)}
+                        className={`mt-1 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                          isSelected(request.id)
+                            ? 'bg-primary border-primary'
+                            : 'border-muted-foreground'
+                        }`}
+                      >
+                        {isSelected(request.id) && <Check className="h-4 w-4 text-primary-foreground" />}
+                      </button>
+                    )}
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-medium text-sm">{request.employeeName}</span>
+                        {request.isUrgent && (
+                          <Badge variant="destructive" className="text-xs">긴급</Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <LeaveTypeBadge type={request.leaveType} />
+                        <span className="text-xs text-muted-foreground">
+                          잔여 {request.remainingDays}일
+                        </span>
+                      </div>
+                      <p className="text-sm">
+                        {format(new Date(request.startDate), 'M/d', { locale: ko })} ~{' '}
+                        {format(new Date(request.endDate), 'M/d', { locale: ko })}
+                        <span className="ml-2 font-medium">{request.days}일</span>
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1 truncate">{request.reason}</p>
+                    </div>
+                  </div>
+
+                  {/* Individual Actions (when not in selection mode) */}
+                  {!mobileSelectionMode && (
+                    <div className="flex gap-2 mt-3 pt-3 border-t">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 text-green-600 hover:text-green-700 hover:bg-green-50"
+                        onClick={() => setApproveDialog({ open: true, request })}
+                      >
+                        <CheckCircle className="mr-1 h-4 w-4" />
+                        승인
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => setRejectDialog({ open: true, request })}
+                      >
+                        <XCircle className="mr-1 h-4 w-4" />
+                        반려
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {totalPages > 1 && (
+                <Pagination
+                  page={searchState.page}
+                  totalPages={totalPages}
+                  onPageChange={setPage}
+                />
+              )}
+            </div>
+          )}
+
+          {/* Mobile Bulk Action Bar */}
+          {mobileSelectionMode && selectedCount > 0 && (
+            <div className="fixed bottom-0 left-0 right-0 bg-background border-t p-4 pb-safe z-50">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-medium">{selectedCount}건 선택됨</span>
+                <button
+                  onClick={handleSelectAll}
+                  className="text-sm text-primary"
+                >
+                  {selectedCount === requests.length ? '전체 해제' : '전체 선택'}
+                </button>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  className="flex-1"
+                  variant="outline"
+                  onClick={() => setBulkRejectDialog(true)}
+                >
+                  <XCircle className="mr-2 h-4 w-4 text-red-600" />
+                  반려
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={() => setBulkApproveDialog(true)}
+                >
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  승인
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Dialogs (same as desktop) */}
+        {/* Single Approve Dialog */}
+        <Dialog open={approveDialog.open} onOpenChange={(open) => {
+          setApproveDialog({ open, request: open ? approveDialog.request : null });
+          if (!open) setComment('');
+        }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>휴가 승인</DialogTitle>
+              <DialogDescription>
+                {approveDialog.request?.employeeName}님의 휴가 신청을 승인합니다.
+              </DialogDescription>
+            </DialogHeader>
+            {approveDialog.request && (
+              <div className="space-y-4">
+                <div className="rounded-lg bg-muted/50 p-4">
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">휴가 유형:</span>{' '}
+                      <span className="font-medium">
+                        {LEAVE_TYPE_LABELS[approveDialog.request.leaveType]}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">일수:</span>{' '}
+                      <span className="font-medium">{approveDialog.request.days}일</span>
+                    </div>
+                    <div className="col-span-2">
+                      <span className="text-muted-foreground">기간:</span>{' '}
+                      <span className="font-medium">
+                        {format(new Date(approveDialog.request.startDate), 'yyyy년 M월 d일', { locale: ko })} ~{' '}
+                        {format(new Date(approveDialog.request.endDate), 'M월 d일', { locale: ko })}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="comment">코멘트 (선택)</Label>
+                  <Textarea
+                    id="comment"
+                    placeholder="승인 코멘트를 입력하세요"
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setApproveDialog({ open: false, request: null })}
+              >
+                취소
+              </Button>
+              <Button onClick={handleApprove} disabled={approveMutation.isPending}>
+                {approveMutation.isPending ? '처리 중...' : '승인'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Single Reject Dialog */}
+        <Dialog open={rejectDialog.open} onOpenChange={(open) => {
+          setRejectDialog({ open, request: open ? rejectDialog.request : null });
+          if (!open) setRejectReason('');
+        }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>휴가 반려</DialogTitle>
+              <DialogDescription>
+                {rejectDialog.request?.employeeName}님의 휴가 신청을 반려합니다.
+              </DialogDescription>
+            </DialogHeader>
+            {rejectDialog.request && (
+              <div className="space-y-4">
+                <div className="rounded-lg bg-muted/50 p-4">
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">휴가 유형:</span>{' '}
+                      <span className="font-medium">
+                        {LEAVE_TYPE_LABELS[rejectDialog.request.leaveType]}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">일수:</span>{' '}
+                      <span className="font-medium">{rejectDialog.request.days}일</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="rejectReason">
+                    반려 사유 <span className="text-destructive">*</span>
+                  </Label>
+                  <Textarea
+                    id="rejectReason"
+                    placeholder="반려 사유를 입력하세요 (필수)"
+                    value={rejectReason}
+                    onChange={(e) => setRejectReason(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setRejectDialog({ open: false, request: null })}
+              >
+                취소
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleReject}
+                disabled={!rejectReason.trim() || rejectMutation.isPending}
+              >
+                {rejectMutation.isPending ? '처리 중...' : '반려'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Bulk Approve Dialog */}
+        <Dialog open={bulkApproveDialog} onOpenChange={(open) => {
+          setBulkApproveDialog(open);
+          if (!open) setComment('');
+        }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>일괄 승인</DialogTitle>
+              <DialogDescription>
+                선택한 {selectedCount}건의 휴가 신청을 일괄 승인합니다.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2">
+              <Label htmlFor="bulkComment">코멘트 (선택)</Label>
+              <Textarea
+                id="bulkComment"
+                placeholder="승인 코멘트를 입력하세요"
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+              />
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setBulkApproveDialog(false)}>
+                취소
+              </Button>
+              <Button onClick={handleBulkApprove} disabled={bulkApproveMutation.isPending}>
+                {bulkApproveMutation.isPending ? '처리 중...' : `${selectedCount}건 승인`}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Bulk Reject Dialog */}
+        <Dialog open={bulkRejectDialog} onOpenChange={(open) => {
+          setBulkRejectDialog(open);
+          if (!open) setRejectReason('');
+        }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>일괄 반려</DialogTitle>
+              <DialogDescription>
+                선택한 {selectedCount}건의 휴가 신청을 일괄 반려합니다.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2">
+              <Label htmlFor="bulkRejectReason">
+                반려 사유 <span className="text-destructive">*</span>
+              </Label>
+              <Textarea
+                id="bulkRejectReason"
+                placeholder="반려 사유를 입력하세요 (필수)"
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+              />
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setBulkRejectDialog(false)}>
+                취소
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleBulkReject}
+                disabled={!rejectReason.trim() || bulkRejectMutation.isPending}
+              >
+                {bulkRejectMutation.isPending ? '처리 중...' : `${selectedCount}건 반려`}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </PullToRefreshContainer>
+    );
+  }
+
+  // Desktop Layout
   return (
     <>
       <PageHeader

@@ -1013,7 +1013,7 @@ export const employeeHandlers = [
   }),
 
   // Resignation (SDD 4.3)
-  http.post('/api/v1/employees/:id/resignation', async ({ params, request }) => {
+  http.post('/api/v1/employees/:id/resign', async ({ params, request }) => {
     await delay(300);
 
     const { id } = params;
@@ -1050,7 +1050,7 @@ export const employeeHandlers = [
   }),
 
   // Resignation cancel
-  http.post('/api/v1/employees/:id/resignation/cancel', async ({ params }) => {
+  http.post('/api/v1/employees/:id/resign/cancel', async ({ params }) => {
     await delay(300);
 
     const { id } = params;
@@ -1385,7 +1385,7 @@ export const employeeHandlers = [
   }),
 
   // Employee History (SDD 3.2.7)
-  http.get('/api/v1/employees/:id/history', async ({ params, request }) => {
+  http.get('/api/v1/employees/:id/histories', async ({ params, request }) => {
     await delay(300);
 
     const { id } = params;

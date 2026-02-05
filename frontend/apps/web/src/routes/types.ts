@@ -37,3 +37,8 @@ export interface NavItem {
   roles?: string[];
   children?: NavChildItem[];
 }
+
+export interface NavGroup {
+  title: string;
+  items: NavItem[];
+}

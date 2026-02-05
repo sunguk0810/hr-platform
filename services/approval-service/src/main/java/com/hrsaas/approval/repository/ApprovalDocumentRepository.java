@@ -40,4 +40,22 @@ public interface ApprovalDocumentRepository extends JpaRepository<ApprovalDocume
 
     @Query("SELECT MAX(d.documentNumber) FROM ApprovalDocument d WHERE d.tenantId = :tenantId AND d.documentNumber LIKE :prefix%")
     Optional<String> findMaxDocumentNumberByPrefix(@Param("tenantId") UUID tenantId, @Param("prefix") String prefix);
+
+    @Query("SELECT d FROM ApprovalDocument d WHERE d.tenantId = :tenantId " +
+           "AND (:status IS NULL OR d.status = :status) " +
+           "AND (:type IS NULL OR d.documentType = :type) " +
+           "AND (:requesterId IS NULL OR d.drafterId = :requesterId) " +
+           "ORDER BY d.createdAt DESC")
+    Page<ApprovalDocument> search(
+        @Param("tenantId") UUID tenantId,
+        @Param("status") ApprovalStatus status,
+        @Param("type") String type,
+        @Param("requesterId") UUID requesterId,
+        Pageable pageable);
+
+    @Query("SELECT COUNT(d) FROM ApprovalDocument d WHERE d.tenantId = :tenantId AND d.status = :status")
+    long countByStatus(@Param("tenantId") UUID tenantId, @Param("status") ApprovalStatus status);
+
+    @Query("SELECT COUNT(d) FROM ApprovalDocument d WHERE d.tenantId = :tenantId AND d.drafterId = :drafterId AND d.status = :status")
+    long countByDrafterIdAndStatus(@Param("tenantId") UUID tenantId, @Param("drafterId") UUID drafterId, @Param("status") ApprovalStatus status);
 }

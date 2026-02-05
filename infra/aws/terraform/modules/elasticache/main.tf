@@ -34,13 +34,15 @@ resource "aws_elasticache_parameter_group" "main" {
   })
 }
 
-# ElastiCache Redis Cluster (Single Node for MVP)
-resource "aws_elasticache_cluster" "main" {
-  cluster_id           = "${var.project}-${var.environment}-redis"
+# ElastiCache Redis Replication Group (Single Node for MVP)
+resource "aws_elasticache_replication_group" "main" {
+  replication_group_id = "${var.project}-${var.environment}-redis"
+  description          = "Redis cluster for ${var.project} ${var.environment}"
+
   engine               = "redis"
   engine_version       = "7.0"
   node_type            = var.node_type
-  num_cache_nodes      = 1
+  num_cache_clusters   = 1
   port                 = 6379
   parameter_group_name = aws_elasticache_parameter_group.main.name
   subnet_group_name    = aws_elasticache_subnet_group.main.name
@@ -49,14 +51,15 @@ resource "aws_elasticache_cluster" "main" {
   # Enable encryption
   transit_encryption_enabled = true
   at_rest_encryption_enabled = true
+  auth_token                 = var.redis_password
 
   # Maintenance
   maintenance_window       = "sun:05:00-sun:06:00"
   snapshot_retention_limit = var.environment == "prod" ? 7 : 1
   snapshot_window          = "04:00-05:00"
 
-  # Notifications (optional)
-  # notification_topic_arn = var.sns_topic_arn
+  # Auto failover disabled for single node
+  automatic_failover_enabled = false
 
   tags = merge(var.tags, {
     Name = "${var.project}-${var.environment}-redis"

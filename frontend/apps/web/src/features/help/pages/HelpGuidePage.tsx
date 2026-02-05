@@ -1,8 +1,16 @@
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { HelpArticle, type HelpArticleData } from '../components/HelpArticle';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 import { useOnboarding } from '../hooks/useOnboarding';
+import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useNavigate } from 'react-router-dom';
+import { MarkdownContent } from '../components/MarkdownContent';
 import {
   BookOpen,
   Users,
@@ -12,16 +20,24 @@ import {
   Play,
   Settings,
   Bell,
+  type LucideIcon,
 } from 'lucide-react';
 
-const guideArticles: HelpArticleData[] = [
+interface GuideSection {
+  id: string;
+  title: string;
+  icon: LucideIcon;
+  summary: string;
+  content: string;
+}
+
+const guideSections: GuideSection[] = [
   {
     id: 'getting-started',
     title: '시작하기',
-    icon: <BookOpen className="h-5 w-5" aria-hidden="true" />,
+    icon: BookOpen,
     summary: 'HR Platform 사용을 위한 기본 가이드',
-    content: `
-## HR Platform 시작하기
+    content: `## HR Platform 시작하기
 
 HR Platform에 오신 것을 환영합니다! 이 가이드에서는 플랫폼의 기본적인 사용법을 안내합니다.
 
@@ -43,16 +59,14 @@ HR Platform에 오신 것을 환영합니다! 이 가이드에서는 플랫폼�
 - **조직관리**: 부서/직급/직책 관리
 - **근태/휴가**: 출퇴근 및 휴가 관리
 - **전자결재**: 결재 문서 작성 및 승인
-- **설정**: 개인 설정 및 알림 관리
-    `,
+- **설정**: 개인 설정 및 알림 관리`,
   },
   {
     id: 'employee-management',
     title: '인사정보 관리',
-    icon: <Users className="h-5 w-5" aria-hidden="true" />,
+    icon: Users,
     summary: '직원 정보 조회 및 관리 방법',
-    content: `
-## 인사정보 관리
+    content: `## 인사정보 관리
 
 ### 직원 목록 조회
 - 검색: 이름, 사번, 이메일로 직원을 검색할 수 있습니다.
@@ -72,16 +86,14 @@ HR Platform에 오신 것을 환영합니다! 이 가이드에서는 플랫폼�
 
 ### 권한에 따른 기능
 - 일반 사용자: 조회만 가능
-- 인사 담당자: 등록/수정/삭제 가능
-    `,
+- 인사 담당자: 등록/수정/삭제 가능`,
   },
   {
     id: 'attendance-leave',
     title: '근태/휴가 관리',
-    icon: <Calendar className="h-5 w-5" aria-hidden="true" />,
+    icon: Calendar,
     summary: '출퇴근 기록 및 휴가 신청 방법',
-    content: `
-## 근태/휴가 관리
+    content: `## 근태/휴가 관리
 
 ### 출퇴근 기록
 1. 대시보드의 출근/퇴근 버튼을 클릭합니다.
@@ -101,16 +113,14 @@ HR Platform에 오신 것을 환영합니다! 이 가이드에서는 플랫폼�
 ### 초과근무 신청
 1. 근태/휴가 > 초과근무 메뉴로 이동합니다.
 2. 초과근무 일시와 사유를 입력합니다.
-3. 결재를 요청합니다.
-    `,
+3. 결재를 요청합니다.`,
   },
   {
     id: 'approval-workflow',
     title: '전자결재',
-    icon: <FileCheck className="h-5 w-5" aria-hidden="true" />,
+    icon: FileCheck,
     summary: '결재 문서 작성 및 처리 방법',
-    content: `
-## 전자결재
+    content: `## 전자결재
 
 ### 결재 문서 작성
 1. 전자결재 > 결재 작성 메뉴로 이동합니다.
@@ -134,16 +144,14 @@ HR Platform에 오신 것을 환영합니다! 이 가이드에서는 플랫폼�
 ### 결재 현황
 - **내 결재**: 내가 상신한 문서 목록
 - **결재 대기**: 내가 처리해야 할 문서 목록
-- **결재 완료**: 처리 완료된 문서 목록
-    `,
+- **결재 완료**: 처리 완료된 문서 목록`,
   },
   {
     id: 'organization',
     title: '조직 관리',
-    icon: <Building2 className="h-5 w-5" aria-hidden="true" />,
+    icon: Building2,
     summary: '조직도 및 부서/직급 관리',
-    content: `
-## 조직 관리
+    content: `## 조직 관리
 
 ### 조직도 조회
 - **트리 뷰**: 계층 구조로 조직을 확인합니다.
@@ -161,16 +169,14 @@ HR Platform에 오신 것을 환영합니다! 이 가이드에서는 플랫폼�
 - 표시 순서 설정
 
 ### 조직 이력
-조직 변경 이력을 타임라인으로 확인할 수 있습니다.
-    `,
+조직 변경 이력을 타임라인으로 확인할 수 있습니다.`,
   },
   {
     id: 'notifications',
     title: '알림 설정',
-    icon: <Bell className="h-5 w-5" aria-hidden="true" />,
+    icon: Bell,
     summary: '알림 수신 및 설정 방법',
-    content: `
-## 알림 설정
+    content: `## 알림 설정
 
 ### 알림 확인
 - 헤더의 알림 아이콘을 클릭하여 최근 알림을 확인합니다.
@@ -186,16 +192,14 @@ HR Platform에 오신 것을 환영합니다! 이 가이드에서는 플랫폼�
 - 결재 요청
 - 결재 완료
 - 휴가 승인
-- 공지사항
-    `,
+- 공지사항`,
   },
   {
     id: 'settings',
     title: '개인 설정',
-    icon: <Settings className="h-5 w-5" aria-hidden="true" />,
+    icon: Settings,
     summary: '프로필 및 보안 설정',
-    content: `
-## 개인 설정
+    content: `## 개인 설정
 
 ### 프로필 설정
 - 프로필 사진 변경
@@ -212,14 +216,103 @@ HR Platform에 오신 것을 환영합니다! 이 가이드에서는 플랫폼�
 
 ### 알림 설정
 - 알림 채널 설정
-- 알림 유형별 수신 설정
-    `,
+- 알림 유형별 수신 설정`,
   },
 ];
 
+// Tour에 해당하는 페이지 경로 매핑
+const tourPageMap: Record<string, string> = {
+  dashboard: '/',
+  approval: '/approvals',
+  attendance: '/attendance',
+  organization: '/organization',
+};
+
 export default function HelpGuidePage() {
   const { startTour } = useOnboarding();
+  const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
+  // 투어 시작 시 해당 페이지로 이동 후 시작
+  const handleStartTour = (tourId: string) => {
+    const targetPath = tourPageMap[tourId];
+    if (targetPath) {
+      navigate(targetPath);
+      // 페이지 이동 후 투어 시작 (DOM이 준비될 때까지 대기)
+      setTimeout(() => startTour(tourId), 500);
+    } else {
+      startTour(tourId);
+    }
+  };
+
+  // Mobile Layout
+  if (isMobile) {
+    return (
+      <div className="space-y-4 pb-20">
+        {/* Mobile Header */}
+        <div>
+          <h1 className="text-xl font-bold">사용자 가이드</h1>
+          <p className="text-sm text-muted-foreground">HR Platform 사용법을 확인하세요</p>
+        </div>
+
+        {/* Interactive Tour */}
+        <div className="bg-card rounded-xl border p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <Play className="h-5 w-5" />
+            <h3 className="font-medium">인터랙티브 투어</h3>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            버튼을 누르면 해당 페이지로 이동하여 실제 화면에서 기능을 배워봅니다.
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <Button variant="outline" size="sm" onClick={() => handleStartTour('dashboard')}>
+              대시보드
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => handleStartTour('approval')}>
+              결재 기능
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => handleStartTour('attendance')}>
+              근태 관리
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => handleStartTour('organization')}>
+              조직도
+            </Button>
+          </div>
+        </div>
+
+        {/* Guide Accordion */}
+        <Accordion type="single" collapsible className="space-y-2">
+          {guideSections.map((section) => {
+            const Icon = section.icon;
+            return (
+              <AccordionItem
+                key={section.id}
+                value={section.id}
+                className="bg-card rounded-xl border px-4"
+              >
+                <AccordionTrigger className="hover:no-underline py-4">
+                  <div className="flex items-center gap-3 text-left">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                      <Icon className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <div className="font-medium">{section.title}</div>
+                      <div className="text-sm text-muted-foreground">{section.summary}</div>
+                    </div>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <MarkdownContent content={section.content} />
+                </AccordionContent>
+              </AccordionItem>
+            );
+          })}
+        </Accordion>
+      </div>
+    );
+  }
+
+  // Desktop Layout
   return (
     <>
       <PageHeader
@@ -228,6 +321,7 @@ export default function HelpGuidePage() {
       />
 
       <div className="space-y-6">
+        {/* Interactive Tour Card */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -235,33 +329,60 @@ export default function HelpGuidePage() {
               인터랙티브 투어
             </CardTitle>
             <CardDescription>
-              실제 화면에서 기능을 배워보세요.
+              버튼을 누르면 해당 페이지로 이동하여 실제 화면에서 기능을 배워봅니다.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-3" role="group" aria-label="투어 시작 버튼">
-              <Button variant="outline" onClick={() => startTour('dashboard')} aria-label="대시보드 기능 투어 시작">
+              <Button variant="outline" onClick={() => handleStartTour('dashboard')} aria-label="대시보드 기능 투어 시작">
                 대시보드 투어
               </Button>
-              <Button variant="outline" onClick={() => startTour('approval')} aria-label="결재 기능 투어 시작">
+              <Button variant="outline" onClick={() => handleStartTour('approval')} aria-label="결재 기능 투어 시작">
                 결재 기능 투어
               </Button>
-              <Button variant="outline" onClick={() => startTour('attendance')} aria-label="근태 관리 기능 투어 시작">
+              <Button variant="outline" onClick={() => handleStartTour('attendance')} aria-label="근태 관리 기능 투어 시작">
                 근태 관리 투어
               </Button>
-              <Button variant="outline" onClick={() => startTour('organization')} aria-label="조직도 기능 투어 시작">
+              <Button variant="outline" onClick={() => handleStartTour('organization')} aria-label="조직도 기능 투어 시작">
                 조직도 투어
               </Button>
             </div>
           </CardContent>
         </Card>
 
+        {/* Guide Sections */}
         <section aria-label="사용자 가이드 문서">
-          <div className="grid gap-6 md:grid-cols-2">
-            {guideArticles.map((article) => (
-              <HelpArticle key={article.id} article={article} />
-            ))}
-          </div>
+          <Accordion type="single" collapsible className="space-y-4">
+            {guideSections.map((section) => {
+              const Icon = section.icon;
+              return (
+                <AccordionItem
+                  key={section.id}
+                  value={section.id}
+                  className="border rounded-lg"
+                >
+                  <Card>
+                    <AccordionTrigger className="hover:no-underline px-6 py-4 [&[data-state=open]>div>div>svg]:rotate-0">
+                      <div className="flex items-center gap-4 text-left w-full">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 shrink-0">
+                          <Icon className="h-6 w-6 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-lg">{section.title}</div>
+                          <div className="text-sm text-muted-foreground">{section.summary}</div>
+                        </div>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <CardContent className="pt-0 pb-6">
+                        <MarkdownContent content={section.content} />
+                      </CardContent>
+                    </AccordionContent>
+                  </Card>
+                </AccordionItem>
+              );
+            })}
+          </Accordion>
         </section>
       </div>
     </>

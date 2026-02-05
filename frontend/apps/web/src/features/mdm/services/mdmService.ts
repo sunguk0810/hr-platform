@@ -86,18 +86,36 @@ export const mdmService = {
     return response.data;
   },
 
-  // Get codes by group (for dropdowns)
+  // Get codes by group (for dropdowns) - Backend uses /mdm/common-codes/group/{groupCode}
   async getCodesByGroup(groupCode: string): Promise<ApiResponse<CodeOption[]>> {
-    const response = await apiClient.get<ApiResponse<CodeOption[]>>(`/mdm/codes/${groupCode}`);
+    const response = await apiClient.get<ApiResponse<CodeOption[]>>(`/mdm/common-codes/group/${groupCode}`);
     return response.data;
   },
 
-  // Update code status
+  // Update code status - Backend uses PUT with separate activate/deactivate endpoints
   async updateCodeStatus(id: string, data: UpdateCodeStatusRequest): Promise<ApiResponse<UpdateCodeStatusResponse>> {
-    const response = await apiClient.patch<ApiResponse<UpdateCodeStatusResponse>>(
-      `/mdm/common-codes/${id}/status`,
-      data
+    const endpoint = data.status === 'ACTIVE' ? 'activate' : 'deactivate';
+    const response = await apiClient.put<ApiResponse<UpdateCodeStatusResponse>>(
+      `/mdm/common-codes/${id}/${endpoint}`
     );
+    return response.data;
+  },
+
+  // Activate code
+  async activateCode(id: string): Promise<ApiResponse<CommonCode>> {
+    const response = await apiClient.put<ApiResponse<CommonCode>>(`/mdm/common-codes/${id}/activate`);
+    return response.data;
+  },
+
+  // Deactivate code
+  async deactivateCode(id: string): Promise<ApiResponse<CommonCode>> {
+    const response = await apiClient.put<ApiResponse<CommonCode>>(`/mdm/common-codes/${id}/deactivate`);
+    return response.data;
+  },
+
+  // Deprecate code
+  async deprecateCode(id: string): Promise<ApiResponse<CommonCode>> {
+    const response = await apiClient.put<ApiResponse<CommonCode>>(`/mdm/common-codes/${id}/deprecate`);
     return response.data;
   },
 
@@ -145,10 +163,11 @@ export const mdmService = {
     return response.data;
   },
 
-  // Get code tree (hierarchical)
+  // Get code tree (hierarchical) - Backend uses /mdm/common-codes/tree with query param
   async getCodeTree(groupCode: string): Promise<ApiResponse<CodeTreeNode[]>> {
     const response = await apiClient.get<ApiResponse<CodeTreeNode[]>>(
-      `/mdm/code-groups/${groupCode}/tree`
+      `/mdm/common-codes/tree`,
+      { params: { groupCode } }
     );
     return response.data;
   },

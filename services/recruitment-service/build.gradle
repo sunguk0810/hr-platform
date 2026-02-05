@@ -40,6 +40,7 @@ dependencies {
 
     // Database
     runtimeOnly 'org.postgresql:postgresql'
+    implementation 'org.flywaydb:flyway-core'
 
     // Kafka
     implementation 'org.springframework.kafka:spring-kafka'

@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, HTMLAttributes } from 'react';
 import { Loader2 } from 'lucide-react';
 import {
   Card,
@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 
-interface WidgetContainerProps {
+interface WidgetContainerProps extends HTMLAttributes<HTMLDivElement> {
   title: string;
   description?: string;
   children: ReactNode;
@@ -22,9 +22,10 @@ export function WidgetContainer({
   children,
   isLoading,
   action,
+  ...props
 }: WidgetContainerProps) {
   return (
-    <Card>
+    <Card {...props}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <div>
           <CardTitle className="text-lg font-medium">{title}</CardTitle>

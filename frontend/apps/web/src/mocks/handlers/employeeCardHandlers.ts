@@ -158,4 +158,38 @@ export const employeeCardHandlers = [
       message: '분실 신고가 완료되었습니다.',
     });
   }),
+
+  // Approve issue request
+  http.post('/api/v1/employee-cards/issue-requests/:id/approve', async ({ params }) => {
+    await delay(300);
+    const { id } = params;
+    return HttpResponse.json({
+      success: true,
+      data: {
+        id,
+        status: 'APPROVED',
+        approvedAt: new Date().toISOString(),
+      },
+      message: '발급 요청이 승인되었습니다.',
+    });
+  }),
+
+  // Revoke card
+  http.post('/api/v1/employee-cards/:id/revoke', async ({ params }) => {
+    await delay(300);
+    const { id } = params;
+    const card = mockCards.find((c) => c.id === id);
+    if (!card) {
+      return HttpResponse.json({ success: false, error: { code: 'NOT_FOUND' } }, { status: 404 });
+    }
+    return HttpResponse.json({
+      success: true,
+      data: {
+        ...card,
+        status: 'REVOKED',
+        revokedAt: new Date().toISOString(),
+      },
+      message: '카드가 폐기되었습니다.',
+    });
+  }),
 ];
