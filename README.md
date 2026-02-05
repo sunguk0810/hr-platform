@@ -1,39 +1,40 @@
 # HR SaaS Platform
 
-Enterprise-grade multi-tenant HR SaaS platform for large corporate groups with 100+ subsidiaries.
+100개 이상의 계열사를 보유한 대기업 그룹을 위한 엔터프라이즈급 멀티테넌트 HR SaaS 플랫폼
 
 ---
 
-## 🚧 프로젝트 현재 상태 (Project Status)
+## 프로젝트 현재 상태
 
 > **최종 업데이트**: 2026년 2월 5일
 
-### ✅ 완료된 작업 (Frontend UI)
+### 완료된 작업 (프론트엔드 UI)
 
 프론트엔드 화면 개발이 완료되었습니다. 현재 **MSW(Mock Service Worker)**를 사용하여 API를 모킹하고 있으며, 실제 백엔드 연동 없이 모든 화면을 확인할 수 있습니다.
 
 | 기능 | 화면 | 상태 |
 |------|------|------|
-| **인증** | 로그인, 로그아웃 | ✅ 완료 |
-| **대시보드** | 메인 대시보드, 위젯 커스터마이징 | ✅ 완료 |
-| **직원 관리** | 목록, 상세, 등록, 수정, 겸직 관리 | ✅ 완료 |
-| **조직 관리** | 조직도, 부서 관리, 직급/직위 관리, 이력 | ✅ 완료 |
-| **근태 관리** | 출퇴근, 연장근무, 휴가 신청/승인/캘린더 | ✅ 완료 |
-| **결재** | 문서 작성/목록/상세, 템플릿, 위임 설정 | ✅ 완료 |
-| **채용** | 채용공고, 지원자 관리, 면접 관리 | ✅ 완료 |
-| **공지사항** | 목록, 상세, 작성 | ✅ 완료 |
-| **위원회** | 목록, 생성, 멤버 관리 | ✅ 완료 |
-| **정원 관리** | 현황, 요청 생성 | ✅ 완료 |
-| **인사이동** | 요청, 목록, 상세 | ✅ 완료 |
-| **증명서** | 발급 신청, 내 증명서 | ✅ 완료 |
-| **알림** | 알림 센터, 설정 | ✅ 완료 |
-| **설정** | 시스템 설정, 테마, 언어 | ✅ 완료 |
-| **도움말** | FAQ, 가이드, 문의 | ✅ 완료 |
-| **모바일 대응** | 반응형 UI, PWA 지원 | ✅ 완료 |
-| **접근성** | WCAG 2.1 AA 준수 | ✅ 완료 |
-| **다국어** | 한국어/영어 지원 | ✅ 완료 |
+| **인증** | 로그인, 로그아웃 | 완료 |
+| **대시보드** | 메인 대시보드, 위젯 커스터마이징 | 완료 |
+| **직원 관리** | 목록, 상세, 등록, 수정, 겸직 관리 | 완료 |
+| **조직 관리** | 조직도, 부서 관리, 직급/직위 관리, 이력 | 완료 |
+| **근태 관리** | 출퇴근, 연장근무, 휴가 신청/승인/캘린더 | 완료 |
+| **결재** | 문서 작성/목록/상세, 템플릿, 위임 설정 | 완료 |
+| **채용** | 채용공고, 지원자 관리, 면접 관리 | 완료 |
+| **공지사항** | 목록, 상세, 작성 | 완료 |
+| **위원회** | 목록, 생성, 멤버 관리 | 완료 |
+| **정원 관리** | 현황, 요청 생성 | 완료 |
+| **인사이동** | 요청, 목록, 상세 | 완료 |
+| **증명서** | 발급 신청, 내 증명서 | 완료 |
+| **경조사** | 신청, 정책 관리, 지급 관리 | 완료 |
+| **알림** | 알림 센터, 설정 | 완료 |
+| **설정** | 시스템 설정, 테마, 언어 | 완료 |
+| **도움말** | FAQ, 가이드, 문의 | 완료 |
+| **모바일 대응** | 반응형 UI, PWA 지원 | 완료 |
+| **접근성** | WCAG 2.1 AA 준수 | 완료 |
+| **다국어** | 한국어/영어 지원 | 완료 |
 
-### 🔄 진행 예정 (Backend Integration)
+### 진행 예정 (백엔드 연동)
 
 백엔드 마이크로서비스는 개발이 완료되었으나, 프론트엔드와의 연동 작업이 필요합니다.
 
@@ -54,15 +55,15 @@ Enterprise-grade multi-tenant HR SaaS platform for large corporate groups with 1
    - 성능 테스트 및 최적화
    - 보안 점검
 
-### 🌐 현재 배포 상태
+### 현재 배포 상태
 
 | 환경 | URL | 상태 |
 |------|-----|------|
-| **Frontend (Production)** | https://app.port-sw.com | ✅ 운영 중 |
-| **Backend API** | https://api-hr.port-sw.com | ⏸️ 정비 중 |
-| **Keycloak** | - | ⏸️ 정비 중 |
+| **프론트엔드** | https://app.port-sw.com | 운영 중 |
+| **백엔드 API** | https://api-hr.port-sw.com | 정비 중 |
+| **Keycloak** | - | 정비 중 |
 
-### 💡 로컬에서 프론트엔드 실행하기
+### 로컬에서 프론트엔드 실행하기
 
 ```bash
 cd frontend/apps/web
@@ -78,44 +79,48 @@ pnpm dev
 
 ---
 
-## Overview
+## 개요
 
-A comprehensive Human Resource Management System built with microservices architecture, designed for enterprise-scale operations with robust multi-tenancy support using PostgreSQL Row Level Security (RLS).
+마이크로서비스 아키텍처로 구축된 종합 인사관리 시스템입니다. PostgreSQL Row Level Security(RLS)를 활용한 멀티테넌시 지원으로 엔터프라이즈 규모의 운영에 적합하게 설계되었습니다.
 
-### Key Features
+### 주요 기능
 
-- **Employee Management**: Full lifecycle management from onboarding to offboarding
-- **Attendance & Leave**: Time tracking, leave requests, and approval workflows
-- **Approval Workflow**: Configurable multi-step approval processes
-- **Organization Management**: Hierarchical org chart, departments, positions, grades
-- **Recruitment**: Job postings, applicant tracking, interview scheduling
-- **Multi-tenancy**: Complete data isolation between tenants using RLS
+- **직원 관리**: 입사부터 퇴사까지 전체 생애주기 관리
+- **근태/휴가**: 출퇴근 기록, 휴가 신청, 승인 워크플로우
+- **결재 워크플로우**: 설정 가능한 다단계 결재 프로세스
+- **조직 관리**: 계층형 조직도, 부서, 직위, 직급 관리
+- **채용**: 채용공고, 지원자 추적, 면접 일정 관리
+- **멀티테넌시**: RLS를 활용한 테넌트 간 완벽한 데이터 격리
 
-## Tech Stack
+---
 
-| Layer | Technology |
-|-------|------------|
-| Language | Java 17 |
-| Framework | Spring Boot 3.2, Spring Cloud 2023.x |
-| Database | PostgreSQL 15 + Row Level Security |
-| Cache | Redis 7.x |
-| Messaging | Apache Kafka 3.x (KRaft mode) |
-| Authentication | Keycloak 23.x (OAuth 2.0 / OIDC) |
-| Build | Gradle 8.x (Multi-module) |
-| Container | Docker, AWS ECS Fargate (Graviton ARM64) |
-| Frontend | React 18, TypeScript, Vite, TanStack Query |
+## 기술 스택
 
-## Architecture
+| 구분 | 기술 |
+|------|------|
+| 언어 | Java 17 |
+| 프레임워크 | Spring Boot 3.2, Spring Cloud 2023.x |
+| 데이터베이스 | PostgreSQL 15 + Row Level Security |
+| 캐시 | Redis 7.x |
+| 메시징 | Apache Kafka 3.x (KRaft 모드) |
+| 인증 | Keycloak 23.x (OAuth 2.0 / OIDC) |
+| 빌드 | Gradle 8.x (멀티모듈) |
+| 컨테이너 | Docker, AWS ECS Fargate (Graviton ARM64) |
+| 프론트엔드 | React 18, TypeScript, Vite, TanStack Query |
+
+---
+
+## 시스템 아키텍처
 
 ```
                     ┌────────────────────────────────────────────────────────┐
                     │                      VPC (10.0.0.0/16)                 │
                     │                                                        │
-    Internet ───────┤►  ALB (Public Subnet)    CloudFront ◄── S3 (Frontend)  │
+    인터넷 ─────────┤►  ALB (퍼블릭 서브넷)   CloudFront ◄── S3 (프론트엔드) │
                     │       │                                                │
                     │       ▼                                                │
                     │   ┌────────────────────────────────────────────────┐  │
-                    │   │           ECS Fargate (Private Subnet)          │  │
+                    │   │         ECS Fargate (프라이빗 서브넷)           │  │
                     │   │                    [ARM64]                       │  │
                     │   │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌────────┐ │  │
                     │   │  │ Gateway │ │  Auth   │ │ Tenant  │ │  Org   │ │  │
@@ -137,39 +142,41 @@ A comprehensive Human Resource Management System built with microservices archit
                     │ └─────────┘                          └─────────┘      │
                     │                                                        │
                     │   ┌─────────────────────────────────────────────┐     │
-                    │   │           VPC Endpoints (No NAT)             │     │
+                    │   │         VPC Endpoints (NAT 불필요)          │     │
                     │   │  ECR API │ ECR DKR │ Logs │ Secrets │ S3(GW) │     │
                     │   └─────────────────────────────────────────────┘     │
                     └────────────────────────────────────────────────────────┘
 ```
 
-### Microservices
+### 마이크로서비스 구성
 
-| Service | Port | Description |
-|---------|------|-------------|
-| Gateway | 8080 | API Gateway, routing, rate limiting |
-| Auth | 8081 | Authentication, session management |
-| Tenant | 8082 | Multi-tenancy management |
-| Organization | 8083 | Org structure, departments, positions |
-| Employee | 8084 | Employee data management |
-| Attendance | 8085 | Time tracking, leave management |
-| Approval | 8086 | Workflow engine |
-| MDM | 8087 | Master data (codes, menus) |
-| Notification | 8088 | Push notifications, emails |
-| File | 8089 | File storage (S3 integration) |
+| 서비스 | 포트 | 설명 |
+|--------|------|------|
+| Gateway | 8080 | API 게이트웨이, 라우팅, 속도 제한 |
+| Auth | 8081 | 인증, 세션 관리 |
+| Tenant | 8082 | 멀티테넌시 관리 |
+| Organization | 8083 | 조직 구조, 부서, 직위 |
+| Employee | 8084 | 직원 데이터 관리 |
+| Attendance | 8085 | 근태 기록, 휴가 관리 |
+| Approval | 8086 | 워크플로우 엔진 |
+| MDM | 8087 | 마스터 데이터 (코드, 메뉴) |
+| Notification | 8088 | 푸시 알림, 이메일 |
+| File | 8089 | 파일 저장 (S3 연동) |
 
-## Project Structure
+---
+
+## 프로젝트 구조
 
 ```
 hr-platform/
-├── docker/                     # Docker configurations
-├── common/                     # Shared modules
-│   ├── common-core/            # Base exceptions, utilities
-│   ├── common-entity/          # JPA base entities
-│   ├── common-security/        # JWT, permissions
-│   ├── common-tenant/          # Multi-tenancy support
+├── docker/                     # Docker 설정
+├── common/                     # 공통 모듈
+│   ├── common-core/            # 기본 예외, 유틸리티
+│   ├── common-entity/          # JPA 기본 엔티티
+│   ├── common-security/        # JWT, 권한
+│   ├── common-tenant/          # 멀티테넌시 지원
 │   └── ...
-├── services/                   # Microservices
+├── services/                   # 마이크로서비스
 │   ├── gateway-service/
 │   ├── auth-service/
 │   ├── employee-service/
@@ -178,101 +185,105 @@ hr-platform/
 │   └── apps/web/               # React SPA
 ├── infra/
 │   └── aws/terraform/          # Infrastructure as Code
-└── config/                     # Centralized configs
+└── config/                     # 중앙화된 설정
 ```
 
-## Local Development
+---
 
-### Prerequisites
+## 로컬 개발 환경
 
-- Java 17+
-- Node.js 18+ with pnpm
-- Docker & Docker Compose
+### 사전 요구사항
+
+- Java 17 이상
+- Node.js 18 이상 + pnpm
+- Docker 및 Docker Compose
 - Gradle 8.x
 
-### Quick Start
+### 빠른 시작
 
 ```bash
-# 1. Start infrastructure (PostgreSQL, Redis, Kafka, Keycloak)
+# 1. 인프라 시작 (PostgreSQL, Redis, Kafka, Keycloak)
 cd docker && docker-compose up -d
 
-# 2. Run backend services
+# 2. 백엔드 서비스 실행
 ./gradlew :services:gateway-service:bootRun &
 ./gradlew :services:auth-service:bootRun &
 ./gradlew :services:employee-service:bootRun &
-# ... or run all services
+# ... 또는 전체 서비스 실행
 
-# 3. Start frontend
+# 3. 프론트엔드 시작
 cd frontend/apps/web
 pnpm install
 pnpm dev
 ```
 
-### Running Individual Services
+### 개별 서비스 실행
 
 ```bash
-# Build all modules
+# 전체 모듈 빌드
 ./gradlew build
 
-# Run specific service
+# 특정 서비스 실행
 ./gradlew :services:employee-service:bootRun
 
-# Run tests
+# 테스트 실행
 ./gradlew test
 
-# Generate test coverage
+# 테스트 커버리지 리포트 생성
 ./gradlew jacocoTestReport
 ```
 
-### Frontend Development
+### 프론트엔드 개발
 
-**Important: Use pnpm, not npm or yarn**
+**중요: npm이나 yarn이 아닌 pnpm을 사용하세요**
 
 ```bash
 cd frontend/apps/web
 
-# Install dependencies
+# 의존성 설치
 pnpm install
 
-# Development server (http://localhost:5173)
+# 개발 서버 (http://localhost:5173)
 pnpm dev
 
-# Production build
+# 프로덕션 빌드
 pnpm build
 
-# Type checking
+# 타입 체크
 pnpm typecheck
 ```
 
-## AWS Deployment
+---
 
-### Infrastructure Overview
+## AWS 배포
 
-- **Compute**: ECS Fargate with Graviton (ARM64) for cost efficiency
-- **Database**: RDS PostgreSQL with Row Level Security
-- **Cache**: Redis on Fargate (ARM64)
-- **Messaging**: Kafka on EC2 (KRaft mode, no ZooKeeper)
-- **Auth**: Keycloak on Fargate (ARM64)
-- **Networking**: VPC Endpoints instead of NAT Gateway (~$20/month savings)
+### 인프라 개요
 
-### Deployment Steps
+- **컴퓨팅**: ECS Fargate + Graviton (ARM64) - 비용 효율성
+- **데이터베이스**: RDS PostgreSQL + Row Level Security
+- **캐시**: Fargate 기반 Redis (ARM64)
+- **메시징**: EC2 기반 Kafka (KRaft 모드, ZooKeeper 불필요)
+- **인증**: Fargate 기반 Keycloak (ARM64)
+- **네트워킹**: NAT Gateway 대신 VPC Endpoints 사용 (월 ~$20 절감)
+
+### 배포 단계
 
 ```bash
-# 1. Initialize Terraform
+# 1. Terraform 초기화
 cd infra/aws/terraform/environments/dev
 terraform init
 
-# 2. Review planned changes
+# 2. 변경 사항 검토
 terraform plan -out=tfplan
 
-# 3. Apply infrastructure
+# 3. 인프라 적용
 terraform apply tfplan
 
-# 4. Build and push Docker images (ARM64)
+# 4. Docker 이미지 빌드 및 푸시 (ARM64)
 aws ecr get-login-password --region ap-northeast-2 | \
   docker login --username AWS --password-stdin <account-id>.dkr.ecr.ap-northeast-2.amazonaws.com
 
-# Build ARM64 images using buildx
+# buildx를 사용한 ARM64 이미지 빌드
 docker buildx create --use
 services="gateway-service auth-service tenant-service organization-service employee-service attendance-service approval-service mdm-service"
 for service in $services; do
@@ -282,30 +293,30 @@ for service in $services; do
     -f docker/Dockerfile.service . --push
 done
 
-# 5. Deploy frontend
+# 5. 프론트엔드 배포
 cd frontend/apps/web && pnpm build
 aws s3 sync dist/ s3://hr-platform-dev-frontend/ --delete
 aws cloudfront create-invalidation --distribution-id <id> --paths "/*"
 ```
 
-### Infrastructure Validation
+### 인프라 검증
 
 ```bash
-# Check VPC Endpoints
+# VPC Endpoints 확인
 aws ec2 describe-vpc-endpoints --filters "Name=vpc-id,Values=<vpc-id>"
 
-# Verify ECS tasks are running ARM64
+# ECS 태스크 ARM64 실행 확인
 aws ecs describe-tasks --cluster hr-platform-dev --tasks <task-arn>
 
-# Test service health
+# 서비스 헬스 체크
 curl -k https://<alb-dns>/actuator/health
 ```
 
-### Estimated Monthly Cost (Dev Environment)
+### 예상 월간 비용 (개발 환경)
 
-| Resource | Configuration | Cost |
-|----------|--------------|------|
-| ECS Fargate (8 services) | ARM64, 256 CPU, 512MB | ~$96 |
+| 리소스 | 구성 | 비용 |
+|--------|------|------|
+| ECS Fargate (8개 서비스) | ARM64, 256 CPU, 512MB | ~$96 |
 | Redis (Fargate) | ARM64, 256 CPU, 512MB | ~$8 |
 | Keycloak (Fargate) | ARM64, 512 CPU, 1GB | ~$16 |
 | Kafka (EC2) | t3.small | ~$15 |
@@ -313,74 +324,82 @@ curl -k https://<alb-dns>/actuator/health
 | ALB | - | ~$20 |
 | VPC Endpoints | ECR, Logs, Secrets | ~$14 |
 | CloudFront + S3 | - | ~$5 |
-| **Total** | | **~$200/month** |
+| **합계** | | **~$200/월** |
 
-## API Documentation
+---
 
-### Accessing Swagger UI
+## API 문서
 
-After starting services locally or on AWS:
+### Swagger UI 접근
+
+로컬 또는 AWS에서 서비스 시작 후:
 
 - Gateway Swagger: `http://localhost:8080/swagger-ui.html`
-- Individual services: `http://localhost:<port>/swagger-ui.html`
+- 개별 서비스: `http://localhost:<port>/swagger-ui.html`
 
-### Key API Endpoints
+### 주요 API 엔드포인트
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/v1/auth/login` | POST | User authentication |
-| `/api/v1/employees` | GET | List employees |
-| `/api/v1/employees/{id}` | GET | Get employee details |
-| `/api/v1/attendance/check-in` | POST | Record check-in |
-| `/api/v1/leaves` | POST | Submit leave request |
-| `/api/v1/approvals` | GET | List pending approvals |
+| 엔드포인트 | 메서드 | 설명 |
+|------------|--------|------|
+| `/api/v1/auth/login` | POST | 사용자 인증 |
+| `/api/v1/employees` | GET | 직원 목록 조회 |
+| `/api/v1/employees/{id}` | GET | 직원 상세 조회 |
+| `/api/v1/attendance/check-in` | POST | 출근 기록 |
+| `/api/v1/leaves` | POST | 휴가 신청 |
+| `/api/v1/approvals` | GET | 대기 중인 결재 목록 |
 
-### Authentication
+### 인증
 
-All API requests require Bearer token authentication:
+모든 API 요청에는 Bearer 토큰 인증이 필요합니다:
 
 ```bash
-# Get access token
+# 액세스 토큰 획득
 curl -X POST https://auth.example.com/realms/hr-saas/protocol/openid-connect/token \
   -d "grant_type=password" \
   -d "client_id=hr-saas-api" \
   -d "username=user@example.com" \
   -d "password=password"
 
-# Use token in requests
+# 토큰을 사용한 요청
 curl -H "Authorization: Bearer <access_token>" \
   https://api.example.com/api/v1/employees
 ```
 
-## Development Conventions
+---
 
-### API Standards
+## 개발 규칙
 
-- Base path: `/api/v1/{resource}`
-- Use plural nouns for resources
-- Response format: `ApiResponse<T>` wrapper
-- Error codes: `{SERVICE}_{NUMBER}` (e.g., `EMP_001`)
+### API 표준
 
-### Database Conventions
+- 기본 경로: `/api/v1/{resource}`
+- 리소스에는 복수형 명사 사용
+- 응답 형식: `ApiResponse<T>` 래퍼
+- 에러 코드: `{SERVICE}_{NUMBER}` (예: `EMP_001`)
 
-- Table names: snake_case, plural (e.g., `employees`)
-- All tenant tables must have `tenant_id` column
-- RLS policies for automatic tenant filtering
+### 데이터베이스 규칙
 
-### Testing
+- 테이블명: snake_case, 복수형 (예: `employees`)
+- 모든 테넌트 테이블에는 `tenant_id` 컬럼 필수
+- 자동 테넌트 필터링을 위한 RLS 정책 적용
 
-- Unit tests: JUnit 5 + Mockito
-- Integration tests: Testcontainers
-- Target coverage: 80%
-- Test naming: `{method}_{scenario}_{expectedResult}`
+### 테스트
 
-## Contributing
+- 단위 테스트: JUnit 5 + Mockito
+- 통합 테스트: Testcontainers
+- 목표 커버리지: 80%
+- 테스트 네이밍: `{method}_{scenario}_{expectedResult}`
 
-1. Create a feature branch from `master`
-2. Make changes following code conventions
-3. Write tests for new functionality
-4. Submit a pull request with clear description
+---
 
-## License
+## 기여 방법
+
+1. `master`에서 기능 브랜치 생성
+2. 코드 규칙에 따라 변경 사항 작성
+3. 새 기능에 대한 테스트 작성
+4. 명확한 설명과 함께 Pull Request 제출
+
+---
+
+## 라이선스
 
 Proprietary - All rights reserved
