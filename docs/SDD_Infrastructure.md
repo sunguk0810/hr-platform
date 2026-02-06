@@ -1,6 +1,9 @@
+> **OUTDATED**: 이 문서의 Kafka/Keycloak 관련 섹션은 현재 구현(SQS/SNS, Custom JWT)과 다릅니다.
+> AWS 인프라 최신 설정은 MEMORY.md의 "AWS Terraform Infrastructure" 섹션을 참조하세요.
+
 # Infrastructure - Software Design Document (SDD)
 
-**문서 버전**: 1.0  
+**문서 버전**: 1.0
 **작성일**: 2025-02-03  
 **서비스명**: Infrastructure  
 

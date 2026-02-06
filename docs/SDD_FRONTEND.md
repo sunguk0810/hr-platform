@@ -1,6 +1,8 @@
+> **OUTDATED**: 이 문서의 인증 섹션은 Keycloak 기반으로 작성되었으며, 현재는 Custom JWT를 사용합니다.
+
 # SDD: Frontend Application (프론트엔드 애플리케이션)
 
-**문서 버전**: 1.0  
+**문서 버전**: 1.0
 **작성일**: 2025-02-03  
 **애플리케이션명**: hr-platform-web  
 **Phase**: Phase 1 (MVP)

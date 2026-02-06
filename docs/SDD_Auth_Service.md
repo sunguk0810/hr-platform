@@ -1,6 +1,9 @@
+> **DEPRECATED**: 이 문서는 초기 설계 문서로, Keycloak/Kafka 기반으로 작성되었습니다.
+> 현재 구현(Custom JWT, SQS/SNS)과 다릅니다. 최신 분석은 [`docs/modules/01-AUTH-SERVICE.md`](modules/01-AUTH-SERVICE.md)를 참조하세요.
+
 # Auth Service - Software Design Document (SDD)
 
-**문서 버전**: 1.0  
+**문서 버전**: 1.0
 **작성일**: 2025-02-03  
 **서비스명**: auth-service  
 **포트**: 8081  

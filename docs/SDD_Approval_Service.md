@@ -1,3 +1,6 @@
+> **DEPRECATED**: 이 문서는 초기 설계 문서로, Kafka 기반으로 작성되었습니다.
+> 현재 구현(SQS/SNS)과 다릅니다. 최신 분석은 [`docs/modules/07-APPROVAL-SERVICE.md`](modules/07-APPROVAL-SERVICE.md)를 참조하세요.
+
 # SDD: Approval Service (전자결재 서비스)
 
 ## 1. 서비스 개요

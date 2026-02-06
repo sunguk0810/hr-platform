@@ -147,13 +147,16 @@ private String residentNumber;
 | Document | Purpose |
 |----------|---------|
 | `PRD.md` | Product requirements, user roles, features |
-| `SDD_Infrastructure.md` | Docker, AWS, Kubernetes configuration |
-| `SDD_Auth_Service.md` | JWT authentication, session management |
-| `SDD_Tenant_Service.md` | Multi-tenancy, policies, features |
-| `SDD_MDM_Service.md` | Common codes, tenant mapping |
-| `SDD_Employee_Service.md` | Employee CRUD, privacy masking |
-| `SDD_Approval_Service.md` | Workflow engine, state machine |
-| `SDD_Common_Modules.md` | Shared module specifications |
+| `PRD_GAP_ANALYSIS.md` | PRD 대비 구현 현황 갭 분석 |
+| `API_CONVENTIONS.md` | REST API 설계 가이드 (상세) |
+| `FRONTEND_SCREEN_INVENTORY.md` | 프론트엔드 85개 화면 추적 |
+| `SDD_Infrastructure.md` | Docker, AWS, Kubernetes (⚠️ Kafka/Keycloak 부분 outdated) |
+| `SDD_Gateway_Service.md` | API Gateway 설계 (⚠️ Keycloak 부분 outdated) |
+| `SDD_FRONTEND.md` | 프론트엔드 아키텍처 (⚠️ Keycloak 부분 outdated) |
+| `SDD_Common_Modules.md` | 공통 모듈 설계 (⚠️ common-event Kafka 부분 outdated) |
+
+> **Note**: 서비스별 SDD (`SDD_Auth_Service.md` 등)는 초기 설계 문서로 Kafka/Keycloak 기반입니다.
+> 현재 구현 상태는 아래 Module Analysis Documents를 참조하세요.
 
 ### Module Analysis Documents (프로덕션 정책/설정 분석)
 

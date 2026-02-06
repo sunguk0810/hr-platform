@@ -1,6 +1,8 @@
+> **OUTDATED**: 이 문서의 Keycloak 인증 관련 내용은 현재 구현(Custom JWT)과 다릅니다.
+
 # Gateway Service - Software Design Document (SDD)
 
-**문서 버전**: 1.0  
+**문서 버전**: 1.0
 **작성일**: 2025-02-03  
 **서비스명**: gateway-service  
 **포트**: 8080  

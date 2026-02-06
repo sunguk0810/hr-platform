@@ -1,3 +1,6 @@
+> **DEPRECATED**: 이 문서는 초기 설계 문서입니다. common-event 섹션의 Kafka 관련 내용은
+> 현재 구현(SQS/SNS)과 다릅니다. 각 모듈 최신 분석은 [`docs/modules/`](modules/)를 참조하세요.
+
 # Common Modules - Software Design Document (SDD)
 
 **Document Version**: 1.0
