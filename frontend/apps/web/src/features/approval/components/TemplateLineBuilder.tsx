@@ -33,8 +33,7 @@ const APPROVER_TYPE_OPTIONS = [
 ];
 
 const ROLE_OPTIONS = [
-  { value: 'HR_MANAGER', label: 'HR 담당자' },
-  { value: 'HR_ADMIN', label: 'HR 관리자' },
+  { value: 'HR_MANAGER', label: 'HR 관리자' },
   { value: 'TENANT_ADMIN', label: '테넌트 관리자' },
   { value: 'DEPT_MANAGER', label: '부서장' },
   { value: 'TEAM_LEADER', label: '팀장' },

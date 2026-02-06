@@ -19,6 +19,7 @@ import type {
   DelegationRuleSearchParams,
   CreateDelegationRuleRequest,
   UpdateDelegationRuleRequest,
+  ApprovalLineRecommendation,
 } from '@hr-platform/shared-types';
 
 export interface ApprovalSummary {
@@ -183,6 +184,18 @@ export const approvalService = {
   async toggleDelegationRuleStatus(id: string): Promise<ApiResponse<DelegationRule>> {
     // TODO: Backend needs to implement toggle-status endpoint
     const response = await apiClient.post<ApiResponse<DelegationRule>>(`/approvals/delegations/${id}/toggle-status`);
+    return response.data;
+  },
+
+  // FR-ATT-002-03: 결재선 추천
+  async getRecommendedApprovalLine(params: {
+    type: string;
+    departmentId?: string;
+  }): Promise<ApiResponse<ApprovalLineRecommendation>> {
+    const response = await apiClient.get<ApiResponse<ApprovalLineRecommendation>>(
+      '/approvals/recommend-line',
+      { params }
+    );
     return response.data;
   },
 };

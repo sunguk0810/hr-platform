@@ -210,6 +210,29 @@ const mockApprovalTemplates: ApprovalTemplate[] = [
     defaultApprovalLine: [
       { stepOrder: 1, stepType: 'APPROVAL', approverType: 'DEPARTMENT_HEAD', isRequired: true },
     ],
+    conditionalRoutingRules: [
+      {
+        id: 'rule-001',
+        conditionField: 'AMOUNT',
+        conditionOperator: '>=',
+        conditionValue: 1000000,
+        approvalLine: [
+          { stepOrder: 1, stepType: 'APPROVAL', approverType: 'DEPARTMENT_HEAD', isRequired: true },
+          { stepOrder: 2, stepType: 'APPROVAL', approverType: 'ROLE', approverRole: 'TENANT_ADMIN', isRequired: true },
+        ],
+      },
+      {
+        id: 'rule-002',
+        conditionField: 'AMOUNT',
+        conditionOperator: '>=',
+        conditionValue: 5000000,
+        approvalLine: [
+          { stepOrder: 1, stepType: 'APPROVAL', approverType: 'DEPARTMENT_HEAD', isRequired: true },
+          { stepOrder: 2, stepType: 'APPROVAL', approverType: 'ROLE', approverRole: 'TENANT_ADMIN', isRequired: true },
+          { stepOrder: 3, stepType: 'APPROVAL', approverType: 'SPECIFIC', approverId: 'emp-012', isRequired: true },
+        ],
+      },
+    ],
     retentionPeriod: 365 * 5,
     isActive: true,
     createdAt: format(subDays(new Date(), 100), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
@@ -643,9 +666,14 @@ const mockApprovals: Approval[] = [
     requesterDepartment: '인사팀',
     status: 'APPROVED',
     urgency: 'NORMAL',
+    mode: 'SEQUENTIAL',
     completedAt: format(subDays(new Date(), 5), 'yyyy-MM-dd\'T\'HH:mm:ss\'Z\''),
     steps: [
       createApprovalStep(1, '홍길동', 'APPROVED', '승인합니다.', format(subDays(new Date(), 5), 'yyyy-MM-dd\'T\'HH:mm:ss\'Z\'')),
+    ],
+    linkedModules: [
+      { module: '경비 정산', status: 'COMPLETED', message: '경비 정산 처리 완료' },
+      { module: '회계 시스템', status: 'COMPLETED', message: '전표 자동 생성 완료' },
     ],
     createdAt: format(subDays(new Date(), 7), 'yyyy-MM-dd\'T\'HH:mm:ss\'Z\''),
     updatedAt: format(subDays(new Date(), 5), 'yyyy-MM-dd\'T\'HH:mm:ss\'Z\''),
@@ -716,9 +744,14 @@ const mockApprovals: Approval[] = [
     requesterDepartment: '디자인팀',
     status: 'APPROVED',
     urgency: 'NORMAL',
+    mode: 'SEQUENTIAL',
     completedAt: format(subDays(new Date(), 25), 'yyyy-MM-dd\'T\'HH:mm:ss\'Z\''),
     steps: [
       createApprovalStep(1, '최수진', 'APPROVED', '빠른 쾌유를 바랍니다.', format(subDays(new Date(), 25), 'yyyy-MM-dd\'T\'HH:mm:ss\'Z\'')),
+    ],
+    linkedModules: [
+      { module: '출근부 반영', status: 'COMPLETED', message: '병가 출근부 반영 완료' },
+      { module: '잔여연차 차감', status: 'COMPLETED', message: '잔여연차 차감 완료 (유급 병가)' },
     ],
     createdAt: format(subDays(new Date(), 26), 'yyyy-MM-dd\'T\'HH:mm:ss\'Z\''),
     updatedAt: format(subDays(new Date(), 25), 'yyyy-MM-dd\'T\'HH:mm:ss\'Z\''),
@@ -761,7 +794,54 @@ function toListItem(approval: Approval): ApprovalListItem {
   };
 }
 
+// FR-ATT-002-03: Mock recommended approval lines by type and department
+const mockRecommendedApprovers: Record<string, Array<{ id: string; name: string; position: string; department: string }>> = {
+  default: [
+    { id: 'emp-001', name: '홍길동', position: '팀장', department: '개발팀' },
+    { id: 'emp-003', name: '박인사', position: '부장', department: '인사팀' },
+  ],
+  LEAVE_REQUEST: [
+    { id: 'emp-001', name: '홍길동', position: '팀장', department: '개발팀' },
+    { id: 'emp-003', name: '박인사', position: '부장', department: '인사팀' },
+  ],
+  EXPENSE: [
+    { id: 'emp-001', name: '홍길동', position: '팀장', department: '개발팀' },
+    { id: 'emp-008', name: '김재무', position: '부장', department: '재무팀' },
+    { id: 'emp-012', name: '이대표', position: '이사', department: '경영지원' },
+  ],
+  OVERTIME: [
+    { id: 'emp-001', name: '홍길동', position: '팀장', department: '개발팀' },
+  ],
+  PERSONNEL: [
+    { id: 'emp-001', name: '홍길동', position: '팀장', department: '개발팀' },
+    { id: 'emp-003', name: '박인사', position: '부장', department: '인사팀' },
+    { id: 'emp-012', name: '이대표', position: '이사', department: '경영지원' },
+  ],
+  GENERAL: [
+    { id: 'emp-001', name: '홍길동', position: '팀장', department: '개발팀' },
+    { id: 'emp-003', name: '박인사', position: '부장', department: '인사팀' },
+  ],
+};
+
 export const approvalHandlers = [
+  // FR-ATT-002-03: Recommend approval line
+  http.get('/api/v1/approvals/recommend-line', async ({ request }) => {
+    await delay(300);
+
+    const url = new URL(request.url);
+    const type = url.searchParams.get('type') || 'default';
+
+    const approvers = mockRecommendedApprovers[type] || mockRecommendedApprovers['default'];
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        approvers,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
   // Get approvals list
   http.get('/api/v1/approvals', async ({ request }) => {
     await delay(300);
@@ -875,6 +955,16 @@ export const approvalHandlers = [
 
     const body = await request.json() as Record<string, unknown>;
     const approverIds = body.approverIds as string[];
+    const mode = (body.mode as string) || 'SEQUENTIAL';
+
+    const approverNameMap: Record<string, string> = {
+      'emp-001': '홍길동',
+      'emp-003': '이영희',
+      'emp-009': '임준혁',
+      'emp-005': '최수진',
+      'emp-002': '김철수',
+      'emp-006': '정민호',
+    };
 
     const newApproval: Approval = {
       id: `appr-${Date.now()}`,
@@ -894,8 +984,10 @@ export const approvalHandlers = [
         stepOrder: index + 1,
         approverType: 'SPECIFIC' as const,
         approverId: id,
-        approverName: ['홍길동', '이영희', '임준혁'][index] || '결재자',
+        approverName: approverNameMap[id] || '결재자',
         status: 'PENDING' as ApprovalStepStatus,
+        // For DIRECT mode, mark as direct approval step
+        ...(mode === 'DIRECT' ? { directApproved: false } : {}),
       })),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -905,8 +997,8 @@ export const approvalHandlers = [
 
     return HttpResponse.json({
       success: true,
-      data: newApproval,
-      message: '결재가 요청되었습니다.',
+      data: { ...newApproval, mode },
+      message: mode === 'DIRECT' ? '전결 결재가 요청되었습니다.' : '결재가 요청되었습니다.',
       timestamp: new Date().toISOString(),
     }, { status: 201 });
   }),
@@ -929,11 +1021,29 @@ export const approvalHandlers = [
       );
     }
 
+    const currentUserId = request.headers.get('x-current-user-id') || 'emp-001';
     const body = await request.json() as Record<string, unknown>;
     const approval = mockApprovals[index];
 
+    // Self-approval prevention
+    if (currentUserId === approval.requesterId) {
+      return HttpResponse.json(
+        { success: false, error: { code: 'APR_403', message: '권한이 없습니다. 본인이 요청한 결재는 직접 승인할 수 없습니다.' } },
+        { status: 403 }
+      );
+    }
+
     // Find current pending step
     const pendingStep = approval.steps.find(s => s.status === 'PENDING');
+
+    // Check that the requester is the current approver
+    if (pendingStep && pendingStep.approverId !== currentUserId) {
+      return HttpResponse.json(
+        { success: false, error: { code: 'APR_403', message: '권한이 없습니다. 현재 결재 단계의 승인자가 아닙니다.' } },
+        { status: 403 }
+      );
+    }
+
     if (pendingStep) {
       pendingStep.status = 'APPROVED';
       pendingStep.comment = body.comment as string | undefined;
@@ -975,11 +1085,29 @@ export const approvalHandlers = [
       );
     }
 
+    const currentUserId = request.headers.get('x-current-user-id') || 'emp-001';
     const body = await request.json() as Record<string, unknown>;
     const approval = mockApprovals[index];
 
+    // Self-rejection prevention
+    if (currentUserId === approval.requesterId) {
+      return HttpResponse.json(
+        { success: false, error: { code: 'APR_403', message: '권한이 없습니다. 본인이 요청한 결재는 직접 반려할 수 없습니다.' } },
+        { status: 403 }
+      );
+    }
+
     // Find current pending step
     const pendingStep = approval.steps.find(s => s.status === 'PENDING');
+
+    // Check that the requester is the current approver
+    if (pendingStep && pendingStep.approverId !== currentUserId) {
+      return HttpResponse.json(
+        { success: false, error: { code: 'APR_403', message: '권한이 없습니다. 현재 결재 단계의 승인자가 아닙니다.' } },
+        { status: 403 }
+      );
+    }
+
     if (pendingStep) {
       pendingStep.status = 'REJECTED';
       pendingStep.comment = body.comment as string;
@@ -1148,7 +1276,17 @@ export const approvalHandlers = [
       );
     }
 
+    const currentUserId = request.headers.get('x-current-user-id') || 'emp-001';
     const approval = mockApprovals[index];
+
+    // Only the requester can recall
+    if (currentUserId !== approval.requesterId) {
+      return HttpResponse.json(
+        { success: false, error: { code: 'APR_403', message: '권한이 없습니다. 본인이 요청한 결재만 회수할 수 있습니다.' } },
+        { status: 403 }
+      );
+    }
+
     if (approval.status !== 'PENDING') {
       return HttpResponse.json(
         {
@@ -1281,6 +1419,16 @@ export const approvalHandlers = [
       );
     }
 
+    const currentUserId = request.headers.get('x-current-user-id') || 'emp-001';
+
+    // Check that the requester is the step's current approver
+    if (step.approverId !== currentUserId) {
+      return HttpResponse.json(
+        { success: false, error: { code: 'APR_403', message: '권한이 없습니다. 해당 결재 단계의 승인자만 대결을 지정할 수 있습니다.' } },
+        { status: 403 }
+      );
+    }
+
     if (step.status !== 'PENDING') {
       return HttpResponse.json(
         {
@@ -1347,7 +1495,18 @@ export const approvalHandlers = [
       );
     }
 
+    const currentUserId = request.headers.get('x-current-user-id') || 'emp-001';
     const approval = mockApprovals[index];
+
+    // Check that the requester is the current approver
+    const currentPendingStep = approval.steps.find(s => s.status === 'PENDING');
+    if (currentPendingStep && currentPendingStep.approverId !== currentUserId) {
+      return HttpResponse.json(
+        { success: false, error: { code: 'APR_403', message: '권한이 없습니다. 현재 결재 단계의 승인자만 전결 처리할 수 있습니다.' } },
+        { status: 403 }
+      );
+    }
+
     if (approval.status !== 'PENDING') {
       return HttpResponse.json(
         {
@@ -1473,6 +1632,7 @@ export const approvalHandlers = [
       category: body.category as string,
       formSchema: {},
       defaultApprovalLine: body.defaultApprovalLine as ApprovalTemplate['defaultApprovalLine'],
+      conditionalRoutingRules: body.conditionalRoutingRules as ApprovalTemplate['conditionalRoutingRules'],
       retentionPeriod: body.retentionPeriod as number | undefined,
       isActive: body.isActive as boolean ?? true,
       createdAt: new Date().toISOString(),
@@ -1514,6 +1674,7 @@ export const approvalHandlers = [
     if (body.description !== undefined) template.description = body.description as string;
     if (body.category !== undefined) template.category = body.category as string;
     if (body.defaultApprovalLine !== undefined) template.defaultApprovalLine = body.defaultApprovalLine as ApprovalTemplate['defaultApprovalLine'];
+    if (body.conditionalRoutingRules !== undefined) template.conditionalRoutingRules = body.conditionalRoutingRules as ApprovalTemplate['conditionalRoutingRules'];
     if (body.retentionPeriod !== undefined) template.retentionPeriod = body.retentionPeriod as number;
     if (body.isActive !== undefined) template.isActive = body.isActive as boolean;
     template.updatedAt = new Date().toISOString();
@@ -1549,6 +1710,236 @@ export const approvalHandlers = [
     return HttpResponse.json({
       success: true,
       message: '양식이 삭제되었습니다.',
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // ===== FR-APR-001-04: 관련 문서 링크 핸들러 =====
+
+  // Get related documents for an approval
+  http.get('/api/v1/approvals/:id/related-documents', async ({ params }) => {
+    await delay(200);
+
+    const { id } = params;
+    const approval = mockApprovals.find(a => a.id === id);
+
+    if (!approval) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'APR_001', message: '결재 문서를 찾을 수 없습니다.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 404 }
+      );
+    }
+
+    // Return mock related documents
+    const relatedDocs = [
+      { id: 'rel-1', documentNumber: 'APR-2024-001', title: '연차 사용 신청', status: 'APPROVED', requesterName: '김민수', createdAt: '2024-12-01' },
+      { id: 'rel-2', documentNumber: 'APR-2024-005', title: '업무 협조 요청', status: 'PENDING', requesterName: '이영희', createdAt: '2024-12-15' },
+    ];
+
+    return HttpResponse.json({
+      success: true,
+      data: relatedDocs,
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // Link a related document to an approval
+  http.post('/api/v1/approvals/:id/related-documents', async ({ params, request }) => {
+    await delay(300);
+
+    const { id } = params;
+    const approval = mockApprovals.find(a => a.id === id);
+
+    if (!approval) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'APR_001', message: '결재 문서를 찾을 수 없습니다.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 404 }
+      );
+    }
+
+    const body = await request.json() as Record<string, unknown>;
+    const relatedApprovalId = body.relatedApprovalId as string;
+    const relatedApproval = mockApprovals.find(a => a.id === relatedApprovalId);
+
+    const linkedDoc = relatedApproval
+      ? {
+          id: relatedApproval.id,
+          documentNumber: relatedApproval.documentNumber,
+          title: relatedApproval.title,
+          status: relatedApproval.status,
+          requesterName: relatedApproval.requesterName,
+          createdAt: relatedApproval.createdAt,
+        }
+      : {
+          id: relatedApprovalId,
+          documentNumber: 'APR-2024-???',
+          title: '관련 문서',
+          status: 'PENDING' as ApprovalStatus,
+          requesterName: '알 수 없음',
+          createdAt: new Date().toISOString(),
+        };
+
+    return HttpResponse.json({
+      success: true,
+      data: linkedDoc,
+      message: '관련 문서가 연결되었습니다.',
+      timestamp: new Date().toISOString(),
+    }, { status: 201 });
+  }),
+
+  // Unlink a related document from an approval
+  http.delete('/api/v1/approvals/:id/related-documents/:relatedId', async ({ params }) => {
+    await delay(300);
+
+    const { id } = params;
+    const approval = mockApprovals.find(a => a.id === id);
+
+    if (!approval) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'APR_001', message: '결재 문서를 찾을 수 없습니다.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 404 }
+      );
+    }
+
+    return HttpResponse.json({
+      success: true,
+      message: '관련 문서 연결이 해제되었습니다.',
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // Search approvals by keyword
+  http.get('/api/v1/approvals/search', async ({ request }) => {
+    await delay(300);
+
+    const url = new URL(request.url);
+    const keyword = url.searchParams.get('keyword') || '';
+
+    let results = [...mockApprovals];
+
+    if (keyword) {
+      const lower = keyword.toLowerCase();
+      results = results.filter(
+        a => a.title.toLowerCase().includes(lower) ||
+             a.documentNumber.toLowerCase().includes(lower) ||
+             a.requesterName.toLowerCase().includes(lower)
+      );
+    }
+
+    const searchResults = results.slice(0, 10).map(a => ({
+      id: a.id,
+      documentNumber: a.documentNumber,
+      title: a.title,
+      status: a.status,
+      requesterName: a.requesterName,
+      createdAt: a.createdAt,
+    }));
+
+    return HttpResponse.json({
+      success: true,
+      data: searchResults,
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // ===== FR-APR-003-04: 결재선 상신 후 수정 =====
+  http.put('/api/v1/approvals/:id/approval-line', async ({ params, request }) => {
+    await delay(300);
+
+    const { id } = params;
+    const index = mockApprovals.findIndex(a => a.id === id);
+
+    if (index === -1) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'APR_001', message: '결재 문서를 찾을 수 없습니다.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 404 }
+      );
+    }
+
+    const approval = mockApprovals[index];
+
+    if (!['PENDING', 'IN_REVIEW'].includes(approval.status)) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'APR_007', message: '결재선을 수정할 수 없는 상태입니다.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 400 }
+      );
+    }
+
+    const body = await request.json() as Record<string, unknown>;
+    const newSteps = body.steps as Array<{
+      id?: string;
+      stepOrder: number;
+      approverId: string;
+      approverName: string;
+      approverDepartment?: string;
+      approverPosition?: string;
+      status: ApprovalStepStatus;
+    }>;
+    const reason = body.reason as string;
+
+    // Rebuild steps: keep completed steps as-is, replace pending steps with new ones
+    const updatedSteps: ApprovalStep[] = newSteps.map((step) => {
+      // If an existing step (has id and is not new), find it in current steps
+      const existingStep = step.id ? approval.steps.find(s => s.id === step.id) : undefined;
+      if (existingStep && (existingStep.status === 'APPROVED' || existingStep.status === 'REJECTED')) {
+        // Keep completed steps unchanged
+        return existingStep;
+      }
+      // New or modified pending step
+      return {
+        id: step.id || `step-${Date.now()}-${step.stepOrder}`,
+        stepOrder: step.stepOrder,
+        approverType: 'SPECIFIC' as const,
+        approverId: step.approverId,
+        approverName: step.approverName,
+        approverDepartment: step.approverDepartment,
+        approverPosition: step.approverPosition,
+        status: 'PENDING' as ApprovalStepStatus,
+      };
+    });
+
+    approval.steps = updatedSteps;
+    approval.updatedAt = new Date().toISOString();
+
+    // Add history entry
+    const historyList = mockApprovalHistories[id as string] || [];
+    historyList.push({
+      id: `hist-${Date.now()}`,
+      approvalId: id as string,
+      stepOrder: 0,
+      actionType: 'COMMENT',
+      actorId: approval.requesterId,
+      actorName: approval.requesterName,
+      actorDepartment: approval.requesterDepartment,
+      comment: `결재선 수정: ${reason}`,
+      actionAt: new Date().toISOString(),
+    });
+    mockApprovalHistories[id as string] = historyList;
+
+    return HttpResponse.json({
+      success: true,
+      data: approval,
+      message: '결재선이 수정되었습니다.',
       timestamp: new Date().toISOString(),
     });
   }),

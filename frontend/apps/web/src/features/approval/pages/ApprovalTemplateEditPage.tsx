@@ -21,8 +21,9 @@ import {
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { approvalService } from '../services/approvalService';
 import { TemplateLineBuilder } from '../components/TemplateLineBuilder';
+import { ConditionalRoutingRules } from '../components/ConditionalRoutingRules';
 import { useToast } from '@/hooks/useToast';
-import type { ApprovalLineTemplate } from '@hr-platform/shared-types';
+import type { ApprovalLineTemplate, ConditionalRoutingRule } from '@hr-platform/shared-types';
 
 const CATEGORIES = [
   { value: 'LEAVE_REQUEST', label: '휴가' },
@@ -53,6 +54,7 @@ export default function ApprovalTemplateEditPage() {
   const isNew = !id;
 
   const [approvalLine, setApprovalLine] = useState<ApprovalLineTemplate[]>([]);
+  const [routingRules, setRoutingRules] = useState<ConditionalRoutingRule[]>([]);
 
   const { data: templateData, isLoading: isLoadingTemplate } = useQuery({
     queryKey: ['approval-template', id || duplicateId],
@@ -91,6 +93,7 @@ export default function ApprovalTemplateEditPage() {
         isActive: duplicateId ? true : template.isActive,
       });
       setApprovalLine(template.defaultApprovalLine || []);
+      setRoutingRules(template.conditionalRoutingRules || []);
     }
   }, [templateData, duplicateId, reset]);
 
@@ -125,6 +128,7 @@ export default function ApprovalTemplateEditPage() {
     const payload = {
       ...data,
       defaultApprovalLine: approvalLine,
+      conditionalRoutingRules: routingRules,
     };
 
     if (isNew || duplicateId) {
@@ -278,6 +282,22 @@ export default function ApprovalTemplateEditPage() {
             <TemplateLineBuilder
               value={approvalLine}
               onChange={setApprovalLine}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>조건부 라우팅 규칙</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              금액, 휴가일수 등의 조건에 따라 기본 결재선 대신 다른 결재선을 자동 적용합니다.
+              조건에 해당하지 않으면 위의 기본 결재선이 사용됩니다.
+            </p>
+            <ConditionalRoutingRules
+              value={routingRules}
+              onChange={setRoutingRules}
             />
           </CardContent>
         </Card>

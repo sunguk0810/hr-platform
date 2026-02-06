@@ -19,6 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
 import {
   ArrowLeft,
   Check,
@@ -34,14 +35,20 @@ import {
   ChevronUp,
   MoreHorizontal,
   Paperclip,
+  CheckCircle2,
+  Clock,
+  Link2,
+  Pencil,
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { queryKeys } from '@/lib/queryClient';
 import { ApprovalLine } from '../components/ApprovalLine';
 import { ApprovalHistory } from '../components/ApprovalHistory';
+import { RelatedDocuments } from '../components/RelatedDocuments';
 import { RecallDialog } from '../components/RecallDialog';
 import { DelegateDialog } from '../components/DelegateDialog';
 import { DirectApproveDialog } from '../components/DirectApproveDialog';
+import { ModifyApprovalLineDialog } from '../components/ModifyApprovalLineDialog';
 import {
   useApproval,
   useApprove,
@@ -52,6 +59,7 @@ import {
   useDirectApprove,
   useApprovalHistory,
 } from '../hooks/useApprovals';
+import { useAuthStore } from '@/stores/authStore';
 import type { ApprovalType } from '@hr-platform/shared-types';
 
 const APPROVAL_TYPE_LABELS: Record<ApprovalType, string> = {
@@ -62,14 +70,13 @@ const APPROVAL_TYPE_LABELS: Record<ApprovalType, string> = {
   GENERAL: '일반기안',
 };
 
-// Mock 현재 사용자 ID (실제로는 auth context에서 가져옴)
-const CURRENT_USER_ID = 'emp-001';
-
 export default function ApprovalDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
+  const { user } = useAuthStore();
+  const currentUserId = user?.employeeId || '';
 
   const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
@@ -77,6 +84,7 @@ export default function ApprovalDetailPage() {
   const [isRecallDialogOpen, setIsRecallDialogOpen] = useState(false);
   const [isDelegateDialogOpen, setIsDelegateDialogOpen] = useState(false);
   const [isDirectApproveDialogOpen, setIsDirectApproveDialogOpen] = useState(false);
+  const [modifyLineOpen, setModifyLineOpen] = useState(false);
   const [comment, setComment] = useState('');
   const [activeTab, setActiveTab] = useState('document');
   const [isContentExpanded, setIsContentExpanded] = useState(false);
@@ -192,9 +200,9 @@ export default function ApprovalDetailPage() {
   }
 
   // 권한 체크
-  const isRequester = approval.requesterId === CURRENT_USER_ID;
+  const isRequester = approval.requesterId === currentUserId;
   const currentStep = approval.steps.find((s) => s.status === 'PENDING');
-  const isCurrentApprover = currentStep?.approverId === CURRENT_USER_ID;
+  const isCurrentApprover = currentStep?.approverId === currentUserId;
   const currentStepOrder = currentStep?.stepOrder || 1;
 
   // 버튼 표시 조건
@@ -203,6 +211,7 @@ export default function ApprovalDetailPage() {
   const canRecall = approval.status === 'PENDING' && isRequester;
   const canDelegate = approval.status === 'PENDING' && isCurrentApprover;
   const canDirectApprove = approval.status === 'PENDING' && isCurrentApprover; // 실제로는 권한 체크 필요
+  const canModifyLine = ['PENDING', 'IN_REVIEW'].includes(approval.status) && isRequester;
 
   // Dialogs render function (shared between mobile and desktop)
   const renderDialogs = () => (
@@ -323,6 +332,17 @@ export default function ApprovalDetailPage() {
         isLoading={directApproveMutation.isPending}
         steps={approval.steps}
         currentStepOrder={currentStepOrder}
+      />
+
+      {/* Modify Approval Line Dialog (FR-APR-003-04) */}
+      <ModifyApprovalLineDialog
+        open={modifyLineOpen}
+        onOpenChange={setModifyLineOpen}
+        approvalId={approval.id}
+        steps={approval.steps}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: queryKeys.approvals.detail(id || '') });
+        }}
       />
     </>
   );
@@ -535,11 +555,17 @@ export default function ApprovalDetailPage() {
             </div>
           </div>
 
+          {/* Related Documents (FR-APR-001-04) */}
+          <RelatedDocuments
+            approvalId={approval.id}
+            isEditable={approval.status === 'PENDING' && isRequester}
+          />
+
           {/* Mobile Bottom Actions */}
-          {(canApproveOrReject || canCancel || canRecall || canDelegate || canDirectApprove) && (
+          {(canApproveOrReject || canCancel || canRecall || canDelegate || canDirectApprove || canModifyLine) && (
             <div className="fixed bottom-0 left-0 right-0 bg-background border-t p-4 pb-safe z-50">
               {/* More Actions Sheet Toggle */}
-              {(canRecall || canCancel || canDelegate || canDirectApprove) && (
+              {(canRecall || canCancel || canDelegate || canDirectApprove || canModifyLine) && (
                 <button
                   onClick={() => setShowMobileActions(!showMobileActions)}
                   className="w-full flex items-center justify-center gap-2 py-2 text-sm text-muted-foreground mb-2"
@@ -592,6 +618,17 @@ export default function ApprovalDetailPage() {
                     >
                       <FastForward className="mr-1 h-4 w-4" />
                       전결
+                    </Button>
+                  )}
+                  {canModifyLine && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setModifyLineOpen(true)}
+                      className="text-blue-600"
+                    >
+                      <Pencil className="mr-1 h-4 w-4" />
+                      결재선 수정
                     </Button>
                   )}
                 </div>
@@ -671,6 +708,16 @@ export default function ApprovalDetailPage() {
               >
                 <FastForward className="mr-2 h-4 w-4" />
                 전결
+              </Button>
+            )}
+            {canModifyLine && (
+              <Button
+                variant="outline"
+                onClick={() => setModifyLineOpen(true)}
+                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+              >
+                <Pencil className="mr-2 h-4 w-4" />
+                결재선 수정
               </Button>
             )}
             {canApproveOrReject && (
@@ -818,6 +865,14 @@ export default function ApprovalDetailPage() {
               )}
             </TabsContent>
           </Tabs>
+
+          {/* Related Documents (FR-APR-001-04) */}
+          <div className="mt-6">
+            <RelatedDocuments
+              approvalId={approval.id}
+              isEditable={approval.status === 'PENDING' && isRequester}
+            />
+          </div>
         </div>
 
         <div className="space-y-6">
@@ -904,6 +959,68 @@ export default function ApprovalDetailPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Approval Mode Display */}
+          {approval.mode && approval.mode !== 'SEQUENTIAL' && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">결재 모드</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Badge variant="outline" className={
+                  approval.mode === 'PARALLEL' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                  approval.mode === 'CONSENSUS' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                  approval.mode === 'DIRECT' ? 'bg-teal-50 text-teal-700 border-teal-200' :
+                  ''
+                }>
+                  {approval.mode === 'PARALLEL' ? '병렬결재' :
+                   approval.mode === 'CONSENSUS' ? '합의결재' :
+                   approval.mode === 'DIRECT' ? '전결' : approval.mode}
+                </Badge>
+                {approval.mode === 'PARALLEL' && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    모든 결재자에게 동시에 결재 요청이 전달됩니다.
+                  </p>
+                )}
+                {approval.mode === 'CONSENSUS' && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    합의자 의견 수집 후 최종 결재자가 결정합니다.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Linked Modules Feedback (FR-APR-004-03) */}
+          {approval.status === 'APPROVED' && approval.linkedModules && approval.linkedModules.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-sm">
+                  <Link2 className="h-4 w-4" />
+                  연계 모듈 반영
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {approval.linkedModules.map((linked, idx) => (
+                    <div key={idx} className="flex items-start gap-2 text-sm">
+                      {linked.status === 'COMPLETED' ? (
+                        <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                      ) : linked.status === 'FAILED' ? (
+                        <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
+                      ) : (
+                        <Clock className="h-4 w-4 text-yellow-500 mt-0.5 flex-shrink-0" />
+                      )}
+                      <div>
+                        <p className="font-medium">{linked.module}</p>
+                        <p className="text-xs text-muted-foreground">{linked.message}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
 
