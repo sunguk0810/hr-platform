@@ -833,7 +833,35 @@ const mockPositions: Record<string, string> = {
   'pos-006': '사원',
 };
 
+// Mock data for homonym (동명이인) check
+const homonymCheckData = [
+  { id: 'emp-h1', name: '김민수', department: '개발팀', employeeNumber: 'EMP-2024-001', profileImageUrl: null },
+  { id: 'emp-h2', name: '김민수', department: '영업팀', employeeNumber: 'EMP-2023-042', profileImageUrl: null },
+  { id: 'emp-h3', name: '이영희', department: '인사팀', employeeNumber: 'EMP-2024-015', profileImageUrl: null },
+  { id: 'emp-h4', name: '이영희', department: '기획팀', employeeNumber: 'EMP-2023-088', profileImageUrl: null },
+  { id: 'emp-h5', name: '이영희', department: '마케팅팀', employeeNumber: 'EMP-2022-033', profileImageUrl: null },
+  { id: 'emp-h6', name: '박지현', department: '재무팀', employeeNumber: 'EMP-2024-007', profileImageUrl: null },
+];
+
 export const employeeHandlers = [
+  // Check homonym (동명이인 조회)
+  http.get('/api/v1/employees/check-homonym', async ({ request }) => {
+    await delay(300);
+
+    const url = new URL(request.url);
+    const name = url.searchParams.get('name') || '';
+
+    const matches = name
+      ? homonymCheckData.filter(emp => emp.name === name)
+      : [];
+
+    return HttpResponse.json({
+      success: true,
+      data: { matches, count: matches.length },
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
   // Get employees list
   http.get('/api/v1/employees', async ({ request }) => {
     await delay(400);

@@ -1,10 +1,20 @@
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -16,24 +26,55 @@ import {
 import { useAuthStore } from '@/stores/authStore';
 import { useToast } from '@/hooks/useToast';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import { Mail, Phone, Building2, Briefcase, Calendar, Edit, Camera, Loader2, Trash2 } from 'lucide-react';
+import {
+  Mail,
+  Phone,
+  Building2,
+  Briefcase,
+  Calendar,
+  Edit,
+  Camera,
+  Loader2,
+  Trash2,
+  ClipboardList,
+  SendHorizonal,
+  Clock,
+  ArrowRight,
+} from 'lucide-react';
 import { profileService, type UpdateProfileRequest, type UserProfile } from '../services/profileService';
+import {
+  changeRequestService,
+  CATEGORY_OPTIONS,
+  type ChangeRequestCategory,
+} from '../services/changeRequestService';
 
 export default function MyInfoPage() {
   const { user, setUser } = useAuthStore();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isChangeRequestDialogOpen, setIsChangeRequestDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [pendingRequestCount, setPendingRequestCount] = useState(0);
   const [formData, setFormData] = useState<UpdateProfileRequest>({
     mobile: '',
     email: '',
     nameEn: '',
+  });
+
+  // Change request form state
+  const [changeRequestForm, setChangeRequestForm] = useState({
+    category: '' as ChangeRequestCategory | '',
+    fieldName: '',
+    oldValue: '',
+    newValue: '',
+    reason: '',
   });
 
   // 프로필 정보 로드
@@ -68,6 +109,22 @@ export default function MyInfoPage() {
 
     loadProfile();
   }, [user]);
+
+  // 대기 중인 변경 요청 건수 로드
+  useEffect(() => {
+    const loadPendingCount = async () => {
+      try {
+        const response = await changeRequestService.getChangeRequests('PENDING');
+        if (response.success && response.data) {
+          setPendingRequestCount(response.data.length);
+        }
+      } catch {
+        // Silently fail - non-critical
+      }
+    };
+
+    loadPendingCount();
+  }, []);
 
   const getInitials = (name: string) => {
     return name
@@ -105,7 +162,7 @@ export default function MyInfoPage() {
 
         toast({
           title: '저장 완료',
-          description: '내 정보가 수정되었습니다.',
+          description: '연락처 정보가 수정되었습니다.',
         });
         setIsEditDialogOpen(false);
       }
@@ -113,6 +170,61 @@ export default function MyInfoPage() {
       toast({
         title: '저장 실패',
         description: '정보 수정 중 오류가 발생했습니다.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleChangeRequestOpen = () => {
+    setChangeRequestForm({
+      category: '',
+      fieldName: '',
+      oldValue: '',
+      newValue: '',
+      reason: '',
+    });
+    setIsChangeRequestDialogOpen(true);
+  };
+
+  const handleChangeRequestSubmit = async () => {
+    if (
+      !changeRequestForm.category ||
+      !changeRequestForm.fieldName ||
+      !changeRequestForm.newValue ||
+      !changeRequestForm.reason
+    ) {
+      toast({
+        title: '입력 오류',
+        description: '필수 항목을 모두 입력해주세요.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const response = await changeRequestService.createChangeRequest({
+        category: changeRequestForm.category as ChangeRequestCategory,
+        fieldName: changeRequestForm.fieldName,
+        oldValue: changeRequestForm.oldValue,
+        newValue: changeRequestForm.newValue,
+        reason: changeRequestForm.reason,
+      });
+
+      if (response.success) {
+        setPendingRequestCount((prev) => prev + 1);
+        toast({
+          title: '변경 요청 완료',
+          description: '변경 요청이 등록되었습니다. HR 담당자의 승인을 기다려주세요.',
+        });
+        setIsChangeRequestDialogOpen(false);
+      }
+    } catch {
+      toast({
+        title: '요청 실패',
+        description: '변경 요청 중 오류가 발생했습니다.',
         variant: 'destructive',
       });
     } finally {
@@ -281,15 +393,24 @@ export default function MyInfoPage() {
                   : displayPosition || displayGrade || '-'}
               </p>
               <p className="text-sm text-muted-foreground">{displayDepartment}</p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-4"
-                onClick={handleEditOpen}
-              >
-                <Edit className="mr-2 h-3.5 w-3.5" />
-                정보 수정
-              </Button>
+              <div className="mt-4 flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleEditOpen}
+                >
+                  <Edit className="mr-1.5 h-3.5 w-3.5" />
+                  연락처 수정
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleChangeRequestOpen}
+                >
+                  <SendHorizonal className="mr-1.5 h-3.5 w-3.5" />
+                  변경 요청
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -301,6 +422,32 @@ export default function MyInfoPage() {
             <MobileInfoItem icon={Briefcase} label="사번" value={displayEmployeeNumber} />
             <MobileInfoItem icon={Calendar} label="입사일" value={displayHireDate} isLast />
           </div>
+
+          {/* Change Request Status Link */}
+          <button
+            type="button"
+            className="w-full bg-card rounded-2xl border p-4 flex items-center justify-between active:bg-accent"
+            onClick={() => navigate('/my-info/change-requests')}
+          >
+            <div className="flex items-center gap-3">
+              <ClipboardList className="h-5 w-5 text-muted-foreground" />
+              <div className="text-left">
+                <p className="text-sm font-medium">변경 요청 현황</p>
+                <p className="text-xs text-muted-foreground">
+                  내 정보 변경 요청 이력 확인
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {pendingRequestCount > 0 && (
+                <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                  <Clock className="mr-1 h-3 w-3" />
+                  {pendingRequestCount}건 대기
+                </Badge>
+              )}
+              <ArrowRight className="h-4 w-4 text-muted-foreground" />
+            </div>
+          </button>
 
           {/* Photo Delete */}
           {displayProfileImage && (
@@ -315,12 +462,14 @@ export default function MyInfoPage() {
           )}
         </div>
 
-        {/* Edit Dialog */}
+        {/* Edit Dialog (Immediate - Contact Info) */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="max-w-[calc(100%-2rem)] rounded-2xl">
             <DialogHeader>
-              <DialogTitle>내 정보 수정</DialogTitle>
-              <DialogDescription>수정 가능한 정보를 입력해주세요.</DialogDescription>
+              <DialogTitle>연락처 정보 수정</DialogTitle>
+              <DialogDescription>
+                연락처 정보는 즉시 반영됩니다.
+              </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
@@ -382,6 +531,17 @@ export default function MyInfoPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Change Request Dialog (Approval Required) */}
+        <ChangeRequestDialog
+          open={isChangeRequestDialogOpen}
+          onOpenChange={setIsChangeRequestDialogOpen}
+          form={changeRequestForm}
+          setForm={setChangeRequestForm}
+          onSubmit={handleChangeRequestSubmit}
+          isSubmitting={isSubmitting}
+          isMobile={true}
+        />
       </>
     );
   }
@@ -393,10 +553,16 @@ export default function MyInfoPage() {
         title="내 정보"
         description="개인 정보 및 근무 정보를 확인하고 관리합니다."
         actions={
-          <Button onClick={handleEditOpen}>
-            <Edit className="mr-2 h-4 w-4" />
-            정보 수정
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={handleChangeRequestOpen}>
+              <SendHorizonal className="mr-2 h-4 w-4" />
+              변경 요청
+            </Button>
+            <Button onClick={handleEditOpen}>
+              <Edit className="mr-2 h-4 w-4" />
+              연락처 수정
+            </Button>
+          </div>
         }
       />
 
@@ -506,13 +672,45 @@ export default function MyInfoPage() {
         </Card>
       </div>
 
-      {/* Edit Dialog */}
+      {/* Change Request Status Section */}
+      <Card className="mt-6">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <CardTitle className="text-base">변경 요청 현황</CardTitle>
+              {pendingRequestCount > 0 && (
+                <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                  <Clock className="mr-1 h-3 w-3" />
+                  {pendingRequestCount}건 대기중
+                </Badge>
+              )}
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/my-info/change-requests')}
+            >
+              전체 보기
+              <ArrowRight className="ml-1 h-4 w-4" />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            주소, 학력, 자격증, 가족사항, 경력사항 등의 변경은 HR 담당자의 승인이
+            필요합니다. 상단의 "변경 요청" 버튼을 통해 변경을 요청할 수 있으며,
+            요청 현황은 "전체 보기"에서 확인할 수 있습니다.
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Edit Dialog (Immediate - Contact Info) */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>내 정보 수정</DialogTitle>
+            <DialogTitle>연락처 정보 수정</DialogTitle>
             <DialogDescription>
-              수정 가능한 정보를 입력해주세요.
+              연락처 정보는 즉시 반영됩니다.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -574,9 +772,22 @@ export default function MyInfoPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Change Request Dialog (Approval Required) */}
+      <ChangeRequestDialog
+        open={isChangeRequestDialogOpen}
+        onOpenChange={setIsChangeRequestDialogOpen}
+        form={changeRequestForm}
+        setForm={setChangeRequestForm}
+        onSubmit={handleChangeRequestSubmit}
+        isSubmitting={isSubmitting}
+        isMobile={false}
+      />
     </>
   );
 }
+
+// ========= Sub Components =========
 
 // Mobile Info Item Component
 interface MobileInfoItemProps {
@@ -595,5 +806,159 @@ function MobileInfoItem({ icon: Icon, label, value, isLast }: MobileInfoItemProp
         <p className="text-sm font-medium truncate">{value}</p>
       </div>
     </div>
+  );
+}
+
+// Change Request Dialog Component
+interface ChangeRequestDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  form: {
+    category: ChangeRequestCategory | '';
+    fieldName: string;
+    oldValue: string;
+    newValue: string;
+    reason: string;
+  };
+  setForm: React.Dispatch<
+    React.SetStateAction<{
+      category: ChangeRequestCategory | '';
+      fieldName: string;
+      oldValue: string;
+      newValue: string;
+      reason: string;
+    }>
+  >;
+  onSubmit: () => void;
+  isSubmitting: boolean;
+  isMobile: boolean;
+}
+
+function ChangeRequestDialog({
+  open,
+  onOpenChange,
+  form,
+  setForm,
+  onSubmit,
+  isSubmitting,
+  isMobile,
+}: ChangeRequestDialogProps) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className={isMobile ? 'max-w-[calc(100%-2rem)] rounded-2xl' : 'max-w-lg'}>
+        <DialogHeader>
+          <DialogTitle>정보 변경 요청</DialogTitle>
+          <DialogDescription>
+            주소, 학력, 자격증, 가족사항, 경력사항 변경은 HR 담당자의 승인이
+            필요합니다. 변경 내용과 사유를 입력해주세요.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label htmlFor="cr-category">
+              변경 구분 <span className="text-destructive">*</span>
+            </Label>
+            <Select
+              value={form.category}
+              onValueChange={(value) =>
+                setForm((prev) => ({
+                  ...prev,
+                  category: value as ChangeRequestCategory,
+                }))
+              }
+            >
+              <SelectTrigger id="cr-category">
+                <SelectValue placeholder="변경 구분을 선택하세요" />
+              </SelectTrigger>
+              <SelectContent>
+                {CATEGORY_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="cr-fieldName">
+              변경 항목 <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="cr-fieldName"
+              value={form.fieldName}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, fieldName: e.target.value }))
+              }
+              placeholder="예: 자택주소, 최종학력, 정보처리기사 등"
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="cr-oldValue">변경 전 값</Label>
+            <Input
+              id="cr-oldValue"
+              value={form.oldValue}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, oldValue: e.target.value }))
+              }
+              placeholder="현재 등록된 값 (없으면 비워두세요)"
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="cr-newValue">
+              변경 후 값 <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="cr-newValue"
+              value={form.newValue}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, newValue: e.target.value }))
+              }
+              placeholder="변경하고자 하는 값을 입력하세요"
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="cr-reason">
+              변경 사유 <span className="text-destructive">*</span>
+            </Label>
+            <Textarea
+              id="cr-reason"
+              value={form.reason}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, reason: e.target.value }))
+              }
+              placeholder="변경 사유를 상세히 입력해주세요"
+              rows={3}
+            />
+          </div>
+        </div>
+        <DialogFooter className={isMobile ? 'flex-row gap-2' : undefined}>
+          <Button
+            variant="outline"
+            className={isMobile ? 'flex-1' : undefined}
+            onClick={() => onOpenChange(false)}
+            disabled={isSubmitting}
+          >
+            취소
+          </Button>
+          <Button
+            className={isMobile ? 'flex-1' : undefined}
+            onClick={onSubmit}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                요청 중...
+              </>
+            ) : (
+              <>
+                <SendHorizonal className="mr-2 h-4 w-4" />
+                변경 요청
+              </>
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -29,6 +29,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { PermissionGate } from '@/components/common/PermissionGate';
 import { queryKeys } from '@/lib/queryClient';
 import {
   DropdownMenu,
@@ -267,9 +268,14 @@ export default function EmployeeDetailPage() {
                 <div className="flex-1">
                   <h1 className="text-lg font-bold">직원 상세</h1>
                 </div>
-                <Button size="sm" onClick={() => navigate(`/employees/${id}/edit`)}>
-                  <Edit className="h-4 w-4" />
-                </Button>
+                <PermissionGate
+                  roles={['SUPER_ADMIN', 'GROUP_ADMIN', 'TENANT_ADMIN', 'HR_MANAGER']}
+                  permissions={['employee:write']}
+                >
+                  <Button size="sm" onClick={() => navigate(`/employees/${id}/edit`)}>
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                </PermissionGate>
               </div>
 
               {/* Profile Card */}
@@ -355,26 +361,31 @@ export default function EmployeeDetailPage() {
               </div>
 
               {/* Action Buttons */}
-              {!isResigned && (
-                <div className="space-y-2 pt-4">
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => setIsTransferDialogOpen(true)}
-                  >
-                    <ArrowRightLeft className="mr-2 h-4 w-4" />
-                    전출 요청
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full text-destructive hover:text-destructive"
-                    onClick={() => setIsResignationDialogOpen(true)}
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    퇴직 처리
-                  </Button>
-                </div>
-              )}
+              <PermissionGate
+                roles={['SUPER_ADMIN', 'GROUP_ADMIN', 'TENANT_ADMIN', 'HR_MANAGER']}
+                permissions={['employee:write']}
+              >
+                {!isResigned && (
+                  <div className="space-y-2 pt-4">
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => setIsTransferDialogOpen(true)}
+                    >
+                      <ArrowRightLeft className="mr-2 h-4 w-4" />
+                      전출 요청
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full text-destructive hover:text-destructive"
+                      onClick={() => setIsResignationDialogOpen(true)}
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      퇴직 처리
+                    </Button>
+                  </div>
+                )}
+              </PermissionGate>
             </div>
           )}
 
@@ -543,10 +554,15 @@ export default function EmployeeDetailPage() {
               <ArrowLeft className="mr-2 h-4 w-4" />
               목록으로
             </Button>
-            <Button onClick={() => navigate(`/employees/${id}/edit`)}>
-              <Edit className="mr-2 h-4 w-4" />
-              수정
-            </Button>
+            <PermissionGate
+              roles={['SUPER_ADMIN', 'GROUP_ADMIN', 'TENANT_ADMIN', 'HR_MANAGER']}
+              permissions={['employee:write']}
+            >
+              <Button onClick={() => navigate(`/employees/${id}/edit`)}>
+                <Edit className="mr-2 h-4 w-4" />
+                수정
+              </Button>
+            </PermissionGate>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="icon">
@@ -562,27 +578,32 @@ export default function EmployeeDetailPage() {
                   <Eye className="mr-2 h-4 w-4" />
                   개인정보 열람
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                {!isResigned && (
-                  <>
-                    <DropdownMenuItem onClick={() => setIsTransferDialogOpen(true)}>
-                      <ArrowRightLeft className="mr-2 h-4 w-4" />
-                      전출 요청
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setIsResignationDialogOpen(true)}>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      퇴직 처리
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                  </>
-                )}
-                <DropdownMenuItem>비밀번호 초기화</DropdownMenuItem>
-                <DropdownMenuItem
-                  className="text-destructive"
-                  onClick={() => setIsDeleteDialogOpen(true)}
+                <PermissionGate
+                  roles={['SUPER_ADMIN', 'GROUP_ADMIN', 'TENANT_ADMIN', 'HR_MANAGER']}
+                  permissions={['employee:write']}
                 >
-                  삭제
-                </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  {!isResigned && (
+                    <>
+                      <DropdownMenuItem onClick={() => setIsTransferDialogOpen(true)}>
+                        <ArrowRightLeft className="mr-2 h-4 w-4" />
+                        전출 요청
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setIsResignationDialogOpen(true)}>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        퇴직 처리
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
+                  <DropdownMenuItem>비밀번호 초기화</DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="text-destructive"
+                    onClick={() => setIsDeleteDialogOpen(true)}
+                  >
+                    삭제
+                  </DropdownMenuItem>
+                </PermissionGate>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

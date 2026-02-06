@@ -38,6 +38,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
+import { FamilyAllowanceMapping } from './FamilyAllowanceMapping';
 
 const familyMemberSchema = z.object({
   relationship: z.string().min(1, '관계는 필수입니다'),
@@ -161,7 +162,15 @@ export function FamilyInfo({
     return relationshipOptions.find((opt) => opt.value === value)?.label || value;
   };
 
+  const familyMembersForAllowance = data.map((member) => ({
+    id: member.id,
+    name: member.name,
+    relationship: member.relationship,
+    birthDate: member.birthDate ? format(member.birthDate, 'yyyy-MM-dd') : '',
+  }));
+
   return (
+    <div className="space-y-6">
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg">가족 정보</CardTitle>
@@ -356,6 +365,11 @@ export function FamilyInfo({
         />
       </CardContent>
     </Card>
+
+    {data.length > 0 && (
+      <FamilyAllowanceMapping familyMembers={familyMembersForAllowance} />
+    )}
+    </div>
   );
 }
 
