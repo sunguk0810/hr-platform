@@ -44,6 +44,14 @@ public class LeaveBalance extends TenantAwareEntity {
     @Builder.Default
     private BigDecimal carriedOverDays = BigDecimal.ZERO;
 
+    @Column(name = "used_hours", precision = 7, scale = 1)
+    @Builder.Default
+    private BigDecimal usedHours = BigDecimal.ZERO;
+
+    @Column(name = "pending_hours", precision = 7, scale = 1)
+    @Builder.Default
+    private BigDecimal pendingHours = BigDecimal.ZERO;
+
     public BigDecimal getAvailableDays() {
         return totalDays.add(carriedOverDays).subtract(usedDays).subtract(pendingDays);
     }

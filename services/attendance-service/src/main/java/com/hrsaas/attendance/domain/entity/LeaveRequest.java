@@ -43,6 +43,14 @@ public class LeaveRequest extends TenantAwareEntity {
     @Column(name = "days_count", nullable = false, precision = 3, scale = 1)
     private BigDecimal daysCount;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "leave_unit", length = 10)
+    @Builder.Default
+    private LeaveUnit leaveUnit = LeaveUnit.DAY;
+
+    @Column(name = "hours_count", precision = 5, scale = 1)
+    private BigDecimal hoursCount;
+
     @Column(name = "reason", columnDefinition = "TEXT")
     private String reason;
 
