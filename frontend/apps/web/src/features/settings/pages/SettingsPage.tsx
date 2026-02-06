@@ -390,6 +390,7 @@ export default function SettingsPage() {
               </div>
             </div>
           )}
+
         </div>
       );
     }
@@ -438,7 +439,7 @@ export default function SettingsPage() {
       <PageHeader title="설정" description="앱 설정을 관리합니다." />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 lg:w-[400px]">
+        <TabsList className="grid w-full grid-cols-4 lg:w-[480px]">
           <TabsTrigger value="profile">
             <User className="h-4 w-4 mr-2" />
             프로필
@@ -771,6 +772,7 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
       </Tabs>
     </>
   );
