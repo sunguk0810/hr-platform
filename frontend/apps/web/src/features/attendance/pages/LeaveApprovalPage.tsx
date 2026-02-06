@@ -21,6 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import {
   Dialog,
@@ -58,6 +59,7 @@ function LeaveTypeBadge({ type }: { type: LeaveType }) {
     SPECIAL: 'bg-purple-100 text-purple-700',
     HALF_DAY_AM: 'bg-green-100 text-green-700',
     HALF_DAY_PM: 'bg-green-100 text-green-700',
+    HOURLY: 'bg-orange-100 text-orange-700',
     MATERNITY: 'bg-pink-100 text-pink-700',
     PATERNITY: 'bg-cyan-100 text-cyan-700',
     UNPAID: 'bg-gray-100 text-gray-700',
@@ -454,6 +456,25 @@ export default function LeaveApprovalPage() {
                     </div>
                   </div>
                 </div>
+                {/* 잔여일수 차감 피드백 */}
+                <Alert variant={approveDialog.request.remainingDays - approveDialog.request.days < 0 ? 'destructive' : 'default'} role="alert">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>잔여일수 변동</AlertTitle>
+                  <AlertDescription>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span>현재 잔여: <strong>{approveDialog.request.remainingDays}일</strong></span>
+                      <span>&rarr;</span>
+                      <span>차감 후: <strong className={approveDialog.request.remainingDays - approveDialog.request.days < 0 ? 'text-destructive' : ''}>
+                        {approveDialog.request.remainingDays - approveDialog.request.days}일
+                      </strong></span>
+                    </div>
+                    {approveDialog.request.remainingDays - approveDialog.request.days < 0 && (
+                      <p className="text-sm text-destructive mt-1 font-medium">
+                        잔여일수가 부족합니다. 승인 시 마이너스 처리됩니다.
+                      </p>
+                    )}
+                  </AlertDescription>
+                </Alert>
                 <div className="space-y-2">
                   <Label htmlFor="comment">코멘트 (선택)</Label>
                   <Textarea
@@ -868,6 +889,25 @@ export default function LeaveApprovalPage() {
                   </div>
                 </div>
               </div>
+              {/* 잔여일수 차감 피드백 */}
+              <Alert variant={approveDialog.request.remainingDays - approveDialog.request.days < 0 ? 'destructive' : 'default'} role="alert">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>잔여일수 변동</AlertTitle>
+                <AlertDescription>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span>현재 잔여: <strong>{approveDialog.request.remainingDays}일</strong></span>
+                    <span>&rarr;</span>
+                    <span>차감 후: <strong className={approveDialog.request.remainingDays - approveDialog.request.days < 0 ? 'text-destructive' : ''}>
+                      {approveDialog.request.remainingDays - approveDialog.request.days}일
+                    </strong></span>
+                  </div>
+                  {approveDialog.request.remainingDays - approveDialog.request.days < 0 && (
+                    <p className="text-sm text-destructive mt-1 font-medium">
+                      잔여일수가 부족합니다. 승인 시 마이너스 처리됩니다.
+                    </p>
+                  )}
+                </AlertDescription>
+              </Alert>
               <div className="space-y-2">
                 <Label htmlFor="comment">코멘트 (선택)</Label>
                 <Textarea

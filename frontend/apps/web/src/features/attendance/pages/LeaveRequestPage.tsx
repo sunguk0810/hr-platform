@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { format, differenceInCalendarDays } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -31,9 +31,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, Calendar, Plus, XCircle } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, Loader2, Plus, XCircle } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { queryKeys } from '@/lib/queryClient';
+import { approvalService } from '@/features/approval/services/approvalService';
+import { ApprovalLinePreview } from '@/features/approval/components/ApprovalLinePreview';
 import {
   useLeaveBalance,
   useLeaveBalanceByType,
@@ -42,8 +44,44 @@ import {
   useCreateLeaveRequest,
   useCancelLeaveRequest,
 } from '../hooks/useAttendance';
-import type { LeaveType, LeaveStatus, CreateLeaveRequest, LeaveRequest as LeaveRequestType } from '@hr-platform/shared-types';
+import type { LeaveType, LeaveStatus, CreateLeaveRequest, LeaveRequest as LeaveRequestType, HourlyLeavePolicy } from '@hr-platform/shared-types';
 import { LEAVE_TYPE_LABELS } from '@hr-platform/shared-types';
+
+/**
+ * Generate time slot options between 09:00 and 18:00 based on the minimum unit.
+ * @param minUnit - Minimum time unit in minutes (30 or 60)
+ * @returns Array of time strings like ["09:00", "09:30", "10:00", ...]
+ */
+function generateTimeSlots(minUnit: 30 | 60): string[] {
+  const slots: string[] = [];
+  const startMinutes = 9 * 60; // 09:00
+  const endMinutes = 18 * 60;  // 18:00
+  for (let m = startMinutes; m <= endMinutes; m += minUnit) {
+    const hours = Math.floor(m / 60);
+    const mins = m % 60;
+    slots.push(`${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`);
+  }
+  return slots;
+}
+
+/**
+ * Calculate the number of hours between two time strings.
+ * @param startTime - e.g., "09:00"
+ * @param endTime - e.g., "11:30"
+ * @returns number of hours (e.g., 2.5)
+ */
+function calculateHoursBetween(startTime: string, endTime: string): number {
+  const [startH, startM] = startTime.split(':').map(Number);
+  const [endH, endM] = endTime.split(':').map(Number);
+  return (endH * 60 + endM - startH * 60 - startM) / 60;
+}
+
+// Default hourly leave policy (would come from tenant settings in production)
+const DEFAULT_HOURLY_LEAVE_POLICY: HourlyLeavePolicy = {
+  enabled: true,
+  minUnit: 30,
+  dailyMaxCount: 2,
+};
 
 export default function LeaveRequestPage() {
   const navigate = useNavigate();
@@ -53,16 +91,31 @@ export default function LeaveRequestPage() {
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<LeaveRequestType | null>(null);
 
+  // In production, this would be fetched from tenant settings API
+  const [hourlyLeavePolicy] = useState<HourlyLeavePolicy>(DEFAULT_HOURLY_LEAVE_POLICY);
+
+  // Mock hourly leave balance (in production, fetched from API)
+  const hourlyLeaveBalance = {
+    totalHours: 16,
+    usedHours: 4,
+    remainingHours: 12,
+    pendingHours: 2,
+  };
+
   const [formData, setFormData] = useState<{
     leaveType: LeaveType | '';
     startDate: Date | undefined;
     endDate: Date | undefined;
     reason: string;
+    startTime: string;
+    endTime: string;
   }>({
     leaveType: '',
     startDate: undefined,
     endDate: undefined,
     reason: '',
+    startTime: '',
+    endTime: '',
   });
 
   const { params, searchState, setLeaveType, setStatus, setPage } = useLeaveSearchParams();
@@ -72,10 +125,43 @@ export default function LeaveRequestPage() {
   const createMutation = useCreateLeaveRequest();
   const cancelMutation = useCancelLeaveRequest();
 
+  // FR-ATT-002-03: Auto-recommended approval line based on leave type
+  const shouldFetchApprovalLine = !!formData.leaveType && isCreateDialogOpen;
+  const { data: approvalLineData, isLoading: isLoadingApprovalLine } = useQuery({
+    queryKey: ['approval-recommend-line', formData.leaveType],
+    queryFn: () => approvalService.getRecommendedApprovalLine({
+      type: 'LEAVE_REQUEST',
+      departmentId: 'dept-001', // Mock: current user's department
+    }),
+    enabled: shouldFetchApprovalLine,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
+  const recommendedApprovers = approvalLineData?.data?.approvers ?? [];
+
   const balance = balanceData?.data;
   const balanceByType = balanceByTypeData?.data ?? [];
   const requests = requestsData?.data?.content ?? [];
   const totalPages = requestsData?.data?.totalPages ?? 0;
+
+  const isHourlyType = formData.leaveType === 'HOURLY';
+  const isHalfDayType = formData.leaveType?.startsWith('HALF_DAY') ?? false;
+
+  const timeSlots = useMemo(
+    () => generateTimeSlots(hourlyLeavePolicy.minUnit),
+    [hourlyLeavePolicy.minUnit]
+  );
+
+  // Filter end time options to only show times after the selected start time
+  const endTimeSlots = useMemo(() => {
+    if (!formData.startTime) return timeSlots;
+    return timeSlots.filter((t) => t > formData.startTime);
+  }, [timeSlots, formData.startTime]);
+
+  const calculatedHours = useMemo(() => {
+    if (!formData.startTime || !formData.endTime) return 0;
+    return calculateHoursBetween(formData.startTime, formData.endTime);
+  }, [formData.startTime, formData.endTime]);
 
   const handleCreateOpen = () => {
     setFormData({
@@ -83,6 +169,8 @@ export default function LeaveRequestPage() {
       startDate: undefined,
       endDate: undefined,
       reason: '',
+      startTime: '',
+      endTime: '',
     });
     setIsCreateDialogOpen(true);
   };
@@ -93,14 +181,26 @@ export default function LeaveRequestPage() {
   };
 
   const handleCreate = async () => {
-    if (!formData.leaveType || !formData.startDate || !formData.endDate) return;
+    if (!formData.leaveType || !formData.startDate) return;
+
+    // For hourly leave, validate time selection
+    if (isHourlyType) {
+      if (!formData.startTime || !formData.endTime) return;
+    } else if (!formData.endDate) {
+      return;
+    }
 
     try {
       const data: CreateLeaveRequest = {
         leaveType: formData.leaveType,
         startDate: format(formData.startDate, 'yyyy-MM-dd'),
-        endDate: format(formData.endDate, 'yyyy-MM-dd'),
+        endDate: format(isHourlyType ? formData.startDate : (formData.endDate ?? formData.startDate), 'yyyy-MM-dd'),
         reason: formData.reason,
+        ...(isHourlyType && {
+          startTime: formData.startTime,
+          endTime: formData.endTime,
+          hours: calculatedHours,
+        }),
       };
       await createMutation.mutateAsync(data);
       setIsCreateDialogOpen(false);
@@ -120,13 +220,53 @@ export default function LeaveRequestPage() {
   };
 
   const calculateDays = () => {
+    if (isHourlyType) return 0;
     if (!formData.startDate || !formData.endDate) return 0;
-    if (formData.leaveType?.startsWith('HALF_DAY')) return 0.5;
+    if (isHalfDayType) return 0.5;
     return differenceInCalendarDays(formData.endDate, formData.startDate) + 1;
   };
 
   const handleRefresh = async () => {
     await queryClient.invalidateQueries({ queryKey: queryKeys.leaves.all });
+  };
+
+  const isCreateDisabled = useMemo(() => {
+    if (!formData.leaveType || !formData.startDate || !formData.reason || createMutation.isPending) return true;
+    if (isHourlyType) {
+      return !formData.startTime || !formData.endTime || calculatedHours <= 0;
+    }
+    return !formData.endDate;
+  }, [formData, isHourlyType, calculatedHours, createMutation.isPending]);
+
+  // Render the period/time column for a leave request
+  const renderRequestPeriod = (request: LeaveRequestType) => {
+    if (request.leaveType === 'HOURLY' && request.startTime && request.endTime) {
+      return (
+        <>
+          {format(new Date(request.startDate), 'M/d', { locale: ko })}
+          {' '}
+          <span className="text-muted-foreground">
+            {request.startTime} ~ {request.endTime}
+          </span>
+        </>
+      );
+    }
+    return (
+      <>
+        {format(new Date(request.startDate), 'M/d', { locale: ko })}
+        {request.startDate !== request.endDate && (
+          <> ~ {format(new Date(request.endDate), 'M/d', { locale: ko })}</>
+        )}
+      </>
+    );
+  };
+
+  // Render the days/hours column for a leave request
+  const renderRequestDuration = (request: LeaveRequestType) => {
+    if (request.leaveType === 'HOURLY' && request.hours) {
+      return <>{request.hours}시간</>;
+    }
+    return <>{request.days}일</>;
   };
 
   // Create/Cancel Dialogs (shared between mobile and desktop)
@@ -149,7 +289,9 @@ export default function LeaveRequestPage() {
                 onValueChange={(value) => setFormData(prev => ({
                   ...prev,
                   leaveType: value as LeaveType,
-                  endDate: value.startsWith('HALF_DAY') && prev.startDate ? prev.startDate : prev.endDate,
+                  endDate: (value.startsWith('HALF_DAY') || value === 'HOURLY') && prev.startDate ? prev.startDate : prev.endDate,
+                  startTime: value === 'HOURLY' ? prev.startTime : '',
+                  endTime: value === 'HOURLY' ? prev.endTime : '',
                 }))}
               >
                 <SelectTrigger>
@@ -161,6 +303,9 @@ export default function LeaveRequestPage() {
                     <SelectItem value="ANNUAL">연차</SelectItem>
                     <SelectItem value="HALF_DAY_AM">반차 (오전) - 09:00~13:00</SelectItem>
                     <SelectItem value="HALF_DAY_PM">반차 (오후) - 14:00~18:00</SelectItem>
+                    {hourlyLeavePolicy.enabled && (
+                      <SelectItem value="HOURLY">시간차 휴가</SelectItem>
+                    )}
                   </SelectGroup>
                   <SelectGroup>
                     <SelectLabel>특별휴가</SelectLabel>
@@ -180,7 +325,9 @@ export default function LeaveRequestPage() {
                 </SelectContent>
               </Select>
             </div>
-            {formData.leaveType?.startsWith('HALF_DAY') && (
+
+            {/* Half-day info banner */}
+            {isHalfDayType && (
               <div className="rounded-md bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 p-3 text-sm">
                 <span className="font-medium text-blue-700 dark:text-blue-400">
                   {formData.leaveType === 'HALF_DAY_AM' ? '오전 반차' : '오후 반차'}
@@ -192,19 +339,45 @@ export default function LeaveRequestPage() {
                 </span>
               </div>
             )}
+
+            {/* Hourly leave info banner and remaining balance */}
+            {isHourlyType && (
+              <div className="rounded-md bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-900 p-3 text-sm space-y-2">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+                  <span className="font-medium text-violet-700 dark:text-violet-400">
+                    시간차 휴가
+                  </span>
+                  <span className="text-violet-600 dark:text-violet-500">
+                    (최소 단위: {hourlyLeavePolicy.minUnit}분 / 일 최대 {hourlyLeavePolicy.dailyMaxCount}회)
+                  </span>
+                </div>
+                <div className="flex items-center gap-4 text-violet-600 dark:text-violet-500">
+                  <span>잔여: <strong className="text-violet-700 dark:text-violet-400">{hourlyLeaveBalance.remainingHours}시간</strong></span>
+                  <span className="text-violet-400 dark:text-violet-700">|</span>
+                  <span>사용: {hourlyLeaveBalance.usedHours}시간</span>
+                  <span className="text-violet-400 dark:text-violet-700">|</span>
+                  <span>총: {hourlyLeaveBalance.totalHours}시간</span>
+                </div>
+              </div>
+            )}
+
+            {/* Date picker - single date for half-day and hourly, range for others */}
             <div className="grid gap-2">
-              <Label>시작일 *</Label>
+              <Label>{isHourlyType ? '날짜 *' : '시작일 *'}</Label>
               <DatePicker
                 value={formData.startDate}
                 onChange={(date) => setFormData(prev => ({
                   ...prev,
                   startDate: date,
-                  endDate: prev.leaveType?.startsWith('HALF_DAY') ? date : prev.endDate,
+                  endDate: (isHalfDayType || isHourlyType) ? date : prev.endDate,
                 }))}
                 disabledDates={(date) => date < new Date()}
               />
             </div>
-            {!formData.leaveType?.startsWith('HALF_DAY') && (
+
+            {/* End date - only for non-half-day and non-hourly types */}
+            {!isHalfDayType && !isHourlyType && (
               <div className="grid gap-2">
                 <Label>종료일 *</Label>
                 <DatePicker
@@ -214,11 +387,77 @@ export default function LeaveRequestPage() {
                 />
               </div>
             )}
-            {formData.startDate && formData.endDate && (
+
+            {/* Time pickers - only for hourly leave */}
+            {isHourlyType && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label>시작 시간 *</Label>
+                  <Select
+                    value={formData.startTime}
+                    onValueChange={(value) => setFormData(prev => ({
+                      ...prev,
+                      startTime: value,
+                      // Reset end time if it's no longer valid
+                      endTime: prev.endTime && prev.endTime <= value ? '' : prev.endTime,
+                    }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="시작 시간" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {timeSlots.slice(0, -1).map((time) => (
+                        <SelectItem key={`start-${time}`} value={time}>
+                          {time}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label>종료 시간 *</Label>
+                  <Select
+                    value={formData.endTime}
+                    onValueChange={(value) => setFormData(prev => ({
+                      ...prev,
+                      endTime: value,
+                    }))}
+                    disabled={!formData.startTime}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="종료 시간" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {endTimeSlots.map((time) => (
+                        <SelectItem key={`end-${time}`} value={time}>
+                          {time}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+
+            {/* Calculated hours for hourly leave */}
+            {isHourlyType && formData.startTime && formData.endTime && calculatedHours > 0 && (
+              <div className="rounded-md bg-muted p-3 text-sm flex items-center gap-2">
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                <span>
+                  {formData.startTime} ~ {formData.endTime}
+                  {' / '}
+                  총 <strong>{calculatedHours}시간</strong> 사용
+                </span>
+              </div>
+            )}
+
+            {/* Calculated days for non-hourly types */}
+            {!isHourlyType && formData.startDate && formData.endDate && (
               <div className="rounded-md bg-muted p-3 text-sm">
                 총 <strong>{calculateDays()}</strong>일
               </div>
             )}
+
             <div className="grid gap-2">
               <Label>사유 *</Label>
               <Textarea
@@ -228,6 +467,33 @@ export default function LeaveRequestPage() {
                 rows={3}
               />
             </div>
+
+            {/* FR-ATT-002-03: 결재선 미리보기 */}
+            {formData.leaveType && (
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">결재선 미리보기</Label>
+                <div className="rounded-lg border bg-muted/30 p-3">
+                  {isLoadingApprovalLine ? (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>결재선을 불러오는 중...</span>
+                    </div>
+                  ) : recommendedApprovers.length > 0 ? (
+                    <ApprovalLinePreview
+                      requesterName="홍길동"
+                      approvers={recommendedApprovers}
+                    />
+                  ) : (
+                    <p className="text-sm text-muted-foreground py-2">
+                      추천 결재선 정보가 없습니다.
+                    </p>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  소속 부서 및 직급 기준으로 자동 추천된 결재선입니다.
+                </p>
+              </div>
+            )}
           </div>
           <DialogFooter className={isMobile ? "flex-row gap-2" : ""}>
             <Button variant="outline" className={isMobile ? "flex-1" : ""} onClick={() => setIsCreateDialogOpen(false)}>
@@ -236,13 +502,7 @@ export default function LeaveRequestPage() {
             <Button
               className={isMobile ? "flex-1" : ""}
               onClick={handleCreate}
-              disabled={
-                !formData.leaveType ||
-                !formData.startDate ||
-                !formData.endDate ||
-                !formData.reason ||
-                createMutation.isPending
-              }
+              disabled={isCreateDisabled}
             >
               {createMutation.isPending ? '신청 중...' : '신청하기'}
             </Button>
@@ -260,7 +520,10 @@ export default function LeaveRequestPage() {
               <br />
               <span className="text-foreground font-medium">
                 {selectedRequest && LEAVE_TYPE_LABELS[selectedRequest.leaveType]}
-                {selectedRequest && ` (${selectedRequest.startDate} ~ ${selectedRequest.endDate})`}
+                {selectedRequest && selectedRequest.leaveType === 'HOURLY' && selectedRequest.startTime && selectedRequest.endTime
+                  ? ` (${selectedRequest.startDate} ${selectedRequest.startTime} ~ ${selectedRequest.endTime})`
+                  : selectedRequest && ` (${selectedRequest.startDate} ~ ${selectedRequest.endDate})`
+                }
               </span>
             </DialogDescription>
           </DialogHeader>
@@ -320,6 +583,33 @@ export default function LeaveRequestPage() {
               </div>
             </div>
           </div>
+
+          {/* Hourly Leave Balance Card (mobile) */}
+          {hourlyLeavePolicy.enabled && (
+            <div className="bg-card rounded-2xl border p-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-violet-600" />
+                  <h3 className="font-semibold text-sm">시간차 휴가</h3>
+                </div>
+                <span className="text-lg font-bold text-violet-600">{hourlyLeaveBalance.remainingHours}시간</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                <div className="bg-muted/50 rounded-lg p-2">
+                  <p className="text-muted-foreground">총</p>
+                  <p className="font-semibold">{hourlyLeaveBalance.totalHours}시간</p>
+                </div>
+                <div className="bg-muted/50 rounded-lg p-2">
+                  <p className="text-muted-foreground">사용</p>
+                  <p className="font-semibold">{hourlyLeaveBalance.usedHours}시간</p>
+                </div>
+                <div className="bg-muted/50 rounded-lg p-2">
+                  <p className="text-muted-foreground">예정</p>
+                  <p className="font-semibold">{hourlyLeaveBalance.pendingHours}시간</p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Leave Balance by Type */}
           {balanceByType.length > 0 && (
@@ -455,6 +745,27 @@ export default function LeaveRequestPage() {
                   <span className="font-medium text-primary">{balance?.remainingDays ?? 0}일</span>
                 </div>
               </div>
+              {/* Hourly leave balance section */}
+              {hourlyLeavePolicy.enabled && (
+                <div className="border-t pt-4 space-y-2">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Clock className="h-4 w-4 text-violet-600" />
+                    <span className="font-medium text-sm">시간차 휴가</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">총</span>
+                    <span className="font-medium">{hourlyLeaveBalance.totalHours}시간</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">사용</span>
+                    <span className="font-medium">{hourlyLeaveBalance.usedHours}시간</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">잔여</span>
+                    <span className="font-medium text-violet-600">{hourlyLeaveBalance.remainingHours}시간</span>
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -542,7 +853,7 @@ export default function LeaveRequestPage() {
                         기간
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        일수
+                        일수/시간
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                         사유
@@ -565,12 +876,11 @@ export default function LeaveRequestPage() {
                           <LeaveTypeBadge type={request.leaveType} />
                         </td>
                         <td className="px-4 py-3 text-sm">
-                          {format(new Date(request.startDate), 'M/d', { locale: ko })}
-                          {request.startDate !== request.endDate && (
-                            <> ~ {format(new Date(request.endDate), 'M/d', { locale: ko })}</>
-                          )}
+                          {renderRequestPeriod(request)}
                         </td>
-                        <td className="px-4 py-3 text-sm">{request.days}일</td>
+                        <td className="px-4 py-3 text-sm">
+                          {renderRequestDuration(request)}
+                        </td>
                         <td className="px-4 py-3 text-sm text-muted-foreground max-w-[200px] truncate">
                           {request.reason}
                         </td>
@@ -616,6 +926,8 @@ interface MobileLeaveCardProps {
 }
 
 function MobileLeaveCard({ request, onCancel }: MobileLeaveCardProps) {
+  const isHourly = request.leaveType === 'HOURLY' && request.startTime && request.endTime;
+
   return (
     <div className="bg-card rounded-xl border p-4">
       <div className="flex items-start justify-between gap-3">
@@ -626,10 +938,18 @@ function MobileLeaveCard({ request, onCancel }: MobileLeaveCardProps) {
           </div>
           <p className="text-sm font-medium">
             {format(new Date(request.startDate), 'M월 d일', { locale: ko })}
-            {request.startDate !== request.endDate && (
-              <> ~ {format(new Date(request.endDate), 'M월 d일', { locale: ko })}</>
+            {isHourly ? (
+              <span className="text-muted-foreground ml-1">
+                {request.startTime} ~ {request.endTime} ({request.hours}시간)
+              </span>
+            ) : (
+              <>
+                {request.startDate !== request.endDate && (
+                  <> ~ {format(new Date(request.endDate), 'M월 d일', { locale: ko })}</>
+                )}
+                <span className="text-muted-foreground ml-1">({request.days}일)</span>
+              </>
             )}
-            <span className="text-muted-foreground ml-1">({request.days}일)</span>
           </p>
           <p className="text-xs text-muted-foreground mt-1 truncate">{request.reason}</p>
         </div>

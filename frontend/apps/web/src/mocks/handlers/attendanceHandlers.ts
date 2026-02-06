@@ -246,12 +246,147 @@ const mockLeaveRequests: LeaveRequest[] = [
     createdAt: format(subDays(new Date(), 48), 'yyyy-MM-dd'),
     updatedAt: format(subDays(new Date(), 47), 'yyyy-MM-dd'),
   },
+  {
+    id: 'leave-006',
+    tenantId: 'tenant-001',
+    employeeId: 'emp-001',
+    employeeName: '홍길동',
+    leaveType: 'HOURLY',
+    startDate: format(subDays(new Date(), 7), 'yyyy-MM-dd'),
+    endDate: format(subDays(new Date(), 7), 'yyyy-MM-dd'),
+    days: 0,
+    reason: '은행 업무',
+    status: 'APPROVED',
+    approverName: '이영희',
+    approvedAt: format(subDays(new Date(), 8), 'yyyy-MM-dd'),
+    createdAt: format(subDays(new Date(), 9), 'yyyy-MM-dd'),
+    updatedAt: format(subDays(new Date(), 8), 'yyyy-MM-dd'),
+    startTime: '10:00',
+    endTime: '12:00',
+    hours: 2,
+  },
+  {
+    id: 'leave-007',
+    tenantId: 'tenant-001',
+    employeeId: 'emp-001',
+    employeeName: '홍길동',
+    leaveType: 'HOURLY',
+    startDate: format(subDays(new Date(), -2), 'yyyy-MM-dd'),
+    endDate: format(subDays(new Date(), -2), 'yyyy-MM-dd'),
+    days: 0,
+    reason: '병원 진료',
+    status: 'PENDING',
+    createdAt: format(subDays(new Date(), 1), 'yyyy-MM-dd'),
+    updatedAt: format(subDays(new Date(), 1), 'yyyy-MM-dd'),
+    startTime: '14:00',
+    endTime: '16:00',
+    hours: 2,
+  },
 ];
 
 let todayCheckedIn = false;
 let todayCheckedOut = false;
 let todayCheckInTime: string | undefined;
 let todayCheckOutTime: string | undefined;
+
+// Mock leave usage conditions data
+let mockLeaveUsageConditions = [
+  {
+    leaveType: 'ANNUAL',
+    leaveTypeName: '연차',
+    advanceNoticeDays: 3,
+    maxConsecutiveDays: 5,
+    requiredDocuments: [] as string[],
+    maxAnnualUsage: 0,
+    minTenureMonths: 0,
+    availableDays: [true, true, true, true, true, false, false],
+    blackoutPeriods: [] as { startDate: string; endDate: string }[],
+    roleRestrictions: [] as string[],
+  },
+  {
+    leaveType: 'HALF_DAY',
+    leaveTypeName: '반차',
+    advanceNoticeDays: 1,
+    maxConsecutiveDays: 1,
+    requiredDocuments: [] as string[],
+    maxAnnualUsage: 0,
+    minTenureMonths: 0,
+    availableDays: [true, true, true, true, true, false, false],
+    blackoutPeriods: [] as { startDate: string; endDate: string }[],
+    roleRestrictions: [] as string[],
+  },
+  {
+    leaveType: 'HOURLY',
+    leaveTypeName: '시간제연차',
+    advanceNoticeDays: 1,
+    maxConsecutiveDays: 1,
+    requiredDocuments: [] as string[],
+    maxAnnualUsage: 0,
+    minTenureMonths: 0,
+    availableDays: [true, true, true, true, true, false, false],
+    blackoutPeriods: [] as { startDate: string; endDate: string }[],
+    roleRestrictions: [] as string[],
+  },
+  {
+    leaveType: 'SICK',
+    leaveTypeName: '병가',
+    advanceNoticeDays: 0,
+    maxConsecutiveDays: 30,
+    requiredDocuments: ['진단서'],
+    maxAnnualUsage: 0,
+    minTenureMonths: 0,
+    availableDays: [true, true, true, true, true, true, true],
+    blackoutPeriods: [] as { startDate: string; endDate: string }[],
+    roleRestrictions: [] as string[],
+  },
+  {
+    leaveType: 'CONDOLENCE',
+    leaveTypeName: '경조휴가',
+    advanceNoticeDays: 0,
+    maxConsecutiveDays: 7,
+    requiredDocuments: ['확인서'],
+    maxAnnualUsage: 0,
+    minTenureMonths: 0,
+    availableDays: [true, true, true, true, true, true, true],
+    blackoutPeriods: [] as { startDate: string; endDate: string }[],
+    roleRestrictions: [] as string[],
+  },
+  {
+    leaveType: 'MATERNITY',
+    leaveTypeName: '출산휴가',
+    advanceNoticeDays: 14,
+    maxConsecutiveDays: 90,
+    requiredDocuments: ['진단서', '확인서'],
+    maxAnnualUsage: 1,
+    minTenureMonths: 0,
+    availableDays: [true, true, true, true, true, true, true],
+    blackoutPeriods: [] as { startDate: string; endDate: string }[],
+    roleRestrictions: [] as string[],
+  },
+  {
+    leaveType: 'PARENTAL',
+    leaveTypeName: '육아휴직',
+    advanceNoticeDays: 30,
+    maxConsecutiveDays: 365,
+    requiredDocuments: ['사유서', '확인서'],
+    maxAnnualUsage: 1,
+    minTenureMonths: 6,
+    availableDays: [true, true, true, true, true, true, true],
+    blackoutPeriods: [] as { startDate: string; endDate: string }[],
+    roleRestrictions: [] as string[],
+  },
+];
+
+// Mock leave approval rules data
+let mockLeaveApprovalRules = [
+  { id: 'lar-1', leaveType: 'ANNUAL', leaveTypeName: '연차', approvalSteps: 1, approverRoles: ['팀장'], autoSubmit: false, note: '' },
+  { id: 'lar-2', leaveType: 'HALF_DAY', leaveTypeName: '반차', approvalSteps: 1, approverRoles: ['팀장'], autoSubmit: true, note: '자동 승인 가능' },
+  { id: 'lar-3', leaveType: 'HOURLY', leaveTypeName: '시간제연차', approvalSteps: 1, approverRoles: ['팀장'], autoSubmit: true, note: '' },
+  { id: 'lar-4', leaveType: 'SICK', leaveTypeName: '병가', approvalSteps: 2, approverRoles: ['팀장', '인사팀장'], autoSubmit: false, note: '3일 이상 시 진단서' },
+  { id: 'lar-5', leaveType: 'CONDOLENCE', leaveTypeName: '경조휴가', approvalSteps: 2, approverRoles: ['팀장', '부서장'], autoSubmit: false, note: '' },
+  { id: 'lar-6', leaveType: 'MATERNITY', leaveTypeName: '출산휴가', approvalSteps: 3, approverRoles: ['팀장', '부서장', '인사팀장'], autoSubmit: false, note: '필수 서류 제출' },
+  { id: 'lar-7', leaveType: 'PARENTAL', leaveTypeName: '육아휴직', approvalSteps: 3, approverRoles: ['팀장', '부서장', '임원'], autoSubmit: false, note: '30일 전 신청' },
+];
 
 export const attendanceHandlers = [
   // Get today's attendance
@@ -454,6 +589,55 @@ export const attendanceHandlers = [
     });
   }),
 
+  // Get hourly leave balance
+  http.get('/api/v1/leaves/hourly/balance', async () => {
+    await delay(200);
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        totalHours: 16,
+        usedHours: 4,
+        remainingHours: 12,
+        pendingHours: 2,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // Get hourly leave policy (tenant settings)
+  http.get('/api/v1/settings/hourly-leave-policy', async () => {
+    await delay(200);
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        enabled: true,
+        minUnit: 30,
+        dailyMaxCount: 2,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // Update hourly leave policy (tenant settings)
+  http.put('/api/v1/settings/hourly-leave-policy', async ({ request }) => {
+    await delay(300);
+
+    const body = await request.json() as Record<string, unknown>;
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        enabled: body.enabled,
+        minUnit: body.minUnit,
+        dailyMaxCount: body.dailyMaxCount,
+      },
+      message: '시간차 휴가 정책이 저장되었습니다.',
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
   // Get leave requests
   http.get('/api/v1/leaves/my', async ({ request }) => {
     await delay(300);
@@ -501,11 +685,18 @@ export const attendanceHandlers = [
 
     const body = await request.json() as Record<string, unknown>;
 
+    const leaveType = body.leaveType as string;
     const startDate = new Date(body.startDate as string);
     const endDate = new Date(body.endDate as string);
-    const days = (body.leaveType as string).startsWith('HALF_DAY')
-      ? 0.5
-      : Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+    let days: number;
+    if (leaveType === 'HOURLY') {
+      days = 0; // Hourly leave uses hours, not days
+    } else if (leaveType.startsWith('HALF_DAY')) {
+      days = 0.5;
+    } else {
+      days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    }
 
     const newRequest: LeaveRequest = {
       id: `leave-${Date.now()}`,
@@ -520,6 +711,11 @@ export const attendanceHandlers = [
       status: 'PENDING',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      ...(leaveType === 'HOURLY' && {
+        startTime: body.startTime as string,
+        endTime: body.endTime as string,
+        hours: body.hours as number,
+      }),
     };
 
     mockLeaveRequests.unshift(newRequest);
@@ -527,7 +723,7 @@ export const attendanceHandlers = [
     return HttpResponse.json({
       success: true,
       data: newRequest,
-      message: '휴가 신청이 완료되었습니다.',
+      message: leaveType === 'HOURLY' ? '시간차 휴가 신청이 완료되었습니다.' : '휴가 신청이 완료되었습니다.',
       timestamp: new Date().toISOString(),
     }, { status: 201 });
   }),
@@ -1187,6 +1383,66 @@ export const attendanceHandlers = [
         lastModifiedAt: null,
         modificationHistory: [],
       },
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // ============================================
+  // Leave Usage Conditions (휴가 사용 조건)
+  // ============================================
+
+  // Get leave usage conditions
+  http.get('/api/v1/settings/leave-usage-conditions', async () => {
+    await delay(200);
+
+    return HttpResponse.json({
+      success: true,
+      data: mockLeaveUsageConditions,
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // Update leave usage conditions
+  http.put('/api/v1/settings/leave-usage-conditions', async ({ request }) => {
+    await delay(300);
+
+    const body = await request.json() as typeof mockLeaveUsageConditions;
+    mockLeaveUsageConditions = body;
+
+    return HttpResponse.json({
+      success: true,
+      data: mockLeaveUsageConditions,
+      message: '휴가 사용 조건이 저장되었습니다.',
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // ============================================
+  // Leave Approval Rules (휴가 결재 규칙)
+  // ============================================
+
+  // Get leave approval rules
+  http.get('/api/v1/settings/leave-approval-rules', async () => {
+    await delay(200);
+
+    return HttpResponse.json({
+      success: true,
+      data: mockLeaveApprovalRules,
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // Update leave approval rules
+  http.put('/api/v1/settings/leave-approval-rules', async ({ request }) => {
+    await delay(300);
+
+    const body = await request.json() as typeof mockLeaveApprovalRules;
+    mockLeaveApprovalRules = body;
+
+    return HttpResponse.json({
+      success: true,
+      data: mockLeaveApprovalRules,
+      message: '휴가 결재 규칙이 저장되었습니다.',
       timestamp: new Date().toISOString(),
     });
   }),

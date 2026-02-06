@@ -20,10 +20,13 @@ import { LEAVE_TYPE_LABELS, type LeaveType } from '@hr-platform/shared-types';
 import { Loader2, CalendarDays, AlertCircle } from 'lucide-react';
 
 const leaveRequestSchema = z.object({
-  leaveType: z.enum(['ANNUAL', 'SICK', 'SPECIAL', 'HALF_DAY_AM', 'HALF_DAY_PM', 'MATERNITY', 'PATERNITY', 'UNPAID'] as const),
+  leaveType: z.enum(['ANNUAL', 'SICK', 'SPECIAL', 'HALF_DAY_AM', 'HALF_DAY_PM', 'HOURLY', 'MATERNITY', 'PATERNITY', 'UNPAID'] as const),
   startDate: z.string().min(1, '시작일을 선택해주세요'),
   endDate: z.string().min(1, '종료일을 선택해주세요'),
   reason: z.string().min(1, '사유를 입력해주세요').max(500, '500자 이내로 입력해주세요'),
+  startTime: z.string().optional(), // For HOURLY leave
+  endTime: z.string().optional(),   // For HOURLY leave
+  hours: z.number().optional(),     // For HOURLY leave
 });
 
 type LeaveRequestFormData = z.infer<typeof leaveRequestSchema>;
@@ -122,12 +125,12 @@ export function LeaveRequestForm({ onSuccess, onCancel }: LeaveRequestFormProps)
 
         {/* Leave Type */}
         <div className="space-y-2">
-          <Label>휴가 유형</Label>
+          <Label htmlFor="leaveType">휴가 유형</Label>
           <Select
             value={leaveType}
             onValueChange={(value) => setValue('leaveType', value as LeaveType)}
           >
-            <SelectTrigger>
+            <SelectTrigger id="leaveType">
               <SelectValue placeholder="휴가 유형 선택" />
             </SelectTrigger>
             <SelectContent>
@@ -192,8 +195,9 @@ export function LeaveRequestForm({ onSuccess, onCancel }: LeaveRequestFormProps)
 
         {/* Reason */}
         <div className="space-y-2">
-          <Label>사유</Label>
+          <Label htmlFor="reason">사유</Label>
           <Textarea
+            id="reason"
             {...methods.register('reason')}
             placeholder="휴가 사유를 입력해주세요"
             rows={3}

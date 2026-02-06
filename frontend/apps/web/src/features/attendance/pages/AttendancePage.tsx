@@ -41,7 +41,7 @@ export default function AttendancePage() {
   }>({ open: false, record: null });
 
   const { hasAnyRole } = useAuthStore();
-  const isAdmin = hasAnyRole(['HR_ADMIN', 'SUPER_ADMIN', 'TENANT_ADMIN']);
+  const isAdmin = hasAnyRole(['HR_MANAGER', 'SUPER_ADMIN', 'GROUP_ADMIN', 'TENANT_ADMIN']);
   const isMobile = useIsMobile();
   const isTablet = useIsTablet();
 
