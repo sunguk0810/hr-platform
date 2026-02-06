@@ -1,5 +1,6 @@
 package com.hrsaas.approval.service.impl;
 
+import com.hrsaas.approval.config.ApprovalStateMachineFactory;
 import com.hrsaas.approval.domain.dto.request.CreateApprovalRequest;
 import com.hrsaas.approval.domain.dto.request.ProcessApprovalRequest;
 import com.hrsaas.approval.domain.dto.response.ApprovalDocumentResponse;
@@ -10,6 +11,7 @@ import com.hrsaas.approval.domain.event.ApprovalCompletedEvent;
 import com.hrsaas.approval.domain.event.ApprovalSubmittedEvent;
 import com.hrsaas.approval.repository.ApprovalDocumentRepository;
 import com.hrsaas.approval.service.ApprovalService;
+import com.hrsaas.approval.statemachine.ApprovalEvent;
 import com.hrsaas.common.core.exception.ForbiddenException;
 import com.hrsaas.common.core.exception.NotFoundException;
 import com.hrsaas.common.event.EventPublisher;
@@ -19,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.statemachine.StateMachine;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +38,7 @@ public class ApprovalServiceImpl implements ApprovalService {
 
     private final ApprovalDocumentRepository documentRepository;
     private final EventPublisher eventPublisher;
+    private final ApprovalStateMachineFactory approvalStateMachineFactory;
 
     @Override
     @Transactional
@@ -69,7 +73,10 @@ public class ApprovalServiceImpl implements ApprovalService {
         ApprovalDocument saved = documentRepository.save(document);
 
         if (request.isSubmitImmediately()) {
-            saved.submit();
+            // Use StateMachine for immediate submission
+            StateMachine<ApprovalStatus, ApprovalEvent> sm = approvalStateMachineFactory.create(saved);
+            approvalStateMachineFactory.sendEvent(sm, ApprovalEvent.SUBMIT);
+            saved.setStatus(sm.getState().getId());
             saved = documentRepository.save(saved);
             eventPublisher.publish(ApprovalSubmittedEvent.of(saved));
         }
@@ -192,12 +199,22 @@ public class ApprovalServiceImpl implements ApprovalService {
     @Transactional
     public ApprovalDocumentResponse submit(UUID documentId) {
         ApprovalDocument document = findById(documentId);
-        document.submit();
+
+        // Use StateMachine to handle DRAFT -> IN_PROGRESS transition
+        StateMachine<ApprovalStatus, ApprovalEvent> sm = approvalStateMachineFactory.create(document);
+        boolean accepted = approvalStateMachineFactory.sendEvent(sm, ApprovalEvent.SUBMIT);
+
+        if (!accepted) {
+            throw new IllegalStateException("Cannot submit document in current state: " + document.getStatus());
+        }
+
+        // Sync SM state back to entity
+        document.setStatus(sm.getState().getId());
         ApprovalDocument saved = documentRepository.save(document);
 
         eventPublisher.publish(ApprovalSubmittedEvent.of(saved));
 
-        log.info("Approval document submitted: id={}", documentId);
+        log.info("Approval document submitted via StateMachine: id={}, newStatus={}", documentId, saved.getStatus());
         return ApprovalDocumentResponse.from(saved);
     }
 
@@ -215,6 +232,7 @@ public class ApprovalServiceImpl implements ApprovalService {
 
         ApprovalStatus fromStatus = document.getStatus();
 
+        // Process the line action (approve, reject, agree, delegate)
         switch (request.getActionType()) {
             case APPROVE -> {
                 if (currentLine.getLineType() == ApprovalLineType.ARBITRARY) {
@@ -229,8 +247,26 @@ public class ApprovalServiceImpl implements ApprovalService {
             default -> throw new IllegalArgumentException("Unsupported action type: " + request.getActionType());
         }
 
+        // Use StateMachine to handle state transitions when line is completed
         if (currentLine.isCompleted()) {
-            document.processLineCompletion(currentLine);
+            StateMachine<ApprovalStatus, ApprovalEvent> sm = approvalStateMachineFactory.create(document);
+            sm.getExtendedState().getVariables().put("completedLine", currentLine);
+
+            ApprovalEvent smEvent = mapActionToEvent(request.getActionType(), currentLine);
+            approvalStateMachineFactory.sendEvent(sm, smEvent);
+
+            // If line was approved and all lines are done, send COMPLETE event
+            if (smEvent == ApprovalEvent.APPROVE_LINE) {
+                boolean allDone = document.getApprovalLines().stream()
+                    .noneMatch(l -> l.getStatus() == ApprovalLineStatus.WAITING ||
+                                   l.getStatus() == ApprovalLineStatus.ACTIVE);
+                if (allDone) {
+                    approvalStateMachineFactory.sendEvent(sm, ApprovalEvent.COMPLETE);
+                }
+            }
+
+            // Sync SM state back to entity
+            document.setStatus(sm.getState().getId());
         }
 
         ApprovalHistory history = ApprovalHistory.builder()
@@ -249,9 +285,26 @@ public class ApprovalServiceImpl implements ApprovalService {
             eventPublisher.publish(ApprovalCompletedEvent.of(saved));
         }
 
-        log.info("Approval processed: documentId={}, action={}, newStatus={}",
+        log.info("Approval processed via StateMachine: documentId={}, action={}, newStatus={}",
             documentId, request.getActionType(), saved.getStatus());
         return ApprovalDocumentResponse.from(saved);
+    }
+
+    /**
+     * Maps an approval action type to the corresponding StateMachine event
+     */
+    private ApprovalEvent mapActionToEvent(ApprovalActionType actionType, ApprovalLine line) {
+        return switch (actionType) {
+            case APPROVE -> {
+                if (line.getLineType() == ApprovalLineType.ARBITRARY) {
+                    yield ApprovalEvent.ARBITRARY_APPROVE;
+                }
+                yield ApprovalEvent.APPROVE_LINE;
+            }
+            case REJECT -> ApprovalEvent.REJECT_LINE;
+            case AGREE -> ApprovalEvent.AGREE_LINE;
+            default -> throw new IllegalArgumentException("Cannot map action to SM event: " + actionType);
+        };
     }
 
     @Override
@@ -263,10 +316,18 @@ public class ApprovalServiceImpl implements ApprovalService {
             throw new ForbiddenException("APV_003", "본인이 기안한 문서만 회수할 수 있습니다");
         }
 
-        document.recall();
+        // Use StateMachine for RECALL transition
+        StateMachine<ApprovalStatus, ApprovalEvent> sm = approvalStateMachineFactory.create(document);
+        boolean accepted = approvalStateMachineFactory.sendEvent(sm, ApprovalEvent.RECALL);
+
+        if (!accepted) {
+            throw new IllegalStateException("Cannot recall document in current state: " + document.getStatus());
+        }
+
+        document.setStatus(sm.getState().getId());
         ApprovalDocument saved = documentRepository.save(document);
 
-        log.info("Approval document recalled: id={}", documentId);
+        log.info("Approval document recalled via StateMachine: id={}", documentId);
         return ApprovalDocumentResponse.from(saved);
     }
 
@@ -279,10 +340,18 @@ public class ApprovalServiceImpl implements ApprovalService {
             throw new ForbiddenException("APV_003", "본인이 기안한 문서만 취소할 수 있습니다");
         }
 
-        document.cancel();
+        // Use StateMachine for CANCEL transition
+        StateMachine<ApprovalStatus, ApprovalEvent> sm = approvalStateMachineFactory.create(document);
+        boolean accepted = approvalStateMachineFactory.sendEvent(sm, ApprovalEvent.CANCEL);
+
+        if (!accepted) {
+            throw new IllegalStateException("Cannot cancel document in current state: " + document.getStatus());
+        }
+
+        document.setStatus(sm.getState().getId());
         ApprovalDocument saved = documentRepository.save(document);
 
-        log.info("Approval document canceled: id={}", documentId);
+        log.info("Approval document canceled via StateMachine: id={}", documentId);
         return ApprovalDocumentResponse.from(saved);
     }
 
