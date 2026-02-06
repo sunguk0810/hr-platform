@@ -70,7 +70,7 @@ public class EmailSender implements NotificationSender {
 
     @Override
     public boolean supports(Notification notification) {
-        return notification.getChannel() == NotificationChannel.EMAIL;
+        return emailEnabled && notification.getChannel() == NotificationChannel.EMAIL;
     }
 
     @Override
