@@ -7,6 +7,7 @@ import com.hrsaas.organization.domain.dto.response.DepartmentHistoryResponse;
 import com.hrsaas.organization.domain.dto.response.DepartmentResponse;
 import com.hrsaas.organization.domain.dto.response.DepartmentTreeResponse;
 import com.hrsaas.organization.service.DepartmentService;
+import com.hrsaas.organization.service.ReorgImpactAnalyzer;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -29,6 +30,7 @@ import java.util.UUID;
 public class DepartmentController {
 
     private final DepartmentService departmentService;
+    private final ReorgImpactAnalyzer reorgImpactAnalyzer;
 
     @PostMapping
     @Operation(summary = "부서 생성")
@@ -98,5 +100,13 @@ public class DepartmentController {
             @PathVariable UUID id) {
         List<DepartmentHistoryResponse> response = departmentService.getDepartmentHistory(id);
         return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PostMapping("/reorg/impact")
+    @Operation(summary = "조직개편 영향 분석")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<ReorgImpactAnalyzer.ImpactAnalysisResult>> analyzeReorgImpact(
+            @RequestBody ReorgImpactAnalyzer.ReorgPlan plan) {
+        return ResponseEntity.ok(ApiResponse.success(reorgImpactAnalyzer.analyzeImpact(plan)));
     }
 }

@@ -1,5 +1,6 @@
 package com.hrsaas.employee.service.impl;
 
+import com.hrsaas.common.core.exception.BusinessException;
 import com.hrsaas.common.core.exception.NotFoundException;
 import com.hrsaas.employee.domain.dto.response.*;
 import com.hrsaas.employee.domain.entity.*;
@@ -7,14 +8,21 @@ import com.hrsaas.employee.repository.*;
 import com.hrsaas.employee.service.RecordCardService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.charset.StandardCharsets;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -93,158 +101,197 @@ public class RecordCardServiceImpl implements RecordCardService {
 
         RecordCardResponse recordCard = getRecordCard(employeeId);
 
-        // HTML 기반 PDF 생성을 위한 HTML 문자열 생성
-        // 실제 환경에서는 iText, Flying Saucer, OpenPDF 등의 라이브러리 사용
-        String html = generateHtmlContent(recordCard);
+        try (PDDocument document = new PDDocument();
+             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
 
-        // 임시로 HTML을 바이트 배열로 반환 (실제로는 PDF 변환 필요)
-        // TODO: PDF 라이브러리 연동 시 실제 PDF 생성 구현
-        log.info("PDF generation completed for employee: {}", employeeId);
+            // TODO: Korean font embedding - load a Korean TTF font (e.g., NanumGothic)
+            // for proper Korean character rendering. Currently using built-in Helvetica
+            // which cannot render Korean characters. Example:
+            //   InputStream fontStream = getClass().getResourceAsStream("/fonts/NanumGothic.ttf");
+            //   PDType0Font koreanFont = PDType0Font.load(document, fontStream);
+            PDType1Font fontBold = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
+            PDType1Font fontRegular = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
 
-        return html.getBytes(StandardCharsets.UTF_8);
+            float margin = 50;
+            float yStart = PDRectangle.A4.getHeight() - margin;
+            float pageWidth = PDRectangle.A4.getWidth();
+            float contentWidth = pageWidth - 2 * margin;
+
+            // -- Page 1: Basic Info --
+            PDPage page = new PDPage(PDRectangle.A4);
+            document.addPage(page);
+            PDPageContentStream cs = new PDPageContentStream(document, page);
+            float y = yStart;
+
+            // Title
+            y = drawCenteredText(cs, fontBold, 18, "Personnel Record Card", pageWidth, y);
+            // Korean subtitle (will show as boxes without Korean font - see TODO above)
+            y = drawCenteredText(cs, fontRegular, 10, "(Insa Girok Kadeu)", pageWidth, y - 5);
+            y -= 30;
+
+            // Horizontal rule
+            cs.setLineWidth(1.5f);
+            cs.moveTo(margin, y);
+            cs.lineTo(pageWidth - margin, y);
+            cs.stroke();
+            y -= 25;
+
+            // Basic Info Section
+            y = drawSectionHeader(cs, fontBold, "Basic Information", margin, y);
+            y -= 5;
+
+            y = drawLabelValue(cs, fontBold, fontRegular, "Name:", nullSafe(recordCard.getName()), margin, y, contentWidth);
+            y = drawLabelValue(cs, fontBold, fontRegular, "Employee No:", nullSafe(recordCard.getEmployeeNumber()), margin, y, contentWidth);
+            y = drawLabelValue(cs, fontBold, fontRegular, "Department:", nullSafe(recordCard.getDepartmentName()), margin, y, contentWidth);
+            y = drawLabelValue(cs, fontBold, fontRegular, "Position:", nullSafe(recordCard.getPositionName()), margin, y, contentWidth);
+            y = drawLabelValue(cs, fontBold, fontRegular, "Hire Date:", formatDate(recordCard.getHireDate()), margin, y, contentWidth);
+            y = drawLabelValue(cs, fontBold, fontRegular, "Email:", nullSafe(recordCard.getEmail()), margin, y, contentWidth);
+            y = drawLabelValue(cs, fontBold, fontRegular, "Phone:", nullSafe(recordCard.getPhone()), margin, y, contentWidth);
+            y = drawLabelValue(cs, fontBold, fontRegular, "Mobile:", nullSafe(recordCard.getMobile()), margin, y, contentWidth);
+            y = drawLabelValue(cs, fontBold, fontRegular, "Status:", formatStatus(recordCard.getStatus()), margin, y, contentWidth);
+            y = drawLabelValue(cs, fontBold, fontRegular, "Employment Type:", formatEmploymentType(recordCard.getEmploymentType()), margin, y, contentWidth);
+            y = drawLabelValue(cs, fontBold, fontRegular, "Service Years:", formatServiceYears(recordCard), margin, y, contentWidth);
+            y -= 15;
+
+            // Career History Section
+            if (recordCard.getCareers() != null && !recordCard.getCareers().isEmpty()) {
+                if (y < 120) {
+                    cs.close();
+                    page = new PDPage(PDRectangle.A4);
+                    document.addPage(page);
+                    cs = new PDPageContentStream(document, page);
+                    y = yStart;
+                }
+                y = drawSectionHeader(cs, fontBold, "Career History", margin, y);
+                y -= 5;
+                for (EmployeeCareerResponse career : recordCard.getCareers()) {
+                    if (y < 80) {
+                        cs.close();
+                        page = new PDPage(PDRectangle.A4);
+                        document.addPage(page);
+                        cs = new PDPageContentStream(document, page);
+                        y = yStart;
+                    }
+                    String line = nullSafe(career.getCompanyName()) + " | " +
+                                  nullSafe(career.getDepartment()) + " | " +
+                                  nullSafe(career.getPosition()) + " | " +
+                                  formatDate(career.getStartDate()) + " ~ " + formatDate(career.getEndDate());
+                    y = drawText(cs, fontRegular, 9, line, margin + 10, y);
+                }
+                y -= 10;
+            }
+
+            // Education Section
+            if (recordCard.getEducations() != null && !recordCard.getEducations().isEmpty()) {
+                if (y < 120) {
+                    cs.close();
+                    page = new PDPage(PDRectangle.A4);
+                    document.addPage(page);
+                    cs = new PDPageContentStream(document, page);
+                    y = yStart;
+                }
+                y = drawSectionHeader(cs, fontBold, "Education", margin, y);
+                y -= 5;
+                for (EmployeeEducationResponse edu : recordCard.getEducations()) {
+                    if (y < 80) {
+                        cs.close();
+                        page = new PDPage(PDRectangle.A4);
+                        document.addPage(page);
+                        cs = new PDPageContentStream(document, page);
+                        y = yStart;
+                    }
+                    String line = nullSafe(edu.getSchoolName()) + " | " +
+                                  nullSafe(edu.getDegree()) + " | " +
+                                  nullSafe(edu.getMajor()) + " | " +
+                                  formatDate(edu.getEndDate());
+                    y = drawText(cs, fontRegular, 9, line, margin + 10, y);
+                }
+                y -= 10;
+            }
+
+            // Footer
+            if (y < 60) {
+                cs.close();
+                page = new PDPage(PDRectangle.A4);
+                document.addPage(page);
+                cs = new PDPageContentStream(document, page);
+                y = yStart;
+            }
+            y -= 20;
+            drawText(cs, fontRegular, 8, "Generated at: " + recordCard.getGeneratedAt(), margin, y);
+
+            cs.close();
+
+            document.save(baos);
+            log.info("PDF generation completed for employee: {}", employeeId);
+            return baos.toByteArray();
+
+        } catch (IOException e) {
+            log.error("Failed to generate PDF for employee: {}", employeeId, e);
+            throw new BusinessException("EMP_010", "PDF 생성에 실패했습니다", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
-    private String generateHtmlContent(RecordCardResponse recordCard) {
-        StringBuilder html = new StringBuilder();
-        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    /**
+     * Draws centered text on the page and returns the new Y position.
+     */
+    private float drawCenteredText(PDPageContentStream cs, PDType1Font font, float fontSize,
+                                    String text, float pageWidth, float y) throws IOException {
+        float textWidth = font.getStringWidth(text) / 1000 * fontSize;
+        float x = (pageWidth - textWidth) / 2;
+        cs.beginText();
+        cs.setFont(font, fontSize);
+        cs.newLineAtOffset(x, y);
+        cs.showText(text);
+        cs.endText();
+        return y - fontSize - 4;
+    }
 
-        html.append("<!DOCTYPE html>\n");
-        html.append("<html lang=\"ko\">\n");
-        html.append("<head>\n");
-        html.append("  <meta charset=\"UTF-8\">\n");
-        html.append("  <title>인사기록카드 - ").append(recordCard.getName()).append("</title>\n");
-        html.append("  <style>\n");
-        html.append("    body { font-family: 'Malgun Gothic', sans-serif; margin: 40px; }\n");
-        html.append("    h1 { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; }\n");
-        html.append("    h2 { background-color: #f5f5f5; padding: 8px; margin-top: 20px; }\n");
-        html.append("    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }\n");
-        html.append("    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }\n");
-        html.append("    th { background-color: #f0f0f0; width: 150px; }\n");
-        html.append("    .section { margin-bottom: 30px; }\n");
-        html.append("  </style>\n");
-        html.append("</head>\n");
-        html.append("<body>\n");
+    /**
+     * Draws a section header with underline.
+     */
+    private float drawSectionHeader(PDPageContentStream cs, PDType1Font font,
+                                     String text, float x, float y) throws IOException {
+        cs.beginText();
+        cs.setFont(font, 12);
+        cs.newLineAtOffset(x, y);
+        cs.showText(text);
+        cs.endText();
+        y -= 4;
+        cs.setLineWidth(0.75f);
+        cs.moveTo(x, y);
+        cs.lineTo(x + font.getStringWidth(text) / 1000 * 12, y);
+        cs.stroke();
+        return y - 16;
+    }
 
-        // 제목
-        html.append("<h1>인사기록카드</h1>\n");
+    /**
+     * Draws a label-value pair.
+     */
+    private float drawLabelValue(PDPageContentStream cs, PDType1Font boldFont, PDType1Font regularFont,
+                                  String label, String value, float x, float y, float contentWidth) throws IOException {
+        cs.beginText();
+        cs.setFont(boldFont, 10);
+        cs.newLineAtOffset(x, y);
+        cs.showText(label);
+        cs.setFont(regularFont, 10);
+        cs.newLineAtOffset(130, 0);
+        cs.showText(value);
+        cs.endText();
+        return y - 16;
+    }
 
-        // 기본정보 섹션
-        html.append("<div class=\"section\">\n");
-        html.append("  <h2>기본정보</h2>\n");
-        html.append("  <table>\n");
-        html.append("    <tr><th>사번</th><td>").append(nullSafe(recordCard.getEmployeeNumber())).append("</td>");
-        html.append("    <th>성명</th><td>").append(nullSafe(recordCard.getName())).append("</td></tr>\n");
-        html.append("    <tr><th>영문명</th><td>").append(nullSafe(recordCard.getNameEn())).append("</td>");
-        html.append("    <th>이메일</th><td>").append(nullSafe(recordCard.getEmail())).append("</td></tr>\n");
-        html.append("    <tr><th>전화번호</th><td>").append(nullSafe(recordCard.getPhone())).append("</td>");
-        html.append("    <th>휴대전화</th><td>").append(nullSafe(recordCard.getMobile())).append("</td></tr>\n");
-        html.append("    <tr><th>부서</th><td>").append(nullSafe(recordCard.getDepartmentName())).append("</td>");
-        html.append("    <th>직책</th><td>").append(nullSafe(recordCard.getPositionName())).append("</td></tr>\n");
-        html.append("    <tr><th>입사일</th><td>").append(formatDate(recordCard.getHireDate())).append("</td>");
-        html.append("    <th>근속기간</th><td>").append(formatServiceYears(recordCard)).append("</td></tr>\n");
-        html.append("    <tr><th>재직상태</th><td>").append(formatStatus(recordCard.getStatus())).append("</td>");
-        html.append("    <th>고용형태</th><td>").append(formatEmploymentType(recordCard.getEmploymentType())).append("</td></tr>\n");
-        html.append("  </table>\n");
-        html.append("</div>\n");
-
-        // 인사이력 섹션
-        if (recordCard.getHistories() != null && !recordCard.getHistories().isEmpty()) {
-            html.append("<div class=\"section\">\n");
-            html.append("  <h2>인사이력</h2>\n");
-            html.append("  <table>\n");
-            html.append("    <tr><th>발령일</th><th>변경유형</th><th>내용</th><th>사유</th></tr>\n");
-            for (EmployeeHistoryResponse history : recordCard.getHistories()) {
-                html.append("    <tr>");
-                html.append("<td>").append(formatDate(history.getEffectiveDate())).append("</td>");
-                html.append("<td>").append(formatChangeType(history.getChangeType())).append("</td>");
-                html.append("<td>").append(formatHistoryDescription(history)).append("</td>");
-                html.append("<td>").append(nullSafe(history.getReason())).append("</td>");
-                html.append("</tr>\n");
-            }
-            html.append("  </table>\n");
-            html.append("</div>\n");
-        }
-
-        // 학력 섹션
-        if (recordCard.getEducations() != null && !recordCard.getEducations().isEmpty()) {
-            html.append("<div class=\"section\">\n");
-            html.append("  <h2>학력사항</h2>\n");
-            html.append("  <table>\n");
-            html.append("    <tr><th>학교명</th><th>학위</th><th>전공</th><th>졸업일</th></tr>\n");
-            for (EmployeeEducationResponse edu : recordCard.getEducations()) {
-                html.append("    <tr>");
-                html.append("<td>").append(nullSafe(edu.getSchoolName())).append("</td>");
-                html.append("<td>").append(nullSafe(edu.getDegree())).append("</td>");
-                html.append("<td>").append(nullSafe(edu.getMajor())).append("</td>");
-                html.append("<td>").append(formatDate(edu.getEndDate())).append("</td>");
-                html.append("</tr>\n");
-            }
-            html.append("  </table>\n");
-            html.append("</div>\n");
-        }
-
-        // 경력 섹션
-        if (recordCard.getCareers() != null && !recordCard.getCareers().isEmpty()) {
-            html.append("<div class=\"section\">\n");
-            html.append("  <h2>경력사항</h2>\n");
-            html.append("  <table>\n");
-            html.append("    <tr><th>회사명</th><th>부서</th><th>직위</th><th>근무기간</th></tr>\n");
-            for (EmployeeCareerResponse career : recordCard.getCareers()) {
-                html.append("    <tr>");
-                html.append("<td>").append(nullSafe(career.getCompanyName())).append("</td>");
-                html.append("<td>").append(nullSafe(career.getDepartment())).append("</td>");
-                html.append("<td>").append(nullSafe(career.getPosition())).append("</td>");
-                html.append("<td>").append(formatDate(career.getStartDate()))
-                    .append(" ~ ").append(formatDate(career.getEndDate())).append("</td>");
-                html.append("</tr>\n");
-            }
-            html.append("  </table>\n");
-            html.append("</div>\n");
-        }
-
-        // 자격증 섹션
-        if (recordCard.getCertificates() != null && !recordCard.getCertificates().isEmpty()) {
-            html.append("<div class=\"section\">\n");
-            html.append("  <h2>자격증</h2>\n");
-            html.append("  <table>\n");
-            html.append("    <tr><th>자격증명</th><th>발급기관</th><th>취득일</th><th>유효기간</th></tr>\n");
-            for (EmployeeCertificateResponse cert : recordCard.getCertificates()) {
-                html.append("    <tr>");
-                html.append("<td>").append(nullSafe(cert.getCertificateName())).append("</td>");
-                html.append("<td>").append(nullSafe(cert.getIssuingOrganization())).append("</td>");
-                html.append("<td>").append(formatDate(cert.getIssueDate())).append("</td>");
-                html.append("<td>").append(formatDate(cert.getExpiryDate())).append("</td>");
-                html.append("</tr>\n");
-            }
-            html.append("  </table>\n");
-            html.append("</div>\n");
-        }
-
-        // 가족 섹션
-        if (recordCard.getFamilies() != null && !recordCard.getFamilies().isEmpty()) {
-            html.append("<div class=\"section\">\n");
-            html.append("  <h2>가족사항</h2>\n");
-            html.append("  <table>\n");
-            html.append("    <tr><th>관계</th><th>성명</th><th>생년월일</th><th>동거여부</th></tr>\n");
-            for (EmployeeFamilyResponse family : recordCard.getFamilies()) {
-                html.append("    <tr>");
-                html.append("<td>").append(formatRelation(family.getRelation())).append("</td>");
-                html.append("<td>").append(nullSafe(family.getName())).append("</td>");
-                html.append("<td>").append(formatDate(family.getBirthDate())).append("</td>");
-                html.append("<td>").append(Boolean.TRUE.equals(family.getIsCohabiting()) ? "동거" : "별거").append("</td>");
-                html.append("</tr>\n");
-            }
-            html.append("  </table>\n");
-            html.append("</div>\n");
-        }
-
-        html.append("<p style=\"text-align: right; color: #666; margin-top: 40px;\">");
-        html.append("생성일시: ").append(recordCard.getGeneratedAt()).append("</p>\n");
-
-        html.append("</body>\n");
-        html.append("</html>");
-
-        return html.toString();
+    /**
+     * Draws a single line of text.
+     */
+    private float drawText(PDPageContentStream cs, PDType1Font font, float fontSize,
+                            String text, float x, float y) throws IOException {
+        cs.beginText();
+        cs.setFont(font, fontSize);
+        cs.newLineAtOffset(x, y);
+        cs.showText(text);
+        cs.endText();
+        return y - fontSize - 4;
     }
 
     private String nullSafe(String value) {

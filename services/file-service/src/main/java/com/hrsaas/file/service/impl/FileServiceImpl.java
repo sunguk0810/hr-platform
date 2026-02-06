@@ -200,6 +200,20 @@ public class FileServiceImpl implements FileService {
         if (file.getSize() > maxFileSize) {
             throw new BusinessException("FILE_007", "파일 크기가 제한을 초과했습니다. 최대: " + (maxFileSize / 1024 / 1024) + "MB", HttpStatus.BAD_REQUEST);
         }
+
+        // TODO: Query tenant-specific file upload policy via Feign client from tenant-service.
+        // Each tenant can define custom policies including:
+        //   - maxFileSize: per-tenant maximum file size override (may be smaller than the global limit)
+        //   - allowedExtensions: list of permitted file extensions (e.g., [".pdf", ".docx", ".xlsx", ".jpg", ".png"])
+        //   - maxTotalStorageBytes: total storage quota per tenant
+        // Example usage:
+        //   UUID tenantId = TenantContext.getCurrentTenant();
+        //   TenantFilePolicy policy = tenantPolicyClient.getFileUploadPolicy(tenantId);
+        //   if (policy != null) {
+        //       if (file.getSize() > policy.getMaxFileSize()) { throw ... }
+        //       String extension = getFileExtension(file.getOriginalFilename());
+        //       if (!policy.getAllowedExtensions().contains(extension)) { throw ... }
+        //   }
     }
 
     private String generateStoredName(String originalName) {

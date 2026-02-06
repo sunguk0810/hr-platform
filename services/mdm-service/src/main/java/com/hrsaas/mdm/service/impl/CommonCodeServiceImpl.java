@@ -1,6 +1,7 @@
 package com.hrsaas.mdm.service.impl;
 
 import com.hrsaas.common.cache.CacheNames;
+import com.hrsaas.common.core.exception.BusinessException;
 import com.hrsaas.common.core.exception.DuplicateException;
 import com.hrsaas.common.core.exception.NotFoundException;
 import com.hrsaas.common.event.EventPublisher;
@@ -20,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,6 +61,9 @@ public class CommonCodeServiceImpl implements CommonCodeService {
                 .orElseThrow(() -> new NotFoundException("MDM_002", "상위 코드를 찾을 수 없습니다."));
             level = parentCode.getLevel() + 1;
         }
+
+        // Validate maximum code depth (대/중/소/세분류 = 4 levels)
+        validateCodeDepth(request.getParentCodeId());
 
         CommonCode commonCode = CommonCode.builder()
             .codeGroup(codeGroup)
@@ -239,5 +244,29 @@ public class CommonCodeServiceImpl implements CommonCodeService {
     private CommonCode findById(UUID id) {
         return commonCodeRepository.findById(id)
             .orElseThrow(() -> new NotFoundException("MDM_002", "코드를 찾을 수 없습니다: " + id));
+    }
+
+    /**
+     * Validates that the code hierarchy depth does not exceed 4 levels.
+     * The 4 levels correspond to: 대분류 / 중분류 / 소분류 / 세분류.
+     *
+     * @param parentCodeId the parent code ID of the new code being created
+     */
+    private void validateCodeDepth(UUID parentCodeId) {
+        if (parentCodeId == null) return;
+
+        int depth = 1;
+        UUID currentId = parentCodeId;
+        while (currentId != null && depth <= 4) {
+            CommonCode parent = commonCodeRepository.findById(currentId).orElse(null);
+            if (parent == null) break;
+            currentId = parent.getParentCodeId();
+            depth++;
+        }
+
+        if (depth > 4) {
+            throw new BusinessException("MDM_004",
+                "코드 분류는 최대 4단계까지만 허용됩니다 (대/중/소/세분류)", HttpStatus.BAD_REQUEST);
+        }
     }
 }
