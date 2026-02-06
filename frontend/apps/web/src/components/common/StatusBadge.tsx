@@ -163,7 +163,7 @@ export function TenantStatusBadge({
 export function LeaveTypeBadge({
   type
 }: {
-  type: 'ANNUAL' | 'SICK' | 'SPECIAL' | 'HALF_DAY_AM' | 'HALF_DAY_PM' | 'MATERNITY' | 'PATERNITY' | 'UNPAID'
+  type: 'ANNUAL' | 'SICK' | 'SPECIAL' | 'HALF_DAY_AM' | 'HALF_DAY_PM' | 'HOURLY' | 'MATERNITY' | 'PATERNITY' | 'UNPAID'
 }) {
   const typeMap: Record<string, { badgeType: StatusType; label: string }> = {
     ANNUAL: { badgeType: 'info', label: '연차' },
@@ -171,6 +171,7 @@ export function LeaveTypeBadge({
     SPECIAL: { badgeType: 'success', label: '특별휴가' },
     HALF_DAY_AM: { badgeType: 'default', label: '반차(오전)' },
     HALF_DAY_PM: { badgeType: 'default', label: '반차(오후)' },
+    HOURLY: { badgeType: 'pending', label: '시간차' },
     MATERNITY: { badgeType: 'info', label: '출산휴가' },
     PATERNITY: { badgeType: 'info', label: '배우자출산휴가' },
     UNPAID: { badgeType: 'default', label: '무급휴가' },

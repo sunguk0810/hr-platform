@@ -21,6 +21,10 @@ import { employeeCardHandlers } from './employeeCardHandlers';
 import { menuHandlers } from './menuHandlers';
 import { profileHandlers } from './profileHandlers';
 import { helpHandlers } from './helpHandlers';
+import { employeeNumberRuleHandlers } from './employeeNumberRuleHandlers';
+import { myInfoChangeHandlers } from './myInfoChangeHandlers';
+import { fileUploadPolicyHandlers } from './fileUploadPolicyHandlers';
+import { notificationChannelHandlers } from './notificationChannelHandlers';
 
 export const handlers = [
   ...authHandlers,
@@ -46,4 +50,8 @@ export const handlers = [
   ...menuHandlers,
   ...profileHandlers,
   ...helpHandlers,
+  ...employeeNumberRuleHandlers,
+  ...myInfoChangeHandlers,
+  ...fileUploadPolicyHandlers,
+  ...notificationChannelHandlers,
 ];

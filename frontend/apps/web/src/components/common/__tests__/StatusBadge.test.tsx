@@ -265,6 +265,11 @@ describe('LeaveTypeBadge', () => {
     expect(screen.getByText('배우자출산휴가')).toBeInTheDocument();
   });
 
+  it('should render HOURLY type', () => {
+    render(<LeaveTypeBadge type="HOURLY" />);
+    expect(screen.getByText('시간차')).toBeInTheDocument();
+  });
+
   it('should render UNPAID type', () => {
     render(<LeaveTypeBadge type="UNPAID" />);
     expect(screen.getByText('무급휴가')).toBeInTheDocument();

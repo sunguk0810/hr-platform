@@ -7,7 +7,7 @@ import { getNavGroups } from '@/routes/config';
 import { getIconWithFallback } from '@/utils/iconMap';
 import { Circle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { NavItem, NavChildItem, NavGroup } from '@/routes/types';
+import type { NavChildItem, NavGroup } from '@/routes/types';
 import type { UserMenuItem } from '@/features/menu/types';
 import { SidebarItem, SidebarSubItem } from './SidebarItem';
 
@@ -45,52 +45,94 @@ export function SidebarNav({ collapsed }: SidebarNavProps) {
     });
   };
 
+  // Filter items based on permissions and roles (shared for both dynamic and static menus)
+  const filterMenuItem = (item: { roles?: string[]; permissions?: string[] }): boolean => {
+    if (item.roles && item.roles.length > 0 && !hasAnyRole(item.roles)) return false;
+    if (item.permissions && item.permissions.length > 0 && !hasAnyPermission(item.permissions)) return false;
+    return true;
+  };
+
   // Render dynamic menus from API
   if (useDynamicMenus) {
+    // Filter dynamic menus by user's roles and permissions
+    const filteredMenus = sidebarMenus
+      .filter(filterMenuItem)
+      .map((menu) => ({
+        ...menu,
+        children: menu.children?.filter(filterMenuItem),
+      }));
+
+    // Group menus by groupName
+    const menuGroups = filteredMenus.reduce((acc, menu) => {
+      const groupName = menu.groupName || '기타';
+      if (!acc[groupName]) {
+        acc[groupName] = [];
+      }
+      acc[groupName].push(menu);
+      return acc;
+    }, {} as Record<string, UserMenuItem[]>);
+
+    const groupNames = Object.keys(menuGroups);
+
     return (
       <TooltipProvider delayDuration={0}>
-        <nav
-          aria-label="주 메뉴"
-          className={cn(
-            'space-y-1',
-            collapsed ? 'px-1 flex flex-col items-center' : 'px-2'
-          )}
-        >
-          {sidebarMenus.map((menu) => {
-            const Icon = getIconWithFallback(menu.icon, Circle);
-            const hasChildren = menu.children && menu.children.length > 0;
-            const shouldDefaultOpen = isChildActive(menu.children);
-
-            if (hasChildren) {
-              return (
-                <SidebarItem
-                  key={menu.code}
-                  icon={Icon}
-                  title={menu.name}
-                  collapsed={collapsed}
-                  defaultOpen={shouldDefaultOpen}
+        <nav aria-label="주 메뉴" className={cn('space-y-4', collapsed ? 'px-1' : 'px-2')}>
+          {groupNames.map((groupName, groupIndex) => (
+            <div key={groupName} role="group" aria-labelledby={`nav-group-dyn-${groupIndex}`}>
+              {/* Group header - hide when collapsed */}
+              {!collapsed && (
+                <h3
+                  id={`nav-group-dyn-${groupIndex}`}
+                  className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70"
                 >
-                  {menu.children!.map((child) => (
-                    <SidebarSubItem
-                      key={child.code}
-                      title={child.name}
-                      href={child.path || '#'}
-                    />
-                  ))}
-                </SidebarItem>
-              );
-            }
+                  {groupName}
+                </h3>
+              )}
+              <div
+                className={cn(
+                  'space-y-1',
+                  collapsed && groupIndex > 0 && 'pt-2 border-t border-border/50',
+                  collapsed && 'flex flex-col items-center'
+                )}
+              >
+                {menuGroups[groupName].map((menu) => {
+                  const Icon = getIconWithFallback(menu.icon, Circle);
+                  const hasChildren = menu.children && menu.children.length > 0;
+                  const shouldDefaultOpen = isChildActive(menu.children);
 
-            return (
-              <SidebarItem
-                key={menu.code}
-                icon={Icon}
-                title={menu.name}
-                href={menu.isExternal ? undefined : menu.path}
-                collapsed={collapsed}
-              />
-            );
-          })}
+                  if (hasChildren) {
+                    return (
+                      <SidebarItem
+                        key={menu.code}
+                        icon={Icon}
+                        title={menu.name}
+                        collapsed={collapsed}
+                        defaultOpen={shouldDefaultOpen}
+                      >
+                        {menu.children!.map((child) => (
+                          <SidebarSubItem
+                            key={child.code}
+                            title={child.name}
+                            href={child.path || '#'}
+                          />
+                        ))}
+                      </SidebarItem>
+                    );
+                  }
+
+                  return (
+                    <SidebarItem
+                      key={menu.code}
+                      icon={Icon}
+                      title={menu.name}
+                      href={menu.isExternal ? undefined : menu.path}
+                      collapsed={collapsed}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
       </TooltipProvider>
     );
@@ -99,21 +141,14 @@ export function SidebarNav({ collapsed }: SidebarNavProps) {
   // Fall back to static navigation from route configuration
   const navGroups = getNavGroups();
 
-  // Filter items based on permissions and roles
-  const filterItem = (item: NavItem | NavChildItem): boolean => {
-    if (item.roles && !hasAnyRole(item.roles)) return false;
-    if (item.permissions && !hasAnyPermission(item.permissions)) return false;
-    return true;
-  };
-
   const filteredGroups: NavGroup[] = navGroups
     .map((group) => ({
       ...group,
       items: group.items
-        .filter(filterItem)
+        .filter(filterMenuItem)
         .map((item) => ({
           ...item,
-          children: item.children?.filter(filterItem),
+          children: item.children?.filter(filterMenuItem),
         })),
     }))
     .filter((group) => group.items.length > 0);

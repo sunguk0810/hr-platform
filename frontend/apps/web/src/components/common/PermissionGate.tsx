@@ -92,12 +92,11 @@ export function usePermission(options: UsePermissionOptions = {}): boolean {
 }
 
 /**
- * PRD 4.1 기준 역할 정의
- * - SUPER_ADMIN: 시스템 관리자 (SDD Infrastructure 참조)
+ * PRD 4.1 기준 역할 정의 (authStore.ts의 ROLES와 동일)
+ * - SUPER_ADMIN: 시스템 관리자
  * - GROUP_ADMIN: 그룹 HR 총괄 (계열사 전체 관리)
  * - TENANT_ADMIN: 테넌트 관리자 (단일 계열사 관리)
- * - HR_ADMIN: HR 관리자
- * - HR_MANAGER: HR 담당자
+ * - HR_MANAGER: HR 관리자/담당자
  * - DEPT_MANAGER: 부서장
  * - TEAM_LEADER: 팀장
  * - EMPLOYEE: 일반 직원
@@ -106,13 +105,10 @@ export const ROLES = {
   SUPER_ADMIN: 'SUPER_ADMIN',
   GROUP_ADMIN: 'GROUP_ADMIN',
   TENANT_ADMIN: 'TENANT_ADMIN',
-  HR_ADMIN: 'HR_ADMIN',
   HR_MANAGER: 'HR_MANAGER',
   DEPT_MANAGER: 'DEPT_MANAGER',
   TEAM_LEADER: 'TEAM_LEADER',
   EMPLOYEE: 'EMPLOYEE',
-  // Legacy alias for backward compatibility
-  MANAGER: 'DEPT_MANAGER',
 } as const;
 
 /**
@@ -120,11 +116,10 @@ export const ROLES = {
  * 상위 역할은 하위 역할의 권한을 포함
  */
 export const ROLE_HIERARCHY: Record<string, string[]> = {
-  SUPER_ADMIN: ['GROUP_ADMIN', 'TENANT_ADMIN', 'HR_ADMIN', 'HR_MANAGER', 'DEPT_MANAGER', 'TEAM_LEADER', 'EMPLOYEE'],
+  SUPER_ADMIN: ['GROUP_ADMIN', 'TENANT_ADMIN', 'HR_MANAGER', 'DEPT_MANAGER', 'TEAM_LEADER', 'EMPLOYEE'],
   GROUP_ADMIN: ['TENANT_ADMIN', 'HR_MANAGER', 'DEPT_MANAGER', 'TEAM_LEADER', 'EMPLOYEE'],
-  TENANT_ADMIN: ['HR_ADMIN', 'HR_MANAGER', 'DEPT_MANAGER', 'TEAM_LEADER', 'EMPLOYEE'],
-  HR_ADMIN: ['HR_MANAGER', 'EMPLOYEE'],
-  HR_MANAGER: ['EMPLOYEE'],
+  TENANT_ADMIN: ['HR_MANAGER', 'DEPT_MANAGER', 'TEAM_LEADER', 'EMPLOYEE'],
+  HR_MANAGER: ['DEPT_MANAGER', 'TEAM_LEADER', 'EMPLOYEE'],
   DEPT_MANAGER: ['TEAM_LEADER', 'EMPLOYEE'],
   TEAM_LEADER: ['EMPLOYEE'],
   EMPLOYEE: [],
@@ -137,8 +132,7 @@ export const ROLE_LABELS: Record<string, string> = {
   SUPER_ADMIN: '시스템 관리자',
   GROUP_ADMIN: '그룹 HR 총괄',
   TENANT_ADMIN: '테넌트 관리자',
-  HR_ADMIN: 'HR 관리자',
-  HR_MANAGER: 'HR 담당자',
+  HR_MANAGER: 'HR 관리자',
   DEPT_MANAGER: '부서장',
   TEAM_LEADER: '팀장',
   EMPLOYEE: '일반 직원',

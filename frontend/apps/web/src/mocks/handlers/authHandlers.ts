@@ -5,8 +5,7 @@ import { http, HttpResponse, delay } from 'msw';
  * - SUPER_ADMIN: 시스템 최고 관리자 (모든 테넌트 관리)
  * - GROUP_ADMIN: 그룹 HR 총괄 (계열사 전체 접근)
  * - TENANT_ADMIN: 테넌트 관리자
- * - HR_ADMIN: HR 관리자
- * - HR_MANAGER: HR 담당자
+ * - HR_MANAGER: HR 관리자/담당자
  * - DEPT_MANAGER: 부서장
  * - TEAM_LEADER: 팀장
  * - EMPLOYEE: 일반 직원
@@ -220,7 +219,7 @@ const hrAdminUser = {
   positionName: '팀장',
   gradeName: '부장',
   profileImageUrl: undefined,
-  roles: ['HR_ADMIN'],
+  roles: ['HR_MANAGER'],
   permissions: [
     'employee:read',
     'employee:write',

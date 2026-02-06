@@ -30,6 +30,7 @@ import type { RouteConfig, NavItem, NavGroup } from './types';
 // Lazy load all pages
 const DashboardPage = lazy(() => import('@/features/dashboard/pages/DashboardPage'));
 const MyInfoPage = lazy(() => import('@/features/my-info/pages/MyInfoPage'));
+const MyInfoChangeRequestPage = lazy(() => import('@/features/my-info/pages/MyInfoChangeRequestPage'));
 const EmployeeListPage = lazy(() => import('@/features/employee/pages/EmployeeListPage'));
 const EmployeeDetailPage = lazy(() => import('@/features/employee/pages/EmployeeDetailPage'));
 const EmployeeCreatePage = lazy(() => import('@/features/employee/pages/EmployeeCreatePage'));
@@ -100,6 +101,10 @@ const EmployeeCardListPage = lazy(() => import('@/features/employee-card/pages/E
 const MenuManagementPage = lazy(() => import('@/features/menu/pages/MenuManagementPage'));
 const TenantMenuConfigPage = lazy(() => import('@/features/menu/pages/TenantMenuConfigPage'));
 const FileManagementPage = lazy(() => import('@/features/file/pages/FileManagementPage'));
+const EmployeeNumberRulePage = lazy(() => import('@/features/settings/pages/EmployeeNumberRulePage'));
+const LeavePolicyPage = lazy(() => import('@/features/settings/pages/LeavePolicyPage'));
+const FileUploadPolicyPage = lazy(() => import('@/features/settings/pages/FileUploadPolicyPage'));
+const OrgChartPage = lazy(() => import('@/features/organization/pages/OrgChartPage'));
 
 /**
  * Main application routes configuration
@@ -132,6 +137,14 @@ export const mainRoutes: RouteConfig[] = [
     icon: User,
     element: MyInfoPage,
     showInNav: true,
+    children: [
+      {
+        path: 'change-requests',
+        title: '변경 요청 현황',
+        element: MyInfoChangeRequestPage,
+        showInNav: false,
+      },
+    ],
   },
   {
     path: 'announcements',
@@ -169,6 +182,13 @@ export const mainRoutes: RouteConfig[] = [
     element: NotificationCenterPage,
     showInNav: true,
   },
+  {
+    path: 'org-chart',
+    title: '조직도',
+    icon: Building2,
+    element: OrgChartPage,
+    showInNav: true,
+  },
 
   // ============================================
   // 그룹 2: 인사관리 (HR 핵심 기능)
@@ -179,6 +199,7 @@ export const mainRoutes: RouteConfig[] = [
     icon: Users,
     element: EmployeeListPage,
     permissions: ['employee:read'],
+    roles: ['SUPER_ADMIN', 'GROUP_ADMIN', 'TENANT_ADMIN', 'HR_MANAGER', 'DEPT_MANAGER'],
     showInNav: true,
     children: [
       {
@@ -209,6 +230,8 @@ export const mainRoutes: RouteConfig[] = [
     title: '조직관리',
     icon: Building2,
     element: OrganizationPage,
+    permissions: ['organization:read'],
+    roles: ['SUPER_ADMIN', 'GROUP_ADMIN', 'TENANT_ADMIN', 'HR_MANAGER'],
     showInNav: true,
     children: [
       {
@@ -244,6 +267,8 @@ export const mainRoutes: RouteConfig[] = [
     title: '발령관리',
     icon: UserCog,
     element: AppointmentListPage,
+    permissions: ['appointment:read'],
+    roles: ['SUPER_ADMIN', 'GROUP_ADMIN', 'TENANT_ADMIN', 'HR_MANAGER'],
     showInNav: true,
     children: [
       {
@@ -453,6 +478,7 @@ export const mainRoutes: RouteConfig[] = [
         path: 'delegation',
         title: '결재 위임',
         element: DelegationPage,
+        roles: ['SUPER_ADMIN', 'GROUP_ADMIN', 'TENANT_ADMIN', 'HR_MANAGER', 'DEPT_MANAGER', 'TEAM_LEADER'],
         showInNav: true,
       },
       {
@@ -562,6 +588,7 @@ export const mainRoutes: RouteConfig[] = [
     title: '설정',
     icon: Settings,
     element: SettingsPage,
+    roles: ['SUPER_ADMIN', 'GROUP_ADMIN', 'TENANT_ADMIN', 'HR_MANAGER'],
     showInNav: true,
     children: [
       {
@@ -607,6 +634,29 @@ export const mainRoutes: RouteConfig[] = [
         title: '테넌트 메뉴 설정',
         element: TenantMenuConfigPage,
         permissions: ['mdm:write'],
+        roles: ['SUPER_ADMIN', 'GROUP_ADMIN', 'TENANT_ADMIN'],
+        showInNav: true,
+      },
+      {
+        path: 'employee-number-rule',
+        title: '사번 규칙 설정',
+        element: EmployeeNumberRulePage,
+        permissions: ['settings:write'],
+        roles: ['SUPER_ADMIN', 'GROUP_ADMIN', 'TENANT_ADMIN'],
+        showInNav: true,
+      },
+      {
+        path: 'leave-policy',
+        title: '연차 규칙 설정',
+        element: LeavePolicyPage,
+        roles: ['SUPER_ADMIN', 'GROUP_ADMIN', 'TENANT_ADMIN', 'HR_MANAGER'],
+        showInNav: true,
+      },
+      {
+        path: 'file-upload-policy',
+        title: '파일 업로드 정책',
+        element: FileUploadPolicyPage,
+        permissions: ['settings:write'],
         roles: ['SUPER_ADMIN', 'GROUP_ADMIN', 'TENANT_ADMIN'],
         showInNav: true,
       },
@@ -743,7 +793,7 @@ export const mainRoutes: RouteConfig[] = [
 const MENU_GROUPS: { title: string; paths: string[] }[] = [
   {
     title: '메인',
-    paths: ['dashboard', 'my-info', 'announcements', 'notifications'],
+    paths: ['dashboard', 'my-info', 'announcements', 'notifications', 'org-chart'],
   },
   {
     title: '인사관리',

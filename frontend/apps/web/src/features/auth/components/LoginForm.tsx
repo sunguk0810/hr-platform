@@ -30,9 +30,9 @@ const roleIcons: Record<string, React.ReactNode> = {
   SUPER_ADMIN: <Shield className="h-4 w-4 text-red-500" />,
   GROUP_ADMIN: <Crown className="h-4 w-4 text-purple-500" />,
   TENANT_ADMIN: <Building2 className="h-4 w-4 text-indigo-500" />,
-  HR_ADMIN: <UserCog className="h-4 w-4 text-blue-500" />,
-  HR_MANAGER: <Users className="h-4 w-4 text-cyan-500" />,
-  MANAGER: <Briefcase className="h-4 w-4 text-amber-500" />,
+  HR_MANAGER: <UserCog className="h-4 w-4 text-blue-500" />,
+  DEPT_MANAGER: <Briefcase className="h-4 w-4 text-amber-500" />,
+  TEAM_LEADER: <Users className="h-4 w-4 text-cyan-500" />,
   EMPLOYEE: <User className="h-4 w-4 text-green-500" />,
 };
 

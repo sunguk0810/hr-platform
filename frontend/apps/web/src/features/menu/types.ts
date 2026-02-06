@@ -44,7 +44,11 @@ export interface UserMenuItem {
   externalUrl?: string;
   isExternal?: boolean;
   sortOrder: number;
+  roles?: string[];
+  permissions?: string[];
   children?: UserMenuItem[];
+  /** Menu group name for sidebar grouping (e.g., '메인', '인사관리', '근무관리') */
+  groupName?: string;
 }
 
 /**

@@ -149,7 +149,15 @@ export const useAuthStore = create<AuthState>()(
 
       hasAnyRole: (roles) => {
         const { user } = get();
-        return roles.some((role) => user?.roles?.includes(role)) ?? false;
+        if (!user?.roles?.length) return false;
+        // Check with role hierarchy: user's role at or above any required role
+        return roles.some((requiredRole) => {
+          const requiredLevel = ROLE_HIERARCHY[requiredRole as Role] ?? 0;
+          return user.roles.some((userRole) => {
+            const userLevel = ROLE_HIERARCHY[userRole as Role] ?? 0;
+            return userLevel >= requiredLevel;
+          });
+        });
       },
 
       hasAnyPermission: (permissions) => {

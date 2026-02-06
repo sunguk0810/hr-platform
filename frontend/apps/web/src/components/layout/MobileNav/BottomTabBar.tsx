@@ -43,8 +43,8 @@ export function BottomTabBar() {
     }
   }, [isAuthenticated, fetchMenus]);
 
-  // Build tabs from dynamic menus or use defaults
-  const tabs: TabItem[] = mobileMenus.length > 0
+  // Build tabs from dynamic menus or use defaults (max 5 items)
+  const tabs: TabItem[] = (mobileMenus.length > 0
     ? mobileMenus.map((menu) => ({
         icon: getIconWithFallback(menu.icon, Home),
         label: menu.name,
@@ -55,7 +55,8 @@ export function BottomTabBar() {
     : defaultTabs.map((tab) => ({
         ...tab,
         badge: tab.href === '/notifications' && unreadCount > 0 ? unreadCount : undefined,
-      }));
+      }))
+  ).slice(0, 5);
 
   const isActive = (href: string) => {
     if (href === '/') {

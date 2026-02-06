@@ -104,10 +104,11 @@ export function getDefaultTenant(roles: string[]): MockTenant {
  *
  * 역할 정의:
  * - SUPER_ADMIN: 시스템 관리자 (전체 시스템 관리)
+ * - GROUP_ADMIN: 그룹 HR 총괄 (계열사 전체 관리)
  * - TENANT_ADMIN: 테넌트 관리자 (단일 계열사 관리, CEO)
- * - HR_ADMIN: HR 관리자 (인사팀장)
- * - HR_MANAGER: HR 담당자 (인사과장/책임)
- * - MANAGER: 부서장/팀장
+ * - HR_MANAGER: HR 관리자 (인사팀장/인사과장)
+ * - DEPT_MANAGER: 부서장/팀장
+ * - TEAM_LEADER: 팀장
  * - EMPLOYEE: 일반 직원
  */
 export const mockUsers: MockUser[] = [
@@ -192,7 +193,7 @@ export const mockUsers: MockUser[] = [
     positionName: '팀장',
     gradeName: '부장',
     profileImageUrl: undefined,
-    roles: ['HR_ADMIN'],
+    roles: ['HR_MANAGER'],
     permissions: [
       'employee:read', 'employee:write', 'employee:read:sensitive',
       'organization:read', 'organization:write',
@@ -253,7 +254,7 @@ export const mockUsers: MockUser[] = [
     positionName: '팀장',
     gradeName: '차장',
     profileImageUrl: undefined,
-    roles: ['MANAGER'],
+    roles: ['DEPT_MANAGER'],
     permissions: [
       'employee:read',
       'organization:read',
@@ -404,7 +405,7 @@ export const quickLoginAccounts = [
     username: 'hr.admin.elec',
     password: 'HrAdmin@2025!',
     description: '인사팀장 (HR 전체 관리)',
-    roles: ['HR_ADMIN'],
+    roles: ['HR_MANAGER'],
   },
   {
     label: 'HR 담당자',
@@ -418,7 +419,7 @@ export const quickLoginAccounts = [
     username: 'dev.manager.elec',
     password: 'DevMgr@2025!',
     description: 'DRAM개발팀장',
-    roles: ['MANAGER'],
+    roles: ['DEPT_MANAGER'],
   },
   {
     label: '선임 (개발)',

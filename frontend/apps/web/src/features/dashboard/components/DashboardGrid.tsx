@@ -11,8 +11,8 @@ import { AnnouncementsWidget } from './widgets/AnnouncementsWidget';
 import { BirthdaysWidget } from './widgets/BirthdaysWidget';
 import { cn } from '@/lib/utils';
 
-const ADMIN_HR_ROLES = ['SUPER_ADMIN', 'TENANT_ADMIN', 'HR_MANAGER', 'HR_STAFF'];
-const MANAGER_ROLES = [...ADMIN_HR_ROLES, 'MANAGER'];
+const ADMIN_HR_ROLES = ['SUPER_ADMIN', 'GROUP_ADMIN', 'TENANT_ADMIN', 'HR_MANAGER'];
+const MANAGER_ROLES = [...ADMIN_HR_ROLES, 'DEPT_MANAGER', 'TEAM_LEADER'];
 
 const widgetComponents: Record<WidgetType, React.ComponentType | null> = {
   attendance: AttendanceWidget,
