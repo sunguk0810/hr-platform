@@ -43,6 +43,8 @@ export interface UpdateCodeGroupRequest {
 }
 
 // Common Code Types
+export type ClassificationLevel = 1 | 2 | 3 | 4;
+
 export interface CommonCode extends TenantAwareEntity {
   groupId: string;
   groupCode: string;
@@ -55,6 +57,9 @@ export interface CommonCode extends TenantAwareEntity {
   parentCode?: string;
   parentName?: string;
   attributes?: Record<string, string>;
+  classificationLevel?: ClassificationLevel;
+  parentCodeId?: string;
+  classificationPath?: string;
 }
 
 export interface CommonCodeListItem {
@@ -66,6 +71,9 @@ export interface CommonCodeListItem {
   sortOrder: number;
   isActive: boolean;
   parentCode?: string;
+  classificationLevel?: ClassificationLevel;
+  parentCodeId?: string;
+  classificationPath?: string;
 }
 
 export interface CommonCodeSearchParams extends PageRequest {
@@ -73,6 +81,7 @@ export interface CommonCodeSearchParams extends PageRequest {
   keyword?: string;
   isActive?: boolean;
   parentCode?: string;
+  classificationLevel?: ClassificationLevel;
 }
 
 export interface CreateCommonCodeRequest {
@@ -84,6 +93,8 @@ export interface CreateCommonCodeRequest {
   sortOrder?: number;
   parentCode?: string;
   attributes?: Record<string, string>;
+  classificationLevel?: ClassificationLevel;
+  parentCodeId?: string;
 }
 
 export interface UpdateCommonCodeRequest {
@@ -94,6 +105,8 @@ export interface UpdateCommonCodeRequest {
   isActive?: boolean;
   parentCode?: string;
   attributes?: Record<string, string>;
+  classificationLevel?: ClassificationLevel;
+  parentCodeId?: string;
 }
 
 // Tenant Code Mapping (for tenant-specific code values)

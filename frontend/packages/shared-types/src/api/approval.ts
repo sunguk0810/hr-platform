@@ -14,6 +14,16 @@ export type ApprovalType = 'LEAVE_REQUEST' | 'EXPENSE' | 'OVERTIME' | 'PERSONNEL
 export type ApprovalStepStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'SKIPPED';
 export type ApprovalUrgency = 'LOW' | 'NORMAL' | 'HIGH';
 
+/** 결재 모드: 순차결재, 전결, 병렬결재, 합의결재 */
+export type ApprovalMode = 'SEQUENTIAL' | 'DIRECT' | 'PARALLEL' | 'CONSENSUS';
+
+export const APPROVAL_MODE_LABELS: Record<ApprovalMode, string> = {
+  SEQUENTIAL: '순차결재',
+  DIRECT: '전결',
+  PARALLEL: '병렬결재',
+  CONSENSUS: '합의결재',
+};
+
 // SDD 4.5 기준 결재 이력 액션 타입
 export type ApprovalActionType =
   | 'SUBMIT'
@@ -25,6 +35,13 @@ export type ApprovalActionType =
   | 'COMMENT'
   | 'RETURN';
 
+/** 연계 모듈 반영 상태 (FR-APR-004-03) */
+export interface LinkedModuleStatus {
+  module: string;
+  status: 'COMPLETED' | 'PENDING' | 'FAILED';
+  message: string;
+}
+
 export interface Approval extends TenantAwareEntity {
   documentNumber: string;
   type: ApprovalType;
@@ -35,6 +52,7 @@ export interface Approval extends TenantAwareEntity {
   requesterDepartment: string;
   status: ApprovalStatus;
   urgency: ApprovalUrgency;
+  mode?: ApprovalMode;
   dueDate?: string;
   completedAt?: string;
   attachments?: ApprovalAttachment[];
@@ -44,6 +62,8 @@ export interface Approval extends TenantAwareEntity {
   recallReason?: string;
   directApprovedBy?: string;
   directApprovedAt?: string;
+  // FR-APR-004-03: 연계 모듈 반영 결과
+  linkedModules?: LinkedModuleStatus[];
 }
 
 export interface ApprovalListItem {
@@ -114,6 +134,10 @@ export interface CreateApprovalRequest {
   dueDate?: string;
   approverIds: string[];
   attachmentIds?: string[];
+  /** 결재 모드 (기본값: SEQUENTIAL) */
+  mode?: ApprovalMode;
+  /** 병렬 결재 완료 조건 (테넌트 설정 기반) */
+  parallelCompletionCondition?: ParallelCompletionCondition;
 }
 
 export interface ApproveRequest {
@@ -203,10 +227,46 @@ export interface ApprovalTemplate {
   category: string;
   formSchema: Record<string, unknown>;  // JSON Schema
   defaultApprovalLine?: ApprovalLineTemplate[];
+  conditionalRoutingRules?: ConditionalRoutingRule[];  // FR-APR-003-02: 조건부 라우팅 규칙
   retentionPeriod?: number;  // 보존 기간(일)
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+// FR-APR-003-02: 조건부 라우팅 규칙
+export type RoutingConditionField = 'AMOUNT' | 'LEAVE_DAYS';
+export type RoutingConditionOperator = '>=' | '<=' | '==';
+
+export interface ConditionalRoutingRule {
+  id: string;
+  conditionField: RoutingConditionField;
+  conditionOperator: RoutingConditionOperator;
+  conditionValue: number;
+  approvalLine: ApprovalLineTemplate[];
+}
+
+export const ROUTING_CONDITION_FIELD_LABELS: Record<RoutingConditionField, string> = {
+  AMOUNT: '금액',
+  LEAVE_DAYS: '휴가일수',
+};
+
+export const ROUTING_CONDITION_OPERATOR_LABELS: Record<RoutingConditionOperator, string> = {
+  '>=': '이상 (>=)',
+  '<=': '이하 (<=)',
+  '==': '같음 (==)',
+};
+
+// FR-ATT-002-03: 결재선 추천 응답
+export interface RecommendedApprover {
+  id: string;
+  name: string;
+  position: string;
+  department: string;
+}
+
+export interface ApprovalLineRecommendation {
+  approvers: RecommendedApprover[];
 }
 
 export interface ApprovalLineTemplate {

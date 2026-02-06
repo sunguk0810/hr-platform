@@ -120,6 +120,7 @@ export interface TenantDetail extends BaseEntity {
   name: string;
   nameEn?: string;
   description?: string;
+  businessNumber?: string; // 사업자등록번호 (XXX-XX-XXXXX)
   logoUrl?: string;
   status: TenantStatus;
   branding: TenantBranding;
@@ -337,6 +338,7 @@ export interface UpdateTenantRequest {
   name?: string;
   nameEn?: string;
   description?: string;
+  businessNumber?: string;
   logoUrl?: string;
   status?: TenantStatus;
   branding?: Partial<TenantBranding>;

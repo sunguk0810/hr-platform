@@ -59,7 +59,7 @@ export interface MonthlyAttendanceSummary {
 }
 
 // Leave Types
-export type LeaveType = 'ANNUAL' | 'SICK' | 'SPECIAL' | 'HALF_DAY_AM' | 'HALF_DAY_PM' | 'MATERNITY' | 'PATERNITY' | 'UNPAID';
+export type LeaveType = 'ANNUAL' | 'SICK' | 'SPECIAL' | 'HALF_DAY_AM' | 'HALF_DAY_PM' | 'HOURLY' | 'MATERNITY' | 'PATERNITY' | 'UNPAID';
 export type LeaveStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 
 export interface LeaveRequest extends TenantAwareEntity {
@@ -75,6 +75,9 @@ export interface LeaveRequest extends TenantAwareEntity {
   approverName?: string;
   approvedAt?: string;
   rejectReason?: string;
+  startTime?: string; // For HOURLY leave
+  endTime?: string;   // For HOURLY leave
+  hours?: number;     // For HOURLY leave
 }
 
 export interface LeaveRequestListItem {
@@ -87,6 +90,9 @@ export interface LeaveRequestListItem {
   status: LeaveStatus;
   createdAt: string;
   approverName?: string;
+  startTime?: string; // For HOURLY leave
+  endTime?: string;   // For HOURLY leave
+  hours?: number;     // For HOURLY leave
 }
 
 export interface LeaveBalance {
@@ -119,6 +125,9 @@ export interface CreateLeaveRequest {
   startDate: string;
   endDate: string;
   reason: string;
+  startTime?: string; // For HOURLY leave, e.g., "10:00"
+  endTime?: string;   // For HOURLY leave, e.g., "12:00"
+  hours?: number;     // For HOURLY leave, calculated hours
 }
 
 export interface CancelLeaveRequest {
@@ -211,6 +220,7 @@ export const LEAVE_TYPE_LABELS: Record<LeaveType, string> = {
   SPECIAL: '특별휴가',
   HALF_DAY_AM: '반차(오전)',
   HALF_DAY_PM: '반차(오후)',
+  HOURLY: '시간차 휴가',
   MATERNITY: '출산휴가',
   PATERNITY: '배우자출산휴가',
   UNPAID: '무급휴가',
@@ -352,4 +362,23 @@ export interface AttendanceModificationLog {
   oldValue: string;
   newValue: string;
   remarks: string;
+}
+
+// ============================================
+// Hourly Leave Policy (시간차 휴가 정책)
+// ============================================
+
+export type HourlyLeaveMinUnit = 30 | 60; // 30min or 1hr
+
+export interface HourlyLeavePolicy {
+  enabled: boolean;
+  minUnit: HourlyLeaveMinUnit; // Minimum time unit in minutes
+  dailyMaxCount: number;       // Maximum number of hourly leaves per day (1-4)
+}
+
+export interface HourlyLeaveBalance {
+  totalHours: number;
+  usedHours: number;
+  remainingHours: number;
+  pendingHours: number;
 }

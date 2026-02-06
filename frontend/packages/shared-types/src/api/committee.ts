@@ -35,6 +35,7 @@ export interface CommitteeListItem {
   type: CommitteeType;
   status: CommitteeStatus;
   memberCount: number;
+  exOfficioCount: number; // 당연직 위원 수
   startDate: string;
   endDate: string | null;
 }
@@ -51,6 +52,8 @@ export interface CommitteeMember {
   startDate: string;
   endDate: string | null;
   isActive: boolean;
+  isExOfficio: boolean; // 당연직 여부
+  exOfficioRole?: string; // 당연직 직책 (e.g., '인사팀장', '재무팀장')
 }
 
 // 위원회 회의록
