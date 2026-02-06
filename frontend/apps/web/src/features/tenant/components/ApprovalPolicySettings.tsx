@@ -1,4 +1,6 @@
+import { useState, useEffect } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,7 +17,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { FormRow } from '@/components/common/Form';
-import { Loader2, FileCheck, Settings, Clock, Users } from 'lucide-react';
+import { Loader2, FileCheck, Settings, Clock, Users, GitFork } from 'lucide-react';
+import { useToast } from '@/hooks/useToast';
 import type { ApprovalPolicy, ApprovalScope, ApprovalLineBase } from '@hr-platform/shared-types';
 import { DEFAULT_APPROVAL_POLICY } from '@hr-platform/shared-types';
 
@@ -391,6 +394,109 @@ export function ApprovalPolicySettings({
           </div>
         )}
       </form>
+
+      {/* 병렬 결재 완료 조건 (별도 저장) */}
+      {!readOnly && <ParallelCompletionCard />}
     </FormProvider>
+  );
+}
+
+function ParallelCompletionCard() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: parallelFeature, isLoading: isLoadingFeature } = useQuery({
+    queryKey: ['tenant', 'features', 'PARALLEL_APPROVAL'],
+    queryFn: async () => {
+      const res = await fetch('/api/v1/tenants/current/features/PARALLEL_APPROVAL');
+      const json = await res.json();
+      return json.data;
+    },
+  });
+
+  const [value, setValue] = useState<string>('all');
+
+  useEffect(() => {
+    if (parallelFeature?.config?.minApprovers) {
+      setValue(parallelFeature.config.minApprovers);
+    }
+  }, [parallelFeature]);
+
+  const saveMutation = useMutation({
+    mutationFn: async (minApprovers: string) => {
+      const res = await fetch('/api/v1/tenants/tenant-001/features/PARALLEL_APPROVAL', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          enabled: true,
+          config: { minApprovers, approvalMode: minApprovers === 'one' ? 'or' : 'and' },
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to save');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tenant', 'features', 'PARALLEL_APPROVAL'] });
+      toast({ title: '저장 완료', description: '병렬 결재 완료 조건이 저장되었습니다.' });
+    },
+    onError: () => {
+      toast({ title: '저장 실패', description: '병렬 결재 완료 조건 저장에 실패했습니다.', variant: 'destructive' });
+    },
+  });
+
+  return (
+    <Card className="mt-6">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <GitFork className="h-5 w-5 text-blue-600" />
+          병렬 결재 완료 조건
+        </CardTitle>
+        <CardDescription>
+          병렬 결재 시 몇 명이 승인해야 결재가 완료되는지 설정합니다. 테넌트 전체에 적용됩니다.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {isLoadingFeature ? (
+          <div className="py-4 flex justify-center">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <>
+            <Select value={value} onValueChange={setValue}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">전원 승인 (ALL)</SelectItem>
+                <SelectItem value="majority">과반수 승인 (MAJORITY)</SelectItem>
+                <SelectItem value="one">1인 승인 (ANY)</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <div className="rounded-md bg-muted p-3 text-sm text-muted-foreground">
+              <p className="font-medium mb-1">현재 설정</p>
+              <p>
+                {value === 'all' && '병렬 결재자 전원이 승인해야 완료됩니다.'}
+                {value === 'majority' && '병렬 결재자 과반수가 승인하면 완료됩니다.'}
+                {value === 'one' && '병렬 결재자 중 1인이 승인하면 완료됩니다.'}
+              </p>
+            </div>
+
+            <div className="flex justify-end">
+              <Button onClick={() => saveMutation.mutate(value)} disabled={saveMutation.isPending}>
+                {saveMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    저장 중...
+                  </>
+                ) : (
+                  '병렬 결재 설정 저장'
+                )}
+              </Button>
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
   );
 }

@@ -234,6 +234,7 @@ const mockTenants: TenantDetail[] = [
     name: '아크미그룹',
     nameEn: 'ACME Group',
     description: '아크미 그룹 지주회사',
+    businessNumber: '110-81-12345',
     logoUrl: undefined,
     status: 'ACTIVE',
     branding: {
@@ -263,6 +264,7 @@ const mockTenants: TenantDetail[] = [
     name: '(주)아크미코리아',
     nameEn: 'ACME Korea Inc.',
     description: '종합 IT 솔루션 기업',
+    businessNumber: '120-86-56789',
     logoUrl: undefined,
     status: 'ACTIVE',
     branding: {
@@ -328,6 +330,7 @@ const mockTenants: TenantDetail[] = [
     name: '아크미재팬',
     nameEn: 'ACME Japan',
     description: '일본 지사',
+    businessNumber: '130-87-11223',
     logoUrl: undefined,
     status: 'ACTIVE',
     branding: {
@@ -357,6 +360,7 @@ const mockTenants: TenantDetail[] = [
     name: '글로벡스그룹',
     nameEn: 'Globex Group',
     description: '글로벌 무역 및 물류 그룹',
+    businessNumber: '211-82-33445',
     logoUrl: undefined,
     status: 'ACTIVE',
     branding: {
@@ -386,6 +390,7 @@ const mockTenants: TenantDetail[] = [
     name: '글로벡스',
     nameEn: 'Globex Corporation',
     description: '글로벌 무역 및 물류',
+    businessNumber: '220-81-55667',
     logoUrl: undefined,
     status: 'ACTIVE',
     branding: {
@@ -415,6 +420,7 @@ const mockTenants: TenantDetail[] = [
     name: '이니텍',
     nameEn: 'Initech',
     description: '소프트웨어 개발 및 컨설팅',
+    businessNumber: '314-86-77889',
     logoUrl: undefined,
     status: 'INACTIVE',
     branding: {
@@ -443,6 +449,7 @@ const mockTenants: TenantDetail[] = [
     name: '엄브렐라 바이오',
     nameEn: 'Umbrella Bio',
     description: '바이오 헬스케어',
+    businessNumber: '415-87-99001',
     logoUrl: undefined,
     status: 'SUSPENDED',
     branding: {
@@ -471,6 +478,7 @@ const mockTenants: TenantDetail[] = [
     name: '스타크 인더스트리',
     nameEn: 'Stark Industries',
     description: '첨단 기술 연구개발',
+    businessNumber: '516-88-22334',
     logoUrl: undefined,
     status: 'PENDING',
     branding: {
@@ -1156,6 +1164,42 @@ export const tenantHandlers = [
       success: true,
       data: mockTenants[index],
       message: '테넌트 상태가 변경되었습니다.',
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // Get current tenant feature config
+  http.get('/api/v1/tenants/current/features/:code', async ({ params }) => {
+    await delay(200);
+
+    const { code } = params;
+    // Use tenant-001 as the current tenant
+    const tenant = mockTenants.find(t => t.id === 'tenant-001');
+
+    if (!tenant) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'TNT_001', message: '테넌트를 찾을 수 없습니다.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 404 }
+      );
+    }
+
+    const feature = tenant.features.find(f => f.code === code);
+
+    if (!feature) {
+      return HttpResponse.json({
+        success: true,
+        data: { code, enabled: false, config: null },
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    return HttpResponse.json({
+      success: true,
+      data: feature,
       timestamp: new Date().toISOString(),
     });
   }),

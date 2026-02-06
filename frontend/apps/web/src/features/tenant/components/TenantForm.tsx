@@ -35,6 +35,10 @@ const tenantSchema = z.object({
     .min(1, '테넌트명을 입력해주세요.')
     .max(100, '100자 이내로 입력해주세요.'),
   nameEn: z.string().max(100, '100자 이내로 입력해주세요.').optional(),
+  businessNumber: z.string()
+    .regex(/^(\d{3}-\d{2}-\d{5})?$/, '사업자등록번호 형식이 올바르지 않습니다. (XXX-XX-XXXXX)')
+    .optional()
+    .or(z.literal('')),
   description: z.string().max(500, '500자 이내로 입력해주세요.').optional(),
   adminName: z.string().max(50, '50자 이내로 입력해주세요.').optional(),
   adminEmail: z.string().email('올바른 이메일을 입력해주세요.').optional().or(z.literal('')),
@@ -85,6 +89,7 @@ export function TenantForm({
       code: '',
       name: '',
       nameEn: '',
+      businessNumber: '',
       description: '',
       adminName: '',
       adminEmail: '',
@@ -101,6 +106,7 @@ export function TenantForm({
           code: tenant.code,
           name: tenant.name,
           nameEn: tenant.nameEn || '',
+          businessNumber: tenant.businessNumber || '',
           description: tenant.description || '',
           adminName: tenant.adminName || '',
           adminEmail: tenant.adminEmail || '',
@@ -115,6 +121,7 @@ export function TenantForm({
           code: '',
           name: '',
           nameEn: '',
+          businessNumber: '',
           description: '',
           adminName: '',
           adminEmail: '',
@@ -245,6 +252,31 @@ export function TenantForm({
                     {...register('nameEn')}
                     placeholder="예: ACME Corporation"
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="businessNumber">사업자등록번호</Label>
+                  <Input
+                    id="businessNumber"
+                    {...register('businessNumber')}
+                    placeholder="000-00-00000"
+                    maxLength={12}
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(/[^0-9]/g, '');
+                      let formatted = raw;
+                      if (raw.length > 3 && raw.length <= 5) {
+                        formatted = `${raw.slice(0, 3)}-${raw.slice(3)}`;
+                      } else if (raw.length > 5) {
+                        formatted = `${raw.slice(0, 3)}-${raw.slice(3, 5)}-${raw.slice(5, 10)}`;
+                      }
+                      e.target.value = formatted;
+                      register('businessNumber').onChange(e);
+                    }}
+                    className={errors.businessNumber ? 'border-destructive' : ''}
+                  />
+                  {errors.businessNumber && (
+                    <p className="text-sm text-destructive">{errors.businessNumber.message}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">

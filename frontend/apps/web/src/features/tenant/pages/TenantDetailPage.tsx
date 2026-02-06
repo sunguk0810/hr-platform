@@ -49,16 +49,20 @@ import {
   usePolicyHistory,
   useUpdateHierarchy,
 } from '../hooks/useTenants';
-import { PolicySettings } from '../components/PolicySettings';
 import { LeavePolicySettings } from '../components/LeavePolicySettings';
 import { AttendancePolicySettings } from '../components/AttendancePolicySettings';
 import { ApprovalPolicySettings } from '../components/ApprovalPolicySettings';
+import { PasswordPolicySettings } from '../components/PasswordPolicySettings';
+import { SecurityPolicySettings } from '../components/SecurityPolicySettings';
+import { NotificationPolicySettings } from '../components/NotificationPolicySettings';
+import { OrganizationPolicySettings } from '../components/OrganizationPolicySettings';
 import { HierarchySettings } from '../components/HierarchySettings';
 import { BrandingSettings } from '../components/BrandingSettings';
 import { FeatureToggleList } from '../components/FeatureToggleList';
 import { PolicyInheritDialog } from '../components/PolicyInheritDialog';
 import { ModuleSettings } from '../components/ModuleSettings';
 import { PolicyHistory } from '../components/PolicyHistory';
+import { NotificationChannelSettings } from '@/features/settings/components/NotificationChannelSettings';
 import type {
   TenantStatus,
   UpdateTenantRequest,
@@ -69,6 +73,10 @@ import type {
   LeavePolicy,
   AttendancePolicy,
   ApprovalPolicy,
+  PasswordPolicy,
+  SecurityPolicy,
+  NotificationPolicy,
+  OrganizationPolicy,
   OrganizationLevel,
 } from '@hr-platform/shared-types';
 import { TENANT_STATUS_LABELS } from '@hr-platform/shared-types';
@@ -87,6 +95,7 @@ export default function TenantDetailPage() {
     name: '',
     nameEn: '',
     description: '',
+    businessNumber: '',
   });
 
   const { data, isLoading, isError } = useTenant(id || '');
@@ -117,6 +126,7 @@ export default function TenantDetailPage() {
       name: tenant.name,
       nameEn: tenant.nameEn || '',
       description: tenant.description || '',
+      businessNumber: tenant.businessNumber || '',
     });
     setIsEditDialogOpen(true);
   };
@@ -147,11 +157,38 @@ export default function TenantDetailPage() {
     }
   };
 
-  const handlePolicySubmit = async (policyType: PolicyType, data: unknown) => {
+  const handlePasswordPolicySubmit = async (data: PasswordPolicy) => {
     if (!id) return;
     await updatePolicyMutation.mutateAsync({
       id,
-      policyType,
+      policyType: 'PASSWORD',
+      data: data as Parameters<typeof updatePolicyMutation.mutateAsync>[0]['data'],
+    });
+  };
+
+  const handleSecurityPolicySubmit = async (data: SecurityPolicy) => {
+    if (!id) return;
+    await updatePolicyMutation.mutateAsync({
+      id,
+      policyType: 'SECURITY',
+      data: data as Parameters<typeof updatePolicyMutation.mutateAsync>[0]['data'],
+    });
+  };
+
+  const handleNotificationPolicySubmit = async (data: NotificationPolicy) => {
+    if (!id) return;
+    await updatePolicyMutation.mutateAsync({
+      id,
+      policyType: 'NOTIFICATION',
+      data: data as Parameters<typeof updatePolicyMutation.mutateAsync>[0]['data'],
+    });
+  };
+
+  const handleOrganizationPolicySubmit = async (data: OrganizationPolicy) => {
+    if (!id) return;
+    await updatePolicyMutation.mutateAsync({
+      id,
+      policyType: 'ORGANIZATION',
       data: data as Parameters<typeof updatePolicyMutation.mutateAsync>[0]['data'],
     });
   };
@@ -361,6 +398,10 @@ export default function TenantDetailPage() {
                   <p>{tenant.nameEn || '-'}</p>
                 </div>
                 <div className="grid gap-1">
+                  <Label className="text-muted-foreground">사업자등록번호</Label>
+                  <p className="font-mono">{tenant.businessNumber || '-'}</p>
+                </div>
+                <div className="grid gap-1">
                   <Label className="text-muted-foreground">설명</Label>
                   <p>{tenant.description || '-'}</p>
                 </div>
@@ -448,33 +489,34 @@ export default function TenantDetailPage() {
             </TabsContent>
 
             <TabsContent value="password">
-              <PolicySettings
-                initialData={{ passwordPolicy: tenant.policies.passwordPolicy }}
-                onSubmit={handlePolicySubmit}
+              <PasswordPolicySettings
+                initialData={tenant.policies.passwordPolicy}
+                onSubmit={handlePasswordPolicySubmit}
                 isLoading={updatePolicyMutation.isPending}
               />
             </TabsContent>
 
             <TabsContent value="security">
-              <PolicySettings
-                initialData={{ securityPolicy: tenant.policies.securityPolicy }}
-                onSubmit={handlePolicySubmit}
+              <SecurityPolicySettings
+                initialData={tenant.policies.securityPolicy}
+                onSubmit={handleSecurityPolicySubmit}
                 isLoading={updatePolicyMutation.isPending}
               />
             </TabsContent>
 
-            <TabsContent value="notification">
-              <PolicySettings
-                initialData={{ notificationPolicy: tenant.policies.notificationPolicy }}
-                onSubmit={handlePolicySubmit}
+            <TabsContent value="notification" className="space-y-6">
+              <NotificationPolicySettings
+                initialData={tenant.policies.notificationPolicy}
+                onSubmit={handleNotificationPolicySubmit}
                 isLoading={updatePolicyMutation.isPending}
               />
+              <NotificationChannelSettings />
             </TabsContent>
 
             <TabsContent value="organization">
-              <PolicySettings
-                initialData={{ organizationPolicy: tenant.policies.organizationPolicy }}
-                onSubmit={handlePolicySubmit}
+              <OrganizationPolicySettings
+                initialData={tenant.policies.organizationPolicy}
+                onSubmit={handleOrganizationPolicySubmit}
                 isLoading={updatePolicyMutation.isPending}
               />
             </TabsContent>
@@ -599,6 +641,28 @@ export default function TenantDetailPage() {
                 value={formData.nameEn}
                 onChange={(e) => setFormData(prev => ({ ...prev, nameEn: e.target.value }))}
               />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-businessNumber">사업자등록번호</Label>
+              <Input
+                id="edit-businessNumber"
+                placeholder="000-00-00000"
+                value={formData.businessNumber}
+                maxLength={12}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/[^0-9]/g, '');
+                  let formatted = raw;
+                  if (raw.length > 3 && raw.length <= 5) {
+                    formatted = `${raw.slice(0, 3)}-${raw.slice(3)}`;
+                  } else if (raw.length > 5) {
+                    formatted = `${raw.slice(0, 3)}-${raw.slice(3, 5)}-${raw.slice(5, 10)}`;
+                  }
+                  setFormData(prev => ({ ...prev, businessNumber: formatted }));
+                }}
+              />
+              <p className="text-xs text-muted-foreground">
+                형식: XXX-XX-XXXXX
+              </p>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="edit-description">설명</Label>

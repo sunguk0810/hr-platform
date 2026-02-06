@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -6,9 +7,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { FormRow } from '@/components/common/Form';
 import { Loader2, Clock, Timer, AlertCircle } from 'lucide-react';
-import type { AttendancePolicy } from '@hr-platform/shared-types';
+import { useToast } from '@/hooks/useToast';
+import { cn } from '@/lib/utils';
+import type { AttendancePolicy, HourlyLeaveMinUnit } from '@hr-platform/shared-types';
 import { DEFAULT_ATTENDANCE_POLICY } from '@hr-platform/shared-types';
 
 const attendancePolicySchema = z.object({
@@ -295,6 +305,126 @@ export function AttendancePolicySettings({
           </div>
         )}
       </form>
+
+      {/* 시간차 휴가 정책 (별도 저장) */}
+      {!readOnly && <HourlyLeavePolicyCard />}
     </FormProvider>
+  );
+}
+
+function HourlyLeavePolicyCard() {
+  const { toast } = useToast();
+  const [policy, setPolicy] = useState({
+    enabled: true,
+    minUnit: 30 as HourlyLeaveMinUnit,
+    dailyMaxCount: 2,
+  });
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      toast({ title: '저장 완료', description: '시간차 휴가 정책이 저장되었습니다.' });
+    } catch {
+      toast({ title: '저장 실패', description: '시간차 휴가 정책 저장에 실패했습니다.', variant: 'destructive' });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <Card className="mt-6">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Clock className="h-5 w-5 text-violet-600" />
+          시간차 휴가 정책
+        </CardTitle>
+        <CardDescription>시간차 휴가(시간 단위 연차)의 사용 정책을 설정합니다.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-center justify-between rounded-lg border p-3">
+          <div>
+            <Label>시간차 휴가 사용</Label>
+            <p className="text-sm text-muted-foreground">
+              활성화하면 직원이 시간 단위로 휴가를 신청할 수 있습니다.
+            </p>
+          </div>
+          <Switch
+            checked={policy.enabled}
+            onCheckedChange={(checked) => setPolicy((prev) => ({ ...prev, enabled: checked }))}
+          />
+        </div>
+
+        {policy.enabled && (
+          <>
+            <div className="space-y-2">
+              <Label>최소 사용 단위</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPolicy((prev) => ({ ...prev, minUnit: 30 }))}
+                  className={cn(
+                    'p-3 rounded-lg border-2 text-center text-sm transition-colors',
+                    policy.minUnit === 30 ? 'border-primary bg-primary/5 font-medium' : 'border-muted'
+                  )}
+                >
+                  30분
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPolicy((prev) => ({ ...prev, minUnit: 60 }))}
+                  className={cn(
+                    'p-3 rounded-lg border-2 text-center text-sm transition-colors',
+                    policy.minUnit === 60 ? 'border-primary bg-primary/5 font-medium' : 'border-muted'
+                  )}
+                >
+                  1시간
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>일일 최대 사용 횟수</Label>
+              <Select
+                value={String(policy.dailyMaxCount)}
+                onValueChange={(value) => setPolicy((prev) => ({ ...prev, dailyMaxCount: parseInt(value, 10) }))}
+              >
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1회</SelectItem>
+                  <SelectItem value="2">2회</SelectItem>
+                  <SelectItem value="3">3회</SelectItem>
+                  <SelectItem value="4">4회</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="rounded-md bg-muted p-3 text-sm text-muted-foreground">
+              <p className="font-medium mb-1">현재 정책 요약</p>
+              <ul className="space-y-0.5">
+                <li>- 최소 단위: {policy.minUnit === 30 ? '30분' : '1시간'}</li>
+                <li>- 일일 최대: {policy.dailyMaxCount}회</li>
+              </ul>
+            </div>
+          </>
+        )}
+
+        <div className="flex justify-end">
+          <Button onClick={handleSave} disabled={isSaving}>
+            {isSaving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                저장 중...
+              </>
+            ) : (
+              '시간차 휴가 정책 저장'
+            )}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
