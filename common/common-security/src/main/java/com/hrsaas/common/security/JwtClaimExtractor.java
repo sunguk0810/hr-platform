@@ -1,12 +1,12 @@
 package com.hrsaas.common.security;
 
-import org.springframework.security.oauth2.jwt.Jwt;
+import io.jsonwebtoken.Claims;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Utility class to extract claims from JWT token.
+ * Utility class to extract claims from JWT token claims.
  */
 public final class JwtClaimExtractor {
 
@@ -14,64 +14,45 @@ public final class JwtClaimExtractor {
         // Utility class
     }
 
-    public static UserContext extractUserContext(Jwt jwt) {
+    public static UserContext extractUserContext(Claims claims) {
         return UserContext.builder()
-            .userId(extractUUID(jwt, "sub"))
-            .tenantId(extractUUID(jwt, "tenant_id"))
-            .employeeId(extractUUID(jwt, "employee_id"))
-            .username(jwt.getClaimAsString("preferred_username"))
-            .email(jwt.getClaimAsString("email"))
-            .roles(extractRoles(jwt))
-            .permissions(extractPermissions(jwt))
+            .userId(extractUUID(claims, "sub"))
+            .tenantId(extractUUID(claims, "tenant_id"))
+            .employeeId(extractUUID(claims, "employee_id"))
+            .username(claims.get("preferred_username", String.class))
+            .email(claims.get("email", String.class))
+            .roles(extractStringSet(claims, "roles"))
+            .permissions(extractStringSet(claims, "permissions"))
             .build();
     }
 
-    public static UUID extractUUID(Jwt jwt, String claimName) {
-        String value = jwt.getClaimAsString(claimName);
-        if (value == null || value.isBlank()) {
+    public static UUID extractUUID(Claims claims, String claimName) {
+        Object value = claims.get(claimName);
+        if (value == null) {
+            // For "sub", it's the subject
+            if ("sub".equals(claimName)) {
+                String sub = claims.getSubject();
+                if (sub == null || sub.isBlank()) return null;
+                try {
+                    return UUID.fromString(sub);
+                } catch (IllegalArgumentException e) {
+                    return null;
+                }
+            }
             return null;
         }
         try {
-            return UUID.fromString(value);
+            return UUID.fromString(value.toString());
         } catch (IllegalArgumentException e) {
             return null;
         }
     }
 
     @SuppressWarnings("unchecked")
-    public static Set<String> extractRoles(Jwt jwt) {
-        Set<String> roles = new HashSet<>();
-
-        // Extract from realm_access.roles
-        Map<String, Object> realmAccess = jwt.getClaim("realm_access");
-        if (realmAccess != null) {
-            Object realmRoles = realmAccess.get("roles");
-            if (realmRoles instanceof Collection) {
-                roles.addAll(((Collection<String>) realmRoles));
-            }
-        }
-
-        // Extract from resource_access.{client}.roles
-        Map<String, Object> resourceAccess = jwt.getClaim("resource_access");
-        if (resourceAccess != null) {
-            for (Object clientAccess : resourceAccess.values()) {
-                if (clientAccess instanceof Map) {
-                    Object clientRoles = ((Map<String, Object>) clientAccess).get("roles");
-                    if (clientRoles instanceof Collection) {
-                        roles.addAll(((Collection<String>) clientRoles));
-                    }
-                }
-            }
-        }
-
-        return roles;
-    }
-
-    @SuppressWarnings("unchecked")
-    public static Set<String> extractPermissions(Jwt jwt) {
-        Object permissions = jwt.getClaim("permissions");
-        if (permissions instanceof Collection) {
-            return ((Collection<Object>) permissions).stream()
+    public static Set<String> extractStringSet(Claims claims, String key) {
+        Object value = claims.get(key);
+        if (value instanceof Collection) {
+            return ((Collection<Object>) value).stream()
                 .map(Object::toString)
                 .collect(Collectors.toSet());
         }

@@ -1,0 +1,23 @@
+api:
+  dashboard: true
+  insecure: true
+
+entryPoints:
+  web:
+    address: ":8080"
+  dashboard:
+    address: ":8090"
+
+providers:
+  docker:
+    exposedByDefault: false
+    network: hr-saas-network
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true
+
+accessLog:
+  format: json
+
+metrics:
+  prometheus: {}

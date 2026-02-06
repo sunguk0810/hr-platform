@@ -11,8 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
+import com.hrsaas.common.security.SecurityContextHolder;
+import com.hrsaas.common.security.UserContext;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,10 +30,10 @@ public class DelegationController {
     @Operation(summary = "대결 설정")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<DelegationRuleResponse>> create(
-            @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody CreateDelegationRuleRequest request) {
-        UUID delegatorId = UUID.fromString(jwt.getSubject());
-        String delegatorName = jwt.getClaimAsString("name");
+        UserContext context = SecurityContextHolder.getCurrentUser();
+        UUID delegatorId = context.getUserId();
+        String delegatorName = context.getUsername();
 
         DelegationRuleResponse response = delegationService.create(delegatorId, delegatorName, request);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -51,9 +51,9 @@ public class DelegationController {
     @GetMapping("/my")
     @Operation(summary = "내 대결 설정 조회")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ApiResponse<List<DelegationRuleResponse>>> getMyDelegations(
-            @AuthenticationPrincipal Jwt jwt) {
-        UUID delegatorId = UUID.fromString(jwt.getSubject());
+    public ResponseEntity<ApiResponse<List<DelegationRuleResponse>>> getMyDelegations() {
+        UserContext context = SecurityContextHolder.getCurrentUser();
+        UUID delegatorId = context.getUserId();
         List<DelegationRuleResponse> response = delegationService.getByDelegatorId(delegatorId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
@@ -61,9 +61,9 @@ public class DelegationController {
     @GetMapping("/my/effective")
     @Operation(summary = "내 현재 유효한 대결 조회")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ApiResponse<DelegationRuleResponse>> getMyEffectiveDelegation(
-            @AuthenticationPrincipal Jwt jwt) {
-        UUID delegatorId = UUID.fromString(jwt.getSubject());
+    public ResponseEntity<ApiResponse<DelegationRuleResponse>> getMyEffectiveDelegation() {
+        UserContext context = SecurityContextHolder.getCurrentUser();
+        UUID delegatorId = context.getUserId();
         return delegationService.getEffectiveRule(delegatorId)
             .map(r -> ResponseEntity.ok(ApiResponse.success(r)))
             .orElse(ResponseEntity.ok(ApiResponse.success(null, "현재 유효한 대결 설정이 없습니다.")));
@@ -72,9 +72,9 @@ public class DelegationController {
     @GetMapping("/delegated-to-me")
     @Operation(summary = "내가 대리 결재하는 목록 조회")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ApiResponse<List<DelegationRuleResponse>>> getDelegatedToMe(
-            @AuthenticationPrincipal Jwt jwt) {
-        UUID delegateId = UUID.fromString(jwt.getSubject());
+    public ResponseEntity<ApiResponse<List<DelegationRuleResponse>>> getDelegatedToMe() {
+        UserContext context = SecurityContextHolder.getCurrentUser();
+        UUID delegateId = context.getUserId();
         List<DelegationRuleResponse> response = delegationService.getByDelegateId(delegateId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }

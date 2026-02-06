@@ -1,6 +1,3 @@
--- Create database for Keycloak
-CREATE DATABASE keycloak;
-
 -- Create schemas
 CREATE SCHEMA IF NOT EXISTS tenant_common;
 CREATE SCHEMA IF NOT EXISTS hr_core;

@@ -1,20 +1,15 @@
 package com.hrsaas.common.privacy;
 
+import com.hrsaas.common.security.UserContext;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.core.annotation.Order;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Set;
 import java.util.UUID;
 
@@ -52,39 +47,20 @@ public class PrivacyFilter extends OncePerRequestFilter {
     }
 
     private void setupPrivacyContext() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
+        UserContext context = com.hrsaas.common.security.SecurityContextHolder.getCurrentUser();
+        if (context == null) {
             return;
         }
 
         // Check if user has privileged role
-        if (hasPrivilegedRole(authentication)) {
+        if (context.getRoles() != null && context.getRoles().stream().anyMatch(PRIVILEGED_ROLES::contains)) {
             PrivacyContext.setSkipMasking(true);
         }
 
-        // Extract employee ID from JWT
-        if (authentication instanceof JwtAuthenticationToken jwtAuth) {
-            Jwt jwt = jwtAuth.getToken();
-            String employeeIdClaim = jwt.getClaimAsString("employee_id");
-            if (employeeIdClaim != null) {
-                try {
-                    UUID employeeId = UUID.fromString(employeeIdClaim);
-                    PrivacyContext.setCurrentEmployeeId(employeeId);
-                } catch (IllegalArgumentException ignored) {
-                    // Invalid UUID format, ignore
-                }
-            }
+        // Extract employee ID from UserContext
+        UUID employeeId = context.getEmployeeId();
+        if (employeeId != null) {
+            PrivacyContext.setCurrentEmployeeId(employeeId);
         }
-    }
-
-    private boolean hasPrivilegedRole(Authentication authentication) {
-        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
-        if (authorities == null) {
-            return false;
-        }
-
-        return authorities.stream()
-                .map(GrantedAuthority::getAuthority)
-                .anyMatch(PRIVILEGED_ROLES::contains);
     }
 }

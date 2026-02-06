@@ -11,11 +11,7 @@ include 'common:common-privacy'
 include 'common:common-cache'
 include 'common:common-event'
 
-// Infrastructure
-include 'infra:config-server'
-
 // Services
-include 'services:gateway-service'
 include 'services:auth-service'
 include 'services:tenant-service'
 include 'services:organization-service'

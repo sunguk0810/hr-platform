@@ -1,0 +1,32 @@
+http:
+  middlewares:
+    cors-headers:
+      headers:
+        accessControlAllowOriginList:
+          - "http://localhost:3000"
+          - "http://localhost:5173"
+        accessControlAllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - PATCH
+          - OPTIONS
+        accessControlAllowHeaders:
+          - Authorization
+          - Content-Type
+          - X-Tenant-ID
+          - X-Request-ID
+        accessControlExposeHeaders:
+          - X-Request-ID
+          - X-Correlation-ID
+        accessControlAllowCredentials: true
+        accessControlMaxAge: 3600
+    rate-limit:
+      rateLimit:
+        average: 100
+        burst: 200
+    rate-limit-auth:
+      rateLimit:
+        average: 10
+        burst: 20

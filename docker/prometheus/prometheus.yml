@@ -7,15 +7,9 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
 
-  - job_name: 'config-server'
-    metrics_path: '/actuator/prometheus'
+  - job_name: 'traefik'
     static_configs:
-      - targets: ['host.docker.internal:8888']
-
-  - job_name: 'gateway-service'
-    metrics_path: '/actuator/prometheus'
-    static_configs:
-      - targets: ['host.docker.internal:8080']
+      - targets: ['host.docker.internal:8090']
 
   - job_name: 'auth-service'
     metrics_path: '/actuator/prometheus'

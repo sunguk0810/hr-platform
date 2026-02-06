@@ -13,9 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
+import com.hrsaas.common.security.UserContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -116,10 +114,10 @@ public class CodeHistoryServiceImpl implements CodeHistoryService {
 
     private String[] getCurrentUserInfo() {
         try {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth != null && auth.getPrincipal() instanceof Jwt jwt) {
-                String name = jwt.getClaimAsString("name");
-                String userId = jwt.getSubject();
+            UserContext context = com.hrsaas.common.security.SecurityContextHolder.getCurrentUser();
+            if (context != null) {
+                String name = context.getUsername();
+                String userId = context.getUserId() != null ? context.getUserId().toString() : null;
                 return new String[]{name != null ? name : "Unknown", userId};
             }
         } catch (Exception e) {

@@ -4,6 +4,7 @@ plugins {
 
 dependencies {
     api project(':common:common-core')
+    api project(':common:common-security')
 
     api 'org.springframework.boot:spring-boot-starter'
     api 'com.fasterxml.jackson.core:jackson-databind'
@@ -11,7 +12,6 @@ dependencies {
     // Web and Security for PrivacyFilter
     compileOnly 'org.springframework.boot:spring-boot-starter-web'
     compileOnly 'org.springframework.boot:spring-boot-starter-security'
-    compileOnly 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
 
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'

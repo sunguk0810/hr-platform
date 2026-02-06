@@ -1,2 +1,0 @@
-ALTER TABLE hr_file.file_metadata ENABLE ROW LEVEL SECURITY;
-ALTER TABLE hr_file.file_metadata FORCE ROW LEVEL SECURITY;

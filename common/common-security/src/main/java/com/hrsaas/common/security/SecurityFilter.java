@@ -1,11 +1,12 @@
 package com.hrsaas.common.security;
 
-import com.hrsaas.common.core.constant.HeaderConstants;
+import com.hrsaas.common.security.jwt.JwtTokenProvider;
 import com.hrsaas.common.tenant.TenantContext;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -13,75 +14,51 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Set;
-import java.util.UUID;
 
 /**
- * Filter to extract user context from headers and propagate to context holders.
+ * Filter to extract user context from JWT in Authorization header.
+ * Each service directly validates JWT tokens (no gateway header propagation).
  */
 @Slf4j
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 20)
+@RequiredArgsConstructor
 public class SecurityFilter extends OncePerRequestFilter {
+
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         try {
-            extractFromHeaders(request);
+            extractFromJwt(request);
             filterChain.doFilter(request, response);
         } finally {
             SecurityContextHolder.clear();
+            TenantContext.clear();
         }
     }
 
-    private void extractFromHeaders(HttpServletRequest request) {
-        // Extract from gateway-propagated headers
-        String userIdHeader = request.getHeader(HeaderConstants.X_USER_ID);
-        String tenantIdHeader = request.getHeader(HeaderConstants.X_TENANT_ID);
-        String employeeIdHeader = request.getHeader(HeaderConstants.X_EMPLOYEE_ID);
-        String rolesHeader = request.getHeader(HeaderConstants.X_USER_ROLES);
-        String permissionsHeader = request.getHeader(HeaderConstants.X_USER_PERMISSIONS);
+    private void extractFromJwt(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return;
+        }
 
-        UserContext.UserContextBuilder builder = UserContext.builder();
+        String token = authHeader.substring(7);
+        try {
+            UserContext context = jwtTokenProvider.parseToken(token);
+            SecurityContextHolder.setContext(context);
 
-        if (userIdHeader != null && !userIdHeader.isBlank()) {
-            try {
-                UUID userId = UUID.fromString(userIdHeader);
-                builder.userId(userId);
-            } catch (IllegalArgumentException e) {
-                log.warn("Invalid user ID format: {}", userIdHeader);
+            if (context.getTenantId() != null) {
+                TenantContext.setCurrentTenant(context.getTenantId());
             }
-        }
 
-        if (tenantIdHeader != null && !tenantIdHeader.isBlank()) {
-            try {
-                UUID tenantId = UUID.fromString(tenantIdHeader);
-                builder.tenantId(tenantId);
-                TenantContext.setCurrentTenant(tenantId);
-            } catch (IllegalArgumentException e) {
-                log.warn("Invalid tenant ID format: {}", tenantIdHeader);
-            }
+            log.debug("JWT authenticated: userId={}, tenantId={}", context.getUserId(), context.getTenantId());
+        } catch (Exception e) {
+            log.debug("JWT validation failed: {}", e.getMessage());
         }
-
-        if (employeeIdHeader != null && !employeeIdHeader.isBlank()) {
-            try {
-                builder.employeeId(UUID.fromString(employeeIdHeader));
-            } catch (IllegalArgumentException e) {
-                log.warn("Invalid employee ID format: {}", employeeIdHeader);
-            }
-        }
-
-        if (rolesHeader != null && !rolesHeader.isBlank()) {
-            builder.roles(Set.of(rolesHeader.split(",")));
-        }
-
-        if (permissionsHeader != null && !permissionsHeader.isBlank()) {
-            builder.permissions(Set.of(permissionsHeader.split(",")));
-        }
-
-        SecurityContextHolder.setContext(builder.build());
     }
 
     @Override
