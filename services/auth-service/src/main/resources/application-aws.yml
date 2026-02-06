@@ -24,21 +24,10 @@ spring:
       ssl:
         enabled: ${REDIS_SSL_ENABLED:false}
 
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: ${KEYCLOAK_ISSUER_URI:}
-
-# Keycloak Configuration
-keycloak:
-  server-url: ${KEYCLOAK_SERVER_URL:}
-  realm: ${KEYCLOAK_REALM:hr-saas}
-  client-id: ${KEYCLOAK_CLIENT_ID:hr-saas-api}
-  client-secret: ${KEYCLOAK_CLIENT_SECRET:}
-  admin:
-    username: ${KEYCLOAK_ADMIN_USERNAME:}
-    password: ${KEYCLOAK_ADMIN_PASSWORD:}
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-expiry: 1800
+  refresh-token-expiry: 604800
 
 management:
   endpoints:

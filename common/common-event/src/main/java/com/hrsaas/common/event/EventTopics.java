@@ -1,7 +1,7 @@
 package com.hrsaas.common.event;
 
 /**
- * Kafka topic name constants.
+ * SNS topic name constants.
  */
 public interface EventTopics {
 
@@ -40,6 +40,12 @@ public interface EventTopics {
     // Notification events
     String NOTIFICATION_EVENTS = "notification-events";
     String NOTIFICATION_SEND = "notification-send";
+
+    // Appointment events
+    String APPOINTMENT_EXECUTED = "appointment-executed";
+
+    // Affiliation events
+    String EMPLOYEE_AFFILIATION_CHANGED = "employee-affiliation-changed";
 
     // MDM events
     String MDM_EVENTS = "mdm-events";

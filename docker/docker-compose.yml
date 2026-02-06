@@ -1,8 +1,6 @@
 # Common environment variables for all application services
 x-common-env: &common-env
   SPRING_PROFILES_ACTIVE: docker
-  SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
-  SPRING_CLOUD_CONFIG_ENABLED: "true"
   DB_HOST: postgres
   DB_PORT: "5432"
   DB_USERNAME: hr_saas
@@ -11,10 +9,12 @@ x-common-env: &common-env
   REDIS_PORT: "6379"
   REDIS_PASSWORD: redis_password
   SPRING_DATA_REDIS_SSL_ENABLED: "false"
-  KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-  KAFKA_SERVERS: kafka:9092
-  KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/hr-saas
-  KEYCLOAK_URL: http://keycloak:8080
+  AWS_REGION: ap-northeast-2
+  AWS_ACCESS_KEY_ID: test
+  AWS_SECRET_ACCESS_KEY: test
+  AWS_SNS_ENDPOINT: http://localstack:4566
+  AWS_SQS_ENDPOINT: http://localstack:4566
+  JWT_SECRET: hr-saas-jwt-secret-key-minimum-256-bits-for-hmac-sha256
 
 services:
   # ===========================================
@@ -55,64 +55,16 @@ services:
       retries: 5
     networks:
       - hr-saas-network
-  kafka:
-    image: apache/kafka:3.7.0
-    container_name: hr-saas-kafka
-    environment:
-      KAFKA_NODE_ID: 1
-      KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
-      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
+  localstack:
+    image: localstack/localstack:3.4
+    container_name: hr-saas-localstack
     ports:
-      - "29092:29092"
+      - "4566:4566"
+    environment:
+      SERVICES: sns,sqs
+      DEFAULT_REGION: ap-northeast-2
     volumes:
-      - kafka_data:/var/lib/kafka/data
-    healthcheck:
-      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-    networks:
-      - hr-saas-network
-  kafka-ui:
-    image: provectuslabs/kafka-ui:latest
-    container_name: hr-saas-kafka-ui
-    environment:
-      - KAFKA_CLUSTERS_0_NAME=local
-      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
-    ports:
-      - "9091:8080"
-    depends_on:
-      - kafka
-    networks:
-      - hr-saas-network
-  keycloak:
-    image: quay.io/keycloak/keycloak:23.0
-    container_name: hr-saas-keycloak
-    command: start-dev --import-realm
-    environment:
-      - KEYCLOAK_ADMIN=admin
-      - KEYCLOAK_ADMIN_PASSWORD=admin
-      - KC_DB=postgres
-      - KC_DB_URL=jdbc:postgresql://postgres:5432/keycloak
-      - KC_DB_USERNAME=hr_saas
-      - KC_DB_PASSWORD=hr_saas_password
-    ports:
-      - "8180:8080"
-    volumes:
-      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json
-    depends_on:
-      postgres:
-        condition: service_healthy
+      - "./localstack/init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh"
     networks:
       - hr-saas-network
   jaeger:
@@ -156,46 +108,23 @@ services:
     networks:
       - hr-saas-network
   # ===========================================
-  # Config Server
+  # API Gateway (Traefik v3)
   # ===========================================
-  config-server:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.config-server
-    container_name: hr-saas-config-server
+  traefik:
+    image: traefik:v3.3
+    container_name: hr-saas-traefik
     ports:
-      - "8888:8888"
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker,native
-      - SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCH_LOCATIONS=file:/config
+      - "8080:8080"
+      - "8090:8090"
     volumes:
-      - ../config:/config:ro
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8888/actuator/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/dynamic:/etc/traefik/dynamic:ro
     networks:
       - hr-saas-network
   # ===========================================
   # Application Services
   # ===========================================
-  gateway-service:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.gateway
-    container_name: hr-saas-gateway
-    ports:
-      - "8080:8080"
-    environment:
-      <<: *common-env
-    depends_on:
-      config-server:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - hr-saas-network
   auth-service:
     build:
       context: ..
@@ -208,12 +137,16 @@ services:
     environment:
       <<: *common-env
     depends_on:
-      config-server:
-        condition: service_healthy
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.auth.rule=PathPrefix(`/api/v1/auth`)"
+      - "traefik.http.routers.auth.entrypoints=web"
+      - "traefik.http.routers.auth.middlewares=cors-headers@file,rate-limit-auth@file"
+      - "traefik.http.services.auth.loadbalancer.server.port=8081"
     networks:
       - hr-saas-network
   tenant-service:
@@ -228,12 +161,16 @@ services:
     environment:
       <<: *common-env
     depends_on:
-      config-server:
-        condition: service_healthy
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.tenant.rule=PathPrefix(`/api/v1/tenants`)"
+      - "traefik.http.routers.tenant.entrypoints=web"
+      - "traefik.http.routers.tenant.middlewares=cors-headers@file,rate-limit@file"
+      - "traefik.http.services.tenant.loadbalancer.server.port=8082"
     networks:
       - hr-saas-network
   organization-service:
@@ -248,10 +185,14 @@ services:
     environment:
       <<: *common-env
     depends_on:
-      config-server:
-        condition: service_healthy
       postgres:
         condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.organization.rule=PathPrefix(`/api/v1/departments`) || PathPrefix(`/api/v1/positions`) || PathPrefix(`/api/v1/grades`) || PathPrefix(`/api/v1/announcements`) || PathPrefix(`/api/v1/committees`) || PathPrefix(`/api/v1/headcounts`)"
+      - "traefik.http.routers.organization.entrypoints=web"
+      - "traefik.http.routers.organization.middlewares=cors-headers@file,rate-limit@file"
+      - "traefik.http.services.organization.loadbalancer.server.port=8083"
     networks:
       - hr-saas-network
   employee-service:
@@ -266,12 +207,16 @@ services:
     environment:
       <<: *common-env
     depends_on:
-      config-server:
-        condition: service_healthy
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.employee.rule=PathPrefix(`/api/v1/employees`) || PathPrefix(`/api/v1/transfers`) || PathPrefix(`/api/v1/condolences`) || PathPrefix(`/api/v1/employee-cards`) || PathPrefix(`/api/v1/profile`)"
+      - "traefik.http.routers.employee.entrypoints=web"
+      - "traefik.http.routers.employee.middlewares=cors-headers@file,rate-limit@file"
+      - "traefik.http.services.employee.loadbalancer.server.port=8084"
     networks:
       - hr-saas-network
   attendance-service:
@@ -286,14 +231,18 @@ services:
     environment:
       <<: *common-env
     depends_on:
-      config-server:
-        condition: service_healthy
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-      kafka:
-        condition: service_healthy
+      localstack:
+        condition: service_started
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.attendance.rule=PathPrefix(`/api/v1/attendances`) || PathPrefix(`/api/v1/leaves`) || PathPrefix(`/api/v1/overtimes`)"
+      - "traefik.http.routers.attendance.entrypoints=web"
+      - "traefik.http.routers.attendance.middlewares=cors-headers@file,rate-limit@file"
+      - "traefik.http.services.attendance.loadbalancer.server.port=8085"
     networks:
       - hr-saas-network
   approval-service:
@@ -308,14 +257,18 @@ services:
     environment:
       <<: *common-env
     depends_on:
-      config-server:
-        condition: service_healthy
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-      kafka:
-        condition: service_healthy
+      localstack:
+        condition: service_started
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.approval.rule=PathPrefix(`/api/v1/approvals`)"
+      - "traefik.http.routers.approval.entrypoints=web"
+      - "traefik.http.routers.approval.middlewares=cors-headers@file,rate-limit@file"
+      - "traefik.http.services.approval.loadbalancer.server.port=8086"
     networks:
       - hr-saas-network
   mdm-service:
@@ -330,12 +283,16 @@ services:
     environment:
       <<: *common-env
     depends_on:
-      config-server:
-        condition: service_healthy
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mdm.rule=PathPrefix(`/api/v1/mdm`) || PathPrefix(`/api/v1/menus`) || PathPrefix(`/api/v1/admin/menus`)"
+      - "traefik.http.routers.mdm.entrypoints=web"
+      - "traefik.http.routers.mdm.middlewares=cors-headers@file,rate-limit@file"
+      - "traefik.http.services.mdm.loadbalancer.server.port=8087"
     networks:
       - hr-saas-network
   notification-service:
@@ -350,14 +307,18 @@ services:
     environment:
       <<: *common-env
     depends_on:
-      config-server:
-        condition: service_healthy
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-      kafka:
-        condition: service_healthy
+      localstack:
+        condition: service_started
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.notification.rule=PathPrefix(`/api/v1/notifications`) || PathPrefix(`/api/v1/announcements`) || PathPrefix(`/api/v1/help`)"
+      - "traefik.http.routers.notification.entrypoints=web"
+      - "traefik.http.routers.notification.middlewares=cors-headers@file,rate-limit@file"
+      - "traefik.http.services.notification.loadbalancer.server.port=8088"
     networks:
       - hr-saas-network
   file-service:
@@ -374,10 +335,14 @@ services:
     volumes:
       - file_storage:/app/storage
     depends_on:
-      config-server:
-        condition: service_healthy
       postgres:
         condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.file.rule=PathPrefix(`/api/v1/files`)"
+      - "traefik.http.routers.file.entrypoints=web"
+      - "traefik.http.routers.file.middlewares=cors-headers@file,rate-limit@file"
+      - "traefik.http.services.file.loadbalancer.server.port=8089"
     networks:
       - hr-saas-network
   appointment-service:
@@ -392,14 +357,18 @@ services:
     environment:
       <<: *common-env
     depends_on:
-      config-server:
-        condition: service_healthy
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-      kafka:
-        condition: service_healthy
+      localstack:
+        condition: service_started
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.appointment.rule=PathPrefix(`/api/v1/appointments`)"
+      - "traefik.http.routers.appointment.entrypoints=web"
+      - "traefik.http.routers.appointment.middlewares=cors-headers@file,rate-limit@file"
+      - "traefik.http.services.appointment.loadbalancer.server.port=8091"
     networks:
       - hr-saas-network
   certificate-service:
@@ -414,12 +383,16 @@ services:
     environment:
       <<: *common-env
     depends_on:
-      config-server:
-        condition: service_healthy
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.certificate.rule=PathPrefix(`/api/v1/certificates`)"
+      - "traefik.http.routers.certificate.entrypoints=web"
+      - "traefik.http.routers.certificate.middlewares=cors-headers@file,rate-limit@file"
+      - "traefik.http.services.certificate.loadbalancer.server.port=8092"
     networks:
       - hr-saas-network
   recruitment-service:
@@ -434,20 +407,23 @@ services:
     environment:
       <<: *common-env
     depends_on:
-      config-server:
-        condition: service_healthy
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-      kafka:
-        condition: service_healthy
+      localstack:
+        condition: service_started
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.recruitment.rule=PathPrefix(`/api/v1/jobs`) || PathPrefix(`/api/v1/applications`) || PathPrefix(`/api/v1/interviews`) || PathPrefix(`/api/v1/offers`)"
+      - "traefik.http.routers.recruitment.entrypoints=web"
+      - "traefik.http.routers.recruitment.middlewares=cors-headers@file,rate-limit@file"
+      - "traefik.http.services.recruitment.loadbalancer.server.port=8093"
     networks:
       - hr-saas-network
 volumes:
   postgres_data:
   redis_data:
-  kafka_data:
   prometheus_data:
   grafana_data:
   file_storage:

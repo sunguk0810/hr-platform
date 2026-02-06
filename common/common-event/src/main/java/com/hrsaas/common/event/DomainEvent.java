@@ -48,7 +48,7 @@ public abstract class DomainEvent {
     }
 
     /**
-     * Get the Kafka topic for this event.
+     * Get the SNS topic name for this event.
      */
     public abstract String getTopic();
 }

@@ -4,19 +4,26 @@ import com.hrsaas.auth.domain.dto.request.ChangePasswordRequest;
 import com.hrsaas.auth.domain.dto.request.ResetPasswordConfirmRequest;
 import com.hrsaas.auth.domain.dto.request.ResetPasswordRequest;
 import com.hrsaas.auth.domain.entity.PasswordResetToken;
-import com.hrsaas.auth.infrastructure.keycloak.KeycloakClient;
+import com.hrsaas.auth.domain.entity.UserEntity;
 import com.hrsaas.auth.repository.PasswordResetTokenRepository;
+import com.hrsaas.auth.repository.UserRepository;
 import com.hrsaas.auth.service.PasswordService;
 import com.hrsaas.auth.service.SessionService;
 import com.hrsaas.common.core.exception.BusinessException;
+import com.hrsaas.common.event.DomainEvent;
+import com.hrsaas.common.event.EventPublisher;
+import com.hrsaas.common.event.EventTopics;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Slf4j
@@ -24,12 +31,11 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PasswordServiceImpl implements PasswordService {
 
-    private final KeycloakClient keycloakClient;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final SessionService sessionService;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
-
-    private static final String PASSWORD_RESET_TOPIC = "hr-saas.auth.password-reset-requested";
+    private final EventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -41,22 +47,20 @@ public class PasswordServiceImpl implements PasswordService {
             throw new BusinessException("AUTH_003", "새 비밀번호와 확인 비밀번호가 일치하지 않습니다.", HttpStatus.BAD_REQUEST);
         }
 
-        // Validate current password by attempting login
-        try {
-            keycloakClient.validatePassword(userId, request.getCurrentPassword());
-        } catch (Exception e) {
+        UserEntity user = userRepository.findByUsername(userId)
+                .orElseThrow(() -> new BusinessException("AUTH_004", "사용자를 찾을 수 없습니다.", HttpStatus.BAD_REQUEST));
+
+        // Validate current password
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())) {
             log.warn("Current password validation failed for user: {}", userId);
             throw new BusinessException("AUTH_004", "현재 비밀번호가 올바르지 않습니다.", HttpStatus.BAD_REQUEST);
         }
 
-        // Change password in Keycloak
-        try {
-            keycloakClient.changePassword(userId, request.getNewPassword());
-            log.info("Password changed successfully for user: {}", userId);
-        } catch (Exception e) {
-            log.error("Failed to change password for user: {}", userId, e);
-            throw new BusinessException("AUTH_005", "비밀번호 변경에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        // Change password
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        user.setPasswordChangedAt(OffsetDateTime.now());
+        userRepository.save(user);
+        log.info("Password changed successfully for user: {}", userId);
 
         // Terminate all other sessions
         sessionService.terminateAllSessions(userId);
@@ -82,12 +86,12 @@ public class PasswordServiceImpl implements PasswordService {
         passwordResetTokenRepository.save(resetToken);
 
         // Send notification event
-        PasswordResetEvent event = new PasswordResetEvent(
-            request.getUsername(),
-            request.getEmail(),
-            token
-        );
-        kafkaTemplate.send(PASSWORD_RESET_TOPIC, event);
+        PasswordResetRequestedEvent event = PasswordResetRequestedEvent.builder()
+            .userId(request.getUsername())
+            .email(request.getEmail())
+            .resetToken(token)
+            .build();
+        eventPublisher.publish(event);
 
         log.info("Password reset token created and notification sent for user: {}", request.getUsername());
     }
@@ -110,14 +114,15 @@ public class PasswordServiceImpl implements PasswordService {
             throw new BusinessException("AUTH_007", "만료되었거나 이미 사용된 토큰입니다.", HttpStatus.BAD_REQUEST);
         }
 
-        // Reset password in Keycloak
-        try {
-            keycloakClient.changePassword(resetToken.getUserId(), request.getNewPassword());
-            log.info("Password reset successfully for user: {}", resetToken.getUserId());
-        } catch (Exception e) {
-            log.error("Failed to reset password for user: {}", resetToken.getUserId(), e);
-            throw new BusinessException("AUTH_005", "비밀번호 변경에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        // Reset password in database
+        UserEntity user = userRepository.findByUsername(resetToken.getUserId())
+                .orElseThrow(() -> new BusinessException("AUTH_004", "사용자를 찾을 수 없습니다.", HttpStatus.BAD_REQUEST));
+
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        user.setPasswordChangedAt(OffsetDateTime.now());
+        user.resetFailedAttempts();
+        userRepository.save(user);
+        log.info("Password reset successfully for user: {}", resetToken.getUserId());
 
         // Mark token as used
         resetToken.markAsUsed();
@@ -128,7 +133,18 @@ public class PasswordServiceImpl implements PasswordService {
     }
 
     /**
-     * Event to be published when a password reset is requested.
+     * Event published when a password reset is requested.
      */
-    public record PasswordResetEvent(String userId, String email, String token) {}
+    @Getter
+    @SuperBuilder
+    public static class PasswordResetRequestedEvent extends DomainEvent {
+        private final String userId;
+        private final String email;
+        private final String resetToken;
+
+        @Override
+        public String getTopic() {
+            return EventTopics.NOTIFICATION_SEND;
+        }
+    }
 }

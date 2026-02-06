@@ -10,10 +10,10 @@ import com.hrsaas.common.core.exception.NotFoundException;
 import com.hrsaas.common.tenant.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.hrsaas.common.event.EventPublisher;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,7 +34,7 @@ public class AppointmentDraftServiceImpl implements AppointmentDraftService {
     private final AppointmentDetailRepository detailRepository;
     private final AppointmentHistoryRepository historyRepository;
     private final AppointmentScheduleRepository scheduleRepository;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final EventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -323,8 +323,8 @@ public class AppointmentDraftServiceImpl implements AppointmentDraftService {
 
                 historyRepository.save(history);
 
-                // TODO: Employee Service에 Kafka 이벤트 발행
-                // kafkaTemplate.send("hr-saas.appointment.apply", event);
+                // TODO: Employee Service에 SNS 이벤트 발행
+                // eventPublisher.publish(appointmentExecutedEvent);
 
                 detail.execute();
 
