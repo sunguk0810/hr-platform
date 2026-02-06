@@ -9,17 +9,19 @@ import { cn } from '@/lib/utils';
 interface CodeTreeProps {
   groupCode: string;
   onSelect?: (node: CodeTreeNode) => void;
+  onContextMenu?: (event: React.MouseEvent, node: CodeTreeNode) => void;
   selectedId?: string;
 }
 
 interface TreeNodeProps {
   node: CodeTreeNode;
   onSelect?: (node: CodeTreeNode) => void;
+  onContextMenu?: (event: React.MouseEvent, node: CodeTreeNode) => void;
   selectedId?: string;
   level: number;
 }
 
-function TreeNode({ node, onSelect, selectedId, level }: TreeNodeProps) {
+function TreeNode({ node, onSelect, onContextMenu, selectedId, level }: TreeNodeProps) {
   const [isExpanded, setIsExpanded] = useState(level < 2);
   const hasChildren = node.children && node.children.length > 0;
   const isSelected = node.id === selectedId;
@@ -42,6 +44,10 @@ function TreeNode({ node, onSelect, selectedId, level }: TreeNodeProps) {
         )}
         style={{ paddingLeft: `${level * 16 + 8}px` }}
         onClick={handleClick}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          onContextMenu?.(e, node);
+        }}
       >
         {hasChildren ? (
           <Button
@@ -89,6 +95,7 @@ function TreeNode({ node, onSelect, selectedId, level }: TreeNodeProps) {
               key={child.id}
               node={child}
               onSelect={onSelect}
+              onContextMenu={onContextMenu}
               selectedId={selectedId}
               level={level + 1}
             />
@@ -99,7 +106,7 @@ function TreeNode({ node, onSelect, selectedId, level }: TreeNodeProps) {
   );
 }
 
-export function CodeTree({ groupCode, onSelect, selectedId }: CodeTreeProps) {
+export function CodeTree({ groupCode, onSelect, onContextMenu, selectedId }: CodeTreeProps) {
   const { data, isLoading, isError } = useCodeTree(groupCode);
   const treeData = data?.data ?? [];
 
@@ -142,6 +149,7 @@ export function CodeTree({ groupCode, onSelect, selectedId }: CodeTreeProps) {
           key={node.id}
           node={node}
           onSelect={onSelect}
+          onContextMenu={onContextMenu}
           selectedId={selectedId}
           level={0}
         />

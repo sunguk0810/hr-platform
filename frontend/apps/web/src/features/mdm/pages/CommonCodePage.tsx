@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
+import { useToast } from '@/hooks/useToast';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { StatusBadge } from '@/components/common/StatusBadge';
@@ -9,7 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -19,13 +21,24 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Code, Plus, Search, Pencil, Trash2, MoreHorizontal, History, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Code, Plus, Search, Pencil, Trash2, MoreHorizontal, History, AlertTriangle, RefreshCw, ChevronRight, LayoutList, GitBranch, Ban, CheckCircle } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,15 +55,23 @@ import {
   useUpdateCommonCode,
   useDeleteCommonCode,
   useUpdateCodeStatus,
+  useBulkUpdateCodeStatus,
   useCodeImpact,
   useCodeHistory,
   useCheckDuplicate,
 } from '../hooks/useMdm';
-import type { CommonCodeListItem, CreateCommonCodeRequest, UpdateCommonCodeRequest, CodeStatus, CheckDuplicateResponse } from '@hr-platform/shared-types';
+import type { CommonCodeListItem, CreateCommonCodeRequest, UpdateCommonCodeRequest, CodeStatus, CheckDuplicateResponse, ClassificationLevel, CodeTreeNode } from '@hr-platform/shared-types';
+import { CodeTree } from '../components/CodeTree';
 
 export default function CommonCodePage() {
   const [searchInput, setSearchInput] = useState('');
   const debouncedKeyword = useDebounce(searchInput, 300);
+
+  // View mode toggle state
+  const [viewMode, setViewMode] = useState<'table' | 'tree'>('table');
+  const [selectedGroupForTree, setSelectedGroupForTree] = useState<string>('');
+  const [selectedTreeNodeId, setSelectedTreeNodeId] = useState<string>();
+  const [selectedTreeNode, setSelectedTreeNode] = useState<CodeTreeNode | null>(null);
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -65,6 +86,28 @@ export default function CommonCodePage() {
   });
   const [duplicateCheckResult, setDuplicateCheckResult] = useState<CheckDuplicateResponse | null>(null);
   const [ignoreDuplicate, setIgnoreDuplicate] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkAction, setBulkAction] = useState<{ action: string; label: string } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    node: CodeTreeNode;
+  } | null>(null);
+  const { toast } = useToast();
+
+  const CLASSIFICATION_LABELS: Record<number, string> = {
+    1: '대분류',
+    2: '중분류',
+    3: '소분류',
+    4: '세분류',
+  };
+
+  const CLASSIFICATION_BADGE_COLORS: Record<number, string> = {
+    1: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+    2: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+    3: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+    4: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+  };
 
   const [formData, setFormData] = useState<{
     groupId: string;
@@ -73,6 +116,8 @@ export default function CommonCodePage() {
     nameEn: string;
     description: string;
     sortOrder: number;
+    classificationLevel: ClassificationLevel;
+    parentCodeId: string;
   }>({
     groupId: '',
     code: '',
@@ -80,6 +125,8 @@ export default function CommonCodePage() {
     nameEn: '',
     description: '',
     sortOrder: 0,
+    classificationLevel: 1,
+    parentCodeId: '',
   });
 
   const {
@@ -88,6 +135,7 @@ export default function CommonCodePage() {
     setGroupCode,
     setKeyword,
     setIsActive,
+    setClassificationLevel,
     setPage,
   } = useCommonCodeSearchParams();
 
@@ -101,6 +149,7 @@ export default function CommonCodePage() {
   const updateMutation = useUpdateCommonCode();
   const deleteMutation = useDeleteCommonCode();
   const statusMutation = useUpdateCodeStatus();
+  const bulkStatusMutation = useBulkUpdateCodeStatus();
   const checkDuplicateMutation = useCheckDuplicate();
 
   // Impact and history queries (enabled when dialog is open)
@@ -117,6 +166,36 @@ export default function CommonCodePage() {
   const totalElements = data?.data?.totalElements ?? 0;
   const codeGroups = codeGroupsData?.data?.content ?? [];
 
+  // Fetch all codes (unfiltered) for parent code selection in dialogs
+  const { data: allCodesData } = useCommonCodeList({ size: 200 });
+  const allCodes = allCodesData?.data?.content ?? [];
+
+  // Get parent code options for cascading selection
+  // When level is N, parents must be level N-1 and belong to the same code group
+  const getParentCodeOptions = (level: ClassificationLevel, groupId: string) => {
+    if (level <= 1) return [];
+    const parentLevel = (level - 1) as ClassificationLevel;
+    const group = codeGroups.find(g => g.id === groupId);
+    if (!group) return [];
+    return allCodes.filter(
+      c => c.classificationLevel === parentLevel && c.groupCode === group.code
+    );
+  };
+
+  // Helper to build CommonCodeListItem from CodeTreeNode for use with existing handlers
+  const treeNodeToCodeItem = (node: CodeTreeNode): CommonCodeListItem => ({
+    id: node.id,
+    code: node.code,
+    name: node.name,
+    nameEn: node.nameEn,
+    groupCode: selectedGroupForTree,
+    sortOrder: node.sortOrder,
+    isActive: node.isActive,
+    classificationLevel: (node.level + 1) as ClassificationLevel,
+    classificationPath: '',
+    parentCodeId: '',
+  });
+
   const handleCreateOpen = () => {
     setFormData({
       groupId: '',
@@ -125,6 +204,8 @@ export default function CommonCodePage() {
       nameEn: '',
       description: '',
       sortOrder: 0,
+      classificationLevel: 1,
+      parentCodeId: '',
     });
     setDuplicateCheckResult(null);
     setIgnoreDuplicate(false);
@@ -160,6 +241,8 @@ export default function CommonCodePage() {
       nameEn: code.nameEn || '',
       description: '',
       sortOrder: code.sortOrder,
+      classificationLevel: code.classificationLevel || 1,
+      parentCodeId: code.parentCodeId || '',
     });
     setIsEditDialogOpen(true);
   };
@@ -218,6 +301,8 @@ export default function CommonCodePage() {
         nameEn: formData.nameEn || undefined,
         description: formData.description || undefined,
         sortOrder: formData.sortOrder || undefined,
+        classificationLevel: formData.classificationLevel,
+        parentCodeId: formData.parentCodeId || undefined,
       };
       await createMutation.mutateAsync(createData);
       setIsCreateDialogOpen(false);
@@ -236,6 +321,8 @@ export default function CommonCodePage() {
         nameEn: formData.nameEn || undefined,
         description: formData.description || undefined,
         sortOrder: formData.sortOrder,
+        classificationLevel: formData.classificationLevel,
+        parentCodeId: formData.parentCodeId || undefined,
       };
       await updateMutation.mutateAsync({ id: selectedCode.id, data: updateData });
       setIsEditDialogOpen(false);
@@ -252,6 +339,53 @@ export default function CommonCodePage() {
     } catch (error) {
       console.error('Failed to delete common code:', error);
     }
+  };
+
+  // Bulk selection helpers
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === commonCodes.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(commonCodes.map(c => c.id)));
+    }
+  };
+
+  const handleBulkStatusChange = async () => {
+    if (!bulkAction) return;
+    try {
+      await bulkStatusMutation.mutateAsync({
+        ids: Array.from(selectedIds),
+        status: bulkAction.action,
+      });
+      toast({
+        title: '일괄 상태 변경 완료',
+        description: `${selectedIds.size}개 코드의 상태가 변경되었습니다.`,
+      });
+      setSelectedIds(new Set());
+      setBulkAction(null);
+    } catch (error) {
+      console.error('Failed to bulk update status:', error);
+      toast({
+        title: '일괄 상태 변경 실패',
+        description: '상태 변경 중 오류가 발생했습니다.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const getSelectedCodeNames = () => {
+    return commonCodes
+      .filter(c => selectedIds.has(c.id))
+      .map(c => c.name);
   };
 
   return (
@@ -292,6 +426,17 @@ export default function CommonCodePage() {
               ))}
             </select>
             <select
+              value={searchState.classificationLevel === null ? '' : searchState.classificationLevel.toString()}
+              onChange={(e) => setClassificationLevel(e.target.value === '' ? null : parseInt(e.target.value) as ClassificationLevel)}
+              className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            >
+              <option value="">전체 분류 수준</option>
+              <option value="1">대분류</option>
+              <option value="2">중분류</option>
+              <option value="3">소분류</option>
+              <option value="4">세분류</option>
+            </select>
+            <select
               value={searchState.isActive === null ? '' : searchState.isActive.toString()}
               onChange={(e) => setIsActive(e.target.value === '' ? null : e.target.value === 'true')}
               className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
@@ -300,157 +445,478 @@ export default function CommonCodePage() {
               <option value="true">활성</option>
               <option value="false">비활성</option>
             </select>
+            <div className="flex items-center gap-1 border rounded-md p-0.5">
+              <Button
+                variant={viewMode === 'table' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('table')}
+                className="h-7 px-2"
+              >
+                <LayoutList className="h-4 w-4 mr-1" />
+                테이블
+              </Button>
+              <Button
+                variant={viewMode === 'tree' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('tree')}
+                className="h-7 px-2"
+              >
+                <GitBranch className="h-4 w-4 mr-1" />
+                트리
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="p-4">
-              <SkeletonTable rows={5} />
-            </div>
-          ) : isError ? (
-            <EmptyState
-              icon={Code}
-              title="데이터를 불러올 수 없습니다"
-              description="잠시 후 다시 시도해주세요."
-            />
-          ) : commonCodes.length === 0 ? (
-            <EmptyState
-              icon={Code}
-              title="등록된 공통코드가 없습니다"
-              description={
-                searchState.keyword || searchState.groupCode
-                  ? '검색 조건에 맞는 공통코드가 없습니다.'
-                  : '새로운 공통코드를 추가해주세요.'
-              }
-              action={
-                !searchState.keyword && !searchState.groupCode
-                  ? {
-                      label: '공통코드 추가',
-                      onClick: handleCreateOpen,
-                    }
-                  : undefined
-              }
-            />
-          ) : (
-            <>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b bg-muted/50">
-                      <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        코드그룹
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        코드
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        코드명
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        영문명
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        정렬순서
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        상태
-                      </th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        작업
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {commonCodes.map((code) => (
-                      <tr
-                        key={code.id}
-                        className="border-b transition-colors hover:bg-muted/50"
-                      >
-                        <td className="px-4 py-3 text-sm text-muted-foreground">
-                          {code.groupCode}
-                        </td>
-                        <td className="px-4 py-3 font-mono text-sm">{code.code}</td>
-                        <td className="px-4 py-3 text-sm font-medium">{code.name}</td>
-                        <td className="px-4 py-3 text-sm text-muted-foreground">
-                          {code.nameEn || '-'}
-                        </td>
-                        <td className="px-4 py-3 text-sm">{code.sortOrder}</td>
-                        <td className="px-4 py-3">
-                          <StatusBadge
-                            status={code.isActive ? 'success' : 'default'}
-                            label={code.isActive ? '활성' : '비활성'}
-                          />
-                        </td>
-                        <td className="px-4 py-3">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleEditOpen(code)}>
-                                <Pencil className="mr-2 h-4 w-4" />
-                                수정
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleHistoryOpen(code)}>
-                                <History className="mr-2 h-4 w-4" />
-                                변경 이력
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleImpactOpen(code)}>
-                                <AlertTriangle className="mr-2 h-4 w-4" />
-                                영향도 분석
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              {code.isActive ? (
-                                <DropdownMenuItem onClick={() => handleStatusChangeOpen(code, 'INACTIVE')}>
-                                  <RefreshCw className="mr-2 h-4 w-4" />
-                                  비활성화
-                                </DropdownMenuItem>
-                              ) : (
-                                <DropdownMenuItem onClick={() => handleStatusChangeOpen(code, 'ACTIVE')}>
-                                  <RefreshCw className="mr-2 h-4 w-4" />
-                                  활성화
-                                </DropdownMenuItem>
-                              )}
-                              <DropdownMenuItem
-                                onClick={() => handleStatusChangeOpen(code, 'DEPRECATED')}
-                                className="text-orange-600"
-                              >
-                                <AlertTriangle className="mr-2 h-4 w-4" />
-                                폐기(Deprecated)
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={() => handleDeleteOpen(code)}
-                                className="text-destructive"
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                삭제
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+      {viewMode === 'table' && (
+        <Card>
+          <CardContent className="p-0">
+            {isLoading ? (
+              <div className="p-4">
+                <SkeletonTable rows={5} />
               </div>
-              <Pagination
-                page={searchState.page}
-                totalPages={totalPages}
-                onPageChange={setPage}
+            ) : isError ? (
+              <EmptyState
+                icon={Code}
+                title="데이터를 불러올 수 없습니다"
+                description="잠시 후 다시 시도해주세요."
               />
-              <div className="px-4 pb-3 text-sm text-muted-foreground">
-                총 {totalElements}개
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
+            ) : commonCodes.length === 0 ? (
+              <EmptyState
+                icon={Code}
+                title="등록된 공통코드가 없습니다"
+                description={
+                  searchState.keyword || searchState.groupCode
+                    ? '검색 조건에 맞는 공통코드가 없습니다.'
+                    : '새로운 공통코드를 추가해주세요.'
+                }
+                action={
+                  !searchState.keyword && !searchState.groupCode
+                    ? {
+                        label: '공통코드 추가',
+                        onClick: handleCreateOpen,
+                      }
+                    : undefined
+                }
+              />
+            ) : (
+              <>
+                {selectedIds.size > 0 && (
+                  <div className="flex items-center justify-between border-b bg-blue-50 px-4 py-3 dark:bg-blue-950">
+                    <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                      {selectedIds.size}개 항목 선택됨
+                    </span>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setBulkAction({ action: 'ACTIVE', label: '활성' })}
+                      >
+                        활성화
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setBulkAction({ action: 'INACTIVE', label: '비활성' })}
+                      >
+                        비활성화
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-orange-600 hover:text-orange-700"
+                        onClick={() => setBulkAction({ action: 'DEPRECATED', label: '폐기' })}
+                      >
+                        폐기
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b bg-muted/50">
+                        <th className="px-4 py-3 text-left">
+                          <Checkbox
+                            checked={commonCodes.length > 0 && selectedIds.size === commonCodes.length}
+                            onCheckedChange={toggleSelectAll}
+                            aria-label="전체 선택"
+                          />
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                          코드그룹
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                          코드
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                          코드명
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                          영문명
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                          분류 수준
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                          분류 경로
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                          정렬순서
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                          상태
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
+                          작업
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {commonCodes.map((code) => (
+                        <tr
+                          key={code.id}
+                          className={`border-b transition-colors hover:bg-muted/50 ${selectedIds.has(code.id) ? 'bg-blue-50/50 dark:bg-blue-950/50' : ''}`}
+                        >
+                          <td className="px-4 py-3">
+                            <Checkbox
+                              checked={selectedIds.has(code.id)}
+                              onCheckedChange={() => toggleSelect(code.id)}
+                              aria-label={`${code.name} 선택`}
+                            />
+                          </td>
+                          <td className="px-4 py-3 text-sm text-muted-foreground">
+                            {code.groupCode}
+                          </td>
+                          <td className="px-4 py-3 font-mono text-sm">{code.code}</td>
+                          <td className="px-4 py-3 text-sm font-medium">{code.name}</td>
+                          <td className="px-4 py-3 text-sm text-muted-foreground">
+                            {code.nameEn || '-'}
+                          </td>
+                          <td className="px-4 py-3">
+                            {code.classificationLevel ? (
+                              <Badge
+                                variant="outline"
+                                className={CLASSIFICATION_BADGE_COLORS[code.classificationLevel]}
+                              >
+                                {CLASSIFICATION_LABELS[code.classificationLevel]}
+                              </Badge>
+                            ) : (
+                              <span className="text-sm text-muted-foreground">-</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-muted-foreground">
+                            {code.classificationPath ? (
+                              <span className="inline-flex items-center gap-1 flex-wrap">
+                                {code.classificationPath.split(' > ').map((segment, idx, arr) => (
+                                  <span key={idx} className="inline-flex items-center">
+                                    <span className={idx === arr.length - 1 ? 'font-medium text-foreground' : ''}>
+                                      {segment}
+                                    </span>
+                                    {idx < arr.length - 1 && (
+                                      <ChevronRight className="mx-0.5 h-3 w-3 text-muted-foreground/50" />
+                                    )}
+                                  </span>
+                                ))}
+                              </span>
+                            ) : '-'}
+                          </td>
+                          <td className="px-4 py-3 text-sm">{code.sortOrder}</td>
+                          <td className="px-4 py-3">
+                            <StatusBadge
+                              status={code.isActive ? 'success' : 'default'}
+                              label={code.isActive ? '활성' : '비활성'}
+                            />
+                          </td>
+                          <td className="px-4 py-3">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleEditOpen(code)}>
+                                  <Pencil className="mr-2 h-4 w-4" />
+                                  수정
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleHistoryOpen(code)}>
+                                  <History className="mr-2 h-4 w-4" />
+                                  변경 이력
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleImpactOpen(code)}>
+                                  <AlertTriangle className="mr-2 h-4 w-4" />
+                                  영향도 분석
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                {code.isActive ? (
+                                  <DropdownMenuItem onClick={() => handleStatusChangeOpen(code, 'INACTIVE')}>
+                                    <RefreshCw className="mr-2 h-4 w-4" />
+                                    비활성화
+                                  </DropdownMenuItem>
+                                ) : (
+                                  <DropdownMenuItem onClick={() => handleStatusChangeOpen(code, 'ACTIVE')}>
+                                    <RefreshCw className="mr-2 h-4 w-4" />
+                                    활성화
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem
+                                  onClick={() => handleStatusChangeOpen(code, 'DEPRECATED')}
+                                  className="text-orange-600"
+                                >
+                                  <AlertTriangle className="mr-2 h-4 w-4" />
+                                  폐기(Deprecated)
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => handleDeleteOpen(code)}
+                                  className="text-destructive"
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  삭제
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <Pagination
+                  page={searchState.page}
+                  totalPages={totalPages}
+                  onPageChange={setPage}
+                />
+                <div className="px-4 pb-3 text-sm text-muted-foreground">
+                  총 {totalElements}개
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {viewMode === 'tree' && (
+        <div className="grid grid-cols-12 gap-4">
+          {/* Left: Code Group selector + Tree */}
+          <div className="col-span-5">
+            <Card>
+              <CardHeader className="pb-3">
+                <Select value={selectedGroupForTree} onValueChange={(value) => {
+                  setSelectedGroupForTree(value);
+                  setSelectedTreeNodeId(undefined);
+                  setSelectedTreeNode(null);
+                }}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="코드그룹 선택" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {codeGroups.map((group) => (
+                      <SelectItem key={group.code} value={group.code}>
+                        {group.name} ({group.code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </CardHeader>
+              <CardContent>
+                {selectedGroupForTree ? (
+                  <CodeTree
+                    groupCode={selectedGroupForTree}
+                    selectedId={selectedTreeNodeId}
+                    onSelect={(node) => {
+                      setSelectedTreeNodeId(node.id);
+                      setSelectedTreeNode(node);
+                    }}
+                    onContextMenu={(event, node) => {
+                      setContextMenu({ x: event.clientX, y: event.clientY, node });
+                    }}
+                  />
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-8">
+                    코드그룹을 선택하세요.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right: Selected node detail */}
+          <div className="col-span-7">
+            <Card>
+              {selectedTreeNode ? (
+                <>
+                  <CardHeader>
+                    <CardTitle className="text-base">{selectedTreeNode.name}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">코드</span>
+                        <p className="font-mono font-medium mt-0.5">{selectedTreeNode.code}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">코드명</span>
+                        <p className="font-medium mt-0.5">{selectedTreeNode.name}</p>
+                      </div>
+                      {selectedTreeNode.nameEn && (
+                        <div>
+                          <span className="text-muted-foreground">영문명</span>
+                          <p className="mt-0.5">{selectedTreeNode.nameEn}</p>
+                        </div>
+                      )}
+                      <div>
+                        <span className="text-muted-foreground">상태</span>
+                        <p className="mt-0.5">
+                          <StatusBadge
+                            status={selectedTreeNode.isActive ? 'success' : 'default'}
+                            label={selectedTreeNode.isActive ? '활성' : '비활성'}
+                          />
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">정렬순서</span>
+                        <p className="mt-0.5">{selectedTreeNode.sortOrder}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">계층 레벨</span>
+                        <p className="mt-0.5">{selectedTreeNode.level + 1}단계</p>
+                      </div>
+                      {selectedTreeNode.children.length > 0 && (
+                        <div>
+                          <span className="text-muted-foreground">하위 코드</span>
+                          <p className="mt-0.5">{selectedTreeNode.children.length}개</p>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex gap-2 pt-2 border-t">
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          handleEditOpen(treeNodeToCodeItem(selectedTreeNode));
+                        }}
+                      >
+                        <Pencil className="mr-1 h-3.5 w-3.5" />
+                        수정
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          // Pre-fill create dialog with this node as parent
+                          const group = codeGroups.find(g => g.code === selectedGroupForTree);
+                          setFormData({
+                            groupId: group?.id || '',
+                            code: '',
+                            name: '',
+                            nameEn: '',
+                            description: '',
+                            sortOrder: 0,
+                            classificationLevel: Math.min(selectedTreeNode.level + 2, 4) as ClassificationLevel,
+                            parentCodeId: selectedTreeNode.id,
+                          });
+                          setDuplicateCheckResult(null);
+                          setIgnoreDuplicate(false);
+                          setIsCreateDialogOpen(true);
+                        }}
+                      >
+                        <Plus className="mr-1 h-3.5 w-3.5" />
+                        하위 코드 추가
+                      </Button>
+                    </div>
+                  </CardContent>
+                </>
+              ) : (
+                <CardContent className="flex items-center justify-center py-16 text-muted-foreground">
+                  <p>트리에서 코드를 선택하세요.</p>
+                </CardContent>
+              )}
+            </Card>
+          </div>
+        </div>
+      )}
+
+      {/* Tree Context Menu */}
+      {contextMenu && (
+        <div
+          className="fixed inset-0 z-50"
+          onClick={() => setContextMenu(null)}
+          onContextMenu={(e) => { e.preventDefault(); setContextMenu(null); }}
+        >
+          <div
+            className="absolute bg-popover border rounded-md shadow-md py-1 w-48 z-50"
+            style={{ left: contextMenu.x, top: contextMenu.y }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="w-full px-3 py-1.5 text-sm text-left hover:bg-muted flex items-center gap-2"
+              onClick={() => {
+                handleEditOpen(treeNodeToCodeItem(contextMenu.node));
+                setContextMenu(null);
+              }}
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              수정
+            </button>
+            <button
+              className="w-full px-3 py-1.5 text-sm text-left hover:bg-muted flex items-center gap-2"
+              onClick={() => {
+                const group = codeGroups.find(g => g.code === selectedGroupForTree);
+                setFormData({
+                  groupId: group?.id || '',
+                  code: '',
+                  name: '',
+                  nameEn: '',
+                  description: '',
+                  sortOrder: 0,
+                  classificationLevel: Math.min(contextMenu.node.level + 2, 4) as ClassificationLevel,
+                  parentCodeId: contextMenu.node.id,
+                });
+                setDuplicateCheckResult(null);
+                setIgnoreDuplicate(false);
+                setIsCreateDialogOpen(true);
+                setContextMenu(null);
+              }}
+            >
+              <Plus className="h-3.5 w-3.5" />
+              하위 코드 추가
+            </button>
+            <div className="border-t my-1" />
+            <button
+              className="w-full px-3 py-1.5 text-sm text-left hover:bg-muted flex items-center gap-2"
+              onClick={() => {
+                const newStatus: CodeStatus = contextMenu.node.isActive ? 'INACTIVE' : 'ACTIVE';
+                handleStatusChangeOpen(treeNodeToCodeItem(contextMenu.node), newStatus);
+                setContextMenu(null);
+              }}
+            >
+              {contextMenu.node.isActive ? (
+                <>
+                  <Ban className="h-3.5 w-3.5" />
+                  비활성화
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="h-3.5 w-3.5" />
+                  활성화
+                </>
+              )}
+            </button>
+            <button
+              className="w-full px-3 py-1.5 text-sm text-left hover:bg-muted flex items-center gap-2 text-destructive"
+              onClick={() => {
+                handleDeleteOpen(treeNodeToCodeItem(contextMenu.node));
+                setContextMenu(null);
+              }}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              삭제
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Create Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
@@ -517,6 +983,58 @@ export default function CommonCodePage() {
                 placeholder="예: 연차"
               />
             </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="classificationLevel">분류 수준 *</Label>
+              <Select
+                value={formData.classificationLevel.toString()}
+                onValueChange={(value) => {
+                  const level = parseInt(value) as ClassificationLevel;
+                  setFormData(prev => ({
+                    ...prev,
+                    classificationLevel: level,
+                    parentCodeId: level === 1 ? '' : prev.parentCodeId,
+                  }));
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="분류 수준 선택" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1 - 대분류</SelectItem>
+                  <SelectItem value="2">2 - 중분류</SelectItem>
+                  <SelectItem value="3">3 - 소분류</SelectItem>
+                  <SelectItem value="4">4 - 세분류</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {formData.classificationLevel > 1 && (
+              <div className="grid gap-2">
+                <Label htmlFor="parentCodeId">
+                  상위 분류 ({CLASSIFICATION_LABELS[formData.classificationLevel - 1]}) *
+                </Label>
+                <Select
+                  value={formData.parentCodeId}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, parentCodeId: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={`상위 ${CLASSIFICATION_LABELS[formData.classificationLevel - 1]} 선택`} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getParentCodeOptions(formData.classificationLevel, formData.groupId).map((parentCode) => (
+                      <SelectItem key={parentCode.id} value={parentCode.id}>
+                        {parentCode.classificationPath ? `${parentCode.classificationPath}` : parentCode.name} ({parentCode.code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {formData.groupId && getParentCodeOptions(formData.classificationLevel, formData.groupId).length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    선택한 코드그룹에 {CLASSIFICATION_LABELS[formData.classificationLevel - 1]} 코드가 없습니다. 먼저 상위 분류를 등록해주세요.
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Duplicate Check Result */}
             {duplicateCheckResult && (
@@ -609,6 +1127,7 @@ export default function CommonCodePage() {
                 !formData.groupId ||
                 !formData.code ||
                 !formData.name ||
+                (formData.classificationLevel > 1 && !formData.parentCodeId) ||
                 createMutation.isPending ||
                 (duplicateCheckResult?.hasDuplicate && duplicateCheckResult.duplicateType !== 'SIMILAR' && !ignoreDuplicate)
               }
@@ -649,6 +1168,52 @@ export default function CommonCodePage() {
                 onChange={(e) => setFormData(prev => ({ ...prev, nameEn: e.target.value }))}
               />
             </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-classificationLevel">분류 수준</Label>
+              <Select
+                value={formData.classificationLevel.toString()}
+                onValueChange={(value) => {
+                  const level = parseInt(value) as ClassificationLevel;
+                  setFormData(prev => ({
+                    ...prev,
+                    classificationLevel: level,
+                    parentCodeId: level === 1 ? '' : prev.parentCodeId,
+                  }));
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="분류 수준 선택" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1 - 대분류</SelectItem>
+                  <SelectItem value="2">2 - 중분류</SelectItem>
+                  <SelectItem value="3">3 - 소분류</SelectItem>
+                  <SelectItem value="4">4 - 세분류</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {formData.classificationLevel > 1 && (
+              <div className="grid gap-2">
+                <Label htmlFor="edit-parentCodeId">
+                  상위 분류 ({CLASSIFICATION_LABELS[formData.classificationLevel - 1]})
+                </Label>
+                <Select
+                  value={formData.parentCodeId}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, parentCodeId: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={`상위 ${CLASSIFICATION_LABELS[formData.classificationLevel - 1]} 선택`} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getParentCodeOptions(formData.classificationLevel, formData.groupId).map((parentCode) => (
+                      <SelectItem key={parentCode.id} value={parentCode.id}>
+                        {parentCode.classificationPath ? `${parentCode.classificationPath}` : parentCode.name} ({parentCode.code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="grid gap-2">
               <Label htmlFor="edit-sortOrder">정렬순서</Label>
               <Input
@@ -949,6 +1514,51 @@ export default function CommonCodePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Bulk Status Change AlertDialog */}
+      <AlertDialog open={bulkAction !== null} onOpenChange={(open) => { if (!open) setBulkAction(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>일괄 상태 변경</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p>
+                  {selectedIds.size}개의 코드를 '{bulkAction?.label}'(으)로 변경하시겠습니까?
+                </p>
+                {bulkAction?.action === 'DEPRECATED' && (
+                  <div className="rounded-md bg-orange-50 p-3 text-sm text-orange-800 dark:bg-orange-950 dark:text-orange-200">
+                    <AlertTriangle className="mb-1 inline-block h-4 w-4" />
+                    <span className="ml-2">폐기된 코드는 복구할 수 없습니다.</span>
+                  </div>
+                )}
+                <div className="rounded-md bg-muted p-3 text-sm">
+                  <div className="mb-1 font-medium">영향받는 코드:</div>
+                  <ul className="space-y-0.5 text-muted-foreground">
+                    {getSelectedCodeNames().slice(0, 5).map((name, idx) => (
+                      <li key={idx}>- {name}</li>
+                    ))}
+                    {getSelectedCodeNames().length > 5 && (
+                      <li className="text-muted-foreground">
+                        외 {getSelectedCodeNames().length - 5}건
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkStatusChange}
+              disabled={bulkStatusMutation.isPending}
+              className={bulkAction?.action === 'DEPRECATED' ? 'bg-orange-600 hover:bg-orange-700' : ''}
+            >
+              {bulkStatusMutation.isPending ? '변경 중...' : '확인'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

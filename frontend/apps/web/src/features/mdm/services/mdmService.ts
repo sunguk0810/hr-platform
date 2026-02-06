@@ -215,4 +215,13 @@ export const mdmService = {
     );
     return response.data;
   },
+
+  // Bulk status change
+  async bulkUpdateCodeStatus(ids: string[], status: string): Promise<ApiResponse<{ updatedCount: number }>> {
+    const response = await apiClient.post<ApiResponse<{ updatedCount: number }>>(
+      '/mdm/common-codes/bulk-status',
+      { ids, status }
+    );
+    return response.data;
+  },
 };

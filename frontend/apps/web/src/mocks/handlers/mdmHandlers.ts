@@ -194,51 +194,63 @@ const mockCodeGroups: CodeGroup[] = [
 ];
 
 const mockCommonCodes: CommonCode[] = [
-  // Leave Types
-  { id: 'cc-001', tenantId: 'tenant-001', groupId: 'cg-001', groupCode: 'LEAVE_TYPE', code: 'ANNUAL', name: '연차', nameEn: 'Annual Leave', sortOrder: 1, isActive: true, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
-  { id: 'cc-002', tenantId: 'tenant-001', groupId: 'cg-001', groupCode: 'LEAVE_TYPE', code: 'SICK', name: '병가', nameEn: 'Sick Leave', sortOrder: 2, isActive: true, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
-  { id: 'cc-003', tenantId: 'tenant-001', groupId: 'cg-001', groupCode: 'LEAVE_TYPE', code: 'SPECIAL', name: '특별휴가', nameEn: 'Special Leave', sortOrder: 3, isActive: true, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
-  { id: 'cc-004', tenantId: 'tenant-001', groupId: 'cg-001', groupCode: 'LEAVE_TYPE', code: 'HALF_DAY_AM', name: '반차(오전)', nameEn: 'Half Day (AM)', sortOrder: 4, isActive: true, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
-  { id: 'cc-005', tenantId: 'tenant-001', groupId: 'cg-001', groupCode: 'LEAVE_TYPE', code: 'HALF_DAY_PM', name: '반차(오후)', nameEn: 'Half Day (PM)', sortOrder: 5, isActive: true, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
-  { id: 'cc-006', tenantId: 'tenant-001', groupId: 'cg-001', groupCode: 'LEAVE_TYPE', code: 'MATERNITY', name: '출산휴가', nameEn: 'Maternity Leave', sortOrder: 6, isActive: true, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
-  { id: 'cc-007', tenantId: 'tenant-001', groupId: 'cg-001', groupCode: 'LEAVE_TYPE', code: 'PATERNITY', name: '배우자출산휴가', nameEn: 'Paternity Leave', sortOrder: 7, isActive: true, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
-  { id: 'cc-008', tenantId: 'tenant-001', groupId: 'cg-001', groupCode: 'LEAVE_TYPE', code: 'UNPAID', name: '무급휴가', nameEn: 'Unpaid Leave', sortOrder: 8, isActive: true, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  // Leave Types - with 4-level classification hierarchy
+  // Level 1 (대분류): 휴가
+  { id: 'cc-001', tenantId: 'tenant-001', groupId: 'cg-001', groupCode: 'LEAVE_TYPE', code: 'ANNUAL', name: '연차', nameEn: 'Annual Leave', sortOrder: 1, isActive: true, classificationLevel: 1, classificationPath: '연차', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  { id: 'cc-002', tenantId: 'tenant-001', groupId: 'cg-001', groupCode: 'LEAVE_TYPE', code: 'SICK', name: '병가', nameEn: 'Sick Leave', sortOrder: 2, isActive: true, classificationLevel: 1, classificationPath: '병가', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  { id: 'cc-003', tenantId: 'tenant-001', groupId: 'cg-001', groupCode: 'LEAVE_TYPE', code: 'SPECIAL', name: '특별휴가', nameEn: 'Special Leave', sortOrder: 3, isActive: true, classificationLevel: 1, classificationPath: '특별휴가', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  // Level 2 (중분류): 연차 하위
+  { id: 'cc-004', tenantId: 'tenant-001', groupId: 'cg-001', groupCode: 'LEAVE_TYPE', code: 'HALF_DAY_AM', name: '반차(오전)', nameEn: 'Half Day (AM)', sortOrder: 4, isActive: true, classificationLevel: 2, parentCodeId: 'cc-001', classificationPath: '연차 > 반차(오전)', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  { id: 'cc-005', tenantId: 'tenant-001', groupId: 'cg-001', groupCode: 'LEAVE_TYPE', code: 'HALF_DAY_PM', name: '반차(오후)', nameEn: 'Half Day (PM)', sortOrder: 5, isActive: true, classificationLevel: 2, parentCodeId: 'cc-001', classificationPath: '연차 > 반차(오후)', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  // Level 2 (중분류): 특별휴가 하위
+  { id: 'cc-006', tenantId: 'tenant-001', groupId: 'cg-001', groupCode: 'LEAVE_TYPE', code: 'MATERNITY', name: '출산휴가', nameEn: 'Maternity Leave', sortOrder: 6, isActive: true, classificationLevel: 2, parentCodeId: 'cc-003', classificationPath: '특별휴가 > 출산휴가', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  { id: 'cc-007', tenantId: 'tenant-001', groupId: 'cg-001', groupCode: 'LEAVE_TYPE', code: 'PATERNITY', name: '배우자출산휴가', nameEn: 'Paternity Leave', sortOrder: 7, isActive: true, classificationLevel: 2, parentCodeId: 'cc-003', classificationPath: '특별휴가 > 배우자출산휴가', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  // Level 3 (소분류): 출산휴가 하위
+  { id: 'cc-006-1', tenantId: 'tenant-001', groupId: 'cg-001', groupCode: 'LEAVE_TYPE', code: 'MATERNITY_PRE', name: '출산전 휴가', nameEn: 'Pre-Maternity Leave', sortOrder: 61, isActive: true, classificationLevel: 3, parentCodeId: 'cc-006', classificationPath: '특별휴가 > 출산휴가 > 출산전 휴가', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  { id: 'cc-006-2', tenantId: 'tenant-001', groupId: 'cg-001', groupCode: 'LEAVE_TYPE', code: 'MATERNITY_POST', name: '출산후 휴가', nameEn: 'Post-Maternity Leave', sortOrder: 62, isActive: true, classificationLevel: 3, parentCodeId: 'cc-006', classificationPath: '특별휴가 > 출산휴가 > 출산후 휴가', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  // Level 4 (세분류): 출산전 휴가 하위
+  { id: 'cc-006-1-1', tenantId: 'tenant-001', groupId: 'cg-001', groupCode: 'LEAVE_TYPE', code: 'MATERNITY_PRE_PAID', name: '유급 출산전 휴가', nameEn: 'Paid Pre-Maternity', sortOrder: 611, isActive: true, classificationLevel: 4, parentCodeId: 'cc-006-1', classificationPath: '특별휴가 > 출산휴가 > 출산전 휴가 > 유급 출산전 휴가', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  { id: 'cc-008', tenantId: 'tenant-001', groupId: 'cg-001', groupCode: 'LEAVE_TYPE', code: 'UNPAID', name: '무급휴가', nameEn: 'Unpaid Leave', sortOrder: 8, isActive: true, classificationLevel: 1, classificationPath: '무급휴가', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
 
-  // Employment Status
-  { id: 'cc-011', tenantId: 'tenant-001', groupId: 'cg-002', groupCode: 'EMPLOYMENT_STATUS', code: 'ACTIVE', name: '재직', nameEn: 'Active', sortOrder: 1, isActive: true, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
-  { id: 'cc-012', tenantId: 'tenant-001', groupId: 'cg-002', groupCode: 'EMPLOYMENT_STATUS', code: 'ON_LEAVE', name: '휴직', nameEn: 'On Leave', sortOrder: 2, isActive: true, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
-  { id: 'cc-013', tenantId: 'tenant-001', groupId: 'cg-002', groupCode: 'EMPLOYMENT_STATUS', code: 'RESIGNED', name: '퇴직', nameEn: 'Resigned', sortOrder: 3, isActive: true, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
-  { id: 'cc-014', tenantId: 'tenant-001', groupId: 'cg-002', groupCode: 'EMPLOYMENT_STATUS', code: 'RETIRED', name: '정년퇴직', nameEn: 'Retired', sortOrder: 4, isActive: true, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  // Employment Status (flat - level 1 only)
+  { id: 'cc-011', tenantId: 'tenant-001', groupId: 'cg-002', groupCode: 'EMPLOYMENT_STATUS', code: 'ACTIVE', name: '재직', nameEn: 'Active', sortOrder: 1, isActive: true, classificationLevel: 1, classificationPath: '재직', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  { id: 'cc-012', tenantId: 'tenant-001', groupId: 'cg-002', groupCode: 'EMPLOYMENT_STATUS', code: 'ON_LEAVE', name: '휴직', nameEn: 'On Leave', sortOrder: 2, isActive: true, classificationLevel: 1, classificationPath: '휴직', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  { id: 'cc-013', tenantId: 'tenant-001', groupId: 'cg-002', groupCode: 'EMPLOYMENT_STATUS', code: 'RESIGNED', name: '퇴직', nameEn: 'Resigned', sortOrder: 3, isActive: true, classificationLevel: 1, classificationPath: '퇴직', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  { id: 'cc-014', tenantId: 'tenant-001', groupId: 'cg-002', groupCode: 'EMPLOYMENT_STATUS', code: 'RETIRED', name: '정년퇴직', nameEn: 'Retired', sortOrder: 4, isActive: true, classificationLevel: 1, classificationPath: '정년퇴직', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
 
-  // Gender
-  { id: 'cc-021', tenantId: 'tenant-001', groupId: 'cg-003', groupCode: 'GENDER', code: 'MALE', name: '남성', nameEn: 'Male', sortOrder: 1, isActive: true, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
-  { id: 'cc-022', tenantId: 'tenant-001', groupId: 'cg-003', groupCode: 'GENDER', code: 'FEMALE', name: '여성', nameEn: 'Female', sortOrder: 2, isActive: true, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  // Gender (flat - level 1 only)
+  { id: 'cc-021', tenantId: 'tenant-001', groupId: 'cg-003', groupCode: 'GENDER', code: 'MALE', name: '남성', nameEn: 'Male', sortOrder: 1, isActive: true, classificationLevel: 1, classificationPath: '남성', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  { id: 'cc-022', tenantId: 'tenant-001', groupId: 'cg-003', groupCode: 'GENDER', code: 'FEMALE', name: '여성', nameEn: 'Female', sortOrder: 2, isActive: true, classificationLevel: 1, classificationPath: '여성', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
 
-  // Approval Types
-  { id: 'cc-031', tenantId: 'tenant-001', groupId: 'cg-004', groupCode: 'APPROVAL_TYPE', code: 'LEAVE_REQUEST', name: '휴가신청', nameEn: 'Leave Request', sortOrder: 1, isActive: true, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
-  { id: 'cc-032', tenantId: 'tenant-001', groupId: 'cg-004', groupCode: 'APPROVAL_TYPE', code: 'EXPENSE', name: '경비청구', nameEn: 'Expense', sortOrder: 2, isActive: true, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
-  { id: 'cc-033', tenantId: 'tenant-001', groupId: 'cg-004', groupCode: 'APPROVAL_TYPE', code: 'OVERTIME', name: '초과근무신청', nameEn: 'Overtime', sortOrder: 3, isActive: true, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
-  { id: 'cc-034', tenantId: 'tenant-001', groupId: 'cg-004', groupCode: 'APPROVAL_TYPE', code: 'PERSONNEL', name: '인사관련', nameEn: 'Personnel', sortOrder: 4, isActive: true, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
-  { id: 'cc-035', tenantId: 'tenant-001', groupId: 'cg-004', groupCode: 'APPROVAL_TYPE', code: 'GENERAL', name: '일반기안', nameEn: 'General', sortOrder: 5, isActive: true, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  // Approval Types - with hierarchy
+  // Level 1 (대분류)
+  { id: 'cc-031', tenantId: 'tenant-001', groupId: 'cg-004', groupCode: 'APPROVAL_TYPE', code: 'LEAVE_REQUEST', name: '휴가신청', nameEn: 'Leave Request', sortOrder: 1, isActive: true, classificationLevel: 1, classificationPath: '휴가신청', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  { id: 'cc-032', tenantId: 'tenant-001', groupId: 'cg-004', groupCode: 'APPROVAL_TYPE', code: 'EXPENSE', name: '경비청구', nameEn: 'Expense', sortOrder: 2, isActive: true, classificationLevel: 1, classificationPath: '경비청구', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  { id: 'cc-033', tenantId: 'tenant-001', groupId: 'cg-004', groupCode: 'APPROVAL_TYPE', code: 'OVERTIME', name: '초과근무신청', nameEn: 'Overtime', sortOrder: 3, isActive: true, classificationLevel: 1, classificationPath: '초과근무신청', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  { id: 'cc-034', tenantId: 'tenant-001', groupId: 'cg-004', groupCode: 'APPROVAL_TYPE', code: 'PERSONNEL', name: '인사관련', nameEn: 'Personnel', sortOrder: 4, isActive: true, classificationLevel: 1, classificationPath: '인사관련', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  { id: 'cc-035', tenantId: 'tenant-001', groupId: 'cg-004', groupCode: 'APPROVAL_TYPE', code: 'GENERAL', name: '일반기안', nameEn: 'General', sortOrder: 5, isActive: true, classificationLevel: 1, classificationPath: '일반기안', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  // Level 2 (중분류): 경비청구 하위
+  { id: 'cc-032-1', tenantId: 'tenant-001', groupId: 'cg-004', groupCode: 'APPROVAL_TYPE', code: 'EXPENSE_TRAVEL', name: '출장경비', nameEn: 'Travel Expense', sortOrder: 21, isActive: true, classificationLevel: 2, parentCodeId: 'cc-032', classificationPath: '경비청구 > 출장경비', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  { id: 'cc-032-2', tenantId: 'tenant-001', groupId: 'cg-004', groupCode: 'APPROVAL_TYPE', code: 'EXPENSE_SUPPLY', name: '비품구매', nameEn: 'Supply Expense', sortOrder: 22, isActive: true, classificationLevel: 2, parentCodeId: 'cc-032', classificationPath: '경비청구 > 비품구매', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
 
-  // Positions
-  { id: 'cc-041', tenantId: 'tenant-001', groupId: 'cg-005', groupCode: 'POSITION', code: 'TEAM_LEADER', name: '팀장', nameEn: 'Team Leader', sortOrder: 1, isActive: true, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
-  { id: 'cc-042', tenantId: 'tenant-001', groupId: 'cg-005', groupCode: 'POSITION', code: 'SENIOR', name: '선임', nameEn: 'Senior', sortOrder: 2, isActive: true, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
-  { id: 'cc-043', tenantId: 'tenant-001', groupId: 'cg-005', groupCode: 'POSITION', code: 'MANAGER', name: '매니저', nameEn: 'Manager', sortOrder: 3, isActive: true, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
-  { id: 'cc-044', tenantId: 'tenant-001', groupId: 'cg-005', groupCode: 'POSITION', code: 'STAFF', name: '사원', nameEn: 'Staff', sortOrder: 4, isActive: true, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  // Positions (flat)
+  { id: 'cc-041', tenantId: 'tenant-001', groupId: 'cg-005', groupCode: 'POSITION', code: 'TEAM_LEADER', name: '팀장', nameEn: 'Team Leader', sortOrder: 1, isActive: true, classificationLevel: 1, classificationPath: '팀장', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  { id: 'cc-042', tenantId: 'tenant-001', groupId: 'cg-005', groupCode: 'POSITION', code: 'SENIOR', name: '선임', nameEn: 'Senior', sortOrder: 2, isActive: true, classificationLevel: 1, classificationPath: '선임', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  { id: 'cc-043', tenantId: 'tenant-001', groupId: 'cg-005', groupCode: 'POSITION', code: 'MANAGER', name: '매니저', nameEn: 'Manager', sortOrder: 3, isActive: true, classificationLevel: 1, classificationPath: '매니저', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  { id: 'cc-044', tenantId: 'tenant-001', groupId: 'cg-005', groupCode: 'POSITION', code: 'STAFF', name: '사원', nameEn: 'Staff', sortOrder: 4, isActive: true, classificationLevel: 1, classificationPath: '사원', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
 
-  // Grades
-  { id: 'cc-051', tenantId: 'tenant-001', groupId: 'cg-006', groupCode: 'GRADE', code: 'G1', name: '부장', nameEn: 'Director', sortOrder: 1, isActive: true, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
-  { id: 'cc-052', tenantId: 'tenant-001', groupId: 'cg-006', groupCode: 'GRADE', code: 'G2', name: '차장', nameEn: 'Deputy Director', sortOrder: 2, isActive: true, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
-  { id: 'cc-053', tenantId: 'tenant-001', groupId: 'cg-006', groupCode: 'GRADE', code: 'G3', name: '과장', nameEn: 'Manager', sortOrder: 3, isActive: true, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
-  { id: 'cc-054', tenantId: 'tenant-001', groupId: 'cg-006', groupCode: 'GRADE', code: 'G4', name: '대리', nameEn: 'Assistant Manager', sortOrder: 4, isActive: true, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
-  { id: 'cc-055', tenantId: 'tenant-001', groupId: 'cg-006', groupCode: 'GRADE', code: 'G5', name: '사원', nameEn: 'Staff', sortOrder: 5, isActive: true, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  // Grades (flat)
+  { id: 'cc-051', tenantId: 'tenant-001', groupId: 'cg-006', groupCode: 'GRADE', code: 'G1', name: '부장', nameEn: 'Director', sortOrder: 1, isActive: true, classificationLevel: 1, classificationPath: '부장', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  { id: 'cc-052', tenantId: 'tenant-001', groupId: 'cg-006', groupCode: 'GRADE', code: 'G2', name: '차장', nameEn: 'Deputy Director', sortOrder: 2, isActive: true, classificationLevel: 1, classificationPath: '차장', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  { id: 'cc-053', tenantId: 'tenant-001', groupId: 'cg-006', groupCode: 'GRADE', code: 'G3', name: '과장', nameEn: 'Manager', sortOrder: 3, isActive: true, classificationLevel: 1, classificationPath: '과장', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  { id: 'cc-054', tenantId: 'tenant-001', groupId: 'cg-006', groupCode: 'GRADE', code: 'G4', name: '대리', nameEn: 'Assistant Manager', sortOrder: 4, isActive: true, classificationLevel: 1, classificationPath: '대리', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  { id: 'cc-055', tenantId: 'tenant-001', groupId: 'cg-006', groupCode: 'GRADE', code: 'G5', name: '사원', nameEn: 'Staff', sortOrder: 5, isActive: true, classificationLevel: 1, classificationPath: '사원', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
 
-  // Contract Types
-  { id: 'cc-061', tenantId: 'tenant-001', groupId: 'cg-007', groupCode: 'CONTRACT_TYPE', code: 'PERMANENT', name: '정규직', nameEn: 'Permanent', sortOrder: 1, isActive: true, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
-  { id: 'cc-062', tenantId: 'tenant-001', groupId: 'cg-007', groupCode: 'CONTRACT_TYPE', code: 'CONTRACT', name: '계약직', nameEn: 'Contract', sortOrder: 2, isActive: true, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
-  { id: 'cc-063', tenantId: 'tenant-001', groupId: 'cg-007', groupCode: 'CONTRACT_TYPE', code: 'INTERN', name: '인턴', nameEn: 'Intern', sortOrder: 3, isActive: true, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
-  { id: 'cc-064', tenantId: 'tenant-001', groupId: 'cg-007', groupCode: 'CONTRACT_TYPE', code: 'PART_TIME', name: '파트타임', nameEn: 'Part-time', sortOrder: 4, isActive: true, createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  // Contract Types (flat)
+  { id: 'cc-061', tenantId: 'tenant-001', groupId: 'cg-007', groupCode: 'CONTRACT_TYPE', code: 'PERMANENT', name: '정규직', nameEn: 'Permanent', sortOrder: 1, isActive: true, classificationLevel: 1, classificationPath: '정규직', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  { id: 'cc-062', tenantId: 'tenant-001', groupId: 'cg-007', groupCode: 'CONTRACT_TYPE', code: 'CONTRACT', name: '계약직', nameEn: 'Contract', sortOrder: 2, isActive: true, classificationLevel: 1, classificationPath: '계약직', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  { id: 'cc-063', tenantId: 'tenant-001', groupId: 'cg-007', groupCode: 'CONTRACT_TYPE', code: 'INTERN', name: '인턴', nameEn: 'Intern', sortOrder: 3, isActive: true, classificationLevel: 1, classificationPath: '인턴', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+  { id: 'cc-064', tenantId: 'tenant-001', groupId: 'cg-007', groupCode: 'CONTRACT_TYPE', code: 'PART_TIME', name: '파트타임', nameEn: 'Part-time', sortOrder: 4, isActive: true, classificationLevel: 1, classificationPath: '파트타임', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
 ];
 
 function toCodeGroupListItem(group: CodeGroup): CodeGroupListItem {
@@ -264,6 +276,9 @@ function toCommonCodeListItem(code: CommonCode): CommonCodeListItem {
     sortOrder: code.sortOrder,
     isActive: code.isActive,
     parentCode: code.parentCode,
+    classificationLevel: code.classificationLevel,
+    parentCodeId: code.parentCodeId,
+    classificationPath: code.classificationPath,
   };
 }
 
@@ -445,6 +460,7 @@ export const mdmHandlers = [
     const groupCode = url.searchParams.get('groupCode') || '';
     const keyword = url.searchParams.get('keyword') || '';
     const isActive = url.searchParams.get('isActive');
+    const classificationLevel = url.searchParams.get('classificationLevel');
 
     let filtered = [...mockCommonCodes];
 
@@ -462,6 +478,11 @@ export const mdmHandlers = [
 
     if (isActive !== null && isActive !== '') {
       filtered = filtered.filter(c => c.isActive === (isActive === 'true'));
+    }
+
+    if (classificationLevel !== null && classificationLevel !== '') {
+      const level = parseInt(classificationLevel, 10);
+      filtered = filtered.filter(c => c.classificationLevel === level);
     }
 
     const totalElements = filtered.length;
@@ -544,6 +565,16 @@ export const mdmHandlers = [
       );
     }
 
+    // Build classification path
+    let classificationPath = body.name as string;
+    const parentCodeId = body.parentCodeId as string | undefined;
+    if (parentCodeId) {
+      const parentCode = mockCommonCodes.find(c => c.id === parentCodeId);
+      if (parentCode?.classificationPath) {
+        classificationPath = `${parentCode.classificationPath} > ${body.name as string}`;
+      }
+    }
+
     const newCode: CommonCode = {
       id: `cc-${Date.now()}`,
       tenantId: 'tenant-001',
@@ -557,6 +588,9 @@ export const mdmHandlers = [
       isActive: true,
       parentCode: body.parentCode as string | undefined,
       attributes: body.attributes as Record<string, string> | undefined,
+      classificationLevel: (body.classificationLevel as number | undefined) as CommonCode['classificationLevel'],
+      parentCodeId: parentCodeId,
+      classificationPath,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -790,6 +824,46 @@ export const mdmHandlers = [
         hasDuplicate: false,
         similarCodes,
       },
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // Bulk status change
+  http.post('/api/v1/mdm/common-codes/bulk-status', async ({ request }) => {
+    await delay(500);
+
+    const body = await request.json() as { ids: string[]; status: string };
+    const { ids, status } = body;
+
+    let updatedCount = 0;
+
+    ids.forEach(id => {
+      const code = mockCommonCodes.find(c => c.id === id);
+      if (code) {
+        const previousStatus = code.isActive ? 'ACTIVE' : 'INACTIVE';
+        code.isActive = status === 'ACTIVE';
+        codeStatusMap.set(id, status as CodeStatus);
+        updatedCount++;
+
+        // Add history entry for each code
+        mockCodeHistory.push({
+          id: `ch-${Date.now()}-${id}`,
+          codeId: id,
+          action: 'STATUS_CHANGED',
+          changedField: 'status',
+          oldValue: previousStatus,
+          newValue: status,
+          changedBy: { id: 'user-001', name: '현재 사용자' },
+          changedAt: new Date().toISOString(),
+          reason: '일괄 상태 변경',
+        });
+      }
+    });
+
+    return HttpResponse.json({
+      success: true,
+      message: `${updatedCount}개 코드의 상태가 변경되었습니다.`,
+      data: { updatedCount },
       timestamp: new Date().toISOString(),
     });
   }),
