@@ -763,4 +763,158 @@ export const organizationHandlers = [
       timestamp: new Date().toISOString(),
     });
   }),
+
+  // Get department employees
+  http.get('/api/v1/departments/:id/employees', async ({ params }) => {
+    await delay(300);
+
+    const { id } = params;
+    const department = mockDepartments.find(d => d.id === id);
+
+    if (!department) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'ORG_001', message: '부서를 찾을 수 없습니다.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 404 }
+      );
+    }
+
+    // Mock employees for each department
+    const departmentEmployees: Record<string, Array<{ id: string; name: string; employeeNumber: string; positionName: string; gradeName: string; departmentName: string; departmentId: string; profileImageUrl?: string }>> = {
+      'dept-001': [
+        { id: 'emp-001', name: '홍길동', employeeNumber: 'EMP-2020-001', positionName: '팀장', gradeName: '부장', departmentName: '개발본부', departmentId: 'dept-001' },
+        { id: 'emp-010', name: '윤서준', employeeNumber: 'EMP-2021-010', positionName: '선임', gradeName: '차장', departmentName: '개발본부', departmentId: 'dept-001' },
+      ],
+      'dept-002': [
+        { id: 'emp-002', name: '김철수', employeeNumber: 'EMP-2020-002', positionName: '팀장', gradeName: '과장', departmentName: '프론트엔드팀', departmentId: 'dept-002' },
+        { id: 'emp-011', name: '한예진', employeeNumber: 'EMP-2023-011', positionName: '사원', gradeName: '사원', departmentName: '프론트엔드팀', departmentId: 'dept-002' },
+        { id: 'emp-012', name: '조민기', employeeNumber: 'EMP-2022-012', positionName: '주임', gradeName: '대리', departmentName: '프론트엔드팀', departmentId: 'dept-002' },
+      ],
+      'dept-003': [
+        { id: 'emp-006', name: '정민호', employeeNumber: 'EMP-2020-006', positionName: '팀장', gradeName: '과장', departmentName: '백엔드팀', departmentId: 'dept-003' },
+        { id: 'emp-013', name: '송유진', employeeNumber: 'EMP-2021-013', positionName: '선임', gradeName: '대리', departmentName: '백엔드팀', departmentId: 'dept-003' },
+        { id: 'emp-014', name: '남기훈', employeeNumber: 'EMP-2022-014', positionName: '사원', gradeName: '사원', departmentName: '백엔드팀', departmentId: 'dept-003' },
+      ],
+      'dept-004': [
+        { id: 'emp-015', name: '오세영', employeeNumber: 'EMP-2021-015', positionName: '선임', gradeName: '대리', departmentName: 'QA팀', departmentId: 'dept-004' },
+        { id: 'emp-016', name: '권다은', employeeNumber: 'EMP-2023-016', positionName: '사원', gradeName: '사원', departmentName: 'QA팀', departmentId: 'dept-004' },
+      ],
+      'dept-005': [
+        { id: 'emp-003', name: '이영희', employeeNumber: 'EMP-2019-003', positionName: '팀장', gradeName: '부장', departmentName: '인사팀', departmentId: 'dept-005' },
+        { id: 'emp-004', name: '박지민', employeeNumber: 'EMP-2021-004', positionName: '선임', gradeName: '과장', departmentName: '인사팀', departmentId: 'dept-005' },
+        { id: 'emp-017', name: '황민서', employeeNumber: 'EMP-2022-017', positionName: '주임', gradeName: '대리', departmentName: '인사팀', departmentId: 'dept-005' },
+      ],
+      'dept-006': [
+        { id: 'emp-018', name: '서지현', employeeNumber: 'EMP-2020-018', positionName: '매니저', gradeName: '과장', departmentName: '재무팀', departmentId: 'dept-006' },
+        { id: 'emp-019', name: '전우성', employeeNumber: 'EMP-2022-019', positionName: '사원', gradeName: '사원', departmentName: '재무팀', departmentId: 'dept-006' },
+      ],
+      'dept-007': [
+        { id: 'emp-005', name: '최수진', employeeNumber: 'EMP-2019-005', positionName: '팀장', gradeName: '부장', departmentName: '마케팅본부', departmentId: 'dept-007' },
+        { id: 'emp-020', name: '배진우', employeeNumber: 'EMP-2021-020', positionName: '선임', gradeName: '차장', departmentName: '마케팅본부', departmentId: 'dept-007' },
+      ],
+      'dept-008': [
+        { id: 'emp-021', name: '안소희', employeeNumber: 'EMP-2022-021', positionName: '선임', gradeName: '대리', departmentName: '디지털마케팅팀', departmentId: 'dept-008' },
+        { id: 'emp-022', name: '노태민', employeeNumber: 'EMP-2023-022', positionName: '사원', gradeName: '사원', departmentName: '디지털마케팅팀', departmentId: 'dept-008' },
+      ],
+      'dept-009': [
+        { id: 'emp-007', name: '강하늘', employeeNumber: 'EMP-2020-007', positionName: '팀장', gradeName: '과장', departmentName: '브랜드팀', departmentId: 'dept-009' },
+        { id: 'emp-023', name: '문지원', employeeNumber: 'EMP-2021-023', positionName: '선임', gradeName: '대리', departmentName: '브랜드팀', departmentId: 'dept-009' },
+      ],
+      'dept-010': [
+        { id: 'emp-009', name: '임준혁', employeeNumber: 'EMP-2019-009', positionName: '팀장', gradeName: '부장', departmentName: '영업팀', departmentId: 'dept-010' },
+        { id: 'emp-008', name: '윤서연', employeeNumber: 'EMP-2020-008', positionName: '선임', gradeName: '과장', departmentName: '영업팀', departmentId: 'dept-010' },
+        { id: 'emp-024', name: '유재현', employeeNumber: 'EMP-2022-024', positionName: '주임', gradeName: '대리', departmentName: '영업팀', departmentId: 'dept-010' },
+      ],
+    };
+
+    const employees = departmentEmployees[id as string] || [];
+
+    return HttpResponse.json({
+      success: true,
+      data: employees,
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // Get department reorg impact analysis
+  http.get('/api/v1/organizations/departments/:id/impact', async ({ params, request }) => {
+    await delay(400);
+
+    const { id } = params;
+    const url = new URL(request.url);
+    const changeType = url.searchParams.get('changeType') || 'delete';
+
+    const department = mockDepartments.find(d => d.id === id);
+
+    if (!department) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'ORG_001', message: '부서를 찾을 수 없습니다.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 404 }
+      );
+    }
+
+    // Generate mock affected employees based on the department
+    const mockEmployees = [
+      {
+        id: 'emp-101',
+        name: '김민수',
+        employeeNumber: 'EMP-2020-001',
+        currentDepartment: department.name,
+        newDepartment: changeType === 'delete' ? '미정' : changeType === 'merge' ? '통합부서' : department.name,
+        position: '과장',
+      },
+      {
+        id: 'emp-102',
+        name: '박지영',
+        employeeNumber: 'EMP-2020-002',
+        currentDepartment: department.name,
+        newDepartment: changeType === 'delete' ? '미정' : changeType === 'merge' ? '통합부서' : department.name,
+        position: '대리',
+      },
+      {
+        id: 'emp-103',
+        name: '이승훈',
+        employeeNumber: 'EMP-2021-003',
+        currentDepartment: department.name,
+        newDepartment: changeType === 'delete' ? '-' : changeType === 'merge' ? '통합부서' : department.name,
+        position: '팀장',
+      },
+      {
+        id: 'emp-104',
+        name: '정수현',
+        employeeNumber: 'EMP-2022-004',
+        currentDepartment: department.name,
+        newDepartment: changeType === 'delete' ? '미정' : changeType === 'merge' ? '통합부서' : department.name,
+        position: '사원',
+      },
+      {
+        id: 'emp-105',
+        name: '한예진',
+        employeeNumber: 'EMP-2023-005',
+        currentDepartment: department.name,
+        newDepartment: changeType === 'delete' ? '미정' : changeType === 'merge' ? '통합부서' : department.name,
+        position: '사원',
+      },
+    ];
+
+    // Limit employees based on department employee count (capped at our mock list size)
+    const count = Math.min(department.employeeCount, mockEmployees.length);
+    const employees = mockEmployees.slice(0, count);
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        affectedCount: count,
+        employees,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  }),
 ];

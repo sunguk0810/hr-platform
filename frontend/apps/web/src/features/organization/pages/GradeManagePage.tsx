@@ -18,8 +18,9 @@ import {
 } from '@/components/ui/dialog';
 import { EmptyState } from '@/components/common/EmptyState';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import { Plus, Pencil, Trash2, GraduationCap, GripVertical } from 'lucide-react';
+import { Plus, Pencil, Trash2, GraduationCap, GripVertical, DollarSign } from 'lucide-react';
 import { useGrades, useCreateGrade, useUpdateGrade, useDeleteGrade } from '../hooks/useOrganization';
+import { SalaryStepSettings } from '../components/SalaryStepSettings';
 import type { Grade, CreateGradeRequest, UpdateGradeRequest } from '@hr-platform/shared-types';
 
 export default function GradeManagePage() {
@@ -29,6 +30,7 @@ export default function GradeManagePage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedGrade, setSelectedGrade] = useState<Grade | null>(null);
+  const [salaryStepGradeId, setSalaryStepGradeId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<CreateGradeRequest>({
     code: '',
@@ -111,6 +113,10 @@ export default function GradeManagePage() {
     } catch (error) {
       console.error('Failed to delete grade:', error);
     }
+  };
+
+  const handleToggleSalaryStep = (gradeId: string) => {
+    setSalaryStepGradeId((prev) => (prev === gradeId ? null : gradeId));
   };
 
   const handleRefresh = async () => {
@@ -393,6 +399,15 @@ export default function GradeManagePage() {
                       variant="outline"
                       size="sm"
                       className="flex-1"
+                      onClick={() => handleToggleSalaryStep(grade.id)}
+                    >
+                      <DollarSign className="mr-1 h-4 w-4" />
+                      호봉 설정
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
                       onClick={() => handleEditOpen(grade)}
                     >
                       <Pencil className="mr-1 h-4 w-4" />
@@ -407,6 +422,12 @@ export default function GradeManagePage() {
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
+
+                  {salaryStepGradeId === grade.id && (
+                    <div className="mt-3">
+                      <SalaryStepSettings gradeId={grade.id} gradeName={grade.name} />
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -475,6 +496,9 @@ export default function GradeManagePage() {
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                       순서
                     </th>
+                    <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
+                      호봉
+                    </th>
                     <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
                       작업
                     </th>
@@ -493,6 +517,16 @@ export default function GradeManagePage() {
                         </td>
                         <td className="px-4 py-3 text-sm">{grade.level}</td>
                         <td className="px-4 py-3 text-sm">{grade.sortOrder}</td>
+                        <td className="px-4 py-3 text-center">
+                          <Button
+                            variant={salaryStepGradeId === grade.id ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => handleToggleSalaryStep(grade.id)}
+                          >
+                            <DollarSign className="mr-1 h-4 w-4" />
+                            호봉 설정
+                          </Button>
+                        </td>
                         <td className="px-4 py-3 text-right">
                           <div className="flex justify-end gap-2">
                             <Button
@@ -519,6 +553,16 @@ export default function GradeManagePage() {
           )}
         </CardContent>
       </Card>
+
+      {salaryStepGradeId && (() => {
+        const grade = grades.find((g) => g.id === salaryStepGradeId);
+        if (!grade) return null;
+        return (
+          <div className="mt-6">
+            <SalaryStepSettings gradeId={grade.id} gradeName={grade.name} />
+          </div>
+        );
+      })()}
 
       {renderDialogs()}
     </>

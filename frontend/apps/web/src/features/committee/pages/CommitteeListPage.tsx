@@ -9,8 +9,9 @@ import { PullToRefreshContainer } from '@/components/mobile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users2, Plus, ChevronRight } from 'lucide-react';
+import { Users2, Plus, ChevronRight, Info, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useCommittees } from '../hooks/useCommittee';
@@ -29,6 +30,9 @@ export default function CommitteeListPage() {
   const isMobile = useIsMobile();
   const [status, setStatus] = useState<CommitteeStatus | ''>('');
   const [page, setPage] = useState(0);
+  const [showSyncBanner, setShowSyncBanner] = useState(true);
+  const pendingSyncCount = 2; // mock count
+  const lastSyncTime = '2024-12-20 14:30';
 
   const { data, isLoading } = useCommittees({
     status: status || undefined,
@@ -53,12 +57,28 @@ export default function CommitteeListPage() {
             <div>
               <h1 className="text-xl font-bold">위원회 관리</h1>
               <p className="text-sm text-muted-foreground">사내 위원회 현황</p>
+              <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                <RefreshCw className="h-3 w-3" />
+                마지막 동기화: {lastSyncTime}
+              </p>
             </div>
             <Button size="sm" onClick={() => navigate('/committee/new')}>
               <Plus className="mr-1 h-4 w-4" />
               등록
             </Button>
           </div>
+
+          {/* 당연직 자동 변경 알림 배너 */}
+          {showSyncBanner && pendingSyncCount > 0 && (
+            <Alert variant="info" className="mb-0">
+              <Info className="h-4 w-4" />
+              <AlertTitle>위원 자동 변경 알림</AlertTitle>
+              <AlertDescription className="flex items-center justify-between">
+                <span>인사발령에 의한 위원 자동 변경이 {pendingSyncCount}건 대기 중입니다.</span>
+                <Button variant="outline" size="sm" onClick={() => setShowSyncBanner(false)}>확인</Button>
+              </AlertDescription>
+            </Alert>
+          )}
 
           {/* Mobile Tab Filters */}
           <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
@@ -113,6 +133,11 @@ export default function CommitteeListPage() {
                         <span className="text-xs text-muted-foreground">
                           {COMMITTEE_TYPE_LABELS[committee.type]}
                         </span>
+                        {committee.exOfficioCount > 0 && (
+                          <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-xs">
+                            당연직 {committee.exOfficioCount}명
+                          </Badge>
+                        )}
                       </div>
                       <p className="font-medium text-sm">{committee.name}</p>
                       <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
@@ -150,6 +175,22 @@ export default function CommitteeListPage() {
           </Button>
         }
       />
+
+      <p className="text-xs text-muted-foreground flex items-center gap-1 -mt-4 mb-4">
+        <RefreshCw className="h-3 w-3" />
+        마지막 동기화: {lastSyncTime}
+      </p>
+
+      {showSyncBanner && pendingSyncCount > 0 && (
+        <Alert variant="info" className="mb-4">
+          <Info className="h-4 w-4" />
+          <AlertTitle>위원 자동 변경 알림</AlertTitle>
+          <AlertDescription className="flex items-center justify-between">
+            <span>인사발령에 의한 위원 자동 변경이 {pendingSyncCount}건 대기 중입니다.</span>
+            <Button variant="outline" size="sm" onClick={() => setShowSyncBanner(false)}>확인</Button>
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Card>
         <CardHeader>
@@ -192,6 +233,7 @@ export default function CommitteeListPage() {
                         <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">위원회명</th>
                         <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">유형</th>
                         <th scope="col" className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">위원 수</th>
+                        <th scope="col" className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">당연직</th>
                         <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">시작일</th>
                         <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">상태</th>
                       </tr>
@@ -209,6 +251,15 @@ export default function CommitteeListPage() {
                           <td className="px-4 py-3 text-sm font-medium">{committee.name}</td>
                           <td className="px-4 py-3 text-sm">{COMMITTEE_TYPE_LABELS[committee.type]}</td>
                           <td className="px-4 py-3 text-sm text-right">{committee.memberCount}명</td>
+                          <td className="px-4 py-3 text-center">
+                            {committee.exOfficioCount > 0 ? (
+                              <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                                당연직 {committee.exOfficioCount}명
+                              </Badge>
+                            ) : (
+                              <span className="text-sm text-muted-foreground">-</span>
+                            )}
+                          </td>
                           <td className="px-4 py-3 text-sm">{committee.startDate}</td>
                           <td className="px-4 py-3">
                             <Badge className={cn(STATUS_COLORS[committee.status])} role="status">

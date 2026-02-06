@@ -19,12 +19,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Building2, Plus, Pencil, Trash2, Users, User, Search, RefreshCw } from 'lucide-react';
+import { Building2, Plus, Pencil, Trash2, Users, User, Search, RefreshCw, GitMerge } from 'lucide-react';
 import { EmptyState } from '@/components/common/EmptyState';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { usePermission } from '@/components/common/PermissionGate';
 import { OrgTree } from '../components/OrgTree';
 import { DepartmentAccordion, DepartmentDetailSheet } from '../components/mobile';
+import { ReorgImpactModal, type ReorgChangeType } from '../components/ReorgImpactModal';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { cn } from '@/lib/utils';
@@ -43,6 +44,8 @@ export default function OrganizationPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
+  const [isReorgImpactOpen, setIsReorgImpactOpen] = useState(false);
+  const [reorgChangeType, setReorgChangeType] = useState<ReorgChangeType>('delete');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedIds, setExpandedIds] = useState<string[]>([]);
   const isMobile = useIsMobile();
@@ -113,6 +116,11 @@ export default function OrganizationPage() {
 
   const handleDeleteOpen = () => {
     setIsDeleteDialogOpen(true);
+  };
+
+  const handleReorgImpactOpen = (type: ReorgChangeType) => {
+    setReorgChangeType(type);
+    setIsReorgImpactOpen(true);
   };
 
   const handleCreate = async () => {
@@ -414,6 +422,10 @@ export default function OrganizationPage() {
                   <Pencil className="mr-1 h-4 w-4" />
                   수정
                 </Button>
+                <Button variant="outline" size="sm" onClick={() => handleReorgImpactOpen('delete')}>
+                  <GitMerge className="mr-1 h-4 w-4" />
+                  영향도 분석
+                </Button>
                 <Button variant="outline" size="sm" onClick={handleDeleteOpen}>
                   <Trash2 className="mr-1 h-4 w-4" />
                   삭제
@@ -639,6 +651,23 @@ export default function OrganizationPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Reorg Impact Analysis Modal */}
+      {selectedNode && (
+        <ReorgImpactModal
+          open={isReorgImpactOpen}
+          onOpenChange={setIsReorgImpactOpen}
+          changeType={reorgChangeType}
+          sourceDepartment={{ id: selectedNode.id, name: selectedNode.name }}
+          onConfirm={() => {
+            if (reorgChangeType === 'delete') {
+              handleDelete();
+            } else if (reorgChangeType === 'rename') {
+              handleEditOpen();
+            }
+          }}
+        />
+      )}
     </>
   );
 }
