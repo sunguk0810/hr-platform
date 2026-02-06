@@ -38,7 +38,7 @@ export default function CertificateIssueHistoryPage() {
 
   const certificateTypes = typesData?.data ?? [];
   const issues = issuesData?.data?.content ?? [];
-  const totalPages = issuesData?.data?.totalPages ?? 0;
+  const totalPages = issuesData?.data?.page?.totalPages ?? 0;
 
   const handleDownload = async (issue: CertificateIssue) => {
     if (issue.isRevoked) {

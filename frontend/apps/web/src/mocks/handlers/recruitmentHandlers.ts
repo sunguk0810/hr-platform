@@ -464,7 +464,19 @@ export const recruitmentHandlers = [
 
     return HttpResponse.json({
       success: true,
-      data: { content, page, size, totalElements, totalPages, first: page === 0, last: page >= totalPages - 1 },
+      data: {
+        content,
+        page: {
+          number: page,
+          size,
+          totalElements,
+          totalPages,
+          first: page === 0,
+          last: page >= totalPages - 1,
+          hasNext: page < totalPages - 1,
+          hasPrevious: page > 0,
+        },
+      },
       timestamp: new Date().toISOString(),
     });
   }),
@@ -636,7 +648,19 @@ export const recruitmentHandlers = [
 
     return HttpResponse.json({
       success: true,
-      data: { content, page, size, totalElements, totalPages, first: page === 0, last: page >= totalPages - 1 },
+      data: {
+        content,
+        page: {
+          number: page,
+          size,
+          totalElements,
+          totalPages,
+          first: page === 0,
+          last: page >= totalPages - 1,
+          hasNext: page < totalPages - 1,
+          hasPrevious: page > 0,
+        },
+      },
       timestamp: new Date().toISOString(),
     });
   }),
@@ -696,7 +720,19 @@ export const recruitmentHandlers = [
 
     return HttpResponse.json({
       success: true,
-      data: { content, page, size, totalElements, totalPages, first: page === 0, last: page >= totalPages - 1 },
+      data: {
+        content,
+        page: {
+          number: page,
+          size,
+          totalElements,
+          totalPages,
+          first: page === 0,
+          last: page >= totalPages - 1,
+          hasNext: page < totalPages - 1,
+          hasPrevious: page > 0,
+        },
+      },
       timestamp: new Date().toISOString(),
     });
   }),
@@ -881,7 +917,19 @@ export const recruitmentHandlers = [
 
     return HttpResponse.json({
       success: true,
-      data: { content, page, size, totalElements, totalPages, first: page === 0, last: page >= totalPages - 1 },
+      data: {
+        content,
+        page: {
+          number: page,
+          size,
+          totalElements,
+          totalPages,
+          first: page === 0,
+          last: page >= totalPages - 1,
+          hasNext: page < totalPages - 1,
+          hasPrevious: page > 0,
+        },
+      },
       timestamp: new Date().toISOString(),
     });
   }),
@@ -911,7 +959,19 @@ export const recruitmentHandlers = [
 
     return HttpResponse.json({
       success: true,
-      data: { content, page, size, totalElements, totalPages, first: page === 0, last: page >= totalPages - 1 },
+      data: {
+        content,
+        page: {
+          number: page,
+          size,
+          totalElements,
+          totalPages,
+          first: page === 0,
+          last: page >= totalPages - 1,
+          hasNext: page < totalPages - 1,
+          hasPrevious: page > 0,
+        },
+      },
       timestamp: new Date().toISOString(),
     });
   }),
@@ -1234,7 +1294,19 @@ export const recruitmentHandlers = [
 
     return HttpResponse.json({
       success: true,
-      data: { content: mockOffers, page, size, totalElements: 1, totalPages: 1, first: true, last: true },
+      data: {
+        content: mockOffers,
+        page: {
+          number: page,
+          size,
+          totalElements: 1,
+          totalPages: 1,
+          first: true,
+          last: true,
+          hasNext: false,
+          hasPrevious: false,
+        },
+      },
       timestamp: new Date().toISOString(),
     });
   }),

@@ -1,6 +1,6 @@
 # Common environment variables for all application services
 x-common-env: &common-env
-  SPRING_PROFILES_ACTIVE: docker
+  SPRING_PROFILES_ACTIVE: dev
   DB_HOST: postgres
   DB_PORT: "5432"
   DB_USERNAME: hr_saas
@@ -42,6 +42,7 @@ services:
       - hr-saas-network
   redis:
     image: redis:7-alpine
+    platform: linux/amd64
     container_name: hr-saas-redis
     command: redis-server --requirepass redis_password
     ports:
@@ -114,10 +115,9 @@ services:
     image: traefik:v3.3
     container_name: hr-saas-traefik
     ports:
-      - "8080:8080"
-      - "8090:8090"
+      - "18080:8080"
+      - "18090:8090"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
       - ./traefik/dynamic:/etc/traefik/dynamic:ro
     networks:

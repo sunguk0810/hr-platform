@@ -70,9 +70,9 @@ export default function CondolencePaymentPage() {
   const bulkProcessPaymentMutation = useBulkProcessPayment();
 
   const pendingList = pendingData?.data?.content ?? [];
-  const pendingTotalPages = pendingData?.data?.totalPages ?? 0;
+  const pendingTotalPages = pendingData?.data?.page?.totalPages ?? 0;
   const historyList = historyData?.data?.content ?? [];
-  const historyTotalPages = historyData?.data?.totalPages ?? 0;
+  const historyTotalPages = historyData?.data?.page?.totalPages ?? 0;
 
   const totalPendingAmount = pendingList
     .filter((item) => selectedIds.has(item.id))

@@ -26,7 +26,7 @@ export default function AppointmentListPage() {
   const { data: summaryData, isLoading: isSummaryLoading } = useAppointmentSummary();
 
   const drafts = draftsData?.data?.content ?? [];
-  const totalPages = draftsData?.data?.totalPages ?? 0;
+  const totalPages = draftsData?.data?.page?.totalPages ?? 0;
   const summary = summaryData?.data;
 
   const handleTabChange = (value: string) => {

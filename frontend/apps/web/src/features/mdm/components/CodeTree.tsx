@@ -78,13 +78,13 @@ function TreeNode({ node, onSelect, onContextMenu, selectedId, level }: TreeNode
 
         <span className="ml-1 font-mono text-sm">{node.code}</span>
         <span className="text-muted-foreground">-</span>
-        <span className="flex-1 truncate text-sm">{node.name}</span>
-        {node.nameEn && (
-          <span className="text-xs text-muted-foreground">({node.nameEn})</span>
+        <span className="flex-1 truncate text-sm">{node.codeName}</span>
+        {node.codeNameEn && (
+          <span className="text-xs text-muted-foreground">({node.codeNameEn})</span>
         )}
         <StatusBadge
-          status={node.isActive ? 'success' : 'default'}
-          label={node.isActive ? '활성' : '비활성'}
+          status={node.active ? 'success' : 'default'}
+          label={node.active ? '활성' : '비활성'}
         />
       </div>
 
@@ -188,12 +188,12 @@ export function CodeTreeView({ groupCode, className }: CodeTreeViewProps) {
             </div>
             <div>
               <div className="text-sm text-muted-foreground">코드명</div>
-              <div className="font-medium">{selectedNode.name}</div>
+              <div className="font-medium">{selectedNode.codeName}</div>
             </div>
-            {selectedNode.nameEn && (
+            {selectedNode.codeNameEn && (
               <div>
                 <div className="text-sm text-muted-foreground">영문명</div>
-                <div>{selectedNode.nameEn}</div>
+                <div>{selectedNode.codeNameEn}</div>
               </div>
             )}
             <div>
@@ -207,8 +207,8 @@ export function CodeTreeView({ groupCode, className }: CodeTreeViewProps) {
             <div>
               <div className="text-sm text-muted-foreground">상태</div>
               <StatusBadge
-                status={selectedNode.isActive ? 'success' : 'default'}
-                label={selectedNode.isActive ? '활성' : '비활성'}
+                status={selectedNode.active ? 'success' : 'default'}
+                label={selectedNode.active ? '활성' : '비활성'}
               />
             </div>
             {selectedNode.children.length > 0 && (

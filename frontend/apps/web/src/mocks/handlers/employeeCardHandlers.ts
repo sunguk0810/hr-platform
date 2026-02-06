@@ -69,10 +69,16 @@ export const employeeCardHandlers = [
       success: true,
       data: {
         content: filtered.slice(page * size, (page + 1) * size),
-        page,
-        size,
-        totalElements: filtered.length,
-        totalPages: Math.ceil(filtered.length / size),
+        page: {
+          number: page,
+          size,
+          totalElements: filtered.length,
+          totalPages: Math.ceil(filtered.length / size),
+          first: page === 0,
+          last: page >= Math.ceil(filtered.length / size) - 1,
+          hasNext: page < Math.ceil(filtered.length / size) - 1,
+          hasPrevious: page > 0,
+        },
       },
     });
   }),
@@ -134,10 +140,16 @@ export const employeeCardHandlers = [
         content: [
           { id: 'req-1', requestNumber: 'CIR-2026-0001', employeeName: '신입사원', employeeNumber: 'E2026001', departmentName: '개발팀', issueType: 'NEW', status: 'PENDING', createdAt: '2026-02-01T09:00:00Z' },
         ],
-        page: 0,
-        size: 10,
-        totalElements: 1,
-        totalPages: 1,
+        page: {
+          number: 0,
+          size: 10,
+          totalElements: 1,
+          totalPages: 1,
+          first: true,
+          last: true,
+          hasNext: false,
+          hasPrevious: false,
+        },
       },
     });
   }),

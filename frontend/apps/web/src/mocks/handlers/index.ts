@@ -1,3 +1,4 @@
+import { isMockEnabled } from '../../lib/featureFlags';
 import { authHandlers } from './authHandlers';
 import { dashboardHandlers } from './dashboardHandlers';
 import { employeeHandlers } from './employeeHandlers';
@@ -26,32 +27,39 @@ import { myInfoChangeHandlers } from './myInfoChangeHandlers';
 import { fileUploadPolicyHandlers } from './fileUploadPolicyHandlers';
 import { notificationChannelHandlers } from './notificationChannelHandlers';
 
-export const handlers = [
-  ...authHandlers,
-  ...dashboardHandlers,
-  ...employeeHandlers,
-  ...mdmHandlers,
-  ...organizationHandlers,
-  ...attendanceHandlers,
-  ...approvalHandlers,
-  ...appointmentHandlers,
-  ...tenantHandlers,
-  ...auditHandlers,
-  ...notificationHandlers,
-  ...fileHandlers,
-  ...announcementHandlers,
-  ...certificateHandlers,
-  ...recruitmentHandlers,
-  ...transferHandlers,
-  ...headcountHandlers,
-  ...condolenceHandlers,
-  ...committeeHandlers,
-  ...employeeCardHandlers,
-  ...menuHandlers,
-  ...profileHandlers,
-  ...helpHandlers,
-  ...employeeNumberRuleHandlers,
-  ...myInfoChangeHandlers,
-  ...fileUploadPolicyHandlers,
-  ...notificationChannelHandlers,
-];
+export function getActiveHandlers() {
+  const handlers: any[] = [];
+
+  if (isMockEnabled('auth')) handlers.push(...authHandlers);
+  if (isMockEnabled('dashboard')) handlers.push(...dashboardHandlers);
+  if (isMockEnabled('employee')) handlers.push(...employeeHandlers);
+  if (isMockEnabled('mdm')) handlers.push(...mdmHandlers);
+  if (isMockEnabled('organization')) handlers.push(...organizationHandlers);
+  if (isMockEnabled('attendance')) handlers.push(...attendanceHandlers);
+  if (isMockEnabled('approval')) handlers.push(...approvalHandlers);
+  if (isMockEnabled('appointment')) handlers.push(...appointmentHandlers);
+  if (isMockEnabled('tenant')) handlers.push(...tenantHandlers);
+  if (isMockEnabled('audit')) handlers.push(...auditHandlers);
+  if (isMockEnabled('notification')) handlers.push(...notificationHandlers);
+  if (isMockEnabled('file')) handlers.push(...fileHandlers);
+  if (isMockEnabled('announcement')) handlers.push(...announcementHandlers);
+  if (isMockEnabled('certificate')) handlers.push(...certificateHandlers);
+  if (isMockEnabled('recruitment')) handlers.push(...recruitmentHandlers);
+  if (isMockEnabled('transfer')) handlers.push(...transferHandlers);
+  if (isMockEnabled('headcount')) handlers.push(...headcountHandlers);
+  if (isMockEnabled('condolence')) handlers.push(...condolenceHandlers);
+  if (isMockEnabled('committee')) handlers.push(...committeeHandlers);
+  if (isMockEnabled('employee_card')) handlers.push(...employeeCardHandlers);
+  if (isMockEnabled('menu')) handlers.push(...menuHandlers);
+  if (isMockEnabled('profile')) handlers.push(...profileHandlers);
+  if (isMockEnabled('help')) handlers.push(...helpHandlers);
+  if (isMockEnabled('employee_number_rule')) handlers.push(...employeeNumberRuleHandlers);
+  if (isMockEnabled('my_info_change')) handlers.push(...myInfoChangeHandlers);
+  if (isMockEnabled('file_upload_policy')) handlers.push(...fileUploadPolicyHandlers);
+  if (isMockEnabled('notification_channel')) handlers.push(...notificationChannelHandlers);
+
+  return handlers;
+}
+
+// Backward compatibility
+export const handlers = getActiveHandlers();

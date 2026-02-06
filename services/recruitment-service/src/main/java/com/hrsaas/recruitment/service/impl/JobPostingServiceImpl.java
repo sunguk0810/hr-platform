@@ -103,7 +103,7 @@ public class JobPostingServiceImpl implements JobPostingService {
     }
 
     @Override
-    @Cacheable(value = "jobPostings", key = "'active'")
+    @Cacheable(value = "jobPostings", key = "'active'", unless = "#result == null || #result.isEmpty()")
     public Page<JobPostingResponse> getActivePostings(Pageable pageable) {
         return jobPostingRepository.findActiveJobPostings(LocalDate.now(), pageable)
                 .map(JobPostingResponse::from);

@@ -88,7 +88,7 @@ public class CertificateTemplateServiceImpl implements CertificateTemplateServic
     }
 
     @Override
-    @Cacheable(value = "certificateTemplates", key = "'active'")
+    @Cacheable(value = "certificateTemplates", key = "'active'", unless = "#result == null || #result.isEmpty()")
     public List<CertificateTemplateResponse> getActiveTemplates() {
         return certificateTemplateRepository.findByActiveTrueOrderByNameAsc().stream()
                 .map(CertificateTemplateResponse::from)

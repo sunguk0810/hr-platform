@@ -206,15 +206,15 @@ export function CommonCodeList({
                     </td>
                   )}
                   <td className="px-4 py-3 font-mono text-sm">{code.code}</td>
-                  <td className="px-4 py-3 text-sm font-medium">{code.name}</td>
+                  <td className="px-4 py-3 text-sm font-medium">{code.codeName}</td>
                   <td className="px-4 py-3 text-sm text-muted-foreground">
-                    {code.nameEn || '-'}
+                    {code.codeNameEn || '-'}
                   </td>
                   <td className="px-4 py-3 text-sm text-center">{code.sortOrder}</td>
                   <td className="px-4 py-3">
                     <StatusBadge
-                      status={code.isActive ? 'success' : 'default'}
-                      label={code.isActive ? '활성' : '비활성'}
+                      status={code.active ? 'success' : 'default'}
+                      label={code.active ? '활성' : '비활성'}
                     />
                   </td>
                   <td className="px-4 py-3">
@@ -293,27 +293,27 @@ export function CommonCodeCompactList({
               'w-full flex items-center justify-between px-3 py-2 rounded-md text-sm',
               'transition-colors hover:bg-muted',
               selectedCode === code.id && 'bg-primary/10 text-primary',
-              !code.isActive && 'opacity-60'
+              !code.active && 'opacity-60'
             )}
           >
             <div className="flex items-center gap-2 min-w-0">
               <span className="font-mono text-xs text-muted-foreground">
                 {code.code}
               </span>
-              <span className="truncate">{code.name}</span>
+              <span className="truncate">{code.codeName}</span>
             </div>
             <div className="flex items-center gap-1 ml-2">
-              {!code.isActive && (
+              {!code.active && (
                 <Badge variant="secondary" className="text-[10px] px-1 py-0">
                   비활성
                 </Badge>
               )}
-              {code.nameEn && (
+              {code.codeNameEn && (
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Info className="h-3 w-3 text-muted-foreground" />
                   </TooltipTrigger>
-                  <TooltipContent>{code.nameEn}</TooltipContent>
+                  <TooltipContent>{code.codeNameEn}</TooltipContent>
                 </Tooltip>
               )}
             </div>

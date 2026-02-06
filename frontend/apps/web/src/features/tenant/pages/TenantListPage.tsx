@@ -86,8 +86,8 @@ export default function TenantListPage() {
   const createMutation = useCreateTenant();
 
   const tenants = data?.data?.content ?? [];
-  const totalPages = data?.data?.totalPages ?? 0;
-  const totalElements = data?.data?.totalElements ?? 0;
+  const totalPages = data?.data?.page?.totalPages ?? 0;
+  const totalElements = data?.data?.page?.totalElements ?? 0;
   const treeNodes = treeData?.data ?? [];
 
   // 그룹사 목록 (레벨 0인 테넌트)

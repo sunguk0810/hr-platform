@@ -4,6 +4,9 @@ import com.hrsaas.mdm.domain.dto.request.CreateCommonCodeRequest;
 import com.hrsaas.mdm.domain.dto.request.UpdateCommonCodeRequest;
 import com.hrsaas.mdm.domain.dto.response.CodeTreeResponse;
 import com.hrsaas.mdm.domain.dto.response.CommonCodeResponse;
+import com.hrsaas.mdm.domain.entity.CodeStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.UUID;
@@ -13,6 +16,8 @@ public interface CommonCodeService {
     CommonCodeResponse create(CreateCommonCodeRequest request);
 
     CommonCodeResponse getById(UUID id);
+
+    Page<CommonCodeResponse> getAll(String keyword, String groupCode, CodeStatus status, Pageable pageable);
 
     List<CommonCodeResponse> getByGroupCode(String groupCode);
 

@@ -60,8 +60,8 @@ export default function MyApprovalsPage() {
   });
 
   const approvals = data?.data?.content ?? [];
-  const totalPages = data?.data?.totalPages ?? 0;
-  const totalElements = data?.data?.totalElements ?? 0;
+  const totalPages = data?.data?.page?.totalPages ?? 0;
+  const totalElements = data?.data?.page?.totalElements ?? 0;
 
   const handleRowClick = (id: string) => {
     navigate(`/approvals/${id}`);

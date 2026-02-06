@@ -34,7 +34,7 @@ export default function EmployeeCardListPage() {
   });
 
   const cards = data?.data?.content ?? [];
-  const totalPages = data?.data?.totalPages ?? 0;
+  const totalPages = data?.data?.page?.totalPages ?? 0;
 
   return (
     <>

@@ -142,7 +142,7 @@ export default function LeaveRequestPage() {
   const balance = balanceData?.data;
   const balanceByType = balanceByTypeData?.data ?? [];
   const requests = requestsData?.data?.content ?? [];
-  const totalPages = requestsData?.data?.totalPages ?? 0;
+  const totalPages = requestsData?.data?.page?.totalPages ?? 0;
 
   const isHourlyType = formData.leaveType === 'HOURLY';
   const isHalfDayType = formData.leaveType?.startsWith('HALF_DAY') ?? false;

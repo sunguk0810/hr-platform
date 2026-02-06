@@ -88,8 +88,8 @@ export function useInfiniteAnnouncementList(params: Omit<AnnouncementListParams,
       return response.data;
     },
     getNextPageParam: (lastPage) => {
-      if (lastPage.last) return undefined;
-      return lastPage.page + 1;
+      if (lastPage.page.last) return undefined;
+      return lastPage.page.number + 1;
     },
     initialPageParam: 0,
   });

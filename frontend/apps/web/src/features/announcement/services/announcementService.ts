@@ -40,12 +40,16 @@ export interface AnnouncementListParams {
 
 export interface AnnouncementListResponse {
   content: AnnouncementListItem[];
-  page: number;
-  size: number;
-  totalElements: number;
-  totalPages: number;
-  first: boolean;
-  last: boolean;
+  page: {
+    number: number;
+    size: number;
+    totalElements: number;
+    totalPages: number;
+    first: boolean;
+    last: boolean;
+    hasNext: boolean;
+    hasPrevious: boolean;
+  };
 }
 
 export interface CreateAnnouncementRequest {

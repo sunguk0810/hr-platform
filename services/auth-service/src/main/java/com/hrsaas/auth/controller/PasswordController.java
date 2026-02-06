@@ -5,6 +5,7 @@ import com.hrsaas.auth.domain.dto.request.ResetPasswordConfirmRequest;
 import com.hrsaas.auth.domain.dto.request.ResetPasswordRequest;
 import com.hrsaas.auth.service.PasswordService;
 import com.hrsaas.common.response.ApiResponse;
+import com.hrsaas.common.security.SecurityContextHolder;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -23,8 +24,8 @@ public class PasswordController {
     @PostMapping("/change")
     @Operation(summary = "비밀번호 변경", description = "현재 비밀번호를 확인 후 새 비밀번호로 변경합니다.")
     public ResponseEntity<ApiResponse<Void>> changePassword(
-            @RequestHeader("X-User-ID") String userId,
             @Valid @RequestBody ChangePasswordRequest request) {
+        String userId = SecurityContextHolder.getCurrentUserId().toString();
         passwordService.changePassword(userId, request);
         return ResponseEntity.ok(ApiResponse.success(null, "비밀번호가 성공적으로 변경되었습니다."));
     }

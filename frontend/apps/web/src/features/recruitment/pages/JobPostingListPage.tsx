@@ -44,7 +44,7 @@ export default function JobPostingListPage() {
 
   const summary = summaryData?.data ?? { total: 0, open: 0, closed: 0, completed: 0, draft: 0 };
   const jobs = data?.data?.content ?? [];
-  const totalPages = data?.data?.totalPages ?? 0;
+  const totalPages = data?.data?.page?.totalPages ?? 0;
 
   const handleRowClick = (id: string) => {
     navigate(`/recruitment/jobs/${id}`);

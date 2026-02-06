@@ -70,6 +70,7 @@ export interface ApiResponse<T> {
   success: boolean;
   data: T;
   message?: string;
+  code?: string;
   timestamp: string;
 }
 
@@ -85,10 +86,14 @@ export interface ApiError {
 
 export interface PageResponse<T> {
   content: T[];
-  page: number;
-  size: number;
-  totalElements: number;
-  totalPages: number;
-  first: boolean;
-  last: boolean;
+  page: {
+    number: number;
+    size: number;
+    totalElements: number;
+    totalPages: number;
+    first: boolean;
+    last: boolean;
+    hasNext: boolean;
+    hasPrevious: boolean;
+  };
 }

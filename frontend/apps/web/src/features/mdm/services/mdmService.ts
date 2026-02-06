@@ -30,16 +30,16 @@ import type {
 } from '@hr-platform/shared-types';
 
 export const mdmService = {
-  // Code Groups
-  async getCodeGroups(params?: CodeGroupSearchParams): Promise<ApiResponse<PageResponse<CodeGroupListItem>>> {
-    const response = await apiClient.get<ApiResponse<PageResponse<CodeGroupListItem>>>('/mdm/code-groups', {
+  // Code Groups — backend returns List<CodeGroupResponse> (non-paginated)
+  async getCodeGroups(params?: CodeGroupSearchParams): Promise<ApiResponse<CodeGroupListItem[]>> {
+    const response = await apiClient.get<ApiResponse<CodeGroupListItem[]>>('/mdm/code-groups', {
       params,
     });
     return response.data;
   },
 
-  async getCodeGroup(id: string): Promise<ApiResponse<CodeGroup>> {
-    const response = await apiClient.get<ApiResponse<CodeGroup>>(`/mdm/code-groups/${id}`);
+  async getCodeGroup(groupCode: string): Promise<ApiResponse<CodeGroup>> {
+    const response = await apiClient.get<ApiResponse<CodeGroup>>(`/mdm/code-groups/${groupCode}`);
     return response.data;
   },
 
@@ -58,7 +58,7 @@ export const mdmService = {
     return response.data;
   },
 
-  // Common Codes
+  // Common Codes — backend returns PageResponse via new paginated endpoint
   async getCommonCodes(params?: CommonCodeSearchParams): Promise<ApiResponse<PageResponse<CommonCodeListItem>>> {
     const response = await apiClient.get<ApiResponse<PageResponse<CommonCodeListItem>>>('/mdm/common-codes', {
       params,
@@ -145,9 +145,9 @@ export const mdmService = {
     return response.data;
   },
 
-  // Get code history
-  async getCodeHistory(id: string, params?: CodeHistorySearchParams): Promise<ApiResponse<PageResponse<CodeHistory>>> {
-    const response = await apiClient.get<ApiResponse<PageResponse<CodeHistory>>>(
+  // Get code history — backend returns List<CodeHistoryResponse> (non-paginated)
+  async getCodeHistory(id: string, params?: CodeHistorySearchParams): Promise<ApiResponse<CodeHistory[]>> {
+    const response = await apiClient.get<ApiResponse<CodeHistory[]>>(
       `/mdm/common-codes/${id}/history`,
       { params }
     );

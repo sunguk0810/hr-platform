@@ -1,1 +1,1 @@
-export { handlers } from './handlers/index';
+export { handlers, getActiveHandlers } from './handlers/index';

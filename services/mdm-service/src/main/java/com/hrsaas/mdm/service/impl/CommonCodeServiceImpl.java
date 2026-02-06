@@ -11,6 +11,7 @@ import com.hrsaas.mdm.domain.dto.request.UpdateCommonCodeRequest;
 import com.hrsaas.mdm.domain.dto.response.CodeTreeResponse;
 import com.hrsaas.mdm.domain.dto.response.CommonCodeResponse;
 import com.hrsaas.mdm.domain.entity.CodeGroup;
+import com.hrsaas.mdm.domain.entity.CodeStatus;
 import com.hrsaas.mdm.domain.entity.CommonCode;
 import com.hrsaas.mdm.domain.event.CommonCodeCreatedEvent;
 import com.hrsaas.mdm.domain.event.CommonCodeUpdatedEvent;
@@ -21,6 +22,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -103,7 +106,19 @@ public class CommonCodeServiceImpl implements CommonCodeService {
     }
 
     @Override
-    @Cacheable(value = CacheNames.COMMON_CODE, key = "#groupCode")
+    public Page<CommonCodeResponse> getAll(String keyword, String groupCode, CodeStatus status, Pageable pageable) {
+        UUID tenantId = TenantContext.getCurrentTenant();
+        Page<CommonCode> page;
+        if (keyword != null && !keyword.isBlank()) {
+            page = commonCodeRepository.findAllWithKeyword(tenantId, keyword, groupCode, status, pageable);
+        } else {
+            page = commonCodeRepository.findAllNoKeyword(tenantId, groupCode, status, pageable);
+        }
+        return page.map(CommonCodeResponse::from);
+    }
+
+    @Override
+    @Cacheable(value = CacheNames.COMMON_CODE, key = "#groupCode", unless = "#result == null || #result.isEmpty()")
     public List<CommonCodeResponse> getByGroupCode(String groupCode) {
         UUID tenantId = TenantContext.getCurrentTenant();
 
@@ -111,7 +126,7 @@ public class CommonCodeServiceImpl implements CommonCodeService {
 
         return codes.stream()
             .map(CommonCodeResponse::from)
-            .toList();
+            .collect(Collectors.toList());
     }
 
     @Override
@@ -212,7 +227,7 @@ public class CommonCodeServiceImpl implements CommonCodeService {
     }
 
     @Override
-    @Cacheable(value = "mdm:codeTree", key = "#groupCode")
+    @Cacheable(value = "mdm:codeTree", key = "#groupCode", unless = "#result == null || #result.isEmpty()")
     public List<CodeTreeResponse> getCodeTree(String groupCode) {
         UUID tenantId = TenantContext.getCurrentTenant();
         List<CommonCode> allCodes = commonCodeRepository.findByGroupCode(groupCode, tenantId);

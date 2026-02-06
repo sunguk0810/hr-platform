@@ -100,7 +100,7 @@ export default function ApprovalListPage() {
 
   const summary = summaryData?.data ?? { pending: 0, approved: 0, rejected: 0, draft: 0 };
   const approvals = data?.data?.content ?? [];
-  const totalPages = data?.data?.totalPages ?? 0;
+  const totalPages = data?.data?.page?.totalPages ?? 0;
 
   // Flatten infinite query pages for mobile
   const mobileApprovals = useMemo(() => {

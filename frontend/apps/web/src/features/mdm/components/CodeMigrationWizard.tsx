@@ -47,7 +47,7 @@ export function CodeMigrationWizard({ open, onOpenChange, sourceCode }: CodeMigr
   const [result, setResult] = useState<MigrationResult | null>(null);
 
   const { data: codeGroupsData } = useCodeGroupList({ size: 100 });
-  const codeGroups = codeGroupsData?.data?.content ?? [];
+  const codeGroups = codeGroupsData?.data ?? [];
 
   const { data: codesData } = useCommonCodeList({ groupCode, size: 100 });
   const codes = codesData?.data?.content ?? [];
@@ -174,8 +174,8 @@ export function CodeMigrationWizard({ open, onOpenChange, sourceCode }: CodeMigr
                 </SelectTrigger>
                 <SelectContent>
                   {codeGroups.map((group) => (
-                    <SelectItem key={group.id} value={group.code}>
-                      {group.name} ({group.code})
+                    <SelectItem key={group.id} value={group.groupCode}>
+                      {group.groupName} ({group.groupCode})
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -194,7 +194,7 @@ export function CodeMigrationWizard({ open, onOpenChange, sourceCode }: CodeMigr
                       .filter(c => c.id !== selectedTargetId)
                       .map((code) => (
                         <SelectItem key={code.id} value={code.id}>
-                          {code.code} - {code.name}
+                          {code.code} - {code.codeName}
                         </SelectItem>
                       ))}
                   </SelectContent>
@@ -204,12 +204,12 @@ export function CodeMigrationWizard({ open, onOpenChange, sourceCode }: CodeMigr
                     <CardContent className="p-3">
                       <div className="text-sm">
                         <span className="font-mono font-medium">{selectedSource.code}</span>
-                        <span className="ml-2 text-muted-foreground">{selectedSource.name}</span>
+                        <span className="ml-2 text-muted-foreground">{selectedSource.codeName}</span>
                       </div>
                       <div className="mt-1">
                         <StatusBadge
-                          status={selectedSource.isActive ? 'success' : 'default'}
-                          label={selectedSource.isActive ? '활성' : '비활성'}
+                          status={selectedSource.active ? 'success' : 'default'}
+                          label={selectedSource.active ? '활성' : '비활성'}
                         />
                       </div>
                     </CardContent>
@@ -232,7 +232,7 @@ export function CodeMigrationWizard({ open, onOpenChange, sourceCode }: CodeMigr
                       .filter(c => c.id !== selectedSourceId)
                       .map((code) => (
                         <SelectItem key={code.id} value={code.id}>
-                          {code.code} - {code.name}
+                          {code.code} - {code.codeName}
                         </SelectItem>
                       ))}
                   </SelectContent>
@@ -242,12 +242,12 @@ export function CodeMigrationWizard({ open, onOpenChange, sourceCode }: CodeMigr
                     <CardContent className="p-3">
                       <div className="text-sm">
                         <span className="font-mono font-medium">{selectedTarget.code}</span>
-                        <span className="ml-2 text-muted-foreground">{selectedTarget.name}</span>
+                        <span className="ml-2 text-muted-foreground">{selectedTarget.codeName}</span>
                       </div>
                       <div className="mt-1">
                         <StatusBadge
-                          status={selectedTarget.isActive ? 'success' : 'default'}
-                          label={selectedTarget.isActive ? '활성' : '비활성'}
+                          status={selectedTarget.active ? 'success' : 'default'}
+                          label={selectedTarget.active ? '활성' : '비활성'}
                         />
                       </div>
                     </CardContent>

@@ -56,7 +56,7 @@ export default function HeadcountRequestsPage() {
   const { data: requestsData, isLoading } = useHeadcountRequests(params);
 
   const requests = requestsData?.data?.content ?? [];
-  const totalPages = requestsData?.data?.totalPages ?? 0;
+  const totalPages = requestsData?.data?.page?.totalPages ?? 0;
 
   const handleTabChange = (value: string) => {
     if (value === 'all') {

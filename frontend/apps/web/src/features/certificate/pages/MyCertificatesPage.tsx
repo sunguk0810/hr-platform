@@ -33,7 +33,7 @@ export default function MyCertificatesPage() {
 
   const certificateTypes = typesData?.data ?? [];
   const requests = requestsData?.data?.content ?? [];
-  const totalPages = requestsData?.data?.totalPages ?? 0;
+  const totalPages = requestsData?.data?.page?.totalPages ?? 0;
 
   // Count stats
   const pendingCount = requests.filter(r => r.status === 'PENDING').length;

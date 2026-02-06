@@ -1,5 +1,6 @@
 package com.hrsaas.employee.config;
 
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -34,5 +35,12 @@ public class SecurityConfig {
             )
             .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
             .build();
+    }
+
+    @Bean
+    public FilterRegistrationBean<SecurityFilter> securityFilterRegistration(SecurityFilter securityFilter) {
+        FilterRegistrationBean<SecurityFilter> registration = new FilterRegistrationBean<>(securityFilter);
+        registration.setEnabled(false);
+        return registration;
     }
 }

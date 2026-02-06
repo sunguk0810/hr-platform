@@ -38,7 +38,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Code, Plus, Search, Pencil, Trash2, MoreHorizontal, History, AlertTriangle, RefreshCw, ChevronRight, LayoutList, GitBranch, Ban, CheckCircle } from 'lucide-react';
+import { Code, Plus, Search, Pencil, Trash2, MoreHorizontal, History, AlertTriangle, RefreshCw, LayoutList, GitBranch, Ban, CheckCircle } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -60,7 +60,7 @@ import {
   useCodeHistory,
   useCheckDuplicate,
 } from '../hooks/useMdm';
-import type { CommonCodeListItem, CreateCommonCodeRequest, UpdateCommonCodeRequest, CodeStatus, CheckDuplicateResponse, ClassificationLevel, CodeTreeNode } from '@hr-platform/shared-types';
+import type { CommonCodeListItem, CreateCommonCodeRequest, UpdateCommonCodeRequest, CodeStatus, CheckDuplicateResponse, CodeTreeNode } from '@hr-platform/shared-types';
 import { CodeTree } from '../components/CodeTree';
 
 export default function CommonCodePage() {
@@ -112,20 +112,20 @@ export default function CommonCodePage() {
   const [formData, setFormData] = useState<{
     groupId: string;
     code: string;
-    name: string;
-    nameEn: string;
+    codeName: string;
+    codeNameEn: string;
     description: string;
     sortOrder: number;
-    classificationLevel: ClassificationLevel;
+    level: number;
     parentCodeId: string;
   }>({
     groupId: '',
     code: '',
-    name: '',
-    nameEn: '',
+    codeName: '',
+    codeNameEn: '',
     description: '',
     sortOrder: 0,
-    classificationLevel: 1,
+    level: 1,
     parentCodeId: '',
   });
 
@@ -134,8 +134,7 @@ export default function CommonCodePage() {
     searchState,
     setGroupCode,
     setKeyword,
-    setIsActive,
-    setClassificationLevel,
+    setStatus,
     setPage,
   } = useCommonCodeSearchParams();
 
@@ -144,7 +143,7 @@ export default function CommonCodePage() {
   }, [debouncedKeyword, setKeyword]);
 
   const { data, isLoading, isError } = useCommonCodeList(params);
-  const { data: codeGroupsData } = useCodeGroupList({ size: 100 });
+  const { data: codeGroupsData } = useCodeGroupList();
   const createMutation = useCreateCommonCode();
   const updateMutation = useUpdateCommonCode();
   const deleteMutation = useDeleteCommonCode();
@@ -162,9 +161,10 @@ export default function CommonCodePage() {
   );
 
   const commonCodes = data?.data?.content ?? [];
-  const totalPages = data?.data?.totalPages ?? 0;
-  const totalElements = data?.data?.totalElements ?? 0;
-  const codeGroups = codeGroupsData?.data?.content ?? [];
+  const totalPages = data?.data?.page?.totalPages ?? 0;
+  const totalElements = data?.data?.page?.totalElements ?? 0;
+  // Backend returns List (array) for code groups
+  const codeGroups = codeGroupsData?.data ?? [];
 
   // Fetch all codes (unfiltered) for parent code selection in dialogs
   const { data: allCodesData } = useCommonCodeList({ size: 200 });
@@ -172,13 +172,13 @@ export default function CommonCodePage() {
 
   // Get parent code options for cascading selection
   // When level is N, parents must be level N-1 and belong to the same code group
-  const getParentCodeOptions = (level: ClassificationLevel, groupId: string) => {
+  const getParentCodeOptions = (level: number, groupId: string) => {
     if (level <= 1) return [];
-    const parentLevel = (level - 1) as ClassificationLevel;
+    const parentLevel = level - 1;
     const group = codeGroups.find(g => g.id === groupId);
     if (!group) return [];
     return allCodes.filter(
-      c => c.classificationLevel === parentLevel && c.groupCode === group.code
+      c => c.level === parentLevel && c.groupCode === group.groupCode
     );
   };
 
@@ -186,13 +186,13 @@ export default function CommonCodePage() {
   const treeNodeToCodeItem = (node: CodeTreeNode): CommonCodeListItem => ({
     id: node.id,
     code: node.code,
-    name: node.name,
-    nameEn: node.nameEn,
+    codeName: node.codeName,
+    codeNameEn: node.codeNameEn,
     groupCode: selectedGroupForTree,
     sortOrder: node.sortOrder,
-    isActive: node.isActive,
-    classificationLevel: (node.level + 1) as ClassificationLevel,
-    classificationPath: '',
+    active: node.active,
+    status: node.active ? 'ACTIVE' : 'INACTIVE',
+    level: node.level + 1,
     parentCodeId: '',
   });
 
@@ -200,11 +200,11 @@ export default function CommonCodePage() {
     setFormData({
       groupId: '',
       code: '',
-      name: '',
-      nameEn: '',
+      codeName: '',
+      codeNameEn: '',
       description: '',
       sortOrder: 0,
-      classificationLevel: 1,
+      level: 1,
       parentCodeId: '',
     });
     setDuplicateCheckResult(null);
@@ -214,16 +214,16 @@ export default function CommonCodePage() {
 
   // Check for duplicates when code or name changes
   const handleCheckDuplicate = async () => {
-    if (!formData.groupId || !formData.code || !formData.name) return;
+    if (!formData.groupId || !formData.code || !formData.codeName) return;
 
     const group = codeGroups.find(g => g.id === formData.groupId);
     if (!group) return;
 
     try {
       const result = await checkDuplicateMutation.mutateAsync({
-        groupCode: group.code,
+        groupCode: group.groupCode,
         code: formData.code,
-        name: formData.name,
+        name: formData.codeName,
       });
       setDuplicateCheckResult(result.data);
     } catch (error) {
@@ -233,15 +233,15 @@ export default function CommonCodePage() {
 
   const handleEditOpen = (code: CommonCodeListItem) => {
     setSelectedCode(code);
-    const group = codeGroups.find(g => g.code === code.groupCode);
+    const group = codeGroups.find(g => g.groupCode === code.groupCode);
     setFormData({
       groupId: group?.id || '',
       code: code.code,
-      name: code.name,
-      nameEn: code.nameEn || '',
+      codeName: code.codeName,
+      codeNameEn: code.codeNameEn || '',
       description: '',
       sortOrder: code.sortOrder,
-      classificationLevel: code.classificationLevel || 1,
+      level: code.level || 1,
       parentCodeId: code.parentCodeId || '',
     });
     setIsEditDialogOpen(true);
@@ -295,13 +295,12 @@ export default function CommonCodePage() {
 
     try {
       const createData: CreateCommonCodeRequest = {
-        groupId: formData.groupId,
+        codeGroupId: formData.groupId,
         code: formData.code,
-        name: formData.name,
-        nameEn: formData.nameEn || undefined,
+        codeName: formData.codeName,
+        codeNameEn: formData.codeNameEn || undefined,
         description: formData.description || undefined,
         sortOrder: formData.sortOrder || undefined,
-        classificationLevel: formData.classificationLevel,
         parentCodeId: formData.parentCodeId || undefined,
       };
       await createMutation.mutateAsync(createData);
@@ -317,11 +316,10 @@ export default function CommonCodePage() {
     if (!selectedCode) return;
     try {
       const updateData: UpdateCommonCodeRequest = {
-        name: formData.name,
-        nameEn: formData.nameEn || undefined,
+        codeName: formData.codeName,
+        codeNameEn: formData.codeNameEn || undefined,
         description: formData.description || undefined,
         sortOrder: formData.sortOrder,
-        classificationLevel: formData.classificationLevel,
         parentCodeId: formData.parentCodeId || undefined,
       };
       await updateMutation.mutateAsync({ id: selectedCode.id, data: updateData });
@@ -385,7 +383,7 @@ export default function CommonCodePage() {
   const getSelectedCodeNames = () => {
     return commonCodes
       .filter(c => selectedIds.has(c.id))
-      .map(c => c.name);
+      .map(c => c.codeName);
   };
 
   return (
@@ -420,30 +418,20 @@ export default function CommonCodePage() {
             >
               <option value="">전체 코드그룹</option>
               {codeGroups.map((group) => (
-                <option key={group.id} value={group.code}>
-                  {group.name}
+                <option key={group.id} value={group.groupCode}>
+                  {group.groupName}
                 </option>
               ))}
             </select>
             <select
-              value={searchState.classificationLevel === null ? '' : searchState.classificationLevel.toString()}
-              onChange={(e) => setClassificationLevel(e.target.value === '' ? null : parseInt(e.target.value) as ClassificationLevel)}
-              className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-            >
-              <option value="">전체 분류 수준</option>
-              <option value="1">대분류</option>
-              <option value="2">중분류</option>
-              <option value="3">소분류</option>
-              <option value="4">세분류</option>
-            </select>
-            <select
-              value={searchState.isActive === null ? '' : searchState.isActive.toString()}
-              onChange={(e) => setIsActive(e.target.value === '' ? null : e.target.value === 'true')}
+              value={searchState.status === null ? '' : searchState.status}
+              onChange={(e) => setStatus(e.target.value === '' ? null : e.target.value as 'ACTIVE' | 'INACTIVE' | 'DEPRECATED')}
               className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
             >
               <option value="">전체 상태</option>
-              <option value="true">활성</option>
-              <option value="false">비활성</option>
+              <option value="ACTIVE">활성</option>
+              <option value="INACTIVE">비활성</option>
+              <option value="DEPRECATED">폐기</option>
             </select>
             <div className="flex items-center gap-1 border rounded-md p-0.5">
               <Button
@@ -560,9 +548,6 @@ export default function CommonCodePage() {
                           분류 수준
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          분류 경로
-                        </th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                           정렬순서
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
@@ -583,50 +568,34 @@ export default function CommonCodePage() {
                             <Checkbox
                               checked={selectedIds.has(code.id)}
                               onCheckedChange={() => toggleSelect(code.id)}
-                              aria-label={`${code.name} 선택`}
+                              aria-label={`${code.codeName} 선택`}
                             />
                           </td>
                           <td className="px-4 py-3 text-sm text-muted-foreground">
                             {code.groupCode}
                           </td>
                           <td className="px-4 py-3 font-mono text-sm">{code.code}</td>
-                          <td className="px-4 py-3 text-sm font-medium">{code.name}</td>
+                          <td className="px-4 py-3 text-sm font-medium">{code.codeName}</td>
                           <td className="px-4 py-3 text-sm text-muted-foreground">
-                            {code.nameEn || '-'}
+                            {code.codeNameEn || '-'}
                           </td>
                           <td className="px-4 py-3">
-                            {code.classificationLevel ? (
+                            {code.level ? (
                               <Badge
                                 variant="outline"
-                                className={CLASSIFICATION_BADGE_COLORS[code.classificationLevel]}
+                                className={CLASSIFICATION_BADGE_COLORS[code.level]}
                               >
-                                {CLASSIFICATION_LABELS[code.classificationLevel]}
+                                {CLASSIFICATION_LABELS[code.level]}
                               </Badge>
                             ) : (
                               <span className="text-sm text-muted-foreground">-</span>
                             )}
                           </td>
-                          <td className="px-4 py-3 text-sm text-muted-foreground">
-                            {code.classificationPath ? (
-                              <span className="inline-flex items-center gap-1 flex-wrap">
-                                {code.classificationPath.split(' > ').map((segment, idx, arr) => (
-                                  <span key={idx} className="inline-flex items-center">
-                                    <span className={idx === arr.length - 1 ? 'font-medium text-foreground' : ''}>
-                                      {segment}
-                                    </span>
-                                    {idx < arr.length - 1 && (
-                                      <ChevronRight className="mx-0.5 h-3 w-3 text-muted-foreground/50" />
-                                    )}
-                                  </span>
-                                ))}
-                              </span>
-                            ) : '-'}
-                          </td>
                           <td className="px-4 py-3 text-sm">{code.sortOrder}</td>
                           <td className="px-4 py-3">
                             <StatusBadge
-                              status={code.isActive ? 'success' : 'default'}
-                              label={code.isActive ? '활성' : '비활성'}
+                              status={code.active ? 'success' : 'default'}
+                              label={code.active ? '활성' : '비활성'}
                             />
                           </td>
                           <td className="px-4 py-3">
@@ -650,7 +619,7 @@ export default function CommonCodePage() {
                                   영향도 분석
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                {code.isActive ? (
+                                {code.active ? (
                                   <DropdownMenuItem onClick={() => handleStatusChangeOpen(code, 'INACTIVE')}>
                                     <RefreshCw className="mr-2 h-4 w-4" />
                                     비활성화
@@ -714,8 +683,8 @@ export default function CommonCodePage() {
                   </SelectTrigger>
                   <SelectContent>
                     {codeGroups.map((group) => (
-                      <SelectItem key={group.code} value={group.code}>
-                        {group.name} ({group.code})
+                      <SelectItem key={group.groupCode} value={group.groupCode}>
+                        {group.groupName} ({group.groupCode})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -749,7 +718,7 @@ export default function CommonCodePage() {
               {selectedTreeNode ? (
                 <>
                   <CardHeader>
-                    <CardTitle className="text-base">{selectedTreeNode.name}</CardTitle>
+                    <CardTitle className="text-base">{selectedTreeNode.codeName}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4 text-sm">
@@ -759,20 +728,20 @@ export default function CommonCodePage() {
                       </div>
                       <div>
                         <span className="text-muted-foreground">코드명</span>
-                        <p className="font-medium mt-0.5">{selectedTreeNode.name}</p>
+                        <p className="font-medium mt-0.5">{selectedTreeNode.codeName}</p>
                       </div>
-                      {selectedTreeNode.nameEn && (
+                      {selectedTreeNode.codeNameEn && (
                         <div>
                           <span className="text-muted-foreground">영문명</span>
-                          <p className="mt-0.5">{selectedTreeNode.nameEn}</p>
+                          <p className="mt-0.5">{selectedTreeNode.codeNameEn}</p>
                         </div>
                       )}
                       <div>
                         <span className="text-muted-foreground">상태</span>
                         <p className="mt-0.5">
                           <StatusBadge
-                            status={selectedTreeNode.isActive ? 'success' : 'default'}
-                            label={selectedTreeNode.isActive ? '활성' : '비활성'}
+                            status={selectedTreeNode.active ? 'success' : 'default'}
+                            label={selectedTreeNode.active ? '활성' : '비활성'}
                           />
                         </p>
                       </div>
@@ -806,15 +775,15 @@ export default function CommonCodePage() {
                         variant="outline"
                         onClick={() => {
                           // Pre-fill create dialog with this node as parent
-                          const group = codeGroups.find(g => g.code === selectedGroupForTree);
+                          const group = codeGroups.find(g => g.groupCode === selectedGroupForTree);
                           setFormData({
                             groupId: group?.id || '',
                             code: '',
-                            name: '',
-                            nameEn: '',
+                            codeName: '',
+                            codeNameEn: '',
                             description: '',
                             sortOrder: 0,
-                            classificationLevel: Math.min(selectedTreeNode.level + 2, 4) as ClassificationLevel,
+                            level: Math.min(selectedTreeNode.level + 2, 4),
                             parentCodeId: selectedTreeNode.id,
                           });
                           setDuplicateCheckResult(null);
@@ -863,15 +832,15 @@ export default function CommonCodePage() {
             <button
               className="w-full px-3 py-1.5 text-sm text-left hover:bg-muted flex items-center gap-2"
               onClick={() => {
-                const group = codeGroups.find(g => g.code === selectedGroupForTree);
+                const group = codeGroups.find(g => g.groupCode === selectedGroupForTree);
                 setFormData({
                   groupId: group?.id || '',
                   code: '',
-                  name: '',
-                  nameEn: '',
+                  codeName: '',
+                  codeNameEn: '',
                   description: '',
                   sortOrder: 0,
-                  classificationLevel: Math.min(contextMenu.node.level + 2, 4) as ClassificationLevel,
+                  level: Math.min(contextMenu.node.level + 2, 4),
                   parentCodeId: contextMenu.node.id,
                 });
                 setDuplicateCheckResult(null);
@@ -887,12 +856,12 @@ export default function CommonCodePage() {
             <button
               className="w-full px-3 py-1.5 text-sm text-left hover:bg-muted flex items-center gap-2"
               onClick={() => {
-                const newStatus: CodeStatus = contextMenu.node.isActive ? 'INACTIVE' : 'ACTIVE';
+                const newStatus: CodeStatus = contextMenu.node.active ? 'INACTIVE' : 'ACTIVE';
                 handleStatusChangeOpen(treeNodeToCodeItem(contextMenu.node), newStatus);
                 setContextMenu(null);
               }}
             >
-              {contextMenu.node.isActive ? (
+              {contextMenu.node.active ? (
                 <>
                   <Ban className="h-3.5 w-3.5" />
                   비활성화
@@ -940,7 +909,7 @@ export default function CommonCodePage() {
                 <SelectContent>
                   {codeGroups.map((group) => (
                     <SelectItem key={group.id} value={group.id}>
-                      {group.name} ({group.code})
+                      {group.groupName} ({group.groupCode})
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -964,19 +933,19 @@ export default function CommonCodePage() {
                   type="button"
                   variant="outline"
                   onClick={handleCheckDuplicate}
-                  disabled={!formData.groupId || !formData.code || !formData.name || checkDuplicateMutation.isPending}
+                  disabled={!formData.groupId || !formData.code || !formData.codeName || checkDuplicateMutation.isPending}
                 >
                   {checkDuplicateMutation.isPending ? '확인 중...' : '중복 확인'}
                 </Button>
               </div>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="name">코드명 *</Label>
+              <Label htmlFor="codeName">코드명 *</Label>
               <Input
-                id="name"
-                value={formData.name}
+                id="codeName"
+                value={formData.codeName}
                 onChange={(e) => {
-                  setFormData(prev => ({ ...prev, name: e.target.value }));
+                  setFormData(prev => ({ ...prev, codeName: e.target.value }));
                   setDuplicateCheckResult(null);
                   setIgnoreDuplicate(false);
                 }}
@@ -985,14 +954,14 @@ export default function CommonCodePage() {
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="classificationLevel">분류 수준 *</Label>
+              <Label htmlFor="level">분류 수준 *</Label>
               <Select
-                value={formData.classificationLevel.toString()}
+                value={formData.level.toString()}
                 onValueChange={(value) => {
-                  const level = parseInt(value) as ClassificationLevel;
+                  const level = parseInt(value);
                   setFormData(prev => ({
                     ...prev,
-                    classificationLevel: level,
+                    level,
                     parentCodeId: level === 1 ? '' : prev.parentCodeId,
                   }));
                 }}
@@ -1008,29 +977,29 @@ export default function CommonCodePage() {
                 </SelectContent>
               </Select>
             </div>
-            {formData.classificationLevel > 1 && (
+            {formData.level > 1 && (
               <div className="grid gap-2">
                 <Label htmlFor="parentCodeId">
-                  상위 분류 ({CLASSIFICATION_LABELS[formData.classificationLevel - 1]}) *
+                  상위 분류 ({CLASSIFICATION_LABELS[formData.level - 1]}) *
                 </Label>
                 <Select
                   value={formData.parentCodeId}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, parentCodeId: value }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder={`상위 ${CLASSIFICATION_LABELS[formData.classificationLevel - 1]} 선택`} />
+                    <SelectValue placeholder={`상위 ${CLASSIFICATION_LABELS[formData.level - 1]} 선택`} />
                   </SelectTrigger>
                   <SelectContent>
-                    {getParentCodeOptions(formData.classificationLevel, formData.groupId).map((parentCode) => (
+                    {getParentCodeOptions(formData.level, formData.groupId).map((parentCode) => (
                       <SelectItem key={parentCode.id} value={parentCode.id}>
-                        {parentCode.classificationPath ? `${parentCode.classificationPath}` : parentCode.name} ({parentCode.code})
+                        {parentCode.codeName} ({parentCode.code})
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                {formData.groupId && getParentCodeOptions(formData.classificationLevel, formData.groupId).length === 0 && (
+                {formData.groupId && getParentCodeOptions(formData.level, formData.groupId).length === 0 && (
                   <p className="text-sm text-muted-foreground">
-                    선택한 코드그룹에 {CLASSIFICATION_LABELS[formData.classificationLevel - 1]} 코드가 없습니다. 먼저 상위 분류를 등록해주세요.
+                    선택한 코드그룹에 {CLASSIFICATION_LABELS[formData.level - 1]} 코드가 없습니다. 먼저 상위 분류를 등록해주세요.
                   </p>
                 )}
               </div>
@@ -1090,11 +1059,11 @@ export default function CommonCodePage() {
             )}
 
             <div className="grid gap-2">
-              <Label htmlFor="nameEn">영문명</Label>
+              <Label htmlFor="codeNameEn">영문명</Label>
               <Input
-                id="nameEn"
-                value={formData.nameEn}
-                onChange={(e) => setFormData(prev => ({ ...prev, nameEn: e.target.value }))}
+                id="codeNameEn"
+                value={formData.codeNameEn}
+                onChange={(e) => setFormData(prev => ({ ...prev, codeNameEn: e.target.value }))}
                 placeholder="예: Annual Leave"
               />
             </div>
@@ -1126,8 +1095,8 @@ export default function CommonCodePage() {
               disabled={
                 !formData.groupId ||
                 !formData.code ||
-                !formData.name ||
-                (formData.classificationLevel > 1 && !formData.parentCodeId) ||
+                !formData.codeName ||
+                (formData.level > 1 && !formData.parentCodeId) ||
                 createMutation.isPending ||
                 (duplicateCheckResult?.hasDuplicate && duplicateCheckResult.duplicateType !== 'SIMILAR' && !ignoreDuplicate)
               }
@@ -1153,30 +1122,30 @@ export default function CommonCodePage() {
               <Input id="edit-code" value={formData.code} disabled />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-name">코드명 *</Label>
+              <Label htmlFor="edit-codeName">코드명 *</Label>
               <Input
-                id="edit-name"
-                value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                id="edit-codeName"
+                value={formData.codeName}
+                onChange={(e) => setFormData(prev => ({ ...prev, codeName: e.target.value }))}
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-nameEn">영문명</Label>
+              <Label htmlFor="edit-codeNameEn">영문명</Label>
               <Input
-                id="edit-nameEn"
-                value={formData.nameEn}
-                onChange={(e) => setFormData(prev => ({ ...prev, nameEn: e.target.value }))}
+                id="edit-codeNameEn"
+                value={formData.codeNameEn}
+                onChange={(e) => setFormData(prev => ({ ...prev, codeNameEn: e.target.value }))}
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-classificationLevel">분류 수준</Label>
+              <Label htmlFor="edit-level">분류 수준</Label>
               <Select
-                value={formData.classificationLevel.toString()}
+                value={formData.level.toString()}
                 onValueChange={(value) => {
-                  const level = parseInt(value) as ClassificationLevel;
+                  const level = parseInt(value);
                   setFormData(prev => ({
                     ...prev,
-                    classificationLevel: level,
+                    level,
                     parentCodeId: level === 1 ? '' : prev.parentCodeId,
                   }));
                 }}
@@ -1192,22 +1161,22 @@ export default function CommonCodePage() {
                 </SelectContent>
               </Select>
             </div>
-            {formData.classificationLevel > 1 && (
+            {formData.level > 1 && (
               <div className="grid gap-2">
                 <Label htmlFor="edit-parentCodeId">
-                  상위 분류 ({CLASSIFICATION_LABELS[formData.classificationLevel - 1]})
+                  상위 분류 ({CLASSIFICATION_LABELS[formData.level - 1]})
                 </Label>
                 <Select
                   value={formData.parentCodeId}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, parentCodeId: value }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder={`상위 ${CLASSIFICATION_LABELS[formData.classificationLevel - 1]} 선택`} />
+                    <SelectValue placeholder={`상위 ${CLASSIFICATION_LABELS[formData.level - 1]} 선택`} />
                   </SelectTrigger>
                   <SelectContent>
-                    {getParentCodeOptions(formData.classificationLevel, formData.groupId).map((parentCode) => (
+                    {getParentCodeOptions(formData.level, formData.groupId).map((parentCode) => (
                       <SelectItem key={parentCode.id} value={parentCode.id}>
-                        {parentCode.classificationPath ? `${parentCode.classificationPath}` : parentCode.name} ({parentCode.code})
+                        {parentCode.codeName} ({parentCode.code})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -1238,7 +1207,7 @@ export default function CommonCodePage() {
             </Button>
             <Button
               onClick={handleUpdate}
-              disabled={!formData.name || updateMutation.isPending}
+              disabled={!formData.codeName || updateMutation.isPending}
             >
               {updateMutation.isPending ? '저장 중...' : '저장'}
             </Button>
@@ -1254,7 +1223,7 @@ export default function CommonCodePage() {
             <DialogDescription>
               정말로 이 공통코드를 삭제하시겠습니까?
               <br />
-              <strong className="text-foreground">{selectedCode?.name}</strong> ({selectedCode?.code})
+              <strong className="text-foreground">{selectedCode?.codeName}</strong> ({selectedCode?.code})
               <br />
               <span className="text-destructive">이 작업은 되돌릴 수 없습니다.</span>
             </DialogDescription>
@@ -1280,7 +1249,7 @@ export default function CommonCodePage() {
           <DialogHeader>
             <DialogTitle>코드 상태 변경</DialogTitle>
             <DialogDescription>
-              <strong className="text-foreground">{selectedCode?.name}</strong> ({selectedCode?.code})의 상태를 변경합니다.
+              <strong className="text-foreground">{selectedCode?.codeName}</strong> ({selectedCode?.code})의 상태를 변경합니다.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -1340,7 +1309,7 @@ export default function CommonCodePage() {
           <DialogHeader>
             <DialogTitle>영향도 분석</DialogTitle>
             <DialogDescription>
-              <strong className="text-foreground">{selectedCode?.name}</strong> ({selectedCode?.code}) 코드의 사용 현황입니다.
+              <strong className="text-foreground">{selectedCode?.codeName}</strong> ({selectedCode?.code}) 코드의 사용 현황입니다.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
@@ -1429,7 +1398,7 @@ export default function CommonCodePage() {
           <DialogHeader>
             <DialogTitle>변경 이력</DialogTitle>
             <DialogDescription>
-              <strong className="text-foreground">{selectedCode?.name}</strong> ({selectedCode?.code}) 코드의 변경 이력입니다.
+              <strong className="text-foreground">{selectedCode?.codeName}</strong> ({selectedCode?.code}) 코드의 변경 이력입니다.
             </DialogDescription>
           </DialogHeader>
           <div className="max-h-96 overflow-y-auto py-4">
@@ -1437,16 +1406,16 @@ export default function CommonCodePage() {
               <div className="flex items-center justify-center py-8">
                 <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
               </div>
-            ) : historyData?.data?.content && historyData.data.content.length > 0 ? (
+            ) : historyData?.data && Array.isArray(historyData.data) && historyData.data.length > 0 ? (
               <div className="relative space-y-0 pl-6">
                 <div className="absolute bottom-0 left-2 top-0 w-px bg-border" />
-                {historyData.data.content.map((history) => (
+                {historyData.data.map((history) => (
                   <div key={history.id} className="relative pb-6">
                     <div className="absolute -left-4 flex h-4 w-4 items-center justify-center rounded-full bg-background">
                       <div className={`h-2 w-2 rounded-full ${
-                        history.action === 'CREATED' ? 'bg-green-500' :
-                        history.action === 'DELETED' ? 'bg-red-500' :
-                        history.action === 'STATUS_CHANGED' ? 'bg-orange-500' :
+                        history.action === 'CREATE' ? 'bg-green-500' :
+                        history.action === 'DELETE' ? 'bg-red-500' :
+                        (history.action === 'ACTIVATE' || history.action === 'DEACTIVATE' || history.action === 'DEPRECATE') ? 'bg-orange-500' :
                         'bg-blue-500'
                       }`} />
                     </div>
@@ -1454,15 +1423,17 @@ export default function CommonCodePage() {
                       <div className="flex items-center gap-2">
                         <StatusBadge
                           status={
-                            history.action === 'CREATED' ? 'success' :
-                            history.action === 'DELETED' ? 'error' :
-                            history.action === 'STATUS_CHANGED' ? 'warning' :
+                            history.action === 'CREATE' ? 'success' :
+                            history.action === 'DELETE' ? 'error' :
+                            (history.action === 'ACTIVATE' || history.action === 'DEACTIVATE' || history.action === 'DEPRECATE') ? 'warning' :
                             'info'
                           }
                           label={
-                            history.action === 'CREATED' ? '생성' :
-                            history.action === 'DELETED' ? '삭제' :
-                            history.action === 'STATUS_CHANGED' ? '상태변경' :
+                            history.action === 'CREATE' ? '생성' :
+                            history.action === 'DELETE' ? '삭제' :
+                            history.action === 'ACTIVATE' ? '활성화' :
+                            history.action === 'DEACTIVATE' ? '비활성화' :
+                            history.action === 'DEPRECATE' ? '폐기' :
                             '수정'
                           }
                         />
@@ -1471,10 +1442,10 @@ export default function CommonCodePage() {
                         </span>
                       </div>
                       <div className="mt-1 text-sm">
-                        <span className="font-medium">{history.changedBy.name}</span>
-                        {history.changedField && (
+                        <span className="font-medium">{history.changedBy}</span>
+                        {history.fieldName && (
                           <span className="text-muted-foreground">
-                            {' '}님이 {history.changedField} 필드를 변경
+                            {' '}님이 {history.fieldName} 필드를 변경
                           </span>
                         )}
                       </div>
@@ -1492,9 +1463,9 @@ export default function CommonCodePage() {
                           )}
                         </div>
                       )}
-                      {history.reason && (
+                      {history.changeReason && (
                         <div className="mt-2 text-sm text-muted-foreground">
-                          사유: {history.reason}
+                          사유: {history.changeReason}
                         </div>
                       )}
                     </div>

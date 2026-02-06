@@ -1,6 +1,7 @@
 package com.hrsaas.organization.domain.dto.response;
 
 import com.hrsaas.organization.domain.entity.Department;
+import com.hrsaas.organization.domain.entity.DepartmentStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,6 +23,9 @@ public class DepartmentTreeResponse {
     private String nameEn;
     private Integer level;
     private UUID managerId;
+    private String managerName;
+    private Integer employeeCount;
+    private DepartmentStatus status;
     private Integer sortOrder;
     private List<DepartmentTreeResponse> children;
 
@@ -33,6 +37,7 @@ public class DepartmentTreeResponse {
             .nameEn(department.getNameEn())
             .level(department.getLevel())
             .managerId(department.getManagerId())
+            .status(department.getStatus())
             .sortOrder(department.getSortOrder())
             .children(new ArrayList<>())
             .build();

@@ -39,7 +39,7 @@ export default function TenantCodePage() {
   const [formData, setFormData] = useState<UpdateTenantCodeRequest>({
     customName: '',
     customNameEn: '',
-    isEnabled: true,
+    enabled: true,
     sortOrder: undefined,
   });
 
@@ -47,30 +47,30 @@ export default function TenantCodePage() {
     setPage(0);
   }, [debouncedKeyword, groupCode, isEnabledFilter]);
 
-  const { data: codeGroupsData } = useCodeGroupList({ size: 100 });
-  const codeGroups = codeGroupsData?.data?.content ?? [];
+  const { data: codeGroupsData } = useCodeGroupList();
+  const codeGroups = codeGroupsData?.data ?? [];
 
   const { data, isLoading, isError } = useTenantCodeList({
     page,
     size: 20,
     groupCode: groupCode || undefined,
     keyword: debouncedKeyword || undefined,
-    isEnabled: isEnabledFilter ?? undefined,
+    enabled: isEnabledFilter ?? undefined,
   });
 
   const updateMutation = useUpdateTenantCode();
   const resetMutation = useResetTenantCode();
 
   const tenantCodes = data?.data?.content ?? [];
-  const totalPages = data?.data?.totalPages ?? 0;
-  const totalElements = data?.data?.totalElements ?? 0;
+  const totalPages = data?.data?.page?.totalPages ?? 0;
+  const totalElements = data?.data?.page?.totalElements ?? 0;
 
   const handleEditOpen = (setting: TenantCodeSetting) => {
     setSelectedSetting(setting);
     setFormData({
       customName: setting.customName || '',
       customNameEn: setting.customNameEn || '',
-      isEnabled: setting.isEnabled,
+      enabled: setting.enabled,
       sortOrder: setting.sortOrder,
     });
     setIsEditDialogOpen(true);
@@ -108,7 +108,7 @@ export default function TenantCodePage() {
     try {
       await updateMutation.mutateAsync({
         codeId: setting.codeId,
-        data: { isEnabled: !setting.isEnabled },
+        data: { enabled: !setting.enabled },
       });
     } catch (error) {
       console.error('Failed to toggle enabled:', error);
@@ -141,8 +141,8 @@ export default function TenantCodePage() {
             >
               <option value="">전체 코드그룹</option>
               {codeGroups.map((group) => (
-                <option key={group.id} value={group.code}>
-                  {group.name}
+                <option key={group.id} value={group.groupCode}>
+                  {group.groupName}
                 </option>
               ))}
             </select>
@@ -230,7 +230,7 @@ export default function TenantCodePage() {
                         </td>
                         <td className="px-4 py-3">
                           <Switch
-                            checked={setting.isEnabled}
+                            checked={setting.enabled}
                             onCheckedChange={() => handleToggleEnabled(setting)}
                             disabled={updateMutation.isPending}
                           />
@@ -251,7 +251,7 @@ export default function TenantCodePage() {
                               variant="ghost"
                               size="icon"
                               onClick={() => handleResetOpen(setting)}
-                              disabled={!setting.customName && setting.isEnabled}
+                              disabled={!setting.customName && setting.enabled}
                             >
                               <RotateCcw className="h-4 w-4" />
                             </Button>
@@ -325,11 +325,11 @@ export default function TenantCodePage() {
             </div>
             <div className="flex items-center gap-2">
               <Switch
-                id="isEnabled"
-                checked={formData.isEnabled}
-                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isEnabled: checked }))}
+                id="enabled"
+                checked={formData.enabled}
+                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, enabled: checked }))}
               />
-              <Label htmlFor="isEnabled">이 테넌트에서 활성화</Label>
+              <Label htmlFor="enabled">이 테넌트에서 활성화</Label>
             </div>
           </div>
           <DialogFooter>

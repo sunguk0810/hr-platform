@@ -208,10 +208,16 @@ export const auditHandlers = [
       success: true,
       data: {
         content: paginatedLogs,
-        totalElements: filteredLogs.length,
-        totalPages: Math.ceil(filteredLogs.length / size),
-        page,
-        size,
+        page: {
+          number: page,
+          size,
+          totalElements: filteredLogs.length,
+          totalPages: Math.ceil(filteredLogs.length / size),
+          first: page === 1,
+          last: page >= Math.ceil(filteredLogs.length / size),
+          hasNext: page < Math.ceil(filteredLogs.length / size),
+          hasPrevious: page > 1,
+        },
       },
     });
   }),

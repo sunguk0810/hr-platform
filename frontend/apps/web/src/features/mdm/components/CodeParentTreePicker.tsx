@@ -69,7 +69,7 @@ function PickerTreeNode({
         )}
         <span className="font-mono text-xs">{node.code}</span>
         <span className="text-muted-foreground text-xs">-</span>
-        <span className="truncate text-xs">{node.name}</span>
+        <span className="truncate text-xs">{node.codeName}</span>
       </div>
       {hasChildren && isExpanded && (
         <div>
@@ -134,7 +134,7 @@ export function CodeParentTreePicker({
             <span className="flex items-center gap-1 truncate">
               <span className="font-mono text-xs">{selectedNode.code}</span>
               <span className="text-muted-foreground">-</span>
-              <span className="truncate">{selectedNode.name}</span>
+              <span className="truncate">{selectedNode.codeName}</span>
             </span>
           ) : (
             <span className="text-muted-foreground">{placeholder}</span>

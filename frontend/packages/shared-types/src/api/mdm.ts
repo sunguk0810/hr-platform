@@ -1,111 +1,130 @@
 import { TenantAwareEntity, PageRequest } from './common';
 
-// Code Group Types
+// Code Group Types — matches backend CodeGroupResponse
 export interface CodeGroup extends TenantAwareEntity {
-  code: string;
-  name: string;
-  nameEn?: string;
+  groupCode: string;
+  groupName: string;
+  groupNameEn?: string;
   description?: string;
-  isSystem: boolean;
+  system: boolean;
+  hierarchical: boolean;
+  maxLevel?: number;
+  status: CodeStatus;
+  active: boolean;
   sortOrder: number;
-  isActive: boolean;
 }
 
+// Flattened view for code group list — derived from CodeGroup
 export interface CodeGroupListItem {
   id: string;
-  code: string;
-  name: string;
+  groupCode: string;
+  groupName: string;
   description?: string;
-  isSystem: boolean;
-  isActive: boolean;
+  system: boolean;
+  active: boolean;
+  status: CodeStatus;
   codeCount: number;
 }
 
 export interface CodeGroupSearchParams extends PageRequest {
   keyword?: string;
-  isActive?: boolean;
+  active?: boolean;
 }
 
 export interface CreateCodeGroupRequest {
-  code: string;
-  name: string;
-  nameEn?: string;
+  groupCode: string;
+  groupName: string;
+  groupNameEn?: string;
   description?: string;
+  hierarchical?: boolean;
+  maxLevel?: number;
   sortOrder?: number;
 }
 
 export interface UpdateCodeGroupRequest {
-  name?: string;
-  nameEn?: string;
+  groupName?: string;
+  groupNameEn?: string;
   description?: string;
   sortOrder?: number;
-  isActive?: boolean;
+  active?: boolean;
 }
 
-// Common Code Types
+// Common Code Types — matches backend CommonCodeResponse
 export type ClassificationLevel = 1 | 2 | 3 | 4;
 
 export interface CommonCode extends TenantAwareEntity {
-  groupId: string;
   groupCode: string;
-  code: string;
-  name: string;
-  nameEn?: string;
-  description?: string;
-  sortOrder: number;
-  isActive: boolean;
-  parentCode?: string;
-  parentName?: string;
-  attributes?: Record<string, string>;
-  classificationLevel?: ClassificationLevel;
   parentCodeId?: string;
-  classificationPath?: string;
+  level?: number;
+  code: string;
+  codeName: string;
+  codeNameEn?: string;
+  description?: string;
+  extraValue1?: string;
+  extraValue2?: string;
+  extraValue3?: string;
+  extraJson?: string;
+  defaultCode: boolean;
+  effectiveFrom?: string;
+  effectiveTo?: string;
+  status: CodeStatus;
+  active: boolean;
+  effective: boolean;
+  sortOrder: number;
+  children?: CommonCode[];
 }
 
+// Flattened view for common code list
 export interface CommonCodeListItem {
   id: string;
   groupCode: string;
   code: string;
-  name: string;
-  nameEn?: string;
+  codeName: string;
+  codeNameEn?: string;
+  level?: number;
   sortOrder: number;
-  isActive: boolean;
-  parentCode?: string;
-  classificationLevel?: ClassificationLevel;
+  active: boolean;
+  status: CodeStatus;
   parentCodeId?: string;
-  classificationPath?: string;
+  defaultCode?: boolean;
 }
 
 export interface CommonCodeSearchParams extends PageRequest {
   groupCode?: string;
   keyword?: string;
-  isActive?: boolean;
-  parentCode?: string;
-  classificationLevel?: ClassificationLevel;
+  status?: CodeStatus;
 }
 
 export interface CreateCommonCodeRequest {
-  groupId: string;
+  codeGroupId: string;
   code: string;
-  name: string;
-  nameEn?: string;
+  codeName: string;
+  codeNameEn?: string;
   description?: string;
+  extraValue1?: string;
+  extraValue2?: string;
+  extraValue3?: string;
+  extraJson?: string;
+  defaultCode?: boolean;
+  effectiveFrom?: string;
+  effectiveTo?: string;
   sortOrder?: number;
-  parentCode?: string;
-  attributes?: Record<string, string>;
-  classificationLevel?: ClassificationLevel;
   parentCodeId?: string;
 }
 
 export interface UpdateCommonCodeRequest {
-  name?: string;
-  nameEn?: string;
+  codeName?: string;
+  codeNameEn?: string;
   description?: string;
+  extraValue1?: string;
+  extraValue2?: string;
+  extraValue3?: string;
+  extraJson?: string;
+  defaultCode?: boolean;
+  effectiveFrom?: string;
+  effectiveTo?: string;
   sortOrder?: number;
-  isActive?: boolean;
-  parentCode?: string;
-  attributes?: Record<string, string>;
-  classificationLevel?: ClassificationLevel;
+  status?: CodeStatus;
   parentCodeId?: string;
 }
 
@@ -116,7 +135,7 @@ export interface TenantCodeMapping extends TenantAwareEntity {
   code: string;
   displayName?: string;
   sortOrder?: number;
-  isActive: boolean;
+  active: boolean;
 }
 
 // Helper types for dropdowns
@@ -202,22 +221,22 @@ export interface CodeImpactResult {
   deleteBlockReason?: string;
 }
 
-// Code History Types
-export type CodeHistoryAction = 'CREATED' | 'UPDATED' | 'DELETED' | 'STATUS_CHANGED';
+// Code History Types — matches backend CodeHistoryResponse
+export type CodeHistoryAction = 'CREATE' | 'UPDATE' | 'DELETE' | 'ACTIVATE' | 'DEACTIVATE' | 'DEPRECATE';
 
 export interface CodeHistory {
   id: string;
   codeId: string;
+  groupCode: string;
+  code: string;
   action: CodeHistoryAction;
-  changedField?: string;
+  fieldName?: string;
   oldValue?: string;
   newValue?: string;
-  changedBy: {
-    id: string;
-    name: string;
-  };
+  changeReason?: string;
+  changedBy: string;
+  changedById?: string;
   changedAt: string;
-  reason?: string;
 }
 
 export interface CodeHistorySearchParams {
@@ -241,9 +260,9 @@ export interface CodeSearchResult {
   groupCode: string;
   groupName: string;
   code: string;
-  name: string;
-  nameEn?: string;
-  isActive: boolean;
+  codeName: string;
+  codeNameEn?: string;
+  active: boolean;
   similarity: number;
   matchType: 'EXACT' | 'PARTIAL' | 'FUZZY';
 }
@@ -252,11 +271,11 @@ export interface CodeSearchResult {
 export interface CodeTreeNode {
   id: string;
   code: string;
-  name: string;
-  nameEn?: string;
+  codeName: string;
+  codeNameEn?: string;
   level: number;
   sortOrder: number;
-  isActive: boolean;
+  active: boolean;
   children: CodeTreeNode[];
 }
 
@@ -313,7 +332,7 @@ export interface TenantCodeSetting {
   originalName: string;
   customName?: string;
   customNameEn?: string;
-  isEnabled: boolean;
+  enabled: boolean;
   sortOrder?: number;
   tenantId: string;
   updatedAt: string;
@@ -322,12 +341,12 @@ export interface TenantCodeSetting {
 export interface UpdateTenantCodeRequest {
   customName?: string;
   customNameEn?: string;
-  isEnabled?: boolean;
+  enabled?: boolean;
   sortOrder?: number;
 }
 
 export interface TenantCodeSearchParams extends PageRequest {
   groupCode?: string;
   keyword?: string;
-  isEnabled?: boolean;
+  enabled?: boolean;
 }

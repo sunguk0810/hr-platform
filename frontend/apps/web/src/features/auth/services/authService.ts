@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { apiClient, ApiResponse } from '@/lib/apiClient';
+import { isMockEnabled } from '@/lib/featureFlags';
 import { User } from '@/stores/authStore';
 import { Tenant } from '@/stores/tenantStore';
 import {
@@ -57,21 +58,34 @@ export interface RefreshTokenResponse {
 export interface PasswordChangeRequest {
   currentPassword: string;
   newPassword: string;
+  confirmPassword: string;
 }
 
+// 백엔드 SessionResponse 대응
 export interface Session {
-  id: string;
-  device: string;
+  sessionId: string;
+  deviceInfo: string;
+  ipAddress: string;
   location: string;
-  lastActive: string;
-  current: boolean;
+  createdAt: string;
+  lastAccessedAt: string;
+  currentSession: boolean;
 }
 
-// Mock 모드 여부 확인 (VITE_ENABLE_MOCK=true 또는 MSW 활성화 시)
-const isMockMode = import.meta.env.VITE_ENABLE_MOCK === 'true';
+const isAuthMocked = isMockEnabled('auth');
 
 // API 기본 URL
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
+
+// JWT payload에서 tenantId 추출
+function extractTenantFromToken(token: string): string | null {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.tenant_id || null;
+  } catch {
+    return null;
+  }
+}
 
 // Mock 로그인 처리
 async function mockLogin(data: LoginRequest): Promise<ApiResponse<LoginResponse>> {
@@ -175,18 +189,22 @@ async function mockGetSessions(): Promise<ApiResponse<Session[]>> {
 
   const sessions: Session[] = [
     {
-      id: '1',
-      device: 'Chrome on Windows',
+      sessionId: '1',
+      deviceInfo: 'Chrome on Windows',
+      ipAddress: '192.168.1.1',
       location: 'Seoul, South Korea',
-      lastActive: new Date().toISOString(),
-      current: true,
+      createdAt: new Date().toISOString(),
+      lastAccessedAt: new Date().toISOString(),
+      currentSession: true,
     },
     {
-      id: '2',
-      device: 'Safari on iPhone',
+      sessionId: '2',
+      deviceInfo: 'Safari on iPhone',
+      ipAddress: '192.168.1.2',
       location: 'Seoul, South Korea',
-      lastActive: new Date(Date.now() - 3600000).toISOString(),
-      current: false,
+      createdAt: new Date(Date.now() - 3600000).toISOString(),
+      lastAccessedAt: new Date(Date.now() - 3600000).toISOString(),
+      currentSession: false,
     },
   ];
 
@@ -263,11 +281,12 @@ async function realLogin(data: LoginRequest): Promise<ApiResponse<LoginResponse>
     permissions: backendUser.permissions || [],
   };
 
-  // 4. 테넌트 정보 구성 (TODO: 실제 테넌트 API 연동 시 수정 필요)
+  // 4. JWT에서 테넌트 정보 추출
+  const tenantId = extractTenantFromToken(tokens.accessToken);
   const defaultTenant: Tenant = {
-    id: 'tenant-001',
-    code: 'HANSUNG_ELEC',
-    name: '한성전자',
+    id: tenantId || 'unknown',
+    code: 'DEFAULT',
+    name: '기본 테넌트',
     status: 'ACTIVE',
   };
 
@@ -287,21 +306,21 @@ async function realLogin(data: LoginRequest): Promise<ApiResponse<LoginResponse>
 
 export const authService = {
   async login(data: LoginRequest): Promise<ApiResponse<LoginResponse>> {
-    if (isMockMode) {
+    if (isAuthMocked) {
       return mockLogin(data);
     }
     return realLogin(data);
   },
 
   async logout(): Promise<void> {
-    if (isMockMode) {
+    if (isAuthMocked) {
       return mockLogout();
     }
     await apiClient.post('/auth/logout');
   },
 
   async refreshToken(refreshToken: string): Promise<ApiResponse<RefreshTokenResponse>> {
-    if (isMockMode) {
+    if (isAuthMocked) {
       return mockRefreshToken(refreshToken);
     }
     const response = await apiClient.post<ApiResponse<RefreshTokenResponse>>('/auth/token/refresh', {
@@ -311,7 +330,7 @@ export const authService = {
   },
 
   async getCurrentUser(): Promise<ApiResponse<User>> {
-    if (isMockMode) {
+    if (isAuthMocked) {
       return mockGetCurrentUser();
     }
     const response = await apiClient.get<ApiResponse<BackendUserResponse>>('/auth/me');
@@ -342,7 +361,7 @@ export const authService = {
   },
 
   async changePassword(data: PasswordChangeRequest): Promise<ApiResponse<null>> {
-    if (isMockMode) {
+    if (isAuthMocked) {
       return mockChangePassword(data);
     }
     const response = await apiClient.post<ApiResponse<null>>('/auth/password/change', data);
@@ -350,7 +369,7 @@ export const authService = {
   },
 
   async getSessions(): Promise<ApiResponse<Session[]>> {
-    if (isMockMode) {
+    if (isAuthMocked) {
       return mockGetSessions();
     }
     const response = await apiClient.get<ApiResponse<Session[]>>('/auth/sessions');
@@ -358,7 +377,7 @@ export const authService = {
   },
 
   async logoutSession(sessionId: string): Promise<ApiResponse<null>> {
-    if (isMockMode) {
+    if (isAuthMocked) {
       return mockLogoutSession(sessionId);
     }
     const response = await apiClient.delete<ApiResponse<null>>(`/auth/sessions/${sessionId}`);
@@ -366,7 +385,7 @@ export const authService = {
   },
 
   async logoutAllSessions(): Promise<ApiResponse<null>> {
-    if (isMockMode) {
+    if (isAuthMocked) {
       return mockLogoutAllSessions();
     }
     const response = await apiClient.delete<ApiResponse<null>>('/auth/sessions');

@@ -71,7 +71,7 @@ export default function OvertimePage() {
 
   const summary = summaryData?.data;
   const overtimeList = listData?.data?.content ?? [];
-  const totalPages = listData?.data?.totalPages ?? 0;
+  const totalPages = listData?.data?.page?.totalPages ?? 0;
 
   const handleCreate = async () => {
     try {

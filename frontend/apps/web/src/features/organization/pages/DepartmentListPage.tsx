@@ -86,8 +86,8 @@ export default function DepartmentListPage() {
   const deleteMutation = useDeleteDepartment();
 
   const departments = data?.data?.content ?? [];
-  const totalPages = data?.data?.totalPages ?? 0;
-  const totalElements = data?.data?.totalElements ?? 0;
+  const totalPages = data?.data?.page?.totalPages ?? 0;
+  const totalElements = data?.data?.page?.totalElements ?? 0;
   const tree = treeData?.data ?? [];
 
   // Flatten tree for parent select

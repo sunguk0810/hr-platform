@@ -10,10 +10,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.stream.Collectors;
 
 /**
  * Filter to extract user context from JWT in Authorization header.
@@ -36,6 +39,7 @@ public class SecurityFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
         } finally {
             SecurityContextHolder.clear();
+            org.springframework.security.core.context.SecurityContextHolder.clearContext();
             TenantContext.clear();
         }
     }
@@ -50,6 +54,17 @@ public class SecurityFilter extends OncePerRequestFilter {
         try {
             UserContext context = jwtTokenProvider.parseToken(token);
             SecurityContextHolder.setContext(context);
+
+            // Bridge to Spring Security's SecurityContextHolder
+            var authorities = context.getRoles() != null
+                    ? context.getRoles().stream()
+                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                        .collect(Collectors.toList())
+                    : java.util.Collections.<SimpleGrantedAuthority>emptyList();
+            var authentication = new UsernamePasswordAuthenticationToken(
+                    context, null, authorities);
+            org.springframework.security.core.context.SecurityContextHolder
+                    .getContext().setAuthentication(authentication);
 
             if (context.getTenantId() != null) {
                 TenantContext.setCurrentTenant(context.getTenantId());

@@ -107,6 +107,7 @@ export default function SettingsPage() {
       await authService.changePassword({
         currentPassword: passwordForm.currentPassword,
         newPassword: passwordForm.newPassword,
+        confirmPassword: passwordForm.confirmPassword,
       });
 
       toast({
@@ -283,18 +284,18 @@ export default function SettingsPage() {
                 ) : (
                   <div className="space-y-2">
                     {sessions.map((session) => (
-                      <div key={session.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                      <div key={session.sessionId} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                         <div className="flex items-center gap-3">
                           <div className="h-8 w-8 rounded-full bg-background flex items-center justify-center">
-                            {session.device.includes('iPhone') ? <Smartphone className="h-4 w-4" /> : <Laptop className="h-4 w-4" />}
+                            {session.deviceInfo.includes('iPhone') ? <Smartphone className="h-4 w-4" /> : <Laptop className="h-4 w-4" />}
                           </div>
                           <div>
-                            <p className="text-sm font-medium">{session.device}</p>
-                            {session.current && <span className="text-xs text-green-600">현재 세션</span>}
+                            <p className="text-sm font-medium">{session.deviceInfo}</p>
+                            {session.currentSession && <span className="text-xs text-green-600">현재 세션</span>}
                           </div>
                         </div>
-                        {!session.current && (
-                          <Button variant="ghost" size="sm" className="text-destructive h-8" onClick={() => handleLogoutSession(session.id)}>
+                        {!session.currentSession && (
+                          <Button variant="ghost" size="sm" className="text-destructive h-8" onClick={() => handleLogoutSession(session.sessionId)}>
                             <LogOut className="h-4 w-4" />
                           </Button>
                         )}
@@ -586,12 +587,12 @@ export default function SettingsPage() {
                 </p>
               ) : sessions.map((session) => (
                 <div
-                  key={session.id}
+                  key={session.sessionId}
                   className="flex items-center justify-between p-4 rounded-lg border"
                 >
                   <div className="flex items-center gap-4">
                     <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-                      {session.device.includes('iPhone') ? (
+                      {session.deviceInfo.includes('iPhone') ? (
                         <Smartphone className="h-5 w-5" />
                       ) : (
                         <Laptop className="h-5 w-5" />
@@ -599,8 +600,8 @@ export default function SettingsPage() {
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <p className="font-medium">{session.device}</p>
-                        {session.current && (
+                        <p className="font-medium">{session.deviceInfo}</p>
+                        {session.currentSession && (
                           <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">
                             현재 세션
                           </span>
@@ -610,20 +611,20 @@ export default function SettingsPage() {
                         <Globe className="h-3 w-3" />
                         {session.location}
                         <span>•</span>
-                        {format(new Date(session.lastActive), 'yyyy.MM.dd HH:mm')}
+                        {format(new Date(session.lastAccessedAt), 'yyyy.MM.dd HH:mm')}
                       </div>
                     </div>
                   </div>
-                  {!session.current && (
+                  {!session.currentSession && (
                     <Button
                       variant="ghost"
                       size="sm"
                       className="text-destructive"
-                      onClick={() => handleLogoutSession(session.id)}
-                      disabled={isLoggingOut === session.id}
+                      onClick={() => handleLogoutSession(session.sessionId)}
+                      disabled={isLoggingOut === session.sessionId}
                     >
                       <LogOut className="h-4 w-4 mr-1" />
-                      {isLoggingOut === session.id ? '처리 중...' : '로그아웃'}
+                      {isLoggingOut === session.sessionId ? '처리 중...' : '로그아웃'}
                     </Button>
                   )}
                 </div>

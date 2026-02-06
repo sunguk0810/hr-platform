@@ -481,10 +481,16 @@ export const headcountHandlers = [
       success: true,
       data: {
         content: paged.map(toRequestListItem),
-        page,
-        size,
-        totalElements: filtered.length,
-        totalPages: Math.ceil(filtered.length / size),
+        page: {
+          number: page,
+          size,
+          totalElements: filtered.length,
+          totalPages: Math.ceil(filtered.length / size),
+          first: page === 0,
+          last: page >= Math.ceil(filtered.length / size) - 1,
+          hasNext: page < Math.ceil(filtered.length / size) - 1,
+          hasPrevious: page > 0,
+        },
       },
     });
   }),

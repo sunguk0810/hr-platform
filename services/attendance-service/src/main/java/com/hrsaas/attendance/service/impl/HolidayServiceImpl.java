@@ -20,6 +20,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -61,14 +62,14 @@ public class HolidayServiceImpl implements HolidayService {
     }
 
     @Override
-    @Cacheable(value = "holiday", key = "'year-' + #year")
+    @Cacheable(value = "holiday", key = "'year-' + #year", unless = "#result == null || #result.isEmpty()")
     public List<HolidayResponse> getByYear(Integer year) {
         UUID tenantId = TenantContext.getCurrentTenant();
         List<Holiday> holidays = holidayRepository.findByYear(tenantId, year);
 
         return holidays.stream()
             .map(HolidayResponse::from)
-            .toList();
+            .collect(Collectors.toList());
     }
 
     @Override

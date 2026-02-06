@@ -54,7 +54,7 @@ export default function HeadcountPage() {
   const { data: summaryData, isLoading: isSummaryLoading } = useHeadcountSummary(searchState.year);
 
   const plans = plansData?.data?.content ?? [];
-  const totalPages = plansData?.data?.totalPages ?? 0;
+  const totalPages = plansData?.data?.page?.totalPages ?? 0;
   const summary = summaryData?.data;
 
   const handleTabChange = (value: string) => {

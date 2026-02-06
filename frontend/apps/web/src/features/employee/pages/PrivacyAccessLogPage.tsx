@@ -122,9 +122,9 @@ export default function PrivacyAccessLogPage() {
   const approveMutation = useApprovePrivacyAccessRequest();
 
   const logs = logsData?.data?.content ?? [];
-  const logTotalPages = logsData?.data?.totalPages ?? 0;
+  const logTotalPages = logsData?.data?.page?.totalPages ?? 0;
   const requests = requestsData?.data?.content ?? [];
-  const requestTotalPages = requestsData?.data?.totalPages ?? 0;
+  const requestTotalPages = requestsData?.data?.page?.totalPages ?? 0;
 
   const handleApplyDateFilter = () => {
     setDateRange(

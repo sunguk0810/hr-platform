@@ -52,12 +52,16 @@ export function useHeadcountPlans(params?: HeadcountPlanSearchParams) {
       ...query.data,
       data: {
         content,
-        totalElements,
-        totalPages,
-        size,
-        number: page,
-        first: page === 0,
-        last: page >= totalPages - 1,
+        page: {
+          number: page,
+          size,
+          totalElements,
+          totalPages,
+          first: page === 0,
+          last: page >= totalPages - 1,
+          hasNext: page < totalPages - 1,
+          hasPrevious: page > 0,
+        },
       },
     };
   }, [query.data, page, size, status]);

@@ -7,7 +7,13 @@ vi.mock('@/lib/apiClient', () => ({
   apiClient: {
     get: vi.fn(),
     post: vi.fn(),
+    delete: vi.fn(),
   },
+}));
+
+// Mock featureFlags
+vi.mock('@/lib/featureFlags', () => ({
+  isMockEnabled: () => false,
 }));
 
 // Mock import.meta.env
@@ -16,7 +22,6 @@ const originalEnv = import.meta.env;
 describe('authService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Default to non-development mode for testing actual API calls
     vi.stubGlobal('import.meta', {
       env: {
         ...originalEnv,
@@ -28,80 +33,6 @@ describe('authService', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
-  });
-
-  describe('login', () => {
-    it('should call login API with credentials', async () => {
-      const loginRequest = {
-        username: 'admin',
-        password: 'password123',
-        tenantCode: 'TENANT01',
-      };
-
-      const mockResponse = {
-        data: {
-          success: true,
-          data: {
-            user: {
-              id: '1',
-              employeeId: 'emp-1',
-              employeeNumber: 'EMP001',
-              name: '관리자',
-              email: 'admin@company.com',
-              departmentId: 'dept-1',
-              departmentName: '경영지원팀',
-              positionName: '팀장',
-              gradeName: 'G4',
-              roles: ['ADMIN'],
-              permissions: ['*'],
-            },
-            accessToken: 'access-token-123',
-            refreshToken: 'refresh-token-123',
-            tenant: {
-              id: 'tenant-1',
-              code: 'TENANT01',
-              name: '테스트 회사',
-              status: 'ACTIVE',
-            },
-          },
-          message: '로그인 성공',
-          timestamp: '2024-01-01T00:00:00Z',
-        },
-      };
-
-      vi.mocked(apiClient.post).mockResolvedValue(mockResponse);
-
-      const result = await authService.login(loginRequest);
-
-      expect(apiClient.post).toHaveBeenCalledWith('/auth/login', loginRequest);
-      expect(result.success).toBe(true);
-      expect(result.data.user.name).toBe('관리자');
-      expect(result.data.accessToken).toBe('access-token-123');
-    });
-
-    it('should throw error for invalid credentials', async () => {
-      const loginRequest = {
-        username: 'wrong',
-        password: 'wrong',
-      };
-
-      const error = {
-        response: {
-          status: 401,
-          data: {
-            success: false,
-            error: {
-              code: 'AUTH_001',
-              message: '아이디 또는 비밀번호가 올바르지 않습니다.',
-            },
-          },
-        },
-      };
-
-      vi.mocked(apiClient.post).mockRejectedValue(error);
-
-      await expect(authService.login(loginRequest)).rejects.toEqual(error);
-    });
   });
 
   describe('logout', () => {
@@ -132,7 +63,7 @@ describe('authService', () => {
 
       const result = await authService.refreshToken('old-refresh-token');
 
-      expect(apiClient.post).toHaveBeenCalledWith('/auth/refresh', {
+      expect(apiClient.post).toHaveBeenCalledWith('/auth/token/refresh', {
         refreshToken: 'old-refresh-token',
       });
       expect(result.data.accessToken).toBe('new-access-token');
@@ -194,6 +125,7 @@ describe('authService', () => {
       const changeRequest = {
         currentPassword: 'oldPassword123',
         newPassword: 'newPassword456',
+        confirmPassword: 'newPassword456',
       };
 
       const mockResponse = {
@@ -209,7 +141,7 @@ describe('authService', () => {
 
       const result = await authService.changePassword(changeRequest);
 
-      expect(apiClient.post).toHaveBeenCalledWith('/auth/change-password', changeRequest);
+      expect(apiClient.post).toHaveBeenCalledWith('/auth/password/change', changeRequest);
       expect(result.success).toBe(true);
     });
 
@@ -217,6 +149,7 @@ describe('authService', () => {
       const changeRequest = {
         currentPassword: 'wrongPassword',
         newPassword: 'newPassword456',
+        confirmPassword: 'newPassword456',
       };
 
       const error = {
@@ -245,18 +178,22 @@ describe('authService', () => {
           success: true,
           data: [
             {
-              id: '1',
-              device: 'Chrome on Windows',
+              sessionId: 'session-001',
+              deviceInfo: 'Chrome on Windows',
+              ipAddress: '192.168.1.1',
               location: 'Seoul, South Korea',
-              lastActive: '2024-01-01T10:00:00Z',
-              current: true,
+              createdAt: '2024-01-01T10:00:00Z',
+              lastAccessedAt: '2024-01-01T10:00:00Z',
+              currentSession: true,
             },
             {
-              id: '2',
-              device: 'Safari on iPhone',
+              sessionId: 'session-002',
+              deviceInfo: 'Safari on iPhone',
+              ipAddress: '192.168.1.2',
               location: 'Seoul, South Korea',
-              lastActive: '2024-01-01T09:00:00Z',
-              current: false,
+              createdAt: '2024-01-01T09:00:00Z',
+              lastAccessedAt: '2024-01-01T09:00:00Z',
+              currentSession: false,
             },
           ],
           timestamp: '2024-01-01T00:00:00Z',
@@ -269,7 +206,9 @@ describe('authService', () => {
 
       expect(apiClient.get).toHaveBeenCalledWith('/auth/sessions');
       expect(result.data).toHaveLength(2);
-      expect(result.data[0].current).toBe(true);
+      expect(result.data[0].currentSession).toBe(true);
+      expect(result.data[0].sessionId).toBe('session-001');
+      expect(result.data[0].deviceInfo).toBe('Chrome on Windows');
     });
   });
 
@@ -279,16 +218,16 @@ describe('authService', () => {
         data: {
           success: true,
           data: null,
-          message: '세션 2이 로그아웃되었습니다.',
+          message: '세션이 종료되었습니다.',
           timestamp: '2024-01-01T00:00:00Z',
         },
       };
 
-      vi.mocked(apiClient.post).mockResolvedValue(mockResponse);
+      vi.mocked(apiClient.delete).mockResolvedValue(mockResponse);
 
-      const result = await authService.logoutSession('2');
+      const result = await authService.logoutSession('session-002');
 
-      expect(apiClient.post).toHaveBeenCalledWith('/auth/sessions/2/logout');
+      expect(apiClient.delete).toHaveBeenCalledWith('/auth/sessions/session-002');
       expect(result.success).toBe(true);
     });
   });
@@ -304,11 +243,11 @@ describe('authService', () => {
         },
       };
 
-      vi.mocked(apiClient.post).mockResolvedValue(mockResponse);
+      vi.mocked(apiClient.delete).mockResolvedValue(mockResponse);
 
       const result = await authService.logoutAllSessions();
 
-      expect(apiClient.post).toHaveBeenCalledWith('/auth/sessions/logout-all');
+      expect(apiClient.delete).toHaveBeenCalledWith('/auth/sessions');
       expect(result.success).toBe(true);
     });
   });

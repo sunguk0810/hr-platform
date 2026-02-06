@@ -67,7 +67,7 @@ export function TransferList({ showActions = true }: TransferListProps) {
   const [dialogType, setDialogType] = useState<'approve' | 'reject' | 'cancel' | null>(null);
 
   const transfers = data?.data?.content ?? [];
-  const totalPages = data?.data?.totalPages ?? 0;
+  const totalPages = data?.data?.page?.totalPages ?? 0;
 
   const isApproving = approveSourceMutation.isPending || approveTargetMutation.isPending;
 

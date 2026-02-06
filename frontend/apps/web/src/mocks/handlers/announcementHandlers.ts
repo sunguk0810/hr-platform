@@ -274,12 +274,16 @@ export const announcementHandlers = [
       success: true,
       data: {
         content,
-        page,
-        size,
-        totalElements,
-        totalPages,
-        first: page === 0,
-        last: page >= totalPages - 1,
+        page: {
+          number: page,
+          size,
+          totalElements,
+          totalPages,
+          first: page === 0,
+          last: page >= totalPages - 1,
+          hasNext: page < totalPages - 1,
+          hasPrevious: page > 0,
+        },
       },
       timestamp: new Date().toISOString(),
     });

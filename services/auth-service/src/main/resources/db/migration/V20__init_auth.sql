@@ -135,14 +135,14 @@ CREATE INDEX IF NOT EXISTS idx_account_locks_is_locked ON tenant_common.account_
 -- =============================================================================
 
 -- Seed default admin user (password: admin123!)
--- BCrypt hash of 'admin123!'
+-- BCrypt hash of 'password!'
 INSERT INTO tenant_common.users (id, tenant_id, username, email, password_hash, roles, permissions, status)
 VALUES (
     gen_random_uuid(),
     '00000000-0000-0000-0000-000000000001',
     'admin',
     'admin@hrsaas.com',
-    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
+    '$2a$12$loGZpPotBBOPqcvnxuUpCuvbPqmehTAH4XWDdqxy5vIPcL42ZYObW',
     ARRAY['SUPER_ADMIN', 'SYSTEM_ADMIN'],
     ARRAY['*'],
     'ACTIVE'

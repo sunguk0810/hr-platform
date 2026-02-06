@@ -37,7 +37,7 @@ export function useInfiniteApprovalList(params?: Omit<ApprovalListParams, 'page'
     getNextPageParam: (lastPage) => {
       const data = lastPage?.data;
       if (!data) return undefined;
-      return data.last ? undefined : data.page + 1;
+      return data.page.last ? undefined : data.page.number + 1;
     },
     initialPageParam: 0,
   });

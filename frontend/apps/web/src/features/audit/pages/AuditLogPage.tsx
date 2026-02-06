@@ -426,10 +426,10 @@ export default function AuditLogPage() {
                 </div>
               ))}
 
-              {data && data.totalPages > 1 && (
+              {data && data.page.totalPages > 1 && (
                 <Pagination
                   page={page}
-                  totalPages={data.totalPages}
+                  totalPages={data.page.totalPages}
                   onPageChange={setPage}
                 />
               )}
@@ -637,10 +637,10 @@ export default function AuditLogPage() {
         </Card>
 
         {/* Pagination */}
-        {data && data.totalPages > 1 && (
+        {data && data.page.totalPages > 1 && (
           <Pagination
             page={page}
-            totalPages={data.totalPages}
+            totalPages={data.page.totalPages}
             onPageChange={setPage}
           />
         )}

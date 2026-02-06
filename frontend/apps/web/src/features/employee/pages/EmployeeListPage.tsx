@@ -181,8 +181,8 @@ export default function EmployeeListPage() {
   const { data, isLoading, isError } = useEmployeeList(params);
 
   const employees = data?.data?.content ?? [];
-  const totalPages = data?.data?.totalPages ?? 0;
-  const totalElements = data?.data?.totalElements ?? 0;
+  const totalPages = data?.data?.page?.totalPages ?? 0;
+  const totalElements = data?.data?.page?.totalElements ?? 0;
 
   const handleRowClick = (id: string) => {
     navigate(`/employees/${id}`);

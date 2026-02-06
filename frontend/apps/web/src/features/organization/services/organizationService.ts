@@ -60,12 +60,33 @@ export const organizationService = {
     return response.data;
   },
 
-  // Departments - Backend uses /departments (not nested under /organizations)
+  // Departments - Backend returns List (not paginated), wrap as PageResponse for UI compatibility
   async getDepartments(params?: DepartmentSearchParams): Promise<ApiResponse<PageResponse<Department>>> {
-    const response = await apiClient.get<ApiResponse<PageResponse<Department>>>('/departments', {
+    const response = await apiClient.get<ApiResponse<Department[] | PageResponse<Department>>>('/departments', {
       params,
     });
-    return response.data;
+    const result = response.data;
+    // Backend returns List<DepartmentResponse>, convert to PageResponse shape
+    if (result.data && Array.isArray(result.data)) {
+      const list = result.data as Department[];
+      return {
+        ...result,
+        data: {
+          content: list,
+          page: {
+            number: 0,
+            size: list.length,
+            totalElements: list.length,
+            totalPages: 1,
+            first: true,
+            last: true,
+            hasNext: false,
+            hasPrevious: false,
+          },
+        },
+      };
+    }
+    return result as ApiResponse<PageResponse<Department>>;
   },
 
   async getDepartment(id: string): Promise<ApiResponse<Department>> {

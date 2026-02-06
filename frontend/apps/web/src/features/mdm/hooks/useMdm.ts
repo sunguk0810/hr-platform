@@ -16,7 +16,6 @@ import type {
   MigrateCodeRequest,
   TenantCodeSearchParams,
   UpdateTenantCodeRequest,
-  ClassificationLevel,
 } from '@hr-platform/shared-types';
 
 // Code Groups
@@ -265,48 +264,37 @@ export function useBulkUpdateCodeStatus() {
 // Search params hooks
 interface CodeGroupSearchState {
   keyword: string;
-  isActive: boolean | null;
-  page: number;
-  size: number;
+  active: boolean | null;
 }
 
-export function useCodeGroupSearchParams(initialSize = 20) {
+export function useCodeGroupSearchParams() {
   const [searchState, setSearchState] = useState<CodeGroupSearchState>({
     keyword: '',
-    isActive: null,
-    page: 0,
-    size: initialSize,
+    active: null,
   });
 
   const params = useMemo<CodeGroupSearchParams>(() => ({
-    page: searchState.page,
-    size: searchState.size,
     ...(searchState.keyword && { keyword: searchState.keyword }),
-    ...(searchState.isActive !== null && { isActive: searchState.isActive }),
+    ...(searchState.active !== null && { active: searchState.active }),
   }), [searchState]);
 
   const setKeyword = useCallback((keyword: string) => {
-    setSearchState(prev => ({ ...prev, keyword, page: 0 }));
+    setSearchState(prev => ({ ...prev, keyword }));
   }, []);
 
-  const setIsActive = useCallback((isActive: boolean | null) => {
-    setSearchState(prev => ({ ...prev, isActive, page: 0 }));
-  }, []);
-
-  const setPage = useCallback((page: number) => {
-    setSearchState(prev => ({ ...prev, page }));
+  const setActive = useCallback((active: boolean | null) => {
+    setSearchState(prev => ({ ...prev, active }));
   }, []);
 
   const resetFilters = useCallback(() => {
-    setSearchState({ keyword: '', isActive: null, page: 0, size: initialSize });
-  }, [initialSize]);
+    setSearchState({ keyword: '', active: null });
+  }, []);
 
   return {
     params,
     searchState,
     setKeyword,
-    setIsActive,
-    setPage,
+    setActive,
     resetFilters,
   };
 }
@@ -314,8 +302,7 @@ export function useCodeGroupSearchParams(initialSize = 20) {
 interface CommonCodeSearchState {
   groupCode: string;
   keyword: string;
-  isActive: boolean | null;
-  classificationLevel: ClassificationLevel | null;
+  status: 'ACTIVE' | 'INACTIVE' | 'DEPRECATED' | null;
   page: number;
   size: number;
 }
@@ -324,8 +311,7 @@ export function useCommonCodeSearchParams(initialGroupCode = '', initialSize = 2
   const [searchState, setSearchState] = useState<CommonCodeSearchState>({
     groupCode: initialGroupCode,
     keyword: '',
-    isActive: null,
-    classificationLevel: null,
+    status: null,
     page: 0,
     size: initialSize,
   });
@@ -335,8 +321,7 @@ export function useCommonCodeSearchParams(initialGroupCode = '', initialSize = 2
     size: searchState.size,
     ...(searchState.groupCode && { groupCode: searchState.groupCode }),
     ...(searchState.keyword && { keyword: searchState.keyword }),
-    ...(searchState.isActive !== null && { isActive: searchState.isActive }),
-    ...(searchState.classificationLevel !== null && { classificationLevel: searchState.classificationLevel }),
+    ...(searchState.status !== null && { status: searchState.status }),
   }), [searchState]);
 
   const setGroupCode = useCallback((groupCode: string) => {
@@ -347,12 +332,8 @@ export function useCommonCodeSearchParams(initialGroupCode = '', initialSize = 2
     setSearchState(prev => ({ ...prev, keyword, page: 0 }));
   }, []);
 
-  const setIsActive = useCallback((isActive: boolean | null) => {
-    setSearchState(prev => ({ ...prev, isActive, page: 0 }));
-  }, []);
-
-  const setClassificationLevel = useCallback((classificationLevel: ClassificationLevel | null) => {
-    setSearchState(prev => ({ ...prev, classificationLevel, page: 0 }));
+  const setStatus = useCallback((status: 'ACTIVE' | 'INACTIVE' | 'DEPRECATED' | null) => {
+    setSearchState(prev => ({ ...prev, status, page: 0 }));
   }, []);
 
   const setPage = useCallback((page: number) => {
@@ -360,7 +341,7 @@ export function useCommonCodeSearchParams(initialGroupCode = '', initialSize = 2
   }, []);
 
   const resetFilters = useCallback(() => {
-    setSearchState({ groupCode: '', keyword: '', isActive: null, classificationLevel: null, page: 0, size: initialSize });
+    setSearchState({ groupCode: '', keyword: '', status: null, page: 0, size: initialSize });
   }, [initialSize]);
 
   return {
@@ -368,8 +349,7 @@ export function useCommonCodeSearchParams(initialGroupCode = '', initialSize = 2
     searchState,
     setGroupCode,
     setKeyword,
-    setIsActive,
-    setClassificationLevel,
+    setStatus,
     setPage,
     resetFilters,
   };

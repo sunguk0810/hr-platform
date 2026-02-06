@@ -118,7 +118,7 @@ export default function LeaveApprovalPage() {
   const [mobileSelectionMode, setMobileSelectionMode] = useState(false);
 
   const requests = listData?.data?.content ?? [];
-  const totalPages = listData?.data?.totalPages ?? 0;
+  const totalPages = listData?.data?.page?.totalPages ?? 0;
   const summary = summaryData?.data;
 
   const handleApprove = async () => {

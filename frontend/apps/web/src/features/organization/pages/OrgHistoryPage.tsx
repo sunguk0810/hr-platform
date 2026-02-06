@@ -84,7 +84,7 @@ export default function OrgHistoryPage() {
 
   const tree = treeData?.data ?? [];
   const history = historyData?.data?.content ?? [];
-  const totalPages = historyData?.data?.totalPages ?? 0;
+  const totalPages = historyData?.data?.page?.totalPages ?? 0;
 
   // Flatten tree for department select
   const flattenTree = (

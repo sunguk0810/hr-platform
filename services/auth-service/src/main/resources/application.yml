@@ -53,4 +53,5 @@ jwt:
 
 logging:
   level:
+    root: INFO
     com.hrsaas: DEBUG

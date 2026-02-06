@@ -25,6 +25,8 @@ public class DepartmentResponse {
     private Integer level;
     private String path;
     private UUID managerId;
+    private String managerName;
+    private Integer employeeCount;
     private DepartmentStatus status;
     private Integer sortOrder;
     private Instant createdAt;

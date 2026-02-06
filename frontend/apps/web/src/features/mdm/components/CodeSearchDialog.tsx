@@ -35,7 +35,7 @@ export function CodeSearchDialog({ open, onOpenChange, onSelect }: CodeSearchDia
   const debouncedKeyword = useDebounce(keyword, 300);
 
   const { data: codeGroupsData } = useCodeGroupList({ size: 100 });
-  const codeGroups = codeGroupsData?.data?.content ?? [];
+  const codeGroups = codeGroupsData?.data ?? [];
 
   const { data: searchResults, isLoading } = useCodeSearch(
     {
@@ -108,8 +108,8 @@ export function CodeSearchDialog({ open, onOpenChange, onSelect }: CodeSearchDia
                 <SelectContent>
                   <SelectItem value="__all__">전체</SelectItem>
                   {codeGroups.map((group) => (
-                    <SelectItem key={group.id} value={group.code}>
-                      {group.name}
+                    <SelectItem key={group.id} value={group.groupCode}>
+                      {group.groupName}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -147,17 +147,17 @@ export function CodeSearchDialog({ open, onOpenChange, onSelect }: CodeSearchDia
                       <div className="flex items-center gap-2">
                         <span className="font-mono text-sm font-medium">{result.code}</span>
                         <span className="text-muted-foreground">-</span>
-                        <span className="font-medium">{result.name}</span>
-                        {result.nameEn && (
-                          <span className="text-sm text-muted-foreground">({result.nameEn})</span>
+                        <span className="font-medium">{result.codeName}</span>
+                        {result.codeNameEn && (
+                          <span className="text-sm text-muted-foreground">({result.codeNameEn})</span>
                         )}
                       </div>
                       <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
                         <span>{result.groupName}</span>
                         <span>•</span>
                         <StatusBadge
-                          status={result.isActive ? 'success' : 'default'}
-                          label={result.isActive ? '활성' : '비활성'}
+                          status={result.active ? 'success' : 'default'}
+                          label={result.active ? '활성' : '비활성'}
                         />
                       </div>
                     </div>

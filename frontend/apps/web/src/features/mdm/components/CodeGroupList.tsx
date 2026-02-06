@@ -127,8 +127,8 @@ export function CodeGroupList({
                   key={group.id}
                   className="border-b transition-colors hover:bg-muted/50"
                 >
-                  <td className="px-4 py-3 font-mono text-sm">{group.code}</td>
-                  <td className="px-4 py-3 text-sm font-medium">{group.name}</td>
+                  <td className="px-4 py-3 font-mono text-sm">{group.groupCode}</td>
+                  <td className="px-4 py-3 text-sm font-medium">{group.groupName}</td>
                   <td className="px-4 py-3 text-sm text-muted-foreground max-w-[200px] truncate">
                     {group.description || '-'}
                   </td>
@@ -144,7 +144,7 @@ export function CodeGroupList({
                     </Button>
                   </td>
                   <td className="px-4 py-3">
-                    {group.isSystem ? (
+                    {group.system ? (
                       <StatusBadge status="info" label="시스템" />
                     ) : (
                       <StatusBadge status="default" label="사용자" />
@@ -152,8 +152,8 @@ export function CodeGroupList({
                   </td>
                   <td className="px-4 py-3">
                     <StatusBadge
-                      status={group.isActive ? 'success' : 'default'}
-                      label={group.isActive ? '활성' : '비활성'}
+                      status={group.active ? 'success' : 'default'}
+                      label={group.active ? '활성' : '비활성'}
                     />
                   </td>
                   <td className="px-4 py-3">
@@ -162,8 +162,8 @@ export function CodeGroupList({
                         variant="ghost"
                         size="icon"
                         onClick={() => onEdit?.(group)}
-                        disabled={group.isSystem}
-                        title={group.isSystem ? '시스템 코드그룹은 수정할 수 없습니다.' : '수정'}
+                        disabled={group.system}
+                        title={group.system ? '시스템 코드그룹은 수정할 수 없습니다.' : '수정'}
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -171,8 +171,8 @@ export function CodeGroupList({
                         variant="ghost"
                         size="icon"
                         onClick={() => onDelete?.(group)}
-                        disabled={group.isSystem}
-                        title={group.isSystem ? '시스템 코드그룹은 삭제할 수 없습니다.' : '삭제'}
+                        disabled={group.system}
+                        title={group.system ? '시스템 코드그룹은 삭제할 수 없습니다.' : '삭제'}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -221,18 +221,18 @@ export function CodeGroupCard({
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between">
           <div className="space-y-1">
-            <CardTitle className="text-base font-medium">{group.name}</CardTitle>
-            <p className="text-xs font-mono text-muted-foreground">{group.code}</p>
+            <CardTitle className="text-base font-medium">{group.groupName}</CardTitle>
+            <p className="text-xs font-mono text-muted-foreground">{group.groupCode}</p>
           </div>
           <div className="flex items-center gap-2">
-            {group.isSystem ? (
+            {group.system ? (
               <StatusBadge status="info" label="시스템" />
             ) : (
               <StatusBadge status="default" label="사용자" />
             )}
             <StatusBadge
-              status={group.isActive ? 'success' : 'default'}
-              label={group.isActive ? '활성' : '비활성'}
+              status={group.active ? 'success' : 'default'}
+              label={group.active ? '활성' : '비활성'}
             />
           </div>
         </div>
@@ -253,7 +253,7 @@ export function CodeGroupCard({
             하위코드 {group.codeCount}개
             <ExternalLink className="ml-1 h-3 w-3" />
           </Button>
-          {!group.isSystem && (
+          {!group.system && (
             <div className="flex gap-1">
               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEdit}>
                 <Pencil className="h-3.5 w-3.5" />

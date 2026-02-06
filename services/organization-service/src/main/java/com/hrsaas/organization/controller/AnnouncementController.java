@@ -1,6 +1,7 @@
 package com.hrsaas.organization.controller;
 
 import com.hrsaas.common.response.ApiResponse;
+import com.hrsaas.common.response.PageResponse;
 import com.hrsaas.organization.domain.dto.request.CreateAnnouncementRequest;
 import com.hrsaas.organization.domain.dto.request.UpdateAnnouncementRequest;
 import com.hrsaas.organization.domain.dto.response.AnnouncementResponse;
@@ -51,21 +52,21 @@ public class AnnouncementController {
     @GetMapping
     @Operation(summary = "공지사항 목록 조회")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ApiResponse<Page<AnnouncementResponse>>> getAll(
+    public ResponseEntity<ApiResponse<PageResponse<AnnouncementResponse>>> getAll(
             @RequestParam(required = false) AnnouncementCategory category,
             @RequestParam(required = false) String keyword,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        Page<AnnouncementResponse> response = announcementService.search(category, keyword, pageable);
-        return ResponseEntity.ok(ApiResponse.success(response));
+        Page<AnnouncementResponse> page = announcementService.search(category, keyword, pageable);
+        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(page)));
     }
 
     @GetMapping("/published")
     @Operation(summary = "발행된 공지사항 목록 조회")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ApiResponse<Page<AnnouncementResponse>>> getPublished(
+    public ResponseEntity<ApiResponse<PageResponse<AnnouncementResponse>>> getPublished(
             @PageableDefault(size = 20, sort = "publishedAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        Page<AnnouncementResponse> response = announcementService.getPublished(pageable);
-        return ResponseEntity.ok(ApiResponse.success(response));
+        Page<AnnouncementResponse> page = announcementService.getPublished(pageable);
+        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(page)));
     }
 
     @GetMapping("/pinned")

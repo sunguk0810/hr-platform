@@ -1,6 +1,9 @@
 package com.hrsaas.mdm.repository;
 
+import com.hrsaas.mdm.domain.entity.CodeStatus;
 import com.hrsaas.mdm.domain.entity.CommonCode;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -51,4 +54,27 @@ public interface CommonCodeRepository extends JpaRepository<CommonCode, UUID> {
         @Param("groupCode") String groupCode,
         @Param("keyword") String keyword,
         @Param("tenantId") UUID tenantId);
+
+    @Query("SELECT cc FROM CommonCode cc WHERE (cc.tenantId IS NULL OR cc.tenantId = :tenantId) " +
+           "AND (:groupCode IS NULL OR cc.codeGroup.groupCode = :groupCode) " +
+           "AND (:status IS NULL OR cc.status = :status) " +
+           "ORDER BY cc.codeGroup.groupCode ASC, cc.sortOrder ASC")
+    Page<CommonCode> findAllNoKeyword(
+        @Param("tenantId") UUID tenantId,
+        @Param("groupCode") String groupCode,
+        @Param("status") CodeStatus status,
+        Pageable pageable);
+
+    @Query("SELECT cc FROM CommonCode cc WHERE (cc.tenantId IS NULL OR cc.tenantId = :tenantId) " +
+           "AND (LOWER(cc.codeName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "    OR LOWER(cc.code) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+           "AND (:groupCode IS NULL OR cc.codeGroup.groupCode = :groupCode) " +
+           "AND (:status IS NULL OR cc.status = :status) " +
+           "ORDER BY cc.codeGroup.groupCode ASC, cc.sortOrder ASC")
+    Page<CommonCode> findAllWithKeyword(
+        @Param("tenantId") UUID tenantId,
+        @Param("keyword") String keyword,
+        @Param("groupCode") String groupCode,
+        @Param("status") CodeStatus status,
+        Pageable pageable);
 }

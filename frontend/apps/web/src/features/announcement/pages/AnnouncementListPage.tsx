@@ -84,7 +84,7 @@ export default function AnnouncementListPage() {
   } = useInfiniteAnnouncementList(infiniteParams);
 
   const announcements = data?.data?.content ?? [];
-  const totalPages = data?.data?.totalPages ?? 0;
+  const totalPages = data?.data?.page?.totalPages ?? 0;
 
   const handleRowClick = (id: string) => {
     navigate(`/announcements/${id}`);

@@ -6,7 +6,7 @@
 
 ## 프로젝트 현재 상태
 
-> **최종 업데이트**: 2026년 2월 5일
+> **최종 업데이트**: 2026년 2월 6일
 
 ### 완료된 작업 (프론트엔드 UI)
 
@@ -25,6 +25,8 @@
 | **위원회** | 목록, 생성, 멤버 관리 | 완료 |
 | **정원 관리** | 현황, 요청 생성 | 완료 |
 | **인사이동** | 요청, 목록, 상세 | 완료 |
+| **사원증** | 목록, 발급 요청, 재발급 | 완료 |
+| **감사로그** | 조회, 필터, 타임라인, 상세 | 완료 |
 | **증명서** | 발급 신청, 내 증명서 | 완료 |
 | **경조사** | 신청, 정책 관리, 지급 관리 | 완료 |
 | **알림** | 알림 센터, 설정 | 완료 |
@@ -102,8 +104,8 @@ pnpm dev
 | 프레임워크 | Spring Boot 3.2, Spring Cloud 2023.x |
 | 데이터베이스 | PostgreSQL 15 + Row Level Security |
 | 캐시 | Redis 7.x |
-| 메시징 | Apache Kafka 3.x (KRaft 모드) |
-| 인증 | Keycloak 23.x (OAuth 2.0 / OIDC) |
+| 메시징 | AWS SQS + SNS (spring-cloud-aws 3.1.1) |
+| 인증 | Custom JWT (Spring Security) |
 | 빌드 | Gradle 8.x (멀티모듈) |
 | 컨테이너 | Docker, AWS ECS Fargate (Graviton ARM64) |
 | 프론트엔드 | React 18, TypeScript, Vite, TanStack Query |
@@ -128,17 +130,20 @@ pnpm dev
                     │   │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌────────┐ │  │
                     │   │  │Employee │ │Attendance│ │Approval │ │  MDM   │ │  │
                     │   │  └─────────┘ └─────────┘ └─────────┘ └────────┘ │  │
-                    │   │  ┌─────────┐ ┌─────────┐                        │  │
-                    │   │  │Keycloak │ │  Redis  │                        │  │
-                    │   │  └─────────┘ └─────────┘                        │  │
+                    │   │  ┌─────────┐ ┌─────────┐ ┌──────────┐┌────────┐│  │
+                    │   │  │Notific. │ │  File   │ │Appointm. ││Certif. ││  │
+                    │   │  └─────────┘ └─────────┘ └──────────┘└────────┘│  │
+                    │   │  ┌─────────┐ ┌─────────┐                       │  │
+                    │   │  │Recruit. │ │  Redis  │                       │  │
+                    │   │  └─────────┘ └─────────┘                       │  │
                     │   └────────────────────────────────────────────────┘  │
                     │              │                │                        │
                     │   ┌──────────┴────────────────┴──────────┐            │
                     │   │                                       │            │
                     │   ▼                                       ▼            │
                     │ ┌─────────┐                          ┌─────────┐      │
-                    │ │   RDS   │                          │  Kafka  │      │
-                    │ │PostgreSQL│                         │  (EC2)  │      │
+                    │ │   RDS   │                          │ SQS/SNS │      │
+                    │ │PostgreSQL│                         │  (AWS)  │      │
                     │ └─────────┘                          └─────────┘      │
                     │                                                        │
                     │   ┌─────────────────────────────────────────────┐     │
@@ -162,6 +167,9 @@ pnpm dev
 | MDM | 8087 | 마스터 데이터 (코드, 메뉴) |
 | Notification | 8088 | 푸시 알림, 이메일 |
 | File | 8089 | 파일 저장 (S3 연동) |
+| Appointment | 8091 | 발령 관리, 예약 실행 |
+| Certificate | 8092 | 증명서 발급, PDF 생성 |
+| Recruitment | 8093 | 채용공고, 지원자, 면접 |
 
 ---
 
@@ -202,7 +210,7 @@ hr-platform/
 ### 빠른 시작
 
 ```bash
-# 1. 인프라 시작 (PostgreSQL, Redis, Kafka, Keycloak)
+# 1. 인프라 시작 (PostgreSQL, Redis, LocalStack)
 cd docker && docker-compose up -d
 
 # 2. 백엔드 서비스 실행
@@ -262,8 +270,8 @@ pnpm typecheck
 - **컴퓨팅**: ECS Fargate + Graviton (ARM64) - 비용 효율성
 - **데이터베이스**: RDS PostgreSQL + Row Level Security
 - **캐시**: Fargate 기반 Redis (ARM64)
-- **메시징**: EC2 기반 Kafka (KRaft 모드, ZooKeeper 불필요)
-- **인증**: Fargate 기반 Keycloak (ARM64)
+- **메시징**: AWS SQS + SNS (서버리스, LocalStack으로 로컬 개발)
+- **인증**: Custom JWT (Spring Security)
 - **네트워킹**: NAT Gateway 대신 VPC Endpoints 사용 (월 ~$20 절감)
 
 ### 배포 단계
@@ -285,7 +293,7 @@ aws ecr get-login-password --region ap-northeast-2 | \
 
 # buildx를 사용한 ARM64 이미지 빌드
 docker buildx create --use
-services="gateway-service auth-service tenant-service organization-service employee-service attendance-service approval-service mdm-service"
+services="gateway-service auth-service tenant-service organization-service employee-service attendance-service approval-service mdm-service notification-service file-service appointment-service certificate-service recruitment-service"
 for service in $services; do
   docker buildx build --platform linux/arm64 \
     -t <account-id>.dkr.ecr.ap-northeast-2.amazonaws.com/hr-platform/$service:latest \
@@ -316,15 +324,35 @@ curl -k https://<alb-dns>/actuator/health
 
 | 리소스 | 구성 | 비용 |
 |--------|------|------|
-| ECS Fargate (8개 서비스) | ARM64, 256 CPU, 512MB | ~$96 |
+| ECS Fargate (13개 서비스) | ARM64, 256 CPU, 512MB | ~$156 |
 | Redis (Fargate) | ARM64, 256 CPU, 512MB | ~$8 |
-| Keycloak (Fargate) | ARM64, 512 CPU, 1GB | ~$16 |
-| Kafka (EC2) | t3.small | ~$15 |
+| SQS/SNS | 서버리스 (사용량 기반) | ~$5 |
 | RDS | db.t3.micro | ~$25 |
 | ALB | - | ~$20 |
 | VPC Endpoints | ECR, Logs, Secrets | ~$14 |
 | CloudFront + S3 | - | ~$5 |
 | **합계** | | **~$200/월** |
+
+---
+
+## 모듈 분석 문서
+
+각 마이크로서비스의 프로덕션 정책, 설정값, 갭 분석, 테스트 시나리오를 정리한 문서입니다.
+
+| 문서 | 서비스 | 주요 내용 |
+|------|--------|----------|
+| [`01-AUTH-SERVICE.md`](docs/modules/01-AUTH-SERVICE.md) | Auth | 세션, 비밀번호, MFA, 감사로그 |
+| [`02-TENANT-SERVICE.md`](docs/modules/02-TENANT-SERVICE.md) | Tenant | 구독, 과금, 기능 플래그 |
+| [`03-MDM-SERVICE.md`](docs/modules/03-MDM-SERVICE.md) | MDM | 코드 체계, 4단계 분류, 메뉴 관리 |
+| [`04-ORGANIZATION-SERVICE.md`](docs/modules/04-ORGANIZATION-SERVICE.md) | Organization | 부서, 직급, 경조, 위원회, 공지, 정원 |
+| [`05-EMPLOYEE-SERVICE.md`](docs/modules/05-EMPLOYEE-SERVICE.md) | Employee | 생애주기, 개인정보, 겸직, 사원증 |
+| [`06-ATTENDANCE-SERVICE.md`](docs/modules/06-ATTENDANCE-SERVICE.md) | Attendance | 근태, 휴가, 초과근무, 휴가 정책 |
+| [`07-APPROVAL-SERVICE.md`](docs/modules/07-APPROVAL-SERVICE.md) | Approval | 결재선, 병렬/조건부 라우팅, 위임 |
+| [`08-NOTIFICATION-SERVICE.md`](docs/modules/08-NOTIFICATION-SERVICE.md) | Notification | 채널, 템플릿, SSE 실시간 |
+| [`09-FILE-SERVICE.md`](docs/modules/09-FILE-SERVICE.md) | File | 업로드, 바이러스 스캔, 보존 정책 |
+| [`10-RECRUITMENT-SERVICE.md`](docs/modules/10-RECRUITMENT-SERVICE.md) | Recruitment | 채용공고, 지원자, 면접, 블랙리스트 |
+| [`11-CERTIFICATE-SERVICE.md`](docs/modules/11-CERTIFICATE-SERVICE.md) | Certificate | 증명서 유형, PDF 생성, 온라인 검증 |
+| [`12-APPOINTMENT-SERVICE.md`](docs/modules/12-APPOINTMENT-SERVICE.md) | Appointment | 발령 유형, 예약 실행, 롤백 |
 
 ---
 
@@ -354,11 +382,9 @@ curl -k https://<alb-dns>/actuator/health
 
 ```bash
 # 액세스 토큰 획득
-curl -X POST https://auth.example.com/realms/hr-saas/protocol/openid-connect/token \
-  -d "grant_type=password" \
-  -d "client_id=hr-saas-api" \
-  -d "username=user@example.com" \
-  -d "password=password"
+curl -X POST https://api.example.com/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "user@example.com", "password": "password"}'
 
 # 토큰을 사용한 요청
 curl -H "Authorization: Bearer <access_token>" \

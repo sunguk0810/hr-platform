@@ -35,7 +35,7 @@ export default function InterviewListPage() {
 
   const summary = summaryData?.data ?? { total: 0, scheduled: 0, completed: 0, cancelled: 0, today: 0 };
   const interviews = data?.data?.content ?? [];
-  const totalPages = data?.data?.totalPages ?? 0;
+  const totalPages = data?.data?.page?.totalPages ?? 0;
 
   const handleRowClick = (applicationId: string) => {
     navigate(`/recruitment/applications/${applicationId}`);

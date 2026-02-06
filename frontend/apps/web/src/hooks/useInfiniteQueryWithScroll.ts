@@ -26,8 +26,8 @@ export function useInfiniteQueryWithScroll<T, TQueryKey extends QueryKey = Query
       return response.data;
     },
     getNextPageParam: (lastPage: PageResponse<T>) => {
-      if (lastPage.last) return undefined;
-      return lastPage.page + 1;
+      if (lastPage.page.last) return undefined;
+      return lastPage.page.number + 1;
     },
     initialPageParam: 0,
     enabled,
@@ -49,7 +49,7 @@ export function useInfiniteQueryWithScroll<T, TQueryKey extends QueryKey = Query
   const allItems = infiniteQuery.data?.pages.flatMap((page: PageResponse<T>) => page.content) ?? [];
 
   // Get total count from the first page
-  const totalElements = infiniteQuery.data?.pages[0]?.totalElements ?? 0;
+  const totalElements = infiniteQuery.data?.pages[0]?.page?.totalElements ?? 0;
 
   return {
     ...infiniteQuery,

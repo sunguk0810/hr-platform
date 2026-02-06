@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -95,7 +96,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     }
 
     @Override
-    @Cacheable(value = CacheNames.ORGANIZATION_TREE)
+    @Cacheable(value = CacheNames.ORGANIZATION_TREE, unless = "#result == null || #result.isEmpty()")
     public List<DepartmentTreeResponse> getTree() {
         UUID tenantId = TenantContext.getCurrentTenant();
         List<Department> rootDepartments = departmentRepository.findRootDepartments(
@@ -103,7 +104,7 @@ public class DepartmentServiceImpl implements DepartmentService {
 
         return rootDepartments.stream()
             .map(DepartmentTreeResponse::fromWithChildren)
-            .toList();
+            .collect(Collectors.toList());
     }
 
     @Override

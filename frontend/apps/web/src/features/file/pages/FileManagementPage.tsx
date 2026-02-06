@@ -86,7 +86,7 @@ export default function FileManagementPage() {
   const downloadMutation = useDownloadFile();
 
   const files = data?.data?.content ?? [];
-  const totalPages = data?.data?.totalPages ?? 0;
+  const totalPages = data?.data?.page?.totalPages ?? 0;
 
   const handleRefresh = async () => {
     await queryClient.invalidateQueries({ queryKey: ['files'] });

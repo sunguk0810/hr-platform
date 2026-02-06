@@ -4,7 +4,6 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { SkeletonTable } from '@/components/common/Skeleton';
-import { Pagination } from '@/components/common/Pagination';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,9 +31,9 @@ export default function CodeGroupPage() {
   const [selectedGroup, setSelectedGroup] = useState<CodeGroupListItem | null>(null);
 
   const [formData, setFormData] = useState<CreateCodeGroupRequest>({
-    code: '',
-    name: '',
-    nameEn: '',
+    groupCode: '',
+    groupName: '',
+    groupNameEn: '',
     description: '',
   });
 
@@ -42,8 +41,7 @@ export default function CodeGroupPage() {
     params,
     searchState,
     setKeyword,
-    setIsActive,
-    setPage,
+    setActive,
   } = useCodeGroupSearchParams();
 
   useEffect(() => {
@@ -55,21 +53,21 @@ export default function CodeGroupPage() {
   const updateMutation = useUpdateCodeGroup();
   const deleteMutation = useDeleteCodeGroup();
 
-  const codeGroups = data?.data?.content ?? [];
-  const totalPages = data?.data?.totalPages ?? 0;
-  const totalElements = data?.data?.totalElements ?? 0;
+  // Backend returns List (array), not PageResponse
+  const codeGroups = data?.data ?? [];
+  const totalElements = codeGroups.length;
 
   const handleCreateOpen = () => {
-    setFormData({ code: '', name: '', nameEn: '', description: '' });
+    setFormData({ groupCode: '', groupName: '', groupNameEn: '', description: '' });
     setIsCreateDialogOpen(true);
   };
 
   const handleEditOpen = (group: CodeGroupListItem) => {
     setSelectedGroup(group);
     setFormData({
-      code: group.code,
-      name: group.name,
-      nameEn: '',
+      groupCode: group.groupCode,
+      groupName: group.groupName,
+      groupNameEn: '',
       description: group.description || '',
     });
     setIsEditDialogOpen(true);
@@ -93,8 +91,8 @@ export default function CodeGroupPage() {
     if (!selectedGroup) return;
     try {
       const updateData: UpdateCodeGroupRequest = {
-        name: formData.name,
-        nameEn: formData.nameEn,
+        groupName: formData.groupName,
+        groupNameEn: formData.groupNameEn,
         description: formData.description,
       };
       await updateMutation.mutateAsync({ id: selectedGroup.id, data: updateData });
@@ -140,8 +138,8 @@ export default function CodeGroupPage() {
               />
             </div>
             <select
-              value={searchState.isActive === null ? '' : searchState.isActive.toString()}
-              onChange={(e) => setIsActive(e.target.value === '' ? null : e.target.value === 'true')}
+              value={searchState.active === null ? '' : searchState.active.toString()}
+              onChange={(e) => setActive(e.target.value === '' ? null : e.target.value === 'true')}
               className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
             >
               <option value="">전체 상태</option>
@@ -217,14 +215,14 @@ export default function CodeGroupPage() {
                         key={group.id}
                         className="border-b transition-colors hover:bg-muted/50"
                       >
-                        <td className="px-4 py-3 font-mono text-sm">{group.code}</td>
-                        <td className="px-4 py-3 text-sm font-medium">{group.name}</td>
+                        <td className="px-4 py-3 font-mono text-sm">{group.groupCode}</td>
+                        <td className="px-4 py-3 text-sm font-medium">{group.groupName}</td>
                         <td className="px-4 py-3 text-sm text-muted-foreground">
                           {group.description || '-'}
                         </td>
                         <td className="px-4 py-3 text-sm">{group.codeCount}개</td>
                         <td className="px-4 py-3">
-                          {group.isSystem ? (
+                          {group.system ? (
                             <StatusBadge status="info" label="시스템" />
                           ) : (
                             <StatusBadge status="default" label="사용자" />
@@ -232,8 +230,8 @@ export default function CodeGroupPage() {
                         </td>
                         <td className="px-4 py-3">
                           <StatusBadge
-                            status={group.isActive ? 'success' : 'default'}
-                            label={group.isActive ? '활성' : '비활성'}
+                            status={group.active ? 'success' : 'default'}
+                            label={group.active ? '활성' : '비활성'}
                           />
                         </td>
                         <td className="px-4 py-3">
@@ -242,7 +240,7 @@ export default function CodeGroupPage() {
                               variant="ghost"
                               size="icon"
                               onClick={() => handleEditOpen(group)}
-                              disabled={group.isSystem}
+                              disabled={group.system}
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
@@ -250,7 +248,7 @@ export default function CodeGroupPage() {
                               variant="ghost"
                               size="icon"
                               onClick={() => handleDeleteOpen(group)}
-                              disabled={group.isSystem}
+                              disabled={group.system}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -261,12 +259,7 @@ export default function CodeGroupPage() {
                   </tbody>
                 </table>
               </div>
-              <Pagination
-                page={searchState.page}
-                totalPages={totalPages}
-                onPageChange={setPage}
-              />
-              <div className="px-4 pb-3 text-sm text-muted-foreground">
+              <div className="px-4 py-3 text-sm text-muted-foreground">
                 총 {totalElements}개
               </div>
             </>
@@ -285,29 +278,29 @@ export default function CodeGroupPage() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="code">코드 *</Label>
+              <Label htmlFor="groupCode">코드 *</Label>
               <Input
-                id="code"
-                value={formData.code}
-                onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value.toUpperCase() }))}
+                id="groupCode"
+                value={formData.groupCode}
+                onChange={(e) => setFormData(prev => ({ ...prev, groupCode: e.target.value.toUpperCase() }))}
                 placeholder="예: LEAVE_TYPE"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="name">코드명 *</Label>
+              <Label htmlFor="groupName">코드명 *</Label>
               <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                id="groupName"
+                value={formData.groupName}
+                onChange={(e) => setFormData(prev => ({ ...prev, groupName: e.target.value }))}
                 placeholder="예: 휴가유형"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="nameEn">영문명</Label>
+              <Label htmlFor="groupNameEn">영문명</Label>
               <Input
-                id="nameEn"
-                value={formData.nameEn}
-                onChange={(e) => setFormData(prev => ({ ...prev, nameEn: e.target.value }))}
+                id="groupNameEn"
+                value={formData.groupNameEn}
+                onChange={(e) => setFormData(prev => ({ ...prev, groupNameEn: e.target.value }))}
                 placeholder="예: Leave Type"
               />
             </div>
@@ -327,7 +320,7 @@ export default function CodeGroupPage() {
             </Button>
             <Button
               onClick={handleCreate}
-              disabled={!formData.code || !formData.name || createMutation.isPending}
+              disabled={!formData.groupCode || !formData.groupName || createMutation.isPending}
             >
               {createMutation.isPending ? '저장 중...' : '저장'}
             </Button>
@@ -346,23 +339,23 @@ export default function CodeGroupPage() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="edit-code">코드</Label>
-              <Input id="edit-code" value={formData.code} disabled />
+              <Label htmlFor="edit-groupCode">코드</Label>
+              <Input id="edit-groupCode" value={formData.groupCode} disabled />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-name">코드명 *</Label>
+              <Label htmlFor="edit-groupName">코드명 *</Label>
               <Input
-                id="edit-name"
-                value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                id="edit-groupName"
+                value={formData.groupName}
+                onChange={(e) => setFormData(prev => ({ ...prev, groupName: e.target.value }))}
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-nameEn">영문명</Label>
+              <Label htmlFor="edit-groupNameEn">영문명</Label>
               <Input
-                id="edit-nameEn"
-                value={formData.nameEn}
-                onChange={(e) => setFormData(prev => ({ ...prev, nameEn: e.target.value }))}
+                id="edit-groupNameEn"
+                value={formData.groupNameEn}
+                onChange={(e) => setFormData(prev => ({ ...prev, groupNameEn: e.target.value }))}
               />
             </div>
             <div className="grid gap-2">
@@ -380,7 +373,7 @@ export default function CodeGroupPage() {
             </Button>
             <Button
               onClick={handleUpdate}
-              disabled={!formData.name || updateMutation.isPending}
+              disabled={!formData.groupName || updateMutation.isPending}
             >
               {updateMutation.isPending ? '저장 중...' : '저장'}
             </Button>
@@ -396,7 +389,7 @@ export default function CodeGroupPage() {
             <DialogDescription>
               정말로 이 코드그룹을 삭제하시겠습니까?
               <br />
-              <strong className="text-foreground">{selectedGroup?.name}</strong> ({selectedGroup?.code})
+              <strong className="text-foreground">{selectedGroup?.groupName}</strong> ({selectedGroup?.groupCode})
               <br />
               <span className="text-destructive">이 작업은 되돌릴 수 없습니다.</span>
             </DialogDescription>

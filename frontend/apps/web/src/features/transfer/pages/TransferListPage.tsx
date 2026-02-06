@@ -75,7 +75,7 @@ export default function TransferListPage() {
   const { data: summaryData, isLoading: isSummaryLoading } = useTransferSummary();
 
   const transfers = transfersData?.data?.content ?? [];
-  const totalPages = transfersData?.data?.totalPages ?? 0;
+  const totalPages = transfersData?.data?.page?.totalPages ?? 0;
   const summary = summaryData?.data;
 
   const handleSearch = () => {

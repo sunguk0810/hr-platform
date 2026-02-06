@@ -1,6 +1,7 @@
 package com.hrsaas.organization.controller;
 
 import com.hrsaas.common.response.ApiResponse;
+import com.hrsaas.common.response.PageResponse;
 import com.hrsaas.organization.domain.dto.request.CreateDepartmentRequest;
 import com.hrsaas.organization.domain.dto.request.UpdateDepartmentRequest;
 import com.hrsaas.organization.domain.dto.response.DepartmentHistoryResponse;
@@ -87,10 +88,10 @@ public class DepartmentController {
     @GetMapping("/history")
     @Operation(summary = "조직 변경 이력 조회")
     @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
-    public ResponseEntity<ApiResponse<Page<DepartmentHistoryResponse>>> getOrganizationHistory(
+    public ResponseEntity<ApiResponse<PageResponse<DepartmentHistoryResponse>>> getOrganizationHistory(
             @PageableDefault(size = 20) Pageable pageable) {
-        Page<DepartmentHistoryResponse> response = departmentService.getOrganizationHistory(pageable);
-        return ResponseEntity.ok(ApiResponse.success(response));
+        Page<DepartmentHistoryResponse> page = departmentService.getOrganizationHistory(pageable);
+        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(page)));
     }
 
     @GetMapping("/{id}/history")

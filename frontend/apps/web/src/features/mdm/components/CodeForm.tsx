@@ -33,12 +33,12 @@ import type {
 
 // Code Group Form Schema
 const codeGroupSchema = z.object({
-  code: z
+  groupCode: z
     .string()
     .min(2, '코드는 2자 이상이어야 합니다.')
     .max(50, '코드는 50자 이내여야 합니다.')
     .regex(/^[A-Z][A-Z0-9_]*$/, '영문 대문자로 시작하고, 영문 대문자/숫자/언더스코어만 사용 가능합니다.'),
-  name: z
+  groupName: z
     .string()
     .min(1, '코드명을 입력해주세요.')
     .max(100, '100자 이내로 입력해주세요.'),
@@ -73,8 +73,8 @@ export function CodeGroupForm({
   } = useForm<CodeGroupFormData>({
     resolver: zodResolver(codeGroupSchema),
     defaultValues: {
-      code: '',
-      name: '',
+      groupCode: '',
+      groupName: '',
       nameEn: '',
       description: '',
     },
@@ -84,15 +84,15 @@ export function CodeGroupForm({
     if (open) {
       if (group) {
         reset({
-          code: group.code,
-          name: group.name,
+          groupCode: group.groupCode,
+          groupName: group.groupName,
           nameEn: '',
           description: group.description || '',
         });
       } else {
         reset({
-          code: '',
-          name: '',
+          groupCode: '',
+          groupName: '',
           nameEn: '',
           description: '',
         });
@@ -103,16 +103,16 @@ export function CodeGroupForm({
   const handleFormSubmit = async (data: CodeGroupFormData) => {
     if (isEditMode) {
       const updateData: UpdateCodeGroupRequest = {
-        name: data.name,
-        nameEn: data.nameEn || undefined,
+        groupName: data.groupName,
+        groupNameEn: data.nameEn || undefined,
         description: data.description || undefined,
       };
       await onSubmit(updateData);
     } else {
       const createData: CreateCodeGroupRequest = {
-        code: data.code,
-        name: data.name,
-        nameEn: data.nameEn || undefined,
+        groupCode: data.groupCode,
+        groupName: data.groupName,
+        groupNameEn: data.nameEn || undefined,
         description: data.description || undefined,
       };
       await onSubmit(createData);
@@ -131,19 +131,19 @@ export function CodeGroupForm({
 
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="code">코드 *</Label>
+            <Label htmlFor="groupCode">코드 *</Label>
             <Input
-              id="code"
-              {...register('code')}
+              id="groupCode"
+              {...register('groupCode')}
               placeholder="예: LEAVE_TYPE"
               disabled={isEditMode}
-              className={errors.code ? 'border-destructive' : ''}
+              className={errors.groupCode ? 'border-destructive' : ''}
               onChange={(e) => {
                 e.target.value = e.target.value.toUpperCase();
               }}
             />
-            {errors.code && (
-              <p className="text-sm text-destructive">{errors.code.message}</p>
+            {errors.groupCode && (
+              <p className="text-sm text-destructive">{errors.groupCode.message}</p>
             )}
             {!isEditMode && (
               <p className="text-xs text-muted-foreground">
@@ -153,15 +153,15 @@ export function CodeGroupForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="name">코드명 *</Label>
+            <Label htmlFor="groupName">코드명 *</Label>
             <Input
-              id="name"
-              {...register('name')}
+              id="groupName"
+              {...register('groupName')}
               placeholder="예: 휴가유형"
-              className={errors.name ? 'border-destructive' : ''}
+              className={errors.groupName ? 'border-destructive' : ''}
             />
-            {errors.name && (
-              <p className="text-sm text-destructive">{errors.name.message}</p>
+            {errors.groupName && (
+              <p className="text-sm text-destructive">{errors.groupName.message}</p>
             )}
           </div>
 
@@ -215,20 +215,20 @@ export function CodeGroupForm({
 
 // Common Code Form Schema
 const commonCodeSchema = z.object({
-  groupId: z.string().min(1, '코드그룹을 선택해주세요.'),
+  codeGroupId: z.string().min(1, '코드그룹을 선택해주세요.'),
   code: z
     .string()
     .min(1, '코드를 입력해주세요.')
     .max(50, '코드는 50자 이내여야 합니다.')
     .regex(/^[A-Z0-9_]+$/, '영문 대문자, 숫자, 언더스코어만 사용 가능합니다.'),
-  name: z
+  codeName: z
     .string()
     .min(1, '코드명을 입력해주세요.')
     .max(100, '100자 이내로 입력해주세요.'),
-  nameEn: z.string().max(100, '100자 이내로 입력해주세요.').optional(),
+  codeNameEn: z.string().max(100, '100자 이내로 입력해주세요.').optional(),
   description: z.string().max(500, '500자 이내로 입력해주세요.').optional(),
   sortOrder: z.number().min(0).max(99999),
-  isActive: z.boolean(),
+  active: z.boolean(),
 });
 
 type CommonCodeFormData = z.infer<typeof commonCodeSchema>;
@@ -241,10 +241,10 @@ export interface CommonCodeFormProps {
     groupId?: string;
     groupCode: string;
     code: string;
-    name: string;
-    nameEn?: string;
+    codeName: string;
+    codeNameEn?: string;
     sortOrder: number;
-    isActive: boolean;
+    active: boolean;
   };
   codeGroups: CodeGroupListItem[];
   defaultGroupId?: string;
@@ -273,41 +273,41 @@ export function CommonCodeForm({
   } = useForm<CommonCodeFormData>({
     resolver: zodResolver(commonCodeSchema),
     defaultValues: {
-      groupId: '',
+      codeGroupId: '',
       code: '',
-      name: '',
-      nameEn: '',
+      codeName: '',
+      codeNameEn: '',
       description: '',
       sortOrder: 0,
-      isActive: true,
+      active: true,
     },
   });
 
-  const watchGroupId = watch('groupId');
-  const watchIsActive = watch('isActive');
+  const watchGroupId = watch('codeGroupId');
+  const watchIsActive = watch('active');
 
   React.useEffect(() => {
     if (open) {
       if (code) {
-        const group = codeGroups.find((g) => g.code === code.groupCode);
+        const group = codeGroups.find((g) => g.groupCode === code.groupCode);
         reset({
-          groupId: code.groupId || group?.id || '',
+          codeGroupId: code.groupId || group?.id || '',
           code: code.code,
-          name: code.name,
-          nameEn: code.nameEn || '',
+          codeName: code.codeName,
+          codeNameEn: code.codeNameEn || '',
           description: '',
           sortOrder: code.sortOrder,
-          isActive: code.isActive,
+          active: code.active,
         });
       } else {
         reset({
-          groupId: defaultGroupId || '',
+          codeGroupId: defaultGroupId || '',
           code: '',
-          name: '',
-          nameEn: '',
+          codeName: '',
+          codeNameEn: '',
           description: '',
           sortOrder: 0,
-          isActive: true,
+          active: true,
         });
       }
     }
@@ -316,19 +316,19 @@ export function CommonCodeForm({
   const handleFormSubmit = async (data: CommonCodeFormData) => {
     if (isEditMode) {
       const updateData: UpdateCommonCodeRequest = {
-        name: data.name,
-        nameEn: data.nameEn || undefined,
+        codeName: data.codeName,
+        codeNameEn: data.codeNameEn || undefined,
         description: data.description || undefined,
         sortOrder: data.sortOrder,
-        isActive: data.isActive,
+        status: data.active ? 'ACTIVE' : 'INACTIVE',
       };
       await onSubmit(updateData);
     } else {
       const createData: CreateCommonCodeRequest = {
-        groupId: data.groupId,
+        codeGroupId: data.codeGroupId,
         code: data.code,
-        name: data.name,
-        nameEn: data.nameEn || undefined,
+        codeName: data.codeName,
+        codeNameEn: data.codeNameEn || undefined,
         description: data.description || undefined,
         sortOrder: data.sortOrder || undefined,
       };
@@ -348,25 +348,25 @@ export function CommonCodeForm({
 
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="groupId">코드그룹 *</Label>
+            <Label htmlFor="codeGroupId">코드그룹 *</Label>
             <Select
               value={watchGroupId}
-              onValueChange={(value) => setValue('groupId', value)}
+              onValueChange={(value) => setValue('codeGroupId', value)}
               disabled={isEditMode}
             >
-              <SelectTrigger className={errors.groupId ? 'border-destructive' : ''}>
+              <SelectTrigger className={errors.codeGroupId ? 'border-destructive' : ''}>
                 <SelectValue placeholder="코드그룹 선택" />
               </SelectTrigger>
               <SelectContent>
                 {codeGroups.map((group) => (
                   <SelectItem key={group.id} value={group.id}>
-                    {group.name} ({group.code})
+                    {group.groupName} ({group.groupCode})
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {errors.groupId && (
-              <p className="text-sm text-destructive">{errors.groupId.message}</p>
+            {errors.codeGroupId && (
+              <p className="text-sm text-destructive">{errors.codeGroupId.message}</p>
             )}
           </div>
 
@@ -388,23 +388,23 @@ export function CommonCodeForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="name">코드명 *</Label>
+            <Label htmlFor="codeName">코드명 *</Label>
             <Input
-              id="name"
-              {...register('name')}
+              id="codeName"
+              {...register('codeName')}
               placeholder="예: 연차"
-              className={errors.name ? 'border-destructive' : ''}
+              className={errors.codeName ? 'border-destructive' : ''}
             />
-            {errors.name && (
-              <p className="text-sm text-destructive">{errors.name.message}</p>
+            {errors.codeName && (
+              <p className="text-sm text-destructive">{errors.codeName.message}</p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="nameEn">영문명</Label>
+            <Label htmlFor="codeNameEn">영문명</Label>
             <Input
-              id="nameEn"
-              {...register('nameEn')}
+              id="codeNameEn"
+              {...register('codeNameEn')}
               placeholder="예: Annual Leave"
             />
           </div>
@@ -427,7 +427,7 @@ export function CommonCodeForm({
                 <div className="flex items-center gap-2 pt-2">
                   <Switch
                     checked={watchIsActive}
-                    onCheckedChange={(checked) => setValue('isActive', checked)}
+                    onCheckedChange={(checked) => setValue('active', checked)}
                   />
                   <span className="text-sm">
                     {watchIsActive ? '활성' : '비활성'}

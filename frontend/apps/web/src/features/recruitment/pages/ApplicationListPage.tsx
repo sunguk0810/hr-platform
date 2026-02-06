@@ -70,7 +70,7 @@ export default function ApplicationListPage() {
     hired: 0,
   };
   const applications = data?.data?.content ?? [];
-  const totalPages = data?.data?.totalPages ?? 0;
+  const totalPages = data?.data?.page?.totalPages ?? 0;
   const jobs = jobsData?.data?.content ?? [];
 
   const handleRowClick = (id: string) => {

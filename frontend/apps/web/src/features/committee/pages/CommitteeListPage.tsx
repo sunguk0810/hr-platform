@@ -41,7 +41,7 @@ export default function CommitteeListPage() {
   });
 
   const committees = data?.data?.content ?? [];
-  const totalPages = data?.data?.totalPages ?? 0;
+  const totalPages = data?.data?.page?.totalPages ?? 0;
 
   const handleRefresh = async () => {
     await queryClient.invalidateQueries({ queryKey: ['committees'] });

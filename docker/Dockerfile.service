@@ -43,7 +43,7 @@ RUN JAR_FILE=$(ls *.jar | grep -v plain | head -1) && java -Djarmode=layertools 
 # Stage 2: Runtime Stage
 # Target ARM64 for AWS Graviton (Fargate)
 # ============================================
-FROM --platform=linux/arm64 amazoncorretto:17-alpine3.18 AS runtime
+FROM --platform=$TARGETPLATFORM amazoncorretto:17-alpine3.18 AS runtime
 
 # Security: Run as non-root user
 RUN addgroup -g 1001 -S appgroup && \
@@ -71,14 +71,11 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport \
     -XX:InitialRAMPercentage=50.0 \
     -XX:+UseG1GC \
     -XX:+UseStringDeduplication \
-    -Djava.security.egd=file:/dev/./urandom \
-    -Dspring.profiles.active=${SPRING_PROFILES_ACTIVE:-aws}"
+    -Djava.security.egd=file:/dev/./urandom"
+ENV SPRING_PROFILES_ACTIVE=aws
 
-# Default port (can be overridden)
+# Health check (port from application.yml per service)
 ARG SERVER_PORT=8080
-ENV SERVER_PORT=${SERVER_PORT}
-
-# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD wget --quiet --tries=1 --spider http://localhost:${SERVER_PORT}/actuator/health || exit 1
 

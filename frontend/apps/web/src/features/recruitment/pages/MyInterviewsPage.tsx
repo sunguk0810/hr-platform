@@ -64,7 +64,7 @@ export default function MyInterviewsPage() {
 
   const todayInterviews = todayData?.data ?? [];
   const interviews = data?.data?.content ?? [];
-  const totalPages = data?.data?.totalPages ?? 0;
+  const totalPages = data?.data?.page?.totalPages ?? 0;
 
   const pendingEvalInterviews = interviews.filter(
     (i) => i.status === 'COMPLETED' && !i.averageScore

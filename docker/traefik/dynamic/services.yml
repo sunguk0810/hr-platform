@@ -1,0 +1,42 @@
+http:
+  routers:
+    auth:
+      rule: "PathPrefix(`/api/v1/auth`)"
+      entryPoints:
+        - web
+      service: auth-service
+      middlewares:
+        - cors-headers
+    auth-actuator:
+      rule: "PathPrefix(`/actuator`)"
+      entryPoints:
+        - web
+      service: auth-service
+    organization:
+      rule: "PathPrefix(`/api/v1/departments`) || PathPrefix(`/api/v1/positions`) || PathPrefix(`/api/v1/grades`) || PathPrefix(`/api/v1/announcements`) || PathPrefix(`/api/v1/committees`) || PathPrefix(`/api/v1/headcounts`) || PathPrefix(`/api/v1/organizations`)"
+      entryPoints:
+        - web
+      service: organization-service
+      middlewares:
+        - cors-headers
+    mdm:
+      rule: "PathPrefix(`/api/v1/mdm`) || PathPrefix(`/api/v1/menus`)"
+      entryPoints:
+        - web
+      service: mdm-service
+      middlewares:
+        - cors-headers
+
+  services:
+    auth-service:
+      loadBalancer:
+        servers:
+          - url: "http://hr-saas-auth:8081"
+    organization-service:
+      loadBalancer:
+        servers:
+          - url: "http://hr-saas-organization:8083"
+    mdm-service:
+      loadBalancer:
+        servers:
+          - url: "http://hr-saas-mdm:8087"

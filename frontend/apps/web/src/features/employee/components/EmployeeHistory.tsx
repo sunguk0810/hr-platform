@@ -152,8 +152,8 @@ export function EmployeeHistory({ employeeId }: EmployeeHistoryProps) {
   const { data, isLoading, refetch } = useEmployeeHistory(employeeId, params);
 
   const histories = data?.data?.content ?? [];
-  const totalPages = data?.data?.totalPages ?? 0;
-  const totalElements = data?.data?.totalElements ?? 0;
+  const totalPages = data?.data?.page?.totalPages ?? 0;
+  const totalElements = data?.data?.page?.totalElements ?? 0;
 
   if (isLoading) {
     return (

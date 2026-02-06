@@ -70,7 +70,7 @@ export default function AttendancePage() {
   const today = todayData?.data;
   const summary = summaryData?.data;
   const records = recordsData?.data?.content ?? [];
-  const totalPages = recordsData?.data?.totalPages ?? 0;
+  const totalPages = recordsData?.data?.page?.totalPages ?? 0;
 
   const timeString = format(currentTime, 'HH:mm:ss');
   const dateString = format(currentTime, 'yyyy년 M월 d일 EEEE', { locale: ko });

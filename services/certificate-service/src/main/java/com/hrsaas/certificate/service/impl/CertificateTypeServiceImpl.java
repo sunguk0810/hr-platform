@@ -88,7 +88,7 @@ public class CertificateTypeServiceImpl implements CertificateTypeService {
     }
 
     @Override
-    @Cacheable(value = "certificateTypes", key = "'active'")
+    @Cacheable(value = "certificateTypes", key = "'active'", unless = "#result == null || #result.isEmpty()")
     public List<CertificateTypeResponse> getActiveTypes() {
         return certificateTypeRepository.findByActiveTrueOrderBySortOrderAsc().stream()
                 .map(CertificateTypeResponse::from)
