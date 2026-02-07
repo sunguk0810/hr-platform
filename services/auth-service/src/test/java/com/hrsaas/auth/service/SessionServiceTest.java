@@ -19,10 +19,10 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("SessionService Tests")
@@ -132,6 +132,37 @@ class SessionServiceTest {
             sessionService.terminateAllSessions(USER_ID);
 
             verify(userSessionRepository).deactivateAllByUserId(USER_ID);
+        }
+    }
+
+    @Nested
+    @DisplayName("terminateByAccessToken")
+    class TerminateByAccessTokenTest {
+
+        @Test
+        @DisplayName("액세스 토큰으로 세션 종료")
+        void terminateByAccessToken_validToken_terminatesSession() {
+            UserSession session = createMockSessions().get(0);
+            lenient().when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+            when(userSessionRepository.findBySessionTokenAndActiveTrue("current-token"))
+                    .thenReturn(java.util.Optional.of(session));
+            when(userSessionRepository.save(any(UserSession.class))).thenReturn(session);
+
+            sessionService.terminateByAccessToken("current-token");
+
+            verify(userSessionRepository).save(any(UserSession.class));
+            verify(redisTemplate).delete("session:current-token");
+        }
+
+        @Test
+        @DisplayName("세션 없으면 무시")
+        void terminateByAccessToken_noSession_doesNothing() {
+            when(userSessionRepository.findBySessionTokenAndActiveTrue("nonexistent-token"))
+                    .thenReturn(java.util.Optional.empty());
+
+            sessionService.terminateByAccessToken("nonexistent-token");
+
+            verify(userSessionRepository, never()).save(any());
         }
     }
 

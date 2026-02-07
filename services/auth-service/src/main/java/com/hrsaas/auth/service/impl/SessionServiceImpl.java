@@ -5,6 +5,9 @@ import com.hrsaas.auth.domain.entity.UserSession;
 import com.hrsaas.auth.repository.UserSessionRepository;
 import com.hrsaas.auth.service.SessionService;
 import com.hrsaas.common.core.exception.BusinessException;
+import com.maxmind.geoip2.DatabaseReader;
+import com.maxmind.geoip2.model.CityResponse;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,6 +16,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.File;
+import java.net.InetAddress;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -35,6 +40,28 @@ public class SessionServiceImpl implements SessionService {
 
     @Value("${auth.session.timeout-hours:24}")
     private int sessionTimeoutHours;
+
+    @Value("${auth.geoip.database-path:}")
+    private String geoipDatabasePath;
+
+    private DatabaseReader geoipReader;
+
+    @PostConstruct
+    public void initGeoip() {
+        if (geoipDatabasePath != null && !geoipDatabasePath.isBlank()) {
+            try {
+                File database = new File(geoipDatabasePath);
+                if (database.exists()) {
+                    geoipReader = new DatabaseReader.Builder(database).build();
+                    log.info("GeoIP database loaded from: {}", geoipDatabasePath);
+                } else {
+                    log.warn("GeoIP database not found at: {}", geoipDatabasePath);
+                }
+            } catch (Exception e) {
+                log.warn("Failed to load GeoIP database: {}", e.getMessage());
+            }
+        }
+    }
 
     @Override
     @Transactional
@@ -100,7 +127,7 @@ public class SessionServiceImpl implements SessionService {
 
         int updated = sessionRepository.deactivateByIdAndUserId(sessionId, userId);
         if (updated == 0) {
-            throw new BusinessException("AUTH_008", "세션을 찾을 수 없습니다.", HttpStatus.NOT_FOUND);
+            throw new BusinessException("AUTH_013", "세션을 찾을 수 없습니다.", HttpStatus.NOT_FOUND);
         }
 
         // Add session token to blacklist
@@ -174,14 +201,57 @@ public class SessionServiceImpl implements SessionService {
         return sessionRepository.findBySessionTokenAndActiveTrue(sessionToken).isPresent();
     }
 
+    @Override
+    @Transactional
+    public void terminateByAccessToken(String accessToken) {
+        log.info("Terminating session by access token");
+
+        sessionRepository.findBySessionTokenAndActiveTrue(accessToken).ifPresent(session -> {
+            session.setActive(false);
+            sessionRepository.save(session);
+
+            blacklistToken(session.getSessionToken());
+            if (session.getRefreshToken() != null) {
+                blacklistToken(session.getRefreshToken());
+            }
+
+            // Remove Redis cache
+            String sessionKey = SESSION_PREFIX + accessToken;
+            redisTemplate.delete(sessionKey);
+
+            log.info("Session terminated by access token, sessionId: {}", session.getId());
+        });
+    }
+
     private void blacklistToken(String token) {
         String blacklistKey = BLACKLIST_PREFIX + token;
         redisTemplate.opsForValue().set(blacklistKey, "1", 24, TimeUnit.HOURS);
     }
 
     private String resolveLocation(String ipAddress) {
-        // TODO: Implement IP geolocation lookup
-        return "Unknown";
+        if (geoipReader == null || ipAddress == null || ipAddress.isBlank()) {
+            return "Unknown";
+        }
+
+        try {
+            InetAddress inetAddress = InetAddress.getByName(ipAddress);
+            if (inetAddress.isSiteLocalAddress() || inetAddress.isLoopbackAddress()) {
+                return "Local Network";
+            }
+            CityResponse response = geoipReader.city(inetAddress);
+            String country = response.getCountry() != null ? response.getCountry().getName() : null;
+            String city = response.getCity() != null ? response.getCity().getName() : null;
+
+            if (country != null && city != null) {
+                return country + ", " + city;
+            } else if (country != null) {
+                return country;
+            }
+            return "Unknown";
+        } catch (Exception e) {
+            log.debug("GeoIP lookup failed for IP: {}", ipAddress);
+            return "Unknown";
+        }
     }
 
     private SessionResponse mapToResponse(UserSession session, String currentSessionToken) {

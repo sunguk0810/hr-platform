@@ -51,6 +51,21 @@ jwt:
   access-token-expiry: 1800
   refresh-token-expiry: 604800
 
+feign:
+  client:
+    tenant-service:
+      url: ${TENANT_SERVICE_URL:http://localhost:8082}
+    employee-service:
+      url: ${EMPLOYEE_SERVICE_URL:http://localhost:8084}
+
+auth:
+  password:
+    expiry-days: ${AUTH_PASSWORD_EXPIRY_DAYS:90}
+    history-count: ${AUTH_PASSWORD_HISTORY_COUNT:5}
+
+cors:
+  allowed-origins: ${CORS_ORIGINS:http://localhost:5173,http://localhost:3000}
+
 logging:
   level:
     root: INFO

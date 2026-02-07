@@ -7,12 +7,15 @@ import com.hrsaas.auth.domain.dto.response.UserResponse;
 import com.hrsaas.auth.domain.entity.UserEntity;
 import com.hrsaas.auth.repository.UserRepository;
 import com.hrsaas.auth.service.AuthService;
+import com.hrsaas.auth.service.LoginHistoryService;
+import com.hrsaas.auth.service.SessionService;
 import com.hrsaas.common.core.exception.BusinessException;
 import com.hrsaas.common.security.SecurityContextHolder;
 import com.hrsaas.common.security.UserContext;
 import com.hrsaas.common.security.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -32,6 +36,12 @@ public class AuthServiceImpl implements AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
     private final RedisTemplate<String, String> redisTemplate;
+    private final SessionService sessionService;
+    private final LoginHistoryService loginHistoryService;
+    private final MfaServiceImpl mfaService;
+
+    @Value("${auth.password.expiry-days:90}")
+    private int passwordExpiryDays;
 
     private static final String BLACKLIST_PREFIX = "token:blacklist:";
     private static final String REFRESH_PREFIX = "token:refresh:";
@@ -40,20 +50,36 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public TokenResponse login(LoginRequest request) {
+    public TokenResponse login(LoginRequest request, String ipAddress, String userAgent) {
         log.info("Login attempt: username={}", request.getUsername());
 
-        UserEntity user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> {
+        // Support tenant-scoped username lookup
+        Optional<UserEntity> userOpt;
+        if (request.getTenantCode() != null && !request.getTenantCode().isBlank()) {
+            try {
+                UUID tenantId = UUID.fromString(request.getTenantCode());
+                userOpt = userRepository.findByUsernameAndTenantId(request.getUsername(), tenantId);
+            } catch (IllegalArgumentException e) {
+                // tenantCode is not a UUID - fall back to global lookup
+                userOpt = userRepository.findByUsername(request.getUsername());
+            }
+        } else {
+            userOpt = userRepository.findByUsername(request.getUsername());
+        }
+
+        UserEntity user = userOpt.orElseThrow(() -> {
                     log.warn("Login failed: user not found username={}", request.getUsername());
+                    loginHistoryService.recordFailure(request.getUsername(), null, ipAddress, userAgent, "USER_NOT_FOUND");
                     return new BusinessException("AUTH_001", "아이디 또는 비밀번호가 올바르지 않습니다.", HttpStatus.UNAUTHORIZED);
                 });
 
         if (!user.isActive()) {
+            loginHistoryService.recordFailure(user.getUsername(), user.getTenantId(), ipAddress, userAgent, "INACTIVE_ACCOUNT");
             throw new BusinessException("AUTH_008", "비활성화된 계정입니다.", HttpStatus.UNAUTHORIZED);
         }
 
         if (user.isLocked()) {
+            loginHistoryService.recordFailure(user.getUsername(), user.getTenantId(), ipAddress, userAgent, "ACCOUNT_LOCKED");
             throw new BusinessException("AUTH_009", "계정이 잠겨있습니다. 잠시 후 다시 시도해주세요.", HttpStatus.UNAUTHORIZED);
         }
 
@@ -65,6 +91,7 @@ public class AuthServiceImpl implements AuthService {
             }
             userRepository.save(user);
             log.warn("Login failed: invalid password username={}", request.getUsername());
+            loginHistoryService.recordFailure(user.getUsername(), user.getTenantId(), ipAddress, userAgent, "INVALID_PASSWORD");
             throw new BusinessException("AUTH_001", "아이디 또는 비밀번호가 올바르지 않습니다.", HttpStatus.UNAUTHORIZED);
         }
 
@@ -72,6 +99,17 @@ public class AuthServiceImpl implements AuthService {
         user.resetFailedAttempts();
         user.setLastLoginAt(OffsetDateTime.now());
         userRepository.save(user);
+
+        // Check MFA requirement
+        if (mfaService.isMfaEnabled(user.getId())) {
+            String mfaToken = mfaService.createMfaPendingToken(user.getId());
+            log.info("MFA required for user: {}", request.getUsername());
+            return TokenResponse.builder()
+                    .tokenType("Bearer")
+                    .mfaRequired(true)
+                    .accessToken(mfaToken)
+                    .build();
+        }
 
         // Build UserContext and generate tokens
         UserContext context = buildUserContext(user);
@@ -83,7 +121,41 @@ public class AuthServiceImpl implements AuthService {
         redisTemplate.opsForValue().set(refreshKey, refreshToken,
                 jwtTokenProvider.getRefreshTokenExpiry(), TimeUnit.SECONDS);
 
+        // Create session
+        try {
+            sessionService.createSession(
+                    user.getId().toString(),
+                    user.getTenantId(),
+                    accessToken,
+                    refreshToken,
+                    userAgent,
+                    ipAddress,
+                    userAgent
+            );
+        } catch (Exception e) {
+            log.warn("Failed to create session for user: {}", user.getUsername(), e);
+        }
+
+        // Record login success
+        loginHistoryService.recordSuccess(user.getUsername(), user.getTenantId(), ipAddress, userAgent);
+
         log.info("Login successful: username={}", request.getUsername());
+
+        // Check password expiry
+        boolean passwordExpired = false;
+        Integer passwordExpiresInDays = null;
+        if (passwordExpiryDays > 0) {
+            OffsetDateTime passwordChangedAt = user.getPasswordChangedAt();
+            if (passwordChangedAt == null) {
+                passwordExpired = true;
+                passwordExpiresInDays = 0;
+            } else {
+                long daysSinceChange = ChronoUnit.DAYS.between(passwordChangedAt, OffsetDateTime.now());
+                int remaining = passwordExpiryDays - (int) daysSinceChange;
+                passwordExpired = remaining <= 0;
+                passwordExpiresInDays = Math.max(remaining, 0);
+            }
+        }
 
         return TokenResponse.builder()
                 .accessToken(accessToken)
@@ -91,6 +163,8 @@ public class AuthServiceImpl implements AuthService {
                 .tokenType("Bearer")
                 .expiresIn(jwtTokenProvider.getAccessTokenExpiry())
                 .refreshExpiresIn(jwtTokenProvider.getRefreshTokenExpiry())
+                .passwordExpired(passwordExpired)
+                .passwordExpiresInDays(passwordExpiresInDays)
                 .build();
     }
 
@@ -125,6 +199,11 @@ public class AuthServiceImpl implements AuthService {
                 throw new BusinessException("AUTH_008", "비활성화된 계정입니다.", HttpStatus.UNAUTHORIZED);
             }
 
+            // Blacklist old refresh token (rotation)
+            String oldBlacklistKey = BLACKLIST_PREFIX + refreshToken;
+            redisTemplate.opsForValue().set(oldBlacklistKey, "1",
+                    jwtTokenProvider.getRefreshTokenExpiry(), TimeUnit.SECONDS);
+
             // Generate new tokens
             UserContext context = buildUserContext(user);
             String newAccessToken = jwtTokenProvider.generateAccessToken(context);
@@ -151,14 +230,35 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public void logout(String authorization) {
         if (authorization != null && authorization.startsWith("Bearer ")) {
             String token = authorization.substring(7);
-            // Add token to blacklist
+
+            // Add access token to blacklist
             String blacklistKey = BLACKLIST_PREFIX + token;
             redisTemplate.opsForValue().set(blacklistKey, "1",
                     jwtTokenProvider.getAccessTokenExpiry(), TimeUnit.SECONDS);
-            log.info("Token added to blacklist");
+
+            // Terminate session and blacklist refresh token
+            try {
+                sessionService.terminateByAccessToken(token);
+            } catch (Exception e) {
+                log.warn("Failed to terminate session on logout: {}", e.getMessage());
+            }
+
+            // Delete refresh token from Redis
+            try {
+                UUID userId = jwtTokenProvider.extractUserId(token);
+                if (userId != null) {
+                    String refreshKey = REFRESH_PREFIX + userId;
+                    redisTemplate.delete(refreshKey);
+                }
+            } catch (Exception e) {
+                log.warn("Failed to delete refresh token on logout: {}", e.getMessage());
+            }
+
+            log.info("Logout completed: token blacklisted, session terminated");
         }
     }
 

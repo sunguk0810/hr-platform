@@ -7,6 +7,7 @@ import com.hrsaas.auth.domain.entity.PasswordResetToken;
 import com.hrsaas.auth.domain.entity.UserEntity;
 import com.hrsaas.auth.repository.PasswordResetTokenRepository;
 import com.hrsaas.auth.repository.UserRepository;
+import com.hrsaas.auth.service.PasswordHistoryService;
 import com.hrsaas.auth.service.PasswordService;
 import com.hrsaas.auth.service.SessionService;
 import com.hrsaas.common.core.exception.BusinessException;
@@ -17,6 +18,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -36,6 +38,10 @@ public class PasswordServiceImpl implements PasswordService {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final SessionService sessionService;
     private final EventPublisher eventPublisher;
+    private final PasswordHistoryService passwordHistoryService;
+
+    @Value("${auth.password.history-count:5}")
+    private int passwordHistoryCount;
 
     @Override
     @Transactional
@@ -44,7 +50,7 @@ public class PasswordServiceImpl implements PasswordService {
 
         // Validate passwords match
         if (!request.getNewPassword().equals(request.getConfirmPassword())) {
-            throw new BusinessException("AUTH_003", "새 비밀번호와 확인 비밀번호가 일치하지 않습니다.", HttpStatus.BAD_REQUEST);
+            throw new BusinessException("AUTH_011", "새 비밀번호와 확인 비밀번호가 일치하지 않습니다.", HttpStatus.BAD_REQUEST);
         }
 
         UserEntity user = userRepository.findByUsername(userId)
@@ -53,8 +59,16 @@ public class PasswordServiceImpl implements PasswordService {
         // Validate current password
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())) {
             log.warn("Current password validation failed for user: {}", userId);
-            throw new BusinessException("AUTH_004", "현재 비밀번호가 올바르지 않습니다.", HttpStatus.BAD_REQUEST);
+            throw new BusinessException("AUTH_012", "현재 비밀번호가 올바르지 않습니다.", HttpStatus.BAD_REQUEST);
         }
+
+        // Check password history
+        if (passwordHistoryService.isRecentlyUsed(user.getId(), request.getNewPassword(), passwordHistoryCount)) {
+            throw new BusinessException("AUTH_014", "최근 사용한 비밀번호는 재사용할 수 없습니다.", HttpStatus.BAD_REQUEST);
+        }
+
+        // Save current password to history before changing
+        passwordHistoryService.saveHistory(user.getId(), user.getPasswordHash());
 
         // Change password
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
@@ -103,7 +117,7 @@ public class PasswordServiceImpl implements PasswordService {
 
         // Validate passwords match
         if (!request.getNewPassword().equals(request.getConfirmPassword())) {
-            throw new BusinessException("AUTH_003", "새 비밀번호와 확인 비밀번호가 일치하지 않습니다.", HttpStatus.BAD_REQUEST);
+            throw new BusinessException("AUTH_011", "새 비밀번호와 확인 비밀번호가 일치하지 않습니다.", HttpStatus.BAD_REQUEST);
         }
 
         // Find and validate token
@@ -117,6 +131,14 @@ public class PasswordServiceImpl implements PasswordService {
         // Reset password in database
         UserEntity user = userRepository.findByUsername(resetToken.getUserId())
                 .orElseThrow(() -> new BusinessException("AUTH_004", "사용자를 찾을 수 없습니다.", HttpStatus.BAD_REQUEST));
+
+        // Check password history
+        if (passwordHistoryService.isRecentlyUsed(user.getId(), request.getNewPassword(), passwordHistoryCount)) {
+            throw new BusinessException("AUTH_014", "최근 사용한 비밀번호는 재사용할 수 없습니다.", HttpStatus.BAD_REQUEST);
+        }
+
+        // Save current password to history before changing
+        passwordHistoryService.saveHistory(user.getId(), user.getPasswordHash());
 
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         user.setPasswordChangedAt(OffsetDateTime.now());

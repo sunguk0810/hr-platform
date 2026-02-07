@@ -7,7 +7,7 @@ import com.hrsaas.auth.domain.dto.response.UserResponse;
 
 public interface AuthService {
 
-    TokenResponse login(LoginRequest request);
+    TokenResponse login(LoginRequest request, String ipAddress, String userAgent);
 
     TokenResponse refreshToken(RefreshTokenRequest request);
 

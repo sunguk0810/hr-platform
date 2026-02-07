@@ -69,4 +69,12 @@ public interface SessionService {
      * @return true if valid, false otherwise
      */
     boolean validateSession(String sessionToken);
+
+    /**
+     * Terminates the session associated with the given access token.
+     * Blacklists both session and refresh tokens.
+     *
+     * @param accessToken The access token (session token)
+     */
+    void terminateByAccessToken(String accessToken);
 }

@@ -85,7 +85,7 @@ class AuthControllerTest {
                     .password("admin123!")
                     .build();
 
-            when(authService.login(any())).thenReturn(createMockTokenResponse());
+            when(authService.login(any(), any(), any())).thenReturn(createMockTokenResponse());
 
             mockMvc.perform(post("/api/v1/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -105,7 +105,7 @@ class AuthControllerTest {
                     .password("wrong")
                     .build();
 
-            when(authService.login(any()))
+            when(authService.login(any(), any(), any()))
                     .thenThrow(new RuntimeException("아이디 또는 비밀번호가 올바르지 않습니다."));
 
             mockMvc.perform(post("/api/v1/auth/login")

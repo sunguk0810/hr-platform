@@ -7,6 +7,7 @@ import com.hrsaas.auth.domain.dto.response.UserResponse;
 import com.hrsaas.auth.domain.entity.UserEntity;
 import com.hrsaas.auth.repository.UserRepository;
 import com.hrsaas.auth.service.impl.AuthServiceImpl;
+import com.hrsaas.auth.service.impl.MfaServiceImpl;
 import com.hrsaas.common.security.SecurityContextHolder;
 import com.hrsaas.common.security.UserContext;
 import com.hrsaas.common.security.jwt.JwtTokenProvider;
@@ -31,8 +32,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AuthService Tests")
@@ -56,8 +57,19 @@ class AuthServiceTest {
     @Mock
     private ValueOperations<String, String> valueOperations;
 
+    @Mock
+    private SessionService sessionService;
+
+    @Mock
+    private LoginHistoryService loginHistoryService;
+
+    @Mock
+    private MfaServiceImpl mfaService;
+
     private static final UUID USER_ID = UUID.fromString("10000000-0000-0000-0000-000000000001");
     private static final UUID TENANT_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    private static final String IP_ADDRESS = "192.168.1.1";
+    private static final String USER_AGENT = "Mozilla/5.0 Chrome";
 
     private UserEntity createMockUser() {
         UserEntity user = new UserEntity();
@@ -104,7 +116,7 @@ class AuthServiceTest {
             when(jwtTokenProvider.getRefreshTokenExpiry()).thenReturn(86400L);
             when(jwtTokenProvider.getAccessTokenExpiry()).thenReturn(3600L);
 
-            TokenResponse response = authService.login(request);
+            TokenResponse response = authService.login(request, IP_ADDRESS, USER_AGENT);
 
             assertThat(response).isNotNull();
             assertThat(response.getAccessToken()).isEqualTo("access-token");
@@ -112,7 +124,57 @@ class AuthServiceTest {
         }
 
         @Test
-        @DisplayName("존재하지 않는 사용자 - 예외 발생")
+        @DisplayName("정상 로그인 - 세션 생성 호출")
+        void login_validCredentials_createsSession() {
+            LoginRequest request = LoginRequest.builder()
+                    .username("admin")
+                    .password("admin123!")
+                    .build();
+
+            UserEntity user = createMockUser();
+            when(userRepository.findByUsername("admin")).thenReturn(Optional.of(user));
+            when(passwordEncoder.matches("admin123!", "$2a$10$encoded")).thenReturn(true);
+            when(jwtTokenProvider.generateAccessToken(any(UserContext.class))).thenReturn("access-token");
+            when(jwtTokenProvider.generateRefreshToken(any(UUID.class))).thenReturn("refresh-token");
+            when(jwtTokenProvider.getRefreshTokenExpiry()).thenReturn(86400L);
+            when(jwtTokenProvider.getAccessTokenExpiry()).thenReturn(3600L);
+
+            authService.login(request, IP_ADDRESS, USER_AGENT);
+
+            verify(sessionService).createSession(
+                    eq(USER_ID.toString()),
+                    eq(TENANT_ID),
+                    eq("access-token"),
+                    eq("refresh-token"),
+                    eq(USER_AGENT),
+                    eq(IP_ADDRESS),
+                    eq(USER_AGENT)
+            );
+        }
+
+        @Test
+        @DisplayName("정상 로그인 - 로그인 이력 기록")
+        void login_validCredentials_recordsLoginHistory() {
+            LoginRequest request = LoginRequest.builder()
+                    .username("admin")
+                    .password("admin123!")
+                    .build();
+
+            UserEntity user = createMockUser();
+            when(userRepository.findByUsername("admin")).thenReturn(Optional.of(user));
+            when(passwordEncoder.matches("admin123!", "$2a$10$encoded")).thenReturn(true);
+            when(jwtTokenProvider.generateAccessToken(any(UserContext.class))).thenReturn("access-token");
+            when(jwtTokenProvider.generateRefreshToken(any(UUID.class))).thenReturn("refresh-token");
+            when(jwtTokenProvider.getRefreshTokenExpiry()).thenReturn(86400L);
+            when(jwtTokenProvider.getAccessTokenExpiry()).thenReturn(3600L);
+
+            authService.login(request, IP_ADDRESS, USER_AGENT);
+
+            verify(loginHistoryService).recordSuccess("admin", TENANT_ID, IP_ADDRESS, USER_AGENT);
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 사용자 - 예외 발생 + 실패 이력 기록")
         void login_userNotFound_throwsException() {
             LoginRequest request = LoginRequest.builder()
                     .username("nonexistent")
@@ -121,12 +183,14 @@ class AuthServiceTest {
 
             when(userRepository.findByUsername("nonexistent")).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> authService.login(request))
+            assertThatThrownBy(() -> authService.login(request, IP_ADDRESS, USER_AGENT))
                     .isInstanceOf(RuntimeException.class);
+
+            verify(loginHistoryService).recordFailure(eq("nonexistent"), any(), eq(IP_ADDRESS), eq(USER_AGENT), eq("USER_NOT_FOUND"));
         }
 
         @Test
-        @DisplayName("잘못된 비밀번호 - 예외 발생")
+        @DisplayName("잘못된 비밀번호 - 예외 발생 + 실패 이력 기록")
         void login_wrongPassword_throwsException() {
             LoginRequest request = LoginRequest.builder()
                     .username("admin")
@@ -137,8 +201,10 @@ class AuthServiceTest {
             when(userRepository.findByUsername("admin")).thenReturn(Optional.of(user));
             when(passwordEncoder.matches("wrong", "$2a$10$encoded")).thenReturn(false);
 
-            assertThatThrownBy(() -> authService.login(request))
+            assertThatThrownBy(() -> authService.login(request, IP_ADDRESS, USER_AGENT))
                     .isInstanceOf(RuntimeException.class);
+
+            verify(loginHistoryService).recordFailure("admin", TENANT_ID, IP_ADDRESS, USER_AGENT, "INVALID_PASSWORD");
         }
 
         @Test
@@ -154,7 +220,7 @@ class AuthServiceTest {
 
             when(userRepository.findByUsername("admin")).thenReturn(Optional.of(user));
 
-            assertThatThrownBy(() -> authService.login(request))
+            assertThatThrownBy(() -> authService.login(request, IP_ADDRESS, USER_AGENT))
                     .isInstanceOf(RuntimeException.class);
         }
     }
@@ -210,6 +276,60 @@ class AuthServiceTest {
             assertThat(response).isNotNull();
             assertThat(response.getAccessToken()).isEqualTo("new-access");
             assertThat(response.getRefreshToken()).isEqualTo("new-refresh");
+        }
+
+        @Test
+        @DisplayName("리프레시 토큰 갱신 시 이전 토큰 블랙리스트에 추가")
+        void refreshToken_validToken_blacklistsOldToken() {
+            RefreshTokenRequest request = RefreshTokenRequest.builder()
+                    .refreshToken("old-refresh-token")
+                    .build();
+
+            UserEntity user = createMockUser();
+
+            when(redisTemplate.hasKey(anyString())).thenReturn(false);
+            when(jwtTokenProvider.isRefreshToken("old-refresh-token")).thenReturn(true);
+            when(jwtTokenProvider.extractUserId("old-refresh-token")).thenReturn(USER_ID);
+            when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
+            when(jwtTokenProvider.generateAccessToken(any(UserContext.class))).thenReturn("new-access");
+            when(jwtTokenProvider.generateRefreshToken(any(UUID.class))).thenReturn("new-refresh");
+            when(jwtTokenProvider.getRefreshTokenExpiry()).thenReturn(86400L);
+            when(jwtTokenProvider.getAccessTokenExpiry()).thenReturn(3600L);
+
+            authService.refreshToken(request);
+
+            verify(valueOperations).set(eq("token:blacklist:old-refresh-token"), eq("1"), eq(86400L), any());
+        }
+    }
+
+    @Nested
+    @DisplayName("logout")
+    class LogoutTest {
+
+        @Test
+        @DisplayName("로그아웃 - 토큰 블랙리스트 + 세션 종료")
+        void logout_validToken_blacklistsAndTerminatesSession() {
+            when(jwtTokenProvider.getAccessTokenExpiry()).thenReturn(3600L);
+            when(jwtTokenProvider.extractUserId("test-access-token")).thenReturn(USER_ID);
+            when(redisTemplate.delete(anyString())).thenReturn(true);
+
+            authService.logout("Bearer test-access-token");
+
+            verify(valueOperations).set(eq("token:blacklist:test-access-token"), eq("1"), eq(3600L), any());
+            verify(sessionService).terminateByAccessToken("test-access-token");
+        }
+
+        @Test
+        @DisplayName("로그아웃 - 세션 종료 실패해도 예외 전파 안 함")
+        void logout_sessionTerminationFails_doesNotThrow() {
+            when(jwtTokenProvider.getAccessTokenExpiry()).thenReturn(3600L);
+            when(jwtTokenProvider.extractUserId("test-access-token")).thenReturn(USER_ID);
+            when(redisTemplate.delete(anyString())).thenReturn(true);
+            doThrow(new RuntimeException("session error")).when(sessionService).terminateByAccessToken("test-access-token");
+
+            authService.logout("Bearer test-access-token");
+
+            verify(valueOperations).set(eq("token:blacklist:test-access-token"), eq("1"), eq(3600L), any());
         }
     }
 }

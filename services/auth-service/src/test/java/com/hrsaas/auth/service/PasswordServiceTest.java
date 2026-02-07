@@ -23,8 +23,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -49,6 +48,9 @@ class PasswordServiceTest {
 
     @Mock
     private EventPublisher eventPublisher;
+
+    @Mock
+    private PasswordHistoryService passwordHistoryService;
 
     private static final String USER_ID = "10000000-0000-0000-0000-000000000001";
 
@@ -82,11 +84,13 @@ class PasswordServiceTest {
             when(userRepository.findByUsername(USER_ID)).thenReturn(Optional.of(user));
             when(passwordEncoder.matches("oldPassword123!", "$2a$10$encoded")).thenReturn(true);
             when(passwordEncoder.encode("NewPassword456!")).thenReturn("$2a$10$newencoded");
+            when(passwordHistoryService.isRecentlyUsed(any(), anyString(), anyInt())).thenReturn(false);
 
             passwordService.changePassword(USER_ID, request);
 
             verify(userRepository).save(user);
             verify(sessionService).terminateAllSessions(USER_ID);
+            verify(passwordHistoryService).saveHistory(user.getId(), "$2a$10$encoded");
         }
 
         @Test
@@ -114,6 +118,24 @@ class PasswordServiceTest {
                     .newPassword("NewPassword456!")
                     .confirmPassword("DifferentPassword789!")
                     .build();
+
+            assertThatThrownBy(() -> passwordService.changePassword(USER_ID, request))
+                    .isInstanceOf(RuntimeException.class);
+        }
+
+        @Test
+        @DisplayName("최근 사용한 비밀번호 재사용 - 예외")
+        void changePassword_recentlyUsedPassword_throwsException() {
+            ChangePasswordRequest request = ChangePasswordRequest.builder()
+                    .currentPassword("oldPassword123!")
+                    .newPassword("ReusedPassword!")
+                    .confirmPassword("ReusedPassword!")
+                    .build();
+
+            UserEntity user = createMockUser();
+            when(userRepository.findByUsername(USER_ID)).thenReturn(Optional.of(user));
+            when(passwordEncoder.matches("oldPassword123!", "$2a$10$encoded")).thenReturn(true);
+            when(passwordHistoryService.isRecentlyUsed(any(), eq("ReusedPassword!"), anyInt())).thenReturn(true);
 
             assertThatThrownBy(() -> passwordService.changePassword(USER_ID, request))
                     .isInstanceOf(RuntimeException.class);
@@ -168,12 +190,14 @@ class PasswordServiceTest {
                     .thenReturn(Optional.of(user));
             when(passwordEncoder.encode("NewPassword789!"))
                     .thenReturn("$2a$10$newencoded");
+            when(passwordHistoryService.isRecentlyUsed(any(), anyString(), anyInt())).thenReturn(false);
 
             passwordService.confirmPasswordReset(request);
 
             verify(userRepository).save(user);
             verify(passwordResetTokenRepository).save(resetToken);
             verify(sessionService).terminateAllSessions(USER_ID);
+            verify(passwordHistoryService).saveHistory(user.getId(), "$2a$10$encoded");
         }
 
         @Test

@@ -19,6 +19,12 @@ dependencies {
     // BCrypt for password hashing
     implementation 'org.springframework.security:spring-security-crypto'
 
+    // TOTP (Google Authenticator) for MFA
+    implementation 'com.warrenstrange:googleauth:1.5.0'
+
+    // IP Geolocation
+    implementation 'com.maxmind.geoip2:geoip2:4.2.0'
+
     // Spring Cloud
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
     implementation 'org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j'
