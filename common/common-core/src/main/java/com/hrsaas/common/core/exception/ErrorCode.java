@@ -20,6 +20,16 @@ public enum ErrorCode {
     INVALID_CREDENTIALS("AUTH_001", "잘못된 인증 정보입니다", HttpStatus.UNAUTHORIZED),
     TOKEN_EXPIRED("AUTH_002", "토큰이 만료되었습니다", HttpStatus.UNAUTHORIZED),
     TOKEN_INVALID("AUTH_003", "유효하지 않은 토큰입니다", HttpStatus.UNAUTHORIZED),
+    USER_NOT_FOUND("AUTH_004", "사용자를 찾을 수 없습니다", HttpStatus.BAD_REQUEST),
+    INVALID_RESET_TOKEN("AUTH_006", "유효하지 않은 리셋 토큰입니다", HttpStatus.BAD_REQUEST),
+    EXPIRED_RESET_TOKEN("AUTH_007", "만료되었거나 이미 사용된 토큰입니다", HttpStatus.BAD_REQUEST),
+    INACTIVE_ACCOUNT("AUTH_008", "비활성화된 계정입니다", HttpStatus.UNAUTHORIZED),
+    ACCOUNT_LOCKED("AUTH_009", "계정이 잠겨있습니다", HttpStatus.UNAUTHORIZED),
+    PASSWORD_EXPIRED("AUTH_010", "비밀번호가 만료되었습니다", HttpStatus.OK),
+    PASSWORD_CONFIRM_MISMATCH("AUTH_011", "비밀번호 확인이 일치하지 않습니다", HttpStatus.BAD_REQUEST),
+    CURRENT_PASSWORD_INVALID("AUTH_012", "현재 비밀번호가 올바르지 않습니다", HttpStatus.BAD_REQUEST),
+    SESSION_NOT_FOUND("AUTH_013", "세션을 찾을 수 없습니다", HttpStatus.NOT_FOUND),
+    PASSWORD_RECENTLY_USED("AUTH_014", "최근 사용한 비밀번호는 재사용할 수 없습니다", HttpStatus.BAD_REQUEST),
 
     // Business errors
     BUSINESS_RULE_VIOLATION("BIZ_001", "비즈니스 규칙 위반", HttpStatus.BAD_REQUEST),
