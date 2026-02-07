@@ -1,10 +1,14 @@
 package com.hrsaas.common.security;
 
 import com.hrsaas.common.core.exception.ForbiddenException;
+import com.hrsaas.common.security.client.EmployeeServiceClient;
+import com.hrsaas.common.security.dto.EmployeeAffiliationDto;
 import com.hrsaas.common.security.service.PermissionMappingService;
-import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -17,11 +21,20 @@ import java.util.UUID;
  *
  * Note: HR_ADMIN was renamed to HR_MANAGER to align with PRD terminology.
  */
+@Slf4j
 @Component("permissionChecker")
-@RequiredArgsConstructor
 public class PermissionChecker {
 
     private final PermissionMappingService permissionMappingService;
+    private final Optional<EmployeeServiceClient> employeeServiceClient;
+
+    @Autowired
+    public PermissionChecker(
+            PermissionMappingService permissionMappingService,
+            @Autowired(required = false) EmployeeServiceClient employeeServiceClient) {
+        this.permissionMappingService = permissionMappingService;
+        this.employeeServiceClient = Optional.ofNullable(employeeServiceClient);
+    }
 
     public void requireRole(String role) {
         if (!SecurityContextHolder.hasRole(role)) {
@@ -115,29 +128,19 @@ public class PermissionChecker {
     /**
      * Check if the current user can access the specified employee's data.
      * Considers role-based scope (all, department, team, self).
-     *
-     * @param employeeId the employee ID to check access for
-     * @return true if access is allowed, false otherwise
      */
     public boolean canAccessEmployee(UUID employeeId) {
         Set<String> permissions = SecurityContextHolder.getCurrentPermissions();
 
-        // Full access permission
         if (permissionMappingService.hasPermission(permissions, "employee:read")) {
             return true;
         }
-
-        // Department-based access
         if (permissionMappingService.hasPermission(permissions, "employee:read:department")) {
             return isSameDepartment(employeeId);
         }
-
-        // Team-based access
         if (permissionMappingService.hasPermission(permissions, "employee:read:team")) {
             return isSameTeam(employeeId);
         }
-
-        // Self-only access
         if (permissionMappingService.hasPermission(permissions, "employee:read:self")) {
             return isSelf(employeeId);
         }
@@ -147,20 +150,13 @@ public class PermissionChecker {
 
     /**
      * Check if the current user can modify the specified employee's data.
-     * Considers role-based scope (all, self).
-     *
-     * @param employeeId the employee ID to check modification access for
-     * @return true if modification is allowed, false otherwise
      */
     public boolean canModifyEmployee(UUID employeeId) {
         Set<String> permissions = SecurityContextHolder.getCurrentPermissions();
 
-        // Full write access
         if (permissionMappingService.hasPermission(permissions, "employee:write")) {
             return true;
         }
-
-        // Self-only write access
         if (permissionMappingService.hasPermission(permissions, "employee:write:self")) {
             return isSelf(employeeId);
         }
@@ -170,9 +166,6 @@ public class PermissionChecker {
 
     /**
      * Check if the current user is the same as the specified employee.
-     *
-     * @param employeeId the employee ID to compare
-     * @return true if it's the current user's own employee ID
      */
     public boolean isSelf(UUID employeeId) {
         UUID currentEmployeeId = SecurityContextHolder.getCurrentEmployeeId();
@@ -181,62 +174,70 @@ public class PermissionChecker {
 
     /**
      * Check if the specified employee is in the same department as the current user.
-     * TODO: Implement actual department check via employee service
-     *
-     * @param employeeId the employee ID to check
-     * @return true if same department
+     * Queries the employee service via Feign client for the target employee's department.
      */
     public boolean isSameDepartment(UUID employeeId) {
-        // Placeholder - should be implemented with actual department lookup
         UserContext context = SecurityContextHolder.getContext();
         if (context == null || context.getDepartmentId() == null) {
             return false;
         }
-        // TODO: Call employee service to get employee's department and compare
-        return true; // Temporary - should check actual department
+
+        EmployeeAffiliationDto affiliation = getEmployeeAffiliation(employeeId);
+        if (affiliation == null || affiliation.departmentId() == null) {
+            return false;
+        }
+
+        return context.getDepartmentId().equals(affiliation.departmentId());
     }
 
     /**
      * Check if the specified employee is in the same team as the current user.
-     * TODO: Implement actual team check via employee service
-     *
-     * @param employeeId the employee ID to check
-     * @return true if same team
+     * Queries the employee service via Feign client for the target employee's team.
      */
     public boolean isSameTeam(UUID employeeId) {
-        // Placeholder - should be implemented with actual team lookup
         UserContext context = SecurityContextHolder.getContext();
         if (context == null || context.getTeamId() == null) {
             return false;
         }
-        // TODO: Call employee service to get employee's team and compare
-        return true; // Temporary - should check actual team
+
+        EmployeeAffiliationDto affiliation = getEmployeeAffiliation(employeeId);
+        if (affiliation == null || affiliation.teamId() == null) {
+            return false;
+        }
+
+        return context.getTeamId().equals(affiliation.teamId());
     }
 
     /**
      * Check if user can approve attendance for the specified employee.
-     *
-     * @param employeeId the employee to approve attendance for
-     * @return true if approval is allowed
      */
     public boolean canApproveAttendance(UUID employeeId) {
         Set<String> permissions = SecurityContextHolder.getCurrentPermissions();
 
-        // Full approval permission
         if (permissionMappingService.hasPermission(permissions, "attendance:approve")) {
             return true;
         }
-
-        // Department scope
         if (permissionMappingService.hasPermission(permissions, "attendance:approve:department")) {
             return isSameDepartment(employeeId);
         }
-
-        // Team scope
         if (permissionMappingService.hasPermission(permissions, "attendance:approve:team")) {
             return isSameTeam(employeeId);
         }
 
         return false;
+    }
+
+    private EmployeeAffiliationDto getEmployeeAffiliation(UUID employeeId) {
+        if (employeeServiceClient.isEmpty()) {
+            log.warn("EmployeeServiceClient not available - cannot check affiliation for employee: {}", employeeId);
+            return null;
+        }
+
+        try {
+            return employeeServiceClient.get().getAffiliation(employeeId);
+        } catch (Exception e) {
+            log.warn("Failed to fetch employee affiliation for: {}", employeeId, e);
+            return null;
+        }
     }
 }
