@@ -16,4 +16,7 @@ public class TokenResponse {
     private String tokenType;
     private long expiresIn;
     private long refreshExpiresIn;
+    private boolean passwordExpired;
+    private Integer passwordExpiresInDays;
+    private boolean mfaRequired;
 }
