@@ -137,8 +137,8 @@ export default function JobPostingDetailPage() {
     );
   }
 
-  const canPublish = job.status === 'DRAFT';
-  const canClose = job.status === 'OPEN';
+  const canPublish = job.status === 'DRAFT' || job.status === 'PENDING';
+  const canClose = job.status === 'PUBLISHED';
   const canComplete = job.status === 'CLOSED';
   const canEdit = job.status === 'DRAFT';
   const canDelete = job.status === 'DRAFT';

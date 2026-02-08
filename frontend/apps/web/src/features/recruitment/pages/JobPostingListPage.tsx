@@ -84,7 +84,7 @@ export default function JobPostingListPage() {
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-card rounded-xl border p-4">
               <p className="text-xs text-muted-foreground">진행중</p>
-              <p className="text-2xl font-bold text-green-500">{summary.open}</p>
+              <p className="text-2xl font-bold text-green-500">{summary.published}</p>
             </div>
             <div className="bg-card rounded-xl border p-4">
               <p className="text-xs text-muted-foreground">마감</p>
@@ -124,14 +124,14 @@ export default function JobPostingListPage() {
               전체
             </button>
             <button
-              onClick={() => handleTabChange('OPEN')}
+              onClick={() => handleTabChange('PUBLISHED')}
               className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                searchState.status === 'OPEN'
+                searchState.status === 'PUBLISHED'
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              진행중 {summary.open > 0 && `(${summary.open})`}
+              진행중 {summary.published > 0 && `(${summary.published})`}
             </button>
             <button
               onClick={() => handleTabChange('CLOSED')}
@@ -268,7 +268,7 @@ export default function JobPostingListPage() {
           <CardContent className="pt-6">
             <div className="text-center">
               <p className="text-sm text-muted-foreground">진행중</p>
-              <p className="mt-1 text-3xl font-bold text-green-500">{summary.open}</p>
+              <p className="mt-1 text-3xl font-bold text-green-500">{summary.published}</p>
             </div>
           </CardContent>
         </Card>
@@ -321,8 +321,8 @@ export default function JobPostingListPage() {
           >
             <TabsList>
               <TabsTrigger value="all">전체</TabsTrigger>
-              <TabsTrigger value="OPEN">
-                진행중 {summary.open > 0 && `(${summary.open})`}
+              <TabsTrigger value="PUBLISHED">
+                진행중 {summary.published > 0 && `(${summary.published})`}
               </TabsTrigger>
               <TabsTrigger value="CLOSED">마감</TabsTrigger>
               <TabsTrigger value="COMPLETED">완료</TabsTrigger>

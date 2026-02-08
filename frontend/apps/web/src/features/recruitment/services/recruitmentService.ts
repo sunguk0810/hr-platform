@@ -160,7 +160,7 @@ export const recruitmentService = {
   },
 
   async getInterviewsByApplication(applicationId: string): Promise<ApiResponse<Interview[]>> {
-    const response = await apiClient.get<ApiResponse<Interview[]>>(`/applications/${applicationId}/interviews`);
+    const response = await apiClient.get<ApiResponse<Interview[]>>(`/interviews/application/${applicationId}`);
     return response.data;
   },
 
@@ -251,7 +251,7 @@ export const recruitmentService = {
   },
 
   async getOfferByApplication(applicationId: string): Promise<ApiResponse<Offer | null>> {
-    const response = await apiClient.get<ApiResponse<Offer | null>>(`/applications/${applicationId}/offer`);
+    const response = await apiClient.get<ApiResponse<Offer | null>>(`/offers/application/${applicationId}`);
     return response.data;
   },
 

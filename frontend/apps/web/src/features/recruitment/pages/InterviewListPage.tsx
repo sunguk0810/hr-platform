@@ -113,14 +113,14 @@ export default function InterviewListPage() {
               예정
             </button>
             <button
-              onClick={() => handleTabChange('CONFIRMED')}
+              onClick={() => handleTabChange('IN_PROGRESS')}
               className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                searchState.status === 'CONFIRMED'
+                searchState.status === 'IN_PROGRESS'
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              확정
+              진행중
             </button>
             <button
               onClick={() => handleTabChange('COMPLETED')}
@@ -291,7 +291,7 @@ export default function InterviewListPage() {
               <TabsTrigger value="SCHEDULED">
                 예정 {summary.scheduled > 0 && `(${summary.scheduled})`}
               </TabsTrigger>
-              <TabsTrigger value="CONFIRMED">확정</TabsTrigger>
+              <TabsTrigger value="IN_PROGRESS">진행중</TabsTrigger>
               <TabsTrigger value="COMPLETED">완료</TabsTrigger>
               <TabsTrigger value="CANCELLED">취소</TabsTrigger>
             </TabsList>

@@ -3,7 +3,7 @@ import { TenantAwareEntity, PageRequest } from './common';
 // ===== 기본 타입 정의 =====
 
 // 채용공고 상태
-export type JobStatus = 'DRAFT' | 'OPEN' | 'CLOSED' | 'CANCELLED' | 'COMPLETED';
+export type JobStatus = 'DRAFT' | 'PENDING' | 'PUBLISHED' | 'CLOSED' | 'CANCELLED' | 'COMPLETED';
 
 // 고용 유형
 export type RecruitmentEmploymentType = 'FULL_TIME' | 'CONTRACT' | 'INTERN' | 'PART_TIME';
@@ -29,15 +29,25 @@ export type ApplicationStage =
 
 // 면접 상태
 export type InterviewStatus =
+  | 'SCHEDULING'
   | 'SCHEDULED'
-  | 'CONFIRMED'
   | 'IN_PROGRESS'
   | 'COMPLETED'
   | 'CANCELLED'
-  | 'NO_SHOW';
+  | 'NO_SHOW'
+  | 'POSTPONED';
 
 // 면접 유형
-export type InterviewType = 'PHONE' | 'VIDEO' | 'ONSITE' | 'TECHNICAL' | 'FINAL';
+export type InterviewType =
+  | 'FIRST_ROUND'
+  | 'SECOND_ROUND'
+  | 'FINAL_ROUND'
+  | 'TECHNICAL'
+  | 'PERSONALITY'
+  | 'PRESENTATION'
+  | 'GROUP'
+  | 'VIDEO'
+  | 'PHONE';
 
 // 면접 추천
 export type InterviewRecommendation = 'STRONG_HIRE' | 'HIRE' | 'NO_HIRE' | 'STRONG_NO_HIRE';
@@ -95,10 +105,12 @@ export interface JobPostingListItem {
 
 export interface JobPostingSummary {
   total: number;
-  open: number;
-  closed: number;
-  completed: number;
   draft: number;
+  pending: number;
+  published: number;
+  closed: number;
+  cancelled: number;
+  completed: number;
 }
 
 // ===== 지원서 =====
@@ -220,10 +232,13 @@ export interface InterviewListItem {
 
 export interface InterviewSummary {
   total: number;
+  scheduling: number;
   scheduled: number;
+  inProgress: number;
   completed: number;
+  noShow: number;
   cancelled: number;
-  today: number;
+  postponed: number;
 }
 
 // ===== 면접 평가 =====
@@ -374,7 +389,7 @@ export interface SubmitInterviewScoreRequest {
 // ===== 채용 제안 (Offer) =====
 
 // 오퍼 상태
-export type OfferStatus = 'DRAFT' | 'SENT' | 'ACCEPTED' | 'REJECTED' | 'WITHDRAWN' | 'EXPIRED';
+export type OfferStatus = 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'SENT' | 'ACCEPTED' | 'DECLINED' | 'NEGOTIATING' | 'EXPIRED' | 'CANCELLED';
 
 export interface Offer extends TenantAwareEntity {
   offerNumber: string;
@@ -435,11 +450,14 @@ export interface OfferListItem {
 export interface OfferSummary {
   total: number;
   draft: number;
+  pendingApproval: number;
+  approved: number;
   sent: number;
   accepted: number;
-  rejected: number;
-  withdrawn: number;
+  declined: number;
+  negotiating: number;
   expired: number;
+  cancelled: number;
 }
 
 export interface OfferSearchParams extends PageRequest {
