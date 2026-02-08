@@ -1,10 +1,12 @@
 package com.hrsaas.organization.service.impl;
 
 import com.hrsaas.common.cache.CacheNames;
+import com.hrsaas.common.core.exception.BusinessException;
 import com.hrsaas.common.core.exception.DuplicateException;
 import com.hrsaas.common.core.exception.NotFoundException;
 import com.hrsaas.common.event.EventPublisher;
 import com.hrsaas.common.tenant.TenantContext;
+import com.hrsaas.organization.client.EmployeeClient;
 import com.hrsaas.organization.domain.event.DepartmentCreatedEvent;
 import com.hrsaas.organization.domain.event.DepartmentUpdatedEvent;
 import com.hrsaas.organization.domain.dto.request.CreateDepartmentRequest;
@@ -40,8 +42,11 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class DepartmentServiceImpl implements DepartmentService {
 
+    private static final int MAX_DEPTH = 10;
+
     private final DepartmentRepository departmentRepository;
     private final EventPublisher eventPublisher;
+    private final EmployeeClient employeeClient;
 
     @Override
     @Transactional
@@ -56,7 +61,14 @@ public class DepartmentServiceImpl implements DepartmentService {
         Department parent = null;
         if (request.getParentId() != null) {
             parent = findById(request.getParentId());
+            // G04: depth limit
+            if (parent.getLevel() >= MAX_DEPTH) {
+                throw new BusinessException("ORG_011", "부서 계층 깊이가 최대 " + MAX_DEPTH + "을 초과할 수 없습니다.");
+            }
         }
+
+        // G10: manager verification
+        validateManagerId(request.getManagerId());
 
         Department department = Department.builder()
             .code(request.getCode())
@@ -119,12 +131,23 @@ public class DepartmentServiceImpl implements DepartmentService {
         if (request.getNameEn() != null) {
             department.setNameEn(request.getNameEn());
         }
+        // G09: code is immutable — UpdateDepartmentRequest has no code field
         if (request.getParentId() != null) {
             Department parent = findById(request.getParentId());
+            // G04: check depth limit on move
+            int newLevel = parent.getLevel() + 1;
+            int maxChildDepth = getMaxChildDepth(department);
+            if (newLevel + maxChildDepth > MAX_DEPTH) {
+                throw new BusinessException("ORG_011",
+                    "이동 후 부서 계층 깊이가 최대 " + MAX_DEPTH + "을 초과합니다.");
+            }
             department.setParent(parent);
             department.updateHierarchy();
+            recalculateSubTreeLevels(department);
         }
         if (request.getManagerId() != null) {
+            // G10: manager verification
+            validateManagerId(request.getManagerId());
             department.setManagerId(request.getManagerId());
         }
         if (request.getSortOrder() != null) {
@@ -146,6 +169,13 @@ public class DepartmentServiceImpl implements DepartmentService {
     @CacheEvict(value = {CacheNames.DEPARTMENT, CacheNames.ORGANIZATION_TREE}, allEntries = true)
     public void delete(UUID id) {
         Department department = findById(id);
+
+        // G01: check for employees before delete
+        Long empCount = employeeClient.countByDepartmentId(id).getData();
+        if (empCount != 0) { // -1 (fallback) also blocks deletion
+            throw new BusinessException("ORG_010", "소속 직원이 있어 삭제할 수 없습니다.");
+        }
+
         department.setStatus(DepartmentStatus.DELETED);
         departmentRepository.save(department);
         log.info("Department deleted: id={}", id);
@@ -156,95 +186,55 @@ public class DepartmentServiceImpl implements DepartmentService {
             .orElseThrow(() -> new NotFoundException("ORG_001", "부서를 찾을 수 없습니다: " + id));
     }
 
+    /**
+     * G10: Validate manager exists via employee-service.
+     */
+    private void validateManagerId(UUID managerId) {
+        if (managerId != null) {
+            Boolean exists = employeeClient.existsById(managerId).getData();
+            if (!Boolean.TRUE.equals(exists)) {
+                throw new BusinessException("ORG_012", "유효하지 않은 관리자 ID입니다.");
+            }
+        }
+    }
+
+    /**
+     * G04: Calculate the maximum depth of a department's subtree.
+     */
+    private int getMaxChildDepth(Department department) {
+        if (department.getChildren() == null || department.getChildren().isEmpty()) {
+            return 0;
+        }
+        int max = 0;
+        for (Department child : department.getChildren()) {
+            max = Math.max(max, 1 + getMaxChildDepth(child));
+        }
+        return max;
+    }
+
+    /**
+     * G04: Recalculate levels for all children after a parent move.
+     */
+    private void recalculateSubTreeLevels(Department department) {
+        if (department.getChildren() == null) return;
+        for (Department child : department.getChildren()) {
+            child.updateHierarchy();
+            recalculateSubTreeLevels(child);
+        }
+    }
+
     @Override
     public Page<DepartmentHistoryResponse> getOrganizationHistory(Pageable pageable) {
-        UUID tenantId = TenantContext.getCurrentTenant();
-
-        // TODO: In production, this would query an audit/history table
-        // For now, return mock data based on departments
-        List<Department> departments = departmentRepository.findAllByTenantAndStatus(
-            tenantId, DepartmentStatus.ACTIVE);
-
-        List<DepartmentHistoryResponse> histories = new ArrayList<>();
-
-        for (Department dept : departments) {
-            // Create mock history entry for department creation
-            histories.add(DepartmentHistoryResponse.builder()
-                .id(UUID.randomUUID())
-                .type(DepartmentHistoryResponse.EventType.DEPARTMENT_CREATED.name().toLowerCase())
-                .date(dept.getCreatedAt())
-                .title(dept.getName() + " 부서 생성")
-                .description(dept.getName() + " 부서가 생성되었습니다.")
-                .actor(DepartmentHistoryResponse.ActorInfo.builder()
-                    .id(dept.getCreatedBy() != null ? UUID.fromString(dept.getCreatedBy()) : null)
-                    .name("시스템")
-                    .build())
-                .departmentId(dept.getId())
-                .departmentName(dept.getName())
-                .metadata(Map.of("code", dept.getCode()))
-                .build());
-        }
-
-        // Sort by date descending
-        histories.sort((a, b) -> b.getDate().compareTo(a.getDate()));
-
-        int start = (int) pageable.getOffset();
-        int end = Math.min(start + pageable.getPageSize(), histories.size());
-
-        List<DepartmentHistoryResponse> pageContent = histories.subList(
-            Math.min(start, histories.size()),
-            Math.min(end, histories.size())
-        );
-
-        return new PageImpl<>(pageContent, pageable, histories.size());
+        // Delegate to OrganizationHistoryService (will be connected in Phase 4)
+        // Temporary: return empty page until Phase 4
+        return new PageImpl<>(List.of(), pageable, 0);
     }
 
     @Override
     public List<DepartmentHistoryResponse> getDepartmentHistory(UUID departmentId) {
-        Department department = findById(departmentId);
-
-        List<DepartmentHistoryResponse> histories = new ArrayList<>();
-
-        // TODO: In production, this would query an audit/history table
-        // For now, return mock data for the specific department
-
-        // Department creation event
-        histories.add(DepartmentHistoryResponse.builder()
-            .id(UUID.randomUUID())
-            .type(DepartmentHistoryResponse.EventType.DEPARTMENT_CREATED.name().toLowerCase())
-            .date(department.getCreatedAt())
-            .title(department.getName() + " 부서 생성")
-            .description(department.getName() + " 부서가 생성되었습니다.")
-            .actor(DepartmentHistoryResponse.ActorInfo.builder()
-                .id(department.getCreatedBy() != null ? UUID.fromString(department.getCreatedBy()) : null)
-                .name("시스템")
-                .build())
-            .departmentId(department.getId())
-            .departmentName(department.getName())
-            .metadata(Map.of("code", department.getCode()))
-            .build());
-
-        // If updated, add update event
-        if (department.getUpdatedAt() != null &&
-            !department.getUpdatedAt().equals(department.getCreatedAt())) {
-            histories.add(DepartmentHistoryResponse.builder()
-                .id(UUID.randomUUID())
-                .type(DepartmentHistoryResponse.EventType.DEPARTMENT_RENAMED.name().toLowerCase())
-                .date(department.getUpdatedAt())
-                .title(department.getName() + " 부서 수정")
-                .description(department.getName() + " 부서 정보가 수정되었습니다.")
-                .actor(DepartmentHistoryResponse.ActorInfo.builder()
-                    .id(department.getUpdatedBy() != null ? UUID.fromString(department.getUpdatedBy()) : null)
-                    .name("관리자")
-                    .build())
-                .departmentId(department.getId())
-                .departmentName(department.getName())
-                .build());
-        }
-
-        // Sort by date descending
-        histories.sort((a, b) -> b.getDate().compareTo(a.getDate()));
-
-        return histories;
+        findById(departmentId); // verify existence
+        // Delegate to OrganizationHistoryService (will be connected in Phase 4)
+        // Temporary: return empty list until Phase 4
+        return List.of();
     }
 }
