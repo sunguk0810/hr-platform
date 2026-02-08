@@ -29,6 +29,9 @@ public class AnnouncementResponse {
     private Boolean isPinned;
     private Long viewCount;
     private Boolean isPublished;
+    private String targetScope;
+    private Long readCount;
+    private Boolean isRead;
     private LocalDateTime publishedAt;
     private List<AttachmentResponse> attachments;
     private Instant createdAt;

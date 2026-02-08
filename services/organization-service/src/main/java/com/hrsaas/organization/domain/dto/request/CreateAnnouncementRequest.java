@@ -30,6 +30,12 @@ public class CreateAnnouncementRequest {
 
     private Boolean isPublished;
 
+    private String targetScope; // ALL or TARGETED
+
+    private List<UUID> targetDepartmentIds;
+
+    private List<UUID> targetGradeIds;
+
     private List<AttachmentRequest> attachments;
 
     @Data

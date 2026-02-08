@@ -110,4 +110,13 @@ public class AnnouncementController {
         announcementService.unpublish(id);
         return ResponseEntity.ok(ApiResponse.success(null, "공지사항 발행이 취소되었습니다."));
     }
+
+    @GetMapping("/{id}/reads")
+    @Operation(summary = "공지사항 읽은 직원 목록 조회")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<List<com.hrsaas.organization.domain.entity.AnnouncementRead>>> getReads(
+            @PathVariable UUID id) {
+        var reads = announcementService.getReads(id);
+        return ResponseEntity.ok(ApiResponse.success(reads));
+    }
 }

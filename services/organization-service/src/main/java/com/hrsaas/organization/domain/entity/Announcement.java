@@ -38,6 +38,10 @@ public class Announcement extends TenantAwareEntity {
     @Column(name = "author_department", length = 200)
     private String authorDepartment;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "target_scope", length = 20)
+    private TargetScope targetScope = TargetScope.ALL;
+
     @Column(name = "is_pinned", nullable = false)
     private Boolean isPinned = false;
 

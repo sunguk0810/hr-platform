@@ -4,6 +4,7 @@ import com.hrsaas.organization.domain.dto.request.CreateAnnouncementRequest;
 import com.hrsaas.organization.domain.dto.request.UpdateAnnouncementRequest;
 import com.hrsaas.organization.domain.dto.response.AnnouncementResponse;
 import com.hrsaas.organization.domain.entity.AnnouncementCategory;
+import com.hrsaas.organization.domain.entity.AnnouncementRead;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -31,4 +32,9 @@ public interface AnnouncementService {
     void publish(UUID id);
 
     void unpublish(UUID id);
+
+    /**
+     * G12: 공지사항 읽은 직원 목록 조회
+     */
+    List<AnnouncementRead> getReads(UUID announcementId);
 }
