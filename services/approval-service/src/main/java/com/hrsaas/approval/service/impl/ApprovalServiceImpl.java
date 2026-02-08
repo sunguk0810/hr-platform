@@ -232,7 +232,7 @@ public class ApprovalServiceImpl implements ApprovalService {
 
         ApprovalStatus fromStatus = document.getStatus();
 
-        // Process the line action (approve, reject, agree, delegate)
+        // Process the line action (approve, reject, agree, delegate, direct_approve)
         switch (request.getActionType()) {
             case APPROVE -> {
                 if (currentLine.getLineType() == ApprovalLineType.ARBITRARY) {
@@ -244,6 +244,13 @@ public class ApprovalServiceImpl implements ApprovalService {
             case REJECT -> currentLine.reject(request.getComment());
             case AGREE -> currentLine.agree(request.getComment());
             case DELEGATE -> currentLine.delegate(request.getDelegateId(), request.getDelegateName());
+            case DIRECT_APPROVE -> {
+                // 전결: 현재 라인 승인 + 이후 라인 모두 스킵
+                currentLine.approveAsArbitrary(request.getComment());
+                document.getApprovalLines().stream()
+                    .filter(l -> l.getStatus() == ApprovalLineStatus.WAITING)
+                    .forEach(l -> l.skip());
+            }
             default -> throw new IllegalArgumentException("Unsupported action type: " + request.getActionType());
         }
 
@@ -303,6 +310,7 @@ public class ApprovalServiceImpl implements ApprovalService {
             }
             case REJECT -> ApprovalEvent.REJECT_LINE;
             case AGREE -> ApprovalEvent.AGREE_LINE;
+            case DIRECT_APPROVE -> ApprovalEvent.ARBITRARY_APPROVE;
             default -> throw new IllegalArgumentException("Cannot map action to SM event: " + actionType);
         };
     }

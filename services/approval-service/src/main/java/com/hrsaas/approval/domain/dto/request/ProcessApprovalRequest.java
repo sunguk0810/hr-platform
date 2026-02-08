@@ -23,4 +23,6 @@ public class ProcessApprovalRequest {
     private UUID delegateId;
 
     private String delegateName;
+
+    private Integer skipToStep;
 }

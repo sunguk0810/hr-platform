@@ -1,7 +1,10 @@
 package com.hrsaas.approval.controller;
 
 import com.hrsaas.approval.domain.dto.request.CreateApprovalRequest;
+import com.hrsaas.approval.domain.dto.request.DelegateStepRequest;
+import com.hrsaas.approval.domain.dto.request.DirectApproveStepRequest;
 import com.hrsaas.approval.domain.dto.request.ProcessApprovalRequest;
+import com.hrsaas.approval.domain.entity.ApprovalActionType;
 import com.hrsaas.approval.domain.dto.response.ApprovalDocumentResponse;
 import com.hrsaas.approval.domain.dto.response.ApprovalHistoryResponse;
 import com.hrsaas.approval.domain.dto.response.ApprovalSummaryResponse;
@@ -157,6 +160,38 @@ public class ApprovalController {
             @Valid @RequestBody ProcessApprovalRequest request) {
         UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
         return ApiResponse.success(approvalService.process(id, userId, request));
+    }
+
+    @PostMapping("/{id}/steps/{stepId}/delegate")
+    @Operation(summary = "대결 (대리결재)")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<ApprovalDocumentResponse> delegateStep(
+            @PathVariable UUID id,
+            @PathVariable UUID stepId,
+            @Valid @RequestBody DelegateStepRequest request) {
+        UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
+        ProcessApprovalRequest processRequest = ProcessApprovalRequest.builder()
+                .actionType(ApprovalActionType.DELEGATE)
+                .delegateId(request.getDelegateToId())
+                .delegateName(request.getDelegateToName())
+                .comment(request.getReason())
+                .build();
+        return ApiResponse.success(approvalService.process(id, userId, processRequest));
+    }
+
+    @PostMapping("/{id}/direct-approve")
+    @Operation(summary = "전결 (직접 승인)")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<ApprovalDocumentResponse> directApprove(
+            @PathVariable UUID id,
+            @RequestBody(required = false) DirectApproveStepRequest request) {
+        UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
+        ProcessApprovalRequest processRequest = ProcessApprovalRequest.builder()
+                .actionType(ApprovalActionType.DIRECT_APPROVE)
+                .comment(request != null ? request.getReason() : null)
+                .skipToStep(request != null ? request.getSkipToStep() : null)
+                .build();
+        return ApiResponse.success(approvalService.process(id, userId, processRequest));
     }
 
     @PostMapping("/{id}/recall")

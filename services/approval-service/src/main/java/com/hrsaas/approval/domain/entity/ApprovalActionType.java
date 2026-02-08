@@ -7,5 +7,6 @@ public enum ApprovalActionType {
     DELEGATE,       // 대결 (대리결재)
     RETURN,         // 반송 (수정요청)
     HOLD,           // 보류
-    COMMENT         // 의견첨부
+    COMMENT,        // 의견첨부
+    DIRECT_APPROVE  // 전결 (중간 결재 생략 후 직접 승인)
 }
