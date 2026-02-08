@@ -9,6 +9,10 @@ public interface EventTopics {
     String TENANT_EVENTS = "tenant-events";
     String TENANT_CREATED = "tenant-created";
     String TENANT_UPDATED = "tenant-updated";
+    String TENANT_STATUS_CHANGED = "tenant-status-changed";
+    String TENANT_POLICY_CHANGED = "tenant-policy-changed";
+    String TENANT_FEATURE_CHANGED = "tenant-feature-changed";
+    String TENANT_CONTRACT_EXPIRY = "tenant-contract-expiry";
 
     // Employee events
     String EMPLOYEE_EVENTS = "employee-events";
