@@ -3,7 +3,9 @@ package com.hrsaas.organization.service.impl;
 import com.hrsaas.common.cache.CacheNames;
 import com.hrsaas.common.core.exception.DuplicateException;
 import com.hrsaas.common.core.exception.NotFoundException;
+import com.hrsaas.common.core.exception.ValidationException;
 import com.hrsaas.common.tenant.TenantContext;
+import com.hrsaas.organization.client.EmployeeClient;
 import com.hrsaas.organization.domain.dto.request.CreateGradeRequest;
 import com.hrsaas.organization.domain.dto.request.UpdateGradeRequest;
 import com.hrsaas.organization.domain.dto.response.GradeResponse;
@@ -27,6 +29,7 @@ import java.util.UUID;
 public class GradeServiceImpl implements GradeService {
 
     private final GradeRepository gradeRepository;
+    private final EmployeeClient employeeClient;
 
     @Override
     @Transactional
@@ -114,6 +117,13 @@ public class GradeServiceImpl implements GradeService {
     @CacheEvict(value = CacheNames.GRADE, allEntries = true)
     public void delete(UUID id) {
         Grade grade = findById(id);
+
+        // G11: 사용 중인 직급 삭제(비활성화) 방지
+        Long empCount = employeeClient.countByGradeId(id).getData();
+        if (empCount != 0) { // -1(fallback)도 차단
+            throw new ValidationException("ORG_013", "사용 중인 직급은 비활성화할 수 없습니다.");
+        }
+
         grade.deactivate();
         gradeRepository.save(grade);
         log.info("Grade deleted (deactivated): id={}", id);

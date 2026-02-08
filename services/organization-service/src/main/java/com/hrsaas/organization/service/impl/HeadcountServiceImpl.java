@@ -5,6 +5,11 @@ import com.hrsaas.common.core.exception.NotFoundException;
 import com.hrsaas.common.core.exception.ValidationException;
 import com.hrsaas.common.security.SecurityContextHolder;
 import com.hrsaas.common.tenant.TenantContext;
+import com.hrsaas.organization.client.ApprovalClient;
+import com.hrsaas.organization.client.dto.ApprovalResponse;
+import com.hrsaas.organization.client.dto.CreateApprovalRequest;
+import com.hrsaas.organization.domain.entity.HeadcountHistory;
+import com.hrsaas.organization.repository.HeadcountHistoryRepository;
 import com.hrsaas.organization.domain.dto.request.CreateHeadcountPlanRequest;
 import com.hrsaas.organization.domain.dto.request.CreateHeadcountRequestRequest;
 import com.hrsaas.organization.domain.dto.request.UpdateHeadcountPlanRequest;
@@ -36,6 +41,8 @@ public class HeadcountServiceImpl implements HeadcountService {
 
     private final HeadcountPlanRepository headcountPlanRepository;
     private final HeadcountRequestRepository headcountRequestRepository;
+    private final HeadcountHistoryRepository headcountHistoryRepository;
+    private final ApprovalClient approvalClient;
 
     // Plan operations
 
@@ -60,6 +67,10 @@ public class HeadcountServiceImpl implements HeadcountService {
             .build();
 
         HeadcountPlan saved = headcountPlanRepository.save(plan);
+
+        // G13: Record history
+        recordPlanHistory(saved.getId(), "PLAN_CREATED", null,
+            "{\"plannedCount\":" + saved.getPlannedCount() + ",\"departmentName\":\"" + saved.getDepartmentName() + "\"}");
 
         log.info("Headcount plan created: id={}, year={}, departmentId={}",
                  saved.getId(), saved.getYear(), saved.getDepartmentId());
@@ -89,9 +100,14 @@ public class HeadcountServiceImpl implements HeadcountService {
         UUID tenantId = TenantContext.getCurrentTenant();
         HeadcountPlan plan = findPlanByIdAndTenantId(id, tenantId);
 
+        String prevValue = "{\"plannedCount\":" + plan.getPlannedCount() + "}";
         plan.update(request.getPlannedCount(), request.getNotes());
+        String newValue = "{\"plannedCount\":" + plan.getPlannedCount() + "}";
 
         HeadcountPlan saved = headcountPlanRepository.save(plan);
+
+        // G13: Record history
+        recordPlanHistory(saved.getId(), "PLAN_UPDATED", prevValue, newValue);
 
         log.info("Headcount plan updated: id={}", id);
 
@@ -229,7 +245,22 @@ public class HeadcountServiceImpl implements HeadcountService {
             throw new ValidationException("ORG_009", "초안 상태의 요청만 제출할 수 있습니다.");
         }
 
-        request.submit();
+        // G03: Create approval via approval-service
+        try {
+            String title = request.getDepartmentName() + " 정원 변경 요청 (" + request.getType() + " " + request.getRequestCount() + "명)";
+            String content = "부서: " + request.getDepartmentName() + "\n유형: " + request.getType()
+                + "\n인원: " + request.getRequestCount() + "\n사유: " + request.getReason();
+            ApprovalResponse resp = approvalClient.createApproval(
+                CreateApprovalRequest.of("HEADCOUNT_REQUEST", id, title, content)
+            ).getData();
+            request.submit();
+            if (resp != null && resp.getApprovalId() != null) {
+                request.setApprovalId(resp.getApprovalId());
+            }
+        } catch (Exception e) {
+            log.warn("Approval service call failed, submitting without approval integration: {}", e.getMessage());
+            request.submit();
+        }
         headcountRequestRepository.save(request);
 
         log.info("Headcount request submitted: id={}", id);
@@ -243,6 +274,15 @@ public class HeadcountServiceImpl implements HeadcountService {
 
         if (!request.isPending()) {
             throw new ValidationException("ORG_009", "대기 상태의 요청만 취소할 수 있습니다.");
+        }
+
+        // G03: Cancel approval
+        if (request.getApprovalId() != null) {
+            try {
+                approvalClient.cancelApproval(request.getApprovalId());
+            } catch (Exception e) {
+                log.warn("Failed to cancel approval {}: {}", request.getApprovalId(), e.getMessage());
+            }
         }
 
         request.cancel();
@@ -352,8 +392,29 @@ public class HeadcountServiceImpl implements HeadcountService {
             .orElseThrow(() -> new NotFoundException("ORG_008", "정현원 계획을 찾을 수 없습니다: " + id));
     }
 
+    @Override
+    public List<HeadcountHistory> getPlanHistory(UUID planId) {
+        return headcountHistoryRepository.findByPlanIdOrderByEventDateDesc(planId);
+    }
+
     private HeadcountRequest findRequestByIdAndTenantId(UUID id, UUID tenantId) {
         return headcountRequestRepository.findByIdAndTenantId(id, tenantId)
             .orElseThrow(() -> new NotFoundException("ORG_009", "정현원 변경 요청을 찾을 수 없습니다: " + id));
+    }
+
+    private void recordPlanHistory(UUID planId, String eventType, String prevValue, String newValue) {
+        UUID tenantId = TenantContext.getCurrentTenant();
+        var currentUser = SecurityContextHolder.getCurrentUser();
+
+        HeadcountHistory history = HeadcountHistory.builder()
+            .tenantId(tenantId)
+            .planId(planId)
+            .eventType(eventType)
+            .previousValue(prevValue)
+            .newValue(newValue)
+            .actorId(currentUser != null ? currentUser.getUserId() : null)
+            .actorName(currentUser != null ? currentUser.getUsername() : "시스템")
+            .build();
+        headcountHistoryRepository.save(history);
     }
 }

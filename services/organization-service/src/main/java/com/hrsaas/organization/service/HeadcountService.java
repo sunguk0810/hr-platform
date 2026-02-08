@@ -7,6 +7,7 @@ import com.hrsaas.organization.domain.dto.request.UpdateHeadcountRequestRequest;
 import com.hrsaas.organization.domain.dto.response.HeadcountPlanResponse;
 import com.hrsaas.organization.domain.dto.response.HeadcountRequestResponse;
 import com.hrsaas.organization.domain.dto.response.HeadcountSummaryResponse;
+import com.hrsaas.organization.domain.entity.HeadcountHistory;
 import com.hrsaas.organization.domain.entity.HeadcountRequestStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -55,4 +56,9 @@ public interface HeadcountService {
 
     // Summary
     HeadcountSummaryResponse getSummary(Integer year);
+
+    /**
+     * G13: 정원 이력 조회
+     */
+    List<HeadcountHistory> getPlanHistory(UUID planId);
 }

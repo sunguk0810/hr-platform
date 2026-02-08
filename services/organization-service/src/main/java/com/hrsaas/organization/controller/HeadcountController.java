@@ -9,6 +9,7 @@ import com.hrsaas.organization.domain.dto.request.UpdateHeadcountRequestRequest;
 import com.hrsaas.organization.domain.dto.response.HeadcountPlanResponse;
 import com.hrsaas.organization.domain.dto.response.HeadcountRequestResponse;
 import com.hrsaas.organization.domain.dto.response.HeadcountSummaryResponse;
+import com.hrsaas.organization.domain.entity.HeadcountHistory;
 import com.hrsaas.organization.domain.entity.HeadcountRequestStatus;
 import com.hrsaas.organization.service.HeadcountService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -90,6 +91,14 @@ public class HeadcountController {
     public ResponseEntity<ApiResponse<HeadcountPlanResponse>> approvePlan(@PathVariable UUID id) {
         HeadcountPlanResponse response = headcountService.approvePlan(id);
         return ResponseEntity.ok(ApiResponse.success(response, "정현원 계획이 승인되었습니다."));
+    }
+
+    @GetMapping("/plans/{id}/history")
+    @Operation(summary = "정원 계획 이력 조회")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<List<HeadcountHistory>>> getPlanHistory(@PathVariable UUID id) {
+        List<HeadcountHistory> history = headcountService.getPlanHistory(id);
+        return ResponseEntity.ok(ApiResponse.success(history));
     }
 
     // Request endpoints

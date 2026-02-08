@@ -3,7 +3,9 @@ package com.hrsaas.organization.service.impl;
 import com.hrsaas.common.cache.CacheNames;
 import com.hrsaas.common.core.exception.DuplicateException;
 import com.hrsaas.common.core.exception.NotFoundException;
+import com.hrsaas.common.core.exception.ValidationException;
 import com.hrsaas.common.tenant.TenantContext;
+import com.hrsaas.organization.client.EmployeeClient;
 import com.hrsaas.organization.domain.dto.request.CreatePositionRequest;
 import com.hrsaas.organization.domain.dto.request.UpdatePositionRequest;
 import com.hrsaas.organization.domain.dto.response.PositionResponse;
@@ -27,6 +29,7 @@ import java.util.UUID;
 public class PositionServiceImpl implements PositionService {
 
     private final PositionRepository positionRepository;
+    private final EmployeeClient employeeClient;
 
     @Override
     @Transactional
@@ -114,6 +117,13 @@ public class PositionServiceImpl implements PositionService {
     @CacheEvict(value = CacheNames.POSITION, allEntries = true)
     public void delete(UUID id) {
         Position position = findById(id);
+
+        // G11: 사용 중인 직책 삭제(비활성화) 방지
+        Long empCount = employeeClient.countByPositionId(id).getData();
+        if (empCount != 0) { // -1(fallback)도 차단
+            throw new ValidationException("ORG_014", "사용 중인 직책은 비활성화할 수 없습니다.");
+        }
+
         position.deactivate();
         positionRepository.save(position);
         log.info("Position deleted (deactivated): id={}", id);
