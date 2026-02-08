@@ -3,10 +3,10 @@ package com.hrsaas.organization.controller;
 import com.hrsaas.common.response.ApiResponse;
 import com.hrsaas.common.response.PageResponse;
 import com.hrsaas.organization.domain.dto.request.CreateDepartmentRequest;
+import com.hrsaas.organization.domain.dto.request.DepartmentMergeRequest;
+import com.hrsaas.organization.domain.dto.request.DepartmentSplitRequest;
 import com.hrsaas.organization.domain.dto.request.UpdateDepartmentRequest;
-import com.hrsaas.organization.domain.dto.response.DepartmentHistoryResponse;
-import com.hrsaas.organization.domain.dto.response.DepartmentResponse;
-import com.hrsaas.organization.domain.dto.response.DepartmentTreeResponse;
+import com.hrsaas.organization.domain.dto.response.*;
 import com.hrsaas.organization.service.DepartmentService;
 import com.hrsaas.organization.service.ReorgImpactAnalyzer;
 import org.springframework.data.domain.Page;
@@ -109,5 +109,31 @@ public class DepartmentController {
     public ResponseEntity<ApiResponse<ReorgImpactAnalyzer.ImpactAnalysisResult>> analyzeReorgImpact(
             @RequestBody ReorgImpactAnalyzer.ReorgPlan plan) {
         return ResponseEntity.ok(ApiResponse.success(reorgImpactAnalyzer.analyzeImpact(plan)));
+    }
+
+    @PostMapping("/merge")
+    @Operation(summary = "부서 통합")
+    @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<DepartmentMergeResponse>> merge(
+            @Valid @RequestBody DepartmentMergeRequest request) {
+        DepartmentMergeResponse response = departmentService.merge(request);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PostMapping("/split")
+    @Operation(summary = "부서 분리")
+    @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<DepartmentSplitResponse>> split(
+            @Valid @RequestBody DepartmentSplitRequest request) {
+        DepartmentSplitResponse response = departmentService.split(request);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @GetMapping("/org-chart")
+    @Operation(summary = "조직도 조회")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<List<OrgChartNodeResponse>>> getOrgChart() {
+        List<OrgChartNodeResponse> response = departmentService.getOrgChart();
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

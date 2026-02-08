@@ -7,14 +7,17 @@ import com.hrsaas.common.core.exception.NotFoundException;
 import com.hrsaas.common.event.EventPublisher;
 import com.hrsaas.common.tenant.TenantContext;
 import com.hrsaas.organization.client.EmployeeClient;
+import com.hrsaas.organization.client.dto.BulkTransferRequest;
 import com.hrsaas.organization.domain.event.DepartmentCreatedEvent;
+import com.hrsaas.organization.domain.event.DepartmentMergedEvent;
+import com.hrsaas.organization.domain.event.DepartmentSplitEvent;
 import com.hrsaas.organization.domain.event.DepartmentUpdatedEvent;
 import com.hrsaas.organization.service.OrganizationHistoryService;
 import com.hrsaas.organization.domain.dto.request.CreateDepartmentRequest;
+import com.hrsaas.organization.domain.dto.request.DepartmentMergeRequest;
+import com.hrsaas.organization.domain.dto.request.DepartmentSplitRequest;
 import com.hrsaas.organization.domain.dto.request.UpdateDepartmentRequest;
-import com.hrsaas.organization.domain.dto.response.DepartmentHistoryResponse;
-import com.hrsaas.organization.domain.dto.response.DepartmentResponse;
-import com.hrsaas.organization.domain.dto.response.DepartmentTreeResponse;
+import com.hrsaas.organization.domain.dto.response.*;
 import com.hrsaas.organization.domain.entity.Department;
 import com.hrsaas.organization.domain.entity.DepartmentStatus;
 import com.hrsaas.organization.repository.DepartmentRepository;
@@ -239,5 +242,192 @@ public class DepartmentServiceImpl implements DepartmentService {
     public List<DepartmentHistoryResponse> getDepartmentHistory(UUID departmentId) {
         findById(departmentId); // verify existence
         return organizationHistoryService.getDepartmentHistory(departmentId);
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(value = {CacheNames.DEPARTMENT, CacheNames.ORGANIZATION_TREE}, allEntries = true)
+    public DepartmentMergeResponse merge(DepartmentMergeRequest request) {
+        UUID tenantId = TenantContext.getCurrentTenant();
+
+        // 1. Validate source departments
+        List<Department> sources = new ArrayList<>();
+        for (UUID sourceId : request.getSourceDepartmentIds()) {
+            Department source = findById(sourceId);
+            if (!source.isActive() && source.getStatus() != DepartmentStatus.INACTIVE) {
+                throw new BusinessException("ORG_014", "활성/비활성 상태의 부서만 통합할 수 있습니다: " + sourceId);
+            }
+            sources.add(source);
+        }
+
+        // 2. Get or create target department
+        Department target;
+        if (request.getTargetDepartmentId() != null) {
+            target = findById(request.getTargetDepartmentId());
+        } else {
+            if (departmentRepository.existsByCodeAndTenantId(request.getTargetDepartmentCode(), tenantId)) {
+                throw new DuplicateException("ORG_001", "이미 존재하는 부서 코드입니다: " + request.getTargetDepartmentCode());
+            }
+            Department firstSource = sources.get(0);
+            target = Department.builder()
+                .code(request.getTargetDepartmentCode())
+                .name(request.getTargetDepartmentName())
+                .parent(firstSource.getParent())
+                .build();
+            target = departmentRepository.save(target);
+        }
+
+        // 3. Transfer employees from all sources to target
+        int totalTransferred = 0;
+        for (Department source : sources) {
+            if (!source.getId().equals(target.getId())) {
+                try {
+                    Long empCount = employeeClient.countByDepartmentId(source.getId()).getData();
+                    if (empCount != null && empCount > 0) {
+                        employeeClient.bulkTransferDepartment(BulkTransferRequest.builder()
+                            .employeeIds(List.of()) // empty = all employees in department
+                            .targetDepartmentId(target.getId())
+                            .build());
+                        totalTransferred += empCount.intValue();
+                    }
+                } catch (Exception e) {
+                    log.warn("Failed to transfer employees from department {}: {}", source.getId(), e.getMessage());
+                }
+            }
+        }
+
+        // 4. Set source departments to MERGED
+        List<UUID> mergedIds = new ArrayList<>();
+        for (Department source : sources) {
+            if (!source.getId().equals(target.getId())) {
+                source.setStatus(DepartmentStatus.MERGED);
+                departmentRepository.save(source);
+                mergedIds.add(source.getId());
+            }
+        }
+
+        // 5. Publish event
+        eventPublisher.publish(DepartmentMergedEvent.builder()
+            .sourceIds(mergedIds)
+            .targetId(target.getId())
+            .targetName(target.getName())
+            .reason(request.getReason())
+            .build());
+
+        log.info("Departments merged: sources={}, target={}", mergedIds, target.getId());
+
+        return DepartmentMergeResponse.builder()
+            .targetDepartment(DepartmentResponse.from(target))
+            .mergedDepartmentIds(mergedIds)
+            .transferredEmployeeCount(totalTransferred)
+            .build();
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(value = {CacheNames.DEPARTMENT, CacheNames.ORGANIZATION_TREE}, allEntries = true)
+    public DepartmentSplitResponse split(DepartmentSplitRequest request) {
+        UUID tenantId = TenantContext.getCurrentTenant();
+        Department source = findById(request.getSourceDepartmentId());
+
+        List<DepartmentResponse> newDepartments = new ArrayList<>();
+        List<UUID> newDepartmentIds = new ArrayList<>();
+
+        // Create new departments
+        if (request.getNewDepartments() != null) {
+            for (DepartmentSplitRequest.SplitTarget splitTarget : request.getNewDepartments()) {
+                if (departmentRepository.existsByCodeAndTenantId(splitTarget.getCode(), tenantId)) {
+                    throw new DuplicateException("ORG_001", "이미 존재하는 부서 코드입니다: " + splitTarget.getCode());
+                }
+
+                Department newDept = Department.builder()
+                    .code(splitTarget.getCode())
+                    .name(splitTarget.getName())
+                    .parent(source.getParent())
+                    .build();
+                newDept = departmentRepository.save(newDept);
+                newDepartmentIds.add(newDept.getId());
+
+                // Transfer specified employees
+                if (splitTarget.getEmployeeIds() != null && !splitTarget.getEmployeeIds().isEmpty()) {
+                    try {
+                        employeeClient.bulkTransferDepartment(BulkTransferRequest.builder()
+                            .employeeIds(splitTarget.getEmployeeIds())
+                            .targetDepartmentId(newDept.getId())
+                            .build());
+                    } catch (Exception e) {
+                        log.warn("Failed to transfer employees to new department {}: {}", newDept.getId(), e.getMessage());
+                    }
+                }
+
+                newDepartments.add(DepartmentResponse.from(newDept));
+            }
+        }
+
+        // Deactivate source if not keeping
+        if (!request.isKeepSource()) {
+            source.deactivate();
+            departmentRepository.save(source);
+        }
+
+        // Publish event
+        eventPublisher.publish(DepartmentSplitEvent.builder()
+            .sourceId(source.getId())
+            .newDepartmentIds(newDepartmentIds)
+            .reason(request.getReason())
+            .build());
+
+        log.info("Department split: source={}, newDepts={}", source.getId(), newDepartmentIds);
+
+        return DepartmentSplitResponse.builder()
+            .sourceDepartmentId(source.getId())
+            .newDepartments(newDepartments)
+            .sourceKept(request.isKeepSource())
+            .build();
+    }
+
+    @Override
+    public List<OrgChartNodeResponse> getOrgChart() {
+        UUID tenantId = TenantContext.getCurrentTenant();
+        List<Department> rootDepartments = departmentRepository.findRootDepartments(tenantId, DepartmentStatus.ACTIVE);
+        return rootDepartments.stream()
+            .map(this::buildOrgChartNode)
+            .collect(Collectors.toList());
+    }
+
+    private OrgChartNodeResponse buildOrgChartNode(Department department) {
+        Long empCount = 0L;
+        try {
+            empCount = employeeClient.countByDepartmentId(department.getId()).getData();
+            if (empCount < 0) empCount = 0L;
+        } catch (Exception e) {
+            log.debug("Failed to get employee count for department {}: {}", department.getId(), e.getMessage());
+        }
+
+        OrgChartNodeResponse.ManagerInfo managerInfo = null;
+        if (department.getManagerId() != null) {
+            managerInfo = OrgChartNodeResponse.ManagerInfo.builder()
+                .id(department.getManagerId())
+                .build();
+        }
+
+        List<OrgChartNodeResponse> children = null;
+        if (department.getChildren() != null && !department.getChildren().isEmpty()) {
+            children = department.getChildren().stream()
+                .filter(Department::isActive)
+                .map(this::buildOrgChartNode)
+                .collect(Collectors.toList());
+        }
+
+        return OrgChartNodeResponse.builder()
+            .id(department.getId())
+            .code(department.getCode())
+            .name(department.getName())
+            .level(department.getLevel())
+            .status(department.getStatus().name())
+            .manager(managerInfo)
+            .employeeCount(empCount.intValue())
+            .children(children)
+            .build();
     }
 }

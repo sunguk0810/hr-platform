@@ -1,10 +1,10 @@
 package com.hrsaas.organization.service;
 
 import com.hrsaas.organization.domain.dto.request.CreateDepartmentRequest;
+import com.hrsaas.organization.domain.dto.request.DepartmentMergeRequest;
+import com.hrsaas.organization.domain.dto.request.DepartmentSplitRequest;
 import com.hrsaas.organization.domain.dto.request.UpdateDepartmentRequest;
-import com.hrsaas.organization.domain.dto.response.DepartmentHistoryResponse;
-import com.hrsaas.organization.domain.dto.response.DepartmentResponse;
-import com.hrsaas.organization.domain.dto.response.DepartmentTreeResponse;
+import com.hrsaas.organization.domain.dto.response.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -25,13 +25,22 @@ public interface DepartmentService {
 
     void delete(UUID id);
 
-    /**
-     * 전체 조직 변경 이력 조회 (페이징)
-     */
     Page<DepartmentHistoryResponse> getOrganizationHistory(Pageable pageable);
 
-    /**
-     * 특정 부서 변경 이력 조회
-     */
     List<DepartmentHistoryResponse> getDepartmentHistory(UUID departmentId);
+
+    /**
+     * G06: 부서 통합
+     */
+    DepartmentMergeResponse merge(DepartmentMergeRequest request);
+
+    /**
+     * G06: 부서 분리
+     */
+    DepartmentSplitResponse split(DepartmentSplitRequest request);
+
+    /**
+     * G14: 조직도 조회
+     */
+    List<OrgChartNodeResponse> getOrgChart();
 }

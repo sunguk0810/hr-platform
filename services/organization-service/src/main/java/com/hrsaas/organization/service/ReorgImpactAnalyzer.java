@@ -1,5 +1,6 @@
 package com.hrsaas.organization.service;
 
+import com.hrsaas.organization.client.EmployeeClient;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -11,22 +12,46 @@ import java.util.*;
 @RequiredArgsConstructor
 public class ReorgImpactAnalyzer {
 
+    private final EmployeeClient employeeClient;
+
     public ImpactAnalysisResult analyzeImpact(ReorgPlan plan) {
         log.info("Analyzing reorg impact for plan: {}", plan.getTitle());
 
         ImpactAnalysisResult result = new ImpactAnalysisResult();
         result.setPlanTitle(plan.getTitle());
 
-        // TODO: Query employee-service for affected employees
-        // TODO: Query approval-service for active approval lines that reference affected departments
-        // TODO: Calculate position changes, approval line changes
+        int totalAffected = 0;
+        List<String> warnings = new ArrayList<>();
+        List<String> positionChanges = new ArrayList<>();
 
-        result.setAffectedEmployeeCount(0);
+        if (plan.getChanges() != null) {
+            for (DepartmentChange change : plan.getChanges()) {
+                if (change.getDepartmentId() != null) {
+                    try {
+                        Long empCount = employeeClient.countByDepartmentId(change.getDepartmentId()).getData();
+                        if (empCount != null && empCount > 0) {
+                            totalAffected += empCount.intValue();
+                            positionChanges.add(change.getAction() + ": " + empCount + " employees affected in department " + change.getDepartmentId());
+
+                            if ("DELETE".equalsIgnoreCase(change.getAction()) && empCount > 0) {
+                                warnings.add("삭제 예정 부서에 " + empCount + "명의 직원이 있습니다: " + change.getDepartmentId());
+                            }
+                        } else if (empCount != null && empCount < 0) {
+                            warnings.add("직원 서비스에 연결할 수 없어 부서 " + change.getDepartmentId() + "의 직원 수를 확인할 수 없습니다.");
+                        }
+                    } catch (Exception e) {
+                        warnings.add("직원 수 조회 실패: " + change.getDepartmentId() + " - " + e.getMessage());
+                    }
+                }
+            }
+        }
+
+        // TODO: Query approval-service for active approval lines
         result.setApprovalLineChanges(0);
-        result.setPositionChanges(Collections.emptyList());
-        result.setWarnings(List.of(
-            "Impact analysis engine not yet connected to employee/approval services"
-        ));
+
+        result.setAffectedEmployeeCount(totalAffected);
+        result.setPositionChanges(positionChanges);
+        result.setWarnings(warnings);
 
         return result;
     }
