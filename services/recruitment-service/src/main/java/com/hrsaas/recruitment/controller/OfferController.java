@@ -2,7 +2,9 @@ package com.hrsaas.recruitment.controller;
 
 import com.hrsaas.common.response.ApiResponse;
 import com.hrsaas.recruitment.domain.dto.request.CreateOfferRequest;
+import com.hrsaas.recruitment.domain.dto.request.RespondOfferRequest;
 import com.hrsaas.recruitment.domain.dto.response.OfferResponse;
+import com.hrsaas.recruitment.domain.dto.response.OfferSummaryResponse;
 import com.hrsaas.recruitment.domain.entity.OfferStatus;
 import com.hrsaas.recruitment.service.OfferService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -68,6 +70,13 @@ public class OfferController {
         return ApiResponse.success(offerService.getByStatus(status, pageable));
     }
 
+    @Operation(summary = "제안 요약")
+    @GetMapping("/summary")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<OfferSummaryResponse> getSummary() {
+        return ApiResponse.success(offerService.getSummary());
+    }
+
     @Operation(summary = "승인 대기 제안 목록")
     @GetMapping("/pending-approval")
     @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
@@ -126,5 +135,13 @@ public class OfferController {
     @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
     public ApiResponse<OfferResponse> cancel(@PathVariable UUID id) {
         return ApiResponse.success(offerService.cancel(id));
+    }
+
+    @Operation(summary = "제안 응답 (수락/거절)")
+    @PostMapping("/public/{id}/respond")
+    public ApiResponse<OfferResponse> respond(
+            @PathVariable UUID id,
+            @Valid @RequestBody RespondOfferRequest request) {
+        return ApiResponse.success(offerService.respond(id, request.getAction(), request.getReason()));
     }
 }

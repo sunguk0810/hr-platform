@@ -5,6 +5,7 @@ import com.hrsaas.common.core.exception.ErrorCode;
 import com.hrsaas.recruitment.domain.dto.request.*;
 import com.hrsaas.recruitment.domain.dto.response.InterviewResponse;
 import com.hrsaas.recruitment.domain.dto.response.InterviewScoreResponse;
+import com.hrsaas.recruitment.domain.dto.response.InterviewSummaryResponse;
 import com.hrsaas.recruitment.domain.entity.*;
 import com.hrsaas.recruitment.repository.ApplicationRepository;
 import com.hrsaas.recruitment.repository.InterviewRepository;
@@ -226,5 +227,40 @@ public class InterviewServiceImpl implements InterviewService {
     @Override
     public Double getAverageScore(UUID interviewId) {
         return interviewScoreRepository.calculateAverageScore(interviewId);
+    }
+
+    @Override
+    public InterviewSummaryResponse getSummary() {
+        return InterviewSummaryResponse.builder()
+                .total(interviewRepository.count())
+                .scheduling(interviewRepository.countByStatus(InterviewStatus.SCHEDULING))
+                .scheduled(interviewRepository.countByStatus(InterviewStatus.SCHEDULED))
+                .inProgress(interviewRepository.countByStatus(InterviewStatus.IN_PROGRESS))
+                .completed(interviewRepository.countByStatus(InterviewStatus.COMPLETED))
+                .noShow(interviewRepository.countByStatus(InterviewStatus.NO_SHOW))
+                .cancelled(interviewRepository.countByStatus(InterviewStatus.CANCELLED))
+                .postponed(interviewRepository.countByStatus(InterviewStatus.POSTPONED))
+                .build();
+    }
+
+    @Override
+    public Page<InterviewResponse> getMyInterviews(UUID interviewerId, Pageable pageable) {
+        return interviewRepository.findByInterviewerId(interviewerId.toString(), pageable)
+                .map(InterviewResponse::from);
+    }
+
+    @Override
+    public List<InterviewScoreResponse> getMyScore(UUID interviewId, UUID interviewerId) {
+        return interviewScoreRepository.findByInterviewIdAndInterviewerIdOrderByCriterionAsc(interviewId, interviewerId)
+                .stream()
+                .map(InterviewScoreResponse::from)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public InterviewResponse confirm(UUID id, ScheduleInterviewRequest request) {
+        log.info("Confirming interview: {}", id);
+        return schedule(id, request);
     }
 }

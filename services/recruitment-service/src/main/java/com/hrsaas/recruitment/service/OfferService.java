@@ -2,6 +2,7 @@ package com.hrsaas.recruitment.service;
 
 import com.hrsaas.recruitment.domain.dto.request.CreateOfferRequest;
 import com.hrsaas.recruitment.domain.dto.response.OfferResponse;
+import com.hrsaas.recruitment.domain.dto.response.OfferSummaryResponse;
 import com.hrsaas.recruitment.domain.entity.OfferStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -41,4 +42,8 @@ public interface OfferService {
     OfferResponse cancel(UUID id);
 
     void checkExpiredOffers();
+
+    OfferSummaryResponse getSummary();
+
+    OfferResponse respond(UUID id, String action, String reason);
 }

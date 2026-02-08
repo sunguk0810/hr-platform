@@ -5,6 +5,7 @@ import com.hrsaas.common.core.exception.ErrorCode;
 import com.hrsaas.recruitment.domain.dto.request.CreateJobPostingRequest;
 import com.hrsaas.recruitment.domain.dto.request.UpdateJobPostingRequest;
 import com.hrsaas.recruitment.domain.dto.response.JobPostingResponse;
+import com.hrsaas.recruitment.domain.dto.response.JobPostingSummaryResponse;
 import com.hrsaas.recruitment.domain.entity.JobPosting;
 import com.hrsaas.recruitment.domain.entity.JobStatus;
 import com.hrsaas.recruitment.repository.JobPostingRepository;
@@ -208,5 +209,18 @@ public class JobPostingServiceImpl implements JobPostingService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "채용공고를 찾을 수 없습니다: " + id));
         jobPosting.incrementViewCount();
         jobPostingRepository.save(jobPosting);
+    }
+
+    @Override
+    public JobPostingSummaryResponse getSummary() {
+        return JobPostingSummaryResponse.builder()
+                .total(jobPostingRepository.count())
+                .draft(jobPostingRepository.countByStatus(JobStatus.DRAFT))
+                .pending(jobPostingRepository.countByStatus(JobStatus.PENDING))
+                .published(jobPostingRepository.countByStatus(JobStatus.PUBLISHED))
+                .closed(jobPostingRepository.countByStatus(JobStatus.CLOSED))
+                .cancelled(jobPostingRepository.countByStatus(JobStatus.CANCELLED))
+                .completed(jobPostingRepository.countByStatus(JobStatus.COMPLETED))
+                .build();
     }
 }

@@ -5,6 +5,8 @@ import com.hrsaas.common.core.exception.ErrorCode;
 import com.hrsaas.recruitment.domain.dto.request.CreateApplicationRequest;
 import com.hrsaas.recruitment.domain.dto.request.ScreenApplicationRequest;
 import com.hrsaas.recruitment.domain.dto.response.ApplicationResponse;
+import com.hrsaas.recruitment.domain.dto.response.ApplicationStageCountResponse;
+import com.hrsaas.recruitment.domain.dto.response.ApplicationSummaryResponse;
 import com.hrsaas.recruitment.domain.entity.*;
 import com.hrsaas.recruitment.repository.ApplicantRepository;
 import com.hrsaas.recruitment.repository.ApplicationRepository;
@@ -19,8 +21,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -184,6 +188,33 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         application.moveToNextStage(stageName, order);
         return ApplicationResponse.from(applicationRepository.save(application));
+    }
+
+    @Override
+    public ApplicationSummaryResponse getSummary() {
+        return ApplicationSummaryResponse.builder()
+                .total(applicationRepository.count())
+                .submitted(applicationRepository.countByStatus(ApplicationStatus.SUBMITTED))
+                .screening(applicationRepository.countByStatus(ApplicationStatus.SCREENING))
+                .screened(applicationRepository.countByStatus(ApplicationStatus.SCREENED))
+                .interviewing(applicationRepository.countByStatus(ApplicationStatus.INTERVIEWING))
+                .interviewPassed(applicationRepository.countByStatus(ApplicationStatus.INTERVIEW_PASSED))
+                .offerPending(applicationRepository.countByStatus(ApplicationStatus.OFFER_PENDING))
+                .hired(applicationRepository.countByStatus(ApplicationStatus.HIRED))
+                .rejected(applicationRepository.countByStatus(ApplicationStatus.REJECTED))
+                .withdrawn(applicationRepository.countByStatus(ApplicationStatus.WITHDRAWN))
+                .build();
+    }
+
+    @Override
+    public List<ApplicationStageCountResponse> getStageCountsByJob(UUID jobPostingId) {
+        List<Object[]> results = applicationRepository.countByJobPostingIdGroupByCurrentStage(jobPostingId);
+        return results.stream()
+                .map(row -> ApplicationStageCountResponse.builder()
+                        .stage((String) row[0])
+                        .count((Long) row[1])
+                        .build())
+                .collect(Collectors.toList());
     }
 
     private String generateApplicationNumber() {

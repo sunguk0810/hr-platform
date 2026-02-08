@@ -4,6 +4,7 @@ import com.hrsaas.common.response.ApiResponse;
 import com.hrsaas.recruitment.domain.dto.request.CreateApplicationRequest;
 import com.hrsaas.recruitment.domain.dto.request.ScreenApplicationRequest;
 import com.hrsaas.recruitment.domain.dto.response.ApplicationResponse;
+import com.hrsaas.recruitment.domain.dto.response.ApplicationSummaryResponse;
 import com.hrsaas.recruitment.domain.entity.ApplicationStatus;
 import com.hrsaas.recruitment.service.ApplicationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -85,6 +86,13 @@ public class ApplicationController {
             @PathVariable String stage,
             @PageableDefault(size = 20) Pageable pageable) {
         return ApiResponse.success(applicationService.getByCurrentStage(stage, pageable));
+    }
+
+    @Operation(summary = "지원서 요약")
+    @GetMapping("/summary")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<ApplicationSummaryResponse> getSummary() {
+        return ApiResponse.success(applicationService.getSummary());
     }
 
     @Operation(summary = "서류 심사")

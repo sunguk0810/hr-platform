@@ -4,8 +4,10 @@ import com.hrsaas.common.response.ApiResponse;
 import com.hrsaas.recruitment.domain.dto.request.*;
 import com.hrsaas.recruitment.domain.dto.response.InterviewResponse;
 import com.hrsaas.recruitment.domain.dto.response.InterviewScoreResponse;
+import com.hrsaas.recruitment.domain.dto.response.InterviewSummaryResponse;
 import com.hrsaas.recruitment.domain.entity.InterviewStatus;
 import com.hrsaas.recruitment.service.InterviewService;
+import com.hrsaas.common.security.SecurityContextHolder;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -79,6 +81,30 @@ public class InterviewController {
         return ApiResponse.success(interviewService.getTodayInterviews());
     }
 
+    @Operation(summary = "면접 요약")
+    @GetMapping("/summary")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<InterviewSummaryResponse> getSummary() {
+        return ApiResponse.success(interviewService.getSummary());
+    }
+
+    @Operation(summary = "내 면접 목록")
+    @GetMapping("/my")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<Page<InterviewResponse>> getMyInterviews(@PageableDefault(size = 20) Pageable pageable) {
+        UUID interviewerId = SecurityContextHolder.getCurrentUser().getUserId();
+        return ApiResponse.success(interviewService.getMyInterviews(interviewerId, pageable));
+    }
+
+    @Operation(summary = "면접 일정 확인(확정)")
+    @PostMapping("/{id}/confirm")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
+    public ApiResponse<InterviewResponse> confirm(
+            @PathVariable UUID id,
+            @Valid @RequestBody ScheduleInterviewRequest request) {
+        return ApiResponse.success(interviewService.confirm(id, request));
+    }
+
     @Operation(summary = "면접 일정 확정")
     @PostMapping("/{id}/schedule")
     @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
@@ -148,6 +174,14 @@ public class InterviewController {
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<List<InterviewScoreResponse>> getScores(@PathVariable UUID interviewId) {
         return ApiResponse.success(interviewService.getScores(interviewId));
+    }
+
+    @Operation(summary = "내 면접 평가 조회")
+    @GetMapping("/{interviewId}/scores/my")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<List<InterviewScoreResponse>> getMyScores(@PathVariable UUID interviewId) {
+        UUID interviewerId = SecurityContextHolder.getCurrentUser().getUserId();
+        return ApiResponse.success(interviewService.getMyScore(interviewId, interviewerId));
     }
 
     @Operation(summary = "면접 평균 점수")

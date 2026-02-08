@@ -4,6 +4,7 @@ import com.hrsaas.common.core.exception.BusinessException;
 import com.hrsaas.common.core.exception.ErrorCode;
 import com.hrsaas.recruitment.domain.dto.request.CreateOfferRequest;
 import com.hrsaas.recruitment.domain.dto.response.OfferResponse;
+import com.hrsaas.recruitment.domain.dto.response.OfferSummaryResponse;
 import com.hrsaas.recruitment.domain.entity.Application;
 import com.hrsaas.recruitment.domain.entity.Offer;
 import com.hrsaas.recruitment.domain.entity.OfferStatus;
@@ -219,6 +220,36 @@ public class OfferServiceImpl implements OfferService {
             offer.expire();
             offerRepository.save(offer);
             log.info("Offer expired: {}", offer.getOfferNumber());
+        }
+    }
+
+    @Override
+    public OfferSummaryResponse getSummary() {
+        return OfferSummaryResponse.builder()
+                .total(offerRepository.count())
+                .draft(offerRepository.countByStatus(OfferStatus.DRAFT))
+                .pendingApproval(offerRepository.countByStatus(OfferStatus.PENDING_APPROVAL))
+                .approved(offerRepository.countByStatus(OfferStatus.APPROVED))
+                .sent(offerRepository.countByStatus(OfferStatus.SENT))
+                .accepted(offerRepository.countByStatus(OfferStatus.ACCEPTED))
+                .declined(offerRepository.countByStatus(OfferStatus.DECLINED))
+                .negotiating(offerRepository.countByStatus(OfferStatus.NEGOTIATING))
+                .expired(offerRepository.countByStatus(OfferStatus.EXPIRED))
+                .cancelled(offerRepository.countByStatus(OfferStatus.CANCELLED))
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public OfferResponse respond(UUID id, String action, String reason) {
+        log.info("Responding to offer: {} with action: {}", id, action);
+
+        if ("ACCEPT".equalsIgnoreCase(action)) {
+            return accept(id);
+        } else if ("DECLINE".equalsIgnoreCase(action)) {
+            return decline(id, reason);
+        } else {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "유효하지 않은 응답 유형입니다: " + action);
         }
     }
 

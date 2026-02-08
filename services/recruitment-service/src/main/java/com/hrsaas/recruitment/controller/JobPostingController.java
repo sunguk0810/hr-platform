@@ -3,8 +3,11 @@ package com.hrsaas.recruitment.controller;
 import com.hrsaas.common.response.ApiResponse;
 import com.hrsaas.recruitment.domain.dto.request.CreateJobPostingRequest;
 import com.hrsaas.recruitment.domain.dto.request.UpdateJobPostingRequest;
+import com.hrsaas.recruitment.domain.dto.response.ApplicationStageCountResponse;
 import com.hrsaas.recruitment.domain.dto.response.JobPostingResponse;
+import com.hrsaas.recruitment.domain.dto.response.JobPostingSummaryResponse;
 import com.hrsaas.recruitment.domain.entity.JobStatus;
+import com.hrsaas.recruitment.service.ApplicationService;
 import com.hrsaas.recruitment.service.JobPostingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -17,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -29,6 +33,7 @@ import java.util.UUID;
 public class JobPostingController {
 
     private final JobPostingService jobPostingService;
+    private final ApplicationService applicationService;
 
     @Operation(summary = "채용공고 생성")
     @PostMapping
@@ -99,6 +104,20 @@ public class JobPostingController {
             @RequestParam String keyword,
             @PageableDefault(size = 20) Pageable pageable) {
         return ApiResponse.success(jobPostingService.search(keyword, pageable));
+    }
+
+    @Operation(summary = "채용공고 요약")
+    @GetMapping("/summary")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<JobPostingSummaryResponse> getSummary() {
+        return ApiResponse.success(jobPostingService.getSummary());
+    }
+
+    @Operation(summary = "채용공고별 단계별 지원서 집계")
+    @GetMapping("/{id}/applications/stages")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<List<ApplicationStageCountResponse>> getApplicationStages(@PathVariable UUID id) {
+        return ApiResponse.success(applicationService.getStageCountsByJob(id));
     }
 
     @Operation(summary = "채용공고 수정")

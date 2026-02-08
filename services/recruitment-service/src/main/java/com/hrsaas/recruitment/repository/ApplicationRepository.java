@@ -103,4 +103,12 @@ public interface ApplicationRepository extends JpaRepository<Application, UUID> 
            "AND a.hiredAt BETWEEN :startDate AND :endDate")
     List<Application> findHiredApplicationsByDateRange(@Param("startDate") Instant startDate,
                                                         @Param("endDate") Instant endDate);
+
+    /**
+     * 채용공고별 단계별 지원서 집계
+     */
+    @Query("SELECT a.currentStage, COUNT(a) FROM Application a " +
+           "WHERE a.jobPosting.id = :jobPostingId AND a.currentStage IS NOT NULL " +
+           "GROUP BY a.currentStage")
+    List<Object[]> countByJobPostingIdGroupByCurrentStage(@Param("jobPostingId") UUID jobPostingId);
 }

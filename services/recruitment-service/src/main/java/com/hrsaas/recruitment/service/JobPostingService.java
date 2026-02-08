@@ -3,6 +3,7 @@ package com.hrsaas.recruitment.service;
 import com.hrsaas.recruitment.domain.dto.request.CreateJobPostingRequest;
 import com.hrsaas.recruitment.domain.dto.request.UpdateJobPostingRequest;
 import com.hrsaas.recruitment.domain.dto.response.JobPostingResponse;
+import com.hrsaas.recruitment.domain.dto.response.JobPostingSummaryResponse;
 import com.hrsaas.recruitment.domain.entity.JobStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -43,4 +44,6 @@ public interface JobPostingService {
     JobPostingResponse complete(UUID id);
 
     void incrementViewCount(UUID id);
+
+    JobPostingSummaryResponse getSummary();
 }

@@ -3,6 +3,7 @@ package com.hrsaas.recruitment.service;
 import com.hrsaas.recruitment.domain.dto.request.*;
 import com.hrsaas.recruitment.domain.dto.response.InterviewResponse;
 import com.hrsaas.recruitment.domain.dto.response.InterviewScoreResponse;
+import com.hrsaas.recruitment.domain.dto.response.InterviewSummaryResponse;
 import com.hrsaas.recruitment.domain.entity.InterviewStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -48,4 +49,12 @@ public interface InterviewService {
     List<InterviewScoreResponse> getScores(UUID interviewId);
 
     Double getAverageScore(UUID interviewId);
+
+    InterviewSummaryResponse getSummary();
+
+    Page<InterviewResponse> getMyInterviews(UUID interviewerId, Pageable pageable);
+
+    List<InterviewScoreResponse> getMyScore(UUID interviewId, UUID interviewerId);
+
+    InterviewResponse confirm(UUID id, ScheduleInterviewRequest request);
 }

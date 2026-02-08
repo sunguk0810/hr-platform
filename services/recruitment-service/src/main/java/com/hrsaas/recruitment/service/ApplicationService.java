@@ -3,6 +3,8 @@ package com.hrsaas.recruitment.service;
 import com.hrsaas.recruitment.domain.dto.request.CreateApplicationRequest;
 import com.hrsaas.recruitment.domain.dto.request.ScreenApplicationRequest;
 import com.hrsaas.recruitment.domain.dto.response.ApplicationResponse;
+import com.hrsaas.recruitment.domain.dto.response.ApplicationStageCountResponse;
+import com.hrsaas.recruitment.domain.dto.response.ApplicationSummaryResponse;
 import com.hrsaas.recruitment.domain.entity.ApplicationStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,4 +39,8 @@ public interface ApplicationService {
     ApplicationResponse hire(UUID id);
 
     ApplicationResponse moveToNextStage(UUID id, String stageName, int order);
+
+    ApplicationSummaryResponse getSummary();
+
+    java.util.List<ApplicationStageCountResponse> getStageCountsByJob(UUID jobPostingId);
 }
