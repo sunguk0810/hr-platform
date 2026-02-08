@@ -1,0 +1,25 @@
+{
+  "title": "Condolence Management",
+  "list": "Condolence List",
+  "create": "Request Condolence",
+  "detail": "Condolence Detail",
+  "payment": "Condolence Payment",
+  "requestNumber": "Request No.",
+  "eventDate": "Event Date",
+  "types": {
+    "MARRIAGE": "Marriage",
+    "CHILDBIRTH": "Childbirth",
+    "DEATH_PARENT": "Death of Parent",
+    "DEATH_SPOUSE": "Death of Spouse",
+    "DEATH_CHILD": "Death of Child",
+    "DEATH_GRANDPARENT": "Death of Grandparent",
+    "DEATH_SIBLING": "Death of Sibling"
+  },
+  "statuses": {
+    "PENDING": "Pending",
+    "APPROVED": "Approved",
+    "REJECTED": "Rejected",
+    "PAID": "Paid",
+    "CANCELLED": "Cancelled"
+  }
+}

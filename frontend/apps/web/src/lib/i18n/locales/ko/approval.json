@@ -1,0 +1,11 @@
+{
+  "title": "전자결재",
+  "list": "결재 목록",
+  "create": "결재 작성",
+  "detail": "결재 상세",
+  "myApprovals": "내 결재",
+  "pending": "대기중",
+  "approved": "승인",
+  "rejected": "반려",
+  "delegation": "결재 위임"
+}

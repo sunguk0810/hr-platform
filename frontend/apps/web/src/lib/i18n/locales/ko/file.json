@@ -1,0 +1,24 @@
+{
+  "title": "파일 관리",
+  "upload": "파일 업로드",
+  "download": "다운로드",
+  "delete": "삭제",
+  "preview": "미리보기",
+  "fileName": "파일명",
+  "fileSize": "크기",
+  "category": "카테고리",
+  "uploadedBy": "업로드",
+  "uploadedAt": "업로드일",
+  "dragDrop": "파일을 여기에 드래그하거나 클릭하여 선택",
+  "selectFile": "파일 선택",
+  "selectedFiles": "선택된 파일",
+  "categories": {
+    "PROFILE": "프로필 사진",
+    "DOCUMENT": "문서",
+    "CERTIFICATE": "증명서",
+    "APPROVAL": "결재 첨부",
+    "ANNOUNCEMENT": "공지사항",
+    "RECRUITMENT": "채용 자료",
+    "OTHER": "기타"
+  }
+}

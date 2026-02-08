@@ -1,0 +1,163 @@
+{
+  "approval": {
+    "DRAFT": "Draft",
+    "PENDING": "Pending",
+    "IN_REVIEW": "In Review",
+    "APPROVED": "Approved",
+    "REJECTED": "Rejected",
+    "RECALLED": "Recalled",
+    "CANCELED": "Cancelled",
+    "CANCELLED": "Cancelled"
+  },
+  "employment": {
+    "ACTIVE": "Active",
+    "LEAVE": "On Leave",
+    "ON_LEAVE": "On Leave",
+    "RESIGNED": "Resigned",
+    "RETIRED": "Retired",
+    "SUSPENDED": "Suspended"
+  },
+  "leave": {
+    "PENDING": "Pending",
+    "APPROVED": "Approved",
+    "REJECTED": "Rejected",
+    "CANCELLED": "Cancelled"
+  },
+  "attendance": {
+    "NORMAL": "Normal",
+    "LATE": "Late",
+    "EARLY_LEAVE": "Early Leave",
+    "ABSENT": "Absent",
+    "HOLIDAY": "Holiday",
+    "WEEKEND": "Weekend",
+    "LEAVE": "Leave",
+    "HALF_DAY": "Half Day",
+    "OVERTIME": "Overtime"
+  },
+  "tenant": {
+    "ACTIVE": "Active",
+    "INACTIVE": "Inactive",
+    "SUSPENDED": "Suspended",
+    "PENDING": "Pending"
+  },
+  "leaveType": {
+    "ANNUAL": "Annual Leave",
+    "SICK": "Sick Leave",
+    "SPECIAL": "Special Leave",
+    "HALF_DAY_AM": "Half Day (AM)",
+    "HALF_DAY_PM": "Half Day (PM)",
+    "HOURLY": "Hourly Leave",
+    "MATERNITY": "Maternity Leave",
+    "PATERNITY": "Paternity Leave",
+    "UNPAID": "Unpaid Leave"
+  },
+  "appointmentDraft": {
+    "DRAFT": "Draft",
+    "PENDING_APPROVAL": "Pending Approval",
+    "APPROVED": "Approved",
+    "REJECTED": "Rejected",
+    "EXECUTED": "Executed",
+    "CANCELLED": "Cancelled"
+  },
+  "appointmentType": {
+    "PROMOTION": "Promotion",
+    "TRANSFER": "Transfer",
+    "POSITION_CHANGE": "Position Change",
+    "JOB_CHANGE": "Job Change",
+    "LEAVE_OF_ABSENCE": "Leave of Absence",
+    "REINSTATEMENT": "Reinstatement",
+    "RESIGNATION": "Resignation",
+    "RETIREMENT": "Retirement",
+    "DEMOTION": "Demotion",
+    "CONCURRENT": "Concurrent Position"
+  },
+  "jobPosting": {
+    "DRAFT": "Draft",
+    "PENDING": "Pending",
+    "PUBLISHED": "Published",
+    "CLOSED": "Closed",
+    "CANCELLED": "Cancelled",
+    "COMPLETED": "Completed"
+  },
+  "application": {
+    "RECEIVED": "Received",
+    "SCREENING": "Screening",
+    "IN_PROGRESS": "In Progress",
+    "PASSED": "Passed",
+    "FAILED": "Failed",
+    "ON_HOLD": "On Hold",
+    "WITHDRAWN": "Withdrawn",
+    "HIRED": "Hired"
+  },
+  "applicationStage": {
+    "DOCUMENT": "Document Review",
+    "FIRST_INTERVIEW": "1st Interview",
+    "SECOND_INTERVIEW": "2nd Interview",
+    "FINAL_INTERVIEW": "Final Interview",
+    "OFFER": "Offer"
+  },
+  "interview": {
+    "SCHEDULING": "Scheduling",
+    "SCHEDULED": "Scheduled",
+    "IN_PROGRESS": "In Progress",
+    "COMPLETED": "Completed",
+    "CANCELLED": "Cancelled",
+    "NO_SHOW": "No Show",
+    "POSTPONED": "Postponed"
+  },
+  "interviewType": {
+    "FIRST_ROUND": "1st Round",
+    "SECOND_ROUND": "2nd Round",
+    "FINAL_ROUND": "Final Round",
+    "TECHNICAL": "Technical",
+    "PERSONALITY": "Personality",
+    "PRESENTATION": "Presentation",
+    "GROUP": "Group",
+    "VIDEO": "Video",
+    "PHONE": "Phone"
+  },
+  "employmentType": {
+    "FULL_TIME": "Full-time",
+    "CONTRACT": "Contract",
+    "INTERN": "Intern",
+    "PART_TIME": "Part-time"
+  },
+  "recommendation": {
+    "STRONG_HIRE": "Strong Hire",
+    "HIRE": "Hire",
+    "NO_HIRE": "No Hire",
+    "STRONG_NO_HIRE": "Strong No Hire"
+  },
+  "offer": {
+    "DRAFT": "Draft",
+    "PENDING_APPROVAL": "Pending Approval",
+    "APPROVED": "Approved",
+    "SENT": "Sent",
+    "ACCEPTED": "Accepted",
+    "DECLINED": "Declined",
+    "NEGOTIATING": "Negotiating",
+    "EXPIRED": "Expired",
+    "CANCELLED": "Cancelled"
+  },
+  "certificate": {
+    "PENDING": "Pending",
+    "APPROVED": "Approved",
+    "REJECTED": "Rejected",
+    "ISSUED": "Issued",
+    "CANCELLED": "Cancelled",
+    "EXPIRED": "Expired"
+  },
+  "certificateValidity": {
+    "VALID": "Valid",
+    "INVALID": "Invalid",
+    "REVOKED": "Revoked",
+    "EXPIRED": "Expired"
+  },
+  "condolence": {
+    "PENDING": "Pending",
+    "APPROVED": "Approved",
+    "REJECTED": "Rejected",
+    "PAID": "Paid",
+    "CANCELLED": "Cancelled"
+  }
+}

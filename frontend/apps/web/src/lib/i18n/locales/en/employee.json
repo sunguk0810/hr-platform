@@ -1,0 +1,15 @@
+{
+  "title": "Employees",
+  "list": "Employee List",
+  "create": "Create Employee",
+  "detail": "Employee Detail",
+  "name": "Name",
+  "employeeNumber": "Employee No.",
+  "department": "Department",
+  "position": "Position",
+  "grade": "Grade",
+  "email": "Email",
+  "phone": "Phone",
+  "joinDate": "Join Date",
+  "status": "Status"
+}

@@ -1,0 +1,15 @@
+{
+  "title": "인사정보",
+  "list": "직원 목록",
+  "create": "직원 등록",
+  "detail": "직원 상세",
+  "name": "이름",
+  "employeeNumber": "사번",
+  "department": "부서",
+  "position": "직책",
+  "grade": "직급",
+  "email": "이메일",
+  "phone": "연락처",
+  "joinDate": "입사일",
+  "status": "재직상태"
+}

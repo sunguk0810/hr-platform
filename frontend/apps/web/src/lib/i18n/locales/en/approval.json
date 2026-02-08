@@ -1,0 +1,11 @@
+{
+  "title": "Approvals",
+  "list": "Approval List",
+  "create": "Create Approval",
+  "detail": "Approval Detail",
+  "myApprovals": "My Approvals",
+  "pending": "Pending",
+  "approved": "Approved",
+  "rejected": "Rejected",
+  "delegation": "Delegation"
+}

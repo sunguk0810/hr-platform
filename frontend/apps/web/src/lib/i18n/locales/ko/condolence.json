@@ -1,0 +1,25 @@
+{
+  "title": "경조비 관리",
+  "list": "경조비 목록",
+  "create": "경조비 신청",
+  "detail": "경조비 상세",
+  "payment": "경조금 지급",
+  "requestNumber": "요청번호",
+  "eventDate": "발생일",
+  "types": {
+    "MARRIAGE": "결혼",
+    "CHILDBIRTH": "출산",
+    "DEATH_PARENT": "부모상",
+    "DEATH_SPOUSE": "배우자상",
+    "DEATH_CHILD": "자녀상",
+    "DEATH_GRANDPARENT": "조부모상",
+    "DEATH_SIBLING": "형제자매상"
+  },
+  "statuses": {
+    "PENDING": "대기중",
+    "APPROVED": "승인",
+    "REJECTED": "반려",
+    "PAID": "지급완료",
+    "CANCELLED": "취소"
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "title": "Dashboard",
+  "greeting": "Hello, {{name}}",
+  "description": "Check your work status for today",
+  "attendance": {
+    "title": "Attendance",
+    "description": "Today's work status",
+    "checkIn": "Check In",
+    "checkOut": "Check Out",
+    "checkInButton": "Check In",
+    "checkOutButton": "Check Out",
+    "status": {
+      "notCheckedIn": "Not Checked In",
+      "working": "Working",
+      "checkedOut": "Checked Out"
+    },
+    "workDuration": "Work Duration",
+    "goodJob": "Great job today!"
+  },
+  "leave": {
+    "title": "Leave Balance",
+    "description": "Remaining leave days",
+    "annual": "Annual",
+    "sick": "Sick",
+    "special": "Special",
+    "upcoming": "Upcoming Leave",
+    "remaining": "Remaining",
+    "used": "Used",
+    "total": "Total"
+  },
+  "approvals": {
+    "title": "Pending Approvals",
+    "description": "{{count}} approvals pending",
+    "noItems": "No pending approvals",
+    "viewAll": "View all {{count}}",
+    "types": {
+      "LEAVE_REQUEST": "Leave",
+      "EXPENSE": "Expense",
+      "OVERTIME": "Overtime",
+      "PERSONNEL": "Personnel"
+    }
+  },
+  "widgets": {
+    "birthdays": {
+      "title": "Birthdays",
+      "description": "Birthdays this week",
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "daysLater": "In {{days}} days",
+      "empty": "No birthdays this week.",
+      "todayBirthdays": "Today's Birthdays",
+      "upcoming": "Upcoming Birthdays"
+    },
+    "announcements": {
+      "title": "Announcements",
+      "viewAll": "View All",
+      "empty": "No announcements.",
+      "category": {
+        "notice": "Notice",
+        "event": "Event",
+        "update": "Update",
+        "urgent": "Urgent"
+      }
+    },
+    "statistics": {
+      "title": "Key Metrics",
+      "description": "This month vs last month",
+      "attendanceRate": "Attendance Rate",
+      "leaveUsageRate": "Leave Usage Rate",
+      "overtimeHours": "Overtime Hours",
+      "approvalTime": "Approval Processing Time"
+    },
+    "orgSummary": {
+      "title": "Organization Summary",
+      "description": "Overall statistics",
+      "totalEmployees": "Total Employees",
+      "active": "Active",
+      "onLeave": "On Leave",
+      "departments": "Departments",
+      "positions": "Positions",
+      "newHires": "New Hires This Month",
+      "resigned": "Resigned"
+    }
+  }
+}
