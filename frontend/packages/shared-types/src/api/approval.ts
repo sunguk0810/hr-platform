@@ -11,8 +11,13 @@ export type ApprovalStatus =
   | 'CANCELLED'; // 취소됨
 
 export type ApprovalType = 'LEAVE_REQUEST' | 'EXPENSE' | 'OVERTIME' | 'PERSONNEL' | 'GENERAL';
-export type ApprovalStepStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'SKIPPED';
 export type ApprovalUrgency = 'LOW' | 'NORMAL' | 'HIGH';
+
+// BE enum 기준 결재선 타입
+export type ApprovalLineType = 'SEQUENTIAL' | 'PARALLEL' | 'AGREEMENT' | 'ARBITRARY';
+
+// BE enum 기준 결재선 상태
+export type ApprovalLineStatus = 'WAITING' | 'ACTIVE' | 'APPROVED' | 'REJECTED' | 'AGREED' | 'SKIPPED';
 
 /** 결재 모드: 순차결재, 전결, 병렬결재, 합의결재 */
 export type ApprovalMode = 'SEQUENTIAL' | 'DIRECT' | 'PARALLEL' | 'CONSENSUS';
@@ -44,38 +49,43 @@ export interface LinkedModuleStatus {
 
 export interface Approval extends TenantAwareEntity {
   documentNumber: string;
-  type: ApprovalType;
+  documentType: string;
   title: string;
   content: string;
-  requesterId: string;
-  requesterName: string;
-  requesterDepartment: string;
+  drafterId: string;
+  drafterName: string;
+  drafterDepartmentName: string;
+  drafterDepartmentId?: string;
   status: ApprovalStatus;
-  urgency: ApprovalUrgency;
+  approvalLines: ApprovalLine[];
+  // BE 추가 필드
+  referenceType?: string;
+  referenceId?: string;
+  submittedAt?: string;
+  completedAt?: string;
+  // FE-only optional 필드 (BE 미구현)
+  urgency?: ApprovalUrgency;
   mode?: ApprovalMode;
   dueDate?: string;
-  completedAt?: string;
   attachments?: ApprovalAttachment[];
-  steps: ApprovalStep[];
-  // SDD 4.4, 4.7 기준 회수/전결 필드
   recalledAt?: string;
   recallReason?: string;
   directApprovedBy?: string;
   directApprovedAt?: string;
-  // FR-APR-004-03: 연계 모듈 반영 결과
   linkedModules?: LinkedModuleStatus[];
 }
 
 export interface ApprovalListItem {
   id: string;
   documentNumber: string;
-  type: ApprovalType;
+  documentType: string;
   title: string;
-  requesterName: string;
-  requesterDepartment: string;
+  drafterName: string;
+  drafterDepartmentName?: string;
   status: ApprovalStatus;
-  urgency: ApprovalUrgency;
   createdAt: string;
+  // FE-only optional
+  urgency?: ApprovalUrgency;
   dueDate?: string;
   currentStepName?: string;
 }
@@ -83,30 +93,28 @@ export interface ApprovalListItem {
 export type ApprovalExecutionType = 'SEQUENTIAL' | 'PARALLEL' | 'AGREEMENT';
 export type ParallelCompletionCondition = 'ALL' | 'ANY' | 'MAJORITY';
 
-export interface ApprovalStep {
+export interface ApprovalLine {
   id: string;
-  stepOrder: number;
-  approverType: 'SPECIFIC' | 'ROLE' | 'DEPARTMENT_HEAD';
+  sequence: number;
+  lineType: ApprovalLineType;
   approverId?: string;
   approverName?: string;
   approverPosition?: string;
-  approverDepartment?: string;
-  approverImage?: string;
-  status: ApprovalStepStatus;
+  approverDepartmentName?: string;
+  status: ApprovalLineStatus;
+  actionType?: ApprovalActionType;
   comment?: string;
-  processedAt?: string;
-  /** Execution type - sequential (default), parallel, or agreement */
+  activatedAt?: string;
+  completedAt?: string;
+  delegateId?: string;
+  delegateName?: string;
+  // FE-only optional 필드 (BE 미구현, mock에서만 사용)
+  approverImage?: string;
   executionType?: ApprovalExecutionType;
-  /** Group ID for parallel/agreement steps - steps with same groupId execute together */
   parallelGroupId?: string;
-  /** Completion condition for parallel steps */
   parallelCompletionCondition?: ParallelCompletionCondition;
-  // SDD 4.6 대결 관련 필드
-  delegatorId?: string;       // 대결 시 원 결재자 ID
-  delegatorName?: string;     // 대결 시 원 결재자 이름
-  delegatedAt?: string;       // 대결 처리 시각
-  // SDD 4.7 전결 관련 필드
-  directApproved?: boolean;   // 전결 여부
+  delegatedAt?: string;
+  directApproved?: boolean;
 }
 
 export interface ApprovalAttachment {
@@ -119,25 +127,34 @@ export interface ApprovalAttachment {
 
 export interface ApprovalSearchParams extends PageRequest {
   keyword?: string;
-  type?: ApprovalType;
+  type?: string;
   status?: ApprovalStatus;
-  requesterId?: string;
   startDate?: string;
   endDate?: string;
 }
 
 export interface CreateApprovalRequest {
-  type: ApprovalType;
   title: string;
-  content: string;
+  content?: string;
+  documentType: string;
+  referenceType?: string;
+  referenceId?: string;
+  approvalLines: ApprovalLineCreateRequest[];
+  submitImmediately?: boolean;
+  // FE-only optional (mock에서만 사용)
   urgency?: ApprovalUrgency;
   dueDate?: string;
-  approverIds: string[];
   attachmentIds?: string[];
-  /** 결재 모드 (기본값: SEQUENTIAL) */
   mode?: ApprovalMode;
-  /** 병렬 결재 완료 조건 (테넌트 설정 기반) */
   parallelCompletionCondition?: ParallelCompletionCondition;
+}
+
+export interface ApprovalLineCreateRequest {
+  approverId: string;
+  approverName?: string;
+  approverPosition?: string;
+  approverDepartmentName?: string;
+  lineType?: ApprovalLineType;
 }
 
 export interface ApproveRequest {
@@ -204,17 +221,18 @@ export const DELEGATION_STATUS_LABELS: Record<DelegationStatus, string> = {
 // SDD 4.5 기준 결재 이력 타입
 export interface ApprovalHistory {
   id: string;
-  approvalId: string;
+  documentId: string;
   stepOrder: number;
-  actionType: ApprovalActionType;
+  action: string;
   actorId: string;
   actorName: string;
   actorDepartment?: string;
-  actorPosition?: string;
-  delegatorId?: string;       // 대결 시 원 결재자
-  delegatorName?: string;
   comment?: string;
-  actionAt: string;
+  processedAt: string;
+  // FE-only optional (BE에 없음)
+  actorPosition?: string;
+  delegatorId?: string;
+  delegatorName?: string;
   ipAddress?: string;
 }
 

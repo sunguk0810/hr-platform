@@ -17,17 +17,22 @@ export interface HeadcountPlan {
   year: number;
   departmentId: string;
   departmentName: string;
-  departmentCode: string;
-  gradeId: string;
-  gradeName: string;
+  departmentCode?: string;
+  gradeId?: string;
+  gradeName?: string;
   plannedCount: number;
-  actualCount: number;
+  currentCount: number;
+  approvedCount?: number;
+  availableCount?: number;
   variance: number;
-  status: HeadcountStatus;
-  approvedBy: string | null;
-  approvedByName: string | null;
-  approvedAt: string | null;
-  remarks: string | null;
+  status?: HeadcountStatus;
+  approvalId?: string;
+  approvedBy?: string | null;
+  approvedByName?: string | null;
+  approvedAt?: string | null;
+  positionId?: string;
+  positionName?: string;
+  notes: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -42,7 +47,7 @@ export interface HeadcountPlanListItem {
   gradeId: string;
   gradeName: string;
   plannedCount: number;
-  actualCount: number;
+  currentCount: number;
   variance: number;
   status: HeadcountStatus;
 }
@@ -50,8 +55,8 @@ export interface HeadcountPlanListItem {
 // 정현원 요약
 export interface HeadcountSummary {
   year: number;
-  totalPlanned: number;
-  totalActual: number;
+  totalPlannedCount: number;
+  totalCurrentCount: number;
   totalVariance: number;
   departmentSummaries: DepartmentHeadcountSummary[];
 }
@@ -62,31 +67,31 @@ export interface DepartmentHeadcountSummary {
   departmentName: string;
   departmentCode: string;
   plannedCount: number;
-  actualCount: number;
+  currentCount: number;
   variance: number;
-  vacancies: number;
+  availableCount: number;
 }
 
 // 정현원 변경 요청
 export interface HeadcountRequest {
   id: string;
-  requestNumber: string;
+  requestNumber?: string;
   type: HeadcountRequestType;
-  status: HeadcountRequestStatus;
+  status?: HeadcountRequestStatus;
   departmentId: string;
   departmentName: string;
-  gradeId: string;
-  gradeName: string;
-  requestedCount: number;
+  gradeId?: string;
+  gradeName?: string;
+  requestCount: number;
   currentCount: number;
   reason: string;
   effectiveDate: string;
-  requesterId: string;
-  requesterName: string;
-  approverId: string | null;
-  approverName: string | null;
-  approvedAt: string | null;
-  rejectionReason: string | null;
+  requesterId?: string;
+  requesterName?: string;
+  approverId?: string | null;
+  approverName?: string | null;
+  approvedAt?: string | null;
+  rejectionReason?: string | null;
   remarks: string | null;
   createdAt: string;
   updatedAt: string;
@@ -100,7 +105,7 @@ export interface HeadcountRequestListItem {
   status: HeadcountRequestStatus;
   departmentName: string;
   gradeName: string;
-  requestedCount: number;
+  requestCount: number;
   currentCount: number;
   requesterName: string;
   effectiveDate: string;
@@ -119,7 +124,7 @@ export interface CreateHeadcountPlanRequest {
 // 정현원 계획 수정 요청
 export interface UpdateHeadcountPlanRequest {
   plannedCount?: number;
-  remarks?: string;
+  notes?: string;
 }
 
 // 정현원 변경 요청 생성
@@ -127,7 +132,7 @@ export interface CreateHeadcountRequest {
   type: HeadcountRequestType;
   departmentId: string;
   gradeId: string;
-  requestedCount: number;
+  requestCount: number;
   reason: string;
   effectiveDate: string;
   remarks?: string;

@@ -21,27 +21,29 @@ export type CondolenceRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'PAI
 // 경조비 신청
 export interface CondolenceRequest {
   id: string;
-  requestNumber: string;
+  requestNumber?: string;
   employeeId: string;
   employeeName: string;
-  employeeNumber: string;
+  employeeNumber?: string;
   departmentName: string;
-  type: CondolenceType;
+  eventType: CondolenceType;
   status: CondolenceRequestStatus;
-  targetName: string;       // 대상자 (본인, 가족 등)
-  relationship: string;     // 관계
+  relatedPersonName: string;       // 대상자 (본인, 가족 등)
+  relation: string;     // 관계
   eventDate: string;        // 경조 발생일
   amount: number;           // 지급 금액
-  supportLeave: number;     // 경조휴가 일수
+  leaveDays: number;     // 경조휴가 일수
   description: string;      // 상세 내용
-  attachments: string[];    // 첨부파일 ID
-  requesterId: string;
-  requesterName: string;
-  approverId: string | null;
-  approverName: string | null;
-  approvedAt: string | null;
-  rejectionReason: string | null;
-  paidAt: string | null;
+  attachments?: string[];    // 첨부파일 ID
+  requesterId?: string;
+  requesterName?: string;
+  approverId?: string | null;
+  approverName?: string | null;
+  approvedAt?: string | null;
+  rejectReason: string | null;
+  paidDate: string | null;
+  policyId?: string;
+  approvalId?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -53,7 +55,7 @@ export interface CondolenceRequestListItem {
   employeeName: string;
   employeeNumber: string;
   departmentName: string;
-  type: CondolenceType;
+  eventType: CondolenceType;
   status: CondolenceRequestStatus;
   eventDate: string;
   amount: number;
@@ -63,18 +65,20 @@ export interface CondolenceRequestListItem {
 // 경조비 지급 규정
 export interface CondolencePolicy {
   id: string;
-  type: CondolenceType;
+  eventType: CondolenceType;
+  name?: string;
   amount: number;
-  leavedays: number;
+  leaveDays: number;
   description: string;
   isActive: boolean;
+  sortOrder?: number;
 }
 
 // 경조비 신청 생성 요청
 export interface CreateCondolenceRequest {
-  type: CondolenceType;
-  targetName: string;
-  relationship: string;
+  eventType: CondolenceType;
+  relatedPersonName: string;
+  relation: string;
   eventDate: string;
   description: string;
   attachments?: string[];
@@ -82,7 +86,7 @@ export interface CreateCondolenceRequest {
 
 // 경조비 검색 파라미터
 export interface CondolenceSearchParams {
-  type?: CondolenceType;
+  eventType?: CondolenceType;
   status?: CondolenceRequestStatus;
   startDate?: string;
   endDate?: string;

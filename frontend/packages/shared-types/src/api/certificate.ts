@@ -44,8 +44,9 @@ export interface CertificateType extends TenantAwareEntity {
 
 export interface CertificateRequest extends TenantAwareEntity {
   requestNumber: string;
-  certificateType: CertificateType;
-  certificateTypeCode: string;
+  certificateTypeId: string;
+  certificateTypeName: string;
+  certificateType?: CertificateType;
   employeeId: string;
   employeeName?: string;
   employeeNumber?: string;
@@ -55,7 +56,6 @@ export interface CertificateRequest extends TenantAwareEntity {
   language: CertificateLanguage;
   includeSalary: boolean;
   status: RequestStatus;
-  requestedAt: string;
   approvedAt?: string;
   approvedBy?: string;
   approverName?: string;
@@ -66,6 +66,12 @@ export interface CertificateRequest extends TenantAwareEntity {
   cancelledAt?: string;
   cancelReason?: string;
   issues?: CertificateIssue[];
+  periodFrom?: string;
+  periodTo?: string;
+  customFields?: Record<string, unknown>;
+  remarks?: string;
+  approvalId?: string;
+  issuedBy?: string;
 }
 
 // ===== 발급 이력 =====
@@ -80,15 +86,21 @@ export interface CertificateIssue extends TenantAwareEntity {
   downloadUrl?: string;
   issuedAt: string;
   expiresAt: string;
-  isRevoked: boolean;
+  revoked: boolean;
   revokedAt?: string;
   revokedBy?: string;
   revokeReason?: string;
   downloadCount: number;
-  lastDownloadAt?: string;
+  downloadedAt?: string;
   certificateTypeName?: string;
   employeeName?: string;
   employeeNumber?: string;
+  contentSnapshot?: string;
+  issuedBy?: string;
+  verifiedCount?: number;
+  lastVerifiedAt?: string;
+  valid?: boolean;
+  expired?: boolean;
 }
 
 // ===== 진위확인 결과 =====
@@ -111,7 +123,7 @@ export interface VerificationResult {
 // ===== Request DTOs =====
 
 export interface CreateCertificateRequestRequest {
-  certificateTypeCode: string;
+  certificateTypeId: string;
   purpose?: string;
   submissionTarget?: string;
   copies: number;

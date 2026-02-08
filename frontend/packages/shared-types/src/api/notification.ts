@@ -1,13 +1,47 @@
 import { BaseEntity, PageRequest } from './common';
 
-export type NotificationType = 'APPROVAL' | 'ATTENDANCE' | 'SYSTEM' | 'ANNOUNCEMENT' | 'LEAVE';
+// BE enum 기준 세분화된 알림 타입
+export type NotificationType =
+  | 'APPROVAL_REQUESTED'
+  | 'APPROVAL_APPROVED'
+  | 'APPROVAL_REJECTED'
+  | 'LEAVE_REQUESTED'
+  | 'LEAVE_APPROVED'
+  | 'LEAVE_REJECTED'
+  | 'EMPLOYEE_JOINED'
+  | 'EMPLOYEE_RESIGNED'
+  | 'ANNOUNCEMENT'
+  | 'SYSTEM';
+
+// 카테고리 매핑 (기존 FE 컴포넌트의 카테고리별 그룹핑 지원)
+export type NotificationCategory = 'APPROVAL' | 'LEAVE' | 'EMPLOYEE' | 'ANNOUNCEMENT' | 'SYSTEM';
+
+export const NOTIFICATION_TYPE_CATEGORY: Record<NotificationType, NotificationCategory> = {
+  APPROVAL_REQUESTED: 'APPROVAL',
+  APPROVAL_APPROVED: 'APPROVAL',
+  APPROVAL_REJECTED: 'APPROVAL',
+  LEAVE_REQUESTED: 'LEAVE',
+  LEAVE_APPROVED: 'LEAVE',
+  LEAVE_REJECTED: 'LEAVE',
+  EMPLOYEE_JOINED: 'EMPLOYEE',
+  EMPLOYEE_RESIGNED: 'EMPLOYEE',
+  ANNOUNCEMENT: 'ANNOUNCEMENT',
+  SYSTEM: 'SYSTEM',
+};
 
 export interface Notification extends BaseEntity {
-  type: NotificationType;
+  notificationType: NotificationType;
   title: string;
-  message: string;
+  content: string;
   isRead: boolean;
-  link?: string;
+  linkUrl?: string;
+  // BE 추가 필드
+  recipientId?: string;
+  channel?: string;
+  referenceType?: string;
+  referenceId?: string;
+  readAt?: string;
+  // FE-only (BE에 없음, optional)
   metadata?: Record<string, unknown>;
 }
 
@@ -39,7 +73,7 @@ export interface NotificationPreferences {
 }
 
 export interface NotificationSearchParams extends PageRequest {
-  type?: NotificationType;
+  notificationType?: NotificationType;
   unreadOnly?: boolean;
   startDate?: string;
   endDate?: string;

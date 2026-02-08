@@ -16,6 +16,7 @@ export interface Committee {
   id: string;
   code: string;
   name: string;
+  nameEn?: string;
   type: CommitteeType;
   status: CommitteeStatus;
   purpose: string;
@@ -46,13 +47,14 @@ export interface CommitteeMember {
   committeeId: string;
   employeeId: string;
   employeeName: string;
-  employeeNumber: string;
+  employeeNumber?: string;
   departmentName: string;
+  positionName?: string;
   role: MemberRole;
-  startDate: string;
-  endDate: string | null;
+  joinDate: string;
+  leaveDate: string | null;
   isActive: boolean;
-  isExOfficio: boolean; // 당연직 여부
+  isExOfficio?: boolean; // 당연직 여부
   exOfficioRole?: string; // 당연직 직책 (e.g., '인사팀장', '재무팀장')
 }
 
@@ -87,8 +89,8 @@ export interface CreateCommitteeRequest {
 export interface AddCommitteeMemberRequest {
   employeeId: string;
   role: MemberRole;
-  startDate: string;
-  endDate?: string;
+  joinDate: string;
+  leaveDate?: string;
 }
 
 // 위원회 검색 파라미터

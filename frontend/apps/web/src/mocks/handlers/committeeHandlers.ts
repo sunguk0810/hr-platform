@@ -82,10 +82,10 @@ export const committeeHandlers = [
     return HttpResponse.json({
       success: true,
       data: [
-        { id: 'm1', employeeId: 'e1', employeeName: '김위원장', employeeNumber: 'E2018001', departmentName: '경영지원', role: 'CHAIR', startDate: '2024-01-01', isActive: true, isExOfficio: true, exOfficioRole: '경영지원본부장' },
-        { id: 'm2', employeeId: 'e2', employeeName: '이간사', employeeNumber: 'E2020005', departmentName: '인사팀', role: 'SECRETARY', startDate: '2024-01-01', isActive: true, isExOfficio: true, exOfficioRole: '인사팀장' },
-        { id: 'm3', employeeId: 'e3', employeeName: '박위원', employeeNumber: 'E2019012', departmentName: '재무팀', role: 'MEMBER', startDate: '2024-01-01', isActive: true, isExOfficio: false },
-        { id: 'm4', employeeId: 'e4', employeeName: '최위원', employeeNumber: 'E2021003', departmentName: '법무팀', role: 'MEMBER', startDate: '2024-06-01', isActive: true, isExOfficio: false },
+        { id: 'm1', employeeId: 'e1', employeeName: '김위원장', employeeNumber: 'E2018001', departmentName: '경영지원', role: 'CHAIR', joinDate: '2024-01-01', leaveDate: null, isActive: true, isExOfficio: true, exOfficioRole: '경영지원본부장' },
+        { id: 'm2', employeeId: 'e2', employeeName: '이간사', employeeNumber: 'E2020005', departmentName: '인사팀', role: 'SECRETARY', joinDate: '2024-01-01', leaveDate: null, isActive: true, isExOfficio: true, exOfficioRole: '인사팀장' },
+        { id: 'm3', employeeId: 'e3', employeeName: '박위원', employeeNumber: 'E2019012', departmentName: '재무팀', role: 'MEMBER', joinDate: '2024-01-01', leaveDate: null, isActive: true, isExOfficio: false },
+        { id: 'm4', employeeId: 'e4', employeeName: '최위원', employeeNumber: 'E2021003', departmentName: '법무팀', role: 'MEMBER', joinDate: '2024-06-01', leaveDate: null, isActive: true, isExOfficio: false },
       ],
     });
   }),

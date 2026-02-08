@@ -2,15 +2,15 @@ import { http, HttpResponse, delay } from 'msw';
 import { subDays, subHours, subMinutes } from 'date-fns';
 
 // Types
-export type NotificationType = 'APPROVAL' | 'ATTENDANCE' | 'SYSTEM' | 'ANNOUNCEMENT' | 'LEAVE';
+export type NotificationType = 'APPROVAL_REQUESTED' | 'LEAVE_APPROVED' | 'SYSTEM' | 'ANNOUNCEMENT' | 'LEAVE_REQUESTED';
 
 export interface Notification {
   id: string;
-  type: NotificationType;
+  notificationType: NotificationType;
   title: string;
-  message: string;
+  content: string;
   isRead: boolean;
-  link?: string;
+  linkUrl?: string;
   createdAt: string;
 }
 
@@ -28,127 +28,127 @@ export interface NotificationSettings {
 const mockNotifications: Notification[] = [
   {
     id: 'notif-001',
-    type: 'APPROVAL',
+    notificationType: 'APPROVAL_REQUESTED',
     title: '새로운 결재 요청',
-    message: '김철수님이 연차 휴가 신청을 요청했습니다.',
+    content: '김철수님이 연차 휴가 신청을 요청했습니다.',
     isRead: false,
-    link: '/approval/appr-001',
+    linkUrl: '/approval/appr-001',
     createdAt: subMinutes(new Date(), 5).toISOString(),
   },
   {
     id: 'notif-002',
-    type: 'APPROVAL',
+    notificationType: 'APPROVAL_REQUESTED',
     title: '결재가 승인되었습니다',
-    message: '출장 경비 청구가 승인되었습니다.',
+    content: '출장 경비 청구가 승인되었습니다.',
     isRead: false,
-    link: '/approval/appr-002',
+    linkUrl: '/approval/appr-002',
     createdAt: subHours(new Date(), 1).toISOString(),
   },
   {
     id: 'notif-003',
-    type: 'ATTENDANCE',
+    notificationType: 'LEAVE_APPROVED',
     title: '출근 확인',
-    message: '오늘 09:05에 출근 처리되었습니다.',
+    content: '오늘 09:05에 출근 처리되었습니다.',
     isRead: true,
     createdAt: subHours(new Date(), 3).toISOString(),
   },
   {
     id: 'notif-004',
-    type: 'SYSTEM',
+    notificationType: 'SYSTEM',
     title: '시스템 점검 안내',
-    message: '2024년 2월 20일 02:00 ~ 04:00 정기 점검이 예정되어 있습니다.',
+    content: '2024년 2월 20일 02:00 ~ 04:00 정기 점검이 예정되어 있습니다.',
     isRead: false,
     createdAt: subHours(new Date(), 5).toISOString(),
   },
   {
     id: 'notif-005',
-    type: 'LEAVE',
+    notificationType: 'LEAVE_REQUESTED',
     title: '휴가 신청 승인',
-    message: '2024.02.15-16 연차 휴가가 승인되었습니다.',
+    content: '2024.02.15-16 연차 휴가가 승인되었습니다.',
     isRead: true,
-    link: '/attendance/leaves',
+    linkUrl: '/attendance/leaves',
     createdAt: subDays(new Date(), 1).toISOString(),
   },
   {
     id: 'notif-006',
-    type: 'ANNOUNCEMENT',
+    notificationType: 'ANNOUNCEMENT',
     title: '전사 공지',
-    message: '2024년 1분기 전사 회의가 2월 28일에 진행됩니다.',
+    content: '2024년 1분기 전사 회의가 2월 28일에 진행됩니다.',
     isRead: true,
     createdAt: subDays(new Date(), 2).toISOString(),
   },
   {
     id: 'notif-007',
-    type: 'APPROVAL',
+    notificationType: 'APPROVAL_REQUESTED',
     title: '결재 반려',
-    message: '초과 근무 신청이 반려되었습니다. 사유: 대체 일정으로 조정 바랍니다.',
+    content: '초과 근무 신청이 반려되었습니다. 사유: 대체 일정으로 조정 바랍니다.',
     isRead: true,
-    link: '/approval/appr-003',
+    linkUrl: '/approval/appr-003',
     createdAt: subDays(new Date(), 3).toISOString(),
   },
   {
     id: 'notif-008',
-    type: 'SYSTEM',
+    notificationType: 'SYSTEM',
     title: '비밀번호 변경 권장',
-    message: '90일이 경과했습니다. 보안을 위해 비밀번호를 변경해주세요.',
+    content: '90일이 경과했습니다. 보안을 위해 비밀번호를 변경해주세요.',
     isRead: false,
-    link: '/settings/security',
+    linkUrl: '/settings/security',
     createdAt: subDays(new Date(), 3).toISOString(),
   },
   {
     id: 'notif-009',
-    type: 'ATTENDANCE',
+    notificationType: 'LEAVE_APPROVED',
     title: '초과근무 알림',
-    message: '이번 주 초과근무 시간이 10시간을 초과했습니다.',
+    content: '이번 주 초과근무 시간이 10시간을 초과했습니다.',
     isRead: true,
     createdAt: subDays(new Date(), 4).toISOString(),
   },
   {
     id: 'notif-010',
-    type: 'LEAVE',
+    notificationType: 'LEAVE_REQUESTED',
     title: '연차 잔여일 알림',
-    message: '연차 잔여일이 8일 남았습니다.',
+    content: '연차 잔여일이 8일 남았습니다.',
     isRead: true,
     createdAt: subDays(new Date(), 5).toISOString(),
   },
   {
     id: 'notif-011',
-    type: 'APPROVAL',
+    notificationType: 'APPROVAL_REQUESTED',
     title: '결재 대기 알림',
-    message: '3건의 결재 요청이 대기 중입니다.',
+    content: '3건의 결재 요청이 대기 중입니다.',
     isRead: false,
-    link: '/approval?tab=pending',
+    linkUrl: '/approval?tab=pending',
     createdAt: subDays(new Date(), 5).toISOString(),
   },
   {
     id: 'notif-012',
-    type: 'ANNOUNCEMENT',
+    notificationType: 'ANNOUNCEMENT',
     title: '인사 발령 공지',
-    message: '2024년 3월 인사 발령이 공지되었습니다.',
+    content: '2024년 3월 인사 발령이 공지되었습니다.',
     isRead: true,
     createdAt: subDays(new Date(), 7).toISOString(),
   },
   {
     id: 'notif-013',
-    type: 'SYSTEM',
+    notificationType: 'SYSTEM',
     title: '새로운 기능 안내',
-    message: '모바일 앱에서 근태 관리 기능이 추가되었습니다.',
+    content: '모바일 앱에서 근태 관리 기능이 추가되었습니다.',
     isRead: true,
     createdAt: subDays(new Date(), 10).toISOString(),
   },
   {
     id: 'notif-014',
-    type: 'ATTENDANCE',
+    notificationType: 'LEAVE_APPROVED',
     title: '지각 알림',
-    message: '오늘 09:15에 출근 처리되었습니다. (지각)',
+    content: '오늘 09:15에 출근 처리되었습니다. (지각)',
     isRead: true,
     createdAt: subDays(new Date(), 12).toISOString(),
   },
   {
     id: 'notif-015',
-    type: 'LEAVE',
+    notificationType: 'LEAVE_REQUESTED',
     title: '팀원 휴가 알림',
-    message: '개발팀 한예진님이 내일 연차입니다.',
+    content: '개발팀 한예진님이 내일 연차입니다.',
     isRead: true,
     createdAt: subDays(new Date(), 14).toISOString(),
   },
@@ -172,13 +172,13 @@ export const notificationHandlers = [
     const url = new URL(request.url);
     const page = parseInt(url.searchParams.get('page') || '0', 10);
     const size = parseInt(url.searchParams.get('size') || '10', 10);
-    const type = url.searchParams.get('type') as NotificationType | null;
+    const notificationType = url.searchParams.get('notificationType') as NotificationType | null;
     const unreadOnly = url.searchParams.get('unreadOnly') === 'true';
 
     let filtered = [...mockNotifications];
 
-    if (type) {
-      filtered = filtered.filter(n => n.type === type);
+    if (notificationType) {
+      filtered = filtered.filter(n => n.notificationType === notificationType);
     }
 
     if (unreadOnly) {

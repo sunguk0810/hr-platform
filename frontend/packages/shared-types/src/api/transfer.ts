@@ -26,15 +26,16 @@ export interface TransferRequest extends TenantAwareEntity {
   employeeId: string;
   employeeName: string;
   employeeNumber: string;
-  currentDepartment: string;
-  currentPosition: string;
-  currentGrade: string;
 
   // 전출 테넌트 (현재)
   sourceTenantId: string;
   sourceTenantName: string;
   sourceDepartmentId?: string;
   sourceDepartmentName?: string;
+  sourcePositionId?: string;
+  sourcePositionName?: string;
+  sourceGradeId?: string;
+  sourceGradeName?: string;
 
   // 전입 테넌트 (목표)
   targetTenantId: string;
@@ -47,9 +48,9 @@ export interface TransferRequest extends TenantAwareEntity {
   targetGradeName?: string;
 
   // 일정
-  requestedDate: string;      // 요청일
-  effectiveDate: string;      // 발령 예정일
-  returnDate?: string;        // 파견 복귀일 (파견인 경우)
+  requestedDate?: string;      // 요청일
+  transferDate: string;        // 발령 예정일
+  returnDate?: string;         // 파견 복귀일 (파견인 경우)
 
   // 상세
   reason: string;             // 이동 사유
@@ -59,22 +60,22 @@ export interface TransferRequest extends TenantAwareEntity {
   // 요청자
   requesterId: string;
   requesterName: string;
-  requesterDepartment: string;
+  requesterDepartment?: string;
 
   // 승인 정보
   sourceApprovedAt?: string;
-  sourceApprovedBy?: string;
+  sourceApproverId?: string;
   sourceApproverName?: string;
   sourceComment?: string;
 
   targetApprovedAt?: string;
-  targetApprovedBy?: string;
+  targetApproverId?: string;
   targetApproverName?: string;
   targetComment?: string;
 
   completedAt?: string;
   cancelledAt?: string;
-  cancelReason?: string;
+  rejectReason?: string;
 }
 
 // 목록용
@@ -87,7 +88,7 @@ export interface TransferRequestListItem {
   employeeNumber: string;
   sourceTenantName: string;
   targetTenantName: string;
-  effectiveDate: string;
+  transferDate: string;
   requestedDate: string;
   requesterName: string;
 }
@@ -100,7 +101,7 @@ export interface CreateTransferRequest {
   targetDepartmentId?: string;
   targetPositionId?: string;
   targetGradeId?: string;
-  effectiveDate: string;
+  transferDate: string;
   returnDate?: string;
   reason: string;
   remarks?: string;
@@ -112,7 +113,7 @@ export interface UpdateTransferRequest {
   targetDepartmentId?: string;
   targetPositionId?: string;
   targetGradeId?: string;
-  effectiveDate?: string;
+  transferDate?: string;
   returnDate?: string;
   reason?: string;
   remarks?: string;

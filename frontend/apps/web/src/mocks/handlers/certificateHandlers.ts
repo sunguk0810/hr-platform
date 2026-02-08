@@ -103,8 +103,9 @@ const mockRequests: CertificateRequest[] = [
     id: 'req-001',
     tenantId: 'tenant-001',
     requestNumber: 'CERT-2024-0001',
+    certificateTypeId: mockCertificateTypes[0].id,
+    certificateTypeName: mockCertificateTypes[0].name,
     certificateType: mockCertificateTypes[0],
-    certificateTypeCode: 'EMPLOYMENT',
     employeeId: 'emp-001',
     employeeName: '홍길동',
     employeeNumber: 'EMP2024001',
@@ -114,7 +115,6 @@ const mockRequests: CertificateRequest[] = [
     language: 'KO',
     includeSalary: false,
     status: 'ISSUED',
-    requestedAt: '2024-03-01T09:00:00Z',
     approvedAt: '2024-03-01T09:00:00Z',
     issuedAt: '2024-03-01T09:01:00Z',
     createdAt: '2024-03-01T09:00:00Z',
@@ -124,8 +124,9 @@ const mockRequests: CertificateRequest[] = [
     id: 'req-002',
     tenantId: 'tenant-001',
     requestNumber: 'CERT-2024-0002',
+    certificateTypeId: mockCertificateTypes[1].id,
+    certificateTypeName: mockCertificateTypes[1].name,
     certificateType: mockCertificateTypes[1],
-    certificateTypeCode: 'CAREER',
     employeeId: 'emp-001',
     employeeName: '홍길동',
     employeeNumber: 'EMP2024001',
@@ -135,7 +136,6 @@ const mockRequests: CertificateRequest[] = [
     language: 'KO',
     includeSalary: false,
     status: 'PENDING',
-    requestedAt: '2024-03-10T14:00:00Z',
     createdAt: '2024-03-10T14:00:00Z',
     updatedAt: '2024-03-10T14:00:00Z',
   },
@@ -143,8 +143,9 @@ const mockRequests: CertificateRequest[] = [
     id: 'req-003',
     tenantId: 'tenant-001',
     requestNumber: 'CERT-2024-0003',
+    certificateTypeId: mockCertificateTypes[0].id,
+    certificateTypeName: mockCertificateTypes[0].name,
     certificateType: mockCertificateTypes[0],
-    certificateTypeCode: 'EMPLOYMENT',
     employeeId: 'emp-001',
     employeeName: '홍길동',
     employeeNumber: 'EMP2024001',
@@ -154,7 +155,6 @@ const mockRequests: CertificateRequest[] = [
     language: 'EN',
     includeSalary: true,
     status: 'APPROVED',
-    requestedAt: '2024-03-15T10:00:00Z',
     approvedAt: '2024-03-15T11:00:00Z',
     approvedBy: 'admin-001',
     approverName: '인사팀장',
@@ -165,8 +165,9 @@ const mockRequests: CertificateRequest[] = [
     id: 'req-004',
     tenantId: 'tenant-001',
     requestNumber: 'CERT-2024-0004',
+    certificateTypeId: mockCertificateTypes[2].id,
+    certificateTypeName: mockCertificateTypes[2].name,
     certificateType: mockCertificateTypes[2],
-    certificateTypeCode: 'SALARY',
     employeeId: 'emp-001',
     employeeName: '홍길동',
     employeeNumber: 'EMP2024001',
@@ -175,7 +176,6 @@ const mockRequests: CertificateRequest[] = [
     language: 'KO',
     includeSalary: false,
     status: 'REJECTED',
-    requestedAt: '2024-02-20T09:00:00Z',
     rejectedAt: '2024-02-21T10:00:00Z',
     rejectedBy: 'admin-001',
     rejectionReason: '급여명세서는 재무팀 별도 신청 필요',
@@ -197,9 +197,9 @@ const mockIssues: CertificateIssue[] = [
     fileSize: 125000,
     issuedAt: '2024-03-01T09:01:00Z',
     expiresAt: '2024-05-30T23:59:59Z',
-    isRevoked: false,
+    revoked: false,
     downloadCount: 2,
-    lastDownloadAt: '2024-03-05T10:00:00Z',
+    downloadedAt: '2024-03-05T10:00:00Z',
     certificateTypeName: '재직증명서',
     employeeName: '홍길동',
     employeeNumber: 'EMP2024001',
@@ -217,9 +217,9 @@ const mockIssues: CertificateIssue[] = [
     fileSize: 125000,
     issuedAt: '2024-03-01T09:01:00Z',
     expiresAt: '2024-05-30T23:59:59Z',
-    isRevoked: false,
+    revoked: false,
     downloadCount: 1,
-    lastDownloadAt: '2024-03-02T14:00:00Z',
+    downloadedAt: '2024-03-02T14:00:00Z',
     certificateTypeName: '재직증명서',
     employeeName: '홍길동',
     employeeNumber: 'EMP2024001',
@@ -237,9 +237,9 @@ const mockIssues: CertificateIssue[] = [
     fileSize: 120000,
     issuedAt: '2023-11-15T09:00:00Z',
     expiresAt: '2024-02-13T23:59:59Z',
-    isRevoked: false,
+    revoked: false,
     downloadCount: 3,
-    lastDownloadAt: '2024-01-10T09:00:00Z',
+    downloadedAt: '2024-01-10T09:00:00Z',
     certificateTypeName: '재직증명서',
     employeeName: '홍길동',
     employeeNumber: 'EMP2024001',
@@ -335,7 +335,7 @@ export const certificateHandlers = [
 
     const body = await request.json() as Record<string, unknown>;
     const certificateType = mockCertificateTypes.find(
-      t => t.code === body.certificateTypeCode
+      t => t.id === body.certificateTypeId
     );
 
     if (!certificateType) {
@@ -356,8 +356,9 @@ export const certificateHandlers = [
       id: `req-${String(requestIdCounter++).padStart(3, '0')}`,
       tenantId: 'tenant-001',
       requestNumber: `CERT-2024-${String(mockRequests.length + 1).padStart(4, '0')}`,
+      certificateTypeId: certificateType.id,
+      certificateTypeName: certificateType.name,
       certificateType,
-      certificateTypeCode: body.certificateTypeCode as string,
       employeeId: 'emp-001',
       employeeName: '홍길동',
       employeeNumber: 'EMP2024001',
@@ -367,7 +368,6 @@ export const certificateHandlers = [
       language: body.language as CertificateLanguage,
       includeSalary: body.includeSalary as boolean,
       status: certificateType.autoIssue ? 'ISSUED' : 'PENDING',
-      requestedAt: new Date().toISOString(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -395,7 +395,7 @@ export const certificateHandlers = [
           fileSize: 125000,
           issuedAt: new Date().toISOString(),
           expiresAt: expiresAt.toISOString(),
-          isRevoked: false,
+          revoked: false,
           downloadCount: 0,
           certificateTypeName: certificateType.name,
           employeeName: '홍길동',
@@ -450,7 +450,7 @@ export const certificateHandlers = [
     }
 
     if (typeCode) {
-      filtered = filtered.filter(r => r.certificateTypeCode === typeCode);
+      filtered = filtered.filter(r => r.certificateTypeId === typeCode || r.certificateType?.code === typeCode);
     }
 
     const totalElements = filtered.length;
@@ -625,7 +625,7 @@ export const certificateHandlers = [
       );
     }
 
-    if (issue.isRevoked) {
+    if (issue.revoked) {
       return HttpResponse.json(
         {
           success: false,
@@ -641,7 +641,7 @@ export const certificateHandlers = [
 
     // Update download count
     issue.downloadCount++;
-    issue.lastDownloadAt = new Date().toISOString();
+    issue.downloadedAt = new Date().toISOString();
 
     // Return mock PDF content
     const pdfContent = `%PDF-1.4

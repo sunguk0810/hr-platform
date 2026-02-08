@@ -5,8 +5,8 @@ import type {
   ApprovalListItem,
   ApprovalStatus,
   ApprovalType,
-  ApprovalStep,
-  ApprovalStepStatus,
+  ApprovalLine,
+  ApprovalLineStatus,
   ApprovalUrgency,
   ApprovalHistory,
   ApprovalTemplate,
@@ -17,21 +17,21 @@ import type {
   DelegationRuleConditionType,
 } from '@hr-platform/shared-types';
 
-const createApprovalStep = (
+const createApprovalLine = (
   order: number,
   name: string,
-  status: ApprovalStepStatus,
+  status: ApprovalLineStatus,
   comment?: string,
-  processedAt?: string
-): ApprovalStep => ({
+  completedAt?: string
+): ApprovalLine => ({
   id: `step-${Date.now()}-${order}`,
-  stepOrder: order,
-  approverType: 'SPECIFIC',
+  sequence: order,
+  lineType: 'SEQUENTIAL',
   approverId: `emp-00${order + 1}`,
   approverName: name,
   status,
   comment,
-  processedAt,
+  completedAt,
 });
 
 // Mock delegations
@@ -77,58 +77,58 @@ const mockApprovalHistories: Record<string, ApprovalHistory[]> = {
   'appr-001': [
     {
       id: 'hist-001',
-      approvalId: 'appr-001',
+      documentId: 'appr-001',
       stepOrder: 0,
-      actionType: 'SUBMIT',
+      action: 'SUBMIT',
       actorId: 'emp-002',
       actorName: '김철수',
       actorDepartment: '개발팀',
       actorPosition: '사원',
-      actionAt: format(subDays(new Date(), 2), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+      processedAt: format(subDays(new Date(), 2), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
     },
   ],
   'appr-002': [
     {
       id: 'hist-002',
-      approvalId: 'appr-002',
+      documentId: 'appr-002',
       stepOrder: 0,
-      actionType: 'SUBMIT',
+      action: 'SUBMIT',
       actorId: 'emp-003',
       actorName: '이영희',
       actorDepartment: '인사팀',
       actorPosition: '대리',
-      actionAt: format(subDays(new Date(), 7), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+      processedAt: format(subDays(new Date(), 7), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
     },
     {
       id: 'hist-003',
-      approvalId: 'appr-002',
+      documentId: 'appr-002',
       stepOrder: 1,
-      actionType: 'APPROVE',
+      action: 'APPROVE',
       actorId: 'emp-001',
       actorName: '홍길동',
       actorDepartment: '개발팀',
       actorPosition: '팀장',
       comment: '승인합니다.',
-      actionAt: format(subDays(new Date(), 5), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+      processedAt: format(subDays(new Date(), 5), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
     },
   ],
   'appr-004': [
     {
       id: 'hist-004',
-      approvalId: 'appr-004',
+      documentId: 'appr-004',
       stepOrder: 0,
-      actionType: 'SUBMIT',
+      action: 'SUBMIT',
       actorId: 'emp-005',
       actorName: '최수진',
       actorDepartment: '마케팅팀',
       actorPosition: '과장',
-      actionAt: format(subDays(new Date(), 3), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+      processedAt: format(subDays(new Date(), 3), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
     },
     {
       id: 'hist-005',
-      approvalId: 'appr-004',
+      documentId: 'appr-004',
       stepOrder: 1,
-      actionType: 'DELEGATE',
+      action: 'DELEGATE',
       actorId: 'emp-006',
       actorName: '정민호',
       actorDepartment: '개발팀',
@@ -136,13 +136,13 @@ const mockApprovalHistories: Record<string, ApprovalHistory[]> = {
       delegatorId: 'emp-001',
       delegatorName: '홍길동',
       comment: '출장으로 인한 대결',
-      actionAt: format(subDays(new Date(), 2), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+      processedAt: format(subDays(new Date(), 2), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
     },
     {
       id: 'hist-006',
-      approvalId: 'appr-004',
+      documentId: 'appr-004',
       stepOrder: 1,
-      actionType: 'APPROVE',
+      action: 'APPROVE',
       actorId: 'emp-006',
       actorName: '정민호',
       actorDepartment: '개발팀',
@@ -150,7 +150,7 @@ const mockApprovalHistories: Record<string, ApprovalHistory[]> = {
       delegatorId: 'emp-001',
       delegatorName: '홍길동',
       comment: '승인',
-      actionAt: format(subDays(new Date(), 1), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+      processedAt: format(subDays(new Date(), 1), "yyyy-MM-dd'T'HH:mm:ss'Z'"),
     },
   ],
 };
@@ -642,18 +642,18 @@ const mockApprovals: Approval[] = [
     id: 'appr-001',
     tenantId: 'tenant-001',
     documentNumber: 'APR-2024-0001',
-    type: 'LEAVE_REQUEST',
+    documentType: 'LEAVE_REQUEST',
     title: '연차 휴가 신청 (2024.02.15-16)',
     content: '개인 사유로 연차 휴가를 신청합니다.',
-    requesterId: 'emp-002',
-    requesterName: '김철수',
-    requesterDepartment: '개발팀',
+    drafterId: 'emp-002',
+    drafterName: '김철수',
+    drafterDepartmentName: '개발팀',
     status: 'PENDING',
     urgency: 'NORMAL',
     dueDate: format(subDays(new Date(), -3), 'yyyy-MM-dd'),
-    steps: [
-      createApprovalStep(1, '홍길동', 'PENDING'),
-      createApprovalStep(2, '이영희', 'PENDING'),
+    approvalLines: [
+      createApprovalLine(1, '홍길동', 'WAITING'),
+      createApprovalLine(2, '이영희', 'WAITING'),
     ],
     createdAt: format(subDays(new Date(), 2), 'yyyy-MM-dd\'T\'HH:mm:ss\'Z\''),
     updatedAt: format(subDays(new Date(), 2), 'yyyy-MM-dd\'T\'HH:mm:ss\'Z\''),
@@ -662,18 +662,18 @@ const mockApprovals: Approval[] = [
     id: 'appr-002',
     tenantId: 'tenant-001',
     documentNumber: 'APR-2024-0002',
-    type: 'EXPENSE',
+    documentType: 'EXPENSE',
     title: '출장 경비 청구 (서울 출장)',
     content: '서울 출장 관련 교통비 및 식비를 청구합니다.\n총 금액: 150,000원',
-    requesterId: 'emp-003',
-    requesterName: '이영희',
-    requesterDepartment: '인사팀',
+    drafterId: 'emp-003',
+    drafterName: '이영희',
+    drafterDepartmentName: '인사팀',
     status: 'APPROVED',
     urgency: 'NORMAL',
     mode: 'SEQUENTIAL',
     completedAt: format(subDays(new Date(), 5), 'yyyy-MM-dd\'T\'HH:mm:ss\'Z\''),
-    steps: [
-      createApprovalStep(1, '홍길동', 'APPROVED', '승인합니다.', format(subDays(new Date(), 5), 'yyyy-MM-dd\'T\'HH:mm:ss\'Z\'')),
+    approvalLines: [
+      createApprovalLine(1, '홍길동', 'APPROVED', '승인합니다.', format(subDays(new Date(), 5), 'yyyy-MM-dd\'T\'HH:mm:ss\'Z\'')),
     ],
     linkedModules: [
       { module: '경비 정산', status: 'COMPLETED', message: '경비 정산 처리 완료' },
@@ -686,16 +686,16 @@ const mockApprovals: Approval[] = [
     id: 'appr-003',
     tenantId: 'tenant-001',
     documentNumber: 'APR-2024-0003',
-    type: 'OVERTIME',
+    documentType: 'OVERTIME',
     title: '초과 근무 신청 (2024.01.20)',
     content: '프로젝트 마감으로 인한 초과 근무를 신청합니다.\n예상 초과 시간: 3시간',
-    requesterId: 'emp-006',
-    requesterName: '정민호',
-    requesterDepartment: '개발팀',
+    drafterId: 'emp-006',
+    drafterName: '정민호',
+    drafterDepartmentName: '개발팀',
     status: 'REJECTED',
     urgency: 'HIGH',
-    steps: [
-      createApprovalStep(1, '홍길동', 'REJECTED', '대체 일정으로 조정 바랍니다.', format(subDays(new Date(), 10), 'yyyy-MM-dd\'T\'HH:mm:ss\'Z\'')),
+    approvalLines: [
+      createApprovalLine(1, '홍길동', 'REJECTED', '대체 일정으로 조정 바랍니다.', format(subDays(new Date(), 10), 'yyyy-MM-dd\'T\'HH:mm:ss\'Z\'')),
     ],
     createdAt: format(subDays(new Date(), 12), 'yyyy-MM-dd\'T\'HH:mm:ss\'Z\''),
     updatedAt: format(subDays(new Date(), 10), 'yyyy-MM-dd\'T\'HH:mm:ss\'Z\''),
@@ -704,18 +704,18 @@ const mockApprovals: Approval[] = [
     id: 'appr-004',
     tenantId: 'tenant-001',
     documentNumber: 'APR-2024-0004',
-    type: 'GENERAL',
+    documentType: 'GENERAL',
     title: '업무 협조 요청 (마케팅 자료 제작)',
     content: '신규 서비스 출시를 위한 마케팅 자료 제작을 요청합니다.',
-    requesterId: 'emp-005',
-    requesterName: '최수진',
-    requesterDepartment: '마케팅팀',
+    drafterId: 'emp-005',
+    drafterName: '최수진',
+    drafterDepartmentName: '마케팅팀',
     status: 'PENDING',
     urgency: 'HIGH',
     dueDate: format(subDays(new Date(), -1), 'yyyy-MM-dd'),
-    steps: [
-      createApprovalStep(1, '홍길동', 'APPROVED', '승인', format(subDays(new Date(), 1), 'yyyy-MM-dd\'T\'HH:mm:ss\'Z\'')),
-      createApprovalStep(2, '임준혁', 'PENDING'),
+    approvalLines: [
+      createApprovalLine(1, '홍길동', 'APPROVED', '승인', format(subDays(new Date(), 1), 'yyyy-MM-dd\'T\'HH:mm:ss\'Z\'')),
+      createApprovalLine(2, '임준혁', 'WAITING'),
     ],
     createdAt: format(subDays(new Date(), 3), 'yyyy-MM-dd\'T\'HH:mm:ss\'Z\''),
     updatedAt: format(subDays(new Date(), 1), 'yyyy-MM-dd\'T\'HH:mm:ss\'Z\''),
@@ -724,15 +724,15 @@ const mockApprovals: Approval[] = [
     id: 'appr-005',
     tenantId: 'tenant-001',
     documentNumber: 'APR-2024-0005',
-    type: 'PERSONNEL',
+    documentType: 'PERSONNEL',
     title: '직원 인사 발령 (개발팀 → QA팀)',
     content: '한예진 사원의 부서 이동을 요청합니다.\n이동 부서: QA팀\n발령일: 2024.03.01',
-    requesterId: 'emp-001',
-    requesterName: '홍길동',
-    requesterDepartment: '개발팀',
+    drafterId: 'emp-001',
+    drafterName: '홍길동',
+    drafterDepartmentName: '개발팀',
     status: 'DRAFT',
     urgency: 'NORMAL',
-    steps: [],
+    approvalLines: [],
     createdAt: format(subDays(new Date(), 1), 'yyyy-MM-dd\'T\'HH:mm:ss\'Z\''),
     updatedAt: format(subDays(new Date(), 1), 'yyyy-MM-dd\'T\'HH:mm:ss\'Z\''),
   },
@@ -740,18 +740,18 @@ const mockApprovals: Approval[] = [
     id: 'appr-006',
     tenantId: 'tenant-001',
     documentNumber: 'APR-2024-0006',
-    type: 'LEAVE_REQUEST',
+    documentType: 'LEAVE_REQUEST',
     title: '병가 신청 (2024.01.08)',
     content: '감기로 인한 병가를 신청합니다.',
-    requesterId: 'emp-007',
-    requesterName: '강하늘',
-    requesterDepartment: '디자인팀',
+    drafterId: 'emp-007',
+    drafterName: '강하늘',
+    drafterDepartmentName: '디자인팀',
     status: 'APPROVED',
     urgency: 'NORMAL',
     mode: 'SEQUENTIAL',
     completedAt: format(subDays(new Date(), 25), 'yyyy-MM-dd\'T\'HH:mm:ss\'Z\''),
-    steps: [
-      createApprovalStep(1, '최수진', 'APPROVED', '빠른 쾌유를 바랍니다.', format(subDays(new Date(), 25), 'yyyy-MM-dd\'T\'HH:mm:ss\'Z\'')),
+    approvalLines: [
+      createApprovalLine(1, '최수진', 'APPROVED', '빠른 쾌유를 바랍니다.', format(subDays(new Date(), 25), 'yyyy-MM-dd\'T\'HH:mm:ss\'Z\'')),
     ],
     linkedModules: [
       { module: '출근부 반영', status: 'COMPLETED', message: '병가 출근부 반영 완료' },
@@ -764,17 +764,17 @@ const mockApprovals: Approval[] = [
     id: 'appr-007',
     tenantId: 'tenant-001',
     documentNumber: 'APR-2024-0007',
-    type: 'EXPENSE',
+    documentType: 'EXPENSE',
     title: '교육비 청구 (AWS 자격증)',
     content: 'AWS Solutions Architect 자격증 시험 응시료를 청구합니다.\n금액: 300,000원',
-    requesterId: 'emp-010',
-    requesterName: '한예진',
-    requesterDepartment: '개발팀',
+    drafterId: 'emp-010',
+    drafterName: '한예진',
+    drafterDepartmentName: '개발팀',
     status: 'PENDING',
     urgency: 'LOW',
-    steps: [
-      createApprovalStep(1, '홍길동', 'PENDING'),
-      createApprovalStep(2, '이영희', 'PENDING'),
+    approvalLines: [
+      createApprovalLine(1, '홍길동', 'WAITING'),
+      createApprovalLine(2, '이영희', 'WAITING'),
     ],
     createdAt: format(subDays(new Date(), 1), 'yyyy-MM-dd\'T\'HH:mm:ss\'Z\''),
     updatedAt: format(subDays(new Date(), 1), 'yyyy-MM-dd\'T\'HH:mm:ss\'Z\''),
@@ -782,19 +782,19 @@ const mockApprovals: Approval[] = [
 ];
 
 function toListItem(approval: Approval): ApprovalListItem {
-  const currentStep = approval.steps.find(s => s.status === 'PENDING');
+  const currentLine = approval.approvalLines.find(s => s.status === 'WAITING');
   return {
     id: approval.id,
     documentNumber: approval.documentNumber,
-    type: approval.type,
+    documentType: approval.documentType,
     title: approval.title,
-    requesterName: approval.requesterName,
-    requesterDepartment: approval.requesterDepartment,
+    drafterName: approval.drafterName,
+    drafterDepartmentName: approval.drafterDepartmentName,
     status: approval.status,
     urgency: approval.urgency,
     createdAt: approval.createdAt,
     dueDate: approval.dueDate,
-    currentStepName: currentStep?.approverName,
+    currentStepName: currentLine?.approverName,
   };
 }
 
@@ -865,12 +865,12 @@ export const approvalHandlers = [
       filtered = filtered.filter(
         a => a.title.toLowerCase().includes(lower) ||
              a.documentNumber.toLowerCase().includes(lower) ||
-             a.requesterName.toLowerCase().includes(lower)
+             a.drafterName.toLowerCase().includes(lower)
       );
     }
 
     if (type) {
-      filtered = filtered.filter(a => a.type === type);
+      filtered = filtered.filter(a => a.documentType === type);
     }
 
     if (status) {
@@ -883,7 +883,7 @@ export const approvalHandlers = [
       filtered = filtered.filter(a => a.status === 'PENDING');
     } else if (tab === 'requested') {
       // Approvals I created (mock: emp-001)
-      filtered = filtered.filter(a => a.requesterId === 'emp-001' || a.requesterId === 'emp-002');
+      filtered = filtered.filter(a => a.drafterId === 'emp-001' || a.drafterId === 'emp-002');
     } else if (tab === 'completed') {
       filtered = filtered.filter(a => ['APPROVED', 'REJECTED'].includes(a.status));
     } else if (tab === 'draft') {
@@ -962,7 +962,7 @@ export const approvalHandlers = [
     await delay(300);
 
     const body = await request.json() as Record<string, unknown>;
-    const approverIds = body.approverIds as string[];
+    const approvalLines = body.approvalLines as Array<{ approverId: string; approverName?: string }>;
     const mode = (body.mode as string) || 'SEQUENTIAL';
 
     const approverNameMap: Record<string, string> = {
@@ -978,22 +978,22 @@ export const approvalHandlers = [
       id: `appr-${Date.now()}`,
       tenantId: 'tenant-001',
       documentNumber: `APR-2024-${String(mockApprovals.length + 1).padStart(4, '0')}`,
-      type: body.type as ApprovalType,
+      documentType: body.documentType as ApprovalType,
       title: body.title as string,
       content: body.content as string,
-      requesterId: 'emp-001',
-      requesterName: '홍길동',
-      requesterDepartment: '개발팀',
+      drafterId: 'emp-001',
+      drafterName: '홍길동',
+      drafterDepartmentName: '개발팀',
       status: 'PENDING',
       urgency: (body.urgency as ApprovalUrgency) || 'NORMAL',
       dueDate: body.dueDate as string | undefined,
-      steps: approverIds.map((id, index) => ({
+      approvalLines: approvalLines.map((line, index) => ({
         id: `step-${Date.now()}-${index}`,
-        stepOrder: index + 1,
-        approverType: 'SPECIFIC' as const,
-        approverId: id,
-        approverName: approverNameMap[id] || '결재자',
-        status: 'PENDING' as ApprovalStepStatus,
+        sequence: index + 1,
+        lineType: 'SEQUENTIAL' as const,
+        approverId: line.approverId,
+        approverName: line.approverName || approverNameMap[line.approverId] || '결재자',
+        status: 'WAITING' as ApprovalLineStatus,
         // For DIRECT mode, mark as direct approval step
         ...(mode === 'DIRECT' ? { directApproved: false } : {}),
       })),
@@ -1034,7 +1034,7 @@ export const approvalHandlers = [
     const approval = mockApprovals[index];
 
     // Self-approval prevention
-    if (currentUserId === approval.requesterId) {
+    if (currentUserId === approval.drafterId) {
       return HttpResponse.json(
         { success: false, error: { code: 'APR_403', message: '권한이 없습니다. 본인이 요청한 결재는 직접 승인할 수 없습니다.' } },
         { status: 403 }
@@ -1042,7 +1042,7 @@ export const approvalHandlers = [
     }
 
     // Find current pending step
-    const pendingStep = approval.steps.find(s => s.status === 'PENDING');
+    const pendingStep = approval.approvalLines.find(s => s.status === 'WAITING');
 
     // Check that the requester is the current approver
     if (pendingStep && pendingStep.approverId !== currentUserId) {
@@ -1055,11 +1055,11 @@ export const approvalHandlers = [
     if (pendingStep) {
       pendingStep.status = 'APPROVED';
       pendingStep.comment = body.comment as string | undefined;
-      pendingStep.processedAt = new Date().toISOString();
+      pendingStep.completedAt = new Date().toISOString();
     }
 
     // Check if all steps are approved
-    const allApproved = approval.steps.every(s => s.status === 'APPROVED');
+    const allApproved = approval.approvalLines.every(s => s.status === 'APPROVED');
     if (allApproved) {
       approval.status = 'APPROVED';
       approval.completedAt = new Date().toISOString();
@@ -1098,7 +1098,7 @@ export const approvalHandlers = [
     const approval = mockApprovals[index];
 
     // Self-rejection prevention
-    if (currentUserId === approval.requesterId) {
+    if (currentUserId === approval.drafterId) {
       return HttpResponse.json(
         { success: false, error: { code: 'APR_403', message: '권한이 없습니다. 본인이 요청한 결재는 직접 반려할 수 없습니다.' } },
         { status: 403 }
@@ -1106,7 +1106,7 @@ export const approvalHandlers = [
     }
 
     // Find current pending step
-    const pendingStep = approval.steps.find(s => s.status === 'PENDING');
+    const pendingStep = approval.approvalLines.find(s => s.status === 'WAITING');
 
     // Check that the requester is the current approver
     if (pendingStep && pendingStep.approverId !== currentUserId) {
@@ -1119,7 +1119,7 @@ export const approvalHandlers = [
     if (pendingStep) {
       pendingStep.status = 'REJECTED';
       pendingStep.comment = body.comment as string;
-      pendingStep.processedAt = new Date().toISOString();
+      pendingStep.completedAt = new Date().toISOString();
     }
 
     approval.status = 'REJECTED';
@@ -1288,7 +1288,7 @@ export const approvalHandlers = [
     const approval = mockApprovals[index];
 
     // Only the requester can recall
-    if (currentUserId !== approval.requesterId) {
+    if (currentUserId !== approval.drafterId) {
       return HttpResponse.json(
         { success: false, error: { code: 'APR_403', message: '권한이 없습니다. 본인이 요청한 결재만 회수할 수 있습니다.' } },
         { status: 403 }
@@ -1316,14 +1316,14 @@ export const approvalHandlers = [
     const historyList = mockApprovalHistories[id as string] || [];
     historyList.push({
       id: `hist-${Date.now()}`,
-      approvalId: id as string,
+      documentId: id as string,
       stepOrder: 0,
-      actionType: 'RECALL',
-      actorId: approval.requesterId,
-      actorName: approval.requesterName,
-      actorDepartment: approval.requesterDepartment,
+      action: 'RECALL',
+      actorId: approval.drafterId,
+      actorName: approval.drafterName,
+      actorDepartment: approval.drafterDepartmentName,
       comment: body.reason as string,
-      actionAt: new Date().toISOString(),
+      processedAt: new Date().toISOString(),
     });
     mockApprovalHistories[id as string] = historyList;
 
@@ -1361,29 +1361,29 @@ export const approvalHandlers = [
       history = [
         {
           id: `hist-auto-${Date.now()}-0`,
-          approvalId: id as string,
+          documentId: id as string,
           stepOrder: 0,
-          actionType: 'SUBMIT' as ApprovalActionType,
-          actorId: approval.requesterId,
-          actorName: approval.requesterName,
-          actorDepartment: approval.requesterDepartment,
-          actionAt: approval.createdAt,
+          action: 'SUBMIT' as ApprovalActionType,
+          actorId: approval.drafterId,
+          actorName: approval.drafterName,
+          actorDepartment: approval.drafterDepartmentName,
+          processedAt: approval.createdAt,
         },
       ];
 
       // Add step histories
-      approval.steps.filter(s => s.processedAt).forEach((step, idx) => {
+      approval.approvalLines.filter(s => s.completedAt).forEach((step, idx) => {
         history!.push({
           id: `hist-auto-${Date.now()}-${idx + 1}`,
-          approvalId: id as string,
-          stepOrder: step.stepOrder,
-          actionType: step.status === 'APPROVED' ? 'APPROVE' : step.status === 'REJECTED' ? 'REJECT' : 'APPROVE',
+          documentId: id as string,
+          stepOrder: step.sequence,
+          action: step.status === 'APPROVED' ? 'APPROVE' : step.status === 'REJECTED' ? 'REJECT' : 'APPROVE',
           actorId: step.approverId || '',
           actorName: step.approverName || '',
-          actorDepartment: step.approverDepartment,
+          actorDepartment: step.approverDepartmentName,
           actorPosition: step.approverPosition,
           comment: step.comment,
-          actionAt: step.processedAt!,
+          processedAt: step.completedAt!,
         });
       });
     }
@@ -1414,7 +1414,7 @@ export const approvalHandlers = [
     }
 
     const approval = mockApprovals[index];
-    const step = approval.steps.find(s => s.id === stepId);
+    const step = approval.approvalLines.find(s => s.id === stepId);
 
     if (!step) {
       return HttpResponse.json(
@@ -1437,7 +1437,7 @@ export const approvalHandlers = [
       );
     }
 
-    if (step.status !== 'PENDING') {
+    if (step.status !== 'WAITING') {
       return HttpResponse.json(
         {
           success: false,
@@ -1452,8 +1452,8 @@ export const approvalHandlers = [
     const delegatee = mockEmployeeSearchResults.find(e => e.id === body.delegateToId);
 
     // Update step with delegation info
-    step.delegatorId = step.approverId;
-    step.delegatorName = step.approverName;
+    step.delegateId = step.approverId;
+    step.delegateName = step.approverName;
     step.approverId = body.delegateToId as string;
     step.approverName = delegatee?.name || (body.delegateToName as string) || '대결자';
     step.delegatedAt = new Date().toISOString();
@@ -1464,16 +1464,16 @@ export const approvalHandlers = [
     const historyList = mockApprovalHistories[id as string] || [];
     historyList.push({
       id: `hist-${Date.now()}`,
-      approvalId: id as string,
-      stepOrder: step.stepOrder,
-      actionType: 'DELEGATE',
+      documentId: id as string,
+      stepOrder: step.sequence,
+      action: 'DELEGATE',
       actorId: body.delegateToId as string,
       actorName: delegatee?.name || (body.delegateToName as string) || '대결자',
       actorDepartment: delegatee?.departmentName,
-      delegatorId: step.delegatorId,
-      delegatorName: step.delegatorName,
+      delegatorId: step.delegateId,
+      delegatorName: step.delegateName,
       comment: body.reason as string,
-      actionAt: new Date().toISOString(),
+      processedAt: new Date().toISOString(),
     });
     mockApprovalHistories[id as string] = historyList;
 
@@ -1507,7 +1507,7 @@ export const approvalHandlers = [
     const approval = mockApprovals[index];
 
     // Check that the requester is the current approver
-    const currentPendingStep = approval.steps.find(s => s.status === 'PENDING');
+    const currentPendingStep = approval.approvalLines.find(s => s.status === 'WAITING');
     if (currentPendingStep && currentPendingStep.approverId !== currentUserId) {
       return HttpResponse.json(
         { success: false, error: { code: 'APR_403', message: '권한이 없습니다. 현재 결재 단계의 승인자만 전결 처리할 수 있습니다.' } },
@@ -1528,20 +1528,20 @@ export const approvalHandlers = [
 
     const body = await request.json() as Record<string, unknown>;
     const skipToStep = body.skipToStep as number | undefined;
-    const maxStepOrder = skipToStep || Math.max(...approval.steps.map(s => s.stepOrder));
+    const maxStepOrder = skipToStep || Math.max(...approval.approvalLines.map(s => s.sequence));
 
     // Approve all pending steps up to skipToStep
-    approval.steps.forEach(step => {
-      if (step.status === 'PENDING' && step.stepOrder <= maxStepOrder) {
+    approval.approvalLines.forEach(step => {
+      if (step.status === 'WAITING' && step.sequence <= maxStepOrder) {
         step.status = 'APPROVED';
         step.directApproved = true;
         step.comment = `전결 처리: ${body.reason}`;
-        step.processedAt = new Date().toISOString();
+        step.completedAt = new Date().toISOString();
       }
     });
 
     // Check if all steps are approved
-    const allApproved = approval.steps.every(s => s.status === 'APPROVED' || s.status === 'SKIPPED');
+    const allApproved = approval.approvalLines.every(s => s.status === 'APPROVED' || s.status === 'SKIPPED');
     if (allApproved) {
       approval.status = 'APPROVED';
       approval.completedAt = new Date().toISOString();
@@ -1555,15 +1555,15 @@ export const approvalHandlers = [
     const historyList = mockApprovalHistories[id as string] || [];
     historyList.push({
       id: `hist-${Date.now()}`,
-      approvalId: id as string,
+      documentId: id as string,
       stepOrder: maxStepOrder,
-      actionType: 'DIRECT_APPROVE',
+      action: 'DIRECT_APPROVE',
       actorId: 'emp-001',
       actorName: '홍길동',
       actorDepartment: '개발팀',
       actorPosition: '팀장',
       comment: body.reason as string,
-      actionAt: new Date().toISOString(),
+      processedAt: new Date().toISOString(),
     });
     mockApprovalHistories[id as string] = historyList;
 
@@ -1744,8 +1744,8 @@ export const approvalHandlers = [
 
     // Return mock related documents
     const relatedDocs = [
-      { id: 'rel-1', documentNumber: 'APR-2024-001', title: '연차 사용 신청', status: 'APPROVED', requesterName: '김민수', createdAt: '2024-12-01' },
-      { id: 'rel-2', documentNumber: 'APR-2024-005', title: '업무 협조 요청', status: 'PENDING', requesterName: '이영희', createdAt: '2024-12-15' },
+      { id: 'rel-1', documentNumber: 'APR-2024-001', title: '연차 사용 신청', status: 'APPROVED', drafterName: '김민수', createdAt: '2024-12-01' },
+      { id: 'rel-2', documentNumber: 'APR-2024-005', title: '업무 협조 요청', status: 'PENDING', drafterName: '이영희', createdAt: '2024-12-15' },
     ];
 
     return HttpResponse.json({
@@ -1783,7 +1783,7 @@ export const approvalHandlers = [
           documentNumber: relatedApproval.documentNumber,
           title: relatedApproval.title,
           status: relatedApproval.status,
-          requesterName: relatedApproval.requesterName,
+          drafterName: relatedApproval.drafterName,
           createdAt: relatedApproval.createdAt,
         }
       : {
@@ -1791,7 +1791,7 @@ export const approvalHandlers = [
           documentNumber: 'APR-2024-???',
           title: '관련 문서',
           status: 'PENDING' as ApprovalStatus,
-          requesterName: '알 수 없음',
+          drafterName: '알 수 없음',
           createdAt: new Date().toISOString(),
         };
 
@@ -1842,7 +1842,7 @@ export const approvalHandlers = [
       results = results.filter(
         a => a.title.toLowerCase().includes(lower) ||
              a.documentNumber.toLowerCase().includes(lower) ||
-             a.requesterName.toLowerCase().includes(lower)
+             a.drafterName.toLowerCase().includes(lower)
       );
     }
 
@@ -1851,7 +1851,7 @@ export const approvalHandlers = [
       documentNumber: a.documentNumber,
       title: a.title,
       status: a.status,
-      requesterName: a.requesterName,
+      drafterName: a.drafterName,
       createdAt: a.createdAt,
     }));
 
@@ -1896,51 +1896,51 @@ export const approvalHandlers = [
     const body = await request.json() as Record<string, unknown>;
     const newSteps = body.steps as Array<{
       id?: string;
-      stepOrder: number;
+      sequence: number;
       approverId: string;
       approverName: string;
-      approverDepartment?: string;
+      approverDepartmentName?: string;
       approverPosition?: string;
-      status: ApprovalStepStatus;
+      status: ApprovalLineStatus;
     }>;
     const reason = body.reason as string;
 
     // Rebuild steps: keep completed steps as-is, replace pending steps with new ones
-    const updatedSteps: ApprovalStep[] = newSteps.map((step) => {
+    const updatedSteps: ApprovalLine[] = newSteps.map((step) => {
       // If an existing step (has id and is not new), find it in current steps
-      const existingStep = step.id ? approval.steps.find(s => s.id === step.id) : undefined;
+      const existingStep = step.id ? approval.approvalLines.find(s => s.id === step.id) : undefined;
       if (existingStep && (existingStep.status === 'APPROVED' || existingStep.status === 'REJECTED')) {
         // Keep completed steps unchanged
         return existingStep;
       }
       // New or modified pending step
       return {
-        id: step.id || `step-${Date.now()}-${step.stepOrder}`,
-        stepOrder: step.stepOrder,
-        approverType: 'SPECIFIC' as const,
+        id: step.id || `step-${Date.now()}-${step.sequence}`,
+        sequence: step.sequence,
+        lineType: 'SEQUENTIAL' as const,
         approverId: step.approverId,
         approverName: step.approverName,
-        approverDepartment: step.approverDepartment,
+        approverDepartmentName: step.approverDepartmentName,
         approverPosition: step.approverPosition,
-        status: 'PENDING' as ApprovalStepStatus,
+        status: 'WAITING' as ApprovalLineStatus,
       };
     });
 
-    approval.steps = updatedSteps;
+    approval.approvalLines = updatedSteps;
     approval.updatedAt = new Date().toISOString();
 
     // Add history entry
     const historyList = mockApprovalHistories[id as string] || [];
     historyList.push({
       id: `hist-${Date.now()}`,
-      approvalId: id as string,
+      documentId: id as string,
       stepOrder: 0,
-      actionType: 'COMMENT',
-      actorId: approval.requesterId,
-      actorName: approval.requesterName,
-      actorDepartment: approval.requesterDepartment,
+      action: 'COMMENT',
+      actorId: approval.drafterId,
+      actorName: approval.drafterName,
+      actorDepartment: approval.drafterDepartmentName,
       comment: `결재선 수정: ${reason}`,
-      actionAt: new Date().toISOString(),
+      processedAt: new Date().toISOString(),
     });
     mockApprovalHistories[id as string] = historyList;
 

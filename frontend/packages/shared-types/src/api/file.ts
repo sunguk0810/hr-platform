@@ -5,27 +5,30 @@ export type FileCategory = 'PROFILE' | 'DOCUMENT' | 'ATTACHMENT' | 'IMPORT' | 'E
 export type FileStatus = 'UPLOADING' | 'COMPLETED' | 'FAILED' | 'DELETED';
 
 export interface FileInfo extends TenantAwareEntity {
-  filename: string;
-  originalFilename: string;
+  originalName: string;
   contentType: string;
-  size: number;
-  category: FileCategory;
-  status: FileStatus;
-  url: string;
+  fileSize: number;
+  category?: FileCategory;
+  status?: FileStatus;
+  downloadUrl: string;
   thumbnailUrl?: string;
   uploaderId: string;
   uploaderName?: string;
   expiresAt?: string;
   metadata?: Record<string, unknown>;
+  storageType?: string;
+  referenceType?: string;
+  referenceId?: string;
+  isPublic?: boolean;
+  downloadCount?: number;
 }
 
 export interface UploadResponse {
   id: string;
-  filename: string;
-  originalFilename: string;
+  originalName: string;
   contentType: string;
-  size: number;
-  url: string;
+  fileSize: number;
+  downloadUrl: string;
   thumbnailUrl?: string;
 }
 

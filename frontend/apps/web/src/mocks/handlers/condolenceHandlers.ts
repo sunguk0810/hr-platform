@@ -21,7 +21,7 @@ const mockCondolences: CondolenceRequestListItem[] = [
     employeeName: '김철수',
     employeeNumber: 'E2020001',
     departmentName: '개발팀',
-    type: 'MARRIAGE',
+    eventType: 'MARRIAGE',
     status: 'PAID',
     eventDate: '2026-01-15',
     amount: 200000,
@@ -33,7 +33,7 @@ const mockCondolences: CondolenceRequestListItem[] = [
     employeeName: '이영희',
     employeeNumber: 'E2021015',
     departmentName: '인사팀',
-    type: 'CHILDBIRTH',
+    eventType: 'CHILDBIRTH',
     status: 'APPROVED',
     eventDate: '2026-01-20',
     amount: 100000,
@@ -45,7 +45,7 @@ const mockCondolences: CondolenceRequestListItem[] = [
     employeeName: '박민수',
     employeeNumber: 'E2019008',
     departmentName: '재무팀',
-    type: 'DEATH_PARENT',
+    eventType: 'DEATH_PARENT',
     status: 'PENDING',
     eventDate: '2026-02-01',
     amount: 500000,
@@ -57,7 +57,7 @@ const mockCondolences: CondolenceRequestListItem[] = [
     employeeName: '최지은',
     employeeNumber: 'E2022003',
     departmentName: '마케팅팀',
-    type: 'MARRIAGE',
+    eventType: 'MARRIAGE',
     status: 'APPROVED',
     eventDate: '2026-02-10',
     amount: 200000,
@@ -69,7 +69,7 @@ const mockCondolences: CondolenceRequestListItem[] = [
     employeeName: '정현우',
     employeeNumber: 'E2020010',
     departmentName: '영업팀',
-    type: 'CHILDBIRTH',
+    eventType: 'CHILDBIRTH',
     status: 'APPROVED',
     eventDate: '2026-02-03',
     amount: 100000,
@@ -126,10 +126,10 @@ export const condolenceHandlers = [
     return HttpResponse.json({
       success: true,
       data: [
-        { id: '1', type: 'MARRIAGE', amount: 200000, leavedays: 5, description: '본인 결혼', isActive: true },
-        { id: '2', type: 'CHILDBIRTH', amount: 100000, leavedays: 3, description: '자녀 출산', isActive: true },
-        { id: '3', type: 'DEATH_PARENT', amount: 500000, leavedays: 5, description: '부모 사망', isActive: true },
-        { id: '4', type: 'DEATH_SPOUSE', amount: 500000, leavedays: 5, description: '배우자 사망', isActive: true },
+        { id: '1', eventType: 'MARRIAGE', amount: 200000, leaveDays: 5, description: '본인 결혼', isActive: true },
+        { id: '2', eventType: 'CHILDBIRTH', amount: 100000, leaveDays: 3, description: '자녀 출산', isActive: true },
+        { id: '3', eventType: 'DEATH_PARENT', amount: 500000, leaveDays: 5, description: '부모 사망', isActive: true },
+        { id: '4', eventType: 'DEATH_SPOUSE', amount: 500000, leaveDays: 5, description: '배우자 사망', isActive: true },
       ],
     });
   }),
@@ -156,14 +156,15 @@ export const condolenceHandlers = [
       success: true,
       data: {
         ...condolence,
-        relationToEmployee: '본인',
+        relatedPersonName: '본인',
+        relation: '본인',
         description: '경조비 신청합니다.',
         attachments: [
           { id: 'att-1', fileName: '청첩장.pdf', fileSize: 1024000, uploadedAt: condolence.createdAt },
         ],
         approvedBy: condolence.status !== 'PENDING' ? '인사팀장' : undefined,
         approvedAt: condolence.status !== 'PENDING' ? '2026-01-19T10:00:00Z' : undefined,
-        rejectionReason: condolence.status === 'REJECTED' ? '증빙 서류 부족' : undefined,
+        rejectReason: condolence.status === 'REJECTED' ? '증빙 서류 부족' : undefined,
       },
     });
   }),
@@ -248,7 +249,7 @@ export const condolenceHandlers = [
     const { id } = params;
     return HttpResponse.json({
       success: true,
-      data: { id, status: 'PAID', paidAt: new Date().toISOString() },
+      data: { id, status: 'PAID', paidDate: new Date().toISOString() },
     });
   }),
 

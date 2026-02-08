@@ -45,11 +45,11 @@ const mockJobPostings: JobPosting[] = [
 - 오픈소스 기여 경험`,
     salaryMin: 5000,
     salaryMax: 8000,
-    isSalaryNegotiable: false,
+    salaryNegotiable: false,
     headcount: 3,
     workLocation: '서울 강남구',
-    postingStartDate: '2024-01-01',
-    postingEndDate: '2024-03-31',
+    openDate: '2024-01-01',
+    closeDate: '2024-03-31',
     status: 'OPEN',
     viewCount: 1523,
     applicationCount: 45,
@@ -76,11 +76,11 @@ const mockJobPostings: JobPosting[] = [
 - 상태관리 라이브러리 경험`,
     salaryMin: 4500,
     salaryMax: 7000,
-    isSalaryNegotiable: true,
+    salaryNegotiable: true,
     headcount: 2,
     workLocation: '서울 강남구',
-    postingStartDate: '2024-01-15',
-    postingEndDate: '2024-04-15',
+    openDate: '2024-01-15',
+    closeDate: '2024-04-15',
     status: 'OPEN',
     viewCount: 980,
     applicationCount: 32,
@@ -106,8 +106,8 @@ const mockJobPostings: JobPosting[] = [
 - HR 시스템 사용 경험`,
     headcount: 1,
     workLocation: '서울 강남구',
-    postingStartDate: '2024-02-01',
-    postingEndDate: '2024-02-28',
+    openDate: '2024-02-01',
+    closeDate: '2024-02-28',
     status: 'CLOSED',
     viewCount: 456,
     applicationCount: 15,
@@ -128,8 +128,8 @@ const mockJobPostings: JobPosting[] = [
     requirements: '컴퓨터공학 전공 졸업예정자',
     headcount: 5,
     workLocation: '서울 강남구',
-    postingStartDate: '2024-03-01',
-    postingEndDate: '2024-05-31',
+    openDate: '2024-03-01',
+    closeDate: '2024-05-31',
     status: 'DRAFT',
     viewCount: 0,
     applicationCount: 0,
@@ -157,12 +157,11 @@ const mockApplications: Application[] = [
     coverLetter: '안녕하세요. 백엔드 개발자 포지션에 지원합니다...',
     currentStage: 'SECOND_INTERVIEW',
     status: 'IN_PROGRESS',
-    appliedAt: '2024-01-15T10:30:00Z',
     statusChangedAt: '2024-02-10T14:00:00Z',
     screenedAt: '2024-01-20T09:00:00Z',
     screenedBy: 'emp-003',
     screenedByName: '이영희',
-    screeningComment: '우수한 경력과 기술 스택. 1차 면접 진행 권장.',
+    screeningNotes: '우수한 경력과 기술 스택. 1차 면접 진행 권장.',
     createdAt: '2024-01-15T10:30:00Z',
     updatedAt: '2024-02-10T14:00:00Z',
   },
@@ -179,7 +178,6 @@ const mockApplications: Application[] = [
     applicantPhone: '010-2222-3333',
     currentStage: 'DOCUMENT',
     status: 'SCREENING',
-    appliedAt: '2024-02-01T14:20:00Z',
     createdAt: '2024-02-01T14:20:00Z',
     updatedAt: '2024-02-01T14:20:00Z',
   },
@@ -195,11 +193,10 @@ const mockApplications: Application[] = [
     applicantEmail: 'lee.mj@email.com',
     currentStage: 'FIRST_INTERVIEW',
     status: 'IN_PROGRESS',
-    appliedAt: '2024-01-20T09:00:00Z',
     screenedAt: '2024-01-25T11:00:00Z',
     screenedBy: 'emp-003',
     screenedByName: '이영희',
-    screeningComment: '풍부한 프로젝트 경험',
+    screeningNotes: '풍부한 프로젝트 경험',
     createdAt: '2024-01-20T09:00:00Z',
     updatedAt: '2024-02-05T10:00:00Z',
   },
@@ -215,7 +212,6 @@ const mockApplications: Application[] = [
     applicantEmail: 'choi.hw@email.com',
     currentStage: 'OFFER',
     status: 'PASSED',
-    appliedAt: '2024-01-25T16:00:00Z',
     createdAt: '2024-01-25T16:00:00Z',
     updatedAt: '2024-02-20T15:00:00Z',
   },
@@ -231,7 +227,6 @@ const mockApplications: Application[] = [
     applicantEmail: 'jung.de@email.com',
     currentStage: 'DOCUMENT',
     status: 'FAILED',
-    appliedAt: '2024-02-05T11:00:00Z',
     rejectionReason: '경력 요건 미충족',
     createdAt: '2024-02-05T11:00:00Z',
     updatedAt: '2024-02-08T09:00:00Z',
@@ -249,14 +244,15 @@ const mockInterviews: Interview[] = [
     jobTitle: '백엔드 개발자 (Java/Spring)',
     jobCode: 'JOB-2024-001',
     interviewType: 'TECHNICAL',
-    scheduledAt: '2024-02-15T14:00:00Z',
+    scheduledDate: '2024-02-15',
+    scheduledTime: '14:00',
     durationMinutes: 60,
     location: '본사 3층 회의실 A',
     interviewerIds: ['emp-001', 'emp-006'],
     interviewerNames: ['홍길동', '정민호'],
     status: 'COMPLETED',
-    averageScore: 8.5,
-    completedAt: '2024-02-15T15:10:00Z',
+    overallScore: 8.5,
+    endedAt: '2024-02-15T15:10:00Z',
     createdAt: '2024-02-01T10:00:00Z',
     updatedAt: '2024-02-15T15:10:00Z',
   },
@@ -270,7 +266,8 @@ const mockInterviews: Interview[] = [
     jobTitle: '백엔드 개발자 (Java/Spring)',
     jobCode: 'JOB-2024-001',
     interviewType: 'FINAL',
-    scheduledAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // 2일 후
+    scheduledDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 2일 후
+    scheduledTime: '10:00',
     durationMinutes: 45,
     meetingUrl: 'https://meet.google.com/abc-defg-hij',
     interviewerIds: ['emp-009'],
@@ -289,7 +286,8 @@ const mockInterviews: Interview[] = [
     jobTitle: '백엔드 개발자 (Java/Spring)',
     jobCode: 'JOB-2024-001',
     interviewType: 'VIDEO',
-    scheduledAt: new Date().toISOString(), // 오늘
+    scheduledDate: new Date().toISOString().split('T')[0], // 오늘
+    scheduledTime: '10:00',
     durationMinutes: 60,
     meetingUrl: 'https://meet.google.com/xyz-uvwx-yzz',
     interviewerIds: ['emp-001'],
@@ -308,14 +306,15 @@ const mockInterviews: Interview[] = [
     jobTitle: '프론트엔드 개발자 (React)',
     jobCode: 'JOB-2024-002',
     interviewType: 'ONSITE',
-    scheduledAt: '2024-02-10T10:00:00Z',
+    scheduledDate: '2024-02-10',
+    scheduledTime: '10:00',
     durationMinutes: 90,
     location: '본사 2층 회의실 B',
     interviewerIds: ['emp-001', 'emp-005'],
     interviewerNames: ['홍길동', '최수진'],
     status: 'COMPLETED',
-    averageScore: 9.0,
-    completedAt: '2024-02-10T11:35:00Z',
+    overallScore: 9.0,
+    endedAt: '2024-02-10T11:35:00Z',
     createdAt: '2024-02-05T09:00:00Z',
     updatedAt: '2024-02-10T11:35:00Z',
   },
@@ -389,8 +388,8 @@ function toJobListItem(job: JobPosting): JobPostingListItem {
     employmentType: job.employmentType,
     headcount: job.headcount,
     applicationCount: job.applicationCount,
-    postingStartDate: job.postingStartDate,
-    postingEndDate: job.postingEndDate,
+    openDate: job.openDate,
+    closeDate: job.closeDate,
     status: job.status,
     recruiterName: job.recruiterName,
   };
@@ -407,7 +406,7 @@ function toApplicationListItem(app: Application): ApplicationListItem {
     applicantEmail: app.applicantEmail,
     currentStage: app.currentStage,
     status: app.status,
-    appliedAt: app.appliedAt,
+    createdAt: app.createdAt,
   };
 }
 
@@ -418,13 +417,14 @@ function toInterviewListItem(interview: Interview): InterviewListItem {
     applicantName: interview.applicantName,
     jobTitle: interview.jobTitle,
     interviewType: interview.interviewType,
-    scheduledAt: interview.scheduledAt,
+    scheduledDate: interview.scheduledDate,
+    scheduledTime: interview.scheduledTime,
     durationMinutes: interview.durationMinutes,
     location: interview.location,
     meetingUrl: interview.meetingUrl,
     interviewerNames: interview.interviewerNames,
     status: interview.status,
-    averageScore: interview.averageScore,
+    overallScore: interview.overallScore,
   };
 }
 
@@ -534,8 +534,8 @@ export const recruitmentHandlers = [
       preferredQualifications: body.preferredQualifications as string,
       headcount: body.headcount as number,
       workLocation: body.workLocation as string,
-      postingStartDate: body.postingStartDate as string,
-      postingEndDate: body.postingEndDate as string,
+      openDate: body.openDate as string,
+      closeDate: body.closeDate as string,
       status: 'DRAFT',
       viewCount: 0,
       applicationCount: 0,
@@ -796,7 +796,7 @@ export const recruitmentHandlers = [
       ...mockApplications[index],
       status: body.passed ? 'IN_PROGRESS' : 'FAILED',
       currentStage: body.passed ? 'FIRST_INTERVIEW' : mockApplications[index].currentStage,
-      screeningComment: body.comment,
+      screeningNotes: body.comment,
       screenedAt: new Date().toISOString(),
       screenedBy: 'emp-001',
       screenedByName: '홍길동',
@@ -907,8 +907,8 @@ export const recruitmentHandlers = [
       filtered = filtered.filter((i) => i.status === status);
     }
 
-    // Sort by scheduledAt descending
-    filtered.sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime());
+    // Sort by scheduledDate descending
+    filtered.sort((a, b) => new Date(b.scheduledDate).getTime() - new Date(a.scheduledDate).getTime());
 
     const totalElements = filtered.length;
     const totalPages = Math.ceil(totalElements / size);
@@ -944,13 +944,13 @@ export const recruitmentHandlers = [
     const status = url.searchParams.get('status') as InterviewStatus | null;
 
     // 현재 사용자(emp-001)가 면접관인 면접만 필터링
-    let filtered = mockInterviews.filter((i) => i.interviewerIds.includes('emp-001'));
+    let filtered = mockInterviews.filter((i) => i.interviewerIds?.includes('emp-001'));
 
     if (status) {
       filtered = filtered.filter((i) => i.status === status);
     }
 
-    filtered.sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime());
+    filtered.sort((a, b) => new Date(b.scheduledDate).getTime() - new Date(a.scheduledDate).getTime());
 
     const totalElements = filtered.length;
     const totalPages = Math.ceil(totalElements / size);
@@ -982,9 +982,9 @@ export const recruitmentHandlers = [
 
     const today = new Date();
     const todayInterviews = mockInterviews.filter((i) => {
-      const interviewDate = new Date(i.scheduledAt);
+      const interviewDate = new Date(i.scheduledDate);
       return (
-        i.interviewerIds.includes('emp-001') &&
+        i.interviewerIds?.includes('emp-001') &&
         interviewDate.toDateString() === today.toDateString()
       );
     });
@@ -1001,14 +1001,14 @@ export const recruitmentHandlers = [
     await delay(200);
 
     const today = new Date();
-    const myInterviews = mockInterviews.filter((i) => i.interviewerIds.includes('emp-001'));
+    const myInterviews = mockInterviews.filter((i) => i.interviewerIds?.includes('emp-001'));
 
     const summary = {
       total: myInterviews.length,
       scheduled: myInterviews.filter((i) => i.status === 'SCHEDULED').length,
       completed: myInterviews.filter((i) => i.status === 'COMPLETED').length,
       cancelled: myInterviews.filter((i) => i.status === 'CANCELLED').length,
-      today: myInterviews.filter((i) => new Date(i.scheduledAt).toDateString() === today.toDateString()).length,
+      today: myInterviews.filter((i) => new Date(i.scheduledDate).toDateString() === today.toDateString()).length,
     };
 
     return HttpResponse.json({ success: true, data: summary, timestamp: new Date().toISOString() });
@@ -1041,7 +1041,8 @@ export const recruitmentHandlers = [
       tenantId: 'tenant-001',
       applicationId: body.applicationId as string,
       interviewType: body.interviewType as InterviewType,
-      scheduledAt: body.scheduledAt as string,
+      scheduledDate: body.scheduledDate as string,
+      scheduledTime: body.scheduledTime as string,
       durationMinutes: body.durationMinutes as number,
       location: body.location as string,
       meetingUrl: body.meetingUrl as string,
@@ -1112,7 +1113,7 @@ export const recruitmentHandlers = [
     if (interviewIndex !== -1) {
       const scores = mockInterviewScores[params.interviewId as string];
       const avgScore = scores.reduce((sum, s) => sum + s.overallScore, 0) / scores.length;
-      mockInterviews[interviewIndex].averageScore = avgScore;
+      mockInterviews[interviewIndex].overallScore = avgScore;
     }
 
     return HttpResponse.json({ success: true, data: newScore, message: '평가가 제출되었습니다.', timestamp: new Date().toISOString() }, { status: 201 });
@@ -1241,7 +1242,7 @@ export const recruitmentHandlers = [
       );
     }
 
-    mockInterviews[index] = { ...mockInterviews[index], status: 'COMPLETED', completedAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+    mockInterviews[index] = { ...mockInterviews[index], status: 'COMPLETED', endedAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
 
     return HttpResponse.json({ success: true, data: mockInterviews[index], message: '면접이 완료되었습니다.', timestamp: new Date().toISOString() });
   }),

@@ -25,13 +25,13 @@ const mockDetails: AppointmentDetail[] = [
     fromDepartmentName: '개발1팀',
     toDepartmentId: 'dept-001',
     toDepartmentName: '개발1팀',
-    fromPositionId: 'pos-002',
+    fromPositionCode: 'pos-002',
     fromPositionName: '팀원',
-    toPositionId: 'pos-003',
+    toPositionCode: 'pos-003',
     toPositionName: '선임',
-    fromGradeId: 'grade-003',
+    fromGradeCode: 'grade-003',
     fromGradeName: '대리',
-    toGradeId: 'grade-002',
+    toGradeCode: 'grade-002',
     toGradeName: '과장',
     reason: '우수한 업무 성과',
     status: 'PENDING',
@@ -46,13 +46,13 @@ const mockDetails: AppointmentDetail[] = [
     fromDepartmentName: '인사팀',
     toDepartmentId: 'dept-003',
     toDepartmentName: '기획팀',
-    fromPositionId: 'pos-002',
+    fromPositionCode: 'pos-002',
     fromPositionName: '팀원',
-    toPositionId: 'pos-002',
+    toPositionCode: 'pos-002',
     toPositionName: '팀원',
-    fromGradeId: 'grade-003',
+    fromGradeCode: 'grade-003',
     fromGradeName: '대리',
-    toGradeId: 'grade-003',
+    toGradeCode: 'grade-003',
     toGradeName: '대리',
     reason: '부서 간 업무 조정',
     status: 'PENDING',
@@ -96,13 +96,13 @@ const mockDrafts: AppointmentDraft[] = [
         fromDepartmentName: '개발1팀',
         toDepartmentId: 'dept-001',
         toDepartmentName: '개발1팀',
-        fromPositionId: 'pos-003',
+        fromPositionCode: 'pos-003',
         fromPositionName: '선임',
-        toPositionId: 'pos-004',
+        toPositionCode: 'pos-004',
         toPositionName: '파트장',
-        fromGradeId: 'grade-002',
+        fromGradeCode: 'grade-002',
         fromGradeName: '과장',
-        toGradeId: 'grade-002',
+        toGradeCode: 'grade-002',
         toGradeName: '과장',
         reason: '파트장 직책 부여',
         status: 'PENDING',
@@ -134,9 +134,9 @@ const mockDrafts: AppointmentDraft[] = [
         fromDepartmentName: '영업팀',
         toDepartmentId: 'dept-004',
         toDepartmentName: '영업팀',
-        fromGradeId: 'grade-004',
+        fromGradeCode: 'grade-004',
         fromGradeName: '사원',
-        toGradeId: 'grade-003',
+        toGradeCode: 'grade-003',
         toGradeName: '대리',
         reason: '우수한 영업 실적',
         status: 'PENDING',
@@ -255,7 +255,7 @@ export const appointmentHandlers = [
       effectiveDate: d.effectiveDate,
       status: d.status,
       detailCount: d.detailCount,
-      draftCreatedBy: d.draftCreatedBy,
+      draftCreatedBy: d.draftCreatedBy!,
       createdAt: d.createdAt,
     }));
 
@@ -315,9 +315,9 @@ export const appointmentHandlers = [
         employeeId: string;
         appointmentType: AppointmentType;
         toDepartmentId?: string;
-        toPositionId?: string;
-        toGradeId?: string;
-        toJobId?: string;
+        toPositionCode?: string;
+        toGradeCode?: string;
+        toJobCode?: string;
         reason?: string;
       }[];
     };
@@ -330,12 +330,12 @@ export const appointmentHandlers = [
       appointmentType: d.appointmentType,
       toDepartmentId: d.toDepartmentId,
       toDepartmentName: d.toDepartmentId ? '부서명' : undefined,
-      toPositionId: d.toPositionId,
-      toPositionName: d.toPositionId ? '직책명' : undefined,
-      toGradeId: d.toGradeId,
-      toGradeName: d.toGradeId ? '직급명' : undefined,
-      toJobId: d.toJobId,
-      toJobName: d.toJobId ? '직무명' : undefined,
+      toPositionCode: d.toPositionCode,
+      toPositionName: d.toPositionCode ? '직책명' : undefined,
+      toGradeCode: d.toGradeCode,
+      toGradeName: d.toGradeCode ? '직급명' : undefined,
+      toJobCode: d.toJobCode,
+      toJobName: d.toJobCode ? '직무명' : undefined,
       reason: d.reason,
       status: 'PENDING' as DetailStatus,
     }));
@@ -465,9 +465,9 @@ export const appointmentHandlers = [
       employeeId: string;
       appointmentType: AppointmentType;
       toDepartmentId?: string;
-      toPositionId?: string;
-      toGradeId?: string;
-      toJobId?: string;
+      toPositionCode?: string;
+      toGradeCode?: string;
+      toJobCode?: string;
       reason?: string;
     };
 
@@ -517,16 +517,16 @@ export const appointmentHandlers = [
       fromDepartmentName: emp.dept,
       toDepartmentId: body.toDepartmentId,
       toDepartmentName: body.toDepartmentId ? '대상 부서' : undefined,
-      fromPositionId: emp.positionId,
+      fromPositionCode: emp.positionId,
       fromPositionName: emp.position,
-      toPositionId: body.toPositionId,
-      toPositionName: body.toPositionId ? '대상 직책' : undefined,
-      fromGradeId: emp.gradeId,
+      toPositionCode: body.toPositionCode,
+      toPositionName: body.toPositionCode ? '대상 직책' : undefined,
+      fromGradeCode: emp.gradeId,
       fromGradeName: emp.grade,
-      toGradeId: body.toGradeId,
-      toGradeName: body.toGradeId ? '대상 직급' : undefined,
-      toJobId: body.toJobId,
-      toJobName: body.toJobId ? '대상 직무' : undefined,
+      toGradeCode: body.toGradeCode,
+      toGradeName: body.toGradeCode ? '대상 직급' : undefined,
+      toJobCode: body.toJobCode,
+      toJobName: body.toJobCode ? '대상 직무' : undefined,
       reason: body.reason,
       status: 'PENDING',
     };

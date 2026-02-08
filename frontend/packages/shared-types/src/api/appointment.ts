@@ -48,7 +48,7 @@ export interface AppointmentDraft extends TenantAwareEntity {
   executedAt?: string;
   cancelledAt?: string;
   cancelReason?: string;
-  draftCreatedBy: AppointmentCreator;
+  draftCreatedBy?: AppointmentCreator;
   details?: AppointmentDetail[];
 }
 
@@ -75,26 +75,29 @@ export interface AppointmentDetail {
   employeeName: string;
   employeeNumber?: string;
   appointmentType: AppointmentType;
+  appointmentTypeName?: string;
   // 이동 전 정보
   fromDepartmentId?: string;
   fromDepartmentName?: string;
-  fromPositionId?: string;
+  fromPositionCode?: string;
   fromPositionName?: string;
-  fromGradeId?: string;
+  fromGradeCode?: string;
   fromGradeName?: string;
-  fromJobId?: string;
+  fromJobCode?: string;
   fromJobName?: string;
   // 이동 후 정보
   toDepartmentId?: string;
   toDepartmentName?: string;
-  toPositionId?: string;
+  toPositionCode?: string;
   toPositionName?: string;
-  toGradeId?: string;
+  toGradeCode?: string;
   toGradeName?: string;
-  toJobId?: string;
+  toJobCode?: string;
   toJobName?: string;
   reason?: string;
   status: DetailStatus;
+  executedAt?: string;
+  errorMessage?: string;
 }
 
 // ============================================
@@ -131,9 +134,9 @@ export interface CreateAppointmentDetailRequest {
   employeeId: string;
   appointmentType: AppointmentType;
   toDepartmentId?: string;
-  toPositionId?: string;
-  toGradeId?: string;
-  toJobId?: string;
+  toPositionCode?: string;
+  toGradeCode?: string;
+  toJobCode?: string;
   reason?: string;
 }
 

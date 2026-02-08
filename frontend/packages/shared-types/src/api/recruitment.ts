@@ -57,16 +57,26 @@ export interface JobPosting extends TenantAwareEntity {
   preferredQualifications?: string;
   salaryMin?: number;
   salaryMax?: number;
-  isSalaryNegotiable?: boolean;
+  salaryNegotiable?: boolean;
   headcount: number;
   workLocation?: string;
-  postingStartDate: string;
-  postingEndDate: string;
+  openDate: string;
+  closeDate: string;
   status: JobStatus;
   viewCount: number;
   applicationCount: number;
   recruiterId?: string;
   recruiterName?: string;
+  experienceMin?: number;
+  experienceMax?: number;
+  skills?: string[];
+  benefits?: string[];
+  hiringManagerId?: string;
+  hiringManagerName?: string;
+  featured?: boolean;
+  urgent?: boolean;
+  open?: boolean;
+  interviewProcess?: string;
 }
 
 export interface JobPostingListItem {
@@ -77,8 +87,8 @@ export interface JobPostingListItem {
   employmentType: RecruitmentEmploymentType;
   headcount: number;
   applicationCount: number;
-  postingStartDate: string;
-  postingEndDate: string;
+  openDate: string;
+  closeDate: string;
   status: JobStatus;
   recruiterName?: string;
 }
@@ -107,18 +117,25 @@ export interface Application extends TenantAwareEntity {
   coverLetter?: string;
   currentStage: ApplicationStage;
   status: ApplicationStatus;
-  appliedAt: string;
   statusChangedAt?: string;
   screenedAt?: string;
   screenedBy?: string;
   screenedByName?: string;
-  screeningComment?: string;
+  screeningNotes?: string;
   rejectionReason?: string;
   hiredAt?: string;
   hiredBy?: string;
   hiredByName?: string;
   withdrawnAt?: string;
   withdrawnReason?: string;
+  answers?: Record<string, unknown>;
+  expectedSalary?: number;
+  availableDate?: string;
+  referrerName?: string;
+  referrerEmployeeId?: string;
+  screeningScore?: number;
+  stageOrder?: number;
+  interviewCount?: number;
 }
 
 export interface ApplicationListItem {
@@ -131,7 +148,7 @@ export interface ApplicationListItem {
   applicantEmail: string;
   currentStage: ApplicationStage;
   status: ApplicationStatus;
-  appliedAt: string;
+  createdAt?: string;
 }
 
 export interface ApplicationSummary {
@@ -159,19 +176,29 @@ export interface Interview extends TenantAwareEntity {
   jobTitle?: string;
   jobCode?: string;
   interviewType: InterviewType;
-  scheduledAt: string;
+  scheduledDate: string;
+  scheduledTime?: string;
   durationMinutes: number;
   location?: string;
   meetingUrl?: string;
-  interviewerIds: string[];
+  interviewerIds?: string[];
   interviewerNames?: string[];
+  interviewers?: Array<{ id: string; name: string }>;
   status: InterviewStatus;
-  averageScore?: number;
+  overallScore?: number;
   notes?: string;
   cancelReason?: string;
   confirmedAt?: string;
-  completedAt?: string;
+  endedAt?: string;
   cancelledAt?: string;
+  round?: number;
+  applicationNumber?: string;
+  result?: string;
+  resultNotes?: string;
+  startedAt?: string;
+  feedbackDeadline?: string;
+  scoreCount?: number;
+  passed?: boolean;
 }
 
 export interface InterviewListItem {
@@ -180,13 +207,15 @@ export interface InterviewListItem {
   applicantName?: string;
   jobTitle?: string;
   interviewType: InterviewType;
-  scheduledAt: string;
+  scheduledDate: string;
+  scheduledTime?: string;
   durationMinutes: number;
   location?: string;
   meetingUrl?: string;
   interviewerNames?: string[];
+  interviewers?: Array<{ id: string; name: string }>;
   status: InterviewStatus;
-  averageScore?: number;
+  overallScore?: number;
 }
 
 export interface InterviewSummary {
@@ -255,11 +284,11 @@ export interface CreateJobPostingRequest {
   preferredQualifications?: string;
   salaryMin?: number;
   salaryMax?: number;
-  isSalaryNegotiable?: boolean;
+  salaryNegotiable?: boolean;
   headcount: number;
   workLocation?: string;
-  postingStartDate: string;
-  postingEndDate: string;
+  openDate: string;
+  closeDate: string;
 }
 
 export interface UpdateJobPostingRequest {
@@ -272,11 +301,11 @@ export interface UpdateJobPostingRequest {
   preferredQualifications?: string;
   salaryMin?: number;
   salaryMax?: number;
-  isSalaryNegotiable?: boolean;
+  salaryNegotiable?: boolean;
   headcount?: number;
   workLocation?: string;
-  postingStartDate?: string;
-  postingEndDate?: string;
+  openDate?: string;
+  closeDate?: string;
 }
 
 export interface ScreenApplicationRequest {
@@ -306,7 +335,8 @@ export interface HireApplicationRequest {
 export interface CreateInterviewRequest {
   applicationId: string;
   interviewType: InterviewType;
-  scheduledAt: string;
+  scheduledDate: string;
+  scheduledTime?: string;
   durationMinutes: number;
   location?: string;
   meetingUrl?: string;
@@ -315,7 +345,8 @@ export interface CreateInterviewRequest {
 }
 
 export interface UpdateInterviewRequest {
-  scheduledAt?: string;
+  scheduledDate?: string;
+  scheduledTime?: string;
   durationMinutes?: number;
   location?: string;
   meetingUrl?: string;
@@ -348,30 +379,41 @@ export type OfferStatus = 'DRAFT' | 'SENT' | 'ACCEPTED' | 'REJECTED' | 'WITHDRAW
 export interface Offer extends TenantAwareEntity {
   offerNumber: string;
   applicationId: string;
-  applicantId: string;
+  applicantId?: string;
   applicantName: string;
-  applicantEmail: string;
+  applicantEmail?: string;
   jobPostingId: string;
   jobTitle?: string;
   departmentId: string;
   departmentName?: string;
   positionId?: string;
-  positionName?: string;
-  gradeId?: string;
+  positionTitle?: string;
+  gradeCode?: string;
   gradeName?: string;
-  proposedSalary: number;
+  baseSalary: number;
   startDate: string;
-  expiryDate: string;
-  benefits?: string;
-  terms?: string;
+  expiresAt: string;
+  benefits?: Record<string, unknown>;
+  specialTerms?: string;
   status: OfferStatus;
   sentAt?: string;
   respondedAt?: string;
-  responseComment?: string;
+  declineReason?: string;
   withdrawnAt?: string;
   withdrawReason?: string;
-  createdById: string;
+  createdById?: string;
   createdByName?: string;
+  signingBonus?: number;
+  employmentType?: string;
+  probationMonths?: number;
+  workLocation?: string;
+  reportToId?: string;
+  reportToName?: string;
+  offerLetterFileId?: string;
+  approvedBy?: string;
+  approvedAt?: string;
+  negotiationNotes?: string;
+  expired?: boolean;
 }
 
 export interface OfferListItem {
@@ -382,10 +424,10 @@ export interface OfferListItem {
   applicantEmail: string;
   jobTitle?: string;
   departmentName?: string;
-  positionName?: string;
-  proposedSalary: number;
+  positionTitle?: string;
+  baseSalary: number;
   startDate: string;
-  expiryDate: string;
+  expiresAt: string;
   status: OfferStatus;
   sentAt?: string;
 }
@@ -412,23 +454,23 @@ export interface CreateOfferRequest {
   applicationId: string;
   departmentId: string;
   positionId?: string;
-  gradeId?: string;
-  proposedSalary: number;
+  gradeCode?: string;
+  baseSalary: number;
   startDate: string;
-  expiryDate: string;
-  benefits?: string;
-  terms?: string;
+  expiresAt: string;
+  benefits?: Record<string, unknown>;
+  specialTerms?: string;
 }
 
 export interface UpdateOfferRequest {
   departmentId?: string;
   positionId?: string;
-  gradeId?: string;
-  proposedSalary?: number;
+  gradeCode?: string;
+  baseSalary?: number;
   startDate?: string;
-  expiryDate?: string;
-  benefits?: string;
-  terms?: string;
+  expiresAt?: string;
+  benefits?: Record<string, unknown>;
+  specialTerms?: string;
 }
 
 export interface RespondOfferRequest {

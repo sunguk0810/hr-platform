@@ -21,13 +21,13 @@ const mockPlans: HeadcountPlan[] = [
     gradeId: 'grade-4',
     gradeName: '과장',
     plannedCount: 10,
-    actualCount: 8,
+    currentCount: 8,
     variance: -2,
     status: 'ACTIVE',
     approvedBy: 'user-1',
     approvedByName: '김이사',
     approvedAt: '2025-12-15T10:00:00Z',
-    remarks: null,
+    notes: null,
     createdAt: '2025-12-01T09:00:00Z',
     updatedAt: '2025-12-15T10:00:00Z',
   },
@@ -40,13 +40,13 @@ const mockPlans: HeadcountPlan[] = [
     gradeId: 'grade-5',
     gradeName: '대리',
     plannedCount: 15,
-    actualCount: 15,
+    currentCount: 15,
     variance: 0,
     status: 'ACTIVE',
     approvedBy: 'user-1',
     approvedByName: '김이사',
     approvedAt: '2025-12-15T10:00:00Z',
-    remarks: null,
+    notes: null,
     createdAt: '2025-12-01T09:00:00Z',
     updatedAt: '2025-12-15T10:00:00Z',
   },
@@ -59,13 +59,13 @@ const mockPlans: HeadcountPlan[] = [
     gradeId: 'grade-4',
     gradeName: '과장',
     plannedCount: 20,
-    actualCount: 22,
+    currentCount: 22,
     variance: 2,
     status: 'ACTIVE',
     approvedBy: 'user-1',
     approvedByName: '김이사',
     approvedAt: '2025-12-15T10:00:00Z',
-    remarks: null,
+    notes: null,
     createdAt: '2025-12-01T09:00:00Z',
     updatedAt: '2025-12-15T10:00:00Z',
   },
@@ -78,13 +78,13 @@ const mockPlans: HeadcountPlan[] = [
     gradeId: 'grade-5',
     gradeName: '대리',
     plannedCount: 30,
-    actualCount: 28,
+    currentCount: 28,
     variance: -2,
     status: 'ACTIVE',
     approvedBy: 'user-1',
     approvedByName: '김이사',
     approvedAt: '2025-12-15T10:00:00Z',
-    remarks: null,
+    notes: null,
     createdAt: '2025-12-01T09:00:00Z',
     updatedAt: '2025-12-15T10:00:00Z',
   },
@@ -97,13 +97,13 @@ const mockPlans: HeadcountPlan[] = [
     gradeId: 'grade-4',
     gradeName: '과장',
     plannedCount: 12,
-    actualCount: 10,
+    currentCount: 10,
     variance: -2,
     status: 'APPROVED',
     approvedBy: 'user-1',
     approvedByName: '김이사',
     approvedAt: '2026-01-10T10:00:00Z',
-    remarks: '2분기 증원 예정',
+    notes: '2분기 증원 예정',
     createdAt: '2026-01-05T09:00:00Z',
     updatedAt: '2026-01-10T10:00:00Z',
   },
@@ -116,13 +116,13 @@ const mockPlans: HeadcountPlan[] = [
     gradeId: 'grade-4',
     gradeName: '과장',
     plannedCount: 12,
-    actualCount: 0,
+    currentCount: 0,
     variance: -12,
     status: 'DRAFT',
     approvedBy: null,
     approvedByName: null,
     approvedAt: null,
-    remarks: '2027년 계획 초안',
+    notes: '2027년 계획 초안',
     createdAt: '2026-02-01T09:00:00Z',
     updatedAt: '2026-02-01T09:00:00Z',
   },
@@ -139,7 +139,7 @@ const mockRequests: HeadcountRequest[] = [
     departmentName: '개발본부',
     gradeId: 'grade-5',
     gradeName: '대리',
-    requestedCount: 32,
+    requestCount: 32,
     currentCount: 28,
     reason: '신규 프로젝트 투입 인원 확보',
     effectiveDate: '2026-03-01',
@@ -162,7 +162,7 @@ const mockRequests: HeadcountRequest[] = [
     departmentName: '영업본부',
     gradeId: 'grade-6',
     gradeName: '사원',
-    requestedCount: 15,
+    requestCount: 15,
     currentCount: 18,
     reason: '업무 효율화에 따른 정원 조정',
     effectiveDate: '2026-02-01',
@@ -185,7 +185,7 @@ const mockRequests: HeadcountRequest[] = [
     departmentName: '경영지원본부',
     gradeId: 'grade-5',
     gradeName: '대리',
-    requestedCount: 17,
+    requestCount: 17,
     currentCount: 15,
     reason: '타 부서 인력 전환 배치',
     effectiveDate: '2026-02-15',
@@ -207,27 +207,27 @@ function toPlanListItem(plan: HeadcountPlan): HeadcountPlanListItem {
     year: plan.year,
     departmentId: plan.departmentId,
     departmentName: plan.departmentName,
-    departmentCode: plan.departmentCode,
-    gradeId: plan.gradeId,
-    gradeName: plan.gradeName,
+    departmentCode: plan.departmentCode ?? '',
+    gradeId: plan.gradeId ?? '',
+    gradeName: plan.gradeName ?? '',
     plannedCount: plan.plannedCount,
-    actualCount: plan.actualCount,
+    currentCount: plan.currentCount,
     variance: plan.variance,
-    status: plan.status,
+    status: plan.status ?? 'DRAFT',
   };
 }
 
 function toRequestListItem(request: HeadcountRequest): HeadcountRequestListItem {
   return {
     id: request.id,
-    requestNumber: request.requestNumber,
+    requestNumber: request.requestNumber ?? '',
     type: request.type,
-    status: request.status,
+    status: request.status ?? 'PENDING',
     departmentName: request.departmentName,
-    gradeName: request.gradeName,
-    requestedCount: request.requestedCount,
+    gradeName: request.gradeName ?? '',
+    requestCount: request.requestCount,
     currentCount: request.currentCount,
-    requesterName: request.requesterName,
+    requesterName: request.requesterName ?? '',
     effectiveDate: request.effectiveDate,
     createdAt: request.createdAt,
   };
@@ -296,13 +296,13 @@ export const headcountHandlers = [
       gradeId: body.gradeId,
       gradeName: '새 직급',
       plannedCount: body.plannedCount,
-      actualCount: 0,
+      currentCount: 0,
       variance: -body.plannedCount,
       status: 'DRAFT',
       approvedBy: null,
       approvedByName: null,
       approvedAt: null,
-      remarks: body.remarks || null,
+      notes: body.remarks || null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -334,8 +334,8 @@ export const headcountHandlers = [
     const updated = {
       ...plan,
       plannedCount: body.plannedCount ?? plan.plannedCount,
-      variance: (body.plannedCount ?? plan.plannedCount) - plan.actualCount,
-      remarks: body.remarks ?? plan.remarks,
+      variance: (body.plannedCount ?? plan.plannedCount) - plan.currentCount,
+      notes: body.notes ?? plan.notes,
       updatedAt: new Date().toISOString(),
     };
     mockPlans[index] = updated;
@@ -407,8 +407,8 @@ export const headcountHandlers = [
 
     const yearPlans = mockPlans.filter((p) => p.year === year);
 
-    const totalPlanned = yearPlans.reduce((sum, p) => sum + p.plannedCount, 0);
-    const totalActual = yearPlans.reduce((sum, p) => sum + p.actualCount, 0);
+    const totalPlannedCount = yearPlans.reduce((sum, p) => sum + p.plannedCount, 0);
+    const totalCurrentCount = yearPlans.reduce((sum, p) => sum + p.currentCount, 0);
 
     // Group by department
     const deptMap = new Map<string, { id: string; name: string; code: string; planned: number; actual: number }>();
@@ -416,28 +416,28 @@ export const headcountHandlers = [
       const existing = deptMap.get(p.departmentId) || {
         id: p.departmentId,
         name: p.departmentName,
-        code: p.departmentCode,
+        code: p.departmentCode ?? '',
         planned: 0,
         actual: 0,
       };
       existing.planned += p.plannedCount;
-      existing.actual += p.actualCount;
+      existing.actual += p.currentCount;
       deptMap.set(p.departmentId, existing);
     });
 
     const summary: HeadcountSummary = {
       year,
-      totalPlanned,
-      totalActual,
-      totalVariance: totalActual - totalPlanned,
+      totalPlannedCount,
+      totalCurrentCount,
+      totalVariance: totalCurrentCount - totalPlannedCount,
       departmentSummaries: Array.from(deptMap.values()).map((d) => ({
         departmentId: d.id,
         departmentName: d.name,
         departmentCode: d.code,
         plannedCount: d.planned,
-        actualCount: d.actual,
+        currentCount: d.actual,
         variance: d.actual - d.planned,
-        vacancies: Math.max(0, d.planned - d.actual),
+        availableCount: Math.max(0, d.planned - d.actual),
       })),
     };
 
@@ -529,7 +529,7 @@ export const headcountHandlers = [
       departmentName: '요청 부서',
       gradeId: body.gradeId,
       gradeName: '요청 직급',
-      requestedCount: body.requestedCount,
+      requestCount: body.requestCount,
       currentCount: 10, // Would be fetched from actual data
       reason: body.reason,
       effectiveDate: body.effectiveDate,

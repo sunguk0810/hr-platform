@@ -23,18 +23,19 @@ export interface Employee extends TenantAwareEntity {
   birthDate?: string;
   gender?: Gender;
   hireDate: string;
-  resignationDate?: string;
-  employmentStatus: EmploymentStatus;
+  resignDate?: string;
+  status: EmploymentStatus;
   employmentType?: EmploymentType;
   contractEndDate?: string;
   resignationType?: ResignationType;
   resignationReason?: string;
   departmentId: string;
-  departmentName: string;
-  positionId?: string;
+  departmentName?: string;
+  positionCode?: string;
   positionName?: string;
-  gradeId?: string;
+  gradeCode?: string;
   gradeName?: string;
+  jobTitleCode?: string;
   jobFamilyId?: string;
   jobFamilyName?: string;
   managerId?: string;
@@ -50,10 +51,10 @@ export interface EmployeeListItem {
   employeeNumber: string;
   name: string;
   email: string;
-  departmentName: string;
+  departmentName?: string;
   positionName?: string;
   gradeName?: string;
-  employmentStatus: EmploymentStatus;
+  status: EmploymentStatus;
   employmentType?: EmploymentType;
   hireDate: string;
   profileImageUrl?: string;
@@ -98,7 +99,7 @@ export interface EmployeeDetail {
 export interface EmployeeSearchParams extends PageRequest {
   keyword?: string;
   departmentId?: string;
-  employmentStatus?: EmploymentStatus;
+  status?: EmploymentStatus;
   employmentType?: EmploymentType;
   hireStartDate?: string;
   hireEndDate?: string;
