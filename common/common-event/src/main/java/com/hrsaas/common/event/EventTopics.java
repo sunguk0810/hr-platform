@@ -25,6 +25,9 @@ public interface EventTopics {
     String ORGANIZATION_EVENTS = "organization-events";
     String DEPARTMENT_CREATED = "department-created";
     String DEPARTMENT_UPDATED = "department-updated";
+    String DEPARTMENT_DELETED = "department-deleted";
+    String DEPARTMENT_MERGED = "department-merged";
+    String DEPARTMENT_SPLIT = "department-split";
 
     // Approval events
     String APPROVAL_EVENTS = "approval-events";
@@ -57,4 +60,7 @@ public interface EventTopics {
     String CODE_GROUP_UPDATED = "code-group-updated";
     String COMMON_CODE_CREATED = "common-code-created";
     String COMMON_CODE_UPDATED = "common-code-updated";
+    String CODE_DEPRECATED = "code-deprecated";
+    String CODE_GRACE_PERIOD_EXPIRING = "code-grace-period-expiring";
+    String CODE_GRACE_PERIOD_EXPIRED = "code-grace-period-expired";
 }

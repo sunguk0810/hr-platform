@@ -9,6 +9,7 @@ import com.hrsaas.common.tenant.TenantContext;
 import com.hrsaas.organization.client.EmployeeClient;
 import com.hrsaas.organization.domain.event.DepartmentCreatedEvent;
 import com.hrsaas.organization.domain.event.DepartmentUpdatedEvent;
+import com.hrsaas.organization.service.OrganizationHistoryService;
 import com.hrsaas.organization.domain.dto.request.CreateDepartmentRequest;
 import com.hrsaas.organization.domain.dto.request.UpdateDepartmentRequest;
 import com.hrsaas.organization.domain.dto.response.DepartmentHistoryResponse;
@@ -47,6 +48,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     private final DepartmentRepository departmentRepository;
     private final EventPublisher eventPublisher;
     private final EmployeeClient employeeClient;
+    private final OrganizationHistoryService organizationHistoryService;
 
     @Override
     @Transactional
@@ -178,6 +180,11 @@ public class DepartmentServiceImpl implements DepartmentService {
 
         department.setStatus(DepartmentStatus.DELETED);
         departmentRepository.save(department);
+
+        organizationHistoryService.recordEvent("DEPARTMENT_DELETED", id,
+            department.getName(), department.getName() + " 부서 삭제",
+            department.getName() + " 부서가 삭제되었습니다.", null, null, null);
+
         log.info("Department deleted: id={}", id);
     }
 
@@ -225,16 +232,12 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     public Page<DepartmentHistoryResponse> getOrganizationHistory(Pageable pageable) {
-        // Delegate to OrganizationHistoryService (will be connected in Phase 4)
-        // Temporary: return empty page until Phase 4
-        return new PageImpl<>(List.of(), pageable, 0);
+        return organizationHistoryService.getOrganizationHistory(pageable);
     }
 
     @Override
     public List<DepartmentHistoryResponse> getDepartmentHistory(UUID departmentId) {
         findById(departmentId); // verify existence
-        // Delegate to OrganizationHistoryService (will be connected in Phase 4)
-        // Temporary: return empty list until Phase 4
-        return List.of();
+        return organizationHistoryService.getDepartmentHistory(departmentId);
     }
 }

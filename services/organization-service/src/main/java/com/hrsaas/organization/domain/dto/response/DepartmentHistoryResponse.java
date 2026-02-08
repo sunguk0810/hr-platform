@@ -44,9 +44,14 @@ public class DepartmentHistoryResponse {
      */
     public enum EventType {
         DEPARTMENT_CREATED,
+        DEPARTMENT_UPDATED,
         DEPARTMENT_DELETED,
         DEPARTMENT_RENAMED,
         DEPARTMENT_MOVED,
+        DEPARTMENT_MERGED,
+        DEPARTMENT_SPLIT,
+        DEPARTMENT_ACTIVATED,
+        DEPARTMENT_DEACTIVATED,
         EMPLOYEE_JOINED,
         EMPLOYEE_LEFT,
         EMPLOYEE_TRANSFERRED
