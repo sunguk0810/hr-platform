@@ -40,6 +40,12 @@ spring:
       sqs:
         endpoint: ${AWS_SQS_ENDPOINT:http://localhost:4566}
 
+services:
+  employee-service:
+    url: ${EMPLOYEE_SERVICE_URL:http://localhost:8084}
+  approval-service:
+    url: ${APPROVAL_SERVICE_URL:http://localhost:8086}
+
 management:
   endpoints:
     web:
