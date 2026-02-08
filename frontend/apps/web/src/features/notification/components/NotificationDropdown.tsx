@@ -41,8 +41,8 @@ export function NotificationDropdown({
     onNotificationClick?.(notification);
     setOpen(false);
 
-    if (notification.link) {
-      navigate(notification.link);
+    if (notification.linkUrl) {
+      navigate(notification.linkUrl);
     }
   };
 

@@ -63,7 +63,7 @@ export function EmployeeCard({
                   {employee.employeeNumber}
                 </span>
               </div>
-              <EmploymentStatusBadge status={employee.employmentStatus} />
+              <EmploymentStatusBadge status={employee.status} />
             </div>
 
             <div className="mt-2 space-y-1 text-sm text-muted-foreground">

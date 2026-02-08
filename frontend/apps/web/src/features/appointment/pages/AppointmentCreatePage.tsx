@@ -61,9 +61,9 @@ export default function AppointmentCreatePage() {
     employeeId: string;
     appointmentType: string;
     toDepartmentId?: string;
-    toPositionId?: string;
-    toGradeId?: string;
-    toJobId?: string;
+    toPositionCode?: string;
+    toGradeCode?: string;
+    toJobCode?: string;
     reason?: string;
   }
 
@@ -77,12 +77,12 @@ export default function AppointmentCreatePage() {
       appointmentType: data.appointmentType as AppointmentType,
       toDepartmentId: data.toDepartmentId,
       toDepartmentName: data.toDepartmentId ? '대상 부서' : undefined,
-      toPositionId: data.toPositionId,
-      toPositionName: data.toPositionId ? '대상 직책' : undefined,
-      toGradeId: data.toGradeId,
-      toGradeName: data.toGradeId ? '대상 직급' : undefined,
-      toJobId: data.toJobId,
-      toJobName: data.toJobId ? '대상 직무' : undefined,
+      toPositionCode: data.toPositionCode,
+      toPositionName: data.toPositionCode ? '대상 직책' : undefined,
+      toGradeCode: data.toGradeCode,
+      toGradeName: data.toGradeCode ? '대상 직급' : undefined,
+      toJobCode: data.toJobCode,
+      toJobName: data.toJobCode ? '대상 직무' : undefined,
       reason: data.reason,
       status: 'PENDING',
     };
@@ -115,9 +115,9 @@ export default function AppointmentCreatePage() {
           employeeId: d.employeeId,
           appointmentType: d.appointmentType,
           toDepartmentId: d.toDepartmentId,
-          toPositionId: d.toPositionId,
-          toGradeId: d.toGradeId,
-          toJobId: d.toJobId,
+          toPositionCode: d.toPositionCode,
+          toGradeCode: d.toGradeCode,
+          toJobCode: d.toJobCode,
           reason: d.reason,
         })),
       });
@@ -159,9 +159,9 @@ export default function AppointmentCreatePage() {
           employeeId: d.employeeId,
           appointmentType: d.appointmentType,
           toDepartmentId: d.toDepartmentId,
-          toPositionId: d.toPositionId,
-          toGradeId: d.toGradeId,
-          toJobId: d.toJobId,
+          toPositionCode: d.toPositionCode,
+          toGradeCode: d.toGradeCode,
+          toJobCode: d.toJobCode,
           reason: d.reason,
         })),
       });

@@ -32,7 +32,7 @@ interface ResignationDialogProps {
 
 interface FormData {
   resignationType: ResignationType;
-  resignationDate: string;
+  resignDate: string;
   lastWorkingDate: string;
   resignationReason: string;
   handoverEmployeeId: string;
@@ -64,7 +64,7 @@ export function ResignationDialog({
   } = useForm<FormData>({
     defaultValues: {
       resignationType: 'VOLUNTARY',
-      resignationDate: new Date().toISOString().split('T')[0],
+      resignDate: new Date().toISOString().split('T')[0],
       lastWorkingDate: new Date().toISOString().split('T')[0],
       resignationReason: '',
       handoverEmployeeId: '',
@@ -74,7 +74,7 @@ export function ResignationDialog({
   const onSubmit = async (data: FormData) => {
     const request: ResignationRequest = {
       resignationType: selectedType,
-      resignationDate: data.resignationDate,
+      resignationDate: data.resignDate,
       lastWorkingDate: data.lastWorkingDate,
       resignationReason: data.resignationReason || undefined,
       handoverEmployeeId: data.handoverEmployeeId || undefined,
@@ -139,10 +139,10 @@ export function ResignationDialog({
               <Input
                 id="resignationDate"
                 type="date"
-                {...register('resignationDate', { required: '퇴직일을 입력해주세요.' })}
+                {...register('resignDate', { required: '퇴직일을 입력해주세요.' })}
               />
-              {errors.resignationDate && (
-                <p className="text-sm text-destructive">{errors.resignationDate.message}</p>
+              {errors.resignDate && (
+                <p className="text-sm text-destructive">{errors.resignDate.message}</p>
               )}
             </div>
 

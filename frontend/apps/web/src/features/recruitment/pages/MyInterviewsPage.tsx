@@ -67,7 +67,7 @@ export default function MyInterviewsPage() {
   const totalPages = data?.data?.page?.totalPages ?? 0;
 
   const pendingEvalInterviews = interviews.filter(
-    (i) => i.status === 'COMPLETED' && !i.averageScore
+    (i) => i.status === 'COMPLETED' && !i.overallScore
   );
 
   const handleOpenScoreDialog = (interview: InterviewListItem) => {
@@ -138,7 +138,7 @@ export default function MyInterviewsPage() {
           <div className="flex items-center gap-2 mb-1">
             <InterviewTypeBadge type={interview.interviewType} />
             <InterviewStatusBadge status={interview.status} />
-            {isToday(new Date(interview.scheduledAt)) && (
+            {isToday(new Date(interview.scheduledDate)) && (
               <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
                 오늘
               </span>
@@ -153,7 +153,7 @@ export default function MyInterviewsPage() {
       <div className="space-y-2 text-sm mt-3 pt-3 border-t">
         <div className="flex items-center gap-2">
           <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-          <span>{format(new Date(interview.scheduledAt), 'M월 d일 (E) HH:mm', { locale: ko })}</span>
+          <span>{format(new Date(interview.scheduledDate), 'M월 d일 (E)', { locale: ko })}{interview.scheduledTime && ` ${interview.scheduledTime}`}</span>
           <span className="text-muted-foreground">({interview.durationMinutes}분)</span>
         </div>
         {interview.location && (
@@ -178,10 +178,10 @@ export default function MyInterviewsPage() {
       </div>
 
       <div className="flex items-center justify-between mt-3 pt-3 border-t">
-        {interview.averageScore !== undefined && interview.averageScore !== null ? (
+        {interview.overallScore !== undefined && interview.overallScore !== null ? (
           <div className="text-sm">
             <span className="text-muted-foreground">내 평가: </span>
-            <span className="font-medium">{interview.averageScore.toFixed(1)}점</span>
+            <span className="font-medium">{interview.overallScore.toFixed(1)}점</span>
           </div>
         ) : showEvalButton && interview.status === 'COMPLETED' ? (
           <Button size="sm" onClick={(e) => { e.stopPropagation(); handleOpenScoreDialog(interview); }}>
@@ -223,7 +223,7 @@ export default function MyInterviewsPage() {
                 <div className="flex items-center gap-2">
                   <InterviewTypeBadge type={interview.interviewType} />
                   <InterviewStatusBadge status={interview.status} />
-                  {isToday(new Date(interview.scheduledAt)) && (
+                  {isToday(new Date(interview.scheduledDate)) && (
                     <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
                       오늘
                     </span>
@@ -236,7 +236,7 @@ export default function MyInterviewsPage() {
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Clock className="h-4 w-4" />
-                    {format(new Date(interview.scheduledAt), 'M월 d일 (E) HH:mm', { locale: ko })}
+                    {format(new Date(interview.scheduledDate), 'M월 d일 (E)', { locale: ko })}{interview.scheduledTime && ` ${interview.scheduledTime}`}
                     <span>({interview.durationMinutes}분)</span>
                   </div>
                   {interview.location && (
@@ -261,10 +261,10 @@ export default function MyInterviewsPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                {interview.averageScore !== undefined && interview.averageScore !== null ? (
+                {interview.overallScore !== undefined && interview.overallScore !== null ? (
                   <div className="text-right">
                     <p className="text-sm text-muted-foreground">내 평가</p>
-                    <p className="font-medium">{interview.averageScore.toFixed(1)}점</p>
+                    <p className="font-medium">{interview.overallScore.toFixed(1)}점</p>
                   </div>
                 ) : showEvalButton && interview.status === 'COMPLETED' ? (
                   <Button size="sm" onClick={() => handleOpenScoreDialog(interview)}>

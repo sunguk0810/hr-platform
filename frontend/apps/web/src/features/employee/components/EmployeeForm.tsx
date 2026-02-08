@@ -74,8 +74,8 @@ export function EmployeeForm({
       gender: employee?.gender,
       hireDate: employee?.hireDate || new Date().toISOString().split('T')[0],
       departmentId: employee?.departmentId || '',
-      positionId: employee?.positionId || '',
-      gradeId: employee?.gradeId || '',
+      positionId: employee?.positionCode || '',
+      gradeId: employee?.gradeCode || '',
     },
   });
 

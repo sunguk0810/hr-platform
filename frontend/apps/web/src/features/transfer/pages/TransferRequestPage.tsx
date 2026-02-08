@@ -38,7 +38,7 @@ const transferSchema = z.object({
   targetDepartmentId: z.string().optional(),
   targetPositionId: z.string().optional(),
   targetGradeId: z.string().optional(),
-  effectiveDate: z.string().min(1, '발령일을 입력해주세요'),
+  transferDate: z.string().min(1, '발령일을 입력해주세요'),
   returnDate: z.string().optional(),
   reason: z.string().min(1, '이동 사유를 입력해주세요').max(500),
   remarks: z.string().max(1000).optional(),
@@ -78,7 +78,7 @@ export default function TransferRequestPage() {
       type: 'TRANSFER_OUT',
       employeeId: '',
       targetTenantId: '',
-      effectiveDate: '',
+      transferDate: '',
       reason: '',
     },
   });
@@ -111,7 +111,7 @@ export default function TransferRequestPage() {
         targetDepartmentId: data.targetDepartmentId || undefined,
         targetPositionId: data.targetPositionId || undefined,
         targetGradeId: data.targetGradeId || undefined,
-        effectiveDate: data.effectiveDate,
+        transferDate: data.transferDate,
         returnDate: data.returnDate || undefined,
         reason: data.reason,
         remarks: data.remarks || undefined,
@@ -249,14 +249,14 @@ export default function TransferRequestPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="mobile-effectiveDate">발령일 *</Label>
+              <Label htmlFor="mobile-transferDate">발령일 *</Label>
               <Input
-                id="mobile-effectiveDate"
+                id="mobile-transferDate"
                 type="date"
-                {...register('effectiveDate')}
+                {...register('transferDate')}
               />
-              {errors.effectiveDate && (
-                <p className="text-sm text-destructive">{errors.effectiveDate.message}</p>
+              {errors.transferDate && (
+                <p className="text-sm text-destructive">{errors.transferDate.message}</p>
               )}
             </div>
 
@@ -562,14 +562,14 @@ export default function TransferRequestPage() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="effectiveDate">발령일 *</Label>
+                  <Label htmlFor="transferDate">발령일 *</Label>
                   <Input
-                    id="effectiveDate"
+                    id="transferDate"
                     type="date"
-                    {...register('effectiveDate')}
+                    {...register('transferDate')}
                   />
-                  {errors.effectiveDate && (
-                    <p className="text-sm text-destructive">{errors.effectiveDate.message}</p>
+                  {errors.transferDate && (
+                    <p className="text-sm text-destructive">{errors.transferDate.message}</p>
                   )}
                 </div>
 

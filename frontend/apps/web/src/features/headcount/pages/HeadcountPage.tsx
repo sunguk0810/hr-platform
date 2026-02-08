@@ -97,7 +97,7 @@ export default function HeadcountPage() {
                 <span className="text-xs text-muted-foreground">정현원</span>
               </div>
               <p className="text-2xl font-bold">
-                {isSummaryLoading ? '-' : (summary?.totalPlanned ?? 0).toLocaleString()}
+                {isSummaryLoading ? '-' : (summary?.totalPlannedCount ?? 0).toLocaleString()}
               </p>
             </div>
             <div className="bg-card rounded-xl border p-4">
@@ -108,7 +108,7 @@ export default function HeadcountPage() {
                 <span className="text-xs text-muted-foreground">실현원</span>
               </div>
               <p className="text-2xl font-bold">
-                {isSummaryLoading ? '-' : (summary?.totalActual ?? 0).toLocaleString()}
+                {isSummaryLoading ? '-' : (summary?.totalCurrentCount ?? 0).toLocaleString()}
               </p>
             </div>
             <div className="bg-card rounded-xl border p-4">
@@ -151,8 +151,8 @@ export default function HeadcountPage() {
               </div>
               <p className="text-2xl font-bold">
                 {isSummaryLoading ? '-' : (
-                  summary?.totalPlanned
-                    ? `${Math.round((summary.totalActual / summary.totalPlanned) * 100)}%`
+                  summary?.totalPlannedCount
+                    ? `${Math.round((summary.totalCurrentCount / summary.totalPlannedCount) * 100)}%`
                     : '-'
                 )}
               </p>
@@ -242,7 +242,7 @@ export default function HeadcountPage() {
                         </div>
                         <div className="text-xs">
                           <span className="text-muted-foreground">실현원</span>
-                          <span className="ml-1 font-medium">{plan.actualCount}</span>
+                          <span className="ml-1 font-medium">{plan.currentCount}</span>
                         </div>
                         <div className={cn(
                           'text-xs font-medium',
@@ -293,7 +293,7 @@ export default function HeadcountPage() {
               <div>
                 <p className="text-sm text-muted-foreground" id="planned-label">정현원</p>
                 <p className="text-2xl font-bold" aria-labelledby="planned-label">
-                  {isSummaryLoading ? '-' : (summary?.totalPlanned ?? 0).toLocaleString()}
+                  {isSummaryLoading ? '-' : (summary?.totalPlannedCount ?? 0).toLocaleString()}
                   <span className="sr-only">명</span>
                 </p>
               </div>
@@ -309,7 +309,7 @@ export default function HeadcountPage() {
               <div>
                 <p className="text-sm text-muted-foreground" id="actual-label">실현원</p>
                 <p className="text-2xl font-bold" aria-labelledby="actual-label">
-                  {isSummaryLoading ? '-' : (summary?.totalActual ?? 0).toLocaleString()}
+                  {isSummaryLoading ? '-' : (summary?.totalCurrentCount ?? 0).toLocaleString()}
                   <span className="sr-only">명</span>
                 </p>
               </div>
@@ -362,8 +362,8 @@ export default function HeadcountPage() {
                 <p className="text-sm text-muted-foreground" id="utilization-label">충원율</p>
                 <p className="text-2xl font-bold" aria-labelledby="utilization-label">
                   {isSummaryLoading ? '-' : (
-                    summary?.totalPlanned
-                      ? `${Math.round((summary.totalActual / summary.totalPlanned) * 100)}%`
+                    summary?.totalPlannedCount
+                      ? `${Math.round((summary.totalCurrentCount / summary.totalPlannedCount) * 100)}%`
                       : '-'
                   )}
                 </p>
@@ -488,7 +488,7 @@ export default function HeadcountPage() {
                             {plan.plannedCount}
                           </td>
                           <td className="px-4 py-3 text-sm text-right">
-                            {plan.actualCount}
+                            {plan.currentCount}
                           </td>
                           <td className={cn(
                             'px-4 py-3 text-sm text-right font-medium',

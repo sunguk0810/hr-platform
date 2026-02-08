@@ -13,10 +13,14 @@ interface NotificationGroupProps {
 }
 
 const typeLabels: Record<string, string> = {
-  APPROVAL_REQUEST: '결재 요청',
-  APPROVAL_RESULT: '결재 결과',
-  LEAVE_REQUEST: '휴가 신청',
-  LEAVE_RESULT: '휴가 결과',
+  APPROVAL_REQUESTED: '결재 요청',
+  APPROVAL_APPROVED: '결재 승인',
+  APPROVAL_REJECTED: '결재 반려',
+  LEAVE_REQUESTED: '휴가 신청',
+  LEAVE_APPROVED: '휴가 승인',
+  LEAVE_REJECTED: '휴가 반려',
+  EMPLOYEE_JOINED: '입사',
+  EMPLOYEE_RESIGNED: '퇴사',
   ANNOUNCEMENT: '공지사항',
   SYSTEM: '시스템',
   REMINDER: '리마인더',
@@ -44,7 +48,7 @@ export function NotificationGroup({
       if (groupBy === 'date') {
         key = startOfDay(notification.createdAt).toISOString();
       } else {
-        key = notification.type;
+        key = notification.notificationType;
       }
 
       if (!groups[key]) {

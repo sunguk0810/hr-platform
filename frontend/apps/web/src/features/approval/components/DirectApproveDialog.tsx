@@ -13,14 +13,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import type { ApprovalStep } from '@hr-platform/shared-types';
+import type { ApprovalLine } from '@hr-platform/shared-types';
 
 interface DirectApproveDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: (skipToStep: number | undefined, reason: string) => Promise<void>;
   isLoading?: boolean;
-  steps: ApprovalStep[];
+  steps: ApprovalLine[];
   currentStepOrder: number;
 }
 
@@ -36,9 +36,9 @@ export function DirectApproveDialog({
   const [skipOption, setSkipOption] = useState<'current' | 'final'>('current');
 
   const pendingSteps = steps.filter(
-    (step) => step.stepOrder >= currentStepOrder && step.status === 'PENDING'
+    (step) => step.sequence >= currentStepOrder && step.status === 'WAITING'
   );
-  const finalStepOrder = Math.max(...steps.map((s) => s.stepOrder));
+  const finalStepOrder = Math.max(...steps.map((s) => s.sequence));
   const hasMultipleSteps = pendingSteps.length > 1;
 
   const handleConfirm = async () => {
@@ -127,8 +127,8 @@ export function DirectApproveDialog({
               {pendingSteps
                 .filter((step) =>
                   skipOption === 'final'
-                    ? step.stepOrder <= finalStepOrder
-                    : step.stepOrder === currentStepOrder
+                    ? step.sequence <= finalStepOrder
+                    : step.sequence === currentStepOrder
                 )
                 .map((step) => (
                   <div
@@ -136,7 +136,7 @@ export function DirectApproveDialog({
                     className="flex items-center gap-2 text-sm"
                   >
                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-teal-500 text-[10px] font-medium text-white">
-                      {step.stepOrder}
+                      {step.sequence}
                     </span>
                     <span>{step.approverName || '결재자'}</span>
                     {step.approverPosition && (

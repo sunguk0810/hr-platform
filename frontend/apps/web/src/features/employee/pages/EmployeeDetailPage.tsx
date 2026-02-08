@@ -113,7 +113,7 @@ export default function EmployeeDetailPage() {
     return name.slice(0, 2);
   };
 
-  const isResigned = employee?.employmentStatus === 'RESIGNED' || employee?.employmentStatus === 'RETIRED';
+  const isResigned = employee?.status === 'RESIGNED' || employee?.status === 'RETIRED';
 
   const handleRefresh = async () => {
     await queryClient.invalidateQueries({ queryKey: queryKeys.employees.detail(id!) });
@@ -295,7 +295,7 @@ export default function EmployeeDetailPage() {
                   <span className="text-sm">{employee.positionName || employee.gradeName}</span>
                 </div>
                 <div className="mt-3">
-                  <EmploymentStatusBadge status={employee.employmentStatus} />
+                  <EmploymentStatusBadge status={employee.status} />
                 </div>
               </div>
 
@@ -444,7 +444,7 @@ export default function EmployeeDetailPage() {
                 <MobileInfoRow label="관리자" value={employee.managerName} />
                 <MobileInfoRow
                   label="고용상태"
-                  value={<EmploymentStatusBadge status={employee.employmentStatus} />}
+                  value={<EmploymentStatusBadge status={employee.status} />}
                 />
                 {employee.employmentType && (
                   <MobileInfoRow
@@ -466,10 +466,10 @@ export default function EmployeeDetailPage() {
                 )}
               </div>
 
-              {employee.resignationDate && (
+              {employee.resignDate && (
                 <div className="bg-card rounded-2xl border p-4">
                   <p className="text-sm font-medium text-destructive mb-3">퇴직 정보</p>
-                  <MobileInfoRow label="퇴직일" value={formatDate(employee.resignationDate)} />
+                  <MobileInfoRow label="퇴직일" value={formatDate(employee.resignDate)} />
                   {employee.resignationType && (
                     <MobileInfoRow
                       label="퇴직유형"
@@ -669,7 +669,7 @@ export default function EmployeeDetailPage() {
                   <InfoRow label="관리자" value={employee.managerName} />
                   <InfoRow
                     label="고용상태"
-                    value={<EmploymentStatusBadge status={employee.employmentStatus} />}
+                    value={<EmploymentStatusBadge status={employee.status} />}
                   />
                   {employee.employmentType && (
                     <InfoRow
@@ -689,10 +689,10 @@ export default function EmployeeDetailPage() {
                   {employee.contractEndDate && (
                     <InfoRow label="계약만료일" value={formatDate(employee.contractEndDate)} />
                   )}
-                  {employee.resignationDate && (
+                  {employee.resignDate && (
                     <>
                       <Separator className="my-2" />
-                      <InfoRow label="퇴직일" value={formatDate(employee.resignationDate)} />
+                      <InfoRow label="퇴직일" value={formatDate(employee.resignDate)} />
                       {employee.resignationType && (
                         <InfoRow
                           label="퇴직유형"

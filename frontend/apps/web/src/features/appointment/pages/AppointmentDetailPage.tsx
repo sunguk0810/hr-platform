@@ -110,9 +110,9 @@ export default function AppointmentDetailPage() {
     employeeId: string;
     appointmentType: string;
     toDepartmentId?: string;
-    toPositionId?: string;
-    toGradeId?: string;
-    toJobId?: string;
+    toPositionCode?: string;
+    toGradeCode?: string;
+    toJobCode?: string;
     reason?: string;
   }
 
@@ -343,7 +343,7 @@ export default function AppointmentDetailPage() {
                   label="상태"
                   value={<AppointmentDraftStatusBadge status={draft.status} />}
                 />
-                <InfoRow label="기안자" value={draft.draftCreatedBy.name} />
+                <InfoRow label="기안자" value={draft.draftCreatedBy?.name} />
                 <InfoRow
                   label="생성일"
                   value={format(new Date(draft.createdAt), 'yyyy-MM-dd HH:mm', { locale: ko })}

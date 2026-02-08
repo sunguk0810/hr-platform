@@ -38,11 +38,11 @@ interface FormData {
   preferredQualifications: string;
   salaryMin: string;
   salaryMax: string;
-  isSalaryNegotiable: boolean;
+  salaryNegotiable: boolean;
   headcount: string;
   workLocation: string;
-  postingStartDate: string;
-  postingEndDate: string;
+  openDate: string;
+  closeDate: string;
 }
 
 export function JobPostingForm({
@@ -70,11 +70,11 @@ export function JobPostingForm({
       preferredQualifications: '',
       salaryMin: '',
       salaryMax: '',
-      isSalaryNegotiable: false,
+      salaryNegotiable: false,
       headcount: '1',
       workLocation: '',
-      postingStartDate: format(new Date(), 'yyyy-MM-dd'),
-      postingEndDate: format(addMonths(new Date(), 1), 'yyyy-MM-dd'),
+      openDate: format(new Date(), 'yyyy-MM-dd'),
+      closeDate: format(addMonths(new Date(), 1), 'yyyy-MM-dd'),
     },
   });
 
@@ -89,15 +89,15 @@ export function JobPostingForm({
       setValue('preferredQualifications', initialData.preferredQualifications || '');
       setValue('salaryMin', initialData.salaryMin?.toString() || '');
       setValue('salaryMax', initialData.salaryMax?.toString() || '');
-      setValue('isSalaryNegotiable', initialData.isSalaryNegotiable || false);
+      setValue('salaryNegotiable', initialData.salaryNegotiable || false);
       setValue('headcount', initialData.headcount.toString());
       setValue('workLocation', initialData.workLocation || '');
-      setValue('postingStartDate', initialData.postingStartDate.split('T')[0]);
-      setValue('postingEndDate', initialData.postingEndDate.split('T')[0]);
+      setValue('openDate', initialData.openDate.split('T')[0]);
+      setValue('closeDate', initialData.closeDate.split('T')[0]);
     }
   }, [initialData, setValue]);
 
-  const isSalaryNegotiable = watch('isSalaryNegotiable');
+  const isSalaryNegotiable = watch('salaryNegotiable');
 
   const validateSalaryRange = (salaryMin: string, salaryMax: string): string | null => {
     if (!salaryMin || !salaryMax) return null;
@@ -126,7 +126,7 @@ export function JobPostingForm({
 
   const handleFormSubmit = (data: FormData) => {
     // 급여 범위 검증
-    if (!data.isSalaryNegotiable) {
+    if (!data.salaryNegotiable) {
       const salaryError = validateSalaryRange(data.salaryMin, data.salaryMax);
       if (salaryError) {
         alert(salaryError);
@@ -135,7 +135,7 @@ export function JobPostingForm({
     }
 
     // 날짜 범위 검증
-    const dateError = validateDateRange(data.postingStartDate, data.postingEndDate);
+    const dateError = validateDateRange(data.openDate, data.closeDate);
     if (dateError) {
       alert(dateError);
       return;
@@ -151,11 +151,11 @@ export function JobPostingForm({
       preferredQualifications: data.preferredQualifications || undefined,
       salaryMin: data.salaryMin ? parseInt(data.salaryMin) : undefined,
       salaryMax: data.salaryMax ? parseInt(data.salaryMax) : undefined,
-      isSalaryNegotiable: data.isSalaryNegotiable,
+      salaryNegotiable: data.salaryNegotiable,
       headcount: parseInt(data.headcount),
       workLocation: data.workLocation || undefined,
-      postingStartDate: data.postingStartDate,
-      postingEndDate: data.postingEndDate,
+      openDate: data.openDate,
+      closeDate: data.closeDate,
     };
     onSubmit(payload);
   };
@@ -267,11 +267,11 @@ export function JobPostingForm({
         <CardContent className="space-y-4">
           <div className="flex items-center gap-2">
             <Checkbox
-              id="isSalaryNegotiable"
+              id="salaryNegotiable"
               checked={isSalaryNegotiable}
-              onCheckedChange={(checked) => setValue('isSalaryNegotiable', checked === true)}
+              onCheckedChange={(checked) => setValue('salaryNegotiable', checked === true)}
             />
-            <Label htmlFor="isSalaryNegotiable" className="cursor-pointer">
+            <Label htmlFor="salaryNegotiable" className="cursor-pointer">
               급여 협의 가능
             </Label>
           </div>
@@ -308,25 +308,25 @@ export function JobPostingForm({
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="postingStartDate">시작일 *</Label>
+              <Label htmlFor="openDate">시작일 *</Label>
               <Input
-                id="postingStartDate"
+                id="openDate"
                 type="date"
-                {...register('postingStartDate', { required: '시작일을 입력해주세요.' })}
+                {...register('openDate', { required: '시작일을 입력해주세요.' })}
               />
-              {errors.postingStartDate && (
-                <p className="text-sm text-destructive">{errors.postingStartDate.message}</p>
+              {errors.openDate && (
+                <p className="text-sm text-destructive">{errors.openDate.message}</p>
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="postingEndDate">종료일 *</Label>
+              <Label htmlFor="closeDate">종료일 *</Label>
               <Input
-                id="postingEndDate"
+                id="closeDate"
                 type="date"
-                {...register('postingEndDate', { required: '종료일을 입력해주세요.' })}
+                {...register('closeDate', { required: '종료일을 입력해주세요.' })}
               />
-              {errors.postingEndDate && (
-                <p className="text-sm text-destructive">{errors.postingEndDate.message}</p>
+              {errors.closeDate && (
+                <p className="text-sm text-destructive">{errors.closeDate.message}</p>
               )}
             </div>
           </div>

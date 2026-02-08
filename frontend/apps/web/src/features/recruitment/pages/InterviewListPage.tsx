@@ -185,7 +185,8 @@ export default function InterviewListPage() {
                     <div className="flex items-center gap-2">
                       <Clock className="h-3.5 w-3.5 text-muted-foreground" />
                       <span className="font-medium">
-                        {format(new Date(interview.scheduledAt), 'M월 d일 (E) HH:mm', { locale: ko })}
+                        {format(new Date(interview.scheduledDate), 'M월 d일 (E)', { locale: ko })}
+                        {interview.scheduledTime && ` ${interview.scheduledTime}`}
                       </span>
                       <span className="text-muted-foreground">({interview.durationMinutes}분)</span>
                     </div>
@@ -352,12 +353,12 @@ export default function InterviewListPage() {
                           <td className="px-4 py-3">
                             <div>
                               <div className="text-sm font-medium">
-                                {format(new Date(interview.scheduledAt), 'M월 d일 (E)', {
+                                {format(new Date(interview.scheduledDate), 'M월 d일 (E)', {
                                   locale: ko,
                                 })}
                               </div>
                               <div className="text-xs text-muted-foreground">
-                                {format(new Date(interview.scheduledAt), 'HH:mm')}
+                                {interview.scheduledTime || '-'}
                                 <span> ({interview.durationMinutes}분)</span>
                               </div>
                             </div>

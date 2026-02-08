@@ -97,7 +97,6 @@ export function InterviewScheduleForm({
       return;
     }
 
-    const scheduledAt = `${data.scheduledDate}T${data.scheduledTime}:00`;
     const interviewerIds = data.interviewerIds
       .split(',')
       .map((id) => id.trim())
@@ -106,7 +105,8 @@ export function InterviewScheduleForm({
     const payload: CreateInterviewRequest = {
       applicationId,
       interviewType: data.interviewType,
-      scheduledAt,
+      scheduledDate: data.scheduledDate,
+      scheduledTime: data.scheduledTime,
       durationMinutes: parseInt(data.durationMinutes),
       location: data.location || undefined,
       meetingUrl: data.meetingUrl || undefined,

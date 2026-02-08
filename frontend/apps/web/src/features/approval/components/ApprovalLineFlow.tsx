@@ -13,21 +13,21 @@ import 'reactflow/dist/style.css';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 
-export type ApprovalStepStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'SKIPPED' | 'CURRENT';
+export type ApprovalLineStatus = 'WAITING' | 'APPROVED' | 'REJECTED' | 'SKIPPED' | 'CURRENT';
 export type ApprovalExecutionType = 'SEQUENTIAL' | 'PARALLEL' | 'AGREEMENT';
 export type ParallelCompletionCondition = 'ALL' | 'ANY' | 'MAJORITY';
 
-export interface ApprovalStep {
+export interface ApprovalLineItem {
   id: string;
   order: number;
   type: 'DRAFT' | 'APPROVAL' | 'AGREEMENT' | 'REFERENCE';
   approverName: string;
   approverPosition?: string;
-  approverDepartment?: string;
+  approverDepartmentName?: string;
   approverImage?: string;
-  status: ApprovalStepStatus;
+  status: ApprovalLineStatus;
   comment?: string;
-  processedAt?: Date;
+  completedAt?: Date;
   /** Execution type - sequential (default), parallel, or agreement */
   executionType?: ApprovalExecutionType;
   /** Group ID for parallel/agreement steps - steps with same groupId execute together */
@@ -43,22 +43,22 @@ export interface ApprovalStep {
 }
 
 interface ApprovalLineFlowProps {
-  steps: ApprovalStep[];
-  onStepClick?: (step: ApprovalStep) => void;
+  steps: ApprovalLineItem[];
+  onStepClick?: (step: ApprovalLineItem) => void;
   direction?: 'horizontal' | 'vertical';
   className?: string;
 }
 
-const statusColors: Record<ApprovalStepStatus, { bg: string; border: string; text: string }> = {
-  PENDING: { bg: 'bg-gray-100', border: 'border-gray-300', text: 'text-gray-600' },
+const statusColors: Record<ApprovalLineStatus, { bg: string; border: string; text: string }> = {
+  WAITING: { bg: 'bg-gray-100', border: 'border-gray-300', text: 'text-gray-600' },
   CURRENT: { bg: 'bg-blue-50', border: 'border-blue-500', text: 'text-blue-600' },
   APPROVED: { bg: 'bg-green-50', border: 'border-green-500', text: 'text-green-600' },
   REJECTED: { bg: 'bg-red-50', border: 'border-red-500', text: 'text-red-600' },
   SKIPPED: { bg: 'bg-gray-50', border: 'border-gray-300', text: 'text-gray-400' },
 };
 
-const statusLabels: Record<ApprovalStepStatus, string> = {
-  PENDING: '대기',
+const statusLabels: Record<ApprovalLineStatus, string> = {
+  WAITING: '대기',
   CURRENT: '진행 중',
   APPROVED: '승인',
   REJECTED: '반려',
@@ -93,7 +93,7 @@ function getInitials(name: string) {
     .slice(0, 2);
 }
 
-interface ApprovalStepNodeData extends ApprovalStep {
+interface ApprovalLineNodeData extends ApprovalLineItem {
   onClick?: () => void;
   isParallel?: boolean;
   parallelCount?: number;
@@ -104,7 +104,7 @@ interface ApprovalStepNodeData extends ApprovalStep {
   isDirectApproved?: boolean;
 }
 
-function ApprovalStepNode({ data }: { data: ApprovalStepNodeData }) {
+function ApprovalLineNode({ data }: { data: ApprovalLineNodeData }) {
   const colors = statusColors[data.status];
   const isParallel = data.executionType === 'PARALLEL' || data.executionType === 'AGREEMENT';
   const isDelegated = data.delegatorName || data.isDelegated;
@@ -211,13 +211,13 @@ function ParallelMarkerNode({ data }: { data: { type: 'fork' | 'join'; label?: s
 }
 
 const nodeTypes = {
-  approvalStep: ApprovalStepNode,
+  approvalLine: ApprovalLineNode,
   parallelMarker: ParallelMarkerNode,
 };
 
 interface ParallelGroup {
   groupId: string;
-  steps: ApprovalStep[];
+  steps: ApprovalLineItem[];
   condition: ParallelCompletionCondition;
   executionType: ApprovalExecutionType;
 }
@@ -327,7 +327,7 @@ function ApprovalLineFlowInner({
 
           flowNodes.push({
             id: parallelStep.id,
-            type: 'approvalStep',
+            type: 'approvalLine',
             position: isHorizontal
               ? { x: currentPosition * nodeSpacing, y: offset }
               : { x: offset, y: currentPosition * nodeSpacing },
@@ -337,7 +337,7 @@ function ApprovalLineFlowInner({
               isParallel: true,
               parallelCount: groupCount,
               completionCondition: parallelGroup.condition,
-            } as ApprovalStepNodeData,
+            } as ApprovalLineNodeData,
             sourcePosition: isHorizontal ? Position.Right : Position.Bottom,
             targetPosition: isHorizontal ? Position.Left : Position.Top,
           });
@@ -406,14 +406,14 @@ function ApprovalLineFlowInner({
         // Regular sequential step
         flowNodes.push({
           id: step.id,
-          type: 'approvalStep',
+          type: 'approvalLine',
           position: isHorizontal
             ? { x: currentPosition * nodeSpacing, y: 0 }
             : { x: 0, y: currentPosition * nodeSpacing },
           data: {
             ...step,
             onClick: onStepClick ? () => onStepClick(step) : undefined,
-          } as ApprovalStepNodeData,
+          } as ApprovalLineNodeData,
           sourcePosition: isHorizontal ? Position.Right : Position.Bottom,
           targetPosition: isHorizontal ? Position.Left : Position.Top,
         });
@@ -423,7 +423,7 @@ function ApprovalLineFlowInner({
           const prevNode = flowNodes.find((n) => n.id === prevId);
           const isMarkerNode = prevNode?.type === 'parallelMarker';
 
-          let prevStep: ApprovalStep | undefined;
+          let prevStep: ApprovalLineItem | undefined;
           if (!isMarkerNode) {
             prevStep = sortedSteps.find((s) => s.id === prevId);
           }

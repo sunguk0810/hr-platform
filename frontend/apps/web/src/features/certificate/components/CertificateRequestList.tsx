@@ -128,7 +128,7 @@ export function CertificateRequestList({
                         {request.requestNumber}
                       </td>
                       <td className="px-4 py-3 text-sm">
-                        {request.certificateType?.name || request.certificateTypeCode}
+                        {request.certificateTypeName ?? request.certificateType?.name}
                       </td>
                       <td className="px-4 py-3 text-sm">
                         {CERTIFICATE_LANGUAGE_LABELS[request.language]}

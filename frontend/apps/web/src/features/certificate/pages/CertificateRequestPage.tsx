@@ -54,7 +54,7 @@ export default function CertificateRequestPage() {
 
     try {
       const data: CreateCertificateRequestRequest = {
-        certificateTypeCode: selectedTypeCode,
+        certificateTypeId: selectedType!.id,
         purpose: formData.purpose || undefined,
         submissionTarget: formData.submissionTarget || undefined,
         copies: formData.copies,

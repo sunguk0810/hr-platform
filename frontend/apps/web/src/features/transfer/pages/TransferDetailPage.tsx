@@ -358,19 +358,25 @@ export default function TransferDetailPage() {
           <div className="space-y-3">
             <MobileSection id="info" title="요청 정보" icon={ArrowLeftRight}>
               <InfoRow label="요청번호" value={transfer.requestNumber} mono />
-              <InfoRow label="요청일" value={format(new Date(transfer.requestedDate), 'yyyy-MM-dd', { locale: ko })} />
-              <InfoRow label="발령 예정일" value={format(new Date(transfer.effectiveDate), 'yyyy-MM-dd', { locale: ko })} highlight />
+              {transfer.requestedDate && <InfoRow label="요청일" value={format(new Date(transfer.requestedDate), 'yyyy-MM-dd', { locale: ko })} />}
+              <InfoRow label="발령 예정일" value={format(new Date(transfer.transferDate), 'yyyy-MM-dd', { locale: ko })} highlight />
               {transfer.returnDate && (
-                <InfoRow label="복귀 예정일" value={format(new Date(transfer.returnDate), 'yyyy-MM-dd', { locale: ko })} />
+                <InfoRow label="복귀 예정일" value={format(new Date(transfer.returnDate!), 'yyyy-MM-dd', { locale: ko })} />
               )}
             </MobileSection>
 
             <MobileSection id="employee" title="대상 직원" icon={User}>
               <InfoRow label="이름" value={transfer.employeeName} highlight />
               <InfoRow label="사번" value={transfer.employeeNumber} mono />
-              <InfoRow label="현재 부서" value={transfer.currentDepartment} />
-              <InfoRow label="현재 직책" value={transfer.currentPosition} />
-              <InfoRow label="현재 직급" value={transfer.currentGrade} />
+              {transfer.sourceDepartmentName && (
+                <InfoRow label="현재 부서" value={transfer.sourceDepartmentName} />
+              )}
+              {transfer.sourcePositionName && (
+                <InfoRow label="현재 직책" value={transfer.sourcePositionName} />
+              )}
+              {transfer.sourceGradeName && (
+                <InfoRow label="현재 직급" value={transfer.sourceGradeName} />
+              )}
             </MobileSection>
 
             <MobileSection id="source" title="전출 테넌트" icon={Building2}>
@@ -613,13 +619,13 @@ export default function TransferDetailPage() {
                 {TRANSFER_STATUS_LABELS[transfer.status]}
               </Badge>
             </div>
-            <div className="flex items-center justify-between">
+            {transfer.requestedDate && <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">요청일</span>
               <span>{format(new Date(transfer.requestedDate), 'yyyy-MM-dd', { locale: ko })}</span>
-            </div>
+            </div>}
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">발령 예정일</span>
-              <span className="font-medium">{format(new Date(transfer.effectiveDate), 'yyyy-MM-dd', { locale: ko })}</span>
+              <span className="font-medium">{format(new Date(transfer.transferDate), 'yyyy-MM-dd', { locale: ko })}</span>
             </div>
             {transfer.returnDate && (
               <div className="flex items-center justify-between">
@@ -647,18 +653,24 @@ export default function TransferDetailPage() {
               <span className="text-sm text-muted-foreground">사번</span>
               <span className="font-mono">{transfer.employeeNumber}</span>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">현재 부서</span>
-              <span>{transfer.currentDepartment}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">현재 직책</span>
-              <span>{transfer.currentPosition}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">현재 직급</span>
-              <span>{transfer.currentGrade}</span>
-            </div>
+            {transfer.sourceDepartmentName && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">현재 부서</span>
+                <span>{transfer.sourceDepartmentName}</span>
+              </div>
+            )}
+            {transfer.sourcePositionName && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">현재 직책</span>
+                <span>{transfer.sourcePositionName}</span>
+              </div>
+            )}
+            {transfer.sourceGradeName && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">현재 직급</span>
+                <span>{transfer.sourceGradeName}</span>
+              </div>
+            )}
           </CardContent>
         </Card>
 

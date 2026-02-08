@@ -5,7 +5,7 @@ import { ApprovalStatusBadge } from '@/components/common/StatusBadge';
 import { EmptyState } from '@/components/common/EmptyState';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FileCheck, AlertCircle } from 'lucide-react';
-import type { ApprovalListItem, ApprovalType } from '@hr-platform/shared-types';
+import type { ApprovalListItem } from '@hr-platform/shared-types';
 
 export interface ApprovalListProps {
   approvals: ApprovalListItem[];
@@ -17,7 +17,7 @@ export interface ApprovalListProps {
   className?: string;
 }
 
-const APPROVAL_TYPE_LABELS: Record<ApprovalType, string> = {
+const APPROVAL_TYPE_LABELS: Record<string, string> = {
   LEAVE_REQUEST: '휴가신청',
   EXPENSE: '경비청구',
   OVERTIME: '초과근무',
@@ -126,7 +126,7 @@ export function ApprovalList({
               </td>
               <td className="px-4 py-3 text-sm">
                 <div className="flex items-center gap-2">
-                  {APPROVAL_TYPE_LABELS[approval.type]}
+                  {APPROVAL_TYPE_LABELS[approval.documentType]}
                   {approval.urgency === 'HIGH' && (
                     <AlertCircle className="h-4 w-4 text-red-500" />
                   )}
@@ -137,9 +137,9 @@ export function ApprovalList({
               </td>
               <td className="px-4 py-3 text-sm">
                 <div>
-                  <div>{approval.requesterName}</div>
+                  <div>{approval.drafterName}</div>
                   <div className="text-xs text-muted-foreground">
-                    {approval.requesterDepartment}
+                    {approval.drafterDepartmentName}
                   </div>
                 </div>
               </td>

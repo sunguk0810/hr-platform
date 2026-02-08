@@ -27,9 +27,9 @@ const appointmentDetailSchema = z.object({
   employeeId: z.string().min(1, '직원을 선택해주세요'),
   appointmentType: z.string().min(1, '발령 유형을 선택해주세요'),
   toDepartmentId: z.string().optional(),
-  toPositionId: z.string().optional(),
-  toGradeId: z.string().optional(),
-  toJobId: z.string().optional(),
+  toPositionCode: z.string().optional(),
+  toGradeCode: z.string().optional(),
+  toJobCode: z.string().optional(),
   reason: z.string().optional(),
 });
 
@@ -101,9 +101,9 @@ export function AppointmentDetailForm({
       employeeId: '',
       appointmentType: '',
       toDepartmentId: undefined,
-      toPositionId: undefined,
-      toGradeId: undefined,
-      toJobId: undefined,
+      toPositionCode: undefined,
+      toGradeCode: undefined,
+      toJobCode: undefined,
       reason: '',
     },
   });
@@ -123,10 +123,10 @@ export function AppointmentDetailForm({
       form.setValue('toDepartmentId', undefined);
     }
     if (!requiresGrade.includes(value as AppointmentType)) {
-      form.setValue('toGradeId', undefined);
+      form.setValue('toGradeCode', undefined);
     }
     if (!requiresPosition.includes(value as AppointmentType)) {
-      form.setValue('toPositionId', undefined);
+      form.setValue('toPositionCode', undefined);
     }
   };
 
@@ -201,11 +201,11 @@ export function AppointmentDetailForm({
 
           {showGrade && (
             <div className="space-y-2">
-              <Label htmlFor="toGradeId">변경 직급</Label>
+              <Label htmlFor="toGradeCode">변경 직급</Label>
               <ComboBox
                 options={mockGrades}
-                value={form.watch('toGradeId')}
-                onChange={(value) => form.setValue('toGradeId', value)}
+                value={form.watch('toGradeCode')}
+                onChange={(value) => form.setValue('toGradeCode', value)}
                 placeholder="직급 선택"
                 clearable
               />
@@ -214,11 +214,11 @@ export function AppointmentDetailForm({
 
           {showPosition && (
             <div className="space-y-2">
-              <Label htmlFor="toPositionId">변경 직책</Label>
+              <Label htmlFor="toPositionCode">변경 직책</Label>
               <ComboBox
                 options={mockPositions}
-                value={form.watch('toPositionId')}
-                onChange={(value) => form.setValue('toPositionId', value)}
+                value={form.watch('toPositionCode')}
+                onChange={(value) => form.setValue('toPositionCode', value)}
                 placeholder="직책 선택"
                 clearable
               />

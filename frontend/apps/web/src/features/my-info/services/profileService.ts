@@ -11,9 +11,9 @@ export interface UserProfile {
   hireDate: string;
   departmentId: string;
   departmentName: string;
-  positionId?: string;
+  positionCode?: string;
   positionName?: string;
-  gradeId?: string;
+  gradeCode?: string;
   gradeName?: string;
   profileImageUrl?: string;
 }

@@ -50,7 +50,7 @@ export function RecordCardHeader({ employee }: RecordCardHeaderProps) {
         </div>
         <div>
           <p className="text-sm text-muted-foreground">재직상태</p>
-          <EmploymentStatusBadge status={employee.employmentStatus} />
+          <EmploymentStatusBadge status={employee.status} />
         </div>
         <div>
           <p className="text-sm text-muted-foreground">이메일</p>

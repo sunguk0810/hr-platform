@@ -26,9 +26,9 @@ export function useRealTimeNotification(
     (notification: NotificationEvent) => {
       addNotification({
         id: notification.id,
-        type: notification.type,
+        notificationType: notification.type,
         title: notification.title,
-        message: notification.message,
+        content: notification.message,
         isRead: false,
         createdAt: notification.createdAt,
         data: notification.data,

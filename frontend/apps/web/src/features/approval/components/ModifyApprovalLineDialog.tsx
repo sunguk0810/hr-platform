@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/useToast';
 import { User, Plus, Trash2, Search, CheckCircle2, XCircle, Clock } from 'lucide-react';
-import type { ApprovalStep, ApprovalStepStatus } from '@hr-platform/shared-types';
+import type { ApprovalLine, ApprovalLineStatus } from '@hr-platform/shared-types';
 
 const MOCK_APPROVERS = [
   { id: 'user-10', name: '김부장', department: '경영지원팀', position: '부장' },
@@ -26,12 +26,12 @@ const MOCK_APPROVERS = [
 
 interface ModifiedStep {
   id: string;
-  stepOrder: number;
+  sequence: number;
   approverId: string;
   approverName: string;
-  approverDepartment?: string;
+  approverDepartmentName?: string;
   approverPosition?: string;
-  status: ApprovalStepStatus;
+  status: ApprovalLineStatus;
   isNew?: boolean;
 }
 
@@ -39,11 +39,11 @@ interface ModifyApprovalLineDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   approvalId: string;
-  steps: ApprovalStep[];
+  steps: ApprovalLine[];
   onSuccess: () => void;
 }
 
-function getStatusBadge(status: ApprovalStepStatus) {
+function getStatusBadge(status: ApprovalLineStatus) {
   switch (status) {
     case 'APPROVED':
       return (
@@ -59,7 +59,7 @@ function getStatusBadge(status: ApprovalStepStatus) {
           반려
         </Badge>
       );
-    case 'PENDING':
+    case 'WAITING':
       return (
         <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
           <Clock className="mr-1 h-3 w-3" />
@@ -96,10 +96,10 @@ export function ModifyApprovalLineDialog({
     setModifiedSteps(
       steps.map((step) => ({
         id: step.id,
-        stepOrder: step.stepOrder,
+        sequence: step.sequence,
         approverId: step.approverId || '',
         approverName: step.approverName || '',
-        approverDepartment: step.approverDepartment,
+        approverDepartmentName: step.approverDepartmentName,
         approverPosition: step.approverPosition,
         status: step.status,
       }))
@@ -138,7 +138,7 @@ export function ModifyApprovalLineDialog({
               ...s,
               approverId: approver.id,
               approverName: approver.name,
-              approverDepartment: approver.department,
+              approverDepartmentName: approver.department,
               approverPosition: approver.position,
             }
           : s
@@ -154,7 +154,7 @@ export function ModifyApprovalLineDialog({
       // Reorder remaining steps
       return filtered.map((s, idx) => ({
         ...s,
-        stepOrder: idx + 1,
+        sequence: idx + 1,
       }));
     });
   };
@@ -162,10 +162,10 @@ export function ModifyApprovalLineDialog({
   const handleAddStep = () => {
     const newStep: ModifiedStep = {
       id: `new-step-${Date.now()}`,
-      stepOrder: modifiedSteps.length + 1,
+      sequence: modifiedSteps.length + 1,
       approverId: '',
       approverName: '',
-      status: 'PENDING',
+      status: 'WAITING',
       isNew: true,
     };
     setModifiedSteps((prev) => [...prev, newStep]);
@@ -173,10 +173,10 @@ export function ModifyApprovalLineDialog({
     setSearchQuery('');
   };
 
-  const pendingStepCount = modifiedSteps.filter((s) => s.status === 'PENDING').length;
+  const pendingStepCount = modifiedSteps.filter((s) => s.status === 'WAITING').length;
   const isReasonValid = reason.trim().length >= 10;
   const hasValidPendingSteps = modifiedSteps
-    .filter((s) => s.status === 'PENDING')
+    .filter((s) => s.status === 'WAITING')
     .every((s) => s.approverId);
   const canSave = isReasonValid && hasValidPendingSteps && pendingStepCount > 0;
 
@@ -191,10 +191,10 @@ export function ModifyApprovalLineDialog({
         body: JSON.stringify({
           steps: modifiedSteps.map((s) => ({
             id: s.isNew ? undefined : s.id,
-            stepOrder: s.stepOrder,
+            sequence: s.sequence,
             approverId: s.approverId,
             approverName: s.approverName,
-            approverDepartment: s.approverDepartment,
+            approverDepartmentName: s.approverDepartmentName,
             approverPosition: s.approverPosition,
             status: s.status,
           })),
@@ -244,7 +244,7 @@ export function ModifyApprovalLineDialog({
             <Label className="text-sm font-semibold">결재선</Label>
             {modifiedSteps.map((step) => {
               const isLocked = step.status === 'APPROVED' || step.status === 'REJECTED';
-              const isPending = step.status === 'PENDING';
+              const isPending = step.status === 'WAITING';
               const isSearchOpen = searchingStepId === step.id;
 
               return (
@@ -257,7 +257,7 @@ export function ModifyApprovalLineDialog({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="flex items-center justify-center w-6 h-6 rounded-full bg-muted text-xs font-semibold">
-                        {step.stepOrder}
+                        {step.sequence}
                       </div>
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4 text-muted-foreground" />
@@ -265,9 +265,9 @@ export function ModifyApprovalLineDialog({
                           <p className="text-sm font-medium">
                             {step.approverName || '(결재자 선택 필요)'}
                           </p>
-                          {step.approverDepartment && (
+                          {step.approverDepartmentName && (
                             <p className="text-xs text-muted-foreground">
-                              {step.approverDepartment}
+                              {step.approverDepartmentName}
                               {step.approverPosition ? ` / ${step.approverPosition}` : ''}
                             </p>
                           )}

@@ -258,7 +258,7 @@ export default function CondolenceDetailPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <p className="text-sm text-muted-foreground">경조 유형</p>
-                  <p className="font-medium">{CONDOLENCE_TYPE_LABELS[request.type]}</p>
+                  <p className="font-medium">{CONDOLENCE_TYPE_LABELS[request.eventType]}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">발생일</p>
@@ -269,11 +269,11 @@ export default function CondolenceDetailPage() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">대상자</p>
-                  <p className="font-medium">{request.targetName || '-'}</p>
+                  <p className="font-medium">{request.relatedPersonName || '-'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">대상자 관계</p>
-                  <p className="font-medium">{request.relationship || '-'}</p>
+                  <p className="font-medium">{request.relation || '-'}</p>
                 </div>
               </div>
               {request.description && (
@@ -364,7 +364,7 @@ export default function CondolenceDetailPage() {
                     </div>
                     <div className="flex-1">
                       <p className="font-medium">반려</p>
-                      <p className="text-sm text-muted-foreground">{request.rejectionReason}</p>
+                      <p className="text-sm text-muted-foreground">{request.rejectReason}</p>
                     </div>
                   </div>
                 ) : request.status === 'CANCELLED' ? (
@@ -396,8 +396,8 @@ export default function CondolenceDetailPage() {
                     <div className="flex-1">
                       <p className="font-medium">지급 완료</p>
                       <p className="text-sm text-muted-foreground">
-                        {request.paidAt
-                          ? format(new Date(request.paidAt), 'yyyy-MM-dd HH:mm')
+                        {request.paidDate
+                          ? format(new Date(request.paidDate), 'yyyy-MM-dd HH:mm')
                           : '-'}
                       </p>
                     </div>

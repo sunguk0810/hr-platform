@@ -272,7 +272,7 @@ export default function ApplicationListPage() {
                   <div className="flex items-center justify-between mt-3 pt-3 border-t">
                     <ApplicationStageBadge stage={app.currentStage} />
                     <span className="text-xs text-muted-foreground">
-                      {format(new Date(app.appliedAt), 'M/d', { locale: ko })}
+                      {app.createdAt ? format(new Date(app.createdAt), 'M/d', { locale: ko }) : '-'}
                     </span>
                   </div>
                 </div>
@@ -462,7 +462,7 @@ export default function ApplicationListPage() {
                             <ApplicationStatusBadge status={app.status} />
                           </td>
                           <td className="px-4 py-3 text-sm text-muted-foreground">
-                            {format(new Date(app.appliedAt), 'M/d', { locale: ko })}
+                            {app.createdAt ? format(new Date(app.createdAt), 'M/d', { locale: ko }) : '-'}
                           </td>
                         </tr>
                       ))}

@@ -41,7 +41,7 @@ export default function CertificateIssueHistoryPage() {
   const totalPages = issuesData?.data?.page?.totalPages ?? 0;
 
   const handleDownload = async (issue: CertificateIssue) => {
-    if (issue.isRevoked) {
+    if (issue.revoked) {
       toast({
         title: '다운로드 불가',
         description: '폐기된 증명서는 다운로드할 수 없습니다.',
@@ -90,7 +90,7 @@ export default function CertificateIssueHistoryPage() {
   };
 
   const getStatusInfo = (issue: CertificateIssue) => {
-    if (issue.isRevoked) {
+    if (issue.revoked) {
       return {
         icon: XCircle,
         label: '폐기됨',
@@ -207,7 +207,7 @@ export default function CertificateIssueHistoryPage() {
                     {issues.map((issue) => {
                       const statusInfo = getStatusInfo(issue);
                       const StatusIcon = statusInfo.icon;
-                      const canDownload = !issue.isRevoked && new Date(issue.expiresAt) >= new Date();
+                      const canDownload = !issue.revoked && new Date(issue.expiresAt) >= new Date();
 
                       return (
                         <tr

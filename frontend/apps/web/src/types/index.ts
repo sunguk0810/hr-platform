@@ -34,7 +34,7 @@ export type {
 export type {
   Approval,
   ApprovalListItem,
-  ApprovalStep,
+  ApprovalLine,
   ApprovalAttachment,
   ApprovalSearchParams,
   CreateApprovalRequest,
@@ -42,6 +42,6 @@ export type {
   RejectRequest,
   ApprovalStatus,
   ApprovalType,
-  ApprovalStepStatus,
+  ApprovalLineStatus,
   ApprovalUrgency,
 } from '@hr-platform/shared-types';

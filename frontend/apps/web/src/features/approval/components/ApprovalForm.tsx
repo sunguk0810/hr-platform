@@ -21,7 +21,7 @@ import { Loader2, Save, Send } from 'lucide-react';
 import type { ApprovalType, CreateApprovalRequest, ApproverOption } from '@hr-platform/shared-types';
 
 const approvalSchema = z.object({
-  type: z.enum(['LEAVE_REQUEST', 'EXPENSE', 'OVERTIME', 'PERSONNEL', 'GENERAL'] as const),
+  documentType: z.enum(['LEAVE_REQUEST', 'EXPENSE', 'OVERTIME', 'PERSONNEL', 'GENERAL'] as const),
   title: z.string().min(1, '제목을 입력해주세요.').max(200, '200자 이내로 입력해주세요.'),
   content: z.string().min(1, '내용을 입력해주세요.'),
   urgency: z.enum(['NORMAL', 'HIGH'] as const),
@@ -61,7 +61,7 @@ export function ApprovalForm({
   const methods = useForm<ApprovalFormData>({
     resolver: zodResolver(approvalSchema),
     defaultValues: {
-      type: defaultType,
+      documentType: defaultType,
       title: '',
       content: '',
       urgency: 'NORMAL',
@@ -76,7 +76,7 @@ export function ApprovalForm({
     formState: { errors },
   } = methods;
 
-  const type = watch('type');
+  const type = watch('documentType');
 
   const handleTemplateSelect = (template: DocumentTemplate) => {
     setSelectedTemplate(template);
@@ -90,9 +90,13 @@ export function ApprovalForm({
   const handleFormSubmit = async (data: ApprovalFormData, isDraft: boolean) => {
     const submitData: CreateApprovalRequest = {
       ...data,
-      approverIds: approvalSteps
+      approvalLines: approvalSteps
         .filter((step) => step.approverId)
-        .map((step) => step.approverId!),
+        .map((step) => ({
+          approverId: step.approverId!,
+          approverName: step.approverName,
+        })),
+      submitImmediately: !isDraft,
       attachmentIds: [], // Would be uploaded separately
     };
 
@@ -115,7 +119,7 @@ export function ApprovalForm({
                 <Label>유형 *</Label>
                 <Select
                   value={type}
-                  onValueChange={(value) => setValue('type', value as ApprovalType)}
+                  onValueChange={(value) => setValue('documentType', value as ApprovalType)}
                 >
                   <SelectTrigger>
                     <SelectValue />

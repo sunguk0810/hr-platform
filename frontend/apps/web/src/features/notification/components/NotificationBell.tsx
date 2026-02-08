@@ -20,7 +20,6 @@ import {
   Calendar,
   Users,
   Settings,
-  AlertCircle,
   Info,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
@@ -32,22 +31,21 @@ export interface NotificationBellProps {
 
 const getNotificationIcon = (type: string) => {
   switch (type) {
-    case 'APPROVAL':
-    case 'APPROVAL_REQUEST':
-    case 'APPROVAL_COMPLETED':
+    case 'APPROVAL_REQUESTED':
+    case 'APPROVAL_APPROVED':
+    case 'APPROVAL_REJECTED':
       return FileCheck;
-    case 'LEAVE':
-    case 'ATTENDANCE':
+    case 'LEAVE_REQUESTED':
+    case 'LEAVE_APPROVED':
+    case 'LEAVE_REJECTED':
       return Calendar;
-    case 'EMPLOYEE':
-    case 'ORGANIZATION':
+    case 'EMPLOYEE_JOINED':
+    case 'EMPLOYEE_RESIGNED':
       return Users;
     case 'SYSTEM':
-    case 'SETTINGS':
       return Settings;
-    case 'WARNING':
-    case 'ERROR':
-      return AlertCircle;
+    case 'ANNOUNCEMENT':
+      return Info;
     default:
       return Info;
   }
@@ -66,8 +64,8 @@ export function NotificationBell({ className }: NotificationBellProps) {
 
   const handleNotificationClick = (notification: Notification) => {
     markAsRead(notification.id);
-    if (notification.link) {
-      navigate(notification.link);
+    if (notification.linkUrl) {
+      navigate(notification.linkUrl);
       setIsOpen(false);
     }
   };
@@ -171,7 +169,7 @@ interface NotificationItemProps {
 }
 
 function NotificationItem({ notification, onClick }: NotificationItemProps) {
-  const Icon = getNotificationIcon(notification.type);
+  const Icon = getNotificationIcon(notification.notificationType);
 
   return (
     <button
@@ -211,7 +209,7 @@ function NotificationItem({ notification, onClick }: NotificationItemProps) {
           )}
         </div>
         <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
-          {notification.message}
+          {notification.content}
         </p>
         <p className="text-[10px] text-muted-foreground mt-1">
           {formatDistanceToNow(new Date(notification.createdAt), {

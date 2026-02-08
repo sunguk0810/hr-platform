@@ -2,11 +2,11 @@ import { create } from 'zustand';
 
 export interface Notification {
   id: string;
-  type: string;
+  notificationType: string;
   title: string;
-  message: string;
+  content: string;
   isRead: boolean;
-  link?: string;
+  linkUrl?: string;
   createdAt: string;
   data?: Record<string, unknown>;
 }

@@ -23,7 +23,7 @@ import type { CondolenceType } from '@hr-platform/shared-types';
 import { CONDOLENCE_TYPE_LABELS } from '@hr-platform/shared-types';
 
 const condolenceSchema = z.object({
-  type: z.enum([
+  eventType: z.enum([
     'MARRIAGE',
     'CHILDBIRTH',
     'FIRST_BIRTHDAY',
@@ -37,8 +37,8 @@ const condolenceSchema = z.object({
   ] as const, {
     required_error: '경조 유형을 선택해주세요',
   }),
-  targetName: z.string().min(1, '대상자명을 입력해주세요').max(50),
-  relationship: z.string().min(1, '관계를 입력해주세요').max(50),
+  relatedPersonName: z.string().min(1, '대상자명을 입력해주세요').max(50),
+  relation: z.string().min(1, '관계를 입력해주세요').max(50),
   eventDate: z.string().min(1, '발생일을 입력해주세요'),
   description: z.string().min(1, '상세 내용을 입력해주세요').max(500),
 });
@@ -64,23 +64,23 @@ export default function CondolenceCreatePage() {
   } = useForm<CondolenceFormData>({
     resolver: zodResolver(condolenceSchema),
     defaultValues: {
-      type: 'MARRIAGE',
-      targetName: '',
-      relationship: '',
+      eventType: 'MARRIAGE',
+      relatedPersonName: '',
+      relation: '',
       eventDate: '',
       description: '',
     },
   });
 
-  const selectedType = watch('type');
-  const selectedPolicy = policies.find((p) => p.type === selectedType);
+  const selectedType = watch('eventType');
+  const selectedPolicy = policies.find((p) => p.eventType === selectedType);
 
   const onSubmit = async (data: CondolenceFormData) => {
     try {
       await createMutation.mutateAsync({
-        type: data.type,
-        targetName: data.targetName,
-        relationship: data.relationship,
+        eventType: data.eventType,
+        relatedPersonName: data.relatedPersonName,
+        relation: data.relation,
         eventDate: data.eventDate,
         description: data.description,
       });
@@ -133,7 +133,7 @@ export default function CondolenceCreatePage() {
             <div className="space-y-2">
               <Label htmlFor="mobile-type">경조 유형 *</Label>
               <Controller
-                name="type"
+                name="eventType"
                 control={control}
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
@@ -152,8 +152,8 @@ export default function CondolenceCreatePage() {
                   </Select>
                 )}
               />
-              {errors.type && (
-                <p className="text-sm text-destructive">{errors.type.message}</p>
+              {errors.eventType && (
+                <p className="text-sm text-destructive">{errors.eventType.message}</p>
               )}
             </div>
 
@@ -171,7 +171,7 @@ export default function CondolenceCreatePage() {
                   <div className="bg-background/50 rounded-lg p-3 text-center">
                     <p className="text-xs text-muted-foreground">경조휴가</p>
                     <p className="text-lg font-bold text-primary">
-                      {selectedPolicy.leavedays}일
+                      {selectedPolicy.leaveDays}일
                     </p>
                   </div>
                 </div>
@@ -196,26 +196,26 @@ export default function CondolenceCreatePage() {
             <h3 className="text-sm font-medium">대상자 정보</h3>
 
             <div className="space-y-2">
-              <Label htmlFor="mobile-targetName">대상자명 *</Label>
+              <Label htmlFor="mobile-relatedPersonName">대상자명 *</Label>
               <Input
-                id="mobile-targetName"
-                {...register('targetName')}
+                id="mobile-relatedPersonName"
+                {...register('relatedPersonName')}
                 placeholder="대상자 이름을 입력하세요"
               />
-              {errors.targetName && (
-                <p className="text-sm text-destructive">{errors.targetName.message}</p>
+              {errors.relatedPersonName && (
+                <p className="text-sm text-destructive">{errors.relatedPersonName.message}</p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="mobile-relationship">관계 *</Label>
+              <Label htmlFor="mobile-relation">관계 *</Label>
               <Input
-                id="mobile-relationship"
-                {...register('relationship')}
+                id="mobile-relation"
+                {...register('relation')}
                 placeholder="예: 본인, 부, 모, 배우자 등"
               />
-              {errors.relationship && (
-                <p className="text-sm text-destructive">{errors.relationship.message}</p>
+              {errors.relation && (
+                <p className="text-sm text-destructive">{errors.relation.message}</p>
               )}
             </div>
 
@@ -280,13 +280,13 @@ export default function CondolenceCreatePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="type">경조 유형 *</Label>
+                <Label htmlFor="eventType">경조 유형 *</Label>
                 <Controller
-                  name="type"
+                  name="eventType"
                   control={control}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger id="type">
+                      <SelectTrigger id="eventType">
                         <SelectValue placeholder="유형 선택" />
                       </SelectTrigger>
                       <SelectContent>
@@ -301,8 +301,8 @@ export default function CondolenceCreatePage() {
                     </Select>
                   )}
                 />
-                {errors.type && (
-                  <p className="text-sm text-destructive">{errors.type.message}</p>
+                {errors.eventType && (
+                  <p className="text-sm text-destructive">{errors.eventType.message}</p>
                 )}
               </div>
 
@@ -313,7 +313,7 @@ export default function CondolenceCreatePage() {
                     지급 금액: {selectedPolicy.amount.toLocaleString()}원
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    경조휴가: {selectedPolicy.leavedays}일
+                    경조휴가: {selectedPolicy.leaveDays}일
                   </p>
                 </div>
               )}
@@ -339,26 +339,26 @@ export default function CondolenceCreatePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="targetName">대상자명 *</Label>
+                <Label htmlFor="relatedPersonName">대상자명 *</Label>
                 <Input
-                  id="targetName"
-                  {...register('targetName')}
+                  id="relatedPersonName"
+                  {...register('relatedPersonName')}
                   placeholder="대상자 이름을 입력하세요"
                 />
-                {errors.targetName && (
-                  <p className="text-sm text-destructive">{errors.targetName.message}</p>
+                {errors.relatedPersonName && (
+                  <p className="text-sm text-destructive">{errors.relatedPersonName.message}</p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="relationship">관계 *</Label>
+                <Label htmlFor="relation">관계 *</Label>
                 <Input
-                  id="relationship"
-                  {...register('relationship')}
+                  id="relation"
+                  {...register('relation')}
                   placeholder="예: 본인, 부, 모, 배우자 등"
                 />
-                {errors.relationship && (
-                  <p className="text-sm text-destructive">{errors.relationship.message}</p>
+                {errors.relation && (
+                  <p className="text-sm text-destructive">{errors.relation.message}</p>
                 )}
               </div>
 

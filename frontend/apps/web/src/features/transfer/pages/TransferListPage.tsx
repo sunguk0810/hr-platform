@@ -238,7 +238,7 @@ export default function TransferListPage() {
                         <span className="text-muted-foreground truncate max-w-[80px]">{transfer.targetTenantName}</span>
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
-                        발령일: {format(new Date(transfer.effectiveDate), 'yyyy.MM.dd', { locale: ko })}
+                        발령일: {format(new Date(transfer.transferDate), 'yyyy.MM.dd', { locale: ko })}
                       </p>
                     </div>
                     <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-1" />
@@ -462,7 +462,7 @@ export default function TransferListPage() {
                             {transfer.targetTenantName}
                           </td>
                           <td className="px-4 py-3 text-sm">
-                            {format(new Date(transfer.effectiveDate), 'yyyy-MM-dd', { locale: ko })}
+                            {format(new Date(transfer.transferDate), 'yyyy-MM-dd', { locale: ko })}
                           </td>
                           <td className="px-4 py-3">
                             <Badge className={cn(STATUS_COLORS[transfer.status])} role="status">

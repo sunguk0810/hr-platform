@@ -1,16 +1,31 @@
 import { apiClient, ApiResponse, PageResponse } from '@/lib/apiClient';
 
-// Types
-export type NotificationType = 'APPROVAL' | 'ATTENDANCE' | 'SYSTEM' | 'ANNOUNCEMENT' | 'LEAVE';
+// Types - BE enum 기준 세분화된 알림 타입
+export type NotificationType =
+  | 'APPROVAL_REQUESTED'
+  | 'APPROVAL_APPROVED'
+  | 'APPROVAL_REJECTED'
+  | 'LEAVE_REQUESTED'
+  | 'LEAVE_APPROVED'
+  | 'LEAVE_REJECTED'
+  | 'EMPLOYEE_JOINED'
+  | 'EMPLOYEE_RESIGNED'
+  | 'ANNOUNCEMENT'
+  | 'SYSTEM';
 
 export interface Notification {
   id: string;
-  type: NotificationType;
+  notificationType: NotificationType;
   title: string;
-  message: string;
+  content: string;
   isRead: boolean;
-  link?: string;
+  linkUrl?: string;
   createdAt: string;
+  recipientId?: string;
+  channel?: string;
+  referenceType?: string;
+  referenceId?: string;
+  readAt?: string;
 }
 
 export interface NotificationSettings {
@@ -30,7 +45,7 @@ export interface NotificationSettings {
 export interface NotificationSearchParams {
   page?: number;
   size?: number;
-  type?: NotificationType;
+  notificationType?: NotificationType;
   unreadOnly?: boolean;
 }
 

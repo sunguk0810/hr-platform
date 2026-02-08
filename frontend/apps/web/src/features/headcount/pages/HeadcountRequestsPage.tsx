@@ -208,10 +208,10 @@ export default function HeadcountRequestsPage() {
                           </td>
                           <td className={cn(
                             'px-4 py-3 text-sm text-right font-medium',
-                            request.requestedCount > request.currentCount && 'text-green-600',
-                            request.requestedCount < request.currentCount && 'text-red-600'
+                            request.requestCount > request.currentCount && 'text-green-600',
+                            request.requestCount < request.currentCount && 'text-red-600'
                           )}>
-                            {request.requestedCount}
+                            {request.requestCount}
                           </td>
                           <td className="px-4 py-3 text-sm">
                             {request.requesterName}

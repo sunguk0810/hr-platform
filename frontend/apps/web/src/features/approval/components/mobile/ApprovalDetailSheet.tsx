@@ -4,9 +4,9 @@ import { User, Calendar, FileText, CheckCircle2, XCircle, Clock } from 'lucide-r
 import { BottomSheet } from '@/components/mobile';
 import { ApprovalStatusBadge } from '@/components/common/StatusBadge';
 import { Button } from '@/components/ui/button';
-import type { ApprovalListItem, ApprovalType } from '@hr-platform/shared-types';
+import type { ApprovalListItem } from '@hr-platform/shared-types';
 
-const APPROVAL_TYPE_LABELS: Record<ApprovalType, string> = {
+const APPROVAL_TYPE_LABELS: Record<string, string> = {
   LEAVE_REQUEST: '휴가신청',
   EXPENSE: '경비청구',
   OVERTIME: '초과근무',
@@ -64,7 +64,7 @@ export function ApprovalDetailSheet({
             <div>
               <p className="text-xs text-muted-foreground">유형</p>
               <p className="text-sm font-medium">
-                {APPROVAL_TYPE_LABELS[approval.type]}
+                {APPROVAL_TYPE_LABELS[approval.documentType]}
               </p>
             </div>
           </div>
@@ -72,7 +72,7 @@ export function ApprovalDetailSheet({
             <User className="h-4 w-4 text-muted-foreground" />
             <div>
               <p className="text-xs text-muted-foreground">기안자</p>
-              <p className="text-sm font-medium">{approval.requesterName}</p>
+              <p className="text-sm font-medium">{approval.drafterName}</p>
             </div>
           </div>
           <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
@@ -96,7 +96,7 @@ export function ApprovalDetailSheet({
         {/* Department Info */}
         <div className="p-3 bg-muted/50 rounded-lg">
           <p className="text-xs text-muted-foreground mb-1">기안 부서</p>
-          <p className="text-sm">{approval.requesterDepartment}</p>
+          <p className="text-sm">{approval.drafterDepartmentName}</p>
         </div>
 
         {/* Actions */}

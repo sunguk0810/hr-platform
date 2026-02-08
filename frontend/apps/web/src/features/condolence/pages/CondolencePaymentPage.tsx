@@ -264,7 +264,7 @@ export default function CondolencePaymentPage() {
                               </div>
                             </td>
                             <td className="px-4 py-3 text-sm">{item.departmentName}</td>
-                            <td className="px-4 py-3 text-sm">{CONDOLENCE_TYPE_LABELS[item.type]}</td>
+                            <td className="px-4 py-3 text-sm">{CONDOLENCE_TYPE_LABELS[item.eventType]}</td>
                             <td className="px-4 py-3 text-sm">
                               {format(new Date(item.eventDate), 'yyyy-MM-dd')}
                             </td>

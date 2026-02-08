@@ -86,13 +86,13 @@ export default function ApprovalCreatePage() {
     parallelFeature?.config?.minApprovers === 'majority' ? 'MAJORITY' :
     parallelFeature?.config?.minApprovers === 'one' ? 'ANY' : 'ALL';
   const [formData, setFormData] = useState<{
-    type: ApprovalType | '';
+    documentType: ApprovalType | '';
     title: string;
     content: string;
     urgency: ApprovalUrgency;
     dueDate: Date | undefined;
   }>({
-    type: '',
+    documentType: '',
     title: '',
     content: '',
     urgency: 'NORMAL',
@@ -160,18 +160,23 @@ export default function ApprovalCreatePage() {
   };
 
   const handleSubmit = async () => {
-    if (!formData.type || !formData.title || !formData.content || selectedApprovers.length === 0) {
+    if (!formData.documentType || !formData.title || !formData.content || selectedApprovers.length === 0) {
       return;
     }
 
     try {
       const data: CreateApprovalRequest = {
-        type: formData.type,
+        documentType: formData.documentType,
         title: formData.title,
         content: formData.content,
         urgency: formData.urgency,
         dueDate: formData.dueDate ? format(formData.dueDate, 'yyyy-MM-dd') : undefined,
-        approverIds: selectedApprovers.map(a => a.id),
+        approvalLines: selectedApprovers.map(a => ({
+          approverId: a.id,
+          approverName: a.name,
+          approverDepartmentName: a.department,
+          approverPosition: a.position,
+        })),
         mode: approvalMode,
         parallelCompletionCondition: approvalMode === 'PARALLEL' ? parallelCompletion : undefined,
       };
@@ -236,8 +241,8 @@ export default function ApprovalCreatePage() {
               <div className="grid gap-2">
                 <Label htmlFor="mobile-type" className="text-sm">문서 유형 *</Label>
                 <Select
-                  value={formData.type}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, type: value as ApprovalType }))}
+                  value={formData.documentType}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, documentType: value as ApprovalType }))}
                 >
                   <SelectTrigger id="mobile-type">
                     <SelectValue placeholder="유형 선택" />
@@ -477,7 +482,7 @@ export default function ApprovalCreatePage() {
               <Button
                 className="flex-1 h-12"
                 onClick={() => setMobileStep('approvers')}
-                disabled={!formData.type || !formData.title || !formData.content}
+                disabled={!formData.documentType || !formData.title || !formData.content}
               >
                 다음
                 <ChevronRight className="ml-1 h-4 w-4" />
@@ -519,7 +524,7 @@ export default function ApprovalCreatePage() {
             <Button
               onClick={handleSubmit}
               disabled={
-                !formData.type ||
+                !formData.documentType ||
                 !formData.title ||
                 !formData.content ||
                 selectedApprovers.length === 0 ||
@@ -543,8 +548,8 @@ export default function ApprovalCreatePage() {
               <div className="grid gap-2">
                 <Label htmlFor="type">문서 유형 *</Label>
                 <Select
-                  value={formData.type}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, type: value as ApprovalType }))}
+                  value={formData.documentType}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, documentType: value as ApprovalType }))}
                 >
                   <SelectTrigger id="type">
                     <SelectValue placeholder="유형 선택" />

@@ -33,7 +33,7 @@ import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { cn } from '@/lib/utils';
 import type { ApprovalType, ApprovalListItem } from '@hr-platform/shared-types';
 
-const APPROVAL_TYPE_LABELS: Record<ApprovalType, string> = {
+const APPROVAL_TYPE_LABELS: Record<string, string> = {
   LEAVE_REQUEST: '휴가신청',
   EXPENSE: '경비청구',
   OVERTIME: '초과근무',
@@ -402,7 +402,7 @@ export default function ApprovalListPage() {
                       </div>
                       <h4 className="font-medium text-sm line-clamp-1">{approval.title}</h4>
                       <div className="flex items-center justify-between mt-1 text-xs text-muted-foreground">
-                        <span>{approval.requesterName}</span>
+                        <span>{approval.drafterName}</span>
                         <span>{format(new Date(approval.createdAt), 'M/d', { locale: ko })}</span>
                       </div>
                     </div>
@@ -439,7 +439,7 @@ export default function ApprovalListPage() {
                   <div className="grid grid-cols-2 gap-3">
                     <div className="p-3 bg-muted/50 rounded-lg">
                       <p className="text-xs text-muted-foreground">유형</p>
-                      <p className="text-sm font-medium">{APPROVAL_TYPE_LABELS[selectedApproval.type]}</p>
+                      <p className="text-sm font-medium">{APPROVAL_TYPE_LABELS[selectedApproval.documentType]}</p>
                     </div>
                     <div className="p-3 bg-muted/50 rounded-lg">
                       <p className="text-xs text-muted-foreground">상태</p>
@@ -447,8 +447,8 @@ export default function ApprovalListPage() {
                     </div>
                     <div className="p-3 bg-muted/50 rounded-lg">
                       <p className="text-xs text-muted-foreground">기안자</p>
-                      <p className="text-sm font-medium">{selectedApproval.requesterName}</p>
-                      <p className="text-xs text-muted-foreground">{selectedApproval.requesterDepartment}</p>
+                      <p className="text-sm font-medium">{selectedApproval.drafterName}</p>
+                      <p className="text-xs text-muted-foreground">{selectedApproval.drafterDepartmentName}</p>
                     </div>
                     <div className="p-3 bg-muted/50 rounded-lg">
                       <p className="text-xs text-muted-foreground">기안일</p>
@@ -661,7 +661,7 @@ export default function ApprovalListPage() {
                           </td>
                           <td className="px-4 py-3 text-sm">
                             <div className="flex items-center gap-2">
-                              {APPROVAL_TYPE_LABELS[approval.type]}
+                              {APPROVAL_TYPE_LABELS[approval.documentType]}
                               {approval.urgency === 'HIGH' && (
                                 <AlertCircle className="h-4 w-4 text-red-500" />
                               )}
@@ -672,9 +672,9 @@ export default function ApprovalListPage() {
                           </td>
                           <td className="px-4 py-3 text-sm">
                             <div>
-                              <div>{approval.requesterName}</div>
+                              <div>{approval.drafterName}</div>
                               <div className="text-xs text-muted-foreground">
-                                {approval.requesterDepartment}
+                                {approval.drafterDepartmentName}
                               </div>
                             </div>
                           </td>

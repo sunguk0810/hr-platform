@@ -29,7 +29,7 @@ const headcountRequestSchema = z.object({
   }),
   departmentId: z.string().min(1, '부서를 선택해주세요'),
   gradeId: z.string().min(1, '직급을 선택해주세요'),
-  requestedCount: z.coerce.number().min(0, '0 이상의 숫자를 입력해주세요'),
+  requestCount: z.coerce.number().min(0, '0 이상의 숫자를 입력해주세요'),
   reason: z.string().min(1, '요청 사유를 입력해주세요').max(500),
   effectiveDate: z.string().min(1, '적용 예정일을 입력해주세요'),
   remarks: z.string().max(1000).optional(),
@@ -60,7 +60,7 @@ export default function HeadcountRequestCreatePage() {
       type: 'INCREASE',
       departmentId: '',
       gradeId: '',
-      requestedCount: 0,
+      requestCount: 0,
       reason: '',
       effectiveDate: '',
       remarks: '',
@@ -73,7 +73,7 @@ export default function HeadcountRequestCreatePage() {
         type: data.type,
         departmentId: data.departmentId,
         gradeId: data.gradeId,
-        requestedCount: data.requestedCount,
+        requestCount: data.requestCount,
         reason: data.reason,
         effectiveDate: data.effectiveDate,
         remarks: data.remarks || undefined,
@@ -208,15 +208,15 @@ export default function HeadcountRequestCreatePage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="mobile-requestedCount">요청 인원 *</Label>
+                <Label htmlFor="mobile-requestCount">요청 인원 *</Label>
                 <Input
-                  id="mobile-requestedCount"
+                  id="mobile-requestCount"
                   type="number"
                   min="0"
-                  {...register('requestedCount')}
+                  {...register('requestCount')}
                 />
-                {errors.requestedCount && (
-                  <p className="text-sm text-destructive">{errors.requestedCount.message}</p>
+                {errors.requestCount && (
+                  <p className="text-sm text-destructive">{errors.requestCount.message}</p>
                 )}
               </div>
 
@@ -390,15 +390,15 @@ export default function HeadcountRequestCreatePage() {
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="requestedCount">요청 인원 *</Label>
+                  <Label htmlFor="requestCount">요청 인원 *</Label>
                   <Input
-                    id="requestedCount"
+                    id="requestCount"
                     type="number"
                     min="0"
-                    {...register('requestedCount')}
+                    {...register('requestCount')}
                   />
-                  {errors.requestedCount && (
-                    <p className="text-sm text-destructive">{errors.requestedCount.message}</p>
+                  {errors.requestCount && (
+                    <p className="text-sm text-destructive">{errors.requestCount.message}</p>
                   )}
                 </div>
 

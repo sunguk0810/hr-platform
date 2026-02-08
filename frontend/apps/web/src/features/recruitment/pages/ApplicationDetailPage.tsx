@@ -463,7 +463,7 @@ export default function ApplicationDetailPage() {
               {application.jobTitle}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              지원일: {format(new Date(application.appliedAt), 'yyyy년 M월 d일', { locale: ko })}
+              지원일: {format(new Date(application.createdAt), 'yyyy년 M월 d일', { locale: ko })}
             </p>
           </CardContent>
         </Card>
@@ -493,13 +493,13 @@ export default function ApplicationDetailPage() {
         )}
 
         {/* 서류 심사 의견 */}
-        {application.screeningComment && (
+        {application.screeningNotes && (
           <Card className="mb-4 border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/20">
             <CardHeader className="p-4 pb-2">
               <CardTitle className="text-base text-blue-800 dark:text-blue-200">서류 심사 의견</CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-0">
-              <p className="text-sm text-blue-800 dark:text-blue-200">{application.screeningComment}</p>
+              <p className="text-sm text-blue-800 dark:text-blue-200">{application.screeningNotes}</p>
               {application.screenedByName && (
                 <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
                   - {application.screenedByName},{' '}
@@ -641,7 +641,7 @@ export default function ApplicationDetailPage() {
                     <div>
                       <Label className="text-muted-foreground">지원일</Label>
                       <p className="text-sm mt-1">
-                        {format(new Date(application.appliedAt), 'yyyy년 M월 d일 HH:mm', {
+                        {format(new Date(application.createdAt), 'yyyy년 M월 d일 HH:mm', {
                           locale: ko,
                         })}
                       </p>
@@ -677,11 +677,11 @@ export default function ApplicationDetailPage() {
                     </div>
                   )}
 
-                  {application.screeningComment && (
+                  {application.screeningNotes && (
                     <div>
                       <Label className="text-muted-foreground">서류 심사 의견</Label>
                       <div className="mt-2 p-4 rounded-lg bg-blue-50 text-sm">
-                        <p className="text-blue-800">{application.screeningComment}</p>
+                        <p className="text-blue-800">{application.screeningNotes}</p>
                         {application.screenedByName && (
                           <p className="text-xs text-blue-600 mt-2">
                             - {application.screenedByName},{' '}
@@ -777,14 +777,15 @@ function InterviewCard({ interview }: { interview: any }) {
           <InterviewTypeBadge type={interview.interviewType} />
           <InterviewStatusBadge status={interview.status} />
         </div>
-        {interview.averageScore && (
-          <span className="text-sm font-medium">평균 {interview.averageScore.toFixed(1)}점</span>
+        {interview.overallScore && (
+          <span className="text-sm font-medium">평균 {interview.overallScore.toFixed(1)}점</span>
         )}
       </div>
       <div className="grid gap-2 text-sm">
         <div>
           <span className="text-muted-foreground">일시: </span>
-          {format(new Date(interview.scheduledAt), 'yyyy년 M월 d일 HH:mm', { locale: ko })}
+          {format(new Date(interview.scheduledDate), 'yyyy년 M월 d일', { locale: ko })}
+          {interview.scheduledTime && ` ${interview.scheduledTime}`}
           <span className="text-muted-foreground"> ({interview.durationMinutes}분)</span>
         </div>
         {interview.location && (

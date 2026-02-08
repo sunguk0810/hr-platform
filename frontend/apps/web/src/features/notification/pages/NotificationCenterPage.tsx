@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { EmptyState } from '@/components/common/EmptyState';
 import { useNotificationStore } from '@/stores/notificationStore';
+import { NOTIFICATION_TYPE_CATEGORY, type NotificationType } from '@hr-platform/shared-types';
 import { NotificationCard, NotificationTabs, NotificationDateGroup } from '../components/mobile';
 import {
   useNotifications,
@@ -67,9 +68,9 @@ export default function NotificationCenterPage() {
       case 'unread':
         return notifications.filter((n) => !n.isRead);
       case 'approval':
-        return notifications.filter((n) => n.type === 'APPROVAL');
+        return notifications.filter((n) => NOTIFICATION_TYPE_CATEGORY[n.notificationType as NotificationType] === 'APPROVAL');
       case 'system':
-        return notifications.filter((n) => n.type === 'SYSTEM');
+        return notifications.filter((n) => n.notificationType === 'SYSTEM');
       default:
         return notifications;
     }
@@ -80,8 +81,8 @@ export default function NotificationCenterPage() {
   const counts = {
     all: notifications.length,
     unread: notifications.filter((n) => !n.isRead).length,
-    approval: notifications.filter((n) => n.type === 'APPROVAL').length,
-    system: notifications.filter((n) => n.type === 'SYSTEM').length,
+    approval: notifications.filter((n) => NOTIFICATION_TYPE_CATEGORY[n.notificationType as NotificationType] === 'APPROVAL').length,
+    system: notifications.filter((n) => n.notificationType === 'SYSTEM').length,
   };
 
   // Mobile Layout
@@ -171,8 +172,8 @@ export default function NotificationCenterPage() {
               <NotificationCard
                 id={notification.id}
                 title={notification.title}
-                message={notification.message}
-                type={notification.type}
+                message={notification.content}
+                type={notification.notificationType}
                 isRead={notification.isRead}
                 createdAt={notification.createdAt}
                 onClick={() => handleMarkAsRead(notification.id)}
@@ -252,8 +253,8 @@ export default function NotificationCenterPage() {
                 key={notification.id}
                 id={notification.id}
                 title={notification.title}
-                message={notification.message}
-                type={notification.type}
+                message={notification.content}
+                type={notification.notificationType}
                 isRead={notification.isRead}
                 createdAt={notification.createdAt}
                 onClick={() => handleMarkAsRead(notification.id)}
@@ -331,7 +332,7 @@ export default function NotificationCenterPage() {
                     >
                       <p className="font-medium">{notification.title}</p>
                       <p className="text-sm text-muted-foreground">
-                        {notification.message}
+                        {notification.content}
                       </p>
                       <p className="mt-1 text-xs text-muted-foreground">
                         {new Date(notification.createdAt).toLocaleString('ko-KR')}
@@ -357,7 +358,7 @@ export default function NotificationCenterPage() {
                     >
                       <p className="font-medium">{notification.title}</p>
                       <p className="text-sm text-muted-foreground">
-                        {notification.message}
+                        {notification.content}
                       </p>
                       <p className="mt-1 text-xs text-muted-foreground">
                         {new Date(notification.createdAt).toLocaleString('ko-KR')}
@@ -368,7 +369,7 @@ export default function NotificationCenterPage() {
               )}
             </TabsContent>
             <TabsContent value="approval" className="mt-4">
-              {notifications.filter(n => n.type === 'APPROVAL').length === 0 ? (
+              {notifications.filter(n => NOTIFICATION_TYPE_CATEGORY[n.notificationType as NotificationType] === 'APPROVAL').length === 0 ? (
                 <EmptyState
                   icon={Bell}
                   title="결재 알림이 없습니다"
@@ -376,7 +377,7 @@ export default function NotificationCenterPage() {
                 />
               ) : (
                 <div className="space-y-2">
-                  {notifications.filter(n => n.type === 'APPROVAL').map((notification) => (
+                  {notifications.filter(n => NOTIFICATION_TYPE_CATEGORY[n.notificationType as NotificationType] === 'APPROVAL').map((notification) => (
                     <div
                       key={notification.id}
                       className={`rounded-lg border p-4 ${
@@ -385,7 +386,7 @@ export default function NotificationCenterPage() {
                     >
                       <p className="font-medium">{notification.title}</p>
                       <p className="text-sm text-muted-foreground">
-                        {notification.message}
+                        {notification.content}
                       </p>
                       <p className="mt-1 text-xs text-muted-foreground">
                         {new Date(notification.createdAt).toLocaleString('ko-KR')}
@@ -396,7 +397,7 @@ export default function NotificationCenterPage() {
               )}
             </TabsContent>
             <TabsContent value="system" className="mt-4">
-              {notifications.filter(n => n.type === 'SYSTEM').length === 0 ? (
+              {notifications.filter(n => n.notificationType === 'SYSTEM').length === 0 ? (
                 <EmptyState
                   icon={Bell}
                   title="시스템 알림이 없습니다"
@@ -404,7 +405,7 @@ export default function NotificationCenterPage() {
                 />
               ) : (
                 <div className="space-y-2">
-                  {notifications.filter(n => n.type === 'SYSTEM').map((notification) => (
+                  {notifications.filter(n => n.notificationType === 'SYSTEM').map((notification) => (
                     <div
                       key={notification.id}
                       className={`rounded-lg border p-4 ${
@@ -413,7 +414,7 @@ export default function NotificationCenterPage() {
                     >
                       <p className="font-medium">{notification.title}</p>
                       <p className="text-sm text-muted-foreground">
-                        {notification.message}
+                        {notification.content}
                       </p>
                       <p className="mt-1 text-xs text-muted-foreground">
                         {new Date(notification.createdAt).toLocaleString('ko-KR')}

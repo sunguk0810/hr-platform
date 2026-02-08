@@ -34,14 +34,14 @@ export function CertificateRequestForm({ open, onOpenChange, onSuccess }: Certif
   const createMutation = useCreateCertificateRequest();
 
   const [formData, setFormData] = useState<{
-    certificateTypeCode: string;
+    certificateTypeId: string;
     purpose: string;
     submissionTarget: string;
     copies: number;
     language: CertificateLanguage;
     includeSalary: boolean;
   }>({
-    certificateTypeCode: '',
+    certificateTypeId: '',
     purpose: '',
     submissionTarget: '',
     copies: 1,
@@ -50,14 +50,14 @@ export function CertificateRequestForm({ open, onOpenChange, onSuccess }: Certif
   });
 
   const certificateTypes = typesData?.data ?? [];
-  const selectedType = certificateTypes.find(t => t.code === formData.certificateTypeCode);
+  const selectedType = certificateTypes.find(t => t.id === formData.certificateTypeId);
 
   const handleSubmit = async () => {
-    if (!formData.certificateTypeCode) return;
+    if (!formData.certificateTypeId) return;
 
     try {
       const data: CreateCertificateRequestRequest = {
-        certificateTypeCode: formData.certificateTypeCode,
+        certificateTypeId: formData.certificateTypeId,
         purpose: formData.purpose || undefined,
         submissionTarget: formData.submissionTarget || undefined,
         copies: formData.copies,
@@ -75,7 +75,7 @@ export function CertificateRequestForm({ open, onOpenChange, onSuccess }: Certif
 
   const resetForm = () => {
     setFormData({
-      certificateTypeCode: '',
+      certificateTypeId: '',
       purpose: '',
       submissionTarget: '',
       copies: 1,
@@ -102,9 +102,9 @@ export function CertificateRequestForm({ open, onOpenChange, onSuccess }: Certif
           <div className="grid gap-2">
             <Label>증명서 유형 *</Label>
             <Select
-              value={formData.certificateTypeCode}
+              value={formData.certificateTypeId}
               onValueChange={(value) =>
-                setFormData(prev => ({ ...prev, certificateTypeCode: value }))
+                setFormData(prev => ({ ...prev, certificateTypeId: value }))
               }
             >
               <SelectTrigger>
@@ -112,7 +112,7 @@ export function CertificateRequestForm({ open, onOpenChange, onSuccess }: Certif
               </SelectTrigger>
               <SelectContent>
                 {certificateTypes.map((type) => (
-                  <SelectItem key={type.code} value={type.code}>
+                  <SelectItem key={type.id} value={type.id}>
                     {type.name}
                     {type.fee > 0 && ` (${type.fee.toLocaleString()}원)`}
                   </SelectItem>
@@ -224,7 +224,7 @@ export function CertificateRequestForm({ open, onOpenChange, onSuccess }: Certif
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={!formData.certificateTypeCode || createMutation.isPending}
+            disabled={!formData.certificateTypeId || createMutation.isPending}
           >
             {createMutation.isPending ? '신청 중...' : '신청하기'}
           </Button>

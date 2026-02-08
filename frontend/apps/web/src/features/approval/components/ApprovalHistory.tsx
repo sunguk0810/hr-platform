@@ -15,7 +15,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import type { ApprovalActionType, ApprovalHistory as ApprovalHistoryType } from '@hr-platform/shared-types';
+import type { ApprovalHistory as ApprovalHistoryType } from '@hr-platform/shared-types';
 
 // 기존 로컬 타입 (하위 호환성)
 export type ApprovalHistoryAction =
@@ -98,8 +98,8 @@ const actionLabels: Record<ApprovalHistoryAction, string> = {
 };
 
 // API 응답 액션 타입을 로컬 타입으로 변환
-function mapApiActionToLocal(actionType: ApprovalActionType): ApprovalHistoryAction {
-  const mapping: Record<ApprovalActionType, ApprovalHistoryAction> = {
+function mapApiActionToLocal(action: string): ApprovalHistoryAction {
+  const mapping: Record<string, ApprovalHistoryAction> = {
     SUBMIT: 'SUBMITTED',
     APPROVE: 'APPROVED',
     REJECT: 'REJECTED',
@@ -109,18 +109,18 @@ function mapApiActionToLocal(actionType: ApprovalActionType): ApprovalHistoryAct
     COMMENT: 'COMMENTED',
     RETURN: 'RETURNED',
   };
-  return mapping[actionType] || 'MODIFIED';
+  return mapping[action] || 'MODIFIED';
 }
 
 // API 응답을 로컬 타입으로 변환
 function convertApiHistoryToLocal(historyData: ApprovalHistoryType[]): ApprovalHistoryItem[] {
   return historyData.map((item) => ({
     id: item.id,
-    action: mapApiActionToLocal(item.actionType),
+    action: mapApiActionToLocal(item.action),
     actorName: item.actorName,
     actorPosition: item.actorPosition,
     actorDepartment: item.actorDepartment,
-    timestamp: new Date(item.actionAt),
+    timestamp: new Date(item.processedAt),
     comment: item.comment,
     delegatorId: item.delegatorId,
     delegatorName: item.delegatorName,

@@ -218,9 +218,9 @@ export default function JobPostingListPage() {
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       <Calendar className="h-3.5 w-3.5" />
                       <span>
-                        {format(new Date(job.postingStartDate), 'M/d', { locale: ko })}
+                        {format(new Date(job.openDate), 'M/d', { locale: ko })}
                         {' - '}
-                        {format(new Date(job.postingEndDate), 'M/d', { locale: ko })}
+                        {format(new Date(job.closeDate), 'M/d', { locale: ko })}
                       </span>
                     </div>
                   </div>
@@ -409,9 +409,9 @@ export default function JobPostingListPage() {
                             </div>
                           </td>
                           <td className="px-4 py-3 text-sm text-muted-foreground">
-                            {format(new Date(job.postingStartDate), 'M/d', { locale: ko })}
+                            {format(new Date(job.openDate), 'M/d', { locale: ko })}
                             {' - '}
-                            {format(new Date(job.postingEndDate), 'M/d', { locale: ko })}
+                            {format(new Date(job.closeDate), 'M/d', { locale: ko })}
                           </td>
                           <td className="px-4 py-3">
                             <JobStatusBadge status={job.status} />

@@ -115,7 +115,7 @@ export default function CondolenceListPage() {
                           {CONDOLENCE_STATUS_LABELS[req.status]}
                         </Badge>
                         <span className="text-xs text-muted-foreground">
-                          {CONDOLENCE_TYPE_LABELS[req.type]}
+                          {CONDOLENCE_TYPE_LABELS[req.eventType]}
                         </span>
                       </div>
                       <p className="font-medium text-sm">{req.employeeName}</p>
@@ -220,7 +220,7 @@ export default function CondolenceListPage() {
                             </div>
                           </td>
                           <td className="px-4 py-3 text-sm">{req.departmentName}</td>
-                          <td className="px-4 py-3 text-sm">{CONDOLENCE_TYPE_LABELS[req.type]}</td>
+                          <td className="px-4 py-3 text-sm">{CONDOLENCE_TYPE_LABELS[req.eventType]}</td>
                           <td className="px-4 py-3 text-sm">{format(new Date(req.eventDate), 'yyyy-MM-dd', { locale: ko })}</td>
                           <td className="px-4 py-3 text-sm text-right">{req.amount.toLocaleString()}원</td>
                           <td className="px-4 py-3">

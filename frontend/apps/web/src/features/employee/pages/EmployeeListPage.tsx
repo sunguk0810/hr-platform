@@ -74,7 +74,7 @@ function exportToExcel(employees: EmployeeListItem[], filename: string) {
     emp.departmentName,
     emp.gradeName || '',
     emp.positionName || '',
-    statusLabels[emp.employmentStatus],
+    statusLabels[emp.status],
     emp.hireDate,
   ]);
 
@@ -124,7 +124,7 @@ function EmployeeCard({ employee, isSelected, onSelect, onClick }: EmployeeCardP
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
               <div className="font-medium truncate">{employee.name}</div>
-              <EmploymentStatusBadge status={employee.employmentStatus} />
+              <EmploymentStatusBadge status={employee.status} />
             </div>
             <div className="text-sm text-muted-foreground">{employee.employeeNumber}</div>
             <div className="text-sm text-muted-foreground mt-1">
@@ -313,7 +313,7 @@ export default function EmployeeListPage() {
                         onClick={() => setEmploymentStatus(status.value as EmploymentStatus | '')}
                         className={cn(
                           'flex-shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors',
-                          searchState.employmentStatus === status.value
+                          searchState.status === status.value
                             ? 'bg-primary text-primary-foreground'
                             : 'bg-muted text-muted-foreground hover:bg-muted/80'
                         )}
@@ -357,7 +357,7 @@ export default function EmployeeListPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
                           <span className="font-medium truncate">{employee.name}</span>
-                          <EmploymentStatusBadge status={employee.employmentStatus} />
+                          <EmploymentStatusBadge status={employee.status} />
                         </div>
                         <div className="text-sm text-muted-foreground truncate">
                           {employee.departmentName} · {employee.positionName || '-'}
@@ -396,7 +396,7 @@ export default function EmployeeListPage() {
                     <div>
                       <h2 className="text-xl font-semibold">{selectedEmployee.name}</h2>
                       <p className="text-sm text-muted-foreground">{selectedEmployee.employeeNumber}</p>
-                      <EmploymentStatusBadge status={selectedEmployee.employmentStatus} />
+                      <EmploymentStatusBadge status={selectedEmployee.status} />
                     </div>
                   </div>
 
@@ -539,7 +539,7 @@ export default function EmployeeListPage() {
             </div>
             <div className="flex gap-2">
               <select
-                value={searchState.employmentStatus}
+                value={searchState.status}
                 onChange={(e) => setEmploymentStatus(e.target.value as EmploymentStatus | '')}
                 className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
               >
@@ -630,12 +630,12 @@ export default function EmployeeListPage() {
               icon={Users}
               title="등록된 직원이 없습니다"
               description={
-                searchState.keyword || searchState.employmentStatus
+                searchState.keyword || searchState.status
                   ? '검색 조건에 맞는 직원이 없습니다.'
                   : '신규 직원을 등록하거나 데이터를 가져와주세요.'
               }
               action={
-                !searchState.keyword && !searchState.employmentStatus
+                !searchState.keyword && !searchState.status
                   ? {
                       label: '신규 등록',
                       onClick: () => navigate('/employees/new'),
@@ -752,7 +752,7 @@ export default function EmployeeListPage() {
                         className="px-4 py-3 cursor-pointer"
                         onClick={() => handleRowClick(employee.id)}
                       >
-                        <EmploymentStatusBadge status={employee.employmentStatus} />
+                        <EmploymentStatusBadge status={employee.status} />
                       </td>
                       <td
                         className="px-4 py-3 text-sm text-muted-foreground cursor-pointer"

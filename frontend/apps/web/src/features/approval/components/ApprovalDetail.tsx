@@ -26,7 +26,7 @@ import {
   Paperclip,
   Loader2,
 } from 'lucide-react';
-import type { Approval, ApprovalStep, ApprovalType } from '@hr-platform/shared-types';
+import type { Approval, ApprovalLine } from '@hr-platform/shared-types';
 
 export interface ApprovalDetailProps {
   approval: Approval;
@@ -38,7 +38,7 @@ export interface ApprovalDetailProps {
   isLoading?: boolean;
 }
 
-const APPROVAL_TYPE_LABELS: Record<ApprovalType, string> = {
+const APPROVAL_TYPE_LABELS: Record<string, string> = {
   LEAVE_REQUEST: '휴가신청',
   EXPENSE: '경비청구',
   OVERTIME: '초과근무',
@@ -120,7 +120,7 @@ export function ApprovalDetail({
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">문서 유형</p>
-                <p className="font-medium">{APPROVAL_TYPE_LABELS[approval.type]}</p>
+                <p className="font-medium">{APPROVAL_TYPE_LABELS[approval.documentType]}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -129,7 +129,7 @@ export function ApprovalDetail({
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">기안자</p>
-                <p className="font-medium">{approval.requesterName}</p>
+                <p className="font-medium">{approval.drafterName}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -138,7 +138,7 @@ export function ApprovalDetail({
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">소속</p>
-                <p className="font-medium">{approval.requesterDepartment}</p>
+                <p className="font-medium">{approval.drafterDepartmentName}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -163,12 +163,12 @@ export function ApprovalDetail({
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-4 overflow-x-auto py-2">
-            {approval.steps.map((step, index) => (
+            {approval.approvalLines.map((step, index) => (
               <React.Fragment key={step.id}>
                 {index > 0 && (
                   <div className="flex-shrink-0 w-8 h-px bg-border" />
                 )}
-                <ApprovalStepCard step={step} />
+                <ApprovalLineCard step={step} />
               </React.Fragment>
             ))}
           </div>
@@ -310,15 +310,17 @@ export function ApprovalDetail({
   );
 }
 
-interface ApprovalStepCardProps {
-  step: ApprovalStep;
+interface ApprovalLineCardProps {
+  step: ApprovalLine;
 }
 
-function ApprovalStepCard({ step }: ApprovalStepCardProps) {
+function ApprovalLineCard({ step }: ApprovalLineCardProps) {
   const statusConfig = {
-    PENDING: { bg: 'bg-gray-100 dark:bg-gray-800', text: 'text-gray-500', label: '대기' },
+    WAITING: { bg: 'bg-gray-100 dark:bg-gray-800', text: 'text-gray-500', label: '대기' },
+    ACTIVE: { bg: 'bg-blue-50 dark:bg-blue-900/20', text: 'text-blue-600', label: '진행중' },
     APPROVED: { bg: 'bg-green-50 dark:bg-green-900/20', text: 'text-green-600', label: '승인' },
     REJECTED: { bg: 'bg-red-50 dark:bg-red-900/20', text: 'text-red-600', label: '반려' },
+    AGREED: { bg: 'bg-emerald-50 dark:bg-emerald-900/20', text: 'text-emerald-600', label: '합의' },
     SKIPPED: { bg: 'bg-gray-50 dark:bg-gray-800', text: 'text-gray-400', label: '생략' },
   };
 
@@ -335,15 +337,15 @@ function ApprovalStepCard({ step }: ApprovalStepCardProps) {
         <div className="min-w-0">
           <p className="text-sm font-medium truncate">{step.approverName || '지정안됨'}</p>
           <p className="text-xs text-muted-foreground">
-            {step.stepOrder}단계
+            {step.sequence}단계
           </p>
         </div>
       </div>
       <div className={`text-xs font-medium ${config.text}`}>
         {config.label}
-        {step.processedAt && (
+        {step.completedAt && (
           <span className="block text-muted-foreground font-normal mt-1">
-            {format(new Date(step.processedAt), 'M/d HH:mm')}
+            {format(new Date(step.completedAt), 'M/d HH:mm')}
           </span>
         )}
       </div>

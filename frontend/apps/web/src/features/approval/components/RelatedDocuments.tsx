@@ -20,7 +20,7 @@ interface RelatedDocument {
   documentNumber: string;
   title: string;
   status: ApprovalStatus;
-  requesterName: string;
+  drafterName: string;
   createdAt: string;
 }
 
@@ -45,7 +45,7 @@ const mockRelatedDocs: RelatedDocument[] = [
     documentNumber: 'APR-2024-001',
     title: '연차 사용 신청',
     status: 'APPROVED',
-    requesterName: '김민수',
+    drafterName: '김민수',
     createdAt: '2024-12-01',
   },
   {
@@ -53,7 +53,7 @@ const mockRelatedDocs: RelatedDocument[] = [
     documentNumber: 'APR-2024-005',
     title: '업무 협조 요청',
     status: 'PENDING',
-    requesterName: '이영희',
+    drafterName: '이영희',
     createdAt: '2024-12-15',
   },
 ];
@@ -64,7 +64,7 @@ const mockSearchResults: RelatedDocument[] = [
     documentNumber: 'APR-2024-010',
     title: '출장 보고서',
     status: 'APPROVED',
-    requesterName: '박지현',
+    drafterName: '박지현',
     createdAt: '2024-11-20',
   },
   {
@@ -72,7 +72,7 @@ const mockSearchResults: RelatedDocument[] = [
     documentNumber: 'APR-2024-011',
     title: '비품 구매 요청',
     status: 'APPROVED',
-    requesterName: '최동욱',
+    drafterName: '최동욱',
     createdAt: '2024-11-25',
   },
   {
@@ -80,7 +80,7 @@ const mockSearchResults: RelatedDocument[] = [
     documentNumber: 'APR-2024-012',
     title: '교육 참가 신청',
     status: 'PENDING',
-    requesterName: '정수연',
+    drafterName: '정수연',
     createdAt: '2024-12-05',
   },
 ];
@@ -183,7 +183,7 @@ export function RelatedDocuments({ approvalId: _approvalId, isEditable }: Relate
                       </div>
                       <p className="text-sm font-medium truncate mt-0.5">{doc.title}</p>
                       <p className="text-xs text-muted-foreground">
-                        {doc.requesterName} | {doc.createdAt}
+                        {doc.drafterName} | {doc.createdAt}
                       </p>
                     </div>
                   </div>
@@ -245,7 +245,7 @@ export function RelatedDocuments({ approvalId: _approvalId, isEditable }: Relate
                       </div>
                       <p className="text-sm font-medium truncate mt-0.5">{doc.title}</p>
                       <p className="text-xs text-muted-foreground">
-                        {doc.requesterName} | {doc.createdAt}
+                        {doc.drafterName} | {doc.createdAt}
                       </p>
                     </div>
                     <Button

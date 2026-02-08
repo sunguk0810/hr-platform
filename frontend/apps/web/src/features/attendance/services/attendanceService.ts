@@ -117,15 +117,29 @@ export const attendanceService = {
   },
 
   async getOvertimeSummary(yearMonth: string): Promise<ApiResponse<OvertimeSummary>> {
-    // Backend uses /overtimes/my/total-hours with startDate/endDate params
+    // Backend returns BigDecimal (number), mock returns OvertimeSummary object
     const [year, month] = yearMonth.split('-');
     const startDate = `${year}-${month}-01`;
     const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
     const endDate = `${year}-${month}-${lastDay.toString().padStart(2, '0')}`;
-    const response = await apiClient.get<ApiResponse<OvertimeSummary>>('/overtimes/my/total-hours', {
+    const response = await apiClient.get<ApiResponse<OvertimeSummary | number>>('/overtimes/my/total-hours', {
       params: { startDate, endDate }
     });
-    return response.data;
+    // Handle BE returning just a number (BigDecimal)
+    if (typeof response.data.data === 'number') {
+      return {
+        ...response.data,
+        data: {
+          yearMonth,
+          totalRequests: 0,
+          approvedRequests: 0,
+          pendingRequests: 0,
+          totalHours: response.data.data,
+          approvedHours: response.data.data,
+        },
+      };
+    }
+    return response.data as ApiResponse<OvertimeSummary>;
   },
 
   async createOvertime(data: CreateOvertimeRequest): Promise<ApiResponse<OvertimeRequest>> {

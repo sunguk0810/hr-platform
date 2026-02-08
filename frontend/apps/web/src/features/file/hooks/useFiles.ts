@@ -40,12 +40,12 @@ export function useDeleteFile() {
 
 export function useDownloadFile() {
   return useMutation({
-    mutationFn: async ({ id, fileName }: { id: string; fileName: string }) => {
+    mutationFn: async ({ id, originalName }: { id: string; originalName: string }) => {
       const blob = await fileService.downloadFile(id);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = fileName;
+      link.download = originalName;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

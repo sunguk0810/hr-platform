@@ -7,32 +7,32 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import type { ApprovalStep, ApprovalStepStatus } from './ApprovalLineFlow';
+import type { ApprovalLineItem, ApprovalLineStatus } from './ApprovalLineFlow';
 
 interface ApprovalStepIndicatorProps {
-  steps: ApprovalStep[];
+  steps: ApprovalLineItem[];
   compact?: boolean;
   className?: string;
 }
 
-const statusIcons: Record<ApprovalStepStatus, React.ReactNode> = {
-  PENDING: <Clock className="h-4 w-4" />,
+const statusIcons: Record<ApprovalLineStatus, React.ReactNode> = {
+  WAITING: <Clock className="h-4 w-4" />,
   CURRENT: <AlertCircle className="h-4 w-4" />,
   APPROVED: <Check className="h-4 w-4" />,
   REJECTED: <X className="h-4 w-4" />,
   SKIPPED: <ChevronRight className="h-4 w-4" />,
 };
 
-const statusColors: Record<ApprovalStepStatus, string> = {
-  PENDING: 'bg-gray-100 text-gray-500 border-gray-300',
+const statusColors: Record<ApprovalLineStatus, string> = {
+  WAITING: 'bg-gray-100 text-gray-500 border-gray-300',
   CURRENT: 'bg-blue-100 text-blue-600 border-blue-500',
   APPROVED: 'bg-green-100 text-green-600 border-green-500',
   REJECTED: 'bg-red-100 text-red-600 border-red-500',
   SKIPPED: 'bg-gray-100 text-gray-400 border-gray-200',
 };
 
-const statusLabels: Record<ApprovalStepStatus, string> = {
-  PENDING: '대기',
+const statusLabels: Record<ApprovalLineStatus, string> = {
+  WAITING: '대기',
   CURRENT: '진행 중',
   APPROVED: '승인',
   REJECTED: '반려',
@@ -144,7 +144,7 @@ export function ApprovalStepIndicator({
                   <p className="font-medium">{step.approverName}</p>
                   <p className="text-sm text-muted-foreground">
                     {step.approverPosition}
-                    {step.approverDepartment && ` · ${step.approverDepartment}`}
+                    {step.approverDepartmentName && ` · ${step.approverDepartmentName}`}
                   </p>
                 </div>
                 <span
@@ -163,9 +163,9 @@ export function ApprovalStepIndicator({
                 </div>
               )}
 
-              {step.processedAt && (
+              {step.completedAt && (
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {new Date(step.processedAt).toLocaleString('ko-KR')}
+                  {new Date(step.completedAt).toLocaleString('ko-KR')}
                 </p>
               )}
             </div>

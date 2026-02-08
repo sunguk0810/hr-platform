@@ -157,7 +157,7 @@ export default function MyCertificatesPage() {
             open={isCancelDialogOpen}
             onOpenChange={setIsCancelDialogOpen}
             title="신청 취소"
-            description={`정말로 이 증명서 신청을 취소하시겠습니까?\n${selectedRequest?.certificateType?.name || ''} (${selectedRequest?.requestNumber || ''})`}
+            description={`정말로 이 증명서 신청을 취소하시겠습니까?\n${selectedRequest?.certificateTypeName ?? selectedRequest?.certificateType?.name ?? ''} (${selectedRequest?.requestNumber || ''})`}
             confirmLabel="취소하기"
             variant="destructive"
             isLoading={cancelMutation.isPending}
@@ -270,7 +270,7 @@ export default function MyCertificatesPage() {
         open={isCancelDialogOpen}
         onOpenChange={setIsCancelDialogOpen}
         title="신청 취소"
-        description={`정말로 이 증명서 신청을 취소하시겠습니까?\n${selectedRequest?.certificateType?.name || ''} (${selectedRequest?.requestNumber || ''})`}
+        description={`정말로 이 증명서 신청을 취소하시겠습니까?\n${selectedRequest?.certificateTypeName ?? selectedRequest?.certificateType?.name ?? ''} (${selectedRequest?.requestNumber || ''})`}
         confirmLabel="취소하기"
         variant="destructive"
         isLoading={cancelMutation.isPending}

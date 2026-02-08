@@ -83,7 +83,7 @@ export function useDeleteEmployee() {
 
 interface EmployeeSearchState {
   keyword: string;
-  employmentStatus: EmploymentStatus | '';
+  status: EmploymentStatus | '';
   page: number;
   size: number;
 }
@@ -91,7 +91,7 @@ interface EmployeeSearchState {
 export function useEmployeeSearchParams(initialSize = 10) {
   const [searchState, setSearchState] = useState<EmployeeSearchState>({
     keyword: '',
-    employmentStatus: '',
+    status: '',
     page: 0,
     size: initialSize,
   });
@@ -100,15 +100,15 @@ export function useEmployeeSearchParams(initialSize = 10) {
     page: searchState.page,
     size: searchState.size,
     ...(searchState.keyword && { keyword: searchState.keyword }),
-    ...(searchState.employmentStatus && { employmentStatus: searchState.employmentStatus }),
+    ...(searchState.status && { status: searchState.status }),
   }), [searchState]);
 
   const setKeyword = useCallback((keyword: string) => {
     setSearchState(prev => ({ ...prev, keyword, page: 0 }));
   }, []);
 
-  const setEmploymentStatus = useCallback((employmentStatus: EmploymentStatus | '') => {
-    setSearchState(prev => ({ ...prev, employmentStatus, page: 0 }));
+  const setEmploymentStatus = useCallback((status: EmploymentStatus | '') => {
+    setSearchState(prev => ({ ...prev, status, page: 0 }));
   }, []);
 
   const setPage = useCallback((page: number) => {
@@ -116,7 +116,7 @@ export function useEmployeeSearchParams(initialSize = 10) {
   }, []);
 
   const resetFilters = useCallback(() => {
-    setSearchState({ keyword: '', employmentStatus: '', page: 0, size: initialSize });
+    setSearchState({ keyword: '', status: '', page: 0, size: initialSize });
   }, [initialSize]);
 
   return {

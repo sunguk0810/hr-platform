@@ -20,7 +20,7 @@ import type { EmploymentStatus, DepartmentTreeNode } from '@hr-platform/shared-t
 
 export interface EmployeeSearchFilters {
   keyword: string;
-  employmentStatus: EmploymentStatus | '';
+  status: EmploymentStatus | '';
   departmentId: string;
   gradeId: string;
   positionId: string;
@@ -81,7 +81,7 @@ export function EmployeeSearch({
   const handleReset = () => {
     onFiltersChange({
       keyword: '',
-      employmentStatus: '',
+      status: '',
       departmentId: '',
       gradeId: '',
       positionId: '',
@@ -123,8 +123,8 @@ export function EmployeeSearch({
 
           {/* Status Select */}
           <Select
-            value={filters.employmentStatus}
-            onValueChange={(value) => updateFilter('employmentStatus', value as EmploymentStatus | '')}
+            value={filters.status}
+            onValueChange={(value) => updateFilter('status', value as EmploymentStatus | '')}
           >
             <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="전체 상태" />

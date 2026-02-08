@@ -76,7 +76,7 @@ export default function FileManagementPage() {
 
   const { data, isLoading } = useFiles({
     category: category || undefined,
-    fileName: searchKeyword || undefined,
+    originalName: searchKeyword || undefined,
     page,
     size: 10,
   });
@@ -132,14 +132,14 @@ export default function FileManagementPage() {
   };
 
   const handlePreview = (file: FileInfo) => {
-    if (fileService.isImageFile(file.mimeType) || fileService.isPdfFile(file.mimeType)) {
+    if (fileService.isImageFile(file.contentType) || fileService.isPdfFile(file.contentType)) {
       setSelectedFile(file);
       setPreviewDialogOpen(true);
     }
   };
 
   const handleDownload = (file: FileInfo) => {
-    downloadMutation.mutate({ id: file.id, fileName: file.originalFileName });
+    downloadMutation.mutate({ id: file.id, originalName: file.originalName });
   };
 
   const handleDeleteClick = (file: FileInfo) => {
@@ -155,11 +155,11 @@ export default function FileManagementPage() {
     }
   };
 
-  const getFileIcon = (mimeType: string) => {
-    if (fileService.isImageFile(mimeType)) {
+  const getFileIcon = (contentType: string) => {
+    if (fileService.isImageFile(contentType)) {
       return <Image className="h-5 w-5 text-green-500" aria-hidden="true" />;
     }
-    if (fileService.isPdfFile(mimeType)) {
+    if (fileService.isPdfFile(contentType)) {
       return <FileText className="h-5 w-5 text-red-500" aria-hidden="true" />;
     }
     return <FileIcon className="h-5 w-5 text-blue-500" aria-hidden="true" />;
@@ -237,12 +237,12 @@ export default function FileManagementPage() {
                   className="w-full bg-card rounded-xl border p-4 text-left transition-colors active:bg-muted"
                 >
                   <div className="flex items-center gap-3">
-                    {getFileIcon(file.mimeType)}
+                    {getFileIcon(file.contentType)}
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">{file.originalFileName}</p>
+                      <p className="font-medium text-sm truncate">{file.originalName}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <Badge variant="outline" className="text-xs">
-                          {FILE_CATEGORY_LABELS[file.category]}
+                          {file.category ? FILE_CATEGORY_LABELS[file.category] : '-'}
                         </Badge>
                         <span className="text-xs text-muted-foreground">
                           {fileService.formatFileSize(file.fileSize)}
@@ -388,31 +388,31 @@ export default function FileManagementPage() {
                       <tr key={file.id} className="border-b transition-colors hover:bg-muted/50">
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
-                            {getFileIcon(file.mimeType)}
+                            {getFileIcon(file.contentType)}
                             <span className="text-sm font-medium truncate max-w-xs">
-                              {file.originalFileName}
+                              {file.originalName}
                             </span>
                           </div>
                         </td>
                         <td className="px-4 py-3">
-                          <Badge variant="outline">{FILE_CATEGORY_LABELS[file.category]}</Badge>
+                          <Badge variant="outline">{file.category ? FILE_CATEGORY_LABELS[file.category] : '-'}</Badge>
                         </td>
                         <td className="px-4 py-3 text-right text-sm">
                           {fileService.formatFileSize(file.fileSize)}
                         </td>
-                        <td className="px-4 py-3 text-sm">{file.uploadedByName}</td>
+                        <td className="px-4 py-3 text-sm">{file.uploaderName}</td>
                         <td className="px-4 py-3 text-sm">
                           {format(new Date(file.createdAt), 'yyyy-MM-dd HH:mm', { locale: ko })}
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center justify-center gap-1">
-                            {(fileService.isImageFile(file.mimeType) ||
-                              fileService.isPdfFile(file.mimeType)) && (
+                            {(fileService.isImageFile(file.contentType) ||
+                              fileService.isPdfFile(file.contentType)) && (
                               <Button
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => handlePreview(file)}
-                                aria-label={`${file.originalFileName} 미리보기`}
+                                aria-label={`${file.originalName} 미리보기`}
                               >
                                 <Eye className="h-4 w-4" />
                               </Button>
@@ -421,7 +421,7 @@ export default function FileManagementPage() {
                               variant="ghost"
                               size="icon"
                               onClick={() => handleDownload(file)}
-                              aria-label={`${file.originalFileName} 다운로드`}
+                              aria-label={`${file.originalName} 다운로드`}
                             >
                               <Download className="h-4 w-4" />
                             </Button>
@@ -430,7 +430,7 @@ export default function FileManagementPage() {
                               size="icon"
                               onClick={() => handleDeleteClick(file)}
                               className="text-destructive hover:text-destructive"
-                              aria-label={`${file.originalFileName} 삭제`}
+                              aria-label={`${file.originalName} 삭제`}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -542,20 +542,20 @@ export default function FileManagementPage() {
       <Dialog open={previewDialogOpen} onOpenChange={setPreviewDialogOpen}>
         <DialogContent className="sm:max-w-3xl max-h-[80vh]">
           <DialogHeader>
-            <DialogTitle>{selectedFile?.originalFileName}</DialogTitle>
+            <DialogTitle>{selectedFile?.originalName}</DialogTitle>
           </DialogHeader>
           <div className="overflow-auto max-h-[60vh]">
-            {selectedFile && fileService.isImageFile(selectedFile.mimeType) && (
+            {selectedFile && fileService.isImageFile(selectedFile.contentType) && (
               <img
                 src={fileService.getPreviewUrl(selectedFile.id)}
-                alt={selectedFile.originalFileName}
+                alt={selectedFile.originalName}
                 className="w-full h-auto"
               />
             )}
-            {selectedFile && fileService.isPdfFile(selectedFile.mimeType) && (
+            {selectedFile && fileService.isPdfFile(selectedFile.contentType) && (
               <iframe
                 src={fileService.getPreviewUrl(selectedFile.id)}
-                title={selectedFile.originalFileName}
+                title={selectedFile.originalName}
                 className="w-full h-[60vh]"
               />
             )}
@@ -580,7 +580,7 @@ export default function FileManagementPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>파일 삭제</AlertDialogTitle>
             <AlertDialogDescription>
-              '{selectedFile?.originalFileName}' 파일을 삭제하시겠습니까? 이 작업은 되돌릴 수
+              '{selectedFile?.originalName}' 파일을 삭제하시겠습니까? 이 작업은 되돌릴 수
               없습니다.
             </AlertDialogDescription>
           </AlertDialogHeader>

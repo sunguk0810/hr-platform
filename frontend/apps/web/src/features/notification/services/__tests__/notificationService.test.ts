@@ -27,9 +27,9 @@ describe('notificationService', () => {
             content: [
               {
                 id: '1',
-                type: 'APPROVAL',
+                notificationType: 'APPROVAL_REQUESTED',
                 title: 'Test Notification',
-                message: 'Test message',
+                content: 'Test message',
                 isRead: false,
                 createdAt: '2024-01-01T00:00:00Z',
               },
@@ -55,7 +55,7 @@ describe('notificationService', () => {
     });
 
     it('should fetch notifications with params', async () => {
-      const params = { page: 0, size: 20, type: 'APPROVAL' as const, unreadOnly: true };
+      const params = { page: 0, size: 20, notificationType: 'APPROVAL_REQUESTED' as const, unreadOnly: true };
       const mockResponse = {
         data: {
           success: true,
@@ -79,9 +79,9 @@ describe('notificationService', () => {
           success: true,
           data: {
             id: '1',
-            type: 'APPROVAL',
+            notificationType: 'APPROVAL_REQUESTED',
             title: 'Test',
-            message: 'Test',
+            content: 'Test',
             isRead: false,
             createdAt: '2024-01-01T00:00:00Z',
           },

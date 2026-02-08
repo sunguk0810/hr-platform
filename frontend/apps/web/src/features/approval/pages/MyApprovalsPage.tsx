@@ -34,7 +34,7 @@ const STATUS_CONFIG: Record<ApprovalStatus, { label: string; variant: 'default' 
   CANCELLED: { label: '취소', variant: 'default' },
 };
 
-const TYPE_LABELS: Record<ApprovalType, string> = {
+const TYPE_LABELS: Record<string, string> = {
   LEAVE_REQUEST: '휴가신청',
   EXPENSE: '경비청구',
   OVERTIME: '초과근무',
@@ -179,7 +179,7 @@ export default function MyApprovalsPage() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs text-muted-foreground">{TYPE_LABELS[approval.type]}</span>
+                          <span className="text-xs text-muted-foreground">{TYPE_LABELS[approval.documentType]}</span>
                           <StatusBadge status={statusConfig.variant} label={statusConfig.label} />
                         </div>
                         <p className="font-medium text-sm truncate">{approval.title}</p>
@@ -378,7 +378,7 @@ export default function MyApprovalsPage() {
                               {approval.documentNumber}
                             </td>
                             <td className="px-4 py-3 text-sm">
-                              {TYPE_LABELS[approval.type]}
+                              {TYPE_LABELS[approval.documentType]}
                             </td>
                             <td className="px-4 py-3">
                               <div className="font-medium">{approval.title}</div>

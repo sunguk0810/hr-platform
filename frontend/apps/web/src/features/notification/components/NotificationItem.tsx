@@ -14,22 +14,26 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 export type NotificationType =
-  | 'APPROVAL_REQUEST'
-  | 'APPROVAL_RESULT'
-  | 'LEAVE_REQUEST'
-  | 'LEAVE_RESULT'
+  | 'APPROVAL_REQUESTED'
+  | 'APPROVAL_APPROVED'
+  | 'APPROVAL_REJECTED'
+  | 'LEAVE_REQUESTED'
+  | 'LEAVE_APPROVED'
+  | 'LEAVE_REJECTED'
+  | 'EMPLOYEE_JOINED'
+  | 'EMPLOYEE_RESIGNED'
   | 'ANNOUNCEMENT'
   | 'SYSTEM'
   | 'REMINDER';
 
 export interface NotificationData {
   id: string;
-  type: NotificationType;
+  notificationType: NotificationType;
   title: string;
-  message: string;
+  content: string;
   isRead: boolean;
   createdAt: Date;
-  link?: string;
+  linkUrl?: string;
   sender?: {
     name: string;
     profileImage?: string;
@@ -47,10 +51,14 @@ interface NotificationItemProps {
 }
 
 const typeIcons: Record<NotificationType, React.ReactNode> = {
-  APPROVAL_REQUEST: <FileText className="h-5 w-5 text-blue-500" />,
-  APPROVAL_RESULT: <CheckCircle className="h-5 w-5 text-green-500" />,
-  LEAVE_REQUEST: <Calendar className="h-5 w-5 text-amber-500" />,
-  LEAVE_RESULT: <Calendar className="h-5 w-5 text-green-500" />,
+  APPROVAL_REQUESTED: <FileText className="h-5 w-5 text-blue-500" />,
+  APPROVAL_APPROVED: <CheckCircle className="h-5 w-5 text-green-500" />,
+  APPROVAL_REJECTED: <AlertCircle className="h-5 w-5 text-red-500" />,
+  LEAVE_REQUESTED: <Calendar className="h-5 w-5 text-amber-500" />,
+  LEAVE_APPROVED: <Calendar className="h-5 w-5 text-green-500" />,
+  LEAVE_REJECTED: <Calendar className="h-5 w-5 text-red-500" />,
+  EMPLOYEE_JOINED: <Bell className="h-5 w-5 text-teal-500" />,
+  EMPLOYEE_RESIGNED: <Bell className="h-5 w-5 text-gray-500" />,
   ANNOUNCEMENT: <Bell className="h-5 w-5 text-purple-500" />,
   SYSTEM: <Info className="h-5 w-5 text-gray-500" />,
   REMINDER: <AlertCircle className="h-5 w-5 text-orange-500" />,
@@ -109,7 +117,7 @@ export function NotificationItem({
           </Avatar>
         ) : (
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-            {typeIcons[notification.type]}
+            {typeIcons[notification.notificationType]}
           </div>
         )}
       </div>
@@ -122,7 +130,7 @@ export function NotificationItem({
               {notification.title}
             </p>
             <p className="mt-0.5 text-sm text-muted-foreground line-clamp-2">
-              {notification.message}
+              {notification.content}
             </p>
           </div>
 

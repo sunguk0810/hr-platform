@@ -4,9 +4,9 @@ import { AlertCircle, User, Clock, ChevronRight, Check, X } from 'lucide-react';
 import { MobileCard, MobileCardContent, SwipeableCard } from '@/components/mobile';
 import { ApprovalStatusBadge } from '@/components/common/StatusBadge';
 import { cn } from '@/lib/utils';
-import type { ApprovalListItem, ApprovalType } from '@hr-platform/shared-types';
+import type { ApprovalListItem } from '@hr-platform/shared-types';
 
-const APPROVAL_TYPE_LABELS: Record<ApprovalType, string> = {
+const APPROVAL_TYPE_LABELS: Record<string, string> = {
   LEAVE_REQUEST: '휴가신청',
   EXPENSE: '경비청구',
   OVERTIME: '초과근무',
@@ -14,7 +14,7 @@ const APPROVAL_TYPE_LABELS: Record<ApprovalType, string> = {
   GENERAL: '일반기안',
 };
 
-const TYPE_COLORS: Record<ApprovalType, string> = {
+const TYPE_COLORS: Record<string, string> = {
   LEAVE_REQUEST: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300',
   EXPENSE: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300',
   OVERTIME: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300',
@@ -52,10 +52,10 @@ export function ApprovalCard({
             <span
               className={cn(
                 'px-2 py-0.5 text-xs font-medium rounded-full',
-                TYPE_COLORS[approval.type]
+                TYPE_COLORS[approval.documentType]
               )}
             >
-              {APPROVAL_TYPE_LABELS[approval.type]}
+              {APPROVAL_TYPE_LABELS[approval.documentType]}
             </span>
             {approval.urgency === 'HIGH' && (
               <span className="flex items-center gap-0.5 text-xs text-red-500 font-medium">
@@ -81,8 +81,8 @@ export function ApprovalCard({
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <div className="flex items-center gap-1.5">
             <User className="h-4 w-4" />
-            <span>{approval.requesterName}</span>
-            <span className="text-xs">({approval.requesterDepartment})</span>
+            <span>{approval.drafterName}</span>
+            <span className="text-xs">({approval.drafterDepartmentName})</span>
           </div>
           <div className="flex items-center gap-1">
             <Clock className="h-3.5 w-3.5" />

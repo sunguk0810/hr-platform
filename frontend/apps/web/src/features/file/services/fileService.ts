@@ -1,42 +1,25 @@
 import { apiClient, ApiResponse, PageResponse } from '@/lib/apiClient';
+import { FileInfo, FileCategory, FileStatus } from '@hr-platform/shared-types';
 
-export interface FileInfo {
-  id: string;
-  fileName: string;
-  originalFileName: string;
-  filePath: string;
-  fileSize: number;
-  mimeType: string;
-  category: FileCategory;
-  uploadedBy: string;
-  uploadedByName: string;
-  createdAt: string;
-  updatedAt: string;
-}
+export type { FileInfo, FileCategory, FileStatus };
 
-export type FileCategory =
-  | 'PROFILE'
-  | 'DOCUMENT'
-  | 'CERTIFICATE'
-  | 'APPROVAL'
-  | 'ANNOUNCEMENT'
-  | 'RECRUITMENT'
-  | 'OTHER';
-
-export const FILE_CATEGORY_LABELS: Record<FileCategory, string> = {
+export const FILE_CATEGORY_LABELS: Record<string, string> = {
   PROFILE: '프로필 사진',
   DOCUMENT: '문서',
   CERTIFICATE: '증명서',
   APPROVAL: '결재 첨부',
   ANNOUNCEMENT: '공지사항',
   RECRUITMENT: '채용 자료',
+  IMPORT: '가져오기',
+  EXPORT: '내보내기',
+  ATTACHMENT: '첨부파일',
   OTHER: '기타',
 };
 
 export interface FileSearchParams {
   category?: FileCategory;
-  fileName?: string;
-  uploadedBy?: string;
+  originalName?: string;
+  uploaderId?: string;
   startDate?: string;
   endDate?: string;
   page?: number;
@@ -95,7 +78,7 @@ export const fileService = {
   },
 
   getCategories(): FileCategory[] {
-    return ['PROFILE', 'DOCUMENT', 'CERTIFICATE', 'APPROVAL', 'ANNOUNCEMENT', 'RECRUITMENT', 'OTHER'];
+    return ['PROFILE', 'DOCUMENT', 'ATTACHMENT', 'IMPORT', 'EXPORT'];
   },
 
   formatFileSize(bytes: number): string {
@@ -106,11 +89,11 @@ export const fileService = {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   },
 
-  isImageFile(mimeType: string): boolean {
-    return mimeType.startsWith('image/');
+  isImageFile(contentType: string): boolean {
+    return contentType.startsWith('image/');
   },
 
-  isPdfFile(mimeType: string): boolean {
-    return mimeType === 'application/pdf';
+  isPdfFile(contentType: string): boolean {
+    return contentType === 'application/pdf';
   },
 };

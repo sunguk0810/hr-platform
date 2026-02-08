@@ -60,9 +60,8 @@ import {
   useApprovalHistory,
 } from '../hooks/useApprovals';
 import { useAuthStore } from '@/stores/authStore';
-import type { ApprovalType } from '@hr-platform/shared-types';
 
-const APPROVAL_TYPE_LABELS: Record<ApprovalType, string> = {
+const APPROVAL_TYPE_LABELS: Record<string, string> = {
   LEAVE_REQUEST: '휴가신청',
   EXPENSE: '경비청구',
   OVERTIME: '초과근무',
@@ -147,7 +146,7 @@ export default function ApprovalDetailPage() {
 
   const handleDelegate = async (delegateToId: string, delegateToName: string, reason?: string) => {
     if (!id || !approval) return;
-    const currentStep = approval.steps.find((s) => s.status === 'PENDING');
+    const currentStep = approval.approvalLines.find((s) => s.status === 'WAITING');
     if (!currentStep) return;
 
     try {
@@ -200,10 +199,10 @@ export default function ApprovalDetailPage() {
   }
 
   // 권한 체크
-  const isRequester = approval.requesterId === currentUserId;
-  const currentStep = approval.steps.find((s) => s.status === 'PENDING');
+  const isRequester = approval.drafterId === currentUserId;
+  const currentStep = approval.approvalLines.find((s) => s.status === 'WAITING');
   const isCurrentApprover = currentStep?.approverId === currentUserId;
-  const currentStepOrder = currentStep?.stepOrder || 1;
+  const currentStepOrder = currentStep?.sequence || 1;
 
   // 버튼 표시 조건
   const canApproveOrReject = approval.status === 'PENDING' && isCurrentApprover;
@@ -330,7 +329,7 @@ export default function ApprovalDetailPage() {
         onOpenChange={setIsDirectApproveDialogOpen}
         onConfirm={handleDirectApprove}
         isLoading={directApproveMutation.isPending}
-        steps={approval.steps}
+        steps={approval.approvalLines}
         currentStepOrder={currentStepOrder}
       />
 
@@ -339,7 +338,7 @@ export default function ApprovalDetailPage() {
         open={modifyLineOpen}
         onOpenChange={setModifyLineOpen}
         approvalId={approval.id}
-        steps={approval.steps}
+        steps={approval.approvalLines}
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: queryKeys.approvals.detail(id || '') });
         }}
@@ -362,7 +361,7 @@ export default function ApprovalDetailPage() {
             </button>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">{APPROVAL_TYPE_LABELS[approval.type]}</span>
+                <span className="text-xs text-muted-foreground">{APPROVAL_TYPE_LABELS[approval.documentType]}</span>
                 <ApprovalStatusBadge status={approval.status} />
                 {approval.urgency === 'HIGH' && (
                   <span className="text-xs text-red-500 flex items-center gap-0.5">
@@ -381,8 +380,8 @@ export default function ApprovalDetailPage() {
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <p className="text-xs text-muted-foreground">기안자</p>
-                <p className="font-medium">{approval.requesterName}</p>
-                <p className="text-xs text-muted-foreground">{approval.requesterDepartment}</p>
+                <p className="font-medium">{approval.drafterName}</p>
+                <p className="text-xs text-muted-foreground">{approval.drafterDepartmentName}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">기안일</p>
@@ -422,21 +421,21 @@ export default function ApprovalDetailPage() {
               {/* Requester */}
               <div className="flex-shrink-0 text-center">
                 <div className="w-12 h-12 mx-auto rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-sm font-semibold text-blue-700 dark:text-blue-300">
-                  {approval.requesterName.slice(0, 1)}
+                  {approval.drafterName.slice(0, 1)}
                 </div>
-                <p className="text-xs font-medium mt-1">{approval.requesterName}</p>
+                <p className="text-xs font-medium mt-1">{approval.drafterName}</p>
                 <p className="text-[10px] text-muted-foreground">기안자</p>
               </div>
               {/* Arrow */}
               <div className="flex-shrink-0 flex items-center text-muted-foreground">→</div>
               {/* Approvers */}
-              {approval.steps.map((step, idx) => (
+              {approval.approvalLines.map((step, idx) => (
                 <div key={step.id} className="flex items-center gap-2">
                   <div className="flex-shrink-0 text-center">
                     <div className={`w-12 h-12 mx-auto rounded-full flex items-center justify-center text-sm font-semibold ${
                       step.status === 'APPROVED' ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300' :
                       step.status === 'REJECTED' ? 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300' :
-                      step.status === 'PENDING' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300' :
+                      step.status === 'WAITING' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300' :
                       'bg-muted text-muted-foreground'
                     }`}>
                       {step.status === 'APPROVED' ? <Check className="h-5 w-5" /> :
@@ -447,10 +446,10 @@ export default function ApprovalDetailPage() {
                     <p className="text-[10px] text-muted-foreground">
                       {step.status === 'APPROVED' ? '승인' :
                        step.status === 'REJECTED' ? '반려' :
-                       step.status === 'PENDING' ? '대기' : '건너뜀'}
+                       step.status === 'WAITING' ? '대기' : '건너뜀'}
                     </p>
                   </div>
-                  {idx < approval.steps.length - 1 && (
+                  {idx < approval.approvalLines.length - 1 && (
                     <span className="flex-shrink-0 text-muted-foreground">→</span>
                   )}
                 </div>
@@ -519,17 +518,17 @@ export default function ApprovalDetailPage() {
                   {format(new Date(approval.createdAt), 'M/d HH:mm')}
                 </div>
                 <div className="flex-1">
-                  <span className="font-medium">{approval.requesterName}</span>
+                  <span className="font-medium">{approval.drafterName}</span>
                   <span className="text-muted-foreground"> 기안</span>
                 </div>
               </div>
-              {approval.steps
-                .filter((step) => step.processedAt)
+              {approval.approvalLines
+                .filter((step) => step.completedAt)
                 .slice(0, 5)
                 .map((step) => (
                   <div key={step.id} className="flex items-start gap-3 text-sm">
                     <div className="w-14 flex-shrink-0 text-xs text-muted-foreground">
-                      {format(new Date(step.processedAt!), 'M/d HH:mm')}
+                      {format(new Date(step.completedAt!), 'M/d HH:mm')}
                     </div>
                     <div className="flex-1">
                       <span className="font-medium">{step.approverName}</span>
@@ -543,7 +542,7 @@ export default function ApprovalDetailPage() {
                          step.status === 'REJECTED' ? '반려' :
                          step.status === 'SKIPPED' ? '건너뜀' : '대기'}
                       </span>
-                      {step.delegatorName && (
+                      {step.delegateName && (
                         <span className="text-xs text-indigo-600 ml-1">(대결)</span>
                       )}
                       {step.comment && (
@@ -760,7 +759,7 @@ export default function ApprovalDetailPage() {
                   <div className="space-y-1">
                     <CardTitle>{approval.title}</CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      {APPROVAL_TYPE_LABELS[approval.type]}
+                      {APPROVAL_TYPE_LABELS[approval.documentType]}
                       {approval.urgency === 'HIGH' && (
                         <span className="ml-2 text-red-500">
                           <AlertCircle className="inline h-4 w-4 mr-1" />
@@ -778,7 +777,7 @@ export default function ApprovalDetailPage() {
                       <div>
                         <Label className="text-muted-foreground">기안자</Label>
                         <p className="text-sm mt-1">
-                          {approval.requesterName} ({approval.requesterDepartment})
+                          {approval.drafterName} ({approval.drafterDepartmentName})
                         </p>
                       </div>
                       <div>
@@ -882,8 +881,8 @@ export default function ApprovalDetailPage() {
             </CardHeader>
             <CardContent>
               <ApprovalLine
-                steps={approval.steps}
-                requesterName={approval.requesterName}
+                steps={approval.approvalLines}
+                requesterName={approval.drafterName}
               />
             </CardContent>
           </Card>
@@ -910,17 +909,17 @@ export default function ApprovalDetailPage() {
                     {format(new Date(approval.createdAt), 'M/d HH:mm')}
                   </div>
                   <div>
-                    <span className="font-medium">{approval.requesterName}</span>
+                    <span className="font-medium">{approval.drafterName}</span>
                     님이 기안
                   </div>
                 </div>
-                {approval.steps
-                  .filter((step) => step.processedAt)
+                {approval.approvalLines
+                  .filter((step) => step.completedAt)
                   .slice(0, 3)
                   .map((step) => (
                     <div key={step.id} className="flex items-start gap-3 text-sm">
                       <div className="w-20 text-muted-foreground">
-                        {format(new Date(step.processedAt!), 'M/d HH:mm')}
+                        {format(new Date(step.completedAt!), 'M/d HH:mm')}
                       </div>
                       <div>
                         <span className="font-medium">{step.approverName}</span>
@@ -942,9 +941,9 @@ export default function ApprovalDetailPage() {
                             ? '건너뜀'
                             : '대기'}
                         </span>
-                        {step.delegatorName && (
+                        {step.delegateName && (
                           <span className="text-xs text-indigo-600 ml-1">
-                            (대결: {step.delegatorName})
+                            (대결: {step.delegateName})
                           </span>
                         )}
                         {step.directApproved && (

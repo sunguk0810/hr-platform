@@ -247,7 +247,7 @@ export default function JobPostingDetailPage() {
               <div className="flex items-center gap-2 col-span-2">
                 <Banknote className="h-4 w-4 text-muted-foreground" />
                 <span>
-                  {job.isSalaryNegotiable
+                  {job.salaryNegotiable
                     ? '협의 가능'
                     : job.salaryMin && job.salaryMax
                     ? `${job.salaryMin.toLocaleString()} ~ ${job.salaryMax.toLocaleString()} 만원`
@@ -257,8 +257,8 @@ export default function JobPostingDetailPage() {
               <div className="flex items-center gap-2 col-span-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
                 <span>
-                  {format(new Date(job.postingStartDate), 'M/d', { locale: ko })} ~{' '}
-                  {format(new Date(job.postingEndDate), 'M/d', { locale: ko })}
+                  {format(new Date(job.openDate), 'M/d', { locale: ko })} ~{' '}
+                  {format(new Date(job.closeDate), 'M/d', { locale: ko })}
                 </span>
               </div>
             </div>
@@ -503,7 +503,7 @@ export default function JobPostingDetailPage() {
                       <Label className="text-muted-foreground">급여</Label>
                       <p className="text-sm mt-1 flex items-center gap-1">
                         <Banknote className="h-4 w-4" />
-                        {job.isSalaryNegotiable
+                        {job.salaryNegotiable
                           ? '협의 가능'
                           : job.salaryMin && job.salaryMax
                           ? `${job.salaryMin.toLocaleString()} ~ ${job.salaryMax.toLocaleString()} 만원`
@@ -513,9 +513,9 @@ export default function JobPostingDetailPage() {
                     <div>
                       <Label className="text-muted-foreground">공고 기간</Label>
                       <p className="text-sm mt-1">
-                        {format(new Date(job.postingStartDate), 'yyyy년 M월 d일', { locale: ko })}
+                        {format(new Date(job.openDate), 'yyyy년 M월 d일', { locale: ko })}
                         {' ~ '}
-                        {format(new Date(job.postingEndDate), 'yyyy년 M월 d일', { locale: ko })}
+                        {format(new Date(job.closeDate), 'yyyy년 M월 d일', { locale: ko })}
                       </p>
                     </div>
                     <div>
@@ -593,7 +593,7 @@ export default function JobPostingDetailPage() {
                                 <ApplicationStatusBadge status={app.status} />
                               </td>
                               <td className="px-4 py-2 text-sm text-muted-foreground">
-                                {format(new Date(app.appliedAt), 'M/d', { locale: ko })}
+                                {app.createdAt ? format(new Date(app.createdAt), 'M/d', { locale: ko }) : '-'}
                               </td>
                             </tr>
                           ))}
