@@ -44,13 +44,18 @@ public class EmployeeResponse {
     private String mobile;
 
     private UUID departmentId;
+    private String departmentName;
     private String positionCode;
+    private String positionName;
     private String jobTitleCode;
+    private String gradeCode;
+    private String gradeName;
     private LocalDate hireDate;
     private LocalDate resignDate;
     private EmployeeStatus status;
     private EmploymentType employmentType;
     private UUID managerId;
+    private String managerName;
     private Instant createdAt;
     private Instant updatedAt;
 

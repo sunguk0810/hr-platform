@@ -6,6 +6,8 @@ import com.hrsaas.attendance.domain.entity.OvertimeStatus;
 import com.hrsaas.attendance.service.OvertimeService;
 import com.hrsaas.common.response.ApiResponse;
 import com.hrsaas.common.response.PageResponse;
+import com.hrsaas.common.security.SecurityContextHolder;
+import com.hrsaas.common.security.UserContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -36,13 +38,11 @@ public class OvertimeController {
     @Operation(summary = "초과근무 신청")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<OvertimeRequestResponse>> create(
-            @RequestHeader("X-User-ID") UUID employeeId,
-            @RequestHeader("X-User-Name") String employeeName,
-            @RequestHeader(value = "X-Department-ID", required = false) UUID departmentId,
-            @RequestHeader(value = "X-Department-Name", required = false) String departmentName,
             @Valid @RequestBody CreateOvertimeRequest request) {
+        UserContext user = SecurityContextHolder.getCurrentUser();
         OvertimeRequestResponse response = overtimeService.create(
-            employeeId, employeeName, departmentId, departmentName, request);
+            user.getUserId(), user.getEmployeeName(), user.getDepartmentId(),
+            user.getDepartmentName(), request);
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(ApiResponse.created(response));
     }
@@ -59,8 +59,8 @@ public class OvertimeController {
     @Operation(summary = "내 초과근무 신청 목록")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<PageResponse<OvertimeRequestResponse>>> getMyOvertimes(
-            @RequestHeader("X-User-ID") UUID employeeId,
             @PageableDefault(size = 20) Pageable pageable) {
+        UUID employeeId = SecurityContextHolder.getCurrentUser().getUserId();
         Page<OvertimeRequestResponse> page = overtimeService.getByEmployeeId(employeeId, pageable);
         return ResponseEntity.ok(ApiResponse.success(PageResponse.from(page)));
     }
@@ -69,8 +69,8 @@ public class OvertimeController {
     @Operation(summary = "상태별 내 초과근무 신청 목록")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<List<OvertimeRequestResponse>>> getMyOvertimesByStatus(
-            @RequestHeader("X-User-ID") UUID employeeId,
             @PathVariable OvertimeStatus status) {
+        UUID employeeId = SecurityContextHolder.getCurrentUser().getUserId();
         List<OvertimeRequestResponse> response = overtimeService.getByEmployeeIdAndStatus(employeeId, status);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
@@ -135,9 +135,9 @@ public class OvertimeController {
     @Operation(summary = "내 초과근무 총 시간 조회")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<BigDecimal>> getTotalHours(
-            @RequestHeader("X-User-ID") UUID employeeId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        UUID employeeId = SecurityContextHolder.getCurrentUser().getUserId();
         BigDecimal totalHours = overtimeService.getTotalOvertimeHours(employeeId, startDate, endDate);
         return ResponseEntity.ok(ApiResponse.success(totalHours));
     }

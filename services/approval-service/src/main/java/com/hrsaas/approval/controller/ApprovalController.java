@@ -8,6 +8,7 @@ import com.hrsaas.approval.domain.dto.response.ApprovalSummaryResponse;
 import com.hrsaas.approval.service.ApprovalService;
 import com.hrsaas.common.response.ApiResponse;
 import com.hrsaas.common.response.PageResponse;
+import com.hrsaas.common.security.SecurityContextHolder;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -35,11 +36,12 @@ public class ApprovalController {
     @Operation(summary = "결재 문서 생성")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<ApprovalDocumentResponse> create(
-            @Valid @RequestBody CreateApprovalRequest request,
-            @RequestHeader("X-User-ID") UUID userId,
-            @RequestHeader(value = "X-User-Name", required = false) String userName,
-            @RequestHeader(value = "X-Department-ID", required = false) UUID departmentId,
-            @RequestHeader(value = "X-Department-Name", required = false) String departmentName) {
+            @Valid @RequestBody CreateApprovalRequest request) {
+        var currentUser = SecurityContextHolder.getCurrentUser();
+        UUID userId = currentUser.getUserId();
+        String userName = currentUser.getUsername();
+        UUID departmentId = currentUser.getDepartmentId();
+        String departmentName = currentUser.getDepartmentName();
         return ApiResponse.success(approvalService.create(request, userId, userName, departmentId, departmentName));
     }
 
@@ -61,8 +63,8 @@ public class ApprovalController {
     @Operation(summary = "내 임시저장 문서 목록")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<PageResponse<ApprovalDocumentResponse>> getMyDrafts(
-            @RequestHeader("X-User-ID") UUID userId,
             @PageableDefault(size = 20) Pageable pageable) {
+        UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
         return ApiResponse.success(approvalService.getMyDrafts(userId, pageable));
     }
 
@@ -70,8 +72,8 @@ public class ApprovalController {
     @Operation(summary = "결재 대기 문서 목록")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<PageResponse<ApprovalDocumentResponse>> getPendingApprovals(
-            @RequestHeader("X-User-ID") UUID userId,
             @PageableDefault(size = 20) Pageable pageable) {
+        UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
         return ApiResponse.success(approvalService.getPendingApprovals(userId, pageable));
     }
 
@@ -79,22 +81,24 @@ public class ApprovalController {
     @Operation(summary = "결재 처리 완료 문서 목록")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<PageResponse<ApprovalDocumentResponse>> getProcessedApprovals(
-            @RequestHeader("X-User-ID") UUID userId,
             @PageableDefault(size = 20) Pageable pageable) {
+        UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
         return ApiResponse.success(approvalService.getProcessedApprovals(userId, pageable));
     }
 
     @GetMapping("/pending/count")
     @Operation(summary = "결재 대기 문서 수")
     @PreAuthorize("isAuthenticated()")
-    public ApiResponse<Long> countPendingApprovals(@RequestHeader("X-User-ID") UUID userId) {
+    public ApiResponse<Long> countPendingApprovals() {
+        UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
         return ApiResponse.success(approvalService.countPendingApprovals(userId));
     }
 
     @GetMapping("/summary")
     @Operation(summary = "결재 요약 정보")
     @PreAuthorize("isAuthenticated()")
-    public ApiResponse<ApprovalSummaryResponse> getSummary(@RequestHeader("X-User-ID") UUID userId) {
+    public ApiResponse<ApprovalSummaryResponse> getSummary() {
+        UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
         return ApiResponse.success(approvalService.getSummary(userId));
     }
 
@@ -111,8 +115,8 @@ public class ApprovalController {
     public ApiResponse<PageResponse<ApprovalDocumentResponse>> getApprovals(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String type,
-            @RequestHeader(value = "X-User-ID", required = false) UUID userId,
             @PageableDefault(size = 20) Pageable pageable) {
+        UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
         return ApiResponse.success(approvalService.search(status, type, userId, pageable));
     }
 
@@ -121,8 +125,8 @@ public class ApprovalController {
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<ApprovalDocumentResponse> approve(
             @PathVariable UUID id,
-            @RequestHeader("X-User-ID") UUID userId,
             @RequestBody(required = false) Map<String, String> body) {
+        UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
         String comment = body != null ? body.get("comment") : null;
         return ApiResponse.success(approvalService.approve(id, userId, comment));
     }
@@ -132,8 +136,8 @@ public class ApprovalController {
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<ApprovalDocumentResponse> reject(
             @PathVariable UUID id,
-            @RequestHeader("X-User-ID") UUID userId,
             @RequestBody Map<String, String> body) {
+        UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
         String reason = body.get("reason");
         return ApiResponse.success(approvalService.reject(id, userId, reason));
     }
@@ -150,8 +154,8 @@ public class ApprovalController {
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<ApprovalDocumentResponse> process(
             @PathVariable UUID id,
-            @RequestHeader("X-User-ID") UUID userId,
             @Valid @RequestBody ProcessApprovalRequest request) {
+        UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
         return ApiResponse.success(approvalService.process(id, userId, request));
     }
 
@@ -159,8 +163,8 @@ public class ApprovalController {
     @Operation(summary = "결재 문서 회수")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<ApprovalDocumentResponse> recall(
-            @PathVariable UUID id,
-            @RequestHeader("X-User-ID") UUID userId) {
+            @PathVariable UUID id) {
+        UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
         return ApiResponse.success(approvalService.recall(id, userId));
     }
 
@@ -168,8 +172,8 @@ public class ApprovalController {
     @Operation(summary = "결재 문서 취소")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<ApprovalDocumentResponse> cancel(
-            @PathVariable UUID id,
-            @RequestHeader("X-User-ID") UUID userId) {
+            @PathVariable UUID id) {
+        UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
         return ApiResponse.success(approvalService.cancel(id, userId));
     }
 }

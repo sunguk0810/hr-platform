@@ -7,6 +7,7 @@ import com.hrsaas.attendance.domain.dto.response.AttendanceSummaryResponse;
 import com.hrsaas.attendance.domain.dto.response.WorkHoursStatisticsResponse;
 import com.hrsaas.attendance.service.AttendanceService;
 import com.hrsaas.common.response.ApiResponse;
+import com.hrsaas.common.security.SecurityContextHolder;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -31,8 +32,8 @@ public class AttendanceController {
     @PostMapping("/check-in")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<AttendanceRecordResponse> checkIn(
-            @Valid @RequestBody CheckInRequest request,
-            @RequestHeader("X-User-ID") UUID userId) {
+            @Valid @RequestBody CheckInRequest request) {
+        UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
         return ApiResponse.success(attendanceService.checkIn(request, userId));
     }
 
@@ -40,16 +41,16 @@ public class AttendanceController {
     @PostMapping("/check-out")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<AttendanceRecordResponse> checkOut(
-            @Valid @RequestBody CheckOutRequest request,
-            @RequestHeader("X-User-ID") UUID userId) {
+            @Valid @RequestBody CheckOutRequest request) {
+        UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
         return ApiResponse.success(attendanceService.checkOut(request, userId));
     }
 
     @Operation(summary = "오늘 근태 조회")
     @GetMapping("/today")
     @PreAuthorize("isAuthenticated()")
-    public ApiResponse<AttendanceRecordResponse> getToday(
-            @RequestHeader("X-User-ID") UUID userId) {
+    public ApiResponse<AttendanceRecordResponse> getToday() {
+        UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
         return ApiResponse.success(attendanceService.getToday(userId));
     }
 
@@ -57,9 +58,9 @@ public class AttendanceController {
     @GetMapping("/my")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<List<AttendanceRecordResponse>> getMyAttendances(
-            @RequestHeader("X-User-ID") UUID userId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
         return ApiResponse.success(attendanceService.getMyAttendances(userId, startDate, endDate));
     }
 
@@ -67,9 +68,9 @@ public class AttendanceController {
     @GetMapping("/my/summary")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<AttendanceSummaryResponse> getMonthlySummary(
-            @RequestHeader("X-User-ID") UUID userId,
             @RequestParam int year,
             @RequestParam int month) {
+        UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
         return ApiResponse.success(attendanceService.getMonthlySummary(userId, year, month));
     }
 

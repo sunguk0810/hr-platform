@@ -1,5 +1,6 @@
 package com.hrsaas.notification.controller;
 
+import com.hrsaas.common.security.SecurityContextHolder;
 import com.hrsaas.notification.infrastructure.SseEmitterRegistry;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -34,13 +35,13 @@ public class SseController {
      * Creates an SSE subscription for the authenticated user.
      * The connection stays open for up to 30 minutes with heartbeats every 30 seconds.
      *
-     * @param userId the user ID from the X-User-ID header
      * @return the SSE emitter streaming real-time notification events
      */
     @GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @Operation(summary = "SSE 구독 (실시간 알림)")
     @PreAuthorize("isAuthenticated()")
-    public SseEmitter subscribe(@RequestHeader("X-User-ID") UUID userId) {
+    public SseEmitter subscribe() {
+        UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
         SseEmitter emitter = new SseEmitter(30 * 60 * 1000L); // 30 minutes timeout
 
         emitterRegistry.register(userId, emitter);
@@ -77,13 +78,12 @@ public class SseController {
 
     /**
      * Removes the SSE subscription for the authenticated user.
-     *
-     * @param userId the user ID from the X-User-ID header
      */
     @DeleteMapping("/unsubscribe")
     @Operation(summary = "SSE 구독 해제")
     @PreAuthorize("isAuthenticated()")
-    public void unsubscribe(@RequestHeader("X-User-ID") UUID userId) {
+    public void unsubscribe() {
+        UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
         emitterRegistry.remove(userId);
         log.info("SSE subscription removed for user: {}", userId);
     }

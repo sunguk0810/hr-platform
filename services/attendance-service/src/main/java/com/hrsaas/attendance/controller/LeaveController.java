@@ -6,6 +6,8 @@ import com.hrsaas.attendance.domain.dto.response.LeaveRequestResponse;
 import com.hrsaas.attendance.service.LeaveService;
 import com.hrsaas.common.response.ApiResponse;
 import com.hrsaas.common.response.PageResponse;
+import com.hrsaas.common.security.SecurityContextHolder;
+import com.hrsaas.common.security.UserContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -33,12 +35,10 @@ public class LeaveController {
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<LeaveRequestResponse> create(
-            @Valid @RequestBody CreateLeaveRequest request,
-            @RequestHeader("X-User-ID") UUID userId,
-            @RequestHeader(value = "X-User-Name", required = false) String userName,
-            @RequestHeader(value = "X-Department-ID", required = false) UUID departmentId,
-            @RequestHeader(value = "X-Department-Name", required = false) String departmentName) {
-        return ApiResponse.success(leaveService.create(request, userId, userName, departmentId, departmentName));
+            @Valid @RequestBody CreateLeaveRequest request) {
+        UserContext user = SecurityContextHolder.getCurrentUser();
+        return ApiResponse.success(leaveService.create(request, user.getUserId(),
+                user.getEmployeeName(), user.getDepartmentId(), user.getDepartmentName()));
     }
 
     @Operation(summary = "휴가 상세 조회")
@@ -52,8 +52,8 @@ public class LeaveController {
     @GetMapping("/my")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<PageResponse<LeaveRequestResponse>> getMyLeaves(
-            @RequestHeader("X-User-ID") UUID userId,
             @PageableDefault(size = 20) Pageable pageable) {
+        UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
         return ApiResponse.success(leaveService.getMyLeaves(userId, pageable));
     }
 
@@ -61,8 +61,8 @@ public class LeaveController {
     @GetMapping("/my/balances")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<List<LeaveBalanceResponse>> getMyBalances(
-            @RequestHeader("X-User-ID") UUID userId,
             @RequestParam(required = false) Integer year) {
+        UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
         int targetYear = year != null ? year : Year.now().getValue();
         return ApiResponse.success(leaveService.getMyBalances(userId, targetYear));
     }
@@ -70,18 +70,16 @@ public class LeaveController {
     @Operation(summary = "휴가 제출")
     @PostMapping("/{id}/submit")
     @PreAuthorize("isAuthenticated()")
-    public ApiResponse<LeaveRequestResponse> submit(
-            @PathVariable UUID id,
-            @RequestHeader("X-User-ID") UUID userId) {
+    public ApiResponse<LeaveRequestResponse> submit(@PathVariable UUID id) {
+        UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
         return ApiResponse.success(leaveService.submit(id, userId));
     }
 
     @Operation(summary = "휴가 취소")
     @PostMapping("/{id}/cancel")
     @PreAuthorize("isAuthenticated()")
-    public ApiResponse<LeaveRequestResponse> cancel(
-            @PathVariable UUID id,
-            @RequestHeader("X-User-ID") UUID userId) {
+    public ApiResponse<LeaveRequestResponse> cancel(@PathVariable UUID id) {
+        UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
         return ApiResponse.success(leaveService.cancel(id, userId));
     }
 }

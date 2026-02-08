@@ -26,6 +26,62 @@ http:
       service: mdm-service
       middlewares:
         - cors-headers
+    employee:
+      rule: "PathPrefix(`/api/v1/employees`) || PathPrefix(`/api/v1/transfers`) || PathPrefix(`/api/v1/employee-numbers`) || PathPrefix(`/api/v1/condolences`)"
+      entryPoints:
+        - web
+      service: employee-service
+      middlewares:
+        - cors-headers
+    attendance:
+      rule: "PathPrefix(`/api/v1/attendances`) || PathPrefix(`/api/v1/leaves`) || PathPrefix(`/api/v1/overtimes`) || PathPrefix(`/api/v1/holidays`)"
+      entryPoints:
+        - web
+      service: attendance-service
+      middlewares:
+        - cors-headers
+    approval:
+      rule: "PathPrefix(`/api/v1/approvals`)"
+      entryPoints:
+        - web
+      service: approval-service
+      middlewares:
+        - cors-headers
+    notification:
+      rule: "PathPrefix(`/api/v1/notifications`)"
+      entryPoints:
+        - web
+      service: notification-service
+      middlewares:
+        - cors-headers
+    file:
+      rule: "PathPrefix(`/api/v1/files`)"
+      entryPoints:
+        - web
+      service: file-service
+      middlewares:
+        - cors-headers
+    recruitment:
+      rule: "PathPrefix(`/api/v1/jobs`) || PathPrefix(`/api/v1/applications`) || PathPrefix(`/api/v1/interviews`) || PathPrefix(`/api/v1/offers`) || PathPrefix(`/api/v1/applicants`)"
+      entryPoints:
+        - web
+      service: recruitment-service
+      middlewares:
+        - cors-headers
+    appointment:
+      rule: "PathPrefix(`/api/v1/appointments`)"
+      entryPoints:
+        - web
+      service: appointment-service
+      middlewares:
+        - cors-headers
+    certificate:
+      rule: "PathPrefix(`/api/v1/certificates`)"
+      entryPoints:
+        - web
+      service: certificate-service
+      middlewares:
+        - cors-headers
 
   services:
     auth-service:
@@ -40,3 +96,35 @@ http:
       loadBalancer:
         servers:
           - url: "http://hr-saas-mdm:8087"
+    employee-service:
+      loadBalancer:
+        servers:
+          - url: "http://hr-saas-employee:8084"
+    attendance-service:
+      loadBalancer:
+        servers:
+          - url: "http://hr-saas-attendance:8085"
+    approval-service:
+      loadBalancer:
+        servers:
+          - url: "http://hr-saas-approval:8086"
+    notification-service:
+      loadBalancer:
+        servers:
+          - url: "http://hr-saas-notification:8088"
+    file-service:
+      loadBalancer:
+        servers:
+          - url: "http://hr-saas-file:8089"
+    recruitment-service:
+      loadBalancer:
+        servers:
+          - url: "http://hr-saas-recruitment:8093"
+    appointment-service:
+      loadBalancer:
+        servers:
+          - url: "http://hr-saas-appointment:8091"
+    certificate-service:
+      loadBalancer:
+        servers:
+          - url: "http://hr-saas-certificate:8092"

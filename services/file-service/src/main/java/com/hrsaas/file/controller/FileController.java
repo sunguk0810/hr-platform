@@ -4,6 +4,7 @@ import com.hrsaas.file.domain.dto.response.FileResponse;
 import com.hrsaas.file.service.FileService;
 import com.hrsaas.common.response.ApiResponse;
 import com.hrsaas.common.response.PageResponse;
+import com.hrsaas.common.security.SecurityContextHolder;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -39,10 +40,10 @@ public class FileController {
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "referenceType", required = false) String referenceType,
             @RequestParam(value = "referenceId", required = false) UUID referenceId,
-            @RequestParam(value = "isPublic", required = false) Boolean isPublic,
-            @RequestHeader("X-User-ID") UUID userId,
-            @RequestHeader(value = "X-User-Name", required = false) String userName) {
-        return ApiResponse.success(fileService.upload(file, referenceType, referenceId, userId, userName, isPublic));
+            @RequestParam(value = "isPublic", required = false) Boolean isPublic) {
+        var currentUser = SecurityContextHolder.getCurrentUser();
+        return ApiResponse.success(fileService.upload(file, referenceType, referenceId,
+                currentUser.getUserId(), currentUser.getEmployeeName(), isPublic));
     }
 
     @PostMapping(value = "/multiple", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -53,10 +54,10 @@ public class FileController {
             @RequestParam("files") List<MultipartFile> files,
             @RequestParam(value = "referenceType", required = false) String referenceType,
             @RequestParam(value = "referenceId", required = false) UUID referenceId,
-            @RequestParam(value = "isPublic", required = false) Boolean isPublic,
-            @RequestHeader("X-User-ID") UUID userId,
-            @RequestHeader(value = "X-User-Name", required = false) String userName) {
-        return ApiResponse.success(fileService.uploadMultiple(files, referenceType, referenceId, userId, userName, isPublic));
+            @RequestParam(value = "isPublic", required = false) Boolean isPublic) {
+        var currentUser = SecurityContextHolder.getCurrentUser();
+        return ApiResponse.success(fileService.uploadMultiple(files, referenceType, referenceId,
+                currentUser.getUserId(), currentUser.getEmployeeName(), isPublic));
     }
 
     @GetMapping("/{id}")
@@ -79,8 +80,8 @@ public class FileController {
     @Operation(summary = "내 파일 목록 조회")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<PageResponse<FileResponse>> getMyFiles(
-            @RequestHeader("X-User-ID") UUID userId,
             @PageableDefault(size = 20) Pageable pageable) {
+        UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
         return ApiResponse.success(fileService.getMyFiles(userId, pageable));
     }
 
@@ -114,9 +115,8 @@ public class FileController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "파일 삭제")
     @PreAuthorize("isAuthenticated()")
-    public void delete(
-            @PathVariable UUID id,
-            @RequestHeader("X-User-ID") UUID userId) {
+    public void delete(@PathVariable UUID id) {
+        UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
         fileService.delete(id, userId);
     }
 }
