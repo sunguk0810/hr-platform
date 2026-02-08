@@ -4,6 +4,7 @@ import com.hrsaas.common.entity.AuditableEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.Instant;
 import java.time.LocalDate;
 
 @Entity
@@ -51,6 +52,12 @@ public class Tenant extends AuditableEntity {
     @Column(name = "max_employees")
     private Integer maxEmployees;
 
+    @Column(name = "terminated_at")
+    private Instant terminatedAt;
+
+    @Column(name = "data_retention_until")
+    private Instant dataRetentionUntil;
+
     @Builder
     public Tenant(String code, String name, String businessNumber, String representativeName,
                   String address, String phone, String email, PlanType planType,
@@ -79,6 +86,8 @@ public class Tenant extends AuditableEntity {
 
     public void terminate() {
         this.status = TenantStatus.TERMINATED;
+        this.terminatedAt = Instant.now();
+        this.dataRetentionUntil = Instant.now().plusSeconds(90L * 24 * 60 * 60); // 90 days retention
     }
 
     public boolean isActive() {
