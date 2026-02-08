@@ -205,6 +205,63 @@ public class CondolenceServiceImpl implements CondolenceService {
         return CondolenceRequestResponse.from(saved);
     }
 
+    // Payment operations
+
+    @Override
+    @Transactional
+    public CondolenceRequestResponse processPayment(UUID id, java.time.LocalDate paidDate) {
+        UUID tenantId = TenantContext.getCurrentTenant();
+        CondolenceRequest request = findRequestByIdAndTenantId(id, tenantId);
+
+        if (!request.isApproved()) {
+            throw new ValidationException("EMP_013", "승인된 신청만 지급 처리할 수 있습니다.");
+        }
+
+        request.markAsPaid(paidDate != null ? paidDate : java.time.LocalDate.now());
+        CondolenceRequest saved = condolenceRequestRepository.save(request);
+
+        log.info("Condolence payment processed: id={}", id);
+
+        return CondolenceRequestResponse.from(saved);
+    }
+
+    @Override
+    public Page<CondolenceRequestResponse> getPendingPayments(org.springframework.data.domain.Pageable pageable) {
+        UUID tenantId = TenantContext.getCurrentTenant();
+        Page<CondolenceRequest> requests = condolenceRequestRepository.findPendingPayments(tenantId, pageable);
+        return requests.map(CondolenceRequestResponse::from);
+    }
+
+    @Override
+    @Transactional
+    public int bulkProcessPayment(java.util.List<UUID> condolenceIds, java.time.LocalDate paidDate) {
+        UUID tenantId = TenantContext.getCurrentTenant();
+        java.time.LocalDate effectiveDate = paidDate != null ? paidDate : java.time.LocalDate.now();
+        int processedCount = 0;
+
+        for (UUID condolenceId : condolenceIds) {
+            CondolenceRequest request = condolenceRequestRepository.findByIdAndTenantId(condolenceId, tenantId)
+                .orElse(null);
+
+            if (request != null && request.isApproved()) {
+                request.markAsPaid(effectiveDate);
+                condolenceRequestRepository.save(request);
+                processedCount++;
+            }
+        }
+
+        log.info("Condolence bulk payment processed: {} of {} requests", processedCount, condolenceIds.size());
+
+        return processedCount;
+    }
+
+    @Override
+    public Page<CondolenceRequestResponse> getPaymentHistory(org.springframework.data.domain.Pageable pageable) {
+        UUID tenantId = TenantContext.getCurrentTenant();
+        Page<CondolenceRequest> requests = condolenceRequestRepository.findPaymentHistory(tenantId, pageable);
+        return requests.map(CondolenceRequestResponse::from);
+    }
+
     // Policy operations
 
     @Override

@@ -1,10 +1,7 @@
 package com.hrsaas.employee.controller;
 
 import com.hrsaas.common.response.ApiResponse;
-import com.hrsaas.employee.domain.dto.request.CreateCondolencePolicyRequest;
-import com.hrsaas.employee.domain.dto.request.CreateCondolenceRequest;
-import com.hrsaas.employee.domain.dto.request.UpdateCondolencePolicyRequest;
-import com.hrsaas.employee.domain.dto.request.UpdateCondolenceRequest;
+import com.hrsaas.employee.domain.dto.request.*;
 import com.hrsaas.employee.domain.dto.response.CondolencePolicyResponse;
 import com.hrsaas.employee.domain.dto.response.CondolenceRequestResponse;
 import com.hrsaas.employee.domain.entity.CondolenceStatus;
@@ -118,6 +115,48 @@ public class CondolenceController {
         String reason = body.get("reason");
         CondolenceRequestResponse response = condolenceService.rejectRequest(id, reason);
         return ResponseEntity.ok(ApiResponse.success(response, "경조비 신청이 반려되었습니다."));
+    }
+
+    // Payment endpoints
+
+    @PostMapping("/{id}/pay")
+    @Operation(summary = "경조비 지급 처리")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<CondolenceRequestResponse>> processPayment(
+            @PathVariable UUID id,
+            @RequestBody(required = false) ProcessPaymentRequest request) {
+        java.time.LocalDate paidDate = request != null ? request.getPaidDate() : null;
+        CondolenceRequestResponse response = condolenceService.processPayment(id, paidDate);
+        return ResponseEntity.ok(ApiResponse.success(response, "경조비 지급이 처리되었습니다."));
+    }
+
+    @GetMapping("/payments/pending")
+    @Operation(summary = "미지급 경조비 목록 조회")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<Page<CondolenceRequestResponse>>> getPendingPayments(
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        Page<CondolenceRequestResponse> response = condolenceService.getPendingPayments(pageable);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PostMapping("/payments/bulk")
+    @Operation(summary = "경조비 일괄 지급 처리")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<java.util.Map<String, Integer>>> bulkProcessPayment(
+            @Valid @RequestBody BulkProcessPaymentRequest request) {
+        int processedCount = condolenceService.bulkProcessPayment(request.getCondolenceIds(), request.getPaidDate());
+        return ResponseEntity.ok(ApiResponse.success(
+            java.util.Map.of("processedCount", processedCount),
+            processedCount + "건의 경조비 지급이 처리되었습니다."));
+    }
+
+    @GetMapping("/payments/history")
+    @Operation(summary = "경조비 지급 이력 조회")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<Page<CondolenceRequestResponse>>> getPaymentHistory(
+            @PageableDefault(size = 20, sort = "paidDate", direction = Sort.Direction.DESC) Pageable pageable) {
+        Page<CondolenceRequestResponse> response = condolenceService.getPaymentHistory(pageable);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     // Policy endpoints

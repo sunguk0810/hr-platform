@@ -47,4 +47,24 @@ public interface CondolenceRequestRepository extends JpaRepository<CondolenceReq
     long countByTenantIdAndStatus(
         @Param("tenantId") UUID tenantId,
         @Param("status") CondolenceStatus status);
+
+    /**
+     * 미지급 승인건 조회 (지급 대기)
+     */
+    @Query("SELECT r FROM CondolenceRequest r WHERE r.tenantId = :tenantId " +
+           "AND r.status = 'APPROVED' AND r.paidDate IS NULL " +
+           "ORDER BY r.createdAt DESC")
+    Page<CondolenceRequest> findPendingPayments(
+        @Param("tenantId") UUID tenantId,
+        Pageable pageable);
+
+    /**
+     * 지급 완료 이력 조회
+     */
+    @Query("SELECT r FROM CondolenceRequest r WHERE r.tenantId = :tenantId " +
+           "AND r.status = 'PAID' " +
+           "ORDER BY r.paidDate DESC")
+    Page<CondolenceRequest> findPaymentHistory(
+        @Param("tenantId") UUID tenantId,
+        Pageable pageable);
 }

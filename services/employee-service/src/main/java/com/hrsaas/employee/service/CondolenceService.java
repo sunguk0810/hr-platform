@@ -36,6 +36,15 @@ public interface CondolenceService {
 
     CondolenceRequestResponse rejectRequest(UUID id, String reason);
 
+    // Payment operations
+    CondolenceRequestResponse processPayment(UUID id, java.time.LocalDate paidDate);
+
+    Page<CondolenceRequestResponse> getPendingPayments(org.springframework.data.domain.Pageable pageable);
+
+    int bulkProcessPayment(java.util.List<UUID> condolenceIds, java.time.LocalDate paidDate);
+
+    Page<CondolenceRequestResponse> getPaymentHistory(org.springframework.data.domain.Pageable pageable);
+
     // Policy operations
     CondolencePolicyResponse createPolicy(CreateCondolencePolicyRequest request);
 
