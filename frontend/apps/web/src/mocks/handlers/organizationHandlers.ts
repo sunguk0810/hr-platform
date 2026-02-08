@@ -384,7 +384,7 @@ export const organizationHandlers = [
     });
   }),
 
-  // Delete department
+  // Delete department (G01: employee count check)
   http.delete('/api/v1/departments/:id', async ({ params }) => {
     await delay(300);
 
@@ -399,6 +399,19 @@ export const organizationHandlers = [
           timestamp: new Date().toISOString(),
         },
         { status: 404 }
+      );
+    }
+
+    // G01: Check for employees before delete
+    const dept = mockDepartments[index];
+    if (dept.employeeCount && dept.employeeCount > 0) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'ORG_010', message: '소속 직원이 있어 삭제할 수 없습니다.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 400 }
       );
     }
 
@@ -843,6 +856,164 @@ export const organizationHandlers = [
     return HttpResponse.json({
       success: true,
       data: employees,
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // G06: Department merge
+  http.post('/api/v1/departments/merge', async ({ request }) => {
+    await delay(400);
+
+    const body = await request.json() as Record<string, unknown>;
+    const sourceDepartmentIds = body.sourceDepartmentIds as string[];
+    const targetDepartmentId = body.targetDepartmentId as string | undefined;
+    const targetDepartmentName = body.targetDepartmentName as string;
+    const targetDepartmentCode = body.targetDepartmentCode as string;
+
+    let target: Department;
+    if (targetDepartmentId) {
+      target = mockDepartments.find(d => d.id === targetDepartmentId)!;
+    } else {
+      target = {
+        id: `dept-${Date.now()}`,
+        tenantId: 'tenant-001',
+        code: targetDepartmentCode,
+        name: targetDepartmentName,
+        level: 1,
+        sortOrder: mockDepartments.length + 1,
+        status: 'ACTIVE',
+        employeeCount: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      mockDepartments.push(target);
+    }
+
+    let transferred = 0;
+    const mergedIds: string[] = [];
+    for (const srcId of sourceDepartmentIds) {
+      const src = mockDepartments.find(d => d.id === srcId);
+      if (src && src.id !== target.id) {
+        transferred += src.employeeCount || 0;
+        src.status = 'MERGED';
+        mergedIds.push(src.id);
+      }
+    }
+    target.employeeCount = (target.employeeCount || 0) + transferred;
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        targetDepartment: target,
+        mergedDepartmentIds: mergedIds,
+        transferredEmployeeCount: transferred,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // G06: Department split
+  http.post('/api/v1/departments/split', async ({ request }) => {
+    await delay(400);
+
+    const body = await request.json() as Record<string, unknown>;
+    const sourceDepartmentId = body.sourceDepartmentId as string;
+    const keepSource = body.keepSource as boolean;
+    const newDepts = body.newDepartments as Array<{ name: string; code: string; employeeIds?: string[] }>;
+
+    const source = mockDepartments.find(d => d.id === sourceDepartmentId);
+    if (!source) {
+      return HttpResponse.json(
+        { success: false, error: { code: 'ORG_001', message: '부서를 찾을 수 없습니다.' } },
+        { status: 404 }
+      );
+    }
+
+    const createdDepts: Department[] = [];
+    for (const nd of newDepts || []) {
+      const newDept: Department = {
+        id: `dept-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        tenantId: 'tenant-001',
+        code: nd.code,
+        name: nd.name,
+        parentId: source.parentId,
+        parentName: source.parentName,
+        level: source.level,
+        sortOrder: mockDepartments.length + 1,
+        status: 'ACTIVE',
+        employeeCount: nd.employeeIds?.length || 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      mockDepartments.push(newDept);
+      createdDepts.push(newDept);
+    }
+
+    if (!keepSource) {
+      source.status = 'INACTIVE';
+    }
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        sourceDepartmentId,
+        newDepartments: createdDepts,
+        sourceKept: keepSource,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // G14: Organization chart
+  http.get('/api/v1/departments/org-chart', async () => {
+    await delay(300);
+
+    const activeDepts = mockDepartments.filter(d => d.status === 'ACTIVE');
+
+    interface OrgChartNode {
+      id: string;
+      code: string;
+      name: string;
+      level: number;
+      status: string;
+      manager: { id: string; name: string } | null;
+      employeeCount: number;
+      children: OrgChartNode[];
+    }
+
+    const nodeMap = new Map<string, OrgChartNode>();
+    const roots: OrgChartNode[] = [];
+
+    activeDepts.forEach(dept => {
+      nodeMap.set(dept.id, {
+        id: dept.id,
+        code: dept.code,
+        name: dept.name,
+        level: dept.level,
+        status: dept.status,
+        manager: dept.managerId ? { id: dept.managerId, name: dept.managerName || '' } : null,
+        employeeCount: dept.employeeCount || 0,
+        children: [],
+      });
+    });
+
+    activeDepts.forEach(dept => {
+      const node = nodeMap.get(dept.id)!;
+      if (dept.parentId) {
+        const parent = nodeMap.get(dept.parentId);
+        if (parent) {
+          parent.children.push(node);
+        } else {
+          roots.push(node);
+        }
+      } else {
+        roots.push(node);
+      }
+    });
+
+    return HttpResponse.json({
+      success: true,
+      data: roots,
       timestamp: new Date().toISOString(),
     });
   }),

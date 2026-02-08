@@ -1,6 +1,6 @@
 import { TenantAwareEntity } from './common';
 
-export type DepartmentStatus = 'ACTIVE' | 'INACTIVE';
+export type DepartmentStatus = 'ACTIVE' | 'INACTIVE' | 'MERGED';
 
 export interface Department extends TenantAwareEntity {
   code: string;

@@ -262,6 +262,55 @@ export const headcountHandlers = [
     });
   }),
 
+  // G13: Get headcount plan history
+  http.get('/api/v1/headcounts/plans/:id/history', async ({ params }) => {
+    await delay(200);
+
+    const { id } = params;
+    const plan = mockPlans.find((p) => p.id === id);
+
+    if (!plan) {
+      return HttpResponse.json(
+        { success: false, error: { code: 'NOT_FOUND', message: '정현원 계획을 찾을 수 없습니다.' } },
+        { status: 404 }
+      );
+    }
+
+    const mockHistory = [
+      {
+        id: `hh-${id}-1`,
+        planId: id,
+        eventType: 'PLAN_CREATED',
+        previousValue: null,
+        newValue: JSON.stringify({ plannedCount: plan.plannedCount, departmentName: plan.departmentName }),
+        actorId: 'user-1',
+        actorName: '김이사',
+        eventDate: plan.createdAt,
+        createdAt: plan.createdAt,
+      },
+      ...(plan.updatedAt !== plan.createdAt
+        ? [
+            {
+              id: `hh-${id}-2`,
+              planId: id,
+              eventType: 'PLAN_UPDATED',
+              previousValue: JSON.stringify({ plannedCount: plan.plannedCount - 2 }),
+              newValue: JSON.stringify({ plannedCount: plan.plannedCount }),
+              actorId: 'user-1',
+              actorName: '김이사',
+              eventDate: plan.updatedAt,
+              createdAt: plan.updatedAt,
+            },
+          ]
+        : []),
+    ];
+
+    return HttpResponse.json({
+      success: true,
+      data: mockHistory,
+    });
+  }),
+
   // Get headcount plan detail
   http.get('/api/v1/headcounts/plans/:id', async ({ params }) => {
     await delay(200);

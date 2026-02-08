@@ -13,6 +13,9 @@ interface Announcement {
   authorDepartment: string;
   createdAt: string;
   updatedAt: string;
+  targetScope?: 'ALL' | 'TARGETED';
+  readCount?: number;
+  isRead?: boolean;
   attachments?: {
     id: string;
     fileName: string;
@@ -289,7 +292,7 @@ export const announcementHandlers = [
     });
   }),
 
-  // Get announcement detail
+  // Get announcement detail (G12: includes readCount, isRead)
   http.get('/api/v1/announcements/:id', async ({ params }) => {
     await delay(200);
 
@@ -312,7 +315,43 @@ export const announcementHandlers = [
 
     return HttpResponse.json({
       success: true,
-      data: announcement,
+      data: {
+        ...announcement,
+        targetScope: announcement.targetScope || 'ALL',
+        readCount: Math.floor(announcement.viewCount * 0.7),
+        isRead: true,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  }),
+
+  // G12: Get announcement reads
+  http.get('/api/v1/announcements/:id/reads', async ({ params }) => {
+    await delay(200);
+
+    const { id } = params;
+    const announcement = mockAnnouncements.find((a) => a.id === id);
+
+    if (!announcement) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'ANN_001', message: '공지사항을 찾을 수 없습니다.' },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 404 }
+      );
+    }
+
+    const mockReads = [
+      { id: 'read-1', announcementId: id, employeeId: 'emp-001', readAt: new Date().toISOString() },
+      { id: 'read-2', announcementId: id, employeeId: 'emp-002', readAt: new Date().toISOString() },
+      { id: 'read-3', announcementId: id, employeeId: 'emp-003', readAt: new Date().toISOString() },
+    ];
+
+    return HttpResponse.json({
+      success: true,
+      data: mockReads,
       timestamp: new Date().toISOString(),
     });
   }),
