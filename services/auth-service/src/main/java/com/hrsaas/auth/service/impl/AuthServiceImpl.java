@@ -6,6 +6,7 @@ import com.hrsaas.auth.domain.dto.response.TokenResponse;
 import com.hrsaas.auth.domain.dto.response.UserResponse;
 import com.hrsaas.auth.domain.entity.UserEntity;
 import com.hrsaas.auth.repository.UserRepository;
+import com.hrsaas.auth.client.TenantServiceClient;
 import com.hrsaas.auth.service.AuthService;
 import com.hrsaas.auth.service.LoginHistoryService;
 import com.hrsaas.auth.service.SessionService;
@@ -39,6 +40,7 @@ public class AuthServiceImpl implements AuthService {
     private final SessionService sessionService;
     private final LoginHistoryService loginHistoryService;
     private final MfaServiceImpl mfaService;
+    private final Optional<TenantServiceClient> tenantServiceClient;
 
     @Value("${auth.password.expiry-days:90}")
     private int passwordExpiryDays;
@@ -72,6 +74,11 @@ public class AuthServiceImpl implements AuthService {
                     loginHistoryService.recordFailure(request.getUsername(), null, ipAddress, userAgent, "USER_NOT_FOUND");
                     return new BusinessException("AUTH_001", "아이디 또는 비밀번호가 올바르지 않습니다.", HttpStatus.UNAUTHORIZED);
                 });
+
+        // Check tenant status
+        if (user.getTenantId() != null) {
+            checkTenantStatus(user.getTenantId(), user.getUsername(), ipAddress, userAgent);
+        }
 
         if (!user.isActive()) {
             loginHistoryService.recordFailure(user.getUsername(), user.getTenantId(), ipAddress, userAgent, "INACTIVE_ACCOUNT");
@@ -284,6 +291,29 @@ public class AuthServiceImpl implements AuthService {
             .roles(context.getRoles() != null ? new ArrayList<>(context.getRoles()) : new ArrayList<>())
             .permissions(context.getPermissions() != null ? new ArrayList<>(context.getPermissions()) : new ArrayList<>())
             .build();
+    }
+
+    private void checkTenantStatus(UUID tenantId, String username, String ipAddress, String userAgent) {
+        tenantServiceClient.ifPresent(client -> {
+            try {
+                var response = client.getTenantStatus(tenantId);
+                if (response != null && response.getData() != null) {
+                    String status = response.getData();
+                    if ("SUSPENDED".equals(status)) {
+                        loginHistoryService.recordFailure(username, tenantId, ipAddress, userAgent, "TENANT_SUSPENDED");
+                        throw new BusinessException("AUTH_010", "테넌트가 일시 중지되었습니다. 관리자에게 문의하세요.", HttpStatus.FORBIDDEN);
+                    }
+                    if ("TERMINATED".equals(status)) {
+                        loginHistoryService.recordFailure(username, tenantId, ipAddress, userAgent, "TENANT_TERMINATED");
+                        throw new BusinessException("AUTH_011", "테넌트 계약이 종료되었습니다.", HttpStatus.FORBIDDEN);
+                    }
+                }
+            } catch (BusinessException e) {
+                throw e;
+            } catch (Exception e) {
+                log.warn("Failed to check tenant status for tenantId={}: {}", tenantId, e.getMessage());
+            }
+        });
     }
 
     private UserContext buildUserContext(UserEntity user) {
