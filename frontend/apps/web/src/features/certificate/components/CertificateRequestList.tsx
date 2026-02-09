@@ -58,12 +58,12 @@ export function CertificateRequestList({
       <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-4">
         <CardTitle>{t('requestList.title')}</CardTitle>
         <div className="flex gap-2">
-          <Select value={selectedTypeCode} onValueChange={onTypeCodeChange}>
+          <Select value={selectedTypeCode || "__all__"} onValueChange={(value) => onTypeCodeChange(value === "__all__" ? "" : value)}>
             <SelectTrigger className="h-9 w-[180px]">
               <SelectValue placeholder={t('requestList.allTypes')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">{t('requestList.allTypes')}</SelectItem>
+              <SelectItem value="__all__">{t('requestList.allTypes')}</SelectItem>
               {certificateTypes.map((type) => (
                 <SelectItem key={type.code} value={type.code}>
                   {type.name}
@@ -72,14 +72,14 @@ export function CertificateRequestList({
             </SelectContent>
           </Select>
           <Select
-            value={selectedStatus}
-            onValueChange={(value) => onStatusChange(value as RequestStatus | '')}
+            value={selectedStatus || "__all__"}
+            onValueChange={(value) => onStatusChange((value === "__all__" ? "" : value) as RequestStatus | '')}
           >
             <SelectTrigger className="h-9 w-[160px]">
               <SelectValue placeholder={t('requestList.allStatuses')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">{t('requestList.allStatuses')}</SelectItem>
+              <SelectItem value="__all__">{t('requestList.allStatuses')}</SelectItem>
               {Object.entries(REQUEST_STATUS_LABELS).map(([value, label]) => (
                 <SelectItem key={value} value={value}>
                   {label}

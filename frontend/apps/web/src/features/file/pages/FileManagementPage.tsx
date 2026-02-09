@@ -313,9 +313,9 @@ export default function FileManagementPage() {
                 {t('categoryFilter')}
               </Label>
               <Select
-                value={category}
+                value={category || "__all__"}
                 onValueChange={(value) => {
-                  setCategory(value as FileCategory | '');
+                  setCategory(value === "__all__" ? "" : value as FileCategory | '');
                   setPage(0);
                 }}
               >
@@ -323,7 +323,7 @@ export default function FileManagementPage() {
                   <SelectValue placeholder={t('categorySelect')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">{tCommon('all')}</SelectItem>
+                  <SelectItem value="__all__">{tCommon('all')}</SelectItem>
                   {fileService.getCategories().map((cat) => (
                     <SelectItem key={cat} value={cat}>
                       {FILE_CATEGORY_LABELS[cat]}

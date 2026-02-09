@@ -267,14 +267,14 @@ export function ConcurrentPositionDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t('concurrentPosition.positionLabel')}</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || ''}>
+                    <Select onValueChange={(value) => field.onChange(value === "__all__" ? "" : value)} value={field.value || "__all__"}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder={t('concurrentPosition.positionPlaceholder')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">{t('common.noSelection')}</SelectItem>
+                        <SelectItem value="__all__">{t('common.noSelection')}</SelectItem>
                         {positions_list.map((pos) => (
                           <SelectItem key={pos.id} value={pos.id}>
                             {pos.name}
@@ -293,14 +293,14 @@ export function ConcurrentPositionDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t('concurrentPosition.gradeLabel')}</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || ''}>
+                    <Select onValueChange={(value) => field.onChange(value === "__all__" ? "" : value)} value={field.value || "__all__"}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder={t('concurrentPosition.gradePlaceholder')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">{t('common.noSelection')}</SelectItem>
+                        <SelectItem value="__all__">{t('common.noSelection')}</SelectItem>
                         {grades.map((grade) => (
                           <SelectItem key={grade.id} value={grade.id}>
                             {grade.name}

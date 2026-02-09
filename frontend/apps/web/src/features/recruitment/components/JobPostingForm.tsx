@@ -224,12 +224,12 @@ export function JobPostingForm({
                 control={control}
                 name="positionId"
                 render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select value={field.value || "__all__"} onValueChange={(value) => field.onChange(value === "__all__" ? "" : value)}>
                     <SelectTrigger className="w-full h-10">
                       <SelectValue placeholder={t('jobPostingForm.positionOptional')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">{t('jobPostingForm.positionOptional')}</SelectItem>
+                      <SelectItem value="__all__">{t('jobPostingForm.positionOptional')}</SelectItem>
                       <SelectItem value="pos-001">팀장</SelectItem>
                       <SelectItem value="pos-002">선임</SelectItem>
                       <SelectItem value="pos-003">매니저</SelectItem>

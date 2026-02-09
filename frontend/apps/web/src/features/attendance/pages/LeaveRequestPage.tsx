@@ -637,28 +637,28 @@ export default function LeaveRequestPage() {
           {/* Filter */}
           <div className="flex gap-2">
             <Select
-              value={searchState.leaveType}
-              onValueChange={(value) => setLeaveType(value as LeaveType | '')}
+              value={searchState.leaveType || "__all__"}
+              onValueChange={(value) => setLeaveType(value === "__all__" ? "" : value as LeaveType | '')}
             >
               <SelectTrigger className="flex-1 h-9">
                 <SelectValue placeholder={t('leaveRequestPage.filter.allTypes')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">{t('leaveRequestPage.filter.allTypes')}</SelectItem>
+                <SelectItem value="__all__">{t('leaveRequestPage.filter.allTypes')}</SelectItem>
                 {Object.entries(LEAVE_TYPE_LABELS).map(([value, label]) => (
                   <SelectItem key={value} value={value}>{label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <Select
-              value={searchState.status}
-              onValueChange={(value) => setStatus(value as LeaveStatus | '')}
+              value={searchState.status || "__all__"}
+              onValueChange={(value) => setStatus(value === "__all__" ? "" : value as LeaveStatus | '')}
             >
               <SelectTrigger className="flex-1 h-9">
                 <SelectValue placeholder={t('leaveRequestPage.filter.allStatus')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">{t('leaveRequestPage.filter.allStatus')}</SelectItem>
+                <SelectItem value="__all__">{t('leaveRequestPage.filter.allStatus')}</SelectItem>
                 <SelectItem value="PENDING">{t('leaveRequestPage.filter.pending')}</SelectItem>
                 <SelectItem value="APPROVED">{t('leaveRequestPage.filter.approved')}</SelectItem>
                 <SelectItem value="REJECTED">{t('leaveRequestPage.filter.rejected')}</SelectItem>
@@ -813,28 +813,28 @@ export default function LeaveRequestPage() {
           <CardTitle>{t('leaveRequestPage.requestList.title')}</CardTitle>
           <div className="flex gap-2">
             <Select
-              value={searchState.leaveType}
-              onValueChange={(value) => setLeaveType(value as LeaveType | '')}
+              value={searchState.leaveType || "__all__"}
+              onValueChange={(value) => setLeaveType(value === "__all__" ? "" : value as LeaveType | '')}
             >
               <SelectTrigger className="h-9 w-[180px]">
                 <SelectValue placeholder={t('leaveRequestPage.filter.allTypes')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">{t('leaveRequestPage.filter.allTypes')}</SelectItem>
+                <SelectItem value="__all__">{t('leaveRequestPage.filter.allTypes')}</SelectItem>
                 {Object.entries(LEAVE_TYPE_LABELS).map(([value, label]) => (
                   <SelectItem key={value} value={value}>{label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <Select
-              value={searchState.status}
-              onValueChange={(value) => setStatus(value as LeaveStatus | '')}
+              value={searchState.status || "__all__"}
+              onValueChange={(value) => setStatus(value === "__all__" ? "" : value as LeaveStatus | '')}
             >
               <SelectTrigger className="h-9 w-[180px]">
                 <SelectValue placeholder={t('leaveRequestPage.filter.allStatus')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">{t('leaveRequestPage.filter.allStatus')}</SelectItem>
+                <SelectItem value="__all__">{t('leaveRequestPage.filter.allStatus')}</SelectItem>
                 <SelectItem value="PENDING">{t('leaveRequestPage.filter.pending')}</SelectItem>
                 <SelectItem value="APPROVED">{t('leaveRequestPage.filter.approved')}</SelectItem>
                 <SelectItem value="REJECTED">{t('leaveRequestPage.filter.rejected')}</SelectItem>
