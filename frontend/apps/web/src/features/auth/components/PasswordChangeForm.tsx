@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,9 +21,13 @@ import {
   CheckCircle2,
   Shield,
 } from 'lucide-react';
+import type { TFunction } from 'i18next';
 
 // Password strength calculation
-function calculatePasswordStrength(password: string): {
+function calculatePasswordStrength(
+  password: string,
+  t: TFunction
+): {
   score: number;
   label: string;
   color: string;
@@ -52,48 +57,52 @@ function calculatePasswordStrength(password: string): {
   score = Math.max(0, Math.min(score, 7));
 
   if (score <= 2) {
-    return { score: (score / 7) * 100, label: '약함', color: 'bg-red-500' };
+    return { score: (score / 7) * 100, label: t('passwordChange.strengthWeak'), color: 'bg-red-500' };
   } else if (score <= 4) {
-    return { score: (score / 7) * 100, label: '보통', color: 'bg-yellow-500' };
+    return { score: (score / 7) * 100, label: t('passwordChange.strengthFair'), color: 'bg-yellow-500' };
   } else if (score <= 5) {
-    return { score: (score / 7) * 100, label: '강함', color: 'bg-green-500' };
+    return { score: (score / 7) * 100, label: t('passwordChange.strengthStrong'), color: 'bg-green-500' };
   } else {
-    return { score: (score / 7) * 100, label: '매우 강함', color: 'bg-green-600' };
+    return { score: (score / 7) * 100, label: t('passwordChange.strengthVeryStrong'), color: 'bg-green-600' };
   }
 }
 
 // Validation rules
-const passwordRules = [
-  { id: 'length', label: '8자 이상', test: (p: string) => p.length >= 8 },
-  { id: 'lowercase', label: '영문 소문자 포함', test: (p: string) => /[a-z]/.test(p) },
-  { id: 'uppercase', label: '영문 대문자 포함', test: (p: string) => /[A-Z]/.test(p) },
-  { id: 'number', label: '숫자 포함', test: (p: string) => /[0-9]/.test(p) },
-  { id: 'special', label: '특수문자 포함', test: (p: string) => /[^a-zA-Z0-9]/.test(p) },
-];
+function getPasswordRules(t: TFunction) {
+  return [
+    { id: 'length', label: t('passwordChange.rule.length'), test: (p: string) => p.length >= 8 },
+    { id: 'lowercase', label: t('passwordChange.rule.lowercase'), test: (p: string) => /[a-z]/.test(p) },
+    { id: 'uppercase', label: t('passwordChange.rule.uppercase'), test: (p: string) => /[A-Z]/.test(p) },
+    { id: 'number', label: t('passwordChange.rule.number'), test: (p: string) => /[0-9]/.test(p) },
+    { id: 'special', label: t('passwordChange.rule.special'), test: (p: string) => /[^a-zA-Z0-9]/.test(p) },
+  ];
+}
 
-// Form schema
-const passwordChangeSchema = z
-  .object({
-    currentPassword: z.string().min(1, '현재 비밀번호를 입력해주세요.'),
-    newPassword: z
-      .string()
-      .min(8, '비밀번호는 8자 이상이어야 합니다.')
-      .regex(/[a-z]/, '영문 소문자를 포함해야 합니다.')
-      .regex(/[A-Z]/, '영문 대문자를 포함해야 합니다.')
-      .regex(/[0-9]/, '숫자를 포함해야 합니다.')
-      .regex(/[^a-zA-Z0-9]/, '특수문자를 포함해야 합니다.'),
-    confirmPassword: z.string().min(1, '비밀번호 확인을 입력해주세요.'),
-  })
-  .refine((data) => data.newPassword !== data.currentPassword, {
-    message: '새 비밀번호는 현재 비밀번호와 달라야 합니다.',
-    path: ['newPassword'],
-  })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: '비밀번호가 일치하지 않습니다.',
-    path: ['confirmPassword'],
-  });
+// Form schema factory
+function createPasswordChangeSchema(t: TFunction) {
+  return z
+    .object({
+      currentPassword: z.string().min(1, t('passwordChange.currentPasswordRequired')),
+      newPassword: z
+        .string()
+        .min(8, t('passwordChange.newPasswordMinLength'))
+        .regex(/[a-z]/, t('passwordChange.newPasswordLowercase'))
+        .regex(/[A-Z]/, t('passwordChange.newPasswordUppercase'))
+        .regex(/[0-9]/, t('passwordChange.newPasswordNumber'))
+        .regex(/[^a-zA-Z0-9]/, t('passwordChange.newPasswordSpecial')),
+      confirmPassword: z.string().min(1, t('passwordChange.confirmPasswordRequired')),
+    })
+    .refine((data) => data.newPassword !== data.currentPassword, {
+      message: t('passwordChange.newPasswordSameAsCurrent'),
+      path: ['newPassword'],
+    })
+    .refine((data) => data.newPassword === data.confirmPassword, {
+      message: t('passwordChange.confirmPasswordMismatch'),
+      path: ['confirmPassword'],
+    });
+}
 
-type PasswordChangeFormData = z.infer<typeof passwordChangeSchema>;
+type PasswordChangeFormData = z.infer<ReturnType<typeof createPasswordChangeSchema>>;
 
 export interface PasswordChangeFormProps {
   onSubmit: (data: { currentPassword: string; newPassword: string }) => Promise<void>;
@@ -114,12 +123,16 @@ export function PasswordChangeForm({
   variant = 'default',
   className,
 }: PasswordChangeFormProps) {
+  const { t } = useTranslation('auth');
   const [showPasswords, setShowPasswords] = React.useState({
     current: false,
     new: false,
     confirm: false,
   });
   const [success, setSuccess] = React.useState(false);
+
+  const passwordChangeSchema = React.useMemo(() => createPasswordChangeSchema(t), [t]);
+  const passwordRules = React.useMemo(() => getPasswordRules(t), [t]);
 
   const {
     register,
@@ -138,7 +151,7 @@ export function PasswordChangeForm({
 
   const newPassword = watch('newPassword', '');
   const confirmPassword = watch('confirmPassword', '');
-  const passwordStrength = calculatePasswordStrength(newPassword);
+  const passwordStrength = calculatePasswordStrength(newPassword, t);
 
   const handleFormSubmit = async (data: PasswordChangeFormData) => {
     setSuccess(false);
@@ -164,12 +177,12 @@ export function PasswordChangeForm({
       {/* Current Password */}
       {showCurrentPassword && (
         <div className="space-y-2">
-          <Label htmlFor="currentPassword">현재 비밀번호</Label>
+          <Label htmlFor="currentPassword">{t('passwordChange.currentPassword')}</Label>
           <div className="relative">
             <Input
               id="currentPassword"
               type={showPasswords.current ? 'text' : 'password'}
-              placeholder="현재 비밀번호를 입력하세요"
+              placeholder={t('passwordChange.currentPasswordPlaceholder')}
               autoComplete="current-password"
               {...register('currentPassword')}
               className={cn(
@@ -194,12 +207,12 @@ export function PasswordChangeForm({
 
       {/* New Password */}
       <div className="space-y-2">
-        <Label htmlFor="newPassword">새 비밀번호</Label>
+        <Label htmlFor="newPassword">{t('passwordChange.newPassword')}</Label>
         <div className="relative">
           <Input
             id="newPassword"
             type={showPasswords.new ? 'text' : 'password'}
-            placeholder="새 비밀번호를 입력하세요"
+            placeholder={t('passwordChange.newPasswordPlaceholder')}
             autoComplete="new-password"
             {...register('newPassword')}
             className={cn('pr-10', errors.newPassword && 'border-destructive')}
@@ -221,7 +234,7 @@ export function PasswordChangeForm({
         {newPassword && (
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">비밀번호 강도</span>
+              <span className="text-muted-foreground">{t('passwordChange.strength')}</span>
               <span className={cn('font-medium', passwordStrength.color.replace('bg-', 'text-'))}>
                 {passwordStrength.label}
               </span>
@@ -258,12 +271,12 @@ export function PasswordChangeForm({
 
       {/* Confirm Password */}
       <div className="space-y-2">
-        <Label htmlFor="confirmPassword">비밀번호 확인</Label>
+        <Label htmlFor="confirmPassword">{t('passwordChange.confirmPassword')}</Label>
         <div className="relative">
           <Input
             id="confirmPassword"
             type={showPasswords.confirm ? 'text' : 'password'}
-            placeholder="비밀번호를 다시 입력하세요"
+            placeholder={t('passwordChange.confirmPasswordPlaceholder')}
             autoComplete="new-password"
             {...register('confirmPassword')}
             className={cn(
@@ -287,7 +300,7 @@ export function PasswordChangeForm({
         {!errors.confirmPassword && confirmPassword && newPassword === confirmPassword && (
           <p className="text-sm text-green-600 flex items-center gap-1">
             <Check className="h-3 w-3" />
-            비밀번호가 일치합니다
+            {t('passwordChange.passwordMatch')}
           </p>
         )}
       </div>
@@ -304,7 +317,7 @@ export function PasswordChangeForm({
       {success && (
         <Alert className="border-green-500 bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400">
           <CheckCircle2 className="h-4 w-4" />
-          <AlertDescription>비밀번호가 성공적으로 변경되었습니다.</AlertDescription>
+          <AlertDescription>{t('passwordChange.success')}</AlertDescription>
         </Alert>
       )}
 
@@ -313,12 +326,12 @@ export function PasswordChangeForm({
         {isLoading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            변경 중...
+            {t('passwordChange.changing')}
           </>
         ) : (
           <>
             <Lock className="mr-2 h-4 w-4" />
-            비밀번호 변경
+            {t('passwordChange.changeButton')}
           </>
         )}
       </Button>
@@ -331,10 +344,10 @@ export function PasswordChangeForm({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
-            비밀번호 변경
+            {t('passwordChange.title')}
           </CardTitle>
           <CardDescription>
-            보안을 위해 주기적으로 비밀번호를 변경하세요.
+            {t('passwordChange.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>{formContent}</CardContent>
@@ -351,9 +364,12 @@ export interface PasswordRequirementsProps {
 }
 
 export function PasswordRequirements({ className }: PasswordRequirementsProps) {
+  const { t } = useTranslation('auth');
+  const passwordRules = React.useMemo(() => getPasswordRules(t), [t]);
+
   return (
     <div className={cn('space-y-2', className)}>
-      <h4 className="text-sm font-medium">비밀번호 요구사항</h4>
+      <h4 className="text-sm font-medium">{t('passwordChange.requirements')}</h4>
       <ul className="text-xs text-muted-foreground space-y-1">
         {passwordRules.map((rule) => (
           <li key={rule.id} className="flex items-center gap-1.5">

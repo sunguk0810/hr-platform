@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -50,22 +51,22 @@ const mockTeamLeaves: TeamLeave[] = [
   },
 ];
 
-function getDateLabel(startDate: string, endDate: string): string {
+function getDateLabel(startDate: string, endDate: string, t: (key: string) => string): string {
   const start = new Date(startDate);
   const end = new Date(endDate);
 
   if (isToday(start)) {
     if (startDate === endDate) {
-      return '오늘';
+      return t('teamLeave.dateLabel.today');
     }
-    return `오늘 ~ ${format(end, 'M.d(EEE)', { locale: ko })}`;
+    return `${t('teamLeave.dateLabel.today')} ~ ${format(end, 'M.d(EEE)', { locale: ko })}`;
   }
 
   if (isTomorrow(start)) {
     if (startDate === endDate) {
-      return '내일';
+      return t('teamLeave.dateLabel.tomorrow');
     }
-    return `내일 ~ ${format(end, 'M.d(EEE)', { locale: ko })}`;
+    return `${t('teamLeave.dateLabel.tomorrow')} ~ ${format(end, 'M.d(EEE)', { locale: ko })}`;
   }
 
   if (startDate === endDate) {
@@ -76,6 +77,8 @@ function getDateLabel(startDate: string, endDate: string): string {
 }
 
 export function TeamLeaveWidget() {
+  const { t } = useTranslation('dashboard');
+
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.dashboard.teamLeave(),
     queryFn: async () => {
@@ -106,7 +109,7 @@ export function TeamLeaveWidget() {
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base">
           <Users className="h-4 w-4" />
-          팀원 휴가 현황
+          {t('teamLeave.title')}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -118,7 +121,7 @@ export function TeamLeaveWidget() {
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <Calendar className="h-10 w-10 text-muted-foreground mb-2" />
             <p className="text-sm text-muted-foreground">
-              예정된 팀원 휴가가 없습니다
+              {t('teamLeave.empty')}
             </p>
           </div>
         ) : (
@@ -127,7 +130,7 @@ export function TeamLeaveWidget() {
             {todayLeaves.length > 0 && (
               <div>
                 <h4 className="text-xs font-medium text-muted-foreground mb-2">
-                  오늘 휴가 ({todayLeaves.length}명)
+                  {t('teamLeave.todayLeave', { count: todayLeaves.length })}
                 </h4>
                 <div className="space-y-2">
                   {todayLeaves.map((leave) => (
@@ -152,7 +155,7 @@ export function TeamLeaveWidget() {
                           </p>
                         </div>
                         <span className="text-xs text-red-600 dark:text-red-400 font-medium">
-                          {getDateLabel(leave.startDate, leave.endDate)}
+                          {getDateLabel(leave.startDate, leave.endDate, t)}
                         </span>
                       </div>
                     </Link>
@@ -165,7 +168,7 @@ export function TeamLeaveWidget() {
             {upcomingLeaves.length > 0 && (
               <div>
                 <h4 className="text-xs font-medium text-muted-foreground mb-2">
-                  예정된 휴가
+                  {t('teamLeave.upcomingLeave')}
                 </h4>
                 <div className="space-y-2">
                   {upcomingLeaves.slice(0, 3).map((leave) => (
@@ -190,7 +193,7 @@ export function TeamLeaveWidget() {
                           </p>
                         </div>
                         <span className="text-xs text-muted-foreground">
-                          {getDateLabel(leave.startDate, leave.endDate)}
+                          {getDateLabel(leave.startDate, leave.endDate, t)}
                         </span>
                       </div>
                     </Link>

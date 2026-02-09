@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { FileCheck, ChevronRight, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,8 @@ interface PendingApprovalsData {
 }
 
 export function PendingApprovalsWidget() {
+  const { t } = useTranslation('dashboard');
+
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.dashboard.pendingApprovals(),
     queryFn: async () => {
@@ -35,19 +38,15 @@ export function PendingApprovalsWidget() {
     const now = new Date();
     const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) return '오늘';
-    if (diffDays === 1) return '어제';
+    if (diffDays === 0) return t('approvals.dateFormat.today');
+    if (diffDays === 1) return t('approvals.dateFormat.yesterday');
     return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
   };
 
   const getTypeLabel = (type: string) => {
-    const types: Record<string, string> = {
-      LEAVE_REQUEST: '휴가',
-      EXPENSE: '경비',
-      OVERTIME: '연장근무',
-      PERSONNEL: '인사',
-    };
-    return types[type] || type;
+    const key = `approvals.types.${type}`;
+    const translated = t(key);
+    return translated === key ? type : translated;
   };
 
   const getUrgencyColor = (urgency: ApprovalItem['urgency']) => {
@@ -66,8 +65,8 @@ export function PendingApprovalsWidget() {
   return (
     <WidgetContainer
       data-tour="pending-approvals-widget"
-      title="결재 대기"
-      description={`${data?.total || 0}건의 결재가 대기 중입니다`}
+      title={t('approvals.title')}
+      description={t('approvals.description', { count: data?.total || 0 })}
       isLoading={isLoading}
       action={
         <Button variant="ghost" size="sm" asChild>
@@ -108,7 +107,7 @@ export function PendingApprovalsWidget() {
           <div className="flex flex-col items-center justify-center py-6 text-center">
             <FileCheck className="h-10 w-10 text-muted-foreground/50" />
             <p className="mt-2 text-sm text-muted-foreground">
-              대기 중인 결재가 없습니다
+              {t('approvals.noItems')}
             </p>
           </div>
         )}
@@ -116,7 +115,7 @@ export function PendingApprovalsWidget() {
         {data?.total && data.total > 3 && (
           <Button variant="outline" className="w-full" asChild>
             <Link to="/approvals">
-              전체 {data.total}건 보기
+              {t('approvals.viewAll', { count: data.total })}
             </Link>
           </Button>
         )}

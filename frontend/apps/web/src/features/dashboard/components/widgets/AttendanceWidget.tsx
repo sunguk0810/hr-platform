@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Clock, LogIn, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { WidgetContainer } from './WidgetContainer';
@@ -16,6 +17,7 @@ interface AttendanceData {
 }
 
 export function AttendanceWidget() {
+  const { t } = useTranslation('dashboard');
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
@@ -58,11 +60,11 @@ export function AttendanceWidget() {
   const getStatusText = (status: AttendanceData['status']) => {
     switch (status) {
       case 'NOT_CHECKED_IN':
-        return '미출근';
+        return t('attendance.status.notCheckedIn');
       case 'WORKING':
-        return '근무중';
+        return t('attendance.status.working');
       case 'CHECKED_OUT':
-        return '퇴근완료';
+        return t('attendance.status.checkedOut');
       default:
         return '--';
     }
@@ -82,11 +84,11 @@ export function AttendanceWidget() {
   };
 
   return (
-    <WidgetContainer data-tour="attendance-widget" title="출퇴근" description="오늘의 근무 현황" isLoading={isLoading}>
+    <WidgetContainer data-tour="attendance-widget" title={t('attendance.title')} description={t('attendance.description')} isLoading={isLoading}>
       <div className="space-y-4">
         {/* Status */}
         <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">상태</span>
+          <span className="text-sm text-muted-foreground">{t('attendance.status.label')}</span>
           <span className={cn('font-medium', data && getStatusColor(data.status))}>
             {data ? getStatusText(data.status) : '--'}
           </span>
@@ -95,13 +97,13 @@ export function AttendanceWidget() {
         {/* Times */}
         <div className="grid grid-cols-2 gap-4">
           <div className="rounded-lg bg-muted/50 p-3 text-center">
-            <p className="text-xs text-muted-foreground">출근</p>
+            <p className="text-xs text-muted-foreground">{t('attendance.checkIn')}</p>
             <p className="mt-1 text-lg font-semibold">
               {formatTime(data?.checkInTime || null)}
             </p>
           </div>
           <div className="rounded-lg bg-muted/50 p-3 text-center">
-            <p className="text-xs text-muted-foreground">퇴근</p>
+            <p className="text-xs text-muted-foreground">{t('attendance.checkOut')}</p>
             <p className="mt-1 text-lg font-semibold">
               {formatTime(data?.checkOutTime || null)}
             </p>
@@ -112,7 +114,7 @@ export function AttendanceWidget() {
         {data?.status === 'WORKING' && (
           <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <Clock className="h-4 w-4" />
-            <span>근무시간: {data.workDuration}</span>
+            <span>{t('attendance.workDurationValue', { duration: data.workDuration })}</span>
           </div>
         )}
 
@@ -125,7 +127,7 @@ export function AttendanceWidget() {
               disabled={checkInMutation.isPending}
             >
               <LogIn className="mr-2 h-4 w-4" />
-              출근하기
+              {t('attendance.checkInButton')}
             </Button>
           )}
           {data?.status === 'WORKING' && (
@@ -136,12 +138,12 @@ export function AttendanceWidget() {
               disabled={checkOutMutation.isPending}
             >
               <LogOut className="mr-2 h-4 w-4" />
-              퇴근하기
+              {t('attendance.checkOutButton')}
             </Button>
           )}
           {data?.status === 'CHECKED_OUT' && (
             <div className="flex-1 rounded-lg bg-green-50 p-3 text-center text-sm text-green-700 dark:bg-green-950 dark:text-green-300">
-              오늘 하루도 수고하셨습니다!
+              {t('attendance.goodJob')}
             </div>
           )}
         </div>

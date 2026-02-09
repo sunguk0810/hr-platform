@@ -18,6 +18,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -80,26 +81,6 @@ const widgetIcons: Record<WidgetType, React.ComponentType<{ className?: string }
   teamLeave: Users,
 };
 
-const widgetDescriptions: Record<WidgetType, string> = {
-  attendance: '오늘의 출퇴근 상태와 버튼',
-  leaveBalance: '남은 휴가 일수 및 현황',
-  pendingApprovals: '대기 중인 결재 목록',
-  recentNotifications: '최근 알림 목록',
-  teamCalendar: '팀원 휴가/일정 캘린더',
-  quickLinks: '자주 사용하는 기능 바로가기',
-  orgSummary: '조직 현황 요약 (관리자 전용)',
-  statistics: 'HR 통계 및 지표 (관리자 전용)',
-  announcements: '최근 공지사항 목록',
-  birthdays: '오늘의 생일 축하',
-  teamLeave: '팀원 휴가 현황',
-};
-
-const sizeLabels: Record<WidgetConfig['size'], string> = {
-  sm: '작게',
-  md: '보통',
-  lg: '크게',
-};
-
 interface SortableWidgetCardProps {
   widget: WidgetConfig;
   onToggle: (id: string) => void;
@@ -113,6 +94,7 @@ function SortableWidgetCard({
   onSizeChange,
   isDragging,
 }: SortableWidgetCardProps) {
+  const { t } = useTranslation('dashboard');
   const {
     attributes,
     listeners,
@@ -148,7 +130,7 @@ function SortableWidgetCard({
               'cursor-grab p-1 text-muted-foreground hover:text-foreground active:cursor-grabbing mt-0.5',
               'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded'
             )}
-            aria-label={`${widget.title} 위젯 순서 변경. 스페이스바를 눌러 드래그 시작`}
+            aria-label={t('customizer.dragAriaLabel', { title: widget.title })}
             {...attributes}
             {...listeners}
           >
@@ -184,17 +166,20 @@ function SortableWidgetCard({
               <Switch
                 checked={widget.enabled}
                 onCheckedChange={() => onToggle(widget.id)}
-                aria-label={`${widget.title} ${widget.enabled ? '비활성화' : '활성화'}`}
+                aria-label={t('customizer.toggleAriaLabel', {
+                  title: widget.title,
+                  state: widget.enabled ? t('customizer.deactivate') : t('customizer.activate'),
+                })}
               />
             </div>
             <p className="text-xs text-muted-foreground">
-              {widgetDescriptions[widget.type]}
+              {t(`customizer.descriptions.${widget.type}`)}
             </p>
 
             {widget.enabled && (
               <div className="flex items-center gap-2 pt-1">
                 <Label htmlFor={`size-${widget.id}`} className="text-xs">
-                  크기:
+                  {t('customizer.sizeLabel')}
                 </Label>
                 <Select
                   value={widget.size}
@@ -206,9 +191,9 @@ function SortableWidgetCard({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="sm">{sizeLabels.sm}</SelectItem>
-                    <SelectItem value="md">{sizeLabels.md}</SelectItem>
-                    <SelectItem value="lg">{sizeLabels.lg}</SelectItem>
+                    <SelectItem value="sm">{t('customizer.size.sm')}</SelectItem>
+                    <SelectItem value="md">{t('customizer.size.md')}</SelectItem>
+                    <SelectItem value="lg">{t('customizer.size.lg')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -222,6 +207,7 @@ function SortableWidgetCard({
 
 // Drag overlay component for visual feedback during drag
 function DragOverlayCard({ widget }: { widget: WidgetConfig }) {
+  const { t } = useTranslation('dashboard');
   const Icon = widgetIcons[widget.type];
 
   return (
@@ -247,7 +233,7 @@ function DragOverlayCard({ widget }: { widget: WidgetConfig }) {
           <div className="flex-1 min-w-0">
             <span className="font-medium">{widget.title}</span>
             <p className="text-xs text-muted-foreground">
-              {widgetDescriptions[widget.type]}
+              {t(`customizer.descriptions.${widget.type}`)}
             </p>
           </div>
         </div>
@@ -262,6 +248,7 @@ export interface WidgetCustomizerProps {
 }
 
 export function WidgetCustomizer({ trigger, className }: WidgetCustomizerProps) {
+  const { t } = useTranslation('dashboard');
   const { widgets, toggleWidget, updateWidgetSize, reorderWidgets, resetToDefault } =
     useDashboardStore();
   const [open, setOpen] = React.useState(false);
@@ -354,7 +341,7 @@ export function WidgetCustomizer({ trigger, className }: WidgetCustomizerProps) 
         {trigger || (
           <Button variant="outline" size="sm" className={className}>
             <Settings2 className="mr-2 h-4 w-4" />
-            위젯 설정
+            {t('customizer.widgetSettingsButton')}
           </Button>
         )}
       </SheetTrigger>
@@ -362,13 +349,13 @@ export function WidgetCustomizer({ trigger, className }: WidgetCustomizerProps) 
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             <LayoutGrid className="h-5 w-5" />
-            대시보드 위젯 설정
+            {t('customizer.title')}
           </SheetTitle>
           <SheetDescription>
-            대시보드에 표시할 위젯을 선택하고 순서를 변경할 수 있습니다.
+            {t('customizer.description')}
             <br />
             <span className="text-xs">
-              키보드: Tab으로 이동, Space로 드래그 시작, 화살표로 이동, Space로 놓기
+              {t('customizer.keyboardHint')}
             </span>
           </SheetDescription>
         </SheetHeader>
@@ -376,11 +363,11 @@ export function WidgetCustomizer({ trigger, className }: WidgetCustomizerProps) 
         <div className="py-4">
           <div className="flex items-center justify-between mb-4">
             <div className="text-sm text-muted-foreground">
-              {enabledCount}개 위젯 활성화
+              {t('customizer.enabledCount', { count: enabledCount })}
             </div>
             <Button variant="ghost" size="sm" onClick={handleReset}>
               <RotateCcw className="mr-1 h-3 w-3" />
-              초기화
+              {t('customizer.reset')}
             </Button>
           </div>
 
@@ -400,7 +387,7 @@ export function WidgetCustomizer({ trigger, className }: WidgetCustomizerProps) 
                 <div
                   className="space-y-2 pr-4"
                   role="listbox"
-                  aria-label="위젯 목록"
+                  aria-label={t('customizer.widgetList')}
                 >
                   {localWidgets.map((widget) => (
                     <SortableWidgetCard
@@ -422,9 +409,9 @@ export function WidgetCustomizer({ trigger, className }: WidgetCustomizerProps) 
 
         <SheetFooter className="gap-2 sm:gap-0">
           <Button variant="outline" onClick={() => setOpen(false)}>
-            취소
+            {t('customizer.cancel')}
           </Button>
-          <Button onClick={handleSave}>변경사항 저장</Button>
+          <Button onClick={handleSave}>{t('customizer.save')}</Button>
         </SheetFooter>
       </SheetContent>
     </Sheet>
@@ -437,6 +424,7 @@ export interface WidgetQuickToggleProps {
 }
 
 export function WidgetQuickToggle({ className }: WidgetQuickToggleProps) {
+  const { t } = useTranslation('dashboard');
   const { widgets, toggleWidget } = useDashboardStore();
 
   return (
@@ -450,7 +438,7 @@ export function WidgetQuickToggle({ className }: WidgetQuickToggleProps) {
             size="sm"
             onClick={() => toggleWidget(widget.id)}
             className={cn('h-8 px-2', !widget.enabled && 'opacity-60')}
-            title={`${widget.title} ${widget.enabled ? '숨기기' : '표시'}`}
+            title={`${widget.title} ${widget.enabled ? t('customizer.hide') : t('customizer.show')}`}
           >
             <Icon className="h-3.5 w-3.5 mr-1" />
             <span className="text-xs">{widget.title}</span>
@@ -482,6 +470,7 @@ export function WidgetPreviewCard({
   onToggle,
   className,
 }: WidgetPreviewCardProps) {
+  const { t } = useTranslation('dashboard');
   const Icon = widgetIcons[type];
 
   return (
@@ -501,7 +490,7 @@ export function WidgetPreviewCard({
       </CardHeader>
       <CardContent>
         <p className="text-xs text-muted-foreground mb-3">
-          {widgetDescriptions[type]}
+          {t(`customizer.descriptions.${type}`)}
         </p>
         <div className="flex items-center justify-between">
           <span
@@ -510,7 +499,7 @@ export function WidgetPreviewCard({
               enabled ? 'text-primary' : 'text-muted-foreground'
             )}
           >
-            {enabled ? '표시 중' : '숨김'}
+            {enabled ? t('customizer.showing') : t('customizer.hidden')}
           </span>
           <Switch
             checked={enabled}

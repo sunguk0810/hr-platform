@@ -12,6 +12,7 @@
     "checkInButton": "Check In",
     "checkOutButton": "Check Out",
     "status": {
+      "label": "Status",
       "notCheckedIn": "Not Checked In",
       "working": "Working",
       "checkedOut": "Checked Out"
@@ -32,6 +33,7 @@
     "used": "Used",
     "total": "Total",
     "days": "/ {{count}} days",
+    "daysCount": "{{count}} days",
     "unit": "items"
   },
   "approvals": {
@@ -41,11 +43,67 @@
     "pendingDocuments": "Pending Documents",
     "unit": "items",
     "viewAll": "View all {{count}}",
+    "dateFormat": {
+      "today": "Today",
+      "yesterday": "Yesterday"
+    },
     "types": {
       "LEAVE_REQUEST": "Leave",
       "EXPENSE": "Expense",
       "OVERTIME": "Overtime",
       "PERSONNEL": "Personnel"
+    }
+  },
+  "teamLeave": {
+    "title": "Team Leave Status",
+    "empty": "No scheduled team leaves",
+    "todayLeave": "Today's Leave ({{count}})",
+    "upcomingLeave": "Upcoming Leave",
+    "dateLabel": {
+      "today": "Today",
+      "tomorrow": "Tomorrow"
+    }
+  },
+  "grid": {
+    "empty": "No widgets to display.",
+    "emptyHint": "Enable widgets in widget settings."
+  },
+  "customizer": {
+    "title": "Dashboard Widget Settings",
+    "description": "Select widgets to display on the dashboard and change their order.",
+    "keyboardHint": "Keyboard: Tab to navigate, Space to start drag, Arrows to move, Space to drop",
+    "enabledCount": "{{count}} widgets enabled",
+    "reset": "Reset",
+    "widgetSettingsButton": "Widget Settings",
+    "widgetList": "Widget list",
+    "dragAriaLabel": "Reorder {{title}} widget. Press spacebar to start dragging",
+    "toggleAriaLabel": "{{title}} {{state}}",
+    "activate": "Enable",
+    "deactivate": "Disable",
+    "sizeLabel": "Size:",
+    "size": {
+      "sm": "Small",
+      "md": "Medium",
+      "lg": "Large"
+    },
+    "cancel": "Cancel",
+    "save": "Save Changes",
+    "showing": "Showing",
+    "hidden": "Hidden",
+    "hide": "Hide",
+    "show": "Show",
+    "descriptions": {
+      "attendance": "Today's attendance status and buttons",
+      "leaveBalance": "Remaining leave days and status",
+      "pendingApprovals": "Pending approval list",
+      "recentNotifications": "Recent notifications",
+      "teamCalendar": "Team leave/schedule calendar",
+      "quickLinks": "Quick access to frequent features",
+      "orgSummary": "Organization summary (Admin only)",
+      "statistics": "HR statistics & metrics (Admin only)",
+      "announcements": "Recent announcements",
+      "birthdays": "Today's birthday celebrations",
+      "teamLeave": "Team leave status"
     }
   },
   "widgets": {

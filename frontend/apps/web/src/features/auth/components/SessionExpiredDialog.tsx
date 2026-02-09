@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -16,6 +17,7 @@ interface SessionExpiredDialogProps {
 
 export function SessionExpiredDialog({ open, onOpenChange }: SessionExpiredDialogProps) {
   const navigate = useNavigate();
+  const { t } = useTranslation('auth');
 
   const handleLoginClick = () => {
     onOpenChange(false);
@@ -26,14 +28,14 @@ export function SessionExpiredDialog({ open, onOpenChange }: SessionExpiredDialo
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>세션 만료</DialogTitle>
+          <DialogTitle>{t('sessionExpiredDialog.title')}</DialogTitle>
           <DialogDescription>
-            로그인 세션이 만료되었습니다. 다시 로그인해주세요.
+            {t('sessionExpiredDialog.description')}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button onClick={handleLoginClick} className="w-full">
-            로그인 페이지로 이동
+            {t('sessionExpiredDialog.goToLogin')}
           </Button>
         </DialogFooter>
       </DialogContent>

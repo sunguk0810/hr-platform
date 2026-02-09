@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/stores/authStore';
 import { useDashboardStore, type WidgetConfig, type WidgetType } from '@/stores/dashboardStore';
 import { AttendanceWidget } from './widgets/AttendanceWidget';
@@ -23,15 +24,12 @@ const widgetComponents: Record<WidgetType, React.ComponentType | null> = {
   announcements: AnnouncementsWidget,
   birthdays: BirthdaysWidget,
   teamLeave: TeamLeaveWidget,
-  recentNotifications: null, // 아직 구현 안됨
-  teamCalendar: null, // 아직 구현 안됨
-  quickLinks: null, // 아직 구현 안됨
+  recentNotifications: null,
+  teamCalendar: null,
+  quickLinks: null,
 };
 
-// 관리자/HR 전용 위젯
 const adminOnlyWidgets: WidgetType[] = ['orgSummary', 'statistics'];
-
-// 매니저 이상 전용 위젯
 const managerOnlyWidgets: WidgetType[] = ['teamLeave'];
 
 function getWidgetColSpan(widget: WidgetConfig): string {
@@ -58,7 +56,6 @@ function WidgetRenderer({ widget, userRoles }: WidgetRendererProps) {
     return null;
   }
 
-  // 관리자 전용 위젯 체크
   if (adminOnlyWidgets.includes(widget.type)) {
     const hasAdminRole = userRoles.some(role => ADMIN_HR_ROLES.includes(role));
     if (!hasAdminRole) {
@@ -66,7 +63,6 @@ function WidgetRenderer({ widget, userRoles }: WidgetRendererProps) {
     }
   }
 
-  // 매니저 전용 위젯 체크
   if (managerOnlyWidgets.includes(widget.type)) {
     const hasManagerRole = userRoles.some(role => MANAGER_ROLES.includes(role));
     if (!hasManagerRole) {
@@ -84,29 +80,26 @@ function WidgetRenderer({ widget, userRoles }: WidgetRendererProps) {
 }
 
 export function DashboardGrid() {
+  const { t } = useTranslation('dashboard');
   const user = useAuthStore((state) => state.user);
   const widgets = useDashboardStore((state) => state.widgets);
   const userRoles = user?.roles ?? [];
 
-  // 활성화된 위젯만 필터링하고 순서대로 정렬
   const enabledWidgets = useMemo(() => {
     return widgets
       .filter((w) => w.enabled)
       .sort((a, b) => a.order - b.order);
   }, [widgets]);
 
-  // 렌더링 가능한 위젯만 필터링 (컴포넌트가 있고 권한이 있는 것만)
   const renderableWidgets = useMemo(() => {
     return enabledWidgets.filter((widget) => {
       const Component = widgetComponents[widget.type];
       if (!Component) return false;
 
-      // 관리자 전용 위젯 권한 체크
       if (adminOnlyWidgets.includes(widget.type)) {
         return userRoles.some(role => ADMIN_HR_ROLES.includes(role));
       }
 
-      // 매니저 전용 위젯 권한 체크
       if (managerOnlyWidgets.includes(widget.type)) {
         return userRoles.some(role => MANAGER_ROLES.includes(role));
       }
@@ -118,8 +111,8 @@ export function DashboardGrid() {
   if (renderableWidgets.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-        <p>표시할 위젯이 없습니다.</p>
-        <p className="text-sm">위젯 설정에서 위젯을 활성화해주세요.</p>
+        <p>{t('grid.empty')}</p>
+        <p className="text-sm">{t('grid.emptyHint')}</p>
       </div>
     );
   }

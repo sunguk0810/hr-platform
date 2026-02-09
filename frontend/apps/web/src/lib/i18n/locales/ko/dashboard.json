@@ -12,6 +12,7 @@
     "checkInButton": "출근하기",
     "checkOutButton": "퇴근하기",
     "status": {
+      "label": "상태",
       "notCheckedIn": "미출근",
       "working": "근무중",
       "checkedOut": "퇴근완료"
@@ -32,6 +33,7 @@
     "used": "사용",
     "total": "총",
     "days": "/ {{count}}일",
+    "daysCount": "{{count}}일",
     "unit": "건"
   },
   "approvals": {
@@ -41,11 +43,67 @@
     "pendingDocuments": "결재 대기 문서",
     "unit": "건",
     "viewAll": "전체 {{count}}건 보기",
+    "dateFormat": {
+      "today": "오늘",
+      "yesterday": "어제"
+    },
     "types": {
       "LEAVE_REQUEST": "휴가",
       "EXPENSE": "경비",
       "OVERTIME": "연장근무",
       "PERSONNEL": "인사"
+    }
+  },
+  "teamLeave": {
+    "title": "팀원 휴가 현황",
+    "empty": "예정된 팀원 휴가가 없습니다",
+    "todayLeave": "오늘 휴가 ({{count}}명)",
+    "upcomingLeave": "예정된 휴가",
+    "dateLabel": {
+      "today": "오늘",
+      "tomorrow": "내일"
+    }
+  },
+  "grid": {
+    "empty": "표시할 위젯이 없습니다.",
+    "emptyHint": "위젯 설정에서 위젯을 활성화해주세요."
+  },
+  "customizer": {
+    "title": "대시보드 위젯 설정",
+    "description": "대시보드에 표시할 위젯을 선택하고 순서를 변경할 수 있습니다.",
+    "keyboardHint": "키보드: Tab으로 이동, Space로 드래그 시작, 화살표로 이동, Space로 놓기",
+    "enabledCount": "{{count}}개 위젯 활성화",
+    "reset": "초기화",
+    "widgetSettingsButton": "위젯 설정",
+    "widgetList": "위젯 목록",
+    "dragAriaLabel": "{{title}} 위젯 순서 변경. 스페이스바를 눌러 드래그 시작",
+    "toggleAriaLabel": "{{title}} {{state}}",
+    "activate": "활성화",
+    "deactivate": "비활성화",
+    "sizeLabel": "크기:",
+    "size": {
+      "sm": "작게",
+      "md": "보통",
+      "lg": "크게"
+    },
+    "cancel": "취소",
+    "save": "변경사항 저장",
+    "showing": "표시 중",
+    "hidden": "숨김",
+    "hide": "숨기기",
+    "show": "표시",
+    "descriptions": {
+      "attendance": "오늘의 출퇴근 상태와 버튼",
+      "leaveBalance": "남은 휴가 일수 및 현황",
+      "pendingApprovals": "대기 중인 결재 목록",
+      "recentNotifications": "최근 알림 목록",
+      "teamCalendar": "팀원 휴가/일정 캘린더",
+      "quickLinks": "자주 사용하는 기능 바로가기",
+      "orgSummary": "조직 현황 요약 (관리자 전용)",
+      "statistics": "HR 통계 및 지표 (관리자 전용)",
+      "announcements": "최근 공지사항 목록",
+      "birthdays": "오늘의 생일 축하",
+      "teamLeave": "팀원 휴가 현황"
     }
   },
   "widgets": {
