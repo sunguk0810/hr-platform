@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -38,28 +39,6 @@ export interface AuditFilterProps {
   className?: string;
 }
 
-const ACTION_OPTIONS: { value: AuditAction | ''; label: string }[] = [
-  { value: '', label: '전체' },
-  { value: 'LOGIN', label: '로그인' },
-  { value: 'LOGOUT', label: '로그아웃' },
-  { value: 'CREATE', label: '생성' },
-  { value: 'UPDATE', label: '수정' },
-  { value: 'DELETE', label: '삭제' },
-  { value: 'READ', label: '조회' },
-  { value: 'EXPORT', label: '내보내기' },
-  { value: 'IMPORT', label: '가져오기' },
-  { value: 'APPROVE', label: '승인' },
-  { value: 'REJECT', label: '반려' },
-  { value: 'PASSWORD_CHANGE', label: '비밀번호 변경' },
-  { value: 'PERMISSION_CHANGE', label: '권한 변경' },
-];
-
-const RESULT_OPTIONS: { value: AuditResult | ''; label: string }[] = [
-  { value: '', label: '전체' },
-  { value: 'SUCCESS', label: '성공' },
-  { value: 'FAILURE', label: '실패' },
-];
-
 export function AuditFilter({
   filters,
   onFiltersChange,
@@ -67,7 +46,30 @@ export function AuditFilter({
   targetTypes = [],
   className,
 }: AuditFilterProps) {
+  const { t } = useTranslation('audit');
   const [isAdvancedOpen, setIsAdvancedOpen] = React.useState(false);
+
+  const ACTION_OPTIONS: { value: AuditAction | ''; label: string }[] = React.useMemo(() => [
+    { value: '', label: t('filter.all') },
+    { value: 'LOGIN', label: t('actions.LOGIN') },
+    { value: 'LOGOUT', label: t('actions.LOGOUT') },
+    { value: 'CREATE', label: t('actions.CREATE') },
+    { value: 'UPDATE', label: t('actions.UPDATE') },
+    { value: 'DELETE', label: t('actions.DELETE') },
+    { value: 'READ', label: t('actions.READ') },
+    { value: 'EXPORT', label: t('actions.EXPORT') },
+    { value: 'IMPORT', label: t('actions.IMPORT') },
+    { value: 'APPROVE', label: t('actions.APPROVE') },
+    { value: 'REJECT', label: t('actions.REJECT') },
+    { value: 'PASSWORD_CHANGE', label: t('actions.PASSWORD_CHANGE') },
+    { value: 'PERMISSION_CHANGE', label: t('actions.PERMISSION_CHANGE') },
+  ], [t]);
+
+  const RESULT_OPTIONS: { value: AuditResult | ''; label: string }[] = React.useMemo(() => [
+    { value: '', label: t('filter.all') },
+    { value: 'SUCCESS', label: t('detail.success') },
+    { value: 'FAILURE', label: t('detail.failure') },
+  ], [t]);
 
   const updateFilter = <K extends keyof AuditFilterValues>(
     key: K,
@@ -122,7 +124,7 @@ export function AuditFilter({
       <CardHeader className="pb-4">
         <CardTitle className="text-base flex items-center gap-2">
           <Filter className="h-4 w-4" />
-          검색 필터
+          {t('filter.title')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -130,11 +132,11 @@ export function AuditFilter({
         <div className="grid gap-4 md:grid-cols-4">
           {/* Keyword */}
           <div className="space-y-2">
-            <Label>키워드</Label>
+            <Label>{t('filter.keyword')}</Label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="사용자, 대상, IP 검색"
+                placeholder={t('filter.keywordPlaceholder')}
                 value={filters.keyword}
                 onChange={(e) => updateFilter('keyword', e.target.value)}
                 onKeyDown={handleKeyDown}
@@ -145,13 +147,13 @@ export function AuditFilter({
 
           {/* Action */}
           <div className="space-y-2">
-            <Label>액션 유형</Label>
+            <Label>{t('filter.actionType')}</Label>
             <Select
               value={filters.action}
               onValueChange={(value) => updateFilter('action', value as AuditAction | '')}
             >
               <SelectTrigger>
-                <SelectValue placeholder="전체" />
+                <SelectValue placeholder={t('filter.all')} />
               </SelectTrigger>
               <SelectContent>
                 {ACTION_OPTIONS.map((option) => (
@@ -165,13 +167,13 @@ export function AuditFilter({
 
           {/* Result */}
           <div className="space-y-2">
-            <Label>결과</Label>
+            <Label>{t('filter.result')}</Label>
             <Select
               value={filters.result}
               onValueChange={(value) => updateFilter('result', value as AuditResult | '')}
             >
               <SelectTrigger>
-                <SelectValue placeholder="전체" />
+                <SelectValue placeholder={t('filter.all')} />
               </SelectTrigger>
               <SelectContent>
                 {RESULT_OPTIONS.map((option) => (
@@ -187,7 +189,7 @@ export function AuditFilter({
           <div className="flex items-end gap-2">
             <Button onClick={onSearch} className="flex-1">
               <Search className="h-4 w-4 mr-2" />
-              검색
+              {t('filter.search')}
             </Button>
             <Popover open={isAdvancedOpen} onOpenChange={setIsAdvancedOpen}>
               <PopoverTrigger asChild>
@@ -203,26 +205,26 @@ export function AuditFilter({
               <PopoverContent className="w-80" align="end">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-medium">상세 검색</h4>
+                    <h4 className="font-medium">{t('filter.advanced')}</h4>
                     <Button variant="ghost" size="sm" onClick={handleReset}>
                       <RotateCcw className="mr-1 h-3 w-3" />
-                      초기화
+                      {t('filter.reset')}
                     </Button>
                   </div>
 
                   {/* Target Type */}
                   {targetTypes.length > 0 && (
                     <div className="space-y-2">
-                      <Label>대상 유형</Label>
+                      <Label>{t('filter.targetType')}</Label>
                       <Select
                         value={filters.targetType || '__all__'}
                         onValueChange={(value) => updateFilter('targetType', value === '__all__' ? '' : value)}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="전체" />
+                          <SelectValue placeholder={t('filter.all')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="__all__">전체</SelectItem>
+                          <SelectItem value="__all__">{t('filter.all')}</SelectItem>
                           {targetTypes.map((type) => (
                             <SelectItem key={type} value={type}>
                               {type}
@@ -235,7 +237,7 @@ export function AuditFilter({
 
                   {/* Date Range */}
                   <div className="space-y-2">
-                    <Label>기간</Label>
+                    <Label>{t('filter.period')}</Label>
                     <DateRangePicker
                       value={
                         filters.startDate && filters.endDate
@@ -246,15 +248,15 @@ export function AuditFilter({
                           : undefined
                       }
                       onChange={handleDateRangeChange}
-                      placeholder="기간 선택"
+                      placeholder={t('filter.periodSelect')}
                     />
                   </div>
 
                   {/* User ID */}
                   <div className="space-y-2">
-                    <Label>사용자 ID</Label>
+                    <Label>{t('filter.userId')}</Label>
                     <Input
-                      placeholder="사용자 ID 입력"
+                      placeholder={t('filter.userIdPlaceholder')}
                       value={filters.userId}
                       onChange={(e) => updateFilter('userId', e.target.value)}
                     />
@@ -268,7 +270,7 @@ export function AuditFilter({
                     }}
                   >
                     <Search className="mr-2 h-4 w-4" />
-                    검색
+                    {t('filter.search')}
                   </Button>
                 </div>
               </PopoverContent>
@@ -281,37 +283,37 @@ export function AuditFilter({
           <div className="flex flex-wrap gap-2 pt-2 border-t">
             {filters.action && (
               <FilterTag
-                label={`액션: ${ACTION_OPTIONS.find((o) => o.value === filters.action)?.label}`}
+                label={t('filter.activeAction', { value: ACTION_OPTIONS.find((o) => o.value === filters.action)?.label })}
                 onRemove={() => updateFilter('action', '')}
               />
             )}
             {filters.result && (
               <FilterTag
-                label={`결과: ${RESULT_OPTIONS.find((o) => o.value === filters.result)?.label}`}
+                label={t('filter.activeResult', { value: RESULT_OPTIONS.find((o) => o.value === filters.result)?.label })}
                 onRemove={() => updateFilter('result', '')}
               />
             )}
             {filters.targetType && (
               <FilterTag
-                label={`대상: ${filters.targetType}`}
+                label={t('filter.activeTarget', { value: filters.targetType })}
                 onRemove={() => updateFilter('targetType', '')}
               />
             )}
             {filters.startDate && (
               <FilterTag
-                label={`시작일: ${filters.startDate}`}
+                label={t('filter.activeStartDate', { value: filters.startDate })}
                 onRemove={() => updateFilter('startDate', '')}
               />
             )}
             {filters.endDate && (
               <FilterTag
-                label={`종료일: ${filters.endDate}`}
+                label={t('filter.activeEndDate', { value: filters.endDate })}
                 onRemove={() => updateFilter('endDate', '')}
               />
             )}
             {filters.userId && (
               <FilterTag
-                label={`사용자: ${filters.userId}`}
+                label={t('filter.activeUser', { value: filters.userId })}
                 onRemove={() => updateFilter('userId', '')}
               />
             )}

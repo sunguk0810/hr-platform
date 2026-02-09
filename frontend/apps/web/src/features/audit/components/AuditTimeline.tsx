@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -44,21 +45,6 @@ const actionIcons: Record<AuditAction, React.ComponentType<{ className?: string 
   PERMISSION_CHANGE: Shield,
 };
 
-const actionLabels: Record<AuditAction, string> = {
-  LOGIN: '로그인',
-  LOGOUT: '로그아웃',
-  CREATE: '생성',
-  UPDATE: '수정',
-  DELETE: '삭제',
-  READ: '조회',
-  EXPORT: '내보내기',
-  IMPORT: '가져오기',
-  APPROVE: '승인',
-  REJECT: '반려',
-  PASSWORD_CHANGE: '비밀번호 변경',
-  PERMISSION_CHANGE: '권한 변경',
-};
-
 const actionColors: Record<AuditAction, string> = {
   LOGIN: 'bg-blue-500',
   LOGOUT: 'bg-gray-500',
@@ -80,6 +66,23 @@ export function AuditTimeline({
   maxHeight = '500px',
   className,
 }: AuditTimelineProps) {
+  const { t } = useTranslation('audit');
+
+  const actionLabels: Record<AuditAction, string> = React.useMemo(() => ({
+    LOGIN: t('actions.LOGIN'),
+    LOGOUT: t('actions.LOGOUT'),
+    CREATE: t('actions.CREATE'),
+    UPDATE: t('actions.UPDATE'),
+    DELETE: t('actions.DELETE'),
+    READ: t('actions.READ'),
+    EXPORT: t('actions.EXPORT'),
+    IMPORT: t('actions.IMPORT'),
+    APPROVE: t('actions.APPROVE'),
+    REJECT: t('actions.REJECT'),
+    PASSWORD_CHANGE: t('actions.PASSWORD_CHANGE'),
+    PERMISSION_CHANGE: t('actions.PERMISSION_CHANGE'),
+  }), [t]);
+
   // Group logs by date
   const groupedLogs = React.useMemo(() => {
     const groups = new Map<string, AuditLog[]>();
@@ -96,7 +99,7 @@ export function AuditTimeline({
   if (logs.length === 0) {
     return (
       <div className={cn('text-center py-8 text-muted-foreground', className)}>
-        <p>감사 로그가 없습니다.</p>
+        <p>{t('timeline.empty')}</p>
       </div>
     );
   }
@@ -116,6 +119,7 @@ export function AuditTimeline({
                 <TimelineItem
                   key={log.id}
                   log={log}
+                  actionLabels={actionLabels}
                   onClick={() => onItemClick?.(log)}
                 />
               ))}
@@ -129,10 +133,11 @@ export function AuditTimeline({
 
 interface TimelineItemProps {
   log: AuditLog;
+  actionLabels: Record<AuditAction, string>;
   onClick?: () => void;
 }
 
-function TimelineItem({ log, onClick }: TimelineItemProps) {
+function TimelineItem({ log, actionLabels, onClick }: TimelineItemProps) {
   const Icon = actionIcons[log.action];
   const color = actionColors[log.action];
 

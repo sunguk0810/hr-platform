@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -31,26 +33,29 @@ import { useEmployeeSearch } from '@/features/approval/hooks/useApprovals';
 import type { TransferType, CreateTransferRequest } from '@hr-platform/shared-types';
 import { TRANSFER_TYPE_LABELS } from '@hr-platform/shared-types';
 
-const transferSchema = z.object({
+const createTransferSchema = (t: TFunction) => z.object({
   type: z.enum(['TRANSFER_OUT', 'TRANSFER_IN', 'SECONDMENT'] as const),
-  employeeId: z.string().min(1, '대상 직원을 선택해주세요'),
-  targetTenantId: z.string().min(1, '전입 테넌트를 선택해주세요'),
+  employeeId: z.string().min(1, t('requestValidation.employeeRequired')),
+  targetTenantId: z.string().min(1, t('requestValidation.tenantRequired')),
   targetDepartmentId: z.string().optional(),
   targetPositionId: z.string().optional(),
   targetGradeId: z.string().optional(),
-  transferDate: z.string().min(1, '발령일을 입력해주세요'),
+  transferDate: z.string().min(1, t('requestValidation.effectiveDateRequired')),
   returnDate: z.string().optional(),
-  reason: z.string().min(1, '이동 사유를 입력해주세요').max(500),
+  reason: z.string().min(1, t('requestValidation.reasonRequired')).max(500),
   remarks: z.string().max(1000).optional(),
   handoverItems: z.string().max(2000).optional(),
 });
 
-type TransferFormData = z.infer<typeof transferSchema>;
+type TransferFormData = z.infer<ReturnType<typeof createTransferSchema>>;
 
 export default function TransferRequestPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const { t } = useTranslation('transfer');
+
+  const transferSchema = useMemo(() => createTransferSchema(t), [t]);
 
   const [employeeSearch, setEmployeeSearch] = useState('');
   const [selectedEmployee, setSelectedEmployee] = useState<{
@@ -123,21 +128,21 @@ export default function TransferRequestPage() {
       if (!isDraft && result.data?.id) {
         await submitMutation.mutateAsync(result.data.id);
         toast({
-          title: '상신 완료',
-          description: '인사이동 요청이 상신되었습니다.',
+          title: t('requestToast.submitSuccess'),
+          description: t('requestToast.submitSuccessDesc'),
         });
       } else {
         toast({
-          title: '임시저장 완료',
-          description: '인사이동 요청이 임시저장되었습니다.',
+          title: t('requestToast.draftSuccess'),
+          description: t('requestToast.draftSuccessDesc'),
         });
       }
 
       navigate('/transfer');
     } catch {
       toast({
-        title: isDraft ? '저장 실패' : '상신 실패',
-        description: '요청 처리 중 오류가 발생했습니다.',
+        title: isDraft ? t('requestToast.draftFailed') : t('requestToast.submitFailed'),
+        description: t('requestToast.failedDesc'),
         variant: 'destructive',
       });
     }
@@ -159,8 +164,8 @@ export default function TransferRequestPage() {
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div>
-            <h1 className="text-xl font-bold">인사이동 요청</h1>
-            <p className="text-sm text-muted-foreground">전출/전입/파견 요청</p>
+            <h1 className="text-xl font-bold">{t('requestPage.title')}</h1>
+            <p className="text-sm text-muted-foreground">{t('requestPage.subtitle')}</p>
           </div>
         </div>
 
@@ -170,18 +175,18 @@ export default function TransferRequestPage() {
           <div className="bg-card rounded-xl border p-4 space-y-4">
             <h3 className="text-sm font-medium flex items-center gap-2">
               <ArrowLeftRight className="h-4 w-4" />
-              기본 정보
+              {t('requestForm.basicInfo')}
             </h3>
 
             <div className="space-y-2">
-              <Label htmlFor="mobile-type">이동 유형 *</Label>
+              <Label htmlFor="mobile-type">{t('requestForm.transferType')}</Label>
               <Controller
                 name="type"
                 control={control}
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="mobile-type">
-                      <SelectValue placeholder="유형 선택" />
+                      <SelectValue placeholder={t('requestForm.typeSelect')} />
                     </SelectTrigger>
                     <SelectContent>
                       {(Object.entries(TRANSFER_TYPE_LABELS) as [TransferType, string][]).map(
@@ -198,7 +203,7 @@ export default function TransferRequestPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>대상 직원 *</Label>
+              <Label>{t('requestForm.targetEmployee')}</Label>
               {selectedEmployee ? (
                 <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/30">
                   <div>
@@ -214,14 +219,14 @@ export default function TransferRequestPage() {
                       setValue('employeeId', '');
                     }}
                   >
-                    변경
+                    {t('requestForm.changeEmployee')}
                   </Button>
                 </div>
               ) : (
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
-                    placeholder="이름으로 검색..."
+                    placeholder={t('requestForm.searchPlaceholder')}
                     value={employeeSearch}
                     onChange={(e) => setEmployeeSearch(e.target.value)}
                     className="pl-9"
@@ -249,7 +254,7 @@ export default function TransferRequestPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="mobile-transferDate">발령일 *</Label>
+              <Label htmlFor="mobile-transferDate">{t('requestForm.effectiveDate')}</Label>
               <Input
                 id="mobile-transferDate"
                 type="date"
@@ -262,7 +267,7 @@ export default function TransferRequestPage() {
 
             {selectedType === 'SECONDMENT' && (
               <div className="space-y-2">
-                <Label htmlFor="mobile-returnDate">복귀 예정일</Label>
+                <Label htmlFor="mobile-returnDate">{t('requestForm.returnDate')}</Label>
                 <Input
                   id="mobile-returnDate"
                   type="date"
@@ -274,17 +279,17 @@ export default function TransferRequestPage() {
 
           {/* 전입처 정보 섹션 */}
           <div className="bg-card rounded-xl border p-4 space-y-4">
-            <h3 className="text-sm font-medium">전입처 정보</h3>
+            <h3 className="text-sm font-medium">{t('requestForm.inboundInfo')}</h3>
 
             <div className="space-y-2">
-              <Label htmlFor="mobile-targetTenantId">전입 테넌트 *</Label>
+              <Label htmlFor="mobile-targetTenantId">{t('requestForm.inboundTenant')}</Label>
               <Controller
                 name="targetTenantId"
                 control={control}
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="mobile-targetTenantId">
-                      <SelectValue placeholder="테넌트 선택" />
+                      <SelectValue placeholder={t('requestForm.tenantSelect')} />
                     </SelectTrigger>
                     <SelectContent>
                       {tenants.map((tenant) => (
@@ -304,14 +309,14 @@ export default function TransferRequestPage() {
             {selectedTenantId && (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="mobile-targetDepartmentId">전입 부서</Label>
+                  <Label htmlFor="mobile-targetDepartmentId">{t('requestForm.inboundDepartment')}</Label>
                   <Controller
                     name="targetDepartmentId"
                     control={control}
                     render={({ field }) => (
                       <Select value={field.value || ''} onValueChange={field.onChange}>
                         <SelectTrigger id="mobile-targetDepartmentId">
-                          <SelectValue placeholder="부서 선택 (선택사항)" />
+                          <SelectValue placeholder={t('requestForm.departmentSelect')} />
                         </SelectTrigger>
                         <SelectContent>
                           {departments.map((dept) => (
@@ -327,14 +332,14 @@ export default function TransferRequestPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="mobile-targetPositionId">직책</Label>
+                    <Label htmlFor="mobile-targetPositionId">{t('requestForm.position')}</Label>
                     <Controller
                       name="targetPositionId"
                       control={control}
                       render={({ field }) => (
                         <Select value={field.value || ''} onValueChange={field.onChange}>
                           <SelectTrigger id="mobile-targetPositionId">
-                            <SelectValue placeholder="선택" />
+                            <SelectValue placeholder={t('requestForm.positionSelect')} />
                           </SelectTrigger>
                           <SelectContent>
                             {positions.map((pos) => (
@@ -349,14 +354,14 @@ export default function TransferRequestPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="mobile-targetGradeId">직급</Label>
+                    <Label htmlFor="mobile-targetGradeId">{t('requestForm.grade')}</Label>
                     <Controller
                       name="targetGradeId"
                       control={control}
                       render={({ field }) => (
                         <Select value={field.value || ''} onValueChange={field.onChange}>
                           <SelectTrigger id="mobile-targetGradeId">
-                            <SelectValue placeholder="선택" />
+                            <SelectValue placeholder={t('requestForm.gradeSelect')} />
                           </SelectTrigger>
                           <SelectContent>
                             {grades.map((grade) => (
@@ -376,14 +381,14 @@ export default function TransferRequestPage() {
 
           {/* 이동 사유 섹션 */}
           <div className="bg-card rounded-xl border p-4 space-y-4">
-            <h3 className="text-sm font-medium">이동 사유 및 인수인계</h3>
+            <h3 className="text-sm font-medium">{t('requestForm.reasonSection')}</h3>
 
             <div className="space-y-2">
-              <Label htmlFor="mobile-reason">이동 사유 *</Label>
+              <Label htmlFor="mobile-reason">{t('requestForm.reason')}</Label>
               <Textarea
                 id="mobile-reason"
                 {...register('reason')}
-                placeholder="인사이동 사유를 입력하세요"
+                placeholder={t('requestForm.reasonPlaceholder')}
                 rows={3}
               />
               {errors.reason && (
@@ -392,21 +397,21 @@ export default function TransferRequestPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="mobile-handoverItems">인수인계 항목</Label>
+              <Label htmlFor="mobile-handoverItems">{t('requestForm.handoverItems')}</Label>
               <Textarea
                 id="mobile-handoverItems"
                 {...register('handoverItems')}
-                placeholder="인수인계가 필요한 업무 및 자료"
+                placeholder={t('requestForm.handoverPlaceholder')}
                 rows={3}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="mobile-remarks">비고</Label>
+              <Label htmlFor="mobile-remarks">{t('requestForm.remarks')}</Label>
               <Textarea
                 id="mobile-remarks"
                 {...register('remarks')}
-                placeholder="기타 참고사항"
+                placeholder={t('requestForm.remarksPlaceholder')}
                 rows={2}
               />
             </div>
@@ -423,7 +428,7 @@ export default function TransferRequestPage() {
               disabled={isPending}
               className="flex-1"
             >
-              취소
+              {t('buttons.cancel')}
             </Button>
             <Button
               type="button"
@@ -437,7 +442,7 @@ export default function TransferRequestPage() {
               ) : (
                 <Save className="mr-1 h-4 w-4" />
               )}
-              임시저장
+              {t('buttons.saveDraft')}
             </Button>
             <Button
               type="button"
@@ -450,7 +455,7 @@ export default function TransferRequestPage() {
               ) : (
                 <Send className="mr-1 h-4 w-4" />
               )}
-              상신
+              {t('buttons.submit')}
             </Button>
           </div>
         </div>
@@ -462,8 +467,8 @@ export default function TransferRequestPage() {
   return (
     <>
       <PageHeader
-        title="인사이동 요청"
-        description="계열사 간 전출/전입 또는 파견을 요청합니다."
+        title={t('requestPage.title')}
+        description={t('requestPage.description')}
       />
 
       <form onSubmit={(e) => e.preventDefault()}>
@@ -473,20 +478,20 @@ export default function TransferRequestPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <ArrowLeftRight className="h-5 w-5" aria-hidden="true" />
-                기본 정보
+                {t('requestForm.basicInfo')}
               </CardTitle>
-              <CardDescription>이동 유형과 대상 직원을 선택합니다.</CardDescription>
+              <CardDescription>{t('requestForm.basicInfoDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="type">이동 유형 *</Label>
+                <Label htmlFor="type">{t('requestForm.transferType')}</Label>
                 <Controller
                   name="type"
                   control={control}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger id="type">
-                        <SelectValue placeholder="유형 선택" />
+                        <SelectValue placeholder={t('requestForm.typeSelect')} />
                       </SelectTrigger>
                       <SelectContent>
                         {(Object.entries(TRANSFER_TYPE_LABELS) as [TransferType, string][]).map(
@@ -503,7 +508,7 @@ export default function TransferRequestPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>대상 직원 *</Label>
+                <Label>{t('requestForm.targetEmployee')}</Label>
                 {selectedEmployee ? (
                   <div className="flex items-center justify-between p-3 border rounded-md">
                     <div>
@@ -521,18 +526,18 @@ export default function TransferRequestPage() {
                         setValue('employeeId', '');
                       }}
                     >
-                      변경
+                      {t('requestForm.changeEmployee')}
                     </Button>
                   </div>
                 ) : (
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
                     <Input
-                      placeholder="이름으로 검색..."
+                      placeholder={t('requestForm.searchPlaceholder')}
                       value={employeeSearch}
                       onChange={(e) => setEmployeeSearch(e.target.value)}
                       className="pl-9"
-                      aria-label="대상 직원 검색"
+                      aria-label={t('requestForm.targetEmployee')}
                     />
                     {employeeSearch.length >= 2 &&
                       employeeResults?.data &&
@@ -562,7 +567,7 @@ export default function TransferRequestPage() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="transferDate">발령일 *</Label>
+                  <Label htmlFor="transferDate">{t('requestForm.effectiveDate')}</Label>
                   <Input
                     id="transferDate"
                     type="date"
@@ -575,7 +580,7 @@ export default function TransferRequestPage() {
 
                 {selectedType === 'SECONDMENT' && (
                   <div className="space-y-2">
-                    <Label htmlFor="returnDate">복귀 예정일</Label>
+                    <Label htmlFor="returnDate">{t('requestForm.returnDate')}</Label>
                     <Input
                       id="returnDate"
                       type="date"
@@ -590,19 +595,19 @@ export default function TransferRequestPage() {
           {/* Target Tenant */}
           <Card>
             <CardHeader>
-              <CardTitle>전입처 정보</CardTitle>
-              <CardDescription>이동할 계열사와 소속을 선택합니다.</CardDescription>
+              <CardTitle>{t('requestForm.inboundInfo')}</CardTitle>
+              <CardDescription>{t('requestForm.inboundInfoDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="targetTenantId">전입 테넌트 *</Label>
+                <Label htmlFor="targetTenantId">{t('requestForm.inboundTenant')}</Label>
                 <Controller
                   name="targetTenantId"
                   control={control}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger id="targetTenantId">
-                        <SelectValue placeholder="테넌트 선택" />
+                        <SelectValue placeholder={t('requestForm.tenantSelect')} />
                       </SelectTrigger>
                       <SelectContent>
                         {tenants.map((tenant) => (
@@ -622,14 +627,14 @@ export default function TransferRequestPage() {
               {selectedTenantId && (
                 <>
                   <div className="space-y-2">
-                    <Label htmlFor="targetDepartmentId">전입 부서</Label>
+                    <Label htmlFor="targetDepartmentId">{t('requestForm.inboundDepartment')}</Label>
                     <Controller
                       name="targetDepartmentId"
                       control={control}
                       render={({ field }) => (
                         <Select value={field.value || ''} onValueChange={field.onChange}>
                           <SelectTrigger id="targetDepartmentId">
-                            <SelectValue placeholder="부서 선택 (선택사항)" />
+                            <SelectValue placeholder={t('requestForm.departmentSelect')} />
                           </SelectTrigger>
                           <SelectContent>
                             {departments.map((dept) => (
@@ -645,14 +650,14 @@ export default function TransferRequestPage() {
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="targetPositionId">직책</Label>
+                      <Label htmlFor="targetPositionId">{t('requestForm.position')}</Label>
                       <Controller
                         name="targetPositionId"
                         control={control}
                         render={({ field }) => (
                           <Select value={field.value || ''} onValueChange={field.onChange}>
                             <SelectTrigger id="targetPositionId">
-                              <SelectValue placeholder="직책 선택" />
+                              <SelectValue placeholder={t('requestForm.positionSelect')} />
                             </SelectTrigger>
                             <SelectContent>
                               {positions.map((pos) => (
@@ -667,14 +672,14 @@ export default function TransferRequestPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="targetGradeId">직급</Label>
+                      <Label htmlFor="targetGradeId">{t('requestForm.grade')}</Label>
                       <Controller
                         name="targetGradeId"
                         control={control}
                         render={({ field }) => (
                           <Select value={field.value || ''} onValueChange={field.onChange}>
                             <SelectTrigger id="targetGradeId">
-                              <SelectValue placeholder="직급 선택" />
+                              <SelectValue placeholder={t('requestForm.gradeSelect')} />
                             </SelectTrigger>
                             <SelectContent>
                               {grades.map((grade) => (
@@ -696,15 +701,15 @@ export default function TransferRequestPage() {
           {/* Reason & Handover */}
           <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle>이동 사유 및 인수인계</CardTitle>
+              <CardTitle>{t('requestForm.reasonSection')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="reason">이동 사유 *</Label>
+                <Label htmlFor="reason">{t('requestForm.reason')}</Label>
                 <Textarea
                   id="reason"
                   {...register('reason')}
-                  placeholder="인사이동 사유를 입력하세요"
+                  placeholder={t('requestForm.reasonPlaceholder')}
                   rows={3}
                 />
                 {errors.reason && (
@@ -713,21 +718,21 @@ export default function TransferRequestPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="handoverItems">인수인계 항목</Label>
+                <Label htmlFor="handoverItems">{t('requestForm.handoverItems')}</Label>
                 <Textarea
                   id="handoverItems"
                   {...register('handoverItems')}
-                  placeholder="인수인계가 필요한 업무 및 자료를 입력하세요"
+                  placeholder={t('requestForm.handoverPlaceholder')}
                   rows={4}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="remarks">비고</Label>
+                <Label htmlFor="remarks">{t('requestForm.remarks')}</Label>
                 <Textarea
                   id="remarks"
                   {...register('remarks')}
-                  placeholder="기타 참고사항을 입력하세요"
+                  placeholder={t('requestForm.remarksPlaceholder')}
                   rows={2}
                 />
               </div>
@@ -743,7 +748,7 @@ export default function TransferRequestPage() {
             onClick={() => navigate('/transfer')}
             disabled={isPending}
           >
-            취소
+            {t('buttons.cancel')}
           </Button>
           <Button
             type="button"
@@ -756,7 +761,7 @@ export default function TransferRequestPage() {
             ) : (
               <Save className="mr-2 h-4 w-4" aria-hidden="true" />
             )}
-            임시저장
+            {t('buttons.saveDraft')}
           </Button>
           <Button
             type="button"
@@ -768,7 +773,7 @@ export default function TransferRequestPage() {
             ) : (
               <Send className="mr-2 h-4 w-4" aria-hidden="true" />
             )}
-            상신
+            {t('buttons.submit')}
           </Button>
         </div>
       </form>

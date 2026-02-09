@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Plus, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -28,6 +29,7 @@ import { MobileMenuPreview } from '../components/MobileMenuPreview';
 import type { MenuItemResponse, CreateMenuItemRequest, UpdateMenuItemRequest } from '../types';
 
 export function MenuManagementPage() {
+  const { t } = useTranslation('menu');
   const { toast } = useToast();
   const [menus, setMenus] = useState<MenuItemResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -48,8 +50,8 @@ export function MenuManagementPage() {
       console.error('Failed to fetch menus:', error);
       setMenus([]);
       toast({
-        title: '메뉴 로드 실패',
-        description: '메뉴 목록을 불러오는데 실패했습니다.',
+        title: t('toast.loadFailed'),
+        description: t('toast.loadFailedDesc'),
         variant: 'destructive',
       });
     } finally {
@@ -87,15 +89,15 @@ export function MenuManagementPage() {
     try {
       await menuService.updateMenu(menu.id, { isActive: active });
       toast({
-        title: active ? '메뉴 활성화' : '메뉴 비활성화',
-        description: `${menu.name} 메뉴가 ${active ? '활성화' : '비활성화'}되었습니다.`,
+        title: active ? t('toast.activateSuccess') : t('toast.deactivateSuccess'),
+        description: t('toast.toggleSuccessDesc', { name: menu.name, status: active ? t('toast.activateSuccess') : t('toast.deactivateSuccess') }),
       });
       fetchMenus();
     } catch (error) {
       console.error('Failed to update menu:', error);
       toast({
-        title: '업데이트 실패',
-        description: '메뉴 상태를 변경하는데 실패했습니다.',
+        title: t('toast.toggleFailed'),
+        description: t('toast.toggleFailedDesc'),
         variant: 'destructive',
       });
     }
@@ -107,14 +109,14 @@ export function MenuManagementPage() {
       if (editingMenu) {
         await menuService.updateMenu(editingMenu.id, data as UpdateMenuItemRequest);
         toast({
-          title: '메뉴 수정 완료',
-          description: '메뉴가 성공적으로 수정되었습니다.',
+          title: t('toast.editSuccess'),
+          description: t('toast.editSuccessDesc'),
         });
       } else {
         await menuService.createMenu(data as CreateMenuItemRequest);
         toast({
-          title: '메뉴 생성 완료',
-          description: '새 메뉴가 성공적으로 생성되었습니다.',
+          title: t('toast.createSuccess'),
+          description: t('toast.createSuccessDesc'),
         });
       }
       setIsFormOpen(false);
@@ -122,8 +124,8 @@ export function MenuManagementPage() {
     } catch (error) {
       console.error('Failed to save menu:', error);
       toast({
-        title: '저장 실패',
-        description: '메뉴를 저장하는데 실패했습니다.',
+        title: t('toast.saveFailed'),
+        description: t('toast.saveFailedDesc'),
         variant: 'destructive',
       });
     } finally {
@@ -137,16 +139,16 @@ export function MenuManagementPage() {
     try {
       await menuService.deleteMenu(deleteMenu.id);
       toast({
-        title: '메뉴 삭제 완료',
-        description: `${deleteMenu.name} 메뉴가 삭제되었습니다.`,
+        title: t('toast.deleteSuccess'),
+        description: t('toast.deleteSuccessDesc', { name: deleteMenu.name }),
       });
       setDeleteMenu(undefined);
       fetchMenus();
     } catch (error) {
       console.error('Failed to delete menu:', error);
       toast({
-        title: '삭제 실패',
-        description: '메뉴를 삭제하는데 실패했습니다.',
+        title: t('toast.deleteFailed'),
+        description: t('toast.deleteFailedDesc'),
         variant: 'destructive',
       });
     }
@@ -168,9 +170,9 @@ export function MenuManagementPage() {
     <div className="container py-6">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">메뉴 관리</h1>
+          <h1 className="text-2xl font-bold">{t('title')}</h1>
           <p className="text-muted-foreground">
-            동적 메뉴 구조를 관리하고 권한을 설정합니다.
+            {t('description')}
           </p>
         </div>
         <div className="flex gap-2">
@@ -179,15 +181,15 @@ export function MenuManagementPage() {
           </Button>
           <Button onClick={handleCreate}>
             <Plus className="mr-2 h-4 w-4" />
-            메뉴 추가
+            {t('addMenu')}
           </Button>
         </div>
       </div>
 
       <Tabs defaultValue="tree">
         <TabsList>
-          <TabsTrigger value="tree">메뉴 트리</TabsTrigger>
-          <TabsTrigger value="mobile">모바일 미리보기</TabsTrigger>
+          <TabsTrigger value="tree">{t('menuTree')}</TabsTrigger>
+          <TabsTrigger value="mobile">{t('mobilePreview')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="tree" className="mt-4">
@@ -213,10 +215,10 @@ export function MenuManagementPage() {
           ) : (
             <div className="flex h-64 items-center justify-center rounded-lg border border-dashed">
               <div className="text-center">
-                <p className="text-muted-foreground">등록된 메뉴가 없습니다.</p>
+                <p className="text-muted-foreground">{t('empty.title')}</p>
                 <Button className="mt-4" onClick={handleCreate}>
                   <Plus className="mr-2 h-4 w-4" />
-                  첫 메뉴 추가
+                  {t('empty.addFirst')}
                 </Button>
               </div>
             </div>
@@ -233,10 +235,10 @@ export function MenuManagementPage() {
         <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingMenu ? '메뉴 수정' : parentMenu ? '하위 메뉴 추가' : '메뉴 추가'}
+              {editingMenu ? t('form.editTitle') : parentMenu ? t('form.addChildTitle') : t('form.addTitle')}
             </DialogTitle>
             <DialogDescription>
-              메뉴 정보와 접근 권한을 설정합니다.
+              {t('form.description')}
             </DialogDescription>
           </DialogHeader>
           <MenuItemForm
@@ -253,20 +255,20 @@ export function MenuManagementPage() {
       <AlertDialog open={!!deleteMenu} onOpenChange={() => setDeleteMenu(undefined)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>메뉴를 삭제하시겠습니까?</AlertDialogTitle>
+            <AlertDialogTitle>{t('deleteDialog.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              {deleteMenu?.name} 메뉴를 삭제합니다.
+              {t('deleteDialog.description', { name: deleteMenu?.name })}
               {deleteMenu?.children && deleteMenu.children.length > 0 && (
                 <span className="block mt-2 text-destructive">
-                  이 메뉴에는 {deleteMenu.children.length}개의 하위 메뉴가 있습니다.
+                  {t('deleteDialog.childWarning', { count: deleteMenu.children.length })}
                 </span>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogCancel>{t('deleteDialog.cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              삭제
+              {t('deleteDialog.confirm')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

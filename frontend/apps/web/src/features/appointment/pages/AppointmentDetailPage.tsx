@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import {
@@ -65,6 +66,7 @@ function InfoRow({ label, value }: InfoRowProps) {
 export default function AppointmentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation('appointment');
   const { toast } = useToast();
   const { data, isLoading, isError } = useAppointmentDraft(id!);
 
@@ -93,14 +95,14 @@ export default function AppointmentDetailPage() {
     try {
       await deleteMutation.mutateAsync(id);
       toast({
-        title: '삭제 완료',
-        description: '발령안이 삭제되었습니다.',
+        title: t('detailToast.deleteSuccess'),
+        description: t('detailToast.deleteSuccessDesc'),
       });
       navigate('/appointments');
     } catch {
       toast({
-        title: '삭제 실패',
-        description: '발령안 삭제 중 오류가 발생했습니다.',
+        title: t('detailToast.deleteFailed'),
+        description: t('detailToast.deleteFailedDesc'),
         variant: 'destructive',
       });
     }
@@ -125,13 +127,13 @@ export default function AppointmentDetailPage() {
     try {
       await addDetailMutation.mutateAsync({ draftId: id, data });
       toast({
-        title: '대상 추가',
-        description: '발령 대상이 추가되었습니다.',
+        title: t('detailToast.addTargetSuccess'),
+        description: t('detailToast.addTargetSuccessDesc'),
       });
     } catch {
       toast({
-        title: '추가 실패',
-        description: '발령 대상 추가 중 오류가 발생했습니다.',
+        title: t('detailToast.addTargetFailed'),
+        description: t('detailToast.addTargetFailedDesc'),
         variant: 'destructive',
       });
     }
@@ -142,13 +144,13 @@ export default function AppointmentDetailPage() {
     try {
       await removeDetailMutation.mutateAsync({ draftId: id, detailId });
       toast({
-        title: '대상 삭제',
-        description: '발령 대상이 삭제되었습니다.',
+        title: t('detailToast.removeTargetSuccess'),
+        description: t('detailToast.removeTargetSuccessDesc'),
       });
     } catch {
       toast({
-        title: '삭제 실패',
-        description: '발령 대상 삭제 중 오류가 발생했습니다.',
+        title: t('detailToast.removeTargetFailed'),
+        description: t('detailToast.removeTargetFailedDesc'),
         variant: 'destructive',
       });
     }
@@ -159,13 +161,13 @@ export default function AppointmentDetailPage() {
     try {
       await submitMutation.mutateAsync(id);
       toast({
-        title: '결재 요청 완료',
-        description: '발령안이 결재 요청되었습니다.',
+        title: t('detailToast.submitSuccess'),
+        description: t('detailToast.submitSuccessDesc'),
       });
     } catch {
       toast({
-        title: '결재 요청 실패',
-        description: '결재 요청 중 오류가 발생했습니다.',
+        title: t('detailToast.submitFailed'),
+        description: t('detailToast.submitFailedDesc'),
         variant: 'destructive',
       });
     }
@@ -176,13 +178,13 @@ export default function AppointmentDetailPage() {
     try {
       await executeMutation.mutateAsync(id);
       toast({
-        title: '시행 완료',
-        description: '발령이 시행되었습니다.',
+        title: t('detailToast.executeSuccess'),
+        description: t('detailToast.executeSuccessDesc'),
       });
     } catch {
       toast({
-        title: '시행 실패',
-        description: '발령 시행 중 오류가 발생했습니다.',
+        title: t('detailToast.executeFailed'),
+        description: t('detailToast.executeFailedDesc'),
         variant: 'destructive',
       });
     }
@@ -193,15 +195,15 @@ export default function AppointmentDetailPage() {
     try {
       await cancelMutation.mutateAsync({ draftId: id, data: { reason: cancelReason } });
       toast({
-        title: '취소 완료',
-        description: '발령안이 취소되었습니다.',
+        title: t('detailToast.cancelSuccess'),
+        description: t('detailToast.cancelSuccessDesc'),
       });
       setIsCancelDialogOpen(false);
       setCancelReason('');
     } catch {
       toast({
-        title: '취소 실패',
-        description: '발령 취소 중 오류가 발생했습니다.',
+        title: t('detailToast.cancelFailed'),
+        description: t('detailToast.cancelFailedDesc'),
         variant: 'destructive',
       });
     }
@@ -219,12 +221,12 @@ export default function AppointmentDetailPage() {
     return (
       <>
         <PageHeader
-          title="발령안 상세"
-          description="로딩 중..."
+          title={t('detailPage.title')}
+          description={t('detailPage.loadingDesc')}
           actions={
             <Button variant="outline" onClick={() => navigate(-1)}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              목록으로
+              {t('goToList')}
             </Button>
           }
         />
@@ -240,20 +242,20 @@ export default function AppointmentDetailPage() {
     return (
       <>
         <PageHeader
-          title="발령안 상세"
-          description="발령안을 찾을 수 없습니다."
+          title={t('detailPage.title')}
+          description={t('detailPage.notFound')}
           actions={
             <Button variant="outline" onClick={() => navigate(-1)}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              목록으로
+              {t('goToList')}
             </Button>
           }
         />
         <Card>
           <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">요청한 발령안을 찾을 수 없습니다.</p>
+            <p className="text-muted-foreground">{t('detailPage.notFoundDesc')}</p>
             <Button variant="outline" onClick={() => navigate('/appointments')} className="mt-4">
-              목록으로 돌아가기
+              {t('detailPage.goToListFull')}
             </Button>
           </CardContent>
         </Card>
@@ -270,24 +272,24 @@ export default function AppointmentDetailPage() {
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => navigate('/appointments')}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              목록으로
+              {t('goToList')}
             </Button>
             {isEditable && (
               <Button variant="outline">
                 <Edit className="mr-2 h-4 w-4" />
-                수정
+                {t('detailActions.edit')}
               </Button>
             )}
             {canSubmit && (
               <Button onClick={handleSubmit} disabled={isMutating}>
                 <Send className="mr-2 h-4 w-4" />
-                결재요청
+                {t('detailActions.requestApproval')}
               </Button>
             )}
             {canExecute && (
               <Button onClick={handleExecute} disabled={isMutating}>
                 <PlayCircle className="mr-2 h-4 w-4" />
-                시행
+                {t('detailActions.execute')}
               </Button>
             )}
             <DropdownMenu>
@@ -300,7 +302,7 @@ export default function AppointmentDetailPage() {
                 {canCancel && (
                   <DropdownMenuItem onClick={() => setIsCancelDialogOpen(true)}>
                     <XCircle className="mr-2 h-4 w-4" />
-                    취소
+                    {t('detailActions.cancel')}
                   </DropdownMenuItem>
                 )}
                 {isEditable && (
@@ -311,7 +313,7 @@ export default function AppointmentDetailPage() {
                       onClick={() => setIsDeleteDialogOpen(true)}
                     >
                       <Trash2 className="mr-2 h-4 w-4" />
-                      삭제
+                      {t('detailActions.delete')}
                     </DropdownMenuItem>
                   </>
                 )}
@@ -325,52 +327,52 @@ export default function AppointmentDetailPage() {
         {/* Basic Info Card */}
         <Card>
           <CardHeader>
-            <CardTitle>기본 정보</CardTitle>
+            <CardTitle>{t('detailInfo.title')}</CardTitle>
           </CardHeader>
           <CardContent>
             <dl className="grid gap-4 md:grid-cols-2">
               <div>
-                <InfoRow label="발령번호" value={draft.draftNumber} />
-                <InfoRow label="제목" value={draft.title} />
+                <InfoRow label={t('detailInfo.appointmentNumber')} value={draft.draftNumber} />
+                <InfoRow label={t('detailInfo.subject')} value={draft.title} />
                 <InfoRow
-                  label="시행일"
+                  label={t('detailInfo.effectiveDate')}
                   value={format(new Date(draft.effectiveDate), 'yyyy년 M월 d일', { locale: ko })}
                 />
-                <InfoRow label="설명" value={draft.description} />
+                <InfoRow label={t('detailInfo.description')} value={draft.description} />
               </div>
               <div>
                 <InfoRow
-                  label="상태"
+                  label={t('detailInfo.status')}
                   value={<AppointmentDraftStatusBadge status={draft.status} />}
                 />
-                <InfoRow label="기안자" value={draft.draftCreatedBy?.name} />
+                <InfoRow label={t('detailInfo.drafter')} value={draft.draftCreatedBy?.name} />
                 <InfoRow
-                  label="생성일"
+                  label={t('detailInfo.createdAt')}
                   value={format(new Date(draft.createdAt), 'yyyy-MM-dd HH:mm', { locale: ko })}
                 />
                 {draft.approvedAt && (
                   <InfoRow
-                    label="승인일"
+                    label={t('detailInfo.approvedAt')}
                     value={format(new Date(draft.approvedAt), 'yyyy-MM-dd HH:mm', { locale: ko })}
                   />
                 )}
                 {draft.executedAt && (
                   <InfoRow
-                    label="시행일시"
+                    label={t('detailInfo.executedAt')}
                     value={format(new Date(draft.executedAt), 'yyyy-MM-dd HH:mm', { locale: ko })}
                   />
                 )}
                 {draft.cancelReason && (
                   <>
                     <InfoRow
-                      label="취소일"
+                      label={t('detailInfo.cancelledAt')}
                       value={
                         draft.cancelledAt
                           ? format(new Date(draft.cancelledAt), 'yyyy-MM-dd HH:mm', { locale: ko })
                           : '-'
                       }
                     />
-                    <InfoRow label="취소사유" value={draft.cancelReason} />
+                    <InfoRow label={t('detailInfo.cancelReason')} value={draft.cancelReason} />
                   </>
                 )}
               </div>
@@ -383,13 +385,13 @@ export default function AppointmentDetailPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>발령 대상</CardTitle>
-                <CardDescription>{details.length}명</CardDescription>
+                <CardTitle>{t('detailTarget.title')}</CardTitle>
+                <CardDescription>{t('detailTarget.count', { count: details.length })}</CardDescription>
               </div>
               {isEditable && (
                 <Button onClick={() => setIsDetailFormOpen(true)}>
                   <Plus className="mr-2 h-4 w-4" />
-                  직원 추가
+                  {t('detailTarget.addEmployee')}
                 </Button>
               )}
             </div>
@@ -417,9 +419,9 @@ export default function AppointmentDetailPage() {
       <ConfirmDialog
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
-        title="발령안 삭제"
-        description={`정말로 "${draft.title}" 발령안을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`}
-        confirmLabel="삭제"
+        title={t('deleteDialog.title')}
+        description={t('deleteDialog.description', { title: draft.title })}
+        confirmLabel={t('deleteDialog.confirm')}
         variant="destructive"
         onConfirm={handleDelete}
         isLoading={deleteMutation.isPending}
@@ -429,16 +431,16 @@ export default function AppointmentDetailPage() {
       <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>발령안 취소</DialogTitle>
+            <DialogTitle>{t('cancelDialog.title')}</DialogTitle>
             <DialogDescription>
-              발령안을 취소합니다. 취소 사유를 입력해주세요.
+              {t('cancelDialog.description')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
-            <Label htmlFor="cancelReason">취소 사유 *</Label>
+            <Label htmlFor="cancelReason">{t('cancelDialog.reasonLabel')}</Label>
             <Textarea
               id="cancelReason"
-              placeholder="취소 사유를 입력하세요"
+              placeholder={t('cancelDialog.reasonPlaceholder')}
               value={cancelReason}
               onChange={(e) => setCancelReason(e.target.value)}
               rows={3}
@@ -446,14 +448,14 @@ export default function AppointmentDetailPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCancelDialogOpen(false)}>
-              닫기
+              {t('cancelDialog.close')}
             </Button>
             <Button
               variant="destructive"
               onClick={handleCancel}
               disabled={!cancelReason || cancelMutation.isPending}
             >
-              {cancelMutation.isPending ? '취소 중...' : '취소'}
+              {cancelMutation.isPending ? t('cancelDialog.cancelling') : t('cancelDialog.confirm')}
             </Button>
           </DialogFooter>
         </DialogContent>

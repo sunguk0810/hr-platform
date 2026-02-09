@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { PageHeader } from '@/components/common/PageHeader';
 import { PullToRefreshContainer } from '@/components/mobile';
@@ -59,21 +60,6 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import type { AuditLog, AuditAction, AuditResult } from '@hr-platform/shared-types';
 
-const actionLabels: Record<AuditAction, string> = {
-  LOGIN: '로그인',
-  LOGOUT: '로그아웃',
-  CREATE: '생성',
-  UPDATE: '수정',
-  DELETE: '삭제',
-  READ: '조회',
-  EXPORT: '내보내기',
-  IMPORT: '가져오기',
-  APPROVE: '승인',
-  REJECT: '반려',
-  PASSWORD_CHANGE: '비밀번호 변경',
-  PERMISSION_CHANGE: '권한 변경',
-};
-
 const actionColors: Record<AuditAction, string> = {
   LOGIN: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
   LOGOUT: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
@@ -90,6 +76,7 @@ const actionColors: Record<AuditAction, string> = {
 };
 
 export default function AuditLogPage() {
+  const { t } = useTranslation('audit');
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
@@ -103,6 +90,21 @@ export default function AuditLogPage() {
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+
+  const actionLabels: Record<AuditAction, string> = useMemo(() => ({
+    LOGIN: t('actions.LOGIN'),
+    LOGOUT: t('actions.LOGOUT'),
+    CREATE: t('actions.CREATE'),
+    UPDATE: t('actions.UPDATE'),
+    DELETE: t('actions.DELETE'),
+    READ: t('actions.READ'),
+    EXPORT: t('actions.EXPORT'),
+    IMPORT: t('actions.IMPORT'),
+    APPROVE: t('actions.APPROVE'),
+    REJECT: t('actions.REJECT'),
+    PASSWORD_CHANGE: t('actions.PASSWORD_CHANGE'),
+    PERMISSION_CHANGE: t('actions.PERMISSION_CHANGE'),
+  }), [t]);
 
   const { data, isLoading } = useAuditLogs({
     page,
@@ -121,29 +123,29 @@ export default function AuditLogPage() {
     setIsDetailOpen(true);
   };
 
-  const handleExport = async (format: 'csv' | 'excel') => {
+  const handleExport = async (fmt: 'csv' | 'excel') => {
     setIsExporting(true);
     try {
       const params = {
         ...(filters.keyword && { keyword: filters.keyword }),
         ...(filters.action && filters.action !== 'ALL' && { action: filters.action }),
         ...(filters.result && filters.result !== 'ALL' && { result: filters.result }),
-        format,
+        format: fmt,
       };
 
       const blob = await auditService.exportAuditLogs(params);
-      const extension = format === 'excel' ? 'xlsx' : 'csv';
+      const extension = fmt === 'excel' ? 'xlsx' : 'csv';
       const filename = generateTimestampedFilename('audit-logs', extension);
       downloadBlob(blob, filename);
 
       toast({
-        title: '내보내기 완료',
-        description: `감사 로그가 ${format.toUpperCase()} 파일로 저장되었습니다.`,
+        title: t('export.success'),
+        description: t('export.successDesc', { format: fmt.toUpperCase() }),
       });
     } catch {
       toast({
-        title: '내보내기 실패',
-        description: '감사 로그 내보내기 중 오류가 발생했습니다.',
+        title: t('export.failed'),
+        description: t('export.failedDesc'),
         variant: 'destructive',
       });
     } finally {
@@ -160,13 +162,13 @@ export default function AuditLogPage() {
     <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>감사 로그 상세</DialogTitle>
+          <DialogTitle>{t('detail.title')}</DialogTitle>
         </DialogHeader>
         {selectedLog && (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">일시</Label>
+                <Label className="text-xs text-muted-foreground">{t('detail.datetime')}</Label>
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-muted-foreground" />
                   <span className="font-mono text-sm">
@@ -175,23 +177,23 @@ export default function AuditLogPage() {
                 </div>
               </div>
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">결과</Label>
+                <Label className="text-xs text-muted-foreground">{t('detail.result')}</Label>
                 {selectedLog.result === 'SUCCESS' ? (
                   <div className="flex items-center gap-1 text-green-600">
                     <CheckCircle2 className="h-4 w-4" />
-                    <span>성공</span>
+                    <span>{t('detail.success')}</span>
                   </div>
                 ) : (
                   <div className="flex items-center gap-1 text-red-600">
                     <XCircle className="h-4 w-4" />
-                    <span>실패</span>
+                    <span>{t('detail.failure')}</span>
                   </div>
                 )}
               </div>
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">사용자</Label>
+              <Label className="text-xs text-muted-foreground">{t('detail.user')}</Label>
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4 text-muted-foreground" />
                 <span>{selectedLog.userName}</span>
@@ -200,7 +202,7 @@ export default function AuditLogPage() {
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">IP 주소</Label>
+              <Label className="text-xs text-muted-foreground">{t('detail.ipAddress')}</Label>
               <div className="flex items-center gap-2">
                 <Globe className="h-4 w-4 text-muted-foreground" />
                 <span className="font-mono">{selectedLog.ipAddress}</span>
@@ -208,14 +210,14 @@ export default function AuditLogPage() {
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">액션</Label>
+              <Label className="text-xs text-muted-foreground">{t('detail.action')}</Label>
               <Badge className={actionColors[selectedLog.action]} variant="secondary">
                 {actionLabels[selectedLog.action]}
               </Badge>
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">대상</Label>
+              <Label className="text-xs text-muted-foreground">{t('detail.target')}</Label>
               <div className="flex items-center gap-2">
                 <FileText className="h-4 w-4 text-muted-foreground" />
                 <span>{selectedLog.targetName || '-'}</span>
@@ -225,7 +227,7 @@ export default function AuditLogPage() {
 
             {selectedLog.errorMessage && (
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">오류 메시지</Label>
+                <Label className="text-xs text-muted-foreground">{t('detail.errorMessage')}</Label>
                 <p className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 p-2 rounded">
                   {selectedLog.errorMessage}
                 </p>
@@ -234,7 +236,7 @@ export default function AuditLogPage() {
 
             {selectedLog.details && Object.keys(selectedLog.details).length > 0 && (
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">상세 정보</Label>
+                <Label className="text-xs text-muted-foreground">{t('detail.details')}</Label>
                 <pre className="text-xs bg-muted p-3 rounded overflow-auto max-h-32">
                   {JSON.stringify(selectedLog.details, null, 2)}
                 </pre>
@@ -254,8 +256,8 @@ export default function AuditLogPage() {
           {/* Mobile Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold">감사 로그</h1>
-              <p className="text-sm text-muted-foreground">시스템 활동 내역</p>
+              <h1 className="text-xl font-bold">{t('title')}</h1>
+              <p className="text-sm text-muted-foreground">{t('subtitle')}</p>
             </div>
             <div className="flex gap-2">
               <Button
@@ -273,10 +275,10 @@ export default function AuditLogPage() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => handleExport('csv')}>
-                    CSV로 내보내기
+                    {t('export.csv')}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleExport('excel')}>
-                    Excel로 내보내기
+                    {t('export.excel')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -287,11 +289,11 @@ export default function AuditLogPage() {
           {showFilters && (
             <div className="bg-card rounded-xl border p-4 space-y-4">
               <div className="space-y-2">
-                <Label>키워드</Label>
+                <Label>{t('filter.keyword')}</Label>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="사용자, 대상, IP 검색"
+                    placeholder={t('filter.keywordPlaceholder')}
                     value={filters.keyword}
                     onChange={(e) => setFilters((prev) => ({ ...prev, keyword: e.target.value }))}
                     className="pl-9"
@@ -300,7 +302,7 @@ export default function AuditLogPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>액션 유형</Label>
+                  <Label>{t('filter.actionType')}</Label>
                   <Select
                     value={filters.action}
                     onValueChange={(value) =>
@@ -308,10 +310,10 @@ export default function AuditLogPage() {
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="전체" />
+                      <SelectValue placeholder={t('filter.all')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="ALL">전체</SelectItem>
+                      <SelectItem value="ALL">{t('filter.all')}</SelectItem>
                       {Object.entries(actionLabels).map(([value, label]) => (
                         <SelectItem key={value} value={value}>
                           {label}
@@ -321,7 +323,7 @@ export default function AuditLogPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>결과</Label>
+                  <Label>{t('filter.result')}</Label>
                   <Select
                     value={filters.result}
                     onValueChange={(value) =>
@@ -329,19 +331,19 @@ export default function AuditLogPage() {
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="전체" />
+                      <SelectValue placeholder={t('filter.all')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="ALL">전체</SelectItem>
-                      <SelectItem value="SUCCESS">성공</SelectItem>
-                      <SelectItem value="FAILURE">실패</SelectItem>
+                      <SelectItem value="ALL">{t('filter.all')}</SelectItem>
+                      <SelectItem value="SUCCESS">{t('detail.success')}</SelectItem>
+                      <SelectItem value="FAILURE">{t('detail.failure')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <Button onClick={handleSearch} className="w-full">
                 <Search className="h-4 w-4 mr-2" />
-                검색
+                {t('filter.search')}
               </Button>
             </div>
           )}
@@ -356,7 +358,7 @@ export default function AuditLogPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              전체
+              {t('tabs.all')}
             </button>
             {Object.entries(actionLabels).slice(0, 6).map(([value, label]) => (
               <button
@@ -381,9 +383,9 @@ export default function AuditLogPage() {
           ) : data?.content.length === 0 ? (
             <div className="bg-card rounded-xl border p-8 text-center">
               <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-              <p className="font-medium">감사 로그가 없습니다</p>
+              <p className="font-medium">{t('empty.title')}</p>
               <p className="text-sm text-muted-foreground mt-1">
-                검색 조건에 맞는 로그가 없습니다.
+                {t('empty.description')}
               </p>
             </div>
           ) : (
@@ -446,8 +448,8 @@ export default function AuditLogPage() {
   return (
     <>
       <PageHeader
-        title="감사 로그"
-        description="시스템 활동 내역을 조회합니다."
+        title={t('title')}
+        description={t('description')}
         actions={
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -455,12 +457,12 @@ export default function AuditLogPage() {
                 {isExporting ? (
                   <>
                     <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    내보내기 중...
+                    {t('export.loading')}
                   </>
                 ) : (
                   <>
                     <FileSpreadsheet className="h-4 w-4 mr-2" />
-                    내보내기
+                    {t('export.button')}
                     <ChevronDown className="h-4 w-4 ml-2" />
                   </>
                 )}
@@ -469,11 +471,11 @@ export default function AuditLogPage() {
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => handleExport('csv')}>
                 <Download className="h-4 w-4 mr-2" />
-                CSV로 내보내기
+                {t('export.csv')}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleExport('excel')}>
                 <Download className="h-4 w-4 mr-2" />
-                Excel로 내보내기
+                {t('export.excel')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -486,17 +488,17 @@ export default function AuditLogPage() {
           <CardHeader className="pb-4">
             <CardTitle className="text-base flex items-center gap-2">
               <Filter className="h-4 w-4" />
-              검색 필터
+              {t('filter.title')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-4">
               <div className="space-y-2">
-                <Label>키워드</Label>
+                <Label>{t('filter.keyword')}</Label>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="사용자, 대상, IP 검색"
+                    placeholder={t('filter.keywordPlaceholder')}
                     value={filters.keyword}
                     onChange={(e) => setFilters((prev) => ({ ...prev, keyword: e.target.value }))}
                     className="pl-9"
@@ -504,7 +506,7 @@ export default function AuditLogPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>액션 유형</Label>
+                <Label>{t('filter.actionType')}</Label>
                 <Select
                   value={filters.action}
                   onValueChange={(value) =>
@@ -512,10 +514,10 @@ export default function AuditLogPage() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="전체" />
+                    <SelectValue placeholder={t('filter.all')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ALL">전체</SelectItem>
+                    <SelectItem value="ALL">{t('filter.all')}</SelectItem>
                     {Object.entries(actionLabels).map(([value, label]) => (
                       <SelectItem key={value} value={value}>
                         {label}
@@ -525,7 +527,7 @@ export default function AuditLogPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>결과</Label>
+                <Label>{t('filter.result')}</Label>
                 <Select
                   value={filters.result}
                   onValueChange={(value) =>
@@ -533,19 +535,19 @@ export default function AuditLogPage() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="전체" />
+                    <SelectValue placeholder={t('filter.all')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ALL">전체</SelectItem>
-                    <SelectItem value="SUCCESS">성공</SelectItem>
-                    <SelectItem value="FAILURE">실패</SelectItem>
+                    <SelectItem value="ALL">{t('filter.all')}</SelectItem>
+                    <SelectItem value="SUCCESS">{t('detail.success')}</SelectItem>
+                    <SelectItem value="FAILURE">{t('detail.failure')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="flex items-end">
                 <Button onClick={handleSearch} className="w-full">
                   <Search className="h-4 w-4 mr-2" />
-                  검색
+                  {t('filter.search')}
                 </Button>
               </div>
             </div>
@@ -558,12 +560,12 @@ export default function AuditLogPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[180px]">일시</TableHead>
-                  <TableHead>사용자</TableHead>
-                  <TableHead>IP 주소</TableHead>
-                  <TableHead>액션</TableHead>
-                  <TableHead>대상</TableHead>
-                  <TableHead>결과</TableHead>
+                  <TableHead className="w-[180px]">{t('table.datetime')}</TableHead>
+                  <TableHead>{t('table.user')}</TableHead>
+                  <TableHead>{t('table.ipAddress')}</TableHead>
+                  <TableHead>{t('table.action')}</TableHead>
+                  <TableHead>{t('table.target')}</TableHead>
+                  <TableHead>{t('table.result')}</TableHead>
                   <TableHead className="w-[80px]"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -579,7 +581,7 @@ export default function AuditLogPage() {
                 ) : data?.content.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                      감사 로그가 없습니다.
+                      {t('timeline.empty')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -610,12 +612,12 @@ export default function AuditLogPage() {
                         {log.result === 'SUCCESS' ? (
                           <div className="flex items-center gap-1 text-green-600">
                             <CheckCircle2 className="h-4 w-4" />
-                            <span className="text-sm">성공</span>
+                            <span className="text-sm">{t('detail.success')}</span>
                           </div>
                         ) : (
                           <div className="flex items-center gap-1 text-red-600">
                             <XCircle className="h-4 w-4" />
-                            <span className="text-sm">실패</span>
+                            <span className="text-sm">{t('detail.failure')}</span>
                           </div>
                         )}
                       </TableCell>

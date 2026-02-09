@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -19,17 +20,21 @@ import { useToast } from '@/hooks/useToast';
 import { AppointmentDetailForm, AppointmentDetailTable } from '../components';
 import { useCreateDraft, useAddDetail, useRemoveDetail, useSubmitDraft } from '../hooks/useAppointments';
 import type { AppointmentDetail, AppointmentType } from '@hr-platform/shared-types';
+import type { TFunction } from 'i18next';
 
-const createDraftSchema = z.object({
-  title: z.string().min(1, '제목을 입력해주세요'),
-  effectiveDate: z.date({ required_error: '시행일을 선택해주세요' }),
-  description: z.string().optional(),
-});
+function createDraftSchema(t: TFunction) {
+  return z.object({
+    title: z.string().min(1, t('createValidation.subjectRequired')),
+    effectiveDate: z.date({ required_error: t('createValidation.effectiveDateRequired') }),
+    description: z.string().optional(),
+  });
+}
 
-type CreateDraftFormData = z.infer<typeof createDraftSchema>;
+type CreateDraftFormData = z.infer<ReturnType<typeof createDraftSchema>>;
 
 export default function AppointmentCreatePage() {
   const navigate = useNavigate();
+  const { t } = useTranslation('appointment');
   const { toast } = useToast();
   const [isDetailFormOpen, setIsDetailFormOpen] = useState(false);
   const [details, setDetails] = useState<AppointmentDetail[]>([]);
@@ -39,8 +44,10 @@ export default function AppointmentCreatePage() {
   const removeDetailMutation = useRemoveDetail();
   const submitDraftMutation = useSubmitDraft();
 
+  const schema = React.useMemo(() => createDraftSchema(t), [t]);
+
   const form = useForm<CreateDraftFormData>({
-    resolver: zodResolver(createDraftSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       title: '',
       description: '',
@@ -88,16 +95,16 @@ export default function AppointmentCreatePage() {
     };
     setDetails((prev) => [...prev, newDetail]);
     toast({
-      title: '대상 추가',
-      description: `${emp.name} 직원이 발령 대상에 추가되었습니다.`,
+      title: t('createToast.addTarget'),
+      description: t('createToast.addTargetDesc', { name: emp.name }),
     });
   };
 
   const handleRemoveDetail = (detailId: string) => {
     setDetails((prev) => prev.filter((d) => d.id !== detailId));
     toast({
-      title: '대상 삭제',
-      description: '발령 대상이 삭제되었습니다.',
+      title: t('createToast.removeTarget'),
+      description: t('createToast.removeTargetDesc'),
     });
   };
 
@@ -122,14 +129,14 @@ export default function AppointmentCreatePage() {
         })),
       });
       toast({
-        title: '임시저장 완료',
-        description: '발령안이 임시저장되었습니다.',
+        title: t('createToast.draftSuccess'),
+        description: t('createToast.draftSuccessDesc'),
       });
       navigate(`/appointments/${response.data.id}`);
     } catch {
       toast({
-        title: '저장 실패',
-        description: '발령안 저장 중 오류가 발생했습니다.',
+        title: t('createToast.draftFailed'),
+        description: t('createToast.draftFailedDesc'),
         variant: 'destructive',
       });
     }
@@ -141,8 +148,8 @@ export default function AppointmentCreatePage() {
 
     if (details.length === 0) {
       toast({
-        title: '결재 요청 불가',
-        description: '발령 대상이 없습니다. 최소 1명 이상의 대상을 추가해주세요.',
+        title: t('createToast.noTarget'),
+        description: t('createToast.noTargetDesc'),
         variant: 'destructive',
       });
       return;
@@ -170,14 +177,14 @@ export default function AppointmentCreatePage() {
       await submitDraftMutation.mutateAsync(createResponse.data.id);
 
       toast({
-        title: '결재 요청 완료',
-        description: '발령안이 결재 요청되었습니다.',
+        title: t('createToast.submitSuccess'),
+        description: t('createToast.submitSuccessDesc'),
       });
       navigate(`/appointments/${createResponse.data.id}`);
     } catch {
       toast({
-        title: '결재 요청 실패',
-        description: '결재 요청 중 오류가 발생했습니다.',
+        title: t('createToast.submitFailed'),
+        description: t('createToast.submitFailedDesc'),
         variant: 'destructive',
       });
     }
@@ -192,12 +199,12 @@ export default function AppointmentCreatePage() {
   return (
     <>
       <PageHeader
-        title="발령안 작성"
-        description="새로운 인사발령안을 작성합니다."
+        title={t('create.title')}
+        description={t('create.description')}
         actions={
           <Button variant="outline" onClick={() => navigate('/appointments')}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            목록으로
+            {t('goToList')}
           </Button>
         }
       />
@@ -206,17 +213,17 @@ export default function AppointmentCreatePage() {
         {/* Basic Info Card */}
         <Card>
           <CardHeader>
-            <CardTitle>기본 정보</CardTitle>
-            <CardDescription>발령안의 기본 정보를 입력합니다.</CardDescription>
+            <CardTitle>{t('create.basicInfo')}</CardTitle>
+            <CardDescription>{t('create.basicInfoDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <form className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="title">제목 *</Label>
+                  <Label htmlFor="title">{t('create.subjectLabel')}</Label>
                   <Input
                     id="title"
-                    placeholder="예: 2026년 1분기 정기 인사발령"
+                    placeholder={t('create.subjectPlaceholder')}
                     {...form.register('title')}
                   />
                   {form.formState.errors.title && (
@@ -227,7 +234,7 @@ export default function AppointmentCreatePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>시행일 *</Label>
+                  <Label>{t('create.effectiveDateLabel')}</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
@@ -241,7 +248,7 @@ export default function AppointmentCreatePage() {
                         {form.watch('effectiveDate') ? (
                           format(form.watch('effectiveDate'), 'PPP', { locale: ko })
                         ) : (
-                          <span>시행일 선택</span>
+                          <span>{t('create.effectiveDateSelect')}</span>
                         )}
                       </Button>
                     </PopoverTrigger>
@@ -262,10 +269,10 @@ export default function AppointmentCreatePage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">설명</Label>
+                <Label htmlFor="description">{t('create.descriptionLabel')}</Label>
                 <Textarea
                   id="description"
-                  placeholder="발령에 대한 설명을 입력하세요"
+                  placeholder={t('create.descriptionPlaceholder')}
                   rows={3}
                   {...form.register('description')}
                 />
@@ -279,14 +286,14 @@ export default function AppointmentCreatePage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>발령 대상</CardTitle>
+                <CardTitle>{t('create.targetSection')}</CardTitle>
                 <CardDescription>
-                  발령 대상 직원을 추가합니다. ({details.length}명)
+                  {t('create.targetSectionDesc', { count: details.length })}
                 </CardDescription>
               </div>
               <Button onClick={() => setIsDetailFormOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
-                직원 추가
+                {t('create.addEmployee')}
               </Button>
             </div>
           </CardHeader>
@@ -303,15 +310,15 @@ export default function AppointmentCreatePage() {
         {/* Action Buttons */}
         <div className="flex justify-end gap-3">
           <Button variant="outline" onClick={() => navigate('/appointments')}>
-            취소
+            {t('buttons.cancel')}
           </Button>
           <Button variant="outline" onClick={handleSaveDraft} disabled={isLoading}>
             <Save className="mr-2 h-4 w-4" />
-            임시저장
+            {t('buttons.saveDraft')}
           </Button>
           <Button onClick={handleSubmitForApproval} disabled={isLoading}>
             <Send className="mr-2 h-4 w-4" />
-            결재요청
+            {t('buttons.requestApproval')}
           </Button>
         </div>
       </div>

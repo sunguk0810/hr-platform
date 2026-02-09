@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { RefreshCw, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -29,6 +30,7 @@ import { menuService } from '../services/menuService';
 import type { MenuItemResponse, TenantMenuConfigResponse } from '../types';
 
 export function TenantMenuConfigPage() {
+  const { t } = useTranslation('menu');
   const { toast } = useToast();
   const { tenantId } = useAuthStore();
   const [menus, setMenus] = useState<MenuItemResponse[]>([]);
@@ -57,8 +59,8 @@ export function TenantMenuConfigPage() {
       setMenus([]);
       setConfigs(new Map());
       toast({
-        title: '데이터 로드 실패',
-        description: '메뉴 설정을 불러오는데 실패했습니다.',
+        title: t('tenantConfigToast.loadFailed'),
+        description: t('tenantConfigToast.loadFailedDesc'),
         variant: 'destructive',
       });
     } finally {
@@ -85,14 +87,14 @@ export function TenantMenuConfigPage() {
       });
 
       toast({
-        title: enabled ? '메뉴 활성화' : '메뉴 비활성화',
-        description: `${menu.name} 메뉴가 ${enabled ? '활성화' : '비활성화'}되었습니다.`,
+        title: enabled ? t('tenantConfigToast.activateSuccess') : t('tenantConfigToast.deactivateSuccess'),
+        description: t('tenantConfigToast.toggleSuccessDesc', { name: menu.name, status: enabled ? t('tenantConfigToast.activateSuccess') : t('tenantConfigToast.deactivateSuccess') }),
       });
     } catch (error) {
       console.error('Failed to update config:', error);
       toast({
-        title: '업데이트 실패',
-        description: '메뉴 설정을 변경하는데 실패했습니다.',
+        title: t('tenantConfigToast.toggleFailed'),
+        description: t('tenantConfigToast.toggleFailedDesc'),
         variant: 'destructive',
       });
     }
@@ -131,8 +133,8 @@ export function TenantMenuConfigPage() {
       });
 
       toast({
-        title: showInMobile ? '모바일 표시' : '모바일 숨김',
-        description: `${menu.name} 메뉴가 모바일에 ${showInMobile ? '표시됩니다' : '숨겨집니다'}.`,
+        title: showInMobile ? t('tenantConfigToast.mobileShow') : t('tenantConfigToast.mobileHide'),
+        description: t('tenantConfigToast.mobileToggleDesc', { name: menu.name, status: showInMobile ? t('tenantConfigToast.mobileShow') : t('tenantConfigToast.mobileHide') }),
       });
     } catch (error) {
       console.error('Failed to update mobile config:', error);
@@ -146,15 +148,15 @@ export function TenantMenuConfigPage() {
       await menuService.resetAllTenantMenuConfigs(tenantId);
       setConfigs(new Map());
       toast({
-        title: '초기화 완료',
-        description: '모든 메뉴 설정이 기본값으로 초기화되었습니다.',
+        title: t('tenantConfigToast.resetSuccess'),
+        description: t('tenantConfigToast.resetSuccessDesc'),
       });
       setShowResetDialog(false);
     } catch (error) {
       console.error('Failed to reset configs:', error);
       toast({
-        title: '초기화 실패',
-        description: '메뉴 설정을 초기화하는데 실패했습니다.',
+        title: t('tenantConfigToast.resetFailed'),
+        description: t('tenantConfigToast.resetFailedDesc'),
         variant: 'destructive',
       });
     }
@@ -172,9 +174,9 @@ export function TenantMenuConfigPage() {
     <div className="container py-6">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">테넌트 메뉴 설정</h1>
+          <h1 className="text-2xl font-bold">{t('tenantConfig.title')}</h1>
           <p className="text-muted-foreground">
-            현재 테넌트의 메뉴 표시 여부와 커스텀 이름을 설정합니다.
+            {t('tenantConfig.description')}
           </p>
         </div>
         <div className="flex gap-2">
@@ -183,7 +185,7 @@ export function TenantMenuConfigPage() {
           </Button>
           <Button variant="outline" onClick={() => setShowResetDialog(true)}>
             <RotateCcw className="mr-2 h-4 w-4" />
-            전체 초기화
+            {t('tenantConfig.resetAll')}
           </Button>
         </div>
       </div>
@@ -199,11 +201,11 @@ export function TenantMenuConfigPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[80px]">활성화</TableHead>
-                <TableHead>메뉴</TableHead>
-                <TableHead>커스텀 이름</TableHead>
-                <TableHead className="w-[100px]">모바일</TableHead>
-                <TableHead className="w-[80px]">상태</TableHead>
+                <TableHead className="w-[80px]">{t('tenantConfig.enabled')}</TableHead>
+                <TableHead>{t('tenantConfig.menu')}</TableHead>
+                <TableHead>{t('tenantConfig.customName')}</TableHead>
+                <TableHead className="w-[100px]">{t('tenantConfig.mobile')}</TableHead>
+                <TableHead className="w-[80px]">{t('tenantConfig.status')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -227,7 +229,7 @@ export function TenantMenuConfigPage() {
                         </Badge>
                         {menu.level > 1 && (
                           <span className="text-xs text-muted-foreground">
-                            레벨 {menu.level}
+                            {t('tenantConfig.level', { level: menu.level })}
                           </span>
                         )}
                       </div>
@@ -248,9 +250,9 @@ export function TenantMenuConfigPage() {
                     </TableCell>
                     <TableCell>
                       {config ? (
-                        <Badge variant="secondary">커스텀</Badge>
+                        <Badge variant="secondary">{t('tenantConfig.custom')}</Badge>
                       ) : (
-                        <Badge variant="outline">기본</Badge>
+                        <Badge variant="outline">{t('tenantConfig.default')}</Badge>
                       )}
                     </TableCell>
                   </TableRow>
@@ -265,16 +267,16 @@ export function TenantMenuConfigPage() {
       <AlertDialog open={showResetDialog} onOpenChange={setShowResetDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>모든 설정을 초기화하시겠습니까?</AlertDialogTitle>
+            <AlertDialogTitle>{t('resetDialog.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              현재 테넌트의 모든 메뉴 커스텀 설정이 기본값으로 초기화됩니다.
-              이 작업은 되돌릴 수 없습니다.
+              {t('resetDialog.description')}
+              {' '}{t('resetDialog.warning')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogCancel>{t('resetDialog.cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={handleResetAll}>
-              초기화
+              {t('resetDialog.confirm')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

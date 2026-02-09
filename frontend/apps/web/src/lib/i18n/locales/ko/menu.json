@@ -1,0 +1,130 @@
+{
+  "title": "메뉴 관리",
+  "description": "동적 메뉴 구조를 관리하고 권한을 설정합니다.",
+  "addMenu": "메뉴 추가",
+  "menuTree": "메뉴 트리",
+  "mobilePreview": "모바일 미리보기",
+  "empty": {
+    "title": "등록된 메뉴가 없습니다.",
+    "addFirst": "첫 메뉴 추가"
+  },
+  "form": {
+    "editTitle": "메뉴 수정",
+    "addChildTitle": "하위 메뉴 추가",
+    "addTitle": "메뉴 추가",
+    "description": "메뉴 정보와 접근 권한을 설정합니다.",
+    "parentMenu": "상위 메뉴: {{name}}",
+    "code": "코드 *",
+    "codePlaceholder": "고유 식별자 (영문 대문자, 언더스코어)",
+    "name": "이름 *",
+    "nameEn": "영문 이름",
+    "menuType": "메뉴 유형",
+    "path": "경로",
+    "pathPlaceholder": "프론트엔드 라우트 경로",
+    "icon": "아이콘",
+    "iconPlaceholder": "Lucide 아이콘 이름",
+    "sortOrder": "정렬 순서",
+    "featureCode": "기능 코드",
+    "featureCodePlaceholder": "테넌트 기능 플래그 연동",
+    "showInNav": "네비게이션에 표시",
+    "showInMobile": "모바일 탭바에 표시",
+    "requiredRoles": "필요 역할",
+    "addRole": "역할 추가...",
+    "roleDescription": "지정된 역할 중 하나를 가진 사용자만 접근 가능",
+    "requiredPermissions": "필요 권한",
+    "addPermission": "권한 추가...",
+    "permissionDescription": "지정된 권한 중 하나를 가진 사용자만 접근 가능",
+    "cancel": "취소",
+    "saving": "저장 중...",
+    "edit": "수정",
+    "create": "생성"
+  },
+  "menuTypes": {
+    "ROUTE": "내부 경로",
+    "EXTERNAL": "외부 링크",
+    "SEPARATOR": "구분선",
+    "HEADER": "헤더"
+  },
+  "validation": {
+    "codeRequired": "코드는 필수입니다",
+    "nameRequired": "이름은 필수입니다"
+  },
+  "treeItem": {
+    "system": "시스템",
+    "mobile": "모바일",
+    "edit": "수정",
+    "addChild": "하위 메뉴 추가",
+    "delete": "삭제"
+  },
+  "mobilePreviewPanel": {
+    "title": "모바일 탭바 미리보기",
+    "description": "최대 5개의 메뉴가 하단 탭바에 표시됩니다",
+    "appContent": "앱 컨텐츠",
+    "empty": "모바일 메뉴가 없습니다",
+    "list": "모바일 메뉴 목록",
+    "sortOrder": "(순서: {{order}})",
+    "noMobileMenu": "'모바일 탭바에 표시' 옵션이 활성화된 메뉴가 없습니다."
+  },
+  "toast": {
+    "loadFailed": "메뉴 로드 실패",
+    "loadFailedDesc": "메뉴 목록을 불러오는데 실패했습니다.",
+    "activateSuccess": "메뉴 활성화",
+    "deactivateSuccess": "메뉴 비활성화",
+    "toggleSuccessDesc": "{{name}} 메뉴가 {{status}} 되었습니다.",
+    "toggleFailed": "업데이트 실패",
+    "toggleFailedDesc": "메뉴 상태를 변경하는데 실패했습니다.",
+    "editSuccess": "메뉴 수정 완료",
+    "editSuccessDesc": "메뉴가 성공적으로 수정되었습니다.",
+    "createSuccess": "메뉴 생성 완료",
+    "createSuccessDesc": "새 메뉴가 성공적으로 생성되었습니다.",
+    "saveFailed": "저장 실패",
+    "saveFailedDesc": "메뉴를 저장하는데 실패했습니다.",
+    "deleteSuccess": "메뉴 삭제 완료",
+    "deleteSuccessDesc": "{{name}} 메뉴가 삭제되었습니다.",
+    "deleteFailed": "삭제 실패",
+    "deleteFailedDesc": "메뉴를 삭제하는데 실패했습니다."
+  },
+  "deleteDialog": {
+    "title": "메뉴를 삭제하시겠습니까?",
+    "description": "{{name}} 메뉴를 삭제합니다.",
+    "childWarning": "이 메뉴에는 {{count}}개의 하위 메뉴가 있습니다.",
+    "cancel": "취소",
+    "confirm": "삭제"
+  },
+  "tenantConfig": {
+    "title": "테넌트 메뉴 설정",
+    "description": "현재 테넌트의 메뉴 표시 여부와 커스텀 이름을 설정합니다.",
+    "resetAll": "전체 초기화",
+    "enabled": "활성화",
+    "menu": "메뉴",
+    "customName": "커스텀 이름",
+    "mobile": "모바일",
+    "status": "상태",
+    "level": "레벨 {{level}}",
+    "custom": "커스텀",
+    "default": "기본"
+  },
+  "tenantConfigToast": {
+    "loadFailed": "데이터 로드 실패",
+    "loadFailedDesc": "메뉴 설정을 불러오는데 실패했습니다.",
+    "activateSuccess": "메뉴 활성화",
+    "deactivateSuccess": "메뉴 비활성화",
+    "toggleSuccessDesc": "{{name}} 메뉴가 {{status}} 되었습니다.",
+    "toggleFailed": "업데이트 실패",
+    "toggleFailedDesc": "메뉴 설정을 변경하는데 실패했습니다.",
+    "mobileShow": "모바일 표시",
+    "mobileHide": "모바일 숨김",
+    "mobileToggleDesc": "{{name}} 메뉴가 모바일에 {{status}}.",
+    "resetSuccess": "초기화 완료",
+    "resetSuccessDesc": "모든 메뉴 설정이 기본값으로 초기화되었습니다.",
+    "resetFailed": "초기화 실패",
+    "resetFailedDesc": "메뉴 설정을 초기화하는데 실패했습니다."
+  },
+  "resetDialog": {
+    "title": "모든 설정을 초기화하시겠습니까?",
+    "description": "현재 테넌트의 모든 메뉴 커스텀 설정이 기본값으로 초기화됩니다.",
+    "warning": "이 작업은 되돌릴 수 없습니다.",
+    "cancel": "취소",
+    "confirm": "초기화"
+  }
+}

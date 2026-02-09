@@ -1,0 +1,198 @@
+{
+  "title": "발령관리",
+  "description": "인사발령을 작성하고 관리합니다.",
+  "newAppointment": "새 발령안",
+  "loading": "로딩 중",
+  "goToList": "목록으로",
+  "stats": {
+    "draft": "임시저장",
+    "pendingApproval": "결재대기",
+    "approved": "승인완료",
+    "executed": "시행완료",
+    "count": "건"
+  },
+  "list": {
+    "title": "발령안 목록",
+    "searchPlaceholder": "발령번호 또는 제목 검색",
+    "clearSearch": "검색어 지우기",
+    "searchAriaLabel": "발령안 검색",
+    "summaryAriaLabel": "발령 현황 요약",
+    "tableAriaLabel": "발령안"
+  },
+  "tabs": {
+    "all": "전체",
+    "draft": "임시저장",
+    "pendingApproval": "결재대기",
+    "approved": "승인",
+    "executed": "시행완료"
+  },
+  "empty": {
+    "noResults": "검색 결과가 없습니다",
+    "noAppointments": "발령안이 없습니다",
+    "noResultsDesc": "다른 검색 조건을 시도해 보세요.",
+    "noAppointmentsDesc": "새 발령안을 작성하여 인사발령을 시작하세요.",
+    "resetFilter": "필터 초기화"
+  },
+  "table": {
+    "appointmentNumber": "발령번호",
+    "subject": "제목",
+    "effectiveDate": "시행일",
+    "targetCount": "대상인원",
+    "status": "상태",
+    "drafter": "기안자",
+    "createdAt": "생성일",
+    "targetCountLabel": "{{count}}명 대상"
+  },
+  "create": {
+    "title": "발령안 작성",
+    "description": "새로운 인사발령안을 작성합니다.",
+    "basicInfo": "기본 정보",
+    "basicInfoDesc": "발령안의 기본 정보를 입력합니다.",
+    "subjectLabel": "제목 *",
+    "subjectPlaceholder": "예: 2026년 1분기 정기 인사발령",
+    "effectiveDateLabel": "시행일 *",
+    "effectiveDateSelect": "시행일 선택",
+    "descriptionLabel": "설명",
+    "descriptionPlaceholder": "발령에 대한 설명을 입력하세요",
+    "targetSection": "발령 대상",
+    "targetSectionDesc": "발령 대상 직원을 추가합니다. ({{count}}명)",
+    "addEmployee": "직원 추가"
+  },
+  "createValidation": {
+    "subjectRequired": "제목을 입력해주세요",
+    "effectiveDateRequired": "시행일을 선택해주세요"
+  },
+  "createToast": {
+    "addTarget": "대상 추가",
+    "addTargetDesc": "{{name}} 직원이 발령 대상에 추가되었습니다.",
+    "removeTarget": "대상 삭제",
+    "removeTargetDesc": "발령 대상이 삭제되었습니다.",
+    "draftSuccess": "임시저장 완료",
+    "draftSuccessDesc": "발령안이 임시저장되었습니다.",
+    "draftFailed": "저장 실패",
+    "draftFailedDesc": "발령안 저장 중 오류가 발생했습니다.",
+    "noTarget": "결재 요청 불가",
+    "noTargetDesc": "발령 대상이 없습니다. 최소 1명 이상의 대상을 추가해주세요.",
+    "submitSuccess": "결재 요청 완료",
+    "submitSuccessDesc": "발령안이 결재 요청되었습니다.",
+    "submitFailed": "결재 요청 실패",
+    "submitFailedDesc": "결재 요청 중 오류가 발생했습니다."
+  },
+  "detailPage": {
+    "title": "발령안 상세",
+    "loadingDesc": "로딩 중...",
+    "notFound": "발령안을 찾을 수 없습니다.",
+    "notFoundDesc": "요청한 발령안을 찾을 수 없습니다.",
+    "goToListFull": "목록으로 돌아가기"
+  },
+  "detailInfo": {
+    "title": "기본 정보",
+    "appointmentNumber": "발령번호",
+    "subject": "제목",
+    "effectiveDate": "시행일",
+    "description": "설명",
+    "status": "상태",
+    "drafter": "기안자",
+    "createdAt": "생성일",
+    "approvedAt": "승인일",
+    "executedAt": "시행일시",
+    "cancelledAt": "취소일",
+    "cancelReason": "취소사유"
+  },
+  "detailTarget": {
+    "title": "발령 대상",
+    "count": "{{count}}명",
+    "addEmployee": "직원 추가"
+  },
+  "detailActions": {
+    "edit": "수정",
+    "requestApproval": "결재요청",
+    "execute": "시행",
+    "cancel": "취소",
+    "delete": "삭제"
+  },
+  "detailToast": {
+    "deleteSuccess": "삭제 완료",
+    "deleteSuccessDesc": "발령안이 삭제되었습니다.",
+    "deleteFailed": "삭제 실패",
+    "deleteFailedDesc": "발령안 삭제 중 오류가 발생했습니다.",
+    "addTargetSuccess": "대상 추가",
+    "addTargetSuccessDesc": "발령 대상이 추가되었습니다.",
+    "addTargetFailed": "추가 실패",
+    "addTargetFailedDesc": "발령 대상 추가 중 오류가 발생했습니다.",
+    "removeTargetSuccess": "대상 삭제",
+    "removeTargetSuccessDesc": "발령 대상이 삭제되었습니다.",
+    "removeTargetFailed": "삭제 실패",
+    "removeTargetFailedDesc": "발령 대상 삭제 중 오류가 발생했습니다.",
+    "submitSuccess": "결재 요청 완료",
+    "submitSuccessDesc": "발령안이 결재 요청되었습니다.",
+    "submitFailed": "결재 요청 실패",
+    "submitFailedDesc": "결재 요청 중 오류가 발생했습니다.",
+    "executeSuccess": "시행 완료",
+    "executeSuccessDesc": "발령이 시행되었습니다.",
+    "executeFailed": "시행 실패",
+    "executeFailedDesc": "발령 시행 중 오류가 발생했습니다.",
+    "cancelSuccess": "취소 완료",
+    "cancelSuccessDesc": "발령안이 취소되었습니다.",
+    "cancelFailed": "취소 실패",
+    "cancelFailedDesc": "발령 취소 중 오류가 발생했습니다."
+  },
+  "deleteDialog": {
+    "title": "발령안 삭제",
+    "description": "정말로 \"{{title}}\" 발령안을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+    "confirm": "삭제"
+  },
+  "cancelDialog": {
+    "title": "발령안 취소",
+    "description": "발령안을 취소합니다. 취소 사유를 입력해주세요.",
+    "reasonLabel": "취소 사유 *",
+    "reasonPlaceholder": "취소 사유를 입력하세요",
+    "close": "닫기",
+    "cancelling": "취소 중...",
+    "confirm": "취소"
+  },
+  "detailForm": {
+    "title": "발령 대상 추가",
+    "description": "발령 대상 직원과 발령 유형, 변경 사항을 입력하세요.",
+    "employeeLabel": "직원 선택 *",
+    "employeePlaceholder": "직원을 검색하세요",
+    "employeeSearchPlaceholder": "이름으로 검색...",
+    "appointmentType": "발령 유형 *",
+    "appointmentTypeSelect": "발령 유형 선택",
+    "targetDepartment": "이동 부서",
+    "departmentSelect": "부서 선택",
+    "targetGrade": "변경 직급",
+    "gradeSelect": "직급 선택",
+    "targetPosition": "변경 직책",
+    "positionSelect": "직책 선택",
+    "reason": "발령 사유",
+    "reasonPlaceholder": "발령 사유를 입력하세요",
+    "cancel": "취소",
+    "adding": "추가 중...",
+    "add": "추가"
+  },
+  "detailFormValidation": {
+    "employeeRequired": "직원을 선택해주세요",
+    "typeRequired": "발령 유형을 선택해주세요"
+  },
+  "detailTable": {
+    "empty": "발령 대상이 없습니다.",
+    "emptyDesc": "위의 \"직원 추가\" 버튼을 클릭하여 발령 대상을 추가하세요.",
+    "department": "부서:",
+    "grade": "직급:",
+    "position": "직책:",
+    "duty": "직무:",
+    "noChange": "변동 없음",
+    "employeeNumber": "사번",
+    "name": "성명",
+    "appointmentType": "발령유형",
+    "changes": "변경 내용",
+    "reason": "사유",
+    "delete": "삭제"
+  },
+  "buttons": {
+    "cancel": "취소",
+    "saveDraft": "임시저장",
+    "requestApproval": "결재요청"
+  }
+}

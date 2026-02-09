@@ -19,6 +19,10 @@ import koCommittee from './locales/ko/committee.json';
 import koAnnouncement from './locales/ko/announcement.json';
 import koHeadcount from './locales/ko/headcount.json';
 import koEmployeeCard from './locales/ko/employeeCard.json';
+import koAudit from './locales/ko/audit.json';
+import koTransfer from './locales/ko/transfer.json';
+import koMenu from './locales/ko/menu.json';
+import koAppointment from './locales/ko/appointment.json';
 
 // English
 import enCommon from './locales/en/common.json';
@@ -38,6 +42,10 @@ import enCommittee from './locales/en/committee.json';
 import enAnnouncement from './locales/en/announcement.json';
 import enHeadcount from './locales/en/headcount.json';
 import enEmployeeCard from './locales/en/employeeCard.json';
+import enAudit from './locales/en/audit.json';
+import enTransfer from './locales/en/transfer.json';
+import enMenu from './locales/en/menu.json';
+import enAppointment from './locales/en/appointment.json';
 
 const resources = {
   ko: {
@@ -58,6 +66,10 @@ const resources = {
     announcement: koAnnouncement,
     headcount: koHeadcount,
     employeeCard: koEmployeeCard,
+    audit: koAudit,
+    transfer: koTransfer,
+    menu: koMenu,
+    appointment: koAppointment,
   },
   en: {
     common: enCommon,
@@ -77,6 +89,10 @@ const resources = {
     announcement: enAnnouncement,
     headcount: enHeadcount,
     employeeCard: enEmployeeCard,
+    audit: enAudit,
+    transfer: enTransfer,
+    menu: enMenu,
+    appointment: enAppointment,
   },
 } as const;
 
@@ -102,6 +118,10 @@ i18n.use(initReactI18next).init({
     'announcement',
     'headcount',
     'employeeCard',
+    'audit',
+    'transfer',
+    'menu',
+    'appointment',
   ],
   defaultNS: 'common',
   interpolation: {

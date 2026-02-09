@@ -1,0 +1,130 @@
+{
+  "title": "Menu Management",
+  "description": "Manage dynamic menu structure and permissions.",
+  "addMenu": "Add Menu",
+  "menuTree": "Menu Tree",
+  "mobilePreview": "Mobile Preview",
+  "empty": {
+    "title": "No menus registered.",
+    "addFirst": "Add First Menu"
+  },
+  "form": {
+    "editTitle": "Edit Menu",
+    "addChildTitle": "Add Sub Menu",
+    "addTitle": "Add Menu",
+    "description": "Set menu information and access permissions.",
+    "parentMenu": "Parent Menu: {{name}}",
+    "code": "Code *",
+    "codePlaceholder": "Unique identifier (uppercase, underscore)",
+    "name": "Name *",
+    "nameEn": "English Name",
+    "menuType": "Menu Type",
+    "path": "Path",
+    "pathPlaceholder": "Frontend route path",
+    "icon": "Icon",
+    "iconPlaceholder": "Lucide icon name",
+    "sortOrder": "Sort Order",
+    "featureCode": "Feature Code",
+    "featureCodePlaceholder": "Tenant feature flag integration",
+    "showInNav": "Show in Navigation",
+    "showInMobile": "Show in Mobile Tab Bar",
+    "requiredRoles": "Required Roles",
+    "addRole": "Add role...",
+    "roleDescription": "Only users with one of the specified roles can access",
+    "requiredPermissions": "Required Permissions",
+    "addPermission": "Add permission...",
+    "permissionDescription": "Only users with one of the specified permissions can access",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "edit": "Edit",
+    "create": "Create"
+  },
+  "menuTypes": {
+    "ROUTE": "Internal Route",
+    "EXTERNAL": "External Link",
+    "SEPARATOR": "Separator",
+    "HEADER": "Header"
+  },
+  "validation": {
+    "codeRequired": "Code is required",
+    "nameRequired": "Name is required"
+  },
+  "treeItem": {
+    "system": "System",
+    "mobile": "Mobile",
+    "edit": "Edit",
+    "addChild": "Add Sub Menu",
+    "delete": "Delete"
+  },
+  "mobilePreviewPanel": {
+    "title": "Mobile Tab Bar Preview",
+    "description": "Up to 5 menus are displayed in the bottom tab bar",
+    "appContent": "App Content",
+    "empty": "No mobile menus",
+    "list": "Mobile Menu List",
+    "sortOrder": "(Order: {{order}})",
+    "noMobileMenu": "No menus have the 'Show in Mobile Tab Bar' option enabled."
+  },
+  "toast": {
+    "loadFailed": "Load Failed",
+    "loadFailedDesc": "Failed to load menu list.",
+    "activateSuccess": "Menu Activated",
+    "deactivateSuccess": "Menu Deactivated",
+    "toggleSuccessDesc": "{{name}} menu has been {{status}}.",
+    "toggleFailed": "Update Failed",
+    "toggleFailedDesc": "Failed to change menu status.",
+    "editSuccess": "Menu Updated",
+    "editSuccessDesc": "Menu has been successfully updated.",
+    "createSuccess": "Menu Created",
+    "createSuccessDesc": "New menu has been successfully created.",
+    "saveFailed": "Save Failed",
+    "saveFailedDesc": "Failed to save menu.",
+    "deleteSuccess": "Menu Deleted",
+    "deleteSuccessDesc": "{{name}} menu has been deleted.",
+    "deleteFailed": "Delete Failed",
+    "deleteFailedDesc": "Failed to delete menu."
+  },
+  "deleteDialog": {
+    "title": "Delete this menu?",
+    "description": "Delete {{name}} menu.",
+    "childWarning": "This menu has {{count}} sub menus.",
+    "cancel": "Cancel",
+    "confirm": "Delete"
+  },
+  "tenantConfig": {
+    "title": "Tenant Menu Settings",
+    "description": "Configure menu visibility and custom names for the current tenant.",
+    "resetAll": "Reset All",
+    "enabled": "Enabled",
+    "menu": "Menu",
+    "customName": "Custom Name",
+    "mobile": "Mobile",
+    "status": "Status",
+    "level": "Level {{level}}",
+    "custom": "Custom",
+    "default": "Default"
+  },
+  "tenantConfigToast": {
+    "loadFailed": "Load Failed",
+    "loadFailedDesc": "Failed to load menu settings.",
+    "activateSuccess": "Menu Activated",
+    "deactivateSuccess": "Menu Deactivated",
+    "toggleSuccessDesc": "{{name}} menu has been {{status}}.",
+    "toggleFailed": "Update Failed",
+    "toggleFailedDesc": "Failed to change menu settings.",
+    "mobileShow": "Mobile Visible",
+    "mobileHide": "Mobile Hidden",
+    "mobileToggleDesc": "{{name}} menu is now {{status}} on mobile.",
+    "resetSuccess": "Reset Complete",
+    "resetSuccessDesc": "All menu settings have been reset to defaults.",
+    "resetFailed": "Reset Failed",
+    "resetFailedDesc": "Failed to reset menu settings."
+  },
+  "resetDialog": {
+    "title": "Reset all settings?",
+    "description": "All custom menu settings for the current tenant will be reset to defaults.",
+    "warning": "This action cannot be undone.",
+    "cancel": "Cancel",
+    "confirm": "Reset"
+  }
+}

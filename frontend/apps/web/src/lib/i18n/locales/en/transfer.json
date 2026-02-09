@@ -1,0 +1,204 @@
+{
+  "title": "Inter-Company Transfer",
+  "description": "Manage transfer and secondment status.",
+  "subtitle": "Transfer & Secondment Status",
+  "request": "Transfer Request",
+  "loading": "Loading",
+  "notFound": {
+    "title": "Transfer request not found.",
+    "description": "The requested transfer could not be found.",
+    "goToList": "Back to List"
+  },
+  "stats": {
+    "outboundPending": "Outbound Pending",
+    "inboundPending": "Inbound Pending",
+    "approved": "Approved",
+    "monthlyCompleted": "Completed This Month",
+    "count": ""
+  },
+  "search": {
+    "placeholder": "Search by name, employee number..."
+  },
+  "tabs": {
+    "all": "All",
+    "outboundPending": "Outbound Pending",
+    "inboundPending": "Inbound Pending",
+    "approved": "Approved",
+    "completed": "Completed"
+  },
+  "statusTabs": {
+    "all": "All",
+    "draft": "Draft",
+    "outboundPending": "Outbound Pending",
+    "inboundPending": "Inbound Pending",
+    "approved": "Approved",
+    "completed": "Completed"
+  },
+  "empty": {
+    "noResults": "No search results",
+    "noRequests": "No transfer requests",
+    "noResultsDesc": "Try different search criteria.",
+    "noRequestsDesc": "Create a new transfer request.",
+    "resetFilter": "Reset Filters"
+  },
+  "typeFilter": {
+    "all": "All Types"
+  },
+  "table": {
+    "requestNumber": "Request No.",
+    "type": "Type",
+    "employee": "Employee",
+    "outboundTenant": "From Tenant",
+    "inboundTenant": "To Tenant",
+    "effectiveDate": "Effective Date",
+    "status": "Status",
+    "effectiveDateLabel": "Effective: {{date}}"
+  },
+  "list": {
+    "title": "Transfer List"
+  },
+  "detail": {
+    "title": "Transfer Detail",
+    "titleWithNumber": "Transfer Detail - {{number}}",
+    "description": "Transfer request details.",
+    "outbound": "Outbound",
+    "inbound": "Inbound"
+  },
+  "requestInfo": {
+    "title": "Request Information",
+    "requestNumber": "Request No.",
+    "requestDate": "Request Date",
+    "effectiveDate": "Effective Date",
+    "returnDate": "Expected Return Date",
+    "type": "Transfer Type",
+    "status": "Status"
+  },
+  "employeeInfo": {
+    "title": "Target Employee",
+    "name": "Name",
+    "employeeNumber": "Employee No.",
+    "currentDepartment": "Current Department",
+    "currentPosition": "Current Position",
+    "currentGrade": "Current Grade"
+  },
+  "outboundTenant": {
+    "title": "From Tenant (Current)",
+    "tenant": "Tenant",
+    "department": "Department",
+    "approved": "Outbound Approved"
+  },
+  "inboundTenant": {
+    "title": "To Tenant (Target)",
+    "tenant": "Tenant",
+    "department": "Department",
+    "position": "Position",
+    "grade": "Grade",
+    "approved": "Inbound Approved"
+  },
+  "reason": {
+    "title": "Transfer Reason",
+    "label": "Reason",
+    "handover": "Handover Items",
+    "remarks": "Remarks"
+  },
+  "handover": {
+    "title": "Handover Checklist",
+    "progress": "Completed: {{completed}} / {{total}}",
+    "completeItem": "Mark {{title}} as complete",
+    "count": "Handover ({{completed}}/{{total}})"
+  },
+  "actions": {
+    "cancel": "Cancel",
+    "reject": "Reject",
+    "approveOutbound": "Approve Outbound",
+    "approveInbound": "Approve Inbound",
+    "complete": "Complete",
+    "cancelRequest": "Cancel"
+  },
+  "rejectDialog": {
+    "title": "Reject Transfer",
+    "description": "Please enter the reason for rejection.",
+    "placeholder": "Enter rejection reason",
+    "cancel": "Cancel",
+    "confirm": "Reject"
+  },
+  "cancelDialog": {
+    "title": "Cancel Transfer",
+    "description": "Are you sure you want to cancel this transfer request?",
+    "confirm": "Cancel Transfer"
+  },
+  "toast": {
+    "outboundApproveSuccess": "Outbound Approved",
+    "outboundApproveSuccessDesc": "Outbound transfer approved. Waiting for inbound tenant approval.",
+    "inboundApproveSuccess": "Inbound Approved",
+    "inboundApproveSuccessDesc": "Inbound transfer approved.",
+    "approveFailed": "Approval Failed",
+    "rejectReasonRequired": "Rejection Reason Required",
+    "rejectReasonRequiredDesc": "Please enter the reason for rejection.",
+    "rejectSuccess": "Rejected",
+    "rejectSuccessDesc": "Transfer request has been rejected.",
+    "rejectFailed": "Rejection Failed",
+    "completeSuccess": "Completed",
+    "completeSuccessDesc": "Transfer has been completed.",
+    "completeFailed": "Completion Failed",
+    "cancelSuccess": "Cancelled",
+    "cancelSuccessDesc": "Transfer request has been cancelled.",
+    "cancelFailed": "Cancellation Failed",
+    "handoverFailed": "Processing Failed",
+    "handoverFailedDesc": "Failed to process handover item.",
+    "processFailed": "An error occurred during processing."
+  },
+  "requestPage": {
+    "title": "Transfer Request",
+    "description": "Request inter-company transfer or secondment.",
+    "subtitle": "Transfer/Secondment Request"
+  },
+  "requestForm": {
+    "basicInfo": "Basic Information",
+    "basicInfoDesc": "Select transfer type and target employee.",
+    "transferType": "Transfer Type *",
+    "typeSelect": "Select Type",
+    "targetEmployee": "Target Employee *",
+    "changeEmployee": "Change",
+    "searchPlaceholder": "Search by name...",
+    "effectiveDate": "Effective Date *",
+    "returnDate": "Expected Return Date",
+    "inboundInfo": "Destination Information",
+    "inboundInfoDesc": "Select target company and assignment.",
+    "inboundTenant": "Target Tenant *",
+    "tenantSelect": "Select Tenant",
+    "inboundDepartment": "Target Department",
+    "departmentSelect": "Select Department (Optional)",
+    "position": "Position",
+    "positionSelect": "Select Position",
+    "grade": "Grade",
+    "gradeSelect": "Select Grade",
+    "reasonSection": "Reason & Handover",
+    "reason": "Transfer Reason *",
+    "reasonPlaceholder": "Enter transfer reason",
+    "handoverItems": "Handover Items",
+    "handoverPlaceholder": "Enter tasks and materials that need handover",
+    "remarks": "Remarks",
+    "remarksPlaceholder": "Enter additional notes"
+  },
+  "requestValidation": {
+    "employeeRequired": "Please select a target employee",
+    "tenantRequired": "Please select a target tenant",
+    "effectiveDateRequired": "Please enter the effective date",
+    "reasonRequired": "Please enter the transfer reason"
+  },
+  "requestToast": {
+    "submitSuccess": "Submitted",
+    "submitSuccessDesc": "Transfer request has been submitted.",
+    "draftSuccess": "Draft Saved",
+    "draftSuccessDesc": "Transfer request saved as draft.",
+    "submitFailed": "Submission Failed",
+    "draftFailed": "Save Failed",
+    "failedDesc": "An error occurred while processing the request."
+  },
+  "buttons": {
+    "cancel": "Cancel",
+    "saveDraft": "Save Draft",
+    "submit": "Submit"
+  }
+}

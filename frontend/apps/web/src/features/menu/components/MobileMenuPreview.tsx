@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { getIconWithFallback } from '@/utils/iconMap';
 import { Circle } from 'lucide-react';
@@ -11,6 +12,8 @@ interface MobileMenuPreviewProps {
  * Preview component showing how menus will appear in mobile bottom tab bar.
  */
 export function MobileMenuPreview({ menus }: MobileMenuPreviewProps) {
+  const { t } = useTranslation('menu');
+
   // Filter to only show mobile menus
   const mobileMenus = menus
     .filter((m) => m.showInMobile && m.isActive)
@@ -20,9 +23,9 @@ export function MobileMenuPreview({ menus }: MobileMenuPreviewProps) {
   return (
     <div className="rounded-lg border bg-card">
       <div className="border-b px-4 py-3">
-        <h3 className="font-medium">모바일 탭바 미리보기</h3>
+        <h3 className="font-medium">{t('mobilePreviewPanel.title')}</h3>
         <p className="text-sm text-muted-foreground">
-          최대 5개의 메뉴가 하단 탭바에 표시됩니다
+          {t('mobilePreviewPanel.description')}
         </p>
       </div>
 
@@ -42,7 +45,7 @@ export function MobileMenuPreview({ menus }: MobileMenuPreviewProps) {
 
             {/* Content area placeholder */}
             <div className="flex h-[360px] items-center justify-center">
-              <span className="text-muted-foreground">앱 컨텐츠</span>
+              <span className="text-muted-foreground">{t('mobilePreviewPanel.appContent')}</span>
             </div>
 
             {/* Bottom tab bar */}
@@ -68,7 +71,7 @@ export function MobileMenuPreview({ menus }: MobileMenuPreviewProps) {
                   })
                 ) : (
                   <p className="text-sm text-muted-foreground">
-                    모바일 메뉴가 없습니다
+                    {t('mobilePreviewPanel.empty')}
                   </p>
                 )}
               </div>
@@ -82,7 +85,7 @@ export function MobileMenuPreview({ menus }: MobileMenuPreviewProps) {
 
       {/* Mobile menu list */}
       <div className="border-t px-4 py-3">
-        <h4 className="mb-2 text-sm font-medium">모바일 메뉴 목록</h4>
+        <h4 className="mb-2 text-sm font-medium">{t('mobilePreviewPanel.list')}</h4>
         {mobileMenus.length > 0 ? (
           <ul className="space-y-1">
             {mobileMenus.map((menu, index) => (
@@ -90,14 +93,14 @@ export function MobileMenuPreview({ menus }: MobileMenuPreviewProps) {
                 <span className="w-4 text-muted-foreground">{index + 1}.</span>
                 <span>{menu.name}</span>
                 <span className="text-xs text-muted-foreground">
-                  (순서: {menu.mobileSortOrder ?? '-'})
+                  {t('mobilePreviewPanel.sortOrder', { order: menu.mobileSortOrder ?? '-' })}
                 </span>
               </li>
             ))}
           </ul>
         ) : (
           <p className="text-sm text-muted-foreground">
-            '모바일 탭바에 표시' 옵션이 활성화된 메뉴가 없습니다.
+            {t('mobilePreviewPanel.noMobileMenu')}
           </p>
         )}
       </div>

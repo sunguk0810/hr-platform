@@ -1,0 +1,204 @@
+{
+  "title": "계열사 인사이동",
+  "description": "전출/전입 및 파견 현황을 관리합니다.",
+  "subtitle": "전출/전입 및 파견 현황",
+  "request": "인사이동 요청",
+  "loading": "로딩 중",
+  "notFound": {
+    "title": "인사이동 요청을 찾을 수 없습니다.",
+    "description": "요청한 발령안을 찾을 수 없습니다.",
+    "goToList": "목록으로 돌아가기"
+  },
+  "stats": {
+    "outboundPending": "전출 승인대기",
+    "inboundPending": "전입 승인대기",
+    "approved": "승인완료",
+    "monthlyCompleted": "이번달 완료",
+    "count": "건"
+  },
+  "search": {
+    "placeholder": "이름, 사번 검색..."
+  },
+  "tabs": {
+    "all": "전체",
+    "outboundPending": "전출대기",
+    "inboundPending": "전입대기",
+    "approved": "승인",
+    "completed": "완료"
+  },
+  "statusTabs": {
+    "all": "전체",
+    "draft": "임시저장",
+    "outboundPending": "전출 대기",
+    "inboundPending": "전입 대기",
+    "approved": "승인",
+    "completed": "완료"
+  },
+  "empty": {
+    "noResults": "검색 결과가 없습니다",
+    "noRequests": "인사이동 요청이 없습니다",
+    "noResultsDesc": "다른 검색 조건을 시도해 보세요.",
+    "noRequestsDesc": "새 인사이동 요청을 등록하세요.",
+    "resetFilter": "필터 초기화"
+  },
+  "typeFilter": {
+    "all": "전체 유형"
+  },
+  "table": {
+    "requestNumber": "요청번호",
+    "type": "유형",
+    "employee": "대상자",
+    "outboundTenant": "전출 테넌트",
+    "inboundTenant": "전입 테넌트",
+    "effectiveDate": "발령일",
+    "status": "상태",
+    "effectiveDateLabel": "발령일: {{date}}"
+  },
+  "list": {
+    "title": "인사이동 목록"
+  },
+  "detail": {
+    "title": "인사이동 상세",
+    "titleWithNumber": "인사이동 상세 - {{number}}",
+    "description": "인사이동 요청 상세 정보입니다.",
+    "outbound": "전출",
+    "inbound": "전입"
+  },
+  "requestInfo": {
+    "title": "요청 정보",
+    "requestNumber": "요청번호",
+    "requestDate": "요청일",
+    "effectiveDate": "발령 예정일",
+    "returnDate": "복귀 예정일",
+    "type": "이동 유형",
+    "status": "상태"
+  },
+  "employeeInfo": {
+    "title": "대상 직원",
+    "name": "이름",
+    "employeeNumber": "사번",
+    "currentDepartment": "현재 부서",
+    "currentPosition": "현재 직책",
+    "currentGrade": "현재 직급"
+  },
+  "outboundTenant": {
+    "title": "전출 테넌트 (현재)",
+    "tenant": "테넌트",
+    "department": "부서",
+    "approved": "전출 승인됨"
+  },
+  "inboundTenant": {
+    "title": "전입 테넌트 (목표)",
+    "tenant": "테넌트",
+    "department": "부서",
+    "position": "직책",
+    "grade": "직급",
+    "approved": "전입 승인됨"
+  },
+  "reason": {
+    "title": "이동 사유",
+    "label": "사유",
+    "handover": "인수인계 항목",
+    "remarks": "비고"
+  },
+  "handover": {
+    "title": "인수인계 체크리스트",
+    "progress": "완료된 항목: {{completed}} / {{total}}",
+    "completeItem": "{{title}} 완료 처리",
+    "count": "인수인계 ({{completed}}/{{total}})"
+  },
+  "actions": {
+    "cancel": "취소",
+    "reject": "거부",
+    "approveOutbound": "전출 승인",
+    "approveInbound": "전입 승인",
+    "complete": "완료 처리",
+    "cancelRequest": "취소"
+  },
+  "rejectDialog": {
+    "title": "인사이동 거부",
+    "description": "거부 사유를 입력해주세요.",
+    "placeholder": "거부 사유를 입력하세요",
+    "cancel": "취소",
+    "confirm": "거부"
+  },
+  "cancelDialog": {
+    "title": "인사이동 취소",
+    "description": "정말로 이 인사이동 요청을 취소하시겠습니까?",
+    "confirm": "취소하기"
+  },
+  "toast": {
+    "outboundApproveSuccess": "전출 승인 완료",
+    "outboundApproveSuccessDesc": "전출이 승인되었습니다. 전입 테넌트의 승인을 대기합니다.",
+    "inboundApproveSuccess": "전입 승인 완료",
+    "inboundApproveSuccessDesc": "전입이 승인되었습니다.",
+    "approveFailed": "승인 실패",
+    "rejectReasonRequired": "거부 사유 필요",
+    "rejectReasonRequiredDesc": "거부 사유를 입력해주세요.",
+    "rejectSuccess": "거부 완료",
+    "rejectSuccessDesc": "인사이동 요청이 거부되었습니다.",
+    "rejectFailed": "거부 실패",
+    "completeSuccess": "완료 처리",
+    "completeSuccessDesc": "인사이동이 완료 처리되었습니다.",
+    "completeFailed": "완료 처리 실패",
+    "cancelSuccess": "취소 완료",
+    "cancelSuccessDesc": "인사이동 요청이 취소되었습니다.",
+    "cancelFailed": "취소 실패",
+    "handoverFailed": "처리 실패",
+    "handoverFailedDesc": "인수인계 항목 완료 처리 중 오류가 발생했습니다.",
+    "processFailed": "처리 중 오류가 발생했습니다."
+  },
+  "requestPage": {
+    "title": "인사이동 요청",
+    "description": "계열사 간 전출/전입 또는 파견을 요청합니다.",
+    "subtitle": "전출/전입/파견 요청"
+  },
+  "requestForm": {
+    "basicInfo": "기본 정보",
+    "basicInfoDesc": "이동 유형과 대상 직원을 선택합니다.",
+    "transferType": "이동 유형 *",
+    "typeSelect": "유형 선택",
+    "targetEmployee": "대상 직원 *",
+    "changeEmployee": "변경",
+    "searchPlaceholder": "이름으로 검색...",
+    "effectiveDate": "발령일 *",
+    "returnDate": "복귀 예정일",
+    "inboundInfo": "전입처 정보",
+    "inboundInfoDesc": "이동할 계열사와 소속을 선택합니다.",
+    "inboundTenant": "전입 테넌트 *",
+    "tenantSelect": "테넌트 선택",
+    "inboundDepartment": "전입 부서",
+    "departmentSelect": "부서 선택 (선택사항)",
+    "position": "직책",
+    "positionSelect": "직책 선택",
+    "grade": "직급",
+    "gradeSelect": "직급 선택",
+    "reasonSection": "이동 사유 및 인수인계",
+    "reason": "이동 사유 *",
+    "reasonPlaceholder": "인사이동 사유를 입력하세요",
+    "handoverItems": "인수인계 항목",
+    "handoverPlaceholder": "인수인계가 필요한 업무 및 자료를 입력하세요",
+    "remarks": "비고",
+    "remarksPlaceholder": "기타 참고사항을 입력하세요"
+  },
+  "requestValidation": {
+    "employeeRequired": "대상 직원을 선택해주세요",
+    "tenantRequired": "전입 테넌트를 선택해주세요",
+    "effectiveDateRequired": "발령일을 입력해주세요",
+    "reasonRequired": "이동 사유를 입력해주세요"
+  },
+  "requestToast": {
+    "submitSuccess": "상신 완료",
+    "submitSuccessDesc": "인사이동 요청이 상신되었습니다.",
+    "draftSuccess": "임시저장 완료",
+    "draftSuccessDesc": "인사이동 요청이 임시저장되었습니다.",
+    "submitFailed": "상신 실패",
+    "draftFailed": "저장 실패",
+    "failedDesc": "요청 처리 중 오류가 발생했습니다."
+  },
+  "buttons": {
+    "cancel": "취소",
+    "saveDraft": "임시저장",
+    "submit": "상신"
+  }
+}

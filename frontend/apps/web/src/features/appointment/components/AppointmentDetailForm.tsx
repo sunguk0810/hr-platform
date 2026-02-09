@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import {
   Dialog,
   DialogContent,
@@ -23,9 +25,9 @@ import {
 import { ComboBox, type ComboBoxOption } from '@/components/common/Form/ComboBox';
 import { APPOINTMENT_TYPE_LABELS, type AppointmentType } from '@hr-platform/shared-types';
 
-const appointmentDetailSchema = z.object({
-  employeeId: z.string().min(1, '직원을 선택해주세요'),
-  appointmentType: z.string().min(1, '발령 유형을 선택해주세요'),
+const createAppointmentDetailSchema = (t: TFunction) => z.object({
+  employeeId: z.string().min(1, t('detailFormValidation.employeeRequired')),
+  appointmentType: z.string().min(1, t('detailFormValidation.typeRequired')),
   toDepartmentId: z.string().optional(),
   toPositionCode: z.string().optional(),
   toGradeCode: z.string().optional(),
@@ -33,7 +35,7 @@ const appointmentDetailSchema = z.object({
   reason: z.string().optional(),
 });
 
-type AppointmentDetailFormData = z.infer<typeof appointmentDetailSchema>;
+type AppointmentDetailFormData = z.infer<ReturnType<typeof createAppointmentDetailSchema>>;
 
 interface AppointmentDetailFormProps {
   open: boolean;
@@ -93,7 +95,10 @@ export function AppointmentDetailForm({
   onSubmit,
   isLoading = false,
 }: AppointmentDetailFormProps) {
+  const { t } = useTranslation('appointment');
   const [selectedType, setSelectedType] = useState<AppointmentType | ''>('');
+
+  const appointmentDetailSchema = useMemo(() => createAppointmentDetailSchema(t), [t]);
 
   const form = useForm<AppointmentDetailFormData>({
     resolver: zodResolver(appointmentDetailSchema),
@@ -143,20 +148,20 @@ export function AppointmentDetailForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>발령 대상 추가</DialogTitle>
+          <DialogTitle>{t('detailForm.title')}</DialogTitle>
           <DialogDescription>
-            발령 대상 직원과 발령 유형, 변경 사항을 입력하세요.
+            {t('detailForm.description')}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="employeeId">직원 선택 *</Label>
+            <Label htmlFor="employeeId">{t('detailForm.employeeLabel')}</Label>
             <ComboBox
               options={mockEmployees}
               value={form.watch('employeeId')}
               onChange={(value) => form.setValue('employeeId', value || '')}
-              placeholder="직원을 검색하세요"
-              searchPlaceholder="이름으로 검색..."
+              placeholder={t('detailForm.employeePlaceholder')}
+              searchPlaceholder={t('detailForm.employeeSearchPlaceholder')}
             />
             {form.formState.errors.employeeId && (
               <p className="text-sm text-destructive">
@@ -166,10 +171,10 @@ export function AppointmentDetailForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="appointmentType">발령 유형 *</Label>
+            <Label htmlFor="appointmentType">{t('detailForm.appointmentType')}</Label>
             <Select value={selectedType} onValueChange={handleTypeChange}>
               <SelectTrigger>
-                <SelectValue placeholder="발령 유형 선택" />
+                <SelectValue placeholder={t('detailForm.appointmentTypeSelect')} />
               </SelectTrigger>
               <SelectContent>
                 {appointmentTypes.map((type) => (
@@ -188,12 +193,12 @@ export function AppointmentDetailForm({
 
           {showDepartment && (
             <div className="space-y-2">
-              <Label htmlFor="toDepartmentId">이동 부서</Label>
+              <Label htmlFor="toDepartmentId">{t('detailForm.targetDepartment')}</Label>
               <ComboBox
                 options={mockDepartments}
                 value={form.watch('toDepartmentId')}
                 onChange={(value) => form.setValue('toDepartmentId', value)}
-                placeholder="부서 선택"
+                placeholder={t('detailForm.departmentSelect')}
                 clearable
               />
             </div>
@@ -201,12 +206,12 @@ export function AppointmentDetailForm({
 
           {showGrade && (
             <div className="space-y-2">
-              <Label htmlFor="toGradeCode">변경 직급</Label>
+              <Label htmlFor="toGradeCode">{t('detailForm.targetGrade')}</Label>
               <ComboBox
                 options={mockGrades}
                 value={form.watch('toGradeCode')}
                 onChange={(value) => form.setValue('toGradeCode', value)}
-                placeholder="직급 선택"
+                placeholder={t('detailForm.gradeSelect')}
                 clearable
               />
             </div>
@@ -214,22 +219,22 @@ export function AppointmentDetailForm({
 
           {showPosition && (
             <div className="space-y-2">
-              <Label htmlFor="toPositionCode">변경 직책</Label>
+              <Label htmlFor="toPositionCode">{t('detailForm.targetPosition')}</Label>
               <ComboBox
                 options={mockPositions}
                 value={form.watch('toPositionCode')}
                 onChange={(value) => form.setValue('toPositionCode', value)}
-                placeholder="직책 선택"
+                placeholder={t('detailForm.positionSelect')}
                 clearable
               />
             </div>
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="reason">발령 사유</Label>
+            <Label htmlFor="reason">{t('detailForm.reason')}</Label>
             <Textarea
               id="reason"
-              placeholder="발령 사유를 입력하세요"
+              placeholder={t('detailForm.reasonPlaceholder')}
               {...form.register('reason')}
               rows={3}
             />
@@ -237,10 +242,10 @@ export function AppointmentDetailForm({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              취소
+              {t('detailForm.cancel')}
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? '추가 중...' : '추가'}
+              {isLoading ? t('detailForm.adding') : t('detailForm.add')}
             </Button>
           </DialogFooter>
         </form>

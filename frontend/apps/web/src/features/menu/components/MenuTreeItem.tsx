@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ChevronRight, ChevronDown, GripVertical, Pencil, Trash2, Plus, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -32,6 +33,7 @@ export function MenuTreeItem({
   onAddChild,
   onToggleActive,
 }: MenuTreeItemProps) {
+  const { t } = useTranslation('menu');
   const [isExpanded, setIsExpanded] = useState(true);
   const hasChildren = menu.children && menu.children.length > 0;
   const Icon = getIconWithFallback(menu.icon, Circle);
@@ -82,10 +84,10 @@ export function MenuTreeItem({
             <span className="text-xs text-muted-foreground">{menu.path}</span>
           )}
           {menu.isSystem && (
-            <Badge variant="secondary" className="text-xs">시스템</Badge>
+            <Badge variant="secondary" className="text-xs">{t('treeItem.system')}</Badge>
           )}
           {menu.showInMobile && (
-            <Badge variant="secondary" className="text-xs">모바일</Badge>
+            <Badge variant="secondary" className="text-xs">{t('treeItem.mobile')}</Badge>
           )}
         </div>
 
@@ -125,11 +127,11 @@ export function MenuTreeItem({
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => onEdit?.(menu)}>
               <Pencil className="mr-2 h-4 w-4" />
-              수정
+              {t('treeItem.edit')}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onAddChild?.(menu)}>
               <Plus className="mr-2 h-4 w-4" />
-              하위 메뉴 추가
+              {t('treeItem.addChild')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
@@ -138,7 +140,7 @@ export function MenuTreeItem({
               disabled={menu.isSystem}
             >
               <Trash2 className="mr-2 h-4 w-4" />
-              삭제
+              {t('treeItem.delete')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

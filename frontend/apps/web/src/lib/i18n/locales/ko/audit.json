@@ -1,0 +1,87 @@
+{
+  "title": "감사 로그",
+  "description": "시스템 활동 내역을 조회합니다.",
+  "subtitle": "시스템 활동 내역",
+  "actions": {
+    "LOGIN": "로그인",
+    "LOGOUT": "로그아웃",
+    "CREATE": "생성",
+    "UPDATE": "수정",
+    "DELETE": "삭제",
+    "READ": "조회",
+    "EXPORT": "내보내기",
+    "IMPORT": "가져오기",
+    "APPROVE": "승인",
+    "REJECT": "반려",
+    "PASSWORD_CHANGE": "비밀번호 변경",
+    "PERMISSION_CHANGE": "권한 변경"
+  },
+  "detail": {
+    "title": "감사 로그 상세",
+    "datetime": "일시",
+    "result": "결과",
+    "success": "성공",
+    "failure": "실패",
+    "user": "사용자",
+    "ipAddress": "IP 주소",
+    "browser": "브라우저",
+    "action": "액션",
+    "target": "대상",
+    "errorMessage": "오류 메시지",
+    "details": "상세 정보",
+    "requestInfo": "요청 정보",
+    "logId": "로그 ID",
+    "copied": "복사됨",
+    "copy": "복사"
+  },
+  "filter": {
+    "title": "검색 필터",
+    "keyword": "키워드",
+    "keywordPlaceholder": "사용자, 대상, IP 검색",
+    "actionType": "액션 유형",
+    "result": "결과",
+    "all": "전체",
+    "search": "검색",
+    "advanced": "상세 검색",
+    "reset": "초기화",
+    "targetType": "대상 유형",
+    "period": "기간",
+    "periodSelect": "기간 선택",
+    "userId": "사용자 ID",
+    "userIdPlaceholder": "사용자 ID 입력",
+    "activeAction": "액션: {{value}}",
+    "activeResult": "결과: {{value}}",
+    "activeTarget": "대상: {{value}}",
+    "activeStartDate": "시작일: {{value}}",
+    "activeEndDate": "종료일: {{value}}",
+    "activeUser": "사용자: {{value}}"
+  },
+  "export": {
+    "button": "내보내기",
+    "loading": "내보내기 중...",
+    "csv": "CSV로 내보내기",
+    "excel": "Excel로 내보내기",
+    "success": "내보내기 완료",
+    "successDesc": "감사 로그가 {{format}} 파일로 저장되었습니다.",
+    "failed": "내보내기 실패",
+    "failedDesc": "감사 로그 내보내기 중 오류가 발생했습니다."
+  },
+  "table": {
+    "datetime": "일시",
+    "user": "사용자",
+    "ipAddress": "IP 주소",
+    "action": "액션",
+    "target": "대상",
+    "result": "결과"
+  },
+  "empty": {
+    "title": "감사 로그가 없습니다",
+    "description": "검색 조건에 맞는 로그가 없습니다."
+  },
+  "timeline": {
+    "empty": "감사 로그가 없습니다."
+  },
+  "tabs": {
+    "all": "전체"
+  }
+}

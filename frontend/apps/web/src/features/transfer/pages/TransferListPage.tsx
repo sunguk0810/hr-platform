@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -59,6 +60,7 @@ export default function TransferListPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
+  const { t } = useTranslation('transfer');
   const [searchInput, setSearchInput] = useState('');
 
   const {
@@ -113,37 +115,37 @@ export default function TransferListPage() {
           {/* Mobile Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold">계열사 인사이동</h1>
-              <p className="text-sm text-muted-foreground">전출/전입 및 파견 현황</p>
+              <h1 className="text-xl font-bold">{t('title')}</h1>
+              <p className="text-sm text-muted-foreground">{t('subtitle')}</p>
             </div>
             <Button size="sm" onClick={() => navigate('/transfer/new')}>
               <Plus className="mr-1 h-4 w-4" />
-              요청
+              {t('request')}
             </Button>
           </div>
 
           {/* Summary Cards (2x2 Grid) */}
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-card rounded-xl border p-4 text-center">
-              <p className="text-xs text-muted-foreground mb-1">전출 승인대기</p>
+              <p className="text-xs text-muted-foreground mb-1">{t('stats.outboundPending')}</p>
               <p className="text-2xl font-bold text-orange-500">
                 {isSummaryLoading ? '-' : summary?.pendingSourceCount ?? 0}
               </p>
             </div>
             <div className="bg-card rounded-xl border p-4 text-center">
-              <p className="text-xs text-muted-foreground mb-1">전입 승인대기</p>
+              <p className="text-xs text-muted-foreground mb-1">{t('stats.inboundPending')}</p>
               <p className="text-2xl font-bold text-yellow-500">
                 {isSummaryLoading ? '-' : summary?.pendingTargetCount ?? 0}
               </p>
             </div>
             <div className="bg-card rounded-xl border p-4 text-center">
-              <p className="text-xs text-muted-foreground mb-1">승인완료</p>
+              <p className="text-xs text-muted-foreground mb-1">{t('stats.approved')}</p>
               <p className="text-2xl font-bold text-blue-500">
                 {isSummaryLoading ? '-' : summary?.approvedCount ?? 0}
               </p>
             </div>
             <div className="bg-card rounded-xl border p-4 text-center">
-              <p className="text-xs text-muted-foreground mb-1">이번달 완료</p>
+              <p className="text-xs text-muted-foreground mb-1">{t('stats.monthlyCompleted')}</p>
               <p className="text-2xl font-bold text-green-500">
                 {isSummaryLoading ? '-' : summary?.completedThisMonth ?? 0}
               </p>
@@ -154,7 +156,7 @@ export default function TransferListPage() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="이름, 사번 검색..."
+              placeholder={t('search.placeholder')}
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -165,11 +167,11 @@ export default function TransferListPage() {
           {/* Mobile Tab Filters */}
           <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
             {[
-              { value: '', label: '전체' },
-              { value: 'PENDING_SOURCE', label: '전출대기' },
-              { value: 'PENDING_TARGET', label: '전입대기' },
-              { value: 'APPROVED', label: '승인' },
-              { value: 'COMPLETED', label: '완료' },
+              { value: '', label: t('tabs.all') },
+              { value: 'PENDING_SOURCE', label: t('tabs.outboundPending') },
+              { value: 'PENDING_TARGET', label: t('tabs.inboundPending') },
+              { value: 'APPROVED', label: t('tabs.approved') },
+              { value: 'COMPLETED', label: t('tabs.completed') },
             ].map((item) => (
               <button
                 key={item.value}
@@ -197,18 +199,18 @@ export default function TransferListPage() {
               icon={ArrowLeftRight}
               title={
                 searchState.status || searchState.keyword || searchState.type
-                  ? '검색 결과가 없습니다'
-                  : '인사이동 요청이 없습니다'
+                  ? t('empty.noResults')
+                  : t('empty.noRequests')
               }
               description={
                 searchState.status || searchState.keyword || searchState.type
-                  ? '다른 검색 조건을 시도해 보세요.'
-                  : '새 인사이동 요청을 등록하세요.'
+                  ? t('empty.noResultsDesc')
+                  : t('empty.noRequestsDesc')
               }
               action={
                 searchState.status || searchState.keyword || searchState.type
-                  ? { label: '필터 초기화', onClick: resetFilters }
-                  : { label: '인사이동 요청', onClick: () => navigate('/transfer/new') }
+                  ? { label: t('empty.resetFilter'), onClick: resetFilters }
+                  : { label: t('request'), onClick: () => navigate('/transfer/new') }
               }
             />
           ) : (
@@ -238,7 +240,7 @@ export default function TransferListPage() {
                         <span className="text-muted-foreground truncate max-w-[80px]">{transfer.targetTenantName}</span>
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
-                        발령일: {format(new Date(transfer.transferDate), 'yyyy.MM.dd', { locale: ko })}
+                        {t('table.effectiveDateLabel', { date: format(new Date(transfer.transferDate), 'yyyy.MM.dd', { locale: ko }) })}
                       </p>
                     </div>
                     <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-1" />
@@ -263,25 +265,25 @@ export default function TransferListPage() {
   return (
     <>
       <PageHeader
-        title="계열사 인사이동"
-        description="전출/전입 및 파견 현황을 관리합니다."
+        title={t('title')}
+        description={t('description')}
         actions={
           <Button onClick={() => navigate('/transfer/new')}>
             <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
-            인사이동 요청
+            {t('request')}
           </Button>
         }
       />
 
       {/* Summary Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6" role="region" aria-label="인사이동 현황 요약">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6" role="region" aria-label={t('title')}>
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm text-muted-foreground" id="pending-source-label">전출 승인대기</p>
+              <p className="text-sm text-muted-foreground" id="pending-source-label">{t('stats.outboundPending')}</p>
               <p className="mt-1 text-3xl font-bold text-orange-500" aria-labelledby="pending-source-label">
                 {isSummaryLoading ? '-' : summary?.pendingSourceCount ?? 0}
-                <span className="sr-only">건</span>
+                <span className="sr-only">{t('stats.count')}</span>
               </p>
             </div>
           </CardContent>
@@ -289,10 +291,10 @@ export default function TransferListPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm text-muted-foreground" id="pending-target-label">전입 승인대기</p>
+              <p className="text-sm text-muted-foreground" id="pending-target-label">{t('stats.inboundPending')}</p>
               <p className="mt-1 text-3xl font-bold text-yellow-500" aria-labelledby="pending-target-label">
                 {isSummaryLoading ? '-' : summary?.pendingTargetCount ?? 0}
-                <span className="sr-only">건</span>
+                <span className="sr-only">{t('stats.count')}</span>
               </p>
             </div>
           </CardContent>
@@ -300,10 +302,10 @@ export default function TransferListPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm text-muted-foreground" id="approved-label">승인완료</p>
+              <p className="text-sm text-muted-foreground" id="approved-label">{t('stats.approved')}</p>
               <p className="mt-1 text-3xl font-bold text-blue-500" aria-labelledby="approved-label">
                 {isSummaryLoading ? '-' : summary?.approvedCount ?? 0}
-                <span className="sr-only">건</span>
+                <span className="sr-only">{t('stats.count')}</span>
               </p>
             </div>
           </CardContent>
@@ -311,10 +313,10 @@ export default function TransferListPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm text-muted-foreground" id="completed-label">이번달 완료</p>
+              <p className="text-sm text-muted-foreground" id="completed-label">{t('stats.monthlyCompleted')}</p>
               <p className="mt-1 text-3xl font-bold text-green-500" aria-labelledby="completed-label">
                 {isSummaryLoading ? '-' : summary?.completedThisMonth ?? 0}
-                <span className="sr-only">건</span>
+                <span className="sr-only">{t('stats.count')}</span>
               </p>
             </div>
           </CardContent>
@@ -327,29 +329,29 @@ export default function TransferListPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle className="flex items-center gap-2">
               <ArrowLeftRight className="h-5 w-5" aria-hidden="true" />
-              인사이동 목록
+              {t('list.title')}
             </CardTitle>
             <div className="flex gap-2">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
                 <Input
-                  placeholder="이름, 사번 검색..."
+                  placeholder={t('search.placeholder')}
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   onKeyDown={handleKeyDown}
                   className="pl-9 w-[200px]"
-                  aria-label="인사이동 검색"
+                  aria-label={t('search.placeholder')}
                 />
               </div>
               <Select
                 value={searchState.type || 'all'}
                 onValueChange={(value) => setType(value === 'all' ? '' : (value as TransferType))}
               >
-                <SelectTrigger className="w-[120px]" aria-label="이동 유형 필터">
-                  <SelectValue placeholder="전체 유형" />
+                <SelectTrigger className="w-[120px]" aria-label={t('requestInfo.type')}>
+                  <SelectValue placeholder={t('typeFilter.all')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">전체 유형</SelectItem>
+                  <SelectItem value="all">{t('typeFilter.all')}</SelectItem>
                   {Object.entries(TRANSFER_TYPE_LABELS).map(([value, label]) => (
                     <SelectItem key={value} value={value}>
                       {label}
@@ -367,12 +369,12 @@ export default function TransferListPage() {
             className="px-4 pt-2"
           >
             <TabsList>
-              <TabsTrigger value="all">전체</TabsTrigger>
-              <TabsTrigger value="DRAFT">임시저장</TabsTrigger>
-              <TabsTrigger value="PENDING_SOURCE">전출 대기</TabsTrigger>
-              <TabsTrigger value="PENDING_TARGET">전입 대기</TabsTrigger>
-              <TabsTrigger value="APPROVED">승인</TabsTrigger>
-              <TabsTrigger value="COMPLETED">완료</TabsTrigger>
+              <TabsTrigger value="all">{t('statusTabs.all')}</TabsTrigger>
+              <TabsTrigger value="DRAFT">{t('statusTabs.draft')}</TabsTrigger>
+              <TabsTrigger value="PENDING_SOURCE">{t('statusTabs.outboundPending')}</TabsTrigger>
+              <TabsTrigger value="PENDING_TARGET">{t('statusTabs.inboundPending')}</TabsTrigger>
+              <TabsTrigger value="APPROVED">{t('statusTabs.approved')}</TabsTrigger>
+              <TabsTrigger value="COMPLETED">{t('statusTabs.completed')}</TabsTrigger>
             </TabsList>
           </Tabs>
 
@@ -386,46 +388,46 @@ export default function TransferListPage() {
                 icon={ArrowLeftRight}
                 title={
                   searchState.status || searchState.keyword || searchState.type
-                    ? '검색 결과가 없습니다'
-                    : '인사이동 요청이 없습니다'
+                    ? t('empty.noResults')
+                    : t('empty.noRequests')
                 }
                 description={
                   searchState.status || searchState.keyword || searchState.type
-                    ? '다른 검색 조건을 시도해 보세요.'
-                    : '새 인사이동 요청을 등록하세요.'
+                    ? t('empty.noResultsDesc')
+                    : t('empty.noRequestsDesc')
                 }
                 action={
                   searchState.status || searchState.keyword || searchState.type
-                    ? { label: '필터 초기화', onClick: resetFilters }
-                    : { label: '인사이동 요청', onClick: () => navigate('/transfer/new') }
+                    ? { label: t('empty.resetFilter'), onClick: resetFilters }
+                    : { label: t('request'), onClick: () => navigate('/transfer/new') }
                 }
               />
             ) : (
               <>
-                <div className="overflow-x-auto" role="region" aria-label="인사이동 목록">
-                  <table className="w-full" role="grid" aria-label="인사이동">
+                <div className="overflow-x-auto" role="region" aria-label={t('list.title')}>
+                  <table className="w-full" role="grid" aria-label={t('title')}>
                     <thead>
                       <tr className="border-b bg-muted/50">
                         <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground w-[130px]">
-                          요청번호
+                          {t('table.requestNumber')}
                         </th>
                         <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground w-[80px]">
-                          유형
+                          {t('table.type')}
                         </th>
                         <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          대상자
+                          {t('table.employee')}
                         </th>
                         <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          전출 테넌트
+                          {t('table.outboundTenant')}
                         </th>
                         <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          전입 테넌트
+                          {t('table.inboundTenant')}
                         </th>
                         <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground w-[100px]">
-                          발령일
+                          {t('table.effectiveDate')}
                         </th>
                         <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground w-[100px]">
-                          상태
+                          {t('table.status')}
                         </th>
                       </tr>
                     </thead>

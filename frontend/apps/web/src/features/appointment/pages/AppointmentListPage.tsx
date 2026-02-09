@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Plus, FileText, Search, X } from 'lucide-react';
@@ -20,6 +21,7 @@ import type { DraftStatus } from '@hr-platform/shared-types';
 
 export default function AppointmentListPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation('appointment');
   const { params, searchState, setStatus, setKeyword, setPage, resetFilters } =
     useAppointmentSearchParams();
   const { data: draftsData, isLoading: isDraftsLoading } = useAppointmentDrafts(params);
@@ -52,18 +54,18 @@ export default function AppointmentListPage() {
   return (
     <>
       <PageHeader
-        title="발령관리"
-        description="인사발령을 작성하고 관리합니다."
+        title={t('title')}
+        description={t('description')}
         actions={
           <Button onClick={() => navigate('/appointments/new')}>
             <Plus className="mr-2 h-4 w-4" />
-            새 발령안
+            {t('newAppointment')}
           </Button>
         }
       />
 
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-4" role="region" aria-label="발령 현황 요약">
+      <div className="grid gap-4 md:grid-cols-4" role="region" aria-label={t('list.summaryAriaLabel')}>
         {isSummaryLoading ? (
           [1, 2, 3, 4].map((i) => (
             <Card key={i}>
@@ -72,7 +74,7 @@ export default function AppointmentListPage() {
                   <div className="h-4 bg-muted animate-pulse rounded w-16 mx-auto" aria-hidden="true" />
                   <div className="h-8 bg-muted animate-pulse rounded w-12 mx-auto" aria-hidden="true" />
                 </div>
-                <span className="sr-only">로딩 중</span>
+                <span className="sr-only">{t('loading')}</span>
               </CardContent>
             </Card>
           ))
@@ -81,17 +83,17 @@ export default function AppointmentListPage() {
             <Card>
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <p className="text-sm text-muted-foreground" id="draft-count-label">임시저장</p>
-                  <p className="mt-1 text-3xl font-bold" aria-labelledby="draft-count-label">{summary?.draftCount ?? 0}<span className="sr-only">건</span></p>
+                  <p className="text-sm text-muted-foreground" id="draft-count-label">{t('stats.draft')}</p>
+                  <p className="mt-1 text-3xl font-bold" aria-labelledby="draft-count-label">{summary?.draftCount ?? 0}<span className="sr-only">{t('stats.count')}</span></p>
                 </div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <p className="text-sm text-muted-foreground" id="pending-count-label">결재대기</p>
+                  <p className="text-sm text-muted-foreground" id="pending-count-label">{t('stats.pendingApproval')}</p>
                   <p className="mt-1 text-3xl font-bold text-orange-500" aria-labelledby="pending-count-label">
-                    {summary?.pendingApprovalCount ?? 0}<span className="sr-only">건</span>
+                    {summary?.pendingApprovalCount ?? 0}<span className="sr-only">{t('stats.count')}</span>
                   </p>
                 </div>
               </CardContent>
@@ -99,9 +101,9 @@ export default function AppointmentListPage() {
             <Card>
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <p className="text-sm text-muted-foreground" id="approved-count-label">승인완료</p>
+                  <p className="text-sm text-muted-foreground" id="approved-count-label">{t('stats.approved')}</p>
                   <p className="mt-1 text-3xl font-bold text-blue-500" aria-labelledby="approved-count-label">
-                    {summary?.approvedCount ?? 0}<span className="sr-only">건</span>
+                    {summary?.approvedCount ?? 0}<span className="sr-only">{t('stats.count')}</span>
                   </p>
                 </div>
               </CardContent>
@@ -109,9 +111,9 @@ export default function AppointmentListPage() {
             <Card>
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <p className="text-sm text-muted-foreground" id="executed-count-label">시행완료</p>
+                  <p className="text-sm text-muted-foreground" id="executed-count-label">{t('stats.executed')}</p>
                   <p className="mt-1 text-3xl font-bold text-green-500" aria-labelledby="executed-count-label">
-                    {summary?.executedCount ?? 0}<span className="sr-only">건</span>
+                    {summary?.executedCount ?? 0}<span className="sr-only">{t('stats.count')}</span>
                   </p>
                 </div>
               </CardContent>
@@ -124,21 +126,21 @@ export default function AppointmentListPage() {
       <Card className="mt-6">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>발령안 목록</CardTitle>
+            <CardTitle>{t('list.title')}</CardTitle>
             <div className="relative w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
               <Input
-                placeholder="발령번호 또는 제목 검색"
+                placeholder={t('list.searchPlaceholder')}
                 value={searchState.keyword}
                 onChange={handleSearch}
                 className="pl-9 pr-9"
-                aria-label="발령안 검색"
+                aria-label={t('list.searchAriaLabel')}
               />
               {searchState.keyword && (
                 <button
                   onClick={clearSearch}
                   className="absolute right-3 top-1/2 -translate-y-1/2"
-                  aria-label="검색어 지우기"
+                  aria-label={t('list.clearSearch')}
                 >
                   <X className="h-4 w-4 text-muted-foreground hover:text-foreground" aria-hidden="true" />
                 </button>
@@ -153,11 +155,11 @@ export default function AppointmentListPage() {
             className="px-4 pt-2"
           >
             <TabsList>
-              <TabsTrigger value="all">전체</TabsTrigger>
-              <TabsTrigger value="DRAFT">임시저장</TabsTrigger>
-              <TabsTrigger value="PENDING_APPROVAL">결재대기</TabsTrigger>
-              <TabsTrigger value="APPROVED">승인</TabsTrigger>
-              <TabsTrigger value="EXECUTED">시행완료</TabsTrigger>
+              <TabsTrigger value="all">{t('tabs.all')}</TabsTrigger>
+              <TabsTrigger value="DRAFT">{t('tabs.draft')}</TabsTrigger>
+              <TabsTrigger value="PENDING_APPROVAL">{t('tabs.pendingApproval')}</TabsTrigger>
+              <TabsTrigger value="APPROVED">{t('tabs.approved')}</TabsTrigger>
+              <TabsTrigger value="EXECUTED">{t('tabs.executed')}</TabsTrigger>
             </TabsList>
           </Tabs>
 
@@ -171,46 +173,46 @@ export default function AppointmentListPage() {
                 icon={FileText}
                 title={
                   searchState.status || searchState.keyword
-                    ? '검색 결과가 없습니다'
-                    : '발령안이 없습니다'
+                    ? t('empty.noResults')
+                    : t('empty.noAppointments')
                 }
                 description={
                   searchState.status || searchState.keyword
-                    ? '다른 검색 조건을 시도해 보세요.'
-                    : '새 발령안을 작성하여 인사발령을 시작하세요.'
+                    ? t('empty.noResultsDesc')
+                    : t('empty.noAppointmentsDesc')
                 }
                 action={
                   searchState.status || searchState.keyword
-                    ? { label: '필터 초기화', onClick: resetFilters }
-                    : { label: '새 발령안', onClick: () => navigate('/appointments/new') }
+                    ? { label: t('empty.resetFilter'), onClick: resetFilters }
+                    : { label: t('newAppointment'), onClick: () => navigate('/appointments/new') }
                 }
               />
             ) : (
               <>
-                <div className="overflow-x-auto" role="region" aria-label="발령안 목록">
-                  <table className="w-full" role="grid" aria-label="발령안">
+                <div className="overflow-x-auto" role="region" aria-label={t('list.title')}>
+                  <table className="w-full" role="grid" aria-label={t('list.tableAriaLabel')}>
                     <thead>
                       <tr className="border-b bg-muted/50">
                         <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          발령번호
+                          {t('table.appointmentNumber')}
                         </th>
                         <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          제목
+                          {t('table.subject')}
                         </th>
                         <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          시행일
+                          {t('table.effectiveDate')}
                         </th>
                         <th scope="col" className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                          대상인원
+                          {t('table.targetCount')}
                         </th>
                         <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          상태
+                          {t('table.status')}
                         </th>
                         <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          기안자
+                          {t('table.drafter')}
                         </th>
                         <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          생성일
+                          {t('table.createdAt')}
                         </th>
                       </tr>
                     </thead>
@@ -237,7 +239,7 @@ export default function AppointmentListPage() {
                             })}
                           </td>
                           <td className="px-4 py-3 text-center text-sm">
-                            {draft.detailCount}<span className="sr-only">명 대상</span>명
+                            {t('table.targetCountLabel', { count: draft.detailCount })}
                           </td>
                           <td className="px-4 py-3">
                             <AppointmentDraftStatusBadge status={draft.status} />

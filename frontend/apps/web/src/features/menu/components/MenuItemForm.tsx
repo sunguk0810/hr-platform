@@ -1,6 +1,9 @@
+import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -25,24 +28,25 @@ import { X } from 'lucide-react';
 import type { MenuItemResponse, CreateMenuItemRequest, UpdateMenuItemRequest, MenuType } from '../types';
 import { ROLES } from '@/stores/authStore';
 
-const formSchema = z.object({
-  code: z.string().min(1, '코드는 필수입니다').max(50),
-  name: z.string().min(1, '이름은 필수입니다').max(100),
-  nameEn: z.string().max(100).optional(),
-  path: z.string().max(200).optional(),
-  icon: z.string().max(50).optional(),
-  menuType: z.enum(['INTERNAL', 'EXTERNAL', 'DIVIDER', 'HEADER']),
-  externalUrl: z.string().max(500).optional(),
-  sortOrder: z.number().int().min(0),
-  featureCode: z.string().max(50).optional(),
-  showInNav: z.boolean(),
-  showInMobile: z.boolean(),
-  mobileSortOrder: z.number().int().min(0).optional(),
-  roles: z.array(z.string()),
-  permissions: z.array(z.string()),
-});
+const createFormSchema = (t: TFunction) =>
+  z.object({
+    code: z.string().min(1, t('validation.codeRequired')).max(50),
+    name: z.string().min(1, t('validation.nameRequired')).max(100),
+    nameEn: z.string().max(100).optional(),
+    path: z.string().max(200).optional(),
+    icon: z.string().max(50).optional(),
+    menuType: z.enum(['INTERNAL', 'EXTERNAL', 'DIVIDER', 'HEADER']),
+    externalUrl: z.string().max(500).optional(),
+    sortOrder: z.number().int().min(0),
+    featureCode: z.string().max(50).optional(),
+    showInNav: z.boolean(),
+    showInMobile: z.boolean(),
+    mobileSortOrder: z.number().int().min(0).optional(),
+    roles: z.array(z.string()),
+    permissions: z.array(z.string()),
+  });
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<ReturnType<typeof createFormSchema>>;
 
 interface MenuItemFormProps {
   menu?: MenuItemResponse;
@@ -51,13 +55,6 @@ interface MenuItemFormProps {
   onCancel: () => void;
   isLoading?: boolean;
 }
-
-const menuTypes: { value: MenuType; label: string }[] = [
-  { value: 'INTERNAL', label: '내부 경로' },
-  { value: 'EXTERNAL', label: '외부 링크' },
-  { value: 'DIVIDER', label: '구분선' },
-  { value: 'HEADER', label: '헤더' },
-];
 
 const commonPermissions = [
   'employee:read',
@@ -88,7 +85,20 @@ export function MenuItemForm({
   onCancel,
   isLoading = false,
 }: MenuItemFormProps) {
+  const { t } = useTranslation('menu');
   const isEditing = !!menu;
+
+  const formSchema = useMemo(() => createFormSchema(t), [t]);
+
+  const menuTypes: { value: MenuType; label: string }[] = useMemo(
+    () => [
+      { value: 'INTERNAL', label: t('menuTypes.ROUTE') },
+      { value: 'EXTERNAL', label: t('menuTypes.EXTERNAL') },
+      { value: 'DIVIDER', label: t('menuTypes.SEPARATOR') },
+      { value: 'HEADER', label: t('menuTypes.HEADER') },
+    ],
+    [t]
+  );
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -148,7 +158,7 @@ export function MenuItemForm({
         {parentMenu && (
           <div className="rounded-lg bg-muted p-3">
             <p className="text-sm text-muted-foreground">
-              상위 메뉴: <strong>{parentMenu.name}</strong> ({parentMenu.code})
+              {t('form.parentMenu', { name: `${parentMenu.name} (${parentMenu.code})` })}
             </p>
           </div>
         )}
@@ -159,15 +169,15 @@ export function MenuItemForm({
             name="code"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>코드 *</FormLabel>
+                <FormLabel>{t('form.code')}</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
-                    placeholder="EMPLOYEES"
+                    placeholder={t('form.codePlaceholder')}
                     disabled={isEditing}
                   />
                 </FormControl>
-                <FormDescription>고유 식별자 (영문 대문자, 언더스코어)</FormDescription>
+                <FormDescription>{t('form.codePlaceholder')}</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -178,9 +188,9 @@ export function MenuItemForm({
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>이름 *</FormLabel>
+                <FormLabel>{t('form.name')}</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="인사정보" />
+                  <Input {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -192,9 +202,9 @@ export function MenuItemForm({
             name="nameEn"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>영문 이름</FormLabel>
+                <FormLabel>{t('form.nameEn')}</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="HR Information" />
+                  <Input {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -206,7 +216,7 @@ export function MenuItemForm({
             name="menuType"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>메뉴 유형</FormLabel>
+                <FormLabel>{t('form.menuType')}</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
@@ -231,11 +241,11 @@ export function MenuItemForm({
             name="path"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>경로</FormLabel>
+                <FormLabel>{t('form.path')}</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="/employees" />
+                  <Input {...field} placeholder={t('form.pathPlaceholder')} />
                 </FormControl>
-                <FormDescription>프론트엔드 라우트 경로</FormDescription>
+                <FormDescription>{t('form.pathPlaceholder')}</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -246,11 +256,11 @@ export function MenuItemForm({
             name="icon"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>아이콘</FormLabel>
+                <FormLabel>{t('form.icon')}</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Users" />
+                  <Input {...field} placeholder={t('form.iconPlaceholder')} />
                 </FormControl>
-                <FormDescription>Lucide 아이콘 이름</FormDescription>
+                <FormDescription>{t('form.iconPlaceholder')}</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -261,7 +271,7 @@ export function MenuItemForm({
             name="sortOrder"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>정렬 순서</FormLabel>
+                <FormLabel>{t('form.sortOrder')}</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
@@ -279,11 +289,11 @@ export function MenuItemForm({
             name="featureCode"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>기능 코드</FormLabel>
+                <FormLabel>{t('form.featureCode')}</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="RECRUITMENT" />
+                  <Input {...field} placeholder={t('form.featureCodePlaceholder')} />
                 </FormControl>
-                <FormDescription>테넌트 기능 플래그 연동</FormDescription>
+                <FormDescription>{t('form.featureCodePlaceholder')}</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -299,7 +309,7 @@ export function MenuItemForm({
                 <FormControl>
                   <Switch checked={field.value} onCheckedChange={field.onChange} />
                 </FormControl>
-                <FormLabel className="!mt-0">네비게이션에 표시</FormLabel>
+                <FormLabel className="!mt-0">{t('form.showInNav')}</FormLabel>
               </FormItem>
             )}
           />
@@ -312,7 +322,7 @@ export function MenuItemForm({
                 <FormControl>
                   <Switch checked={field.value} onCheckedChange={field.onChange} />
                 </FormControl>
-                <FormLabel className="!mt-0">모바일 탭바에 표시</FormLabel>
+                <FormLabel className="!mt-0">{t('form.showInMobile')}</FormLabel>
               </FormItem>
             )}
           />
@@ -324,7 +334,7 @@ export function MenuItemForm({
           name="roles"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>필요 역할</FormLabel>
+              <FormLabel>{t('form.requiredRoles')}</FormLabel>
               <div className="flex flex-wrap gap-2">
                 {field.value.map((role) => (
                   <Badge key={role} variant="secondary">
@@ -342,7 +352,7 @@ export function MenuItemForm({
               <Select onValueChange={addRole}>
                 <FormControl>
                   <SelectTrigger className="w-48">
-                    <SelectValue placeholder="역할 추가..." />
+                    <SelectValue placeholder={t('form.addRole')} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -356,7 +366,7 @@ export function MenuItemForm({
                 </SelectContent>
               </Select>
               <FormDescription>
-                지정된 역할 중 하나를 가진 사용자만 접근 가능
+                {t('form.roleDescription')}
               </FormDescription>
             </FormItem>
           )}
@@ -368,7 +378,7 @@ export function MenuItemForm({
           name="permissions"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>필요 권한</FormLabel>
+              <FormLabel>{t('form.requiredPermissions')}</FormLabel>
               <div className="flex flex-wrap gap-2">
                 {field.value.map((perm) => (
                   <Badge key={perm} variant="outline" className="text-blue-600">
@@ -386,7 +396,7 @@ export function MenuItemForm({
               <Select onValueChange={addPermission}>
                 <FormControl>
                   <SelectTrigger className="w-48">
-                    <SelectValue placeholder="권한 추가..." />
+                    <SelectValue placeholder={t('form.addPermission')} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -400,7 +410,7 @@ export function MenuItemForm({
                 </SelectContent>
               </Select>
               <FormDescription>
-                지정된 권한 중 하나를 가진 사용자만 접근 가능
+                {t('form.permissionDescription')}
               </FormDescription>
             </FormItem>
           )}
@@ -408,10 +418,10 @@ export function MenuItemForm({
 
         <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onCancel}>
-            취소
+            {t('form.cancel')}
           </Button>
           <Button type="submit" disabled={isLoading}>
-            {isLoading ? '저장 중...' : isEditing ? '수정' : '생성'}
+            {isLoading ? t('form.saving') : isEditing ? t('form.edit') : t('form.create')}
           </Button>
         </div>
       </form>

@@ -1,0 +1,198 @@
+{
+  "title": "Appointment Management",
+  "description": "Create and manage personnel appointments.",
+  "newAppointment": "New Appointment",
+  "loading": "Loading",
+  "goToList": "Back to List",
+  "stats": {
+    "draft": "Draft",
+    "pendingApproval": "Pending Approval",
+    "approved": "Approved",
+    "executed": "Executed",
+    "count": ""
+  },
+  "list": {
+    "title": "Appointment List",
+    "searchPlaceholder": "Search by number or title",
+    "clearSearch": "Clear search",
+    "searchAriaLabel": "Search appointments",
+    "summaryAriaLabel": "Appointment summary",
+    "tableAriaLabel": "Appointments"
+  },
+  "tabs": {
+    "all": "All",
+    "draft": "Draft",
+    "pendingApproval": "Pending",
+    "approved": "Approved",
+    "executed": "Executed"
+  },
+  "empty": {
+    "noResults": "No search results",
+    "noAppointments": "No appointments",
+    "noResultsDesc": "Try different search criteria.",
+    "noAppointmentsDesc": "Create a new appointment to get started.",
+    "resetFilter": "Reset Filters"
+  },
+  "table": {
+    "appointmentNumber": "Appointment No.",
+    "subject": "Title",
+    "effectiveDate": "Effective Date",
+    "targetCount": "Targets",
+    "status": "Status",
+    "drafter": "Drafter",
+    "createdAt": "Created",
+    "targetCountLabel": "{{count}} targets"
+  },
+  "create": {
+    "title": "Create Appointment",
+    "description": "Create a new personnel appointment.",
+    "basicInfo": "Basic Information",
+    "basicInfoDesc": "Enter basic appointment information.",
+    "subjectLabel": "Title *",
+    "subjectPlaceholder": "e.g., Q1 2026 Regular Personnel Appointment",
+    "effectiveDateLabel": "Effective Date *",
+    "effectiveDateSelect": "Select effective date",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Enter appointment description",
+    "targetSection": "Appointment Targets",
+    "targetSectionDesc": "Add target employees. ({{count}} people)",
+    "addEmployee": "Add Employee"
+  },
+  "createValidation": {
+    "subjectRequired": "Please enter a title",
+    "effectiveDateRequired": "Please select an effective date"
+  },
+  "createToast": {
+    "addTarget": "Target Added",
+    "addTargetDesc": "{{name}} has been added to the appointment.",
+    "removeTarget": "Target Removed",
+    "removeTargetDesc": "Target has been removed from the appointment.",
+    "draftSuccess": "Draft Saved",
+    "draftSuccessDesc": "Appointment saved as draft.",
+    "draftFailed": "Save Failed",
+    "draftFailedDesc": "Failed to save appointment.",
+    "noTarget": "Cannot Submit",
+    "noTargetDesc": "No targets. Please add at least one target employee.",
+    "submitSuccess": "Submitted for Approval",
+    "submitSuccessDesc": "Appointment has been submitted for approval.",
+    "submitFailed": "Submission Failed",
+    "submitFailedDesc": "Failed to submit for approval."
+  },
+  "detailPage": {
+    "title": "Appointment Detail",
+    "loadingDesc": "Loading...",
+    "notFound": "Appointment not found.",
+    "notFoundDesc": "The requested appointment could not be found.",
+    "goToListFull": "Back to List"
+  },
+  "detailInfo": {
+    "title": "Basic Information",
+    "appointmentNumber": "Appointment No.",
+    "subject": "Title",
+    "effectiveDate": "Effective Date",
+    "description": "Description",
+    "status": "Status",
+    "drafter": "Drafter",
+    "createdAt": "Created",
+    "approvedAt": "Approved",
+    "executedAt": "Executed",
+    "cancelledAt": "Cancelled",
+    "cancelReason": "Cancel Reason"
+  },
+  "detailTarget": {
+    "title": "Appointment Targets",
+    "count": "{{count}} people",
+    "addEmployee": "Add Employee"
+  },
+  "detailActions": {
+    "edit": "Edit",
+    "requestApproval": "Request Approval",
+    "execute": "Execute",
+    "cancel": "Cancel",
+    "delete": "Delete"
+  },
+  "detailToast": {
+    "deleteSuccess": "Deleted",
+    "deleteSuccessDesc": "Appointment has been deleted.",
+    "deleteFailed": "Delete Failed",
+    "deleteFailedDesc": "Failed to delete appointment.",
+    "addTargetSuccess": "Target Added",
+    "addTargetSuccessDesc": "Target has been added.",
+    "addTargetFailed": "Add Failed",
+    "addTargetFailedDesc": "Failed to add target.",
+    "removeTargetSuccess": "Target Removed",
+    "removeTargetSuccessDesc": "Target has been removed.",
+    "removeTargetFailed": "Remove Failed",
+    "removeTargetFailedDesc": "Failed to remove target.",
+    "submitSuccess": "Submitted for Approval",
+    "submitSuccessDesc": "Appointment has been submitted for approval.",
+    "submitFailed": "Submission Failed",
+    "submitFailedDesc": "Failed to submit for approval.",
+    "executeSuccess": "Executed",
+    "executeSuccessDesc": "Appointment has been executed.",
+    "executeFailed": "Execution Failed",
+    "executeFailedDesc": "Failed to execute appointment.",
+    "cancelSuccess": "Cancelled",
+    "cancelSuccessDesc": "Appointment has been cancelled.",
+    "cancelFailed": "Cancellation Failed",
+    "cancelFailedDesc": "Failed to cancel appointment."
+  },
+  "deleteDialog": {
+    "title": "Delete Appointment",
+    "description": "Are you sure you want to delete \"{{title}}\"? This action cannot be undone.",
+    "confirm": "Delete"
+  },
+  "cancelDialog": {
+    "title": "Cancel Appointment",
+    "description": "Cancel this appointment. Please enter the reason.",
+    "reasonLabel": "Cancel Reason *",
+    "reasonPlaceholder": "Enter cancel reason",
+    "close": "Close",
+    "cancelling": "Cancelling...",
+    "confirm": "Cancel"
+  },
+  "detailForm": {
+    "title": "Add Appointment Target",
+    "description": "Enter the target employee, appointment type, and changes.",
+    "employeeLabel": "Select Employee *",
+    "employeePlaceholder": "Search for employee",
+    "employeeSearchPlaceholder": "Search by name...",
+    "appointmentType": "Appointment Type *",
+    "appointmentTypeSelect": "Select appointment type",
+    "targetDepartment": "Target Department",
+    "departmentSelect": "Select department",
+    "targetGrade": "Target Grade",
+    "gradeSelect": "Select grade",
+    "targetPosition": "Target Position",
+    "positionSelect": "Select position",
+    "reason": "Reason",
+    "reasonPlaceholder": "Enter appointment reason",
+    "cancel": "Cancel",
+    "adding": "Adding...",
+    "add": "Add"
+  },
+  "detailFormValidation": {
+    "employeeRequired": "Please select an employee",
+    "typeRequired": "Please select an appointment type"
+  },
+  "detailTable": {
+    "empty": "No appointment targets.",
+    "emptyDesc": "Click the \"Add Employee\" button above to add targets.",
+    "department": "Dept:",
+    "grade": "Grade:",
+    "position": "Position:",
+    "duty": "Duty:",
+    "noChange": "No Change",
+    "employeeNumber": "Emp. No.",
+    "name": "Name",
+    "appointmentType": "Type",
+    "changes": "Changes",
+    "reason": "Reason",
+    "delete": "Delete"
+  },
+  "buttons": {
+    "cancel": "Cancel",
+    "saveDraft": "Save Draft",
+    "requestApproval": "Request Approval"
+  }
+}

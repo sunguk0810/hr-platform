@@ -1,0 +1,87 @@
+{
+  "title": "Audit Log",
+  "description": "View system activity history.",
+  "subtitle": "System Activity History",
+  "actions": {
+    "LOGIN": "Login",
+    "LOGOUT": "Logout",
+    "CREATE": "Create",
+    "UPDATE": "Update",
+    "DELETE": "Delete",
+    "READ": "Read",
+    "EXPORT": "Export",
+    "IMPORT": "Import",
+    "APPROVE": "Approve",
+    "REJECT": "Reject",
+    "PASSWORD_CHANGE": "Password Change",
+    "PERMISSION_CHANGE": "Permission Change"
+  },
+  "detail": {
+    "title": "Audit Log Detail",
+    "datetime": "Date/Time",
+    "result": "Result",
+    "success": "Success",
+    "failure": "Failure",
+    "user": "User",
+    "ipAddress": "IP Address",
+    "browser": "Browser",
+    "action": "Action",
+    "target": "Target",
+    "errorMessage": "Error Message",
+    "details": "Details",
+    "requestInfo": "Request Info",
+    "logId": "Log ID",
+    "copied": "Copied",
+    "copy": "Copy"
+  },
+  "filter": {
+    "title": "Search Filter",
+    "keyword": "Keyword",
+    "keywordPlaceholder": "Search user, target, IP",
+    "actionType": "Action Type",
+    "result": "Result",
+    "all": "All",
+    "search": "Search",
+    "advanced": "Advanced Search",
+    "reset": "Reset",
+    "targetType": "Target Type",
+    "period": "Period",
+    "periodSelect": "Select Period",
+    "userId": "User ID",
+    "userIdPlaceholder": "Enter User ID",
+    "activeAction": "Action: {{value}}",
+    "activeResult": "Result: {{value}}",
+    "activeTarget": "Target: {{value}}",
+    "activeStartDate": "Start: {{value}}",
+    "activeEndDate": "End: {{value}}",
+    "activeUser": "User: {{value}}"
+  },
+  "export": {
+    "button": "Export",
+    "loading": "Exporting...",
+    "csv": "Export as CSV",
+    "excel": "Export as Excel",
+    "success": "Export Complete",
+    "successDesc": "Audit log saved as {{format}} file.",
+    "failed": "Export Failed",
+    "failedDesc": "Failed to export audit log."
+  },
+  "table": {
+    "datetime": "Date/Time",
+    "user": "User",
+    "ipAddress": "IP Address",
+    "action": "Action",
+    "target": "Target",
+    "result": "Result"
+  },
+  "empty": {
+    "title": "No audit logs",
+    "description": "No logs match the search criteria."
+  },
+  "timeline": {
+    "empty": "No audit logs."
+  },
+  "tabs": {
+    "all": "All"
+  }
+}
