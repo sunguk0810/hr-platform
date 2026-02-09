@@ -44,6 +44,7 @@ public interface EventTopics {
     String LEAVE_APPROVED = "leave-approved";
     String LEAVE_REJECTED = "leave-rejected";
     String LEAVE_CANCELED = "leave-canceled";
+    String OVERTIME_REQUESTED = "overtime-requested";
 
     // Notification events
     String NOTIFICATION_EVENTS = "notification-events";

@@ -4,10 +4,12 @@ import com.hrsaas.attendance.domain.dto.request.CreateOvertimeRequest;
 import com.hrsaas.attendance.domain.dto.response.OvertimeRequestResponse;
 import com.hrsaas.attendance.domain.entity.OvertimeRequest;
 import com.hrsaas.attendance.domain.entity.OvertimeStatus;
+import com.hrsaas.attendance.domain.event.OvertimeRequestCreatedEvent;
 import com.hrsaas.attendance.repository.OvertimeRequestRepository;
 import com.hrsaas.attendance.service.OvertimeService;
 import com.hrsaas.attendance.domain.AttendanceErrorCode;
 import com.hrsaas.common.core.exception.NotFoundException;
+import com.hrsaas.common.event.EventPublisher;
 import com.hrsaas.common.tenant.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +30,7 @@ import java.util.UUID;
 public class OvertimeServiceImpl implements OvertimeService {
 
     private final OvertimeRequestRepository overtimeRequestRepository;
+    private final EventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -49,6 +52,8 @@ public class OvertimeServiceImpl implements OvertimeService {
         OvertimeRequest saved = overtimeRequestRepository.save(overtimeRequest);
         log.info("Overtime request created: id={}, employeeId={}, date={}",
             saved.getId(), employeeId, request.getOvertimeDate());
+
+        eventPublisher.publish(OvertimeRequestCreatedEvent.of(saved));
 
         return OvertimeRequestResponse.from(saved);
     }
