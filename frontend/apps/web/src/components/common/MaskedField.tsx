@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Eye, EyeOff } from 'lucide-react';
@@ -94,6 +95,7 @@ export function MaskedField({
   onRevealRequest,
   className,
 }: MaskedFieldProps) {
+  const { t } = useTranslation('common');
   // Support both 'type' and legacy 'maskType' prop
   const effectiveType = type || maskType || 'custom';
   const [isRevealed, setIsRevealed] = React.useState(false);
@@ -148,7 +150,7 @@ export function MaskedField({
         className="h-6 w-6"
         onClick={handleToggle}
         disabled={loading}
-        aria-label={isRevealed ? '숨기기' : '보기'}
+        aria-label={isRevealed ? t('component.hide') : t('component.show')}
       >
         {loading ? (
           <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />

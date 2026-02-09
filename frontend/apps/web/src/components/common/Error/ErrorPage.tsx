@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Home, ArrowLeft, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -30,6 +31,7 @@ export function ErrorPage({
   children,
 }: ErrorPageProps) {
   const navigate = useNavigate();
+  const { t } = useTranslation('common');
 
   return (
     <div
@@ -70,19 +72,19 @@ export function ErrorPage({
               className="gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
-              뒤로 가기
+              {t('back')}
             </Button>
           )}
           {showHomeButton && (
             <Button onClick={() => navigate('/')} className="gap-2">
               <Home className="h-4 w-4" />
-              홈으로 이동
+              {t('goHome')}
             </Button>
           )}
           {showRetryButton && onRetry && (
             <Button variant="secondary" onClick={onRetry} className="gap-2">
               <RefreshCw className="h-4 w-4" />
-              다시 시도
+              {t('retry')}
             </Button>
           )}
         </div>

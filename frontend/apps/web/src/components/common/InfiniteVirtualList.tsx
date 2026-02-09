@@ -1,5 +1,6 @@
 import { useRef, ReactNode, CSSProperties, useEffect } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 
 export interface InfiniteVirtualListProps<T> {
@@ -89,10 +90,11 @@ export function InfiniteVirtualList<T>({
   className,
   getItemKey,
   emptyState,
-  loadingText = '불러오는 중...',
-  endText = '모든 데이터를 불러왔습니다.',
+  loadingText,
+  endText,
   disableInfiniteScroll = false,
 }: InfiniteVirtualListProps<T>) {
+  const { t } = useTranslation('common');
   const parentRef = useRef<HTMLDivElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
@@ -140,7 +142,7 @@ export function InfiniteVirtualList<T>({
     return (
       <div className={cn('flex items-center justify-center py-8', className)}>
         {emptyState || (
-          <p className="text-muted-foreground">데이터가 없습니다.</p>
+          <p className="text-muted-foreground">{t('noData')}</p>
         )}
       </div>
     );
@@ -187,10 +189,10 @@ export function InfiniteVirtualList<T>({
         {isLoading ? (
           <div className="flex items-center gap-2">
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-            <span>{loadingText}</span>
+            <span>{loadingText ?? t('loading')}</span>
           </div>
         ) : !hasMore && items.length > 0 ? (
-          <span>{endText}</span>
+          <span>{endText ?? t('allLoaded')}</span>
         ) : null}
       </div>
     </div>
@@ -221,9 +223,10 @@ export function SimpleInfiniteList<T>({
   onLoadMore,
   className,
   emptyState,
-  loadingText = '불러오는 중...',
-  endText = '모든 데이터를 불러왔습니다.',
+  loadingText,
+  endText,
 }: SimpleInfiniteListProps<T>) {
+  const { t } = useTranslation('common');
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -256,7 +259,7 @@ export function SimpleInfiniteList<T>({
     return (
       <div className={cn('flex items-center justify-center py-8', className)}>
         {emptyState || (
-          <p className="text-muted-foreground">데이터가 없습니다.</p>
+          <p className="text-muted-foreground">{t('noData')}</p>
         )}
       </div>
     );
@@ -276,10 +279,10 @@ export function SimpleInfiniteList<T>({
         {isLoading ? (
           <div className="flex items-center gap-2">
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-            <span>{loadingText}</span>
+            <span>{loadingText ?? t('loading')}</span>
           </div>
         ) : !hasMore && items.length > 0 ? (
-          <span>{endText}</span>
+          <span>{endText ?? t('allLoaded')}</span>
         ) : null}
       </div>
     </div>

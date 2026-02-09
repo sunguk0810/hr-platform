@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Calendar as CalendarIcon } from 'lucide-react';
@@ -29,12 +30,13 @@ export interface DateRangePickerProps {
 export function DateRangePicker({
   value,
   onChange,
-  placeholder = '기간 선택',
+  placeholder,
   disabled = false,
   disabledDates,
   locale = 'ko',
   className,
 }: DateRangePickerProps) {
+  const { t } = useTranslation('common');
   const [open, setOpen] = React.useState(false);
 
   const handleSelect = (date: Date | { from?: Date; to?: Date } | undefined) => {
@@ -74,7 +76,7 @@ export function DateRangePicker({
               formatDate(value.from)
             )
           ) : (
-            <span>{placeholder}</span>
+            <span>{placeholder ?? t('component.selectDateRange')}</span>
           )}
         </Button>
       </PopoverTrigger>

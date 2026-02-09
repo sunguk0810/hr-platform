@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/stores/authStore';
 
 export interface PermissionGateProps {
@@ -128,15 +129,18 @@ export const ROLE_HIERARCHY: Record<string, string[]> = {
 /**
  * 역할 표시 이름
  */
-export const ROLE_LABELS: Record<string, string> = {
-  SUPER_ADMIN: '시스템 관리자',
-  GROUP_ADMIN: '그룹 HR 총괄',
-  TENANT_ADMIN: '테넌트 관리자',
-  HR_MANAGER: 'HR 관리자',
-  DEPT_MANAGER: '부서장',
-  TEAM_LEADER: '팀장',
-  EMPLOYEE: '일반 직원',
-};
+export function useRoleLabels(): Record<string, string> {
+  const { t } = useTranslation('common');
+  return {
+    SUPER_ADMIN: t('role.superAdmin'),
+    GROUP_ADMIN: t('role.groupAdmin'),
+    TENANT_ADMIN: t('role.tenantAdmin'),
+    HR_MANAGER: t('role.hrManager'),
+    DEPT_MANAGER: t('role.deptManager'),
+    TEAM_LEADER: t('role.teamLeader'),
+    EMPLOYEE: t('role.employee'),
+  };
+}
 
 export const PERMISSIONS = {
   // Employee

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Calendar as CalendarIcon } from 'lucide-react';
@@ -24,12 +25,13 @@ export interface DatePickerProps {
 export function DatePicker({
   value,
   onChange,
-  placeholder = '날짜 선택',
+  placeholder,
   disabled = false,
   disabledDates,
   locale = 'ko',
   className,
 }: DatePickerProps) {
+  const { t } = useTranslation('common');
   const [open, setOpen] = React.useState(false);
 
   const handleSelect = (date: Date | { from?: Date; to?: Date } | undefined) => {
@@ -57,7 +59,7 @@ export function DatePicker({
               locale: locale === 'ko' ? ko : undefined,
             })
           ) : (
-            <span>{placeholder}</span>
+            <span>{placeholder ?? t('component.selectDate')}</span>
           )}
         </Button>
       </PopoverTrigger>

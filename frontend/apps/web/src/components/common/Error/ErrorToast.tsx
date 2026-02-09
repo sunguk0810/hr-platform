@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { AxiosError } from 'axios';
+import i18n from '@/lib/i18n';
 import { toast } from '@/hooks/useToast';
 
 interface ApiErrorResponse {
@@ -35,29 +36,32 @@ function getErrorMessage(error: unknown): string {
     }
 
     // HTTP status-based messages
+    const t = (key: string) => i18n.t(key, { ns: 'common' });
     switch (error.response?.status) {
       case 400:
-        return '잘못된 요청입니다.';
+        return t('httpError.400');
       case 401:
-        return '인증이 필요합니다. 다시 로그인해주세요.';
+        return t('httpError.401');
       case 403:
-        return '접근 권한이 없습니다.';
+        return t('httpError.403');
       case 404:
-        return '요청한 리소스를 찾을 수 없습니다.';
+        return t('httpError.404');
       case 409:
-        return '데이터 충돌이 발생했습니다.';
+        return t('httpError.409');
       case 422:
-        return '입력값이 올바르지 않습니다.';
+        return t('httpError.422');
       case 429:
-        return '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.';
+        return t('httpError.429');
       case 500:
-        return '서버 오류가 발생했습니다.';
+        return t('httpError.500');
       case 502:
+        return t('httpError.502');
       case 503:
+        return t('httpError.503');
       case 504:
-        return '서비스가 일시적으로 이용 불가합니다.';
+        return t('httpError.504');
       default:
-        return '네트워크 오류가 발생했습니다.';
+        return t('httpError.networkError');
     }
   }
 
@@ -69,7 +73,7 @@ function getErrorMessage(error: unknown): string {
     return error;
   }
 
-  return '알 수 없는 오류가 발생했습니다.';
+  return i18n.t('httpError.unknown', { ns: 'common' });
 }
 
 /**
@@ -92,7 +96,7 @@ export function showErrorToast(error: unknown, options?: ErrorToastOptions) {
 
   toast({
     variant: 'destructive',
-    title: options?.title || '오류가 발생했습니다',
+    title: options?.title || i18n.t('error', { ns: 'common' }),
     description:
       options?.description ||
       (errorCode ? `[${errorCode}] ${errorMessage}` : errorMessage),

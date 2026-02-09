@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { RefreshCw } from 'lucide-react';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { cn } from '@/lib/utils';
@@ -22,6 +23,7 @@ export function PullToRefreshContainer({
   threshold = 80,
   disabled = false,
 }: PullToRefreshContainerProps) {
+  const { t } = useTranslation('common');
   const { isPulling, isRefreshing, pullProgress, pullDistance, handlers } = usePullToRefresh({
     onRefresh,
     threshold,
@@ -51,10 +53,10 @@ export function PullToRefreshContainer({
             />
             <span className="text-xs text-muted-foreground">
               {isRefreshing
-                ? '새로고침 중...'
+                ? t('refreshing')
                 : pullProgress >= 1
-                  ? '놓아서 새로고침'
-                  : '당겨서 새로고침'}
+                  ? t('component.releaseToRefresh')
+                  : t('component.pullToRefresh')}
             </span>
           </div>
         </div>

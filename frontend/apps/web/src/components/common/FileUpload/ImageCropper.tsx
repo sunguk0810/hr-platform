@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import ReactCrop, { type Crop, centerCrop, makeAspectCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { Button } from '@/components/ui/button';
@@ -39,6 +40,7 @@ export function ImageCropper({
   outputType = 'image/jpeg',
   outputQuality = 0.9,
 }: ImageCropperProps) {
+  const { t } = useTranslation('common');
   const [imgSrc, setImgSrc] = React.useState<string>('');
   const [crop, setCrop] = React.useState<Crop>();
   const [completedCrop, setCompletedCrop] = React.useState<Crop>();
@@ -155,7 +157,7 @@ export function ImageCropper({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>이미지 자르기</DialogTitle>
+          <DialogTitle>{t('component.cropImage')}</DialogTitle>
         </DialogHeader>
         <div className="flex items-center justify-center">
           {imgSrc && (
@@ -181,10 +183,10 @@ export function ImageCropper({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={handleCancel}>
-            취소
+            {t('cancel')}
           </Button>
           <Button onClick={handleComplete} disabled={!completedCrop}>
-            적용
+            {t('apply')}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,12 +10,17 @@ import {
 import { useUIStore } from '@/stores/uiStore';
 
 const LANGUAGES = [
-  { code: 'ko' as const, label: '한국어', flag: '🇰🇷' },
-  { code: 'en' as const, label: 'English', flag: '🇺🇸' },
+  { code: 'ko' as const, labelKey: 'component.korean', flag: '🇰🇷' },
+  { code: 'en' as const, labelKey: 'English', flag: '🇺🇸' },
 ];
 
 export function LanguageSwitcher() {
+  const { t } = useTranslation('common');
   const { language, setLanguage } = useUIStore();
+
+  const getLabel = (labelKey: string) => {
+    return labelKey.startsWith('component.') ? t(labelKey) : labelKey;
+  };
 
   const currentLanguage = LANGUAGES.find((l) => l.code === language) || LANGUAGES[0];
 
@@ -24,7 +30,7 @@ export function LanguageSwitcher() {
         <Button
           variant="ghost"
           size="icon"
-          aria-label={`현재 언어: ${currentLanguage.label}. 언어 변경`}
+          aria-label={t('component.currentLanguage', { language: getLabel(currentLanguage.labelKey) })}
         >
           <Globe className="h-5 w-5" aria-hidden="true" />
         </Button>
@@ -37,9 +43,9 @@ export function LanguageSwitcher() {
             className="flex items-center gap-2"
           >
             <span aria-hidden="true">{lang.flag}</span>
-            <span>{lang.label}</span>
+            <span>{getLabel(lang.labelKey)}</span>
             {language === lang.code && (
-              <span className="ml-auto text-primary" aria-label="선택됨">
+              <span className="ml-auto text-primary" aria-label={t('component.selected')}>
                 ✓
               </span>
             )}

@@ -106,5 +106,82 @@
       "goHome": "Go to dashboard"
     }
   },
-  "goToDashboard": "Go to dashboard"
+  "goToDashboard": "Go to dashboard",
+
+  "apply": "Apply",
+  "export": "Export",
+  "goHome": "Go to home",
+  "print": "Print",
+  "requesting": "Requesting...",
+  "refreshing": "Refreshing...",
+
+  "role": {
+    "superAdmin": "System Admin",
+    "groupAdmin": "Group HR Director",
+    "tenantAdmin": "Tenant Admin",
+    "hrManager": "HR Manager",
+    "deptManager": "Department Manager",
+    "teamLeader": "Team Leader",
+    "employee": "Employee"
+  },
+
+  "httpError": {
+    "400": "Bad request.",
+    "401": "Authentication required. Please log in again.",
+    "403": "Access denied.",
+    "404": "The requested resource was not found.",
+    "409": "A data conflict has occurred.",
+    "422": "Invalid input values.",
+    "429": "Too many requests. Please try again later.",
+    "500": "A server error has occurred.",
+    "502": "Service temporarily unavailable.",
+    "503": "Service temporarily unavailable.",
+    "504": "Service temporarily unavailable.",
+    "networkError": "A network error has occurred.",
+    "unknown": "An unknown error has occurred."
+  },
+
+  "component": {
+    "newTab": "Open in new tab",
+    "unsupportedFormat": "This file format is not supported for preview.",
+    "downloadFile": "Download file",
+    "hide": "Hide",
+    "show": "Show",
+    "searchTypes": {
+      "employee": "Employee",
+      "department": "Department",
+      "document": "Document",
+      "approval": "Approval",
+      "notification": "Notification",
+      "setting": "Setting",
+      "page": "Page"
+    },
+    "noSearchResults": "No results found for \"{{query}}\".",
+    "enterSearchTerm": "Enter a search term.",
+    "searching": "Searching...",
+    "globalSearch": "Global Search",
+    "searchFullPlaceholder": "Search... (employees, departments, pages)",
+    "searchInfo": "Search for employees, departments, and pages.",
+    "navigate": "Navigate",
+    "select": "Select",
+    "fileSizeError": "File size must be {{maxSize}}MB or less.",
+    "unsupportedFileType": "Unsupported file type.",
+    "maxFilesError": "You can upload up to {{maxFiles}} files.",
+    "cropImage": "Crop Image",
+    "selectDateRange": "Select date range",
+    "selectDate": "Select date",
+    "changeTheme": "Change theme",
+    "selectTheme": "Select theme",
+    "theme": {
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
+    "korean": "Korean",
+    "english": "English",
+    "currentLanguage": "Current language: {{language}}. Change language",
+    "selected": "Selected",
+    "releaseToRefresh": "Release to refresh",
+    "pullToRefresh": "Pull to refresh"
+  }
 }

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -66,6 +67,7 @@ export function FilePreview({
   onOpenChange,
   onDownload,
 }: FilePreviewProps) {
+  const { t } = useTranslation('common');
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
   const [zoom, setZoom] = React.useState(1);
   const [rotation, setRotation] = React.useState(0);
@@ -146,14 +148,14 @@ export function FilePreview({
               <Button variant="ghost" size="sm" asChild>
                 <a href={previewUrl} target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="h-4 w-4 mr-1" />
-                  새 탭에서 열기
+                  {t('component.newTab')}
                 </a>
               </Button>
             )}
             {onDownload && (
               <Button variant="ghost" size="sm" onClick={onDownload}>
                 <Download className="h-4 w-4 mr-1" />
-                다운로드
+                {t('download')}
               </Button>
             )}
           </div>
@@ -189,12 +191,12 @@ export function FilePreview({
                 </p>
               )}
               <p className="text-sm text-muted-foreground mt-4">
-                이 파일 형식은 미리보기를 지원하지 않습니다.
+                {t('component.unsupportedFormat')}
               </p>
               {onDownload && (
                 <Button className="mt-4" onClick={onDownload}>
                   <Download className="h-4 w-4 mr-2" />
-                  파일 다운로드
+                  {t('component.downloadFile')}
                 </Button>
               )}
             </div>

@@ -106,5 +106,82 @@
       "goHome": "대시보드로 이동"
     }
   },
-  "goToDashboard": "대시보드로 이동"
+  "goToDashboard": "대시보드로 이동",
+
+  "apply": "적용",
+  "export": "내보내기",
+  "goHome": "홈으로 이동",
+  "print": "인쇄",
+  "requesting": "요청 중...",
+  "refreshing": "새로고침 중...",
+
+  "role": {
+    "superAdmin": "시스템 관리자",
+    "groupAdmin": "그룹 HR 총괄",
+    "tenantAdmin": "테넌트 관리자",
+    "hrManager": "HR 관리자",
+    "deptManager": "부서장",
+    "teamLeader": "팀장",
+    "employee": "일반 직원"
+  },
+
+  "httpError": {
+    "400": "잘못된 요청입니다.",
+    "401": "인증이 필요합니다. 다시 로그인해주세요.",
+    "403": "접근 권한이 없습니다.",
+    "404": "요청한 리소스를 찾을 수 없습니다.",
+    "409": "데이터 충돌이 발생했습니다.",
+    "422": "입력값이 올바르지 않습니다.",
+    "429": "요청이 너무 많습니다. 잠시 후 다시 시도해주세요.",
+    "500": "서버 오류가 발생했습니다.",
+    "502": "서비스가 일시적으로 이용 불가합니다.",
+    "503": "서비스가 일시적으로 이용 불가합니다.",
+    "504": "서비스가 일시적으로 이용 불가합니다.",
+    "networkError": "네트워크 오류가 발생했습니다.",
+    "unknown": "알 수 없는 오류가 발생했습니다."
+  },
+
+  "component": {
+    "newTab": "새 탭에서 열기",
+    "unsupportedFormat": "이 파일 형식은 미리보기를 지원하지 않습니다.",
+    "downloadFile": "파일 다운로드",
+    "hide": "숨기기",
+    "show": "보기",
+    "searchTypes": {
+      "employee": "직원",
+      "department": "부서",
+      "document": "문서",
+      "approval": "결재",
+      "notification": "알림",
+      "setting": "설정",
+      "page": "페이지"
+    },
+    "noSearchResults": "\"{{query}}\"에 대한 검색 결과가 없습니다.",
+    "enterSearchTerm": "검색어를 입력하세요.",
+    "searching": "검색 중...",
+    "globalSearch": "전역 검색",
+    "searchFullPlaceholder": "검색어를 입력하세요... (직원, 부서, 페이지)",
+    "searchInfo": "직원, 부서, 페이지를 검색할 수 있습니다.",
+    "navigate": "탐색",
+    "select": "선택",
+    "fileSizeError": "파일 크기는 {{maxSize}}MB 이하여야 합니다.",
+    "unsupportedFileType": "지원하지 않는 파일 형식입니다.",
+    "maxFilesError": "최대 {{maxFiles}}개의 파일만 업로드할 수 있습니다.",
+    "cropImage": "이미지 자르기",
+    "selectDateRange": "기간 선택",
+    "selectDate": "날짜 선택",
+    "changeTheme": "테마 변경",
+    "selectTheme": "테마 선택",
+    "theme": {
+      "light": "라이트",
+      "dark": "다크",
+      "system": "시스템"
+    },
+    "korean": "한국어",
+    "english": "English",
+    "currentLanguage": "현재 언어: {{language}}. 언어 변경",
+    "selected": "선택됨",
+    "releaseToRefresh": "놓아서 새로고침",
+    "pullToRefresh": "당겨서 새로고침"
+  }
 }

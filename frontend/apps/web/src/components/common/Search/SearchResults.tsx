@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FileText, Users, Building2, Bell, Settings, LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -31,16 +32,6 @@ const typeIcons: Record<SearchResultItem['type'], LucideIcon> = {
   page: FileText,
 };
 
-const typeLabels: Record<SearchResultItem['type'], string> = {
-  employee: '직원',
-  department: '부서',
-  document: '문서',
-  approval: '결재',
-  notification: '알림',
-  setting: '설정',
-  page: '페이지',
-};
-
 export function SearchResults({
   results,
   isLoading,
@@ -50,11 +41,23 @@ export function SearchResults({
   emptyMessage,
   className,
 }: SearchResultsProps) {
+  const { t } = useTranslation('common');
+
+  const typeLabels: Record<SearchResultItem['type'], string> = {
+    employee: t('component.searchTypes.employee'),
+    department: t('component.searchTypes.department'),
+    document: t('component.searchTypes.document'),
+    approval: t('component.searchTypes.approval'),
+    notification: t('component.searchTypes.notification'),
+    setting: t('component.searchTypes.setting'),
+    page: t('component.searchTypes.page'),
+  };
+
   if (isLoading) {
     return (
       <div className={cn('py-6 text-center', className)}>
         <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        <p className="mt-2 text-sm text-muted-foreground">검색 중...</p>
+        <p className="mt-2 text-sm text-muted-foreground">{t('component.searching')}</p>
       </div>
     );
   }
@@ -65,7 +68,7 @@ export function SearchResults({
         {emptyMessage || (
           <>
             <p className="text-sm text-muted-foreground">
-              {query ? `"${query}"에 대한 검색 결과가 없습니다.` : '검색어를 입력하세요.'}
+              {query ? t('component.noSearchResults', { query }) : t('component.enterSearchTerm')}
             </p>
           </>
         )}

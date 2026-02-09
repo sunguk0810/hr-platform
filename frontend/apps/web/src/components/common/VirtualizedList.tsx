@@ -1,5 +1,6 @@
 import { useRef, ReactNode, CSSProperties } from 'react';
 import { useVirtualizer, VirtualItem } from '@tanstack/react-virtual';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 
 export interface VirtualizedListProps<T> {
@@ -31,6 +32,7 @@ export function VirtualizedList<T>({
   gap = 0,
   emptyMessage,
 }: VirtualizedListProps<T>) {
+  const { t } = useTranslation('common');
   const parentRef = useRef<HTMLDivElement>(null);
 
   const virtualizer = useVirtualizer({
@@ -55,7 +57,7 @@ export function VirtualizedList<T>({
           className
         )}
       >
-        {emptyMessage || '데이터가 없습니다.'}
+        {emptyMessage || t('noData')}
       </div>
     );
   }

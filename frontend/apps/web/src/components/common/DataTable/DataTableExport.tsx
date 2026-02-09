@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -16,6 +17,7 @@ export function DataTableExport<TData>({
   columns,
   fileName = 'export',
 }: DataTableExportProps<TData>) {
+  const { t } = useTranslation('common');
   const prepareData = useCallback(() => {
     return data.map((row) => {
       const rowData: Record<string, unknown> = {};
@@ -86,7 +88,7 @@ export function DataTableExport<TData>({
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm" className="h-9">
           <Download className="h-4 w-4 mr-2" />
-          내보내기
+          {t('export')}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

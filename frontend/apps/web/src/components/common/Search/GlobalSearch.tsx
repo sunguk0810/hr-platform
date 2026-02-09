@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Command } from 'lucide-react';
 import {
   Dialog,
@@ -31,6 +32,7 @@ interface GlobalSearchProps {
 }
 
 export function GlobalSearch({ open: controlledOpen, onOpenChange }: GlobalSearchProps) {
+  const { t } = useTranslation('common');
   const [internalOpen, setInternalOpen] = useState(false);
   const open = controlledOpen ?? internalOpen;
   const setOpen = onOpenChange ?? setInternalOpen;
@@ -142,7 +144,7 @@ export function GlobalSearch({ open: controlledOpen, onOpenChange }: GlobalSearc
         onClick={() => setOpen(true)}
         className="flex h-9 w-full items-center gap-2 rounded-md border border-input bg-background px-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground md:w-64"
       >
-        <span className="flex-1 text-left">검색...</span>
+        <span className="flex-1 text-left">{t('searchPlaceholder')}</span>
         <kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground sm:flex">
           <Command className="h-3 w-3" />K
         </kbd>
@@ -152,7 +154,7 @@ export function GlobalSearch({ open: controlledOpen, onOpenChange }: GlobalSearc
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl gap-0 p-0">
           <DialogHeader className="sr-only">
-            <DialogTitle>전역 검색</DialogTitle>
+            <DialogTitle>{t('component.globalSearch')}</DialogTitle>
           </DialogHeader>
 
           <div className="border-b p-4">
@@ -168,9 +170,9 @@ export function GlobalSearch({ open: controlledOpen, onOpenChange }: GlobalSearc
                 setResults([]);
               }}
               onKeyDown={handleKeyDown}
-              placeholder="검색어를 입력하세요... (직원, 부서, 페이지)"
+              placeholder={t('component.searchFullPlaceholder')}
               isLoading={isLoading}
-              aria-label="전역 검색"
+              aria-label={t('component.globalSearch')}
             />
           </div>
 
@@ -184,16 +186,16 @@ export function GlobalSearch({ open: controlledOpen, onOpenChange }: GlobalSearc
               query.trim() ? undefined : (
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">
-                    직원, 부서, 페이지를 검색할 수 있습니다.
+                    {t('component.searchInfo')}
                   </p>
                   <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                     <kbd className="rounded border bg-muted px-1.5 py-0.5">↑</kbd>
                     <kbd className="rounded border bg-muted px-1.5 py-0.5">↓</kbd>
-                    <span>탐색</span>
+                    <span>{t('component.navigate')}</span>
                     <kbd className="rounded border bg-muted px-1.5 py-0.5">Enter</kbd>
-                    <span>선택</span>
+                    <span>{t('component.select')}</span>
                     <kbd className="rounded border bg-muted px-1.5 py-0.5">Esc</kbd>
-                    <span>닫기</span>
+                    <span>{t('close')}</span>
                   </div>
                 </div>
               )

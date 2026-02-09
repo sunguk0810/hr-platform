@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Upload, X, File, AlertCircle } from 'lucide-react';
@@ -28,9 +29,10 @@ export function FileUpload({
   maxFiles = 5,
   disabled = false,
   className,
-  placeholder = '파일을 드래그하거나 클릭하여 업로드하세요',
+  placeholder,
   error,
 }: FileUploadProps) {
+  const { t } = useTranslation('common');
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = React.useState(false);
   const [localError, setLocalError] = React.useState<string | null>(null);
@@ -45,7 +47,7 @@ export function FileUpload({
       for (const file of files) {
         if (maxSize && file.size > maxSize) {
           const maxSizeMB = Math.round(maxSize / 1024 / 1024);
-          errorMsg = `파일 크기는 ${maxSizeMB}MB 이하여야 합니다.`;
+          errorMsg = t('component.fileSizeError', { maxSize: maxSizeMB });
           continue;
         }
 
@@ -62,7 +64,7 @@ export function FileUpload({
             return file.type === type;
           });
           if (!isAccepted) {
-            errorMsg = '지원하지 않는 파일 형식입니다.';
+            errorMsg = t('component.unsupportedFileType');
             continue;
           }
         }
@@ -72,7 +74,7 @@ export function FileUpload({
 
       return { valid: validFiles, error: errorMsg };
     },
-    [accept, maxSize]
+    [accept, maxSize, t]
   );
 
   const handleFiles = React.useCallback(
@@ -92,7 +94,7 @@ export function FileUpload({
       if (multiple) {
         const combinedFiles = [...value, ...valid];
         if (maxFiles && combinedFiles.length > maxFiles) {
-          setLocalError(`최대 ${maxFiles}개의 파일만 업로드할 수 있습니다.`);
+          setLocalError(t('component.maxFilesError', { maxFiles }));
           return;
         }
         onChange?.(combinedFiles);
@@ -100,7 +102,7 @@ export function FileUpload({
         onChange?.(valid.slice(0, 1));
       }
     },
-    [value, onChange, multiple, maxFiles, validateFiles]
+    [value, onChange, multiple, maxFiles, validateFiles, t]
   );
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -161,7 +163,7 @@ export function FileUpload({
           className="hidden"
         />
         <Upload className="mx-auto h-10 w-10 text-muted-foreground mb-2" />
-        <p className="text-sm text-muted-foreground">{placeholder}</p>
+        <p className="text-sm text-muted-foreground">{placeholder ?? t('upload')}</p>
         {accept && (
           <p className="text-xs text-muted-foreground mt-1">
             허용 형식: {accept}
