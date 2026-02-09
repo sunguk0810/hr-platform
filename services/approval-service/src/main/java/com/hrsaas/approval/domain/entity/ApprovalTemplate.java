@@ -9,6 +9,10 @@ import java.util.List;
 
 @Entity
 @Table(name = "approval_template", schema = "hr_approval")
+@NamedEntityGraph(
+    name = "ApprovalTemplate.withLines",
+    attributeNodes = @NamedAttributeNode("templateLines")
+)
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

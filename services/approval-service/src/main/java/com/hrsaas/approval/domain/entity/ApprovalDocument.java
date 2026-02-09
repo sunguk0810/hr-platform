@@ -12,6 +12,19 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "approval_document", schema = "hr_approval")
+@NamedEntityGraphs({
+    @NamedEntityGraph(
+        name = "ApprovalDocument.withLines",
+        attributeNodes = @NamedAttributeNode("approvalLines")
+    ),
+    @NamedEntityGraph(
+        name = "ApprovalDocument.withLinesAndHistories",
+        attributeNodes = {
+            @NamedAttributeNode("approvalLines"),
+            @NamedAttributeNode("histories")
+        }
+    )
+})
 @Getter
 @Setter
 @NoArgsConstructor

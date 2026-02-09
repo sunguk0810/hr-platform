@@ -4,6 +4,7 @@ import com.hrsaas.approval.domain.entity.ApprovalDocument;
 import com.hrsaas.approval.domain.entity.ApprovalStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,6 +18,15 @@ import java.util.UUID;
 public interface ApprovalDocumentRepository extends JpaRepository<ApprovalDocument, UUID> {
 
     Optional<ApprovalDocument> findByDocumentNumber(String documentNumber);
+
+    // New methods with @EntityGraph for N+1 query optimization
+    @EntityGraph(value = "ApprovalDocument.withLinesAndHistories", type = EntityGraph.EntityGraphType.LOAD)
+    @Query("SELECT d FROM ApprovalDocument d WHERE d.id = :id")
+    Optional<ApprovalDocument> findByIdWithLinesAndHistories(@Param("id") UUID id);
+
+    @EntityGraph(value = "ApprovalDocument.withLines", type = EntityGraph.EntityGraphType.LOAD)
+    @Query("SELECT d FROM ApprovalDocument d WHERE d.tenantId = :tenantId AND d.drafterId = :drafterId ORDER BY d.createdAt DESC")
+    Page<ApprovalDocument> findByDrafterIdWithLines(@Param("tenantId") UUID tenantId, @Param("drafterId") UUID drafterId, Pageable pageable);
 
     @Query("SELECT d FROM ApprovalDocument d WHERE d.tenantId = :tenantId AND d.drafterId = :drafterId ORDER BY d.createdAt DESC")
     Page<ApprovalDocument> findByDrafterId(@Param("tenantId") UUID tenantId, @Param("drafterId") UUID drafterId, Pageable pageable);

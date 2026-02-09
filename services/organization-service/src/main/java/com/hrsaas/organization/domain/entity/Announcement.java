@@ -3,6 +3,7 @@ package com.hrsaas.organization.domain.entity;
 import com.hrsaas.common.entity.TenantAwareEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -56,6 +57,7 @@ public class Announcement extends TenantAwareEntity {
 
     @OneToMany(mappedBy = "announcement", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("createdAt ASC")
+    @BatchSize(size = 10)  // Fetch up to 10 attachment collections in one query
     private List<AnnouncementAttachment> attachments = new ArrayList<>();
 
     @Builder

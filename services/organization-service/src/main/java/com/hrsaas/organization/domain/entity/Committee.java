@@ -3,6 +3,7 @@ package com.hrsaas.organization.domain.entity;
 import com.hrsaas.common.entity.TenantAwareEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -49,6 +50,7 @@ public class Committee extends TenantAwareEntity {
 
     @OneToMany(mappedBy = "committee", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("role ASC, joinDate ASC")
+    @BatchSize(size = 25)  // Fetch up to 25 member collections in one query
     private List<CommitteeMember> members = new ArrayList<>();
 
     @Builder
