@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmploymentStatusBadge } from '@/components/common/StatusBadge';
 import { SkeletonCard, SkeletonAvatar } from '@/components/common/Skeleton';
@@ -66,6 +67,7 @@ export default function EmployeeDetailPage() {
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const { toast } = useToast();
+  const { t } = useTranslation('employee');
   const { data, isLoading, isError, refetch } = useEmployee(id!);
   const deleteMutation = useDeleteEmployee();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -82,14 +84,14 @@ export default function EmployeeDetailPage() {
     try {
       await deleteMutation.mutateAsync(id);
       toast({
-        title: '삭제 완료',
-        description: '직원 정보가 삭제되었습니다.',
+        title: t('toast.deleteComplete'),
+        description: t('detailPage.deleteSuccess'),
       });
       navigate('/employees');
     } catch {
       toast({
-        title: '삭제 실패',
-        description: '직원 정보 삭제 중 오류가 발생했습니다.',
+        title: t('toast.deleteFailure'),
+        description: t('detailPage.deleteFailure'),
         variant: 'destructive',
       });
     }
@@ -106,7 +108,7 @@ export default function EmployeeDetailPage() {
 
   const formatGender = (gender?: 'MALE' | 'FEMALE') => {
     if (!gender) return '-';
-    return gender === 'MALE' ? '남성' : '여성';
+    return gender === 'MALE' ? t('gender.male') : t('gender.female');
   };
 
   const getInitials = (name: string) => {
@@ -126,9 +128,9 @@ export default function EmployeeDetailPage() {
       <ConfirmDialog
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
-        title="직원 삭제"
-        description={`정말로 "${employee?.name}" 직원을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`}
-        confirmLabel="삭제"
+        title={t('detailPage.deleteTitle')}
+        description={t('detailPage.deleteDescription', { name: employee?.name })}
+        confirmLabel={t('common.delete')}
         variant="destructive"
         onConfirm={handleDelete}
         isLoading={deleteMutation.isPending}
@@ -168,19 +170,19 @@ export default function EmployeeDetailPage() {
     return (
       <>
         <PageHeader
-          title="직원 상세"
-          description="로딩 중..."
+          title={t('detailPage.title')}
+          description={t('common.loading')}
           actions={
             <Button variant="outline" onClick={() => navigate(-1)}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              목록으로
+              {t('common.backToList')}
             </Button>
           }
         />
         <div className="grid gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>기본 정보</CardTitle>
+              <CardTitle>{t('basicInfo.title')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center gap-4">
@@ -199,20 +201,20 @@ export default function EmployeeDetailPage() {
     return (
       <>
         <PageHeader
-          title="직원 상세"
-          description="직원 정보를 찾을 수 없습니다."
+          title={t('detailPage.title')}
+          description={t('detailPage.notFoundDescription')}
           actions={
             <Button variant="outline" onClick={() => navigate(-1)}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              목록으로
+              {t('common.backToList')}
             </Button>
           }
         />
         <Card>
           <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">요청한 직원 정보를 찾을 수 없습니다.</p>
+            <p className="text-muted-foreground">{t('detailPage.notFoundMessage')}</p>
             <Button variant="outline" onClick={() => navigate('/employees')} className="mt-4">
-              목록으로 돌아가기
+              {t('common.backToListLong')}
             </Button>
           </CardContent>
         </Card>
@@ -266,7 +268,7 @@ export default function EmployeeDetailPage() {
                   <ArrowLeft className="h-5 w-5" />
                 </button>
                 <div className="flex-1">
-                  <h1 className="text-lg font-bold">직원 상세</h1>
+                  <h1 className="text-lg font-bold">{t('detailPage.title')}</h1>
                 </div>
                 <PermissionGate
                   roles={['SUPER_ADMIN', 'GROUP_ADMIN', 'TENANT_ADMIN', 'HR_MANAGER']}
@@ -307,7 +309,7 @@ export default function EmployeeDetailPage() {
                   disabled={!employee.mobile}
                 >
                   <Phone className="h-5 w-5 text-green-600" />
-                  <span className="text-xs">전화</span>
+                  <span className="text-xs">{t('detailPage.mobileQuickCall')}</span>
                 </button>
                 <button
                   onClick={() => window.location.href = `mailto:${employee.email}`}
@@ -315,21 +317,21 @@ export default function EmployeeDetailPage() {
                   disabled={!employee.email}
                 >
                   <Mail className="h-5 w-5 text-blue-600" />
-                  <span className="text-xs">메일</span>
+                  <span className="text-xs">{t('detailPage.mobileQuickMail')}</span>
                 </button>
                 <button
                   onClick={() => navigate(`/employees/${id}/record-card`)}
                   className="flex flex-col items-center justify-center gap-1 p-3 rounded-xl bg-card border"
                 >
                   <FileText className="h-5 w-5 text-purple-600" />
-                  <span className="text-xs">인사카드</span>
+                  <span className="text-xs">{t('detailPage.mobileQuickCard')}</span>
                 </button>
                 <button
                   onClick={() => setIsUnmaskDialogOpen(true)}
                   className="flex flex-col items-center justify-center gap-1 p-3 rounded-xl bg-card border"
                 >
                   <Eye className="h-5 w-5 text-orange-600" />
-                  <span className="text-xs">열람</span>
+                  <span className="text-xs">{t('detailPage.mobileQuickView')}</span>
                 </button>
               </div>
 
@@ -337,25 +339,25 @@ export default function EmployeeDetailPage() {
               <div className="space-y-2">
                 <MobileSectionItem
                   icon={User}
-                  label="기본 정보"
+                  label={t('basicInfo.title')}
                   section="info"
-                  description="연락처, 생년월일 등"
+                  description={t('detailPage.mobileBasicInfoDesc')}
                 />
                 <MobileSectionItem
                   icon={Briefcase}
-                  label="인사 정보"
+                  label={t('detailPage.hrInfo')}
                   section="hr"
-                  description="부서, 직급, 입사일 등"
+                  description={t('detailPage.mobileHrInfoDesc')}
                 />
                 <MobileSectionItem
                   icon={Building2}
-                  label="소속 정보"
+                  label={t('detailPage.positionsInfo')}
                   section="positions"
-                  description="겸직 현황"
+                  description={t('detailPage.mobilePositionsDesc')}
                 />
                 <MobileSectionItem
                   icon={History}
-                  label="변경 이력"
+                  label={t('detailPage.changeHistory')}
                   section="history"
                 />
               </div>
@@ -373,7 +375,7 @@ export default function EmployeeDetailPage() {
                       onClick={() => setIsTransferDialogOpen(true)}
                     >
                       <ArrowRightLeft className="mr-2 h-4 w-4" />
-                      전출 요청
+                      {t('detailPage.transferRequest')}
                     </Button>
                     <Button
                       variant="outline"
@@ -381,7 +383,7 @@ export default function EmployeeDetailPage() {
                       onClick={() => setIsResignationDialogOpen(true)}
                     >
                       <LogOut className="mr-2 h-4 w-4" />
-                      퇴직 처리
+                      {t('detailPage.resignationProcess')}
                     </Button>
                   </div>
                 )}
@@ -399,26 +401,26 @@ export default function EmployeeDetailPage() {
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </button>
-                <h1 className="text-lg font-bold">기본 정보</h1>
+                <h1 className="text-lg font-bold">{t('basicInfo.title')}</h1>
               </div>
 
               <div className="bg-card rounded-2xl border p-4">
                 <MobileInfoRow
-                  label="이메일"
+                  label={t('email')}
                   value={employee.email ? <MaskedField value={employee.email} type="email" /> : '-'}
                 />
                 <MobileInfoRow
-                  label="연락처"
+                  label={t('phone')}
                   value={employee.mobile ? <MaskedField value={employee.mobile} type="phone" /> : '-'}
                 />
                 {employee.phone && (
                   <MobileInfoRow
-                    label="전화번호"
+                    label={t('basicInfo.phoneLabel')}
                     value={<MaskedField value={employee.phone} type="phone" />}
                   />
                 )}
-                <MobileInfoRow label="성별" value={formatGender(employee.gender)} />
-                <MobileInfoRow label="생년월일" value={formatDate(employee.birthDate)} />
+                <MobileInfoRow label={t('gender.label')} value={formatGender(employee.gender)} />
+                <MobileInfoRow label={t('basicInfo.birthDate')} value={formatDate(employee.birthDate)} />
               </div>
             </div>
           )}
@@ -433,66 +435,50 @@ export default function EmployeeDetailPage() {
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </button>
-                <h1 className="text-lg font-bold">인사 정보</h1>
+                <h1 className="text-lg font-bold">{t('detailPage.hrInfo')}</h1>
               </div>
 
               <div className="bg-card rounded-2xl border p-4">
-                <MobileInfoRow label="부서" value={employee.departmentName} />
-                <MobileInfoRow label="직급" value={employee.gradeName} />
-                <MobileInfoRow label="직책" value={employee.positionName} />
-                {employee.jobFamilyName && <MobileInfoRow label="직군" value={employee.jobFamilyName} />}
-                <MobileInfoRow label="관리자" value={employee.managerName} />
+                <MobileInfoRow label={t('department')} value={employee.departmentName} />
+                <MobileInfoRow label={t('grade')} value={employee.gradeName} />
+                <MobileInfoRow label={t('position')} value={employee.positionName} />
+                {employee.jobFamilyName && <MobileInfoRow label={t('organizationInfo.jobFamily')} value={employee.jobFamilyName} />}
+                <MobileInfoRow label={t('organizationInfo.manager')} value={employee.managerName} />
                 <MobileInfoRow
-                  label="고용상태"
+                  label={t('organizationInfo.employmentStatus')}
                   value={<EmploymentStatusBadge status={employee.status} />}
                 />
                 {employee.employmentType && (
                   <MobileInfoRow
-                    label="고용유형"
-                    value={
-                      {
-                        REGULAR: '정규직',
-                        CONTRACT: '계약직',
-                        PARTTIME: '파트타임',
-                        INTERN: '인턴',
-                        DISPATCH: '파견직',
-                      }[employee.employmentType]
-                    }
+                    label={t('employmentType.label')}
+                    value={t(`employmentType.${employee.employmentType}`)}
                   />
                 )}
-                <MobileInfoRow label="입사일" value={formatDate(employee.hireDate)} />
+                <MobileInfoRow label={t('joinDate')} value={formatDate(employee.hireDate)} />
                 {employee.contractEndDate && (
-                  <MobileInfoRow label="계약만료일" value={formatDate(employee.contractEndDate)} />
+                  <MobileInfoRow label={t('organizationInfo.contractEndDate')} value={formatDate(employee.contractEndDate)} />
                 )}
               </div>
 
               {employee.resignDate && (
                 <div className="bg-card rounded-2xl border p-4">
-                  <p className="text-sm font-medium text-destructive mb-3">퇴직 정보</p>
-                  <MobileInfoRow label="퇴직일" value={formatDate(employee.resignDate)} />
+                  <p className="text-sm font-medium text-destructive mb-3">{t('detailPage.resignationInfo')}</p>
+                  <MobileInfoRow label={t('detailPage.resignDate')} value={formatDate(employee.resignDate)} />
                   {employee.resignationType && (
                     <MobileInfoRow
-                      label="퇴직유형"
-                      value={
-                        {
-                          VOLUNTARY: '자발적 퇴사',
-                          DISMISSAL: '해고',
-                          RETIREMENT: '정년퇴직',
-                          CONTRACT_END: '계약만료',
-                          TRANSFER: '전출',
-                        }[employee.resignationType]
-                      }
+                      label={t('detailPage.resignType')}
+                      value={t(`resignation.typeOptions.${employee.resignationType}`)}
                     />
                   )}
                   {employee.resignationReason && (
-                    <MobileInfoRow label="퇴직사유" value={employee.resignationReason} />
+                    <MobileInfoRow label={t('detailPage.resignReason')} value={employee.resignationReason} />
                   )}
                 </div>
               )}
 
               {employee.workLocation && (
                 <div className="bg-card rounded-2xl border p-4">
-                  <MobileInfoRow label="근무지" value={employee.workLocation} />
+                  <MobileInfoRow label={t('organizationInfo.workLocation')} value={employee.workLocation} />
                 </div>
               )}
             </div>
@@ -508,7 +494,7 @@ export default function EmployeeDetailPage() {
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </button>
-                <h1 className="text-lg font-bold">소속 정보</h1>
+                <h1 className="text-lg font-bold">{t('detailPage.positionsInfo')}</h1>
               </div>
 
               <ConcurrentPositionList
@@ -529,7 +515,7 @@ export default function EmployeeDetailPage() {
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </button>
-                <h1 className="text-lg font-bold">변경 이력</h1>
+                <h1 className="text-lg font-bold">{t('detailPage.changeHistory')}</h1>
               </div>
 
               <EmployeeHistory employeeId={id!} />
@@ -552,7 +538,7 @@ export default function EmployeeDetailPage() {
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => navigate(-1)}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              목록으로
+              {t('common.backToList')}
             </Button>
             <PermissionGate
               roles={['SUPER_ADMIN', 'GROUP_ADMIN', 'TENANT_ADMIN', 'HR_MANAGER']}
@@ -560,7 +546,7 @@ export default function EmployeeDetailPage() {
             >
               <Button onClick={() => navigate(`/employees/${id}/edit`)}>
                 <Edit className="mr-2 h-4 w-4" />
-                수정
+                {t('common.edit')}
               </Button>
             </PermissionGate>
             <DropdownMenu>
@@ -572,11 +558,11 @@ export default function EmployeeDetailPage() {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => navigate(`/employees/${id}/record-card`)}>
                   <FileText className="mr-2 h-4 w-4" />
-                  인사기록카드
+                  {t('detailPage.recordCard')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setIsUnmaskDialogOpen(true)}>
                   <Eye className="mr-2 h-4 w-4" />
-                  개인정보 열람
+                  {t('detailPage.privacyAccess')}
                 </DropdownMenuItem>
                 <PermissionGate
                   roles={['SUPER_ADMIN', 'GROUP_ADMIN', 'TENANT_ADMIN', 'HR_MANAGER']}
@@ -587,21 +573,21 @@ export default function EmployeeDetailPage() {
                     <>
                       <DropdownMenuItem onClick={() => setIsTransferDialogOpen(true)}>
                         <ArrowRightLeft className="mr-2 h-4 w-4" />
-                        전출 요청
+                        {t('detailPage.transferRequest')}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setIsResignationDialogOpen(true)}>
                         <LogOut className="mr-2 h-4 w-4" />
-                        퇴직 처리
+                        {t('detailPage.resignationProcess')}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                     </>
                   )}
-                  <DropdownMenuItem>비밀번호 초기화</DropdownMenuItem>
+                  <DropdownMenuItem>{t('detailPage.resetPassword')}</DropdownMenuItem>
                   <DropdownMenuItem
                     className="text-destructive"
                     onClick={() => setIsDeleteDialogOpen(true)}
                   >
-                    삭제
+                    {t('common.delete')}
                   </DropdownMenuItem>
                 </PermissionGate>
               </DropdownMenuContent>
@@ -612,14 +598,14 @@ export default function EmployeeDetailPage() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList>
-          <TabsTrigger value="info">기본 정보</TabsTrigger>
+          <TabsTrigger value="info">{t('basicInfo.title')}</TabsTrigger>
           <TabsTrigger value="positions">
             <Building2 className="mr-2 h-4 w-4" />
-            소속 정보
+            {t('detailPage.positionsInfo')}
           </TabsTrigger>
           <TabsTrigger value="history">
             <History className="mr-2 h-4 w-4" />
-            변경 이력
+            {t('detailPage.changeHistory')}
           </TabsTrigger>
         </TabsList>
 
@@ -627,7 +613,7 @@ export default function EmployeeDetailPage() {
           <div className="grid gap-6 md:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>기본 정보</CardTitle>
+                <CardTitle>{t('basicInfo.title')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-start gap-4 mb-6">
@@ -647,68 +633,52 @@ export default function EmployeeDetailPage() {
                   </div>
                 </div>
                 <dl>
-                  <InfoRow label="이메일" value={employee.email ? <MaskedField value={employee.email} type="email" /> : '-'} />
-                  <InfoRow label="연락처" value={employee.mobile ? <MaskedField value={employee.mobile} type="phone" /> : '-'} />
-                  {employee.phone && <InfoRow label="전화번호" value={<MaskedField value={employee.phone} type="phone" />} />}
-                  <InfoRow label="성별" value={formatGender(employee.gender)} />
-                  <InfoRow label="생년월일" value={formatDate(employee.birthDate)} />
+                  <InfoRow label={t('email')} value={employee.email ? <MaskedField value={employee.email} type="email" /> : '-'} />
+                  <InfoRow label={t('phone')} value={employee.mobile ? <MaskedField value={employee.mobile} type="phone" /> : '-'} />
+                  {employee.phone && <InfoRow label={t('basicInfo.phoneLabel')} value={<MaskedField value={employee.phone} type="phone" />} />}
+                  <InfoRow label={t('gender.label')} value={formatGender(employee.gender)} />
+                  <InfoRow label={t('basicInfo.birthDate')} value={formatDate(employee.birthDate)} />
                 </dl>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>인사 정보</CardTitle>
+                <CardTitle>{t('detailPage.hrInfo')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <dl>
-                  <InfoRow label="부서" value={employee.departmentName} />
-                  <InfoRow label="직급" value={employee.gradeName} />
-                  <InfoRow label="직책" value={employee.positionName} />
-                  {employee.jobFamilyName && <InfoRow label="직군" value={employee.jobFamilyName} />}
-                  <InfoRow label="관리자" value={employee.managerName} />
+                  <InfoRow label={t('department')} value={employee.departmentName} />
+                  <InfoRow label={t('grade')} value={employee.gradeName} />
+                  <InfoRow label={t('position')} value={employee.positionName} />
+                  {employee.jobFamilyName && <InfoRow label={t('organizationInfo.jobFamily')} value={employee.jobFamilyName} />}
+                  <InfoRow label={t('organizationInfo.manager')} value={employee.managerName} />
                   <InfoRow
-                    label="고용상태"
+                    label={t('organizationInfo.employmentStatus')}
                     value={<EmploymentStatusBadge status={employee.status} />}
                   />
                   {employee.employmentType && (
                     <InfoRow
-                      label="고용유형"
-                      value={
-                        {
-                          REGULAR: '정규직',
-                          CONTRACT: '계약직',
-                          PARTTIME: '파트타임',
-                          INTERN: '인턴',
-                          DISPATCH: '파견직',
-                        }[employee.employmentType]
-                      }
+                      label={t('employmentType.label')}
+                      value={t(`employmentType.${employee.employmentType}`)}
                     />
                   )}
-                  <InfoRow label="입사일" value={formatDate(employee.hireDate)} />
+                  <InfoRow label={t('joinDate')} value={formatDate(employee.hireDate)} />
                   {employee.contractEndDate && (
-                    <InfoRow label="계약만료일" value={formatDate(employee.contractEndDate)} />
+                    <InfoRow label={t('organizationInfo.contractEndDate')} value={formatDate(employee.contractEndDate)} />
                   )}
                   {employee.resignDate && (
                     <>
                       <Separator className="my-2" />
-                      <InfoRow label="퇴직일" value={formatDate(employee.resignDate)} />
+                      <InfoRow label={t('detailPage.resignDate')} value={formatDate(employee.resignDate)} />
                       {employee.resignationType && (
                         <InfoRow
-                          label="퇴직유형"
-                          value={
-                            {
-                              VOLUNTARY: '자발적 퇴사',
-                              DISMISSAL: '해고',
-                              RETIREMENT: '정년퇴직',
-                              CONTRACT_END: '계약만료',
-                              TRANSFER: '전출',
-                            }[employee.resignationType]
-                          }
+                          label={t('detailPage.resignType')}
+                          value={t(`resignation.typeOptions.${employee.resignationType}`)}
                         />
                       )}
                       {employee.resignationReason && (
-                        <InfoRow label="퇴직사유" value={employee.resignationReason} />
+                        <InfoRow label={t('detailPage.resignReason')} value={employee.resignationReason} />
                       )}
                     </>
                   )}
@@ -720,11 +690,11 @@ export default function EmployeeDetailPage() {
           {employee.workLocation && (
             <Card>
               <CardHeader>
-                <CardTitle>근무 정보</CardTitle>
+                <CardTitle>{t('detailPage.workInfo')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <dl>
-                  <InfoRow label="근무지" value={employee.workLocation} />
+                  <InfoRow label={t('organizationInfo.workLocation')} value={employee.workLocation} />
                 </dl>
               </CardContent>
             </Card>

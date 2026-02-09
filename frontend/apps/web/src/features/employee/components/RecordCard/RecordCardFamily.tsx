@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -16,6 +17,7 @@ interface RecordCardFamilyProps {
 }
 
 export function RecordCardFamily({ family }: RecordCardFamilyProps) {
+  const { t } = useTranslation('employee');
   const formatDate = (dateString?: string) => {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('ko-KR');
@@ -27,12 +29,12 @@ export function RecordCardFamily({ family }: RecordCardFamilyProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Users className="h-4 w-4" />
-            가족사항
+            {t('recordCard.family.title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground text-center py-4">
-            등록된 가족정보가 없습니다.
+            {t('recordCard.family.empty')}
           </p>
         </CardContent>
       </Card>
@@ -44,21 +46,21 @@ export function RecordCardFamily({ family }: RecordCardFamilyProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <Users className="h-4 w-4" />
-          가족사항
-          <span className="text-sm font-normal text-muted-foreground">({family.length}명)</span>
+          {t('recordCard.family.title')}
+          <span className="text-sm font-normal text-muted-foreground">({t('recordCard.family.count', { count: family.length })})</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>관계</TableHead>
-              <TableHead>성명</TableHead>
-              <TableHead>생년월일</TableHead>
-              <TableHead>직업</TableHead>
-              <TableHead>동거</TableHead>
-              <TableHead>부양</TableHead>
-              <TableHead>연락처</TableHead>
+              <TableHead>{t('recordCard.family.relation')}</TableHead>
+              <TableHead>{t('recordCard.family.name')}</TableHead>
+              <TableHead>{t('recordCard.family.birthDate')}</TableHead>
+              <TableHead>{t('recordCard.family.occupation')}</TableHead>
+              <TableHead>{t('recordCard.family.cohabitant')}</TableHead>
+              <TableHead>{t('recordCard.family.dependent')}</TableHead>
+              <TableHead>{t('recordCard.family.phone')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -70,14 +72,14 @@ export function RecordCardFamily({ family }: RecordCardFamilyProps) {
                 <TableCell>{member.occupation || '-'}</TableCell>
                 <TableCell>
                   {member.isCohabitant ? (
-                    <Badge variant="secondary">동거</Badge>
+                    <Badge variant="secondary">{t('recordCard.family.cohabitantBadge')}</Badge>
                   ) : (
                     '-'
                   )}
                 </TableCell>
                 <TableCell>
                   {member.isDependent ? (
-                    <Badge variant="outline">부양</Badge>
+                    <Badge variant="outline">{t('recordCard.family.dependentBadge')}</Badge>
                   ) : (
                     '-'
                   )}

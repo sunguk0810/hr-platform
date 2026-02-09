@@ -2,6 +2,8 @@ import * as React from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,21 +19,22 @@ import { Loader2, Save, X } from 'lucide-react';
 import { ProfileImageUpload } from './ProfileImageUpload';
 import type { Employee, CreateEmployeeRequest, UpdateEmployeeRequest, Gender, DepartmentTreeNode } from '@hr-platform/shared-types';
 
-const employeeSchema = z.object({
-  employeeNumber: z.string().optional(),
-  name: z.string().min(1, '이름을 입력해주세요.').max(50, '50자 이내로 입력해주세요.'),
-  nameEn: z.string().max(100, '100자 이내로 입력해주세요.').optional(),
-  email: z.string().email('올바른 이메일을 입력해주세요.'),
-  mobile: z.string().regex(/^010-?\d{4}-?\d{4}$/, '올바른 휴대전화 번호를 입력해주세요.').optional().or(z.literal('')),
-  birthDate: z.string().optional(),
-  gender: z.enum(['MALE', 'FEMALE']).optional(),
-  hireDate: z.string().min(1, '입사일을 입력해주세요.'),
-  departmentId: z.string().min(1, '부서를 선택해주세요.'),
-  positionId: z.string().optional(),
-  gradeId: z.string().optional(),
-});
+const createEmployeeSchema = (t: TFunction) =>
+  z.object({
+    employeeNumber: z.string().optional(),
+    name: z.string().min(1, t('form.nameRequired')).max(50, t('form.nameMaxLength')),
+    nameEn: z.string().max(100, t('form.nameEnMaxLength')).optional(),
+    email: z.string().email(t('form.emailRequired')),
+    mobile: z.string().regex(/^010-?\d{4}-?\d{4}$/, t('form.mobileInvalid')).optional().or(z.literal('')),
+    birthDate: z.string().optional(),
+    gender: z.enum(['MALE', 'FEMALE']).optional(),
+    hireDate: z.string().min(1, t('form.hireDateRequired')),
+    departmentId: z.string().min(1, t('form.departmentRequired')),
+    positionId: z.string().optional(),
+    gradeId: z.string().optional(),
+  });
 
-type EmployeeFormData = z.infer<typeof employeeSchema>;
+type EmployeeFormData = z.infer<ReturnType<typeof createEmployeeSchema>>;
 
 export interface EmployeeFormProps {
   employee?: Employee;
@@ -54,6 +57,7 @@ export function EmployeeForm({
   isLoading = false,
   autoGenerateEmployeeNumber = true,
 }: EmployeeFormProps) {
+  const { t } = useTranslation('employee');
   const [, setProfileImage] = React.useState<File | null>(null);
   const [profileImageUrl, setProfileImageUrl] = React.useState<string | undefined>(
     employee?.profileImageUrl
@@ -61,6 +65,8 @@ export function EmployeeForm({
   const [useAutoNumber, setUseAutoNumber] = React.useState(autoGenerateEmployeeNumber && !employee);
 
   const isEditMode = !!employee;
+
+  const employeeSchema = React.useMemo(() => createEmployeeSchema(t), [t]);
 
   const methods = useForm<EmployeeFormData>({
     resolver: zodResolver(employeeSchema),
@@ -134,7 +140,7 @@ export function EmployeeForm({
         {/* Basic Info */}
         <Card>
           <CardHeader>
-            <CardTitle>기본 정보</CardTitle>
+            <CardTitle>{t('basicInfo.title')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Profile Image */}
@@ -145,14 +151,14 @@ export function EmployeeForm({
               />
               <div className="flex-1 space-y-4">
                 <p className="text-sm text-muted-foreground">
-                  프로필 사진을 업로드하세요. (JPG, PNG 형식, 최대 5MB)
+                  {t('createPage.profileUploadDescription')}
                 </p>
               </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="name">이름 *</Label>
+                <Label htmlFor="name">{t('basicInfo.nameLabel')}</Label>
                 <Input
                   id="name"
                   {...register('name')}
@@ -165,7 +171,7 @@ export function EmployeeForm({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="nameEn">영문명</Label>
+                <Label htmlFor="nameEn">{t('basicInfo.nameEn')}</Label>
                 <Input
                   id="nameEn"
                   {...register('nameEn')}
@@ -177,7 +183,7 @@ export function EmployeeForm({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">이메일 *</Label>
+                <Label htmlFor="email">{t('basicInfo.emailLabel')}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -191,7 +197,7 @@ export function EmployeeForm({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="mobile">휴대전화</Label>
+                <Label htmlFor="mobile">{t('basicInfo.mobile')}</Label>
                 <Input
                   id="mobile"
                   {...register('mobile')}
@@ -204,7 +210,7 @@ export function EmployeeForm({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="birthDate">생년월일</Label>
+                <Label htmlFor="birthDate">{t('basicInfo.birthDate')}</Label>
                 <Input
                   id="birthDate"
                   type="date"
@@ -213,17 +219,17 @@ export function EmployeeForm({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="gender">성별</Label>
+                <Label htmlFor="gender">{t('gender.label')}</Label>
                 <Select
                   value={watch('gender') || ''}
                   onValueChange={(value) => setValue('gender', value as Gender)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="선택" />
+                    <SelectValue placeholder={t('common.selectPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="MALE">남성</SelectItem>
-                    <SelectItem value="FEMALE">여성</SelectItem>
+                    <SelectItem value="MALE">{t('gender.male')}</SelectItem>
+                    <SelectItem value="FEMALE">{t('gender.female')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -234,23 +240,23 @@ export function EmployeeForm({
         {/* Organization Info */}
         <Card>
           <CardHeader>
-            <CardTitle>소속 정보</CardTitle>
+            <CardTitle>{t('organizationInfo.title')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="departmentId">부서 *</Label>
+                <Label htmlFor="departmentId">{t('organizationInfo.department')}</Label>
                 <Select
                   value={watch('departmentId')}
                   onValueChange={(value) => setValue('departmentId', value)}
                 >
                   <SelectTrigger className={errors.departmentId ? 'border-destructive' : ''}>
-                    <SelectValue placeholder="부서 선택" />
+                    <SelectValue placeholder={t('organizationInfo.departmentPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {flatDepartments.map((dept) => (
                       <SelectItem key={dept.id} value={dept.id}>
-                        {'　'.repeat(dept.level - 1)}
+                        {'\u3000'.repeat(dept.level - 1)}
                         {dept.name}
                       </SelectItem>
                     ))}
@@ -262,13 +268,13 @@ export function EmployeeForm({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="gradeId">직급</Label>
+                <Label htmlFor="gradeId">{t('organizationInfo.grade')}</Label>
                 <Select
                   value={watch('gradeId') || ''}
                   onValueChange={(value) => setValue('gradeId', value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="직급 선택" />
+                    <SelectValue placeholder={t('organizationInfo.gradePlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {grades.map((grade) => (
@@ -281,13 +287,13 @@ export function EmployeeForm({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="positionId">직책</Label>
+                <Label htmlFor="positionId">{t('organizationInfo.position')}</Label>
                 <Select
                   value={watch('positionId') || ''}
                   onValueChange={(value) => setValue('positionId', value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="직책 선택" />
+                    <SelectValue placeholder={t('organizationInfo.positionPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {positions.map((pos) => (
@@ -300,7 +306,7 @@ export function EmployeeForm({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="hireDate">입사일 *</Label>
+                <Label htmlFor="hireDate">{t('organizationInfo.hireDate')}</Label>
                 <Input
                   id="hireDate"
                   type="date"
@@ -319,13 +325,13 @@ export function EmployeeForm({
         {!isEditMode && (
           <Card>
             <CardHeader>
-              <CardTitle>계정 정보</CardTitle>
+              <CardTitle>{t('accountInfo.title')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="employeeNumber">사번</Label>
+                    <Label htmlFor="employeeNumber">{t('accountInfo.employeeNumber')}</Label>
                     <label className="flex items-center gap-2 text-sm">
                       <input
                         type="checkbox"
@@ -333,21 +339,21 @@ export function EmployeeForm({
                         onChange={(e) => setUseAutoNumber(e.target.checked)}
                         className="rounded border-gray-300"
                       />
-                      자동 생성
+                      {t('accountInfo.autoGenerate')}
                     </label>
                   </div>
                   <Input
                     id="employeeNumber"
                     {...register('employeeNumber')}
-                    placeholder={useAutoNumber ? '자동 생성됨' : 'EMP2024001'}
+                    placeholder={useAutoNumber ? t('accountInfo.autoGeneratedPlaceholder') : 'EMP2024001'}
                     disabled={useAutoNumber}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label>초기 비밀번호</Label>
+                  <Label>{t('accountInfo.initialPassword')}</Label>
                   <p className="text-sm text-muted-foreground mt-2">
-                    초기 비밀번호는 이메일로 전송됩니다.
+                    {t('accountInfo.initialPasswordDescription')}
                   </p>
                 </div>
               </div>
@@ -360,19 +366,19 @@ export function EmployeeForm({
           {onCancel && (
             <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
               <X className="mr-2 h-4 w-4" />
-              취소
+              {t('common.cancel')}
             </Button>
           )}
           <Button type="submit" disabled={isLoading}>
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {isEditMode ? '저장 중...' : '등록 중...'}
+                {isEditMode ? t('common.saving') : t('common.registering')}
               </>
             ) : (
               <>
                 <Save className="mr-2 h-4 w-4" />
-                {isEditMode ? '저장' : '등록'}
+                {isEditMode ? t('common.save') : t('common.register')}
               </>
             )}
           </Button>

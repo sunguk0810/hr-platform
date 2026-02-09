@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { EmploymentStatusBadge } from '@/components/common/StatusBadge';
 import type { Employee } from '@hr-platform/shared-types';
@@ -7,6 +8,7 @@ interface RecordCardHeaderProps {
 }
 
 export function RecordCardHeader({ employee }: RecordCardHeaderProps) {
+  const { t } = useTranslation('employee');
   const getInitials = (name: string) => name.slice(0, 2);
 
   const formatDate = (dateString?: string) => {
@@ -23,41 +25,41 @@ export function RecordCardHeader({ employee }: RecordCardHeaderProps) {
 
       <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4">
         <div>
-          <p className="text-sm text-muted-foreground">성명</p>
+          <p className="text-sm text-muted-foreground">{t('recordCard.header.name')}</p>
           <p className="font-semibold text-lg">{employee.name}</p>
           {employee.nameEn && (
             <p className="text-sm text-muted-foreground">{employee.nameEn}</p>
           )}
         </div>
         <div>
-          <p className="text-sm text-muted-foreground">사번</p>
+          <p className="text-sm text-muted-foreground">{t('recordCard.header.employeeNumber')}</p>
           <p className="font-medium">{employee.employeeNumber}</p>
         </div>
         <div>
-          <p className="text-sm text-muted-foreground">부서</p>
+          <p className="text-sm text-muted-foreground">{t('recordCard.header.department')}</p>
           <p className="font-medium">{employee.departmentName}</p>
         </div>
         <div>
-          <p className="text-sm text-muted-foreground">직급/직책</p>
+          <p className="text-sm text-muted-foreground">{t('recordCard.header.gradePosition')}</p>
           <p className="font-medium">
             {employee.gradeName || '-'}
             {employee.positionName && ` / ${employee.positionName}`}
           </p>
         </div>
         <div>
-          <p className="text-sm text-muted-foreground">입사일</p>
+          <p className="text-sm text-muted-foreground">{t('recordCard.header.hireDate')}</p>
           <p className="font-medium">{formatDate(employee.hireDate)}</p>
         </div>
         <div>
-          <p className="text-sm text-muted-foreground">재직상태</p>
+          <p className="text-sm text-muted-foreground">{t('recordCard.header.status')}</p>
           <EmploymentStatusBadge status={employee.status} />
         </div>
         <div>
-          <p className="text-sm text-muted-foreground">이메일</p>
+          <p className="text-sm text-muted-foreground">{t('recordCard.header.email')}</p>
           <p className="font-medium text-sm">{employee.email}</p>
         </div>
         <div>
-          <p className="text-sm text-muted-foreground">연락처</p>
+          <p className="text-sm text-muted-foreground">{t('recordCard.header.phone')}</p>
           <p className="font-medium">{employee.mobile || '-'}</p>
         </div>
       </div>

@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import {
   Form,
   FormControl,
@@ -26,18 +28,19 @@ import {
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { cn } from '@/lib/utils';
 
-const careerSchema = z.object({
-  companyName: z.string().min(1, '회사명은 필수입니다'),
-  department: z.string().optional(),
-  position: z.string().optional(),
-  startDate: z.date({ required_error: '입사일은 필수입니다' }),
-  endDate: z.date().optional(),
-  isCurrent: z.boolean().default(false),
-  jobDescription: z.string().optional(),
-  resignationReason: z.string().optional(),
-});
+const createCareerSchema = (t: TFunction) =>
+  z.object({
+    companyName: z.string().min(1, t('careerInfo.companyNameRequired')),
+    department: z.string().optional(),
+    position: z.string().optional(),
+    startDate: z.date({ required_error: t('careerInfo.startDateRequired') }),
+    endDate: z.date().optional(),
+    isCurrent: z.boolean().default(false),
+    jobDescription: z.string().optional(),
+    resignationReason: z.string().optional(),
+  });
 
-type CareerFormData = z.infer<typeof careerSchema>;
+type CareerFormData = z.infer<ReturnType<typeof createCareerSchema>>;
 
 export interface CareerRecord {
   id: string;
@@ -68,6 +71,9 @@ export function CareerInfo({
   onDelete,
   isLoading,
 }: CareerInfoProps) {
+  const { t } = useTranslation('employee');
+  const careerSchema = React.useMemo(() => createCareerSchema(t), [t]);
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCareer, setEditingCareer] = useState<CareerRecord | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -141,18 +147,18 @@ export function CareerInfo({
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-lg">경력 사항</CardTitle>
+        <CardTitle className="text-lg">{t('careerInfo.title')}</CardTitle>
         {editable && (
           <Button size="sm" onClick={() => handleOpenDialog()}>
             <Plus className="mr-1 h-4 w-4" />
-            추가
+            {t('common.add')}
           </Button>
         )}
       </CardHeader>
       <CardContent>
         {sortedData.length === 0 ? (
           <p className="py-8 text-center text-muted-foreground">
-            등록된 경력 사항이 없습니다.
+            {t('careerInfo.empty')}
           </p>
         ) : (
           <div className="relative space-y-4">
@@ -183,7 +189,7 @@ export function CareerInfo({
                       <span className="text-sm text-muted-foreground">
                         {format(career.startDate, 'yyyy.MM')} ~{' '}
                         {career.isCurrent
-                          ? '현재'
+                          ? t('common.present')
                           : career.endDate
                           ? format(career.endDate, 'yyyy.MM')
                           : ''}
@@ -224,7 +230,7 @@ export function CareerInfo({
           <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>
-                {editingCareer ? '경력 수정' : '경력 추가'}
+                {editingCareer ? t('careerInfo.editDialog') : t('careerInfo.addDialog')}
               </DialogTitle>
             </DialogHeader>
             <Form {...form}>
@@ -237,7 +243,7 @@ export function CareerInfo({
                   name="companyName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>회사명 *</FormLabel>
+                      <FormLabel>{t('careerInfo.companyName')}</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -251,7 +257,7 @@ export function CareerInfo({
                     name="department"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>부서</FormLabel>
+                        <FormLabel>{t('careerInfo.department')}</FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
@@ -264,7 +270,7 @@ export function CareerInfo({
                     name="position"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>직위</FormLabel>
+                        <FormLabel>{t('careerInfo.position')}</FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
@@ -277,7 +283,7 @@ export function CareerInfo({
                     name="startDate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>입사일 *</FormLabel>
+                        <FormLabel>{t('careerInfo.startDate')}</FormLabel>
                         <FormControl>
                           <DatePicker
                             value={field.value}
@@ -293,7 +299,7 @@ export function CareerInfo({
                     name="endDate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>퇴사일</FormLabel>
+                        <FormLabel>{t('careerInfo.endDate')}</FormLabel>
                         <FormControl>
                           <DatePicker
                             value={field.value}
@@ -311,7 +317,7 @@ export function CareerInfo({
                   name="jobDescription"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>담당 업무</FormLabel>
+                      <FormLabel>{t('careerInfo.jobDescription')}</FormLabel>
                       <FormControl>
                         <Textarea {...field} rows={3} />
                       </FormControl>
@@ -324,7 +330,7 @@ export function CareerInfo({
                   name="resignationReason"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>퇴사 사유</FormLabel>
+                      <FormLabel>{t('careerInfo.resignationReason')}</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -338,10 +344,10 @@ export function CareerInfo({
                     variant="outline"
                     onClick={handleCloseDialog}
                   >
-                    취소
+                    {t('common.cancel')}
                   </Button>
                   <Button type="submit" disabled={isLoading}>
-                    {isLoading ? '저장 중...' : '저장'}
+                    {isLoading ? t('common.saving') : t('common.save')}
                   </Button>
                 </div>
               </form>
@@ -353,10 +359,10 @@ export function CareerInfo({
         <ConfirmDialog
           open={!!deleteId}
           onOpenChange={(open) => !open && setDeleteId(null)}
-          title="경력 삭제"
-          description="선택한 경력 정보를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
-          confirmText="삭제"
-          cancelText="취소"
+          title={t('careerInfo.deleteTitle')}
+          description={t('careerInfo.deleteDescription')}
+          confirmText={t('common.delete')}
+          cancelText={t('common.cancel')}
           variant="destructive"
           onConfirm={handleDelete}
         />

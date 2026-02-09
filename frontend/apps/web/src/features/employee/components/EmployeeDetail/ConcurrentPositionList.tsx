@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -51,6 +52,7 @@ export function ConcurrentPositionList({
   employeeName,
   editable = false,
 }: ConcurrentPositionListProps) {
+  const { t } = useTranslation('employee');
   const { toast } = useToast();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingPosition, setEditingPosition] = useState<ConcurrentPosition | null>(null);
@@ -73,13 +75,13 @@ export function ConcurrentPositionList({
         positionId: position.id,
       });
       toast({
-        title: '주소속 변경 완료',
-        description: `${position.departmentName}을(를) 주소속으로 설정했습니다.`,
+        title: t('toast.primaryChangeComplete'),
+        description: t('concurrentPosition.setPrimarySuccess', { name: position.departmentName }),
       });
     } catch {
       toast({
-        title: '주소속 변경 실패',
-        description: '주소속 변경 중 오류가 발생했습니다.',
+        title: t('toast.primaryChangeFailure'),
+        description: t('concurrentPosition.setPrimaryFailure'),
         variant: 'destructive',
       });
     }
@@ -94,18 +96,18 @@ export function ConcurrentPositionList({
         positionId: endingPosition.id,
         data: {
           endDate: format(new Date(), 'yyyy-MM-dd'),
-          reason: '겸직 종료',
+          reason: t('concurrentPosition.menuEndPosition'),
         },
       });
       toast({
-        title: '겸직 종료 완료',
-        description: `${endingPosition.departmentName} 겸직이 종료되었습니다.`,
+        title: t('toast.endComplete'),
+        description: t('concurrentPosition.endSuccess', { name: endingPosition.departmentName }),
       });
       setEndingPosition(null);
     } catch {
       toast({
-        title: '겸직 종료 실패',
-        description: '겸직 종료 중 오류가 발생했습니다.',
+        title: t('toast.endFailure'),
+        description: t('concurrentPosition.endFailure'),
         variant: 'destructive',
       });
     }
@@ -120,14 +122,14 @@ export function ConcurrentPositionList({
         positionId: deletingPosition.id,
       });
       toast({
-        title: '삭제 완료',
-        description: `${deletingPosition.departmentName} 소속 정보가 삭제되었습니다.`,
+        title: t('toast.deleteComplete'),
+        description: t('concurrentPosition.deleteSuccess', { name: deletingPosition.departmentName }),
       });
       setDeletingPosition(null);
     } catch {
       toast({
-        title: '삭제 실패',
-        description: '소속 정보 삭제 중 오류가 발생했습니다.',
+        title: t('toast.deleteFailure'),
+        description: t('concurrentPosition.deleteFailure'),
         variant: 'destructive',
       });
     }
@@ -138,18 +140,18 @@ export function ConcurrentPositionList({
       <h4 className="text-sm font-medium text-muted-foreground">{title}</h4>
       {data.length === 0 ? (
         <p className="text-sm text-muted-foreground py-4 text-center">
-          해당하는 소속 정보가 없습니다.
+          {t('concurrentPosition.emptyPositions')}
         </p>
       ) : (
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[100px]">구분</TableHead>
-              <TableHead>부서</TableHead>
-              <TableHead>직위</TableHead>
-              <TableHead>직급</TableHead>
-              <TableHead>시작일</TableHead>
-              <TableHead>종료일</TableHead>
+              <TableHead className="w-[100px]">{t('concurrentPosition.tableType')}</TableHead>
+              <TableHead>{t('concurrentPosition.tableDepartment')}</TableHead>
+              <TableHead>{t('concurrentPosition.tablePosition')}</TableHead>
+              <TableHead>{t('concurrentPosition.tableGrade')}</TableHead>
+              <TableHead>{t('concurrentPosition.tableStartDate')}</TableHead>
+              <TableHead>{t('concurrentPosition.tableEndDate')}</TableHead>
               {showActions && editable && <TableHead className="w-[60px]" />}
             </TableRow>
           </TableHeader>
@@ -161,10 +163,10 @@ export function ConcurrentPositionList({
                     {position.isPrimary ? (
                       <>
                         <Star className="mr-1 h-3 w-3" />
-                        주소속
+                        {t('concurrentPosition.primaryBadge')}
                       </>
                     ) : (
-                      '부소속'
+                      t('concurrentPosition.secondaryBadge')
                     )}
                   </Badge>
                 </TableCell>
@@ -190,12 +192,12 @@ export function ConcurrentPositionList({
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => setEditingPosition(position)}>
                           <Edit className="mr-2 h-4 w-4" />
-                          수정
+                          {t('concurrentPosition.menuEdit')}
                         </DropdownMenuItem>
                         {!position.isPrimary && position.status === 'ACTIVE' && (
                           <DropdownMenuItem onClick={() => handleSetPrimary(position)}>
                             <Star className="mr-2 h-4 w-4" />
-                            주소속으로 설정
+                            {t('concurrentPosition.menuSetPrimary')}
                           </DropdownMenuItem>
                         )}
                         {position.status === 'ACTIVE' && !position.isPrimary && (
@@ -206,7 +208,7 @@ export function ConcurrentPositionList({
                               className="text-amber-600"
                             >
                               <XCircle className="mr-2 h-4 w-4" />
-                              겸직 종료
+                              {t('concurrentPosition.menuEndPosition')}
                             </DropdownMenuItem>
                           </>
                         )}
@@ -218,7 +220,7 @@ export function ConcurrentPositionList({
                               className="text-destructive"
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
-                              삭제
+                              {t('concurrentPosition.menuDelete')}
                             </DropdownMenuItem>
                           </>
                         )}
@@ -240,7 +242,7 @@ export function ConcurrentPositionList({
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Building2 className="h-5 w-5" />
-            소속 정보
+            {t('concurrentPosition.title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -258,15 +260,15 @@ export function ConcurrentPositionList({
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Building2 className="h-5 w-5" />
-            소속 정보
+            {t('concurrentPosition.title')}
             <Badge variant="outline" className="ml-2">
-              {activePositions.length}개 활성
+              {t('concurrentPosition.activeCount', { count: activePositions.length })}
             </Badge>
           </CardTitle>
           {editable && (
             <Button size="sm" onClick={() => setIsAddDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
-              겸직 추가
+              {t('concurrentPosition.addButton')}
             </Button>
           )}
         </CardHeader>
@@ -274,22 +276,22 @@ export function ConcurrentPositionList({
           {positions.length === 0 ? (
             <EmptyState
               icon={Building2}
-              title="소속 정보 없음"
-              description="등록된 소속 정보가 없습니다."
+              title={t('concurrentPosition.emptyTitle')}
+              description={t('concurrentPosition.emptyDescription')}
               action={
                 editable ? {
-                  label: '소속 추가',
+                  label: t('concurrentPosition.addPositionButton'),
                   onClick: () => setIsAddDialogOpen(true)
                 } : undefined
               }
             />
           ) : (
             <>
-              {renderPositionTable(activePositions, '현재 소속', true)}
+              {renderPositionTable(activePositions, t('concurrentPosition.currentPositions'), true)}
               {endedPositions.length > 0 && (
                 <>
                   <div className="border-t" />
-                  {renderPositionTable(endedPositions, '종료된 소속', false)}
+                  {renderPositionTable(endedPositions, t('concurrentPosition.endedPositions'), false)}
                 </>
               )}
             </>
@@ -316,9 +318,9 @@ export function ConcurrentPositionList({
       <ConfirmDialog
         open={!!endingPosition}
         onOpenChange={(open) => !open && setEndingPosition(null)}
-        title="겸직 종료"
-        description={`${endingPosition?.departmentName} 겸직을 종료하시겠습니까? 종료일은 오늘 날짜로 설정됩니다.`}
-        confirmLabel="종료"
+        title={t('concurrentPosition.endPositionTitle')}
+        description={t('concurrentPosition.endPositionDescription', { name: endingPosition?.departmentName })}
+        confirmLabel={t('concurrentPosition.menuEndPosition')}
         variant="default"
         onConfirm={handleEndPosition}
         isLoading={endPositionMutation.isPending}
@@ -328,9 +330,9 @@ export function ConcurrentPositionList({
       <ConfirmDialog
         open={!!deletingPosition}
         onOpenChange={(open) => !open && setDeletingPosition(null)}
-        title="소속 정보 삭제"
-        description={`${deletingPosition?.departmentName} 소속 정보를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`}
-        confirmLabel="삭제"
+        title={t('concurrentPosition.deletePositionTitle')}
+        description={t('concurrentPosition.deletePositionDescription', { name: deletingPosition?.departmentName })}
+        confirmLabel={t('common.delete')}
         variant="destructive"
         onConfirm={handleDeletePosition}
         isLoading={deletePositionMutation.isPending}

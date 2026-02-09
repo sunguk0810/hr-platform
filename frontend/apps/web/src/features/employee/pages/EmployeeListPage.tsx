@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { EmploymentStatusBadge } from '@/components/common/StatusBadge';
@@ -46,6 +47,7 @@ import { employeeService } from '../services/employeeService';
 import { EmployeeImportDialog } from '../components/EmployeeImportDialog';
 import { cn } from '@/lib/utils';
 import type { EmploymentStatus, EmployeeListItem } from '@hr-platform/shared-types';
+import type { TFunction } from 'i18next';
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -59,13 +61,22 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 // Excel export utility (simple CSV for now)
-function exportToExcel(employees: EmployeeListItem[], filename: string) {
-  const headers = ['사번', '이름', '이메일', '부서', '직급', '직책', '상태', '입사일'];
-  const statusLabels: Record<EmploymentStatus, string> = {
-    ACTIVE: '재직',
-    ON_LEAVE: '휴직',
-    RESIGNED: '퇴직',
-    RETIRED: '정년퇴직',
+function exportToExcel(employees: EmployeeListItem[], filename: string, t: TFunction) {
+  const headers = [
+    t('listPage.csvHeaders.employeeNumber'),
+    t('listPage.csvHeaders.name'),
+    t('listPage.csvHeaders.email'),
+    t('listPage.csvHeaders.department'),
+    t('listPage.csvHeaders.grade'),
+    t('listPage.csvHeaders.position'),
+    t('listPage.csvHeaders.status'),
+    t('listPage.csvHeaders.hireDate'),
+  ];
+  const statusKeys: Record<EmploymentStatus, string> = {
+    ACTIVE: 'employmentStatus.ACTIVE',
+    ON_LEAVE: 'employmentStatus.ON_LEAVE',
+    RESIGNED: 'employmentStatus.RESIGNED',
+    RETIRED: 'employmentStatus.RETIRED',
   };
 
   const rows = employees.map((emp) => [
@@ -75,7 +86,7 @@ function exportToExcel(employees: EmployeeListItem[], filename: string) {
     emp.departmentName,
     emp.gradeName || '',
     emp.positionName || '',
-    statusLabels[emp.status],
+    t(statusKeys[emp.status]),
     emp.hireDate,
   ]);
 
@@ -101,6 +112,7 @@ interface EmployeeCardProps {
 }
 
 function EmployeeCard({ employee, isSelected, onSelect, onClick }: EmployeeCardProps) {
+  const { t } = useTranslation('employee');
   const getInitials = (name: string) => name.slice(0, 2);
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString('ko-KR');
@@ -132,7 +144,7 @@ function EmployeeCard({ employee, isSelected, onSelect, onClick }: EmployeeCardP
               {employee.departmentName} · {employee.positionName || '-'}
             </div>
             <div className="text-xs text-muted-foreground mt-1">
-              입사일: {formatDate(employee.hireDate)}
+              {t('employeeCard.hireDateLabel', { date: formatDate(employee.hireDate) })}
             </div>
           </div>
         </div>
@@ -146,6 +158,7 @@ export default function EmployeeListPage() {
   const isMobile = useIsMobile();
   const isTablet = useIsTablet();
   const { toast } = useToast();
+  const { t } = useTranslation('employee');
 
   const [searchInput, setSearchInput] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -223,7 +236,7 @@ export default function EmployeeListPage() {
       ? employees.filter((emp) => selectedIds.has(emp.id))
       : employees;
     const filename = `employees_${new Date().toISOString().split('T')[0]}`;
-    exportToExcel(dataToExport, filename);
+    exportToExcel(dataToExport, filename, t);
   };
 
   const handleImportClick = () => {
@@ -243,16 +256,16 @@ export default function EmployeeListPage() {
     try {
       const response = await employeeService.bulkDelete(Array.from(selectedIds));
       toast({
-        title: '삭제 완료',
-        description: `${response.data?.deleted || selectedIds.size}명의 직원 정보가 삭제되었습니다.`,
+        title: t('toast.deleteComplete'),
+        description: t('listPage.deleteSuccess', { count: response.data?.deleted || selectedIds.size }),
       });
       setSelectedIds(new Set());
       setDeleteDialogOpen(false);
       queryClient.invalidateQueries({ queryKey: ['employees'] });
     } catch {
       toast({
-        title: '삭제 실패',
-        description: '직원 정보 삭제 중 오류가 발생했습니다.',
+        title: t('toast.deleteFailure'),
+        description: t('listPage.deleteFailure'),
         variant: 'destructive',
       });
     } finally {
@@ -277,12 +290,12 @@ export default function EmployeeListPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-bold">인사정보</h1>
-            <p className="text-sm text-muted-foreground">총 {totalElements}명</p>
+            <h1 className="text-2xl font-bold">{t('listPage.title')}</h1>
+            <p className="text-sm text-muted-foreground">{t('common.total', { count: totalElements })}</p>
           </div>
           <Button size="sm" onClick={() => navigate('/employees/new')}>
             <Plus className="mr-2 h-4 w-4" />
-            신규 등록
+            {t('listPage.newEmployee')}
           </Button>
         </div>
 
@@ -296,7 +309,7 @@ export default function EmployeeListPage() {
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
-                      placeholder="이름, 사번 검색..."
+                      placeholder={t('listPage.searchPlaceholderShort')}
                       value={searchInput}
                       onChange={(e) => setSearchInput(e.target.value)}
                       className="pl-9"
@@ -304,10 +317,10 @@ export default function EmployeeListPage() {
                   </div>
                   <div className="flex gap-2 overflow-x-auto pb-1">
                     {[
-                      { value: '', label: '전체' },
-                      { value: 'ACTIVE', label: '재직' },
-                      { value: 'ON_LEAVE', label: '휴직' },
-                      { value: 'RESIGNED', label: '퇴직' },
+                      { value: '', label: t('common.all') },
+                      { value: 'ACTIVE', label: t('employmentStatus.ACTIVE') },
+                      { value: 'ON_LEAVE', label: t('employmentStatus.ON_LEAVE') },
+                      { value: 'RESIGNED', label: t('employmentStatus.RESIGNED') },
                     ].map((status) => (
                       <button
                         key={status.value}
@@ -335,8 +348,8 @@ export default function EmployeeListPage() {
               ) : employees.length === 0 ? (
                 <EmptyState
                   icon={Users}
-                  title="직원이 없습니다"
-                  description="검색 조건을 변경해보세요."
+                  title={t('listPage.noEmployeesTablet')}
+                  description={t('listPage.noEmployeesTabletDesc')}
                 />
               ) : (
                 <div className="space-y-2">
@@ -380,9 +393,9 @@ export default function EmployeeListPage() {
               <SplitViewPanel
                 header={
                   <div className="flex items-center justify-between">
-                    <h3 className="font-semibold">직원 상세</h3>
+                    <h3 className="font-semibold">{t('detailPage.title')}</h3>
                     <Button size="sm" onClick={() => navigate(`/employees/${selectedEmployee.id}`)}>
-                      전체 보기
+                      {t('common.fullView')}
                     </Button>
                   </div>
                 }
@@ -406,35 +419,35 @@ export default function EmployeeListPage() {
                     <div className="p-3 bg-muted/50 rounded-lg">
                       <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
                         <Building2 className="h-3 w-3" />
-                        부서
+                        {t('department')}
                       </div>
                       <p className="text-sm font-medium">{selectedEmployee.departmentName}</p>
                     </div>
                     <div className="p-3 bg-muted/50 rounded-lg">
                       <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
                         <Users className="h-3 w-3" />
-                        직책
+                        {t('position')}
                       </div>
                       <p className="text-sm font-medium">{selectedEmployee.positionName || '-'}</p>
                     </div>
                     <div className="p-3 bg-muted/50 rounded-lg">
                       <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
                         <Mail className="h-3 w-3" />
-                        이메일
+                        {t('email')}
                       </div>
                       <p className="text-sm font-medium truncate">{selectedEmployee.email}</p>
                     </div>
                     <div className="p-3 bg-muted/50 rounded-lg">
                       <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
                         <Phone className="h-3 w-3" />
-                        연락처
+                        {t('phone')}
                       </div>
                       <p className="text-sm font-medium">{selectedEmployee.mobile || '-'}</p>
                     </div>
                     <div className="p-3 bg-muted/50 rounded-lg col-span-2">
                       <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
                         <Calendar className="h-3 w-3" />
-                        입사일
+                        {t('joinDate')}
                       </div>
                       <p className="text-sm font-medium">
                         {format(new Date(selectedEmployee.hireDate), 'yyyy년 M월 d일', { locale: ko })}
@@ -450,20 +463,20 @@ export default function EmployeeListPage() {
                       onClick={() => window.location.href = `mailto:${selectedEmployee.email}`}
                     >
                       <Mail className="mr-2 h-4 w-4" />
-                      이메일
+                      {t('email')}
                     </Button>
                     <Button
                       className="flex-1"
                       onClick={() => navigate(`/employees/${selectedEmployee.id}`)}
                     >
-                      상세 보기
+                      {t('common.detailView')}
                     </Button>
                   </div>
                 </div>
               </SplitViewPanel>
             ) : (
               <div className="flex items-center justify-center h-full text-muted-foreground">
-                좌측에서 직원을 선택하세요
+                {t('listPage.selectFromLeft')}
               </div>
             )
           }
@@ -480,9 +493,9 @@ export default function EmployeeListPage() {
         <ConfirmDialog
           open={deleteDialogOpen}
           onOpenChange={setDeleteDialogOpen}
-          title="직원 삭제"
-          description={`선택한 ${selectedIds.size}명의 직원 정보를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`}
-          confirmLabel="삭제"
+          title={t('listPage.bulkDeleteTitle')}
+          description={t('listPage.bulkDeleteDescription', { count: selectedIds.size })}
+          confirmLabel={t('common.delete')}
           variant="destructive"
           isLoading={isDeleting}
           onConfirm={handleBulkDelete}
@@ -495,32 +508,32 @@ export default function EmployeeListPage() {
   return (
     <>
       <PageHeader
-        title="인사정보"
-        description="임직원 정보를 조회하고 관리합니다."
+        title={t('listPage.title')}
+        description={t('listPage.description')}
         actions={
           <div className="flex gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline">
                   <FileSpreadsheet className="mr-2 h-4 w-4" />
-                  엑셀
+                  {t('listPage.excel')}
                   <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={handleExport}>
                   <Download className="mr-2 h-4 w-4" />
-                  내보내기 {isSomeSelected && `(${selectedIds.size}명)`}
+                  {isSomeSelected ? t('listPage.exportCount', { count: selectedIds.size }) : t('listPage.export')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleImportClick}>
                   <Upload className="mr-2 h-4 w-4" />
-                  가져오기
+                  {t('listPage.import')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             <Button onClick={() => navigate('/employees/new')}>
               <Plus className="mr-2 h-4 w-4" />
-              신규 등록
+              {t('listPage.newEmployee')}
             </Button>
           </div>
         }
@@ -532,7 +545,7 @@ export default function EmployeeListPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="이름, 사번, 이메일로 검색..."
+                placeholder={t('listPage.searchPlaceholder')}
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 className="pl-9"
@@ -544,11 +557,11 @@ export default function EmployeeListPage() {
                 onChange={(e) => setEmploymentStatus(e.target.value as EmploymentStatus | '')}
                 className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
               >
-                <option value="">전체 상태</option>
-                <option value="ACTIVE">재직</option>
-                <option value="ON_LEAVE">휴직</option>
-                <option value="RESIGNED">퇴직</option>
-                <option value="RETIRED">정년퇴직</option>
+                <option value="">{t('employmentStatus.label')}</option>
+                <option value="ACTIVE">{t('employmentStatus.ACTIVE')}</option>
+                <option value="ON_LEAVE">{t('employmentStatus.ON_LEAVE')}</option>
+                <option value="RESIGNED">{t('employmentStatus.RESIGNED')}</option>
+                <option value="RETIRED">{t('employmentStatus.RETIRED')}</option>
               </select>
               {!isMobile && (
                 <div className="flex border rounded-md">
@@ -575,7 +588,7 @@ export default function EmployeeListPage() {
           {isSomeSelected && (
             <div className="flex items-center gap-4 mt-4 pt-4 border-t">
               <span className="text-sm text-muted-foreground">
-                {selectedIds.size}명 선택됨
+                {t('common.selected', { count: selectedIds.size })}
               </span>
               <div className="flex gap-2">
                 <Button
@@ -584,7 +597,7 @@ export default function EmployeeListPage() {
                   onClick={() => handleBulkAction('email')}
                 >
                   <Mail className="mr-2 h-4 w-4" />
-                  이메일 보내기
+                  {t('listPage.sendEmail')}
                 </Button>
                 <Button
                   variant="outline"
@@ -593,7 +606,7 @@ export default function EmployeeListPage() {
                   onClick={() => handleBulkAction('delete')}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
-                  삭제
+                  {t('common.delete')}
                 </Button>
               </div>
               <Button
@@ -601,7 +614,7 @@ export default function EmployeeListPage() {
                 size="sm"
                 onClick={() => setSelectedIds(new Set())}
               >
-                선택 해제
+                {t('common.deselect')}
               </Button>
             </div>
           )}
@@ -619,8 +632,8 @@ export default function EmployeeListPage() {
           <CardContent>
             <EmptyState
               icon={Users}
-              title="데이터를 불러올 수 없습니다"
-              description="잠시 후 다시 시도해주세요."
+              title={t('listPage.cannotLoadData')}
+              description={t('listPage.cannotLoadDataDesc')}
             />
           </CardContent>
         </Card>
@@ -629,16 +642,16 @@ export default function EmployeeListPage() {
           <CardContent>
             <EmptyState
               icon={Users}
-              title="등록된 직원이 없습니다"
+              title={t('listPage.noEmployees')}
               description={
                 searchState.keyword || searchState.status
-                  ? '검색 조건에 맞는 직원이 없습니다.'
-                  : '신규 직원을 등록하거나 데이터를 가져와주세요.'
+                  ? t('listPage.noEmployeesSearch')
+                  : t('listPage.noEmployeesAction')
               }
               action={
                 !searchState.keyword && !searchState.status
                   ? {
-                      label: '신규 등록',
+                      label: t('listPage.newEmployee'),
                       onClick: () => navigate('/employees/new'),
                     }
                   : undefined
@@ -661,7 +674,7 @@ export default function EmployeeListPage() {
             ))}
           </div>
           <div className="flex items-center justify-between">
-            <div className="text-sm text-muted-foreground">총 {totalElements}명</div>
+            <div className="text-sm text-muted-foreground">{t('common.total', { count: totalElements })}</div>
             <Pagination
               page={searchState.page}
               totalPages={totalPages}
@@ -684,19 +697,19 @@ export default function EmployeeListPage() {
                       />
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                      직원
+                      {t('listPage.tableColumnEmployee')}
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                      부서
+                      {t('listPage.tableColumnDepartment')}
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                      직급
+                      {t('listPage.tableColumnGrade')}
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                      상태
+                      {t('listPage.tableColumnStatus')}
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                      입사일
+                      {t('listPage.tableColumnHireDate')}
                     </th>
                     <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
 
@@ -770,18 +783,18 @@ export default function EmployeeListPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => handleRowClick(employee.id)}>
-                              상세보기
+                              {t('common.viewDetail')}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => window.location.href = `mailto:${employee.email}`}
                             >
                               <Mail className="mr-2 h-4 w-4" />
-                              이메일 보내기
+                              {t('listPage.sendEmail')}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem className="text-destructive">
                               <Trash2 className="mr-2 h-4 w-4" />
-                              삭제
+                              {t('common.delete')}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -792,7 +805,7 @@ export default function EmployeeListPage() {
               </table>
             </div>
             <div className="flex items-center justify-between px-4 py-3 border-t">
-              <div className="text-sm text-muted-foreground">총 {totalElements}명</div>
+              <div className="text-sm text-muted-foreground">{t('common.total', { count: totalElements })}</div>
               <Pagination
                 page={searchState.page}
                 totalPages={totalPages}
@@ -814,9 +827,9 @@ export default function EmployeeListPage() {
       <ConfirmDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        title="직원 삭제"
-        description={`선택한 ${selectedIds.size}명의 직원 정보를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`}
-        confirmLabel="삭제"
+        title={t('listPage.bulkDeleteTitle')}
+        description={t('listPage.bulkDeleteDescription', { count: selectedIds.size })}
+        confirmLabel={t('common.delete')}
         variant="destructive"
         isLoading={isDeleting}
         onConfirm={handleBulkDelete}

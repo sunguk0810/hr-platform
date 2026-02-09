@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -17,6 +18,7 @@ interface RecordCardAwardProps {
 }
 
 export function RecordCardAward({ awards, disciplinary }: RecordCardAwardProps) {
+  const { t } = useTranslation('employee');
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('ko-KR');
   };
@@ -36,10 +38,10 @@ export function RecordCardAward({ awards, disciplinary }: RecordCardAwardProps) 
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <Trophy className="h-4 w-4" />
-          포상/징계
+          {t('recordCard.award.title')}
           {hasContent && (
             <span className="text-sm font-normal text-muted-foreground">
-              (포상 {awards.length}건, 징계 {disciplinary.length}건)
+              ({t('recordCard.award.count', { awardCount: awards.length, disciplinaryCount: disciplinary.length })})
             </span>
           )}
         </CardTitle>
@@ -49,22 +51,22 @@ export function RecordCardAward({ awards, disciplinary }: RecordCardAwardProps) 
         <div>
           <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
             <Trophy className="h-4 w-4 text-yellow-500" />
-            포상내역
+            {t('recordCard.award.awardSection')}
           </h4>
           {awards.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4 bg-muted/30 rounded">
-              등록된 포상내역이 없습니다.
+              {t('recordCard.award.awardEmpty')}
             </p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[100px]">포상일</TableHead>
-                  <TableHead>유형</TableHead>
-                  <TableHead>포상명</TableHead>
-                  <TableHead>수여기관</TableHead>
-                  <TableHead>포상금</TableHead>
-                  <TableHead>사유</TableHead>
+                  <TableHead className="w-[100px]">{t('recordCard.award.awardDate')}</TableHead>
+                  <TableHead>{t('recordCard.award.awardType')}</TableHead>
+                  <TableHead>{t('recordCard.award.awardName')}</TableHead>
+                  <TableHead>{t('recordCard.award.awardIssuer')}</TableHead>
+                  <TableHead>{t('recordCard.award.awardAmount')}</TableHead>
+                  <TableHead>{t('recordCard.award.awardReason')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -93,22 +95,22 @@ export function RecordCardAward({ awards, disciplinary }: RecordCardAwardProps) 
         <div>
           <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 text-red-500" />
-            징계내역
+            {t('recordCard.award.disciplinarySection')}
           </h4>
           {disciplinary.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4 bg-muted/30 rounded">
-              등록된 징계내역이 없습니다.
+              {t('recordCard.award.disciplinaryEmpty')}
             </p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[100px]">시행일</TableHead>
-                  <TableHead>유형</TableHead>
-                  <TableHead>사유</TableHead>
-                  <TableHead>기간</TableHead>
-                  <TableHead>종료일</TableHead>
-                  <TableHead>상태</TableHead>
+                  <TableHead className="w-[100px]">{t('recordCard.award.disciplinaryDate')}</TableHead>
+                  <TableHead>{t('recordCard.award.disciplinaryType')}</TableHead>
+                  <TableHead>{t('recordCard.award.disciplinaryReason')}</TableHead>
+                  <TableHead>{t('recordCard.award.disciplinaryDuration')}</TableHead>
+                  <TableHead>{t('recordCard.award.disciplinaryEndDate')}</TableHead>
+                  <TableHead>{t('recordCard.award.disciplinaryStatus')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -123,13 +125,13 @@ export function RecordCardAward({ awards, disciplinary }: RecordCardAwardProps) 
                         {disc.reason}
                       </div>
                     </TableCell>
-                    <TableCell>{disc.duration ? `${disc.duration}일` : '-'}</TableCell>
+                    <TableCell>{disc.duration ? t('common.days', { count: disc.duration }) : '-'}</TableCell>
                     <TableCell>{disc.endDate ? formatDate(disc.endDate) : '-'}</TableCell>
                     <TableCell>
                       {disc.isCurrent ? (
-                        <Badge variant="destructive">진행중</Badge>
+                        <Badge variant="destructive">{t('recordCard.award.disciplinaryActive')}</Badge>
                       ) : (
-                        <Badge variant="outline">종료</Badge>
+                        <Badge variant="outline">{t('recordCard.award.disciplinaryEnded')}</Badge>
                       )}
                     </TableCell>
                   </TableRow>

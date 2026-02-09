@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -30,6 +31,7 @@ export function ProfileImageUpload({
   size = 'md',
   error,
 }: ProfileImageUploadProps) {
+  const { t } = useTranslation('employee');
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [preview, setPreview] = React.useState<string | null>(null);
   const [localError, setLocalError] = React.useState<string | null>(null);
@@ -56,11 +58,11 @@ export function ProfileImageUpload({
 
   const validateFile = (file: File): string | null => {
     if (!file.type.startsWith('image/')) {
-      return '이미지 파일만 업로드할 수 있습니다.';
+      return t('profileImage.imageOnly');
     }
     if (file.size > maxSize) {
       const maxSizeMB = Math.round(maxSize / 1024 / 1024);
-      return `파일 크기는 ${maxSizeMB}MB 이하여야 합니다.`;
+      return t('profileImage.maxSize', { size: maxSizeMB });
     }
     return null;
   };

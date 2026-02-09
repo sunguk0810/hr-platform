@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import {
   Dialog,
@@ -28,16 +29,17 @@ interface FormData {
   purpose: string;
 }
 
-const privacyFieldOptions: { value: PrivacyField; label: string; description: string }[] = [
-  { value: 'residentNumber', label: '주민등록번호', description: '주민등록번호 전체' },
-  { value: 'bankAccount', label: '계좌번호', description: '급여 계좌 정보' },
-  { value: 'address', label: '주소', description: '거주지 주소' },
-  { value: 'mobile', label: '휴대전화', description: '개인 연락처' },
-  { value: 'phone', label: '전화번호', description: '자택/직장 전화번호' },
-  { value: 'birthDate', label: '생년월일', description: '생년월일 전체' },
+const privacyFieldKeys: { value: PrivacyField; labelKey: string; descKey: string }[] = [
+  { value: 'residentNumber', labelKey: 'unmaskDialog.privacyFields.residentNumber', descKey: 'unmaskDialog.privacyFields.residentNumberDesc' },
+  { value: 'bankAccount', labelKey: 'unmaskDialog.privacyFields.bankAccount', descKey: 'unmaskDialog.privacyFields.bankAccountDesc' },
+  { value: 'address', labelKey: 'unmaskDialog.privacyFields.address', descKey: 'unmaskDialog.privacyFields.addressDesc' },
+  { value: 'mobile', labelKey: 'unmaskDialog.privacyFields.mobile', descKey: 'unmaskDialog.privacyFields.mobileDesc' },
+  { value: 'phone', labelKey: 'unmaskDialog.privacyFields.phone', descKey: 'unmaskDialog.privacyFields.phoneDesc' },
+  { value: 'birthDate', labelKey: 'unmaskDialog.privacyFields.birthDate', descKey: 'unmaskDialog.privacyFields.birthDateDesc' },
 ];
 
 export function UnmaskDialog({ open, onOpenChange, employee }: UnmaskDialogProps) {
+  const { t } = useTranslation('employee');
   const { toast } = useToast();
   const unmaskMutation = useUnmask();
   const [selectedFields, setSelectedFields] = useState<PrivacyField[]>([]);
@@ -63,8 +65,8 @@ export function UnmaskDialog({ open, onOpenChange, employee }: UnmaskDialogProps
   const onSubmit = async (data: FormData) => {
     if (selectedFields.length === 0) {
       toast({
-        title: '선택 필요',
-        description: '열람할 개인정보 항목을 선택해주세요.',
+        title: t('unmaskDialog.selectionRequired'),
+        description: t('unmaskDialog.selectRequired'),
         variant: 'destructive',
       });
       return;
@@ -79,13 +81,13 @@ export function UnmaskDialog({ open, onOpenChange, employee }: UnmaskDialogProps
       const response = await unmaskMutation.mutateAsync({ id: employee.id, data: request });
       setUnmaskedData(response.data);
       toast({
-        title: '열람 승인',
-        description: '개인정보 열람이 승인되었습니다. 열람 기록이 저장됩니다.',
+        title: t('unmaskDialog.approvedTitle'),
+        description: t('unmaskDialog.approvedDescription'),
       });
     } catch {
       toast({
-        title: '열람 실패',
-        description: '개인정보 열람 요청 중 오류가 발생했습니다.',
+        title: t('unmaskDialog.failureTitle'),
+        description: t('unmaskDialog.failureDescription'),
         variant: 'destructive',
       });
     }
@@ -108,10 +110,10 @@ export function UnmaskDialog({ open, onOpenChange, employee }: UnmaskDialogProps
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
-            개인정보 열람 요청
+            {t('unmaskDialog.title')}
           </DialogTitle>
           <DialogDescription>
-            {employee.name}({employee.employeeNumber})님의 마스킹된 개인정보를 열람합니다.
+            {t('unmaskDialog.description', { name: employee.name, employeeNumber: employee.employeeNumber })}
           </DialogDescription>
         </DialogHeader>
 
@@ -119,17 +121,16 @@ export function UnmaskDialog({ open, onOpenChange, employee }: UnmaskDialogProps
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <Alert variant="default" className="border-yellow-500 bg-yellow-50 dark:bg-yellow-950">
               <AlertTriangle className="h-4 w-4 text-yellow-600" />
-              <AlertTitle className="text-yellow-800 dark:text-yellow-200">주의</AlertTitle>
+              <AlertTitle className="text-yellow-800 dark:text-yellow-200">{t('unmaskDialog.warningTitle')}</AlertTitle>
               <AlertDescription className="text-yellow-700 dark:text-yellow-300 text-sm">
-                개인정보 열람은 업무상 필요한 경우에만 허용됩니다.
-                모든 열람 기록은 감사 로그에 저장됩니다.
+                {t('unmaskDialog.warningDescription')}
               </AlertDescription>
             </Alert>
 
             <div className="space-y-3">
-              <Label>열람할 정보 선택 *</Label>
+              <Label>{t('unmaskDialog.selectFieldsLabel')}</Label>
               <div className="grid grid-cols-2 gap-3">
-                {privacyFieldOptions.map((option) => (
+                {privacyFieldKeys.map((option) => (
                   <div
                     key={option.value}
                     className={`flex items-start space-x-3 p-3 rounded-lg border cursor-pointer transition-colors ${
@@ -144,8 +145,8 @@ export function UnmaskDialog({ open, onOpenChange, employee }: UnmaskDialogProps
                       onCheckedChange={() => toggleField(option.value)}
                     />
                     <div className="grid gap-0.5">
-                      <Label className="font-normal cursor-pointer">{option.label}</Label>
-                      <p className="text-xs text-muted-foreground">{option.description}</p>
+                      <Label className="font-normal cursor-pointer">{t(option.labelKey)}</Label>
+                      <p className="text-xs text-muted-foreground">{t(option.descKey)}</p>
                     </div>
                   </div>
                 ))}
@@ -153,14 +154,14 @@ export function UnmaskDialog({ open, onOpenChange, employee }: UnmaskDialogProps
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="purpose">열람 목적 *</Label>
+              <Label htmlFor="purpose">{t('unmaskDialog.purposeLabel')}</Label>
               <Textarea
                 id="purpose"
-                placeholder="개인정보 열람 목적을 구체적으로 입력해주세요."
+                placeholder={t('unmaskDialog.purposePlaceholder')}
                 rows={3}
                 {...register('purpose', {
-                  required: '열람 목적을 입력해주세요.',
-                  minLength: { value: 10, message: '열람 목적을 10자 이상 입력해주세요.' },
+                  required: t('unmaskDialog.purposeRequired'),
+                  minLength: { value: 10, message: t('unmaskDialog.purposeMinLength') },
                 })}
               />
               {errors.purpose && (
@@ -170,10 +171,10 @@ export function UnmaskDialog({ open, onOpenChange, employee }: UnmaskDialogProps
 
             <DialogFooter className="gap-2 sm:gap-0">
               <Button type="button" variant="outline" onClick={handleClose}>
-                취소
+                {t('common.cancel')}
               </Button>
               <Button type="submit" disabled={unmaskMutation.isPending}>
-                {unmaskMutation.isPending ? '요청 중...' : '열람 요청'}
+                {unmaskMutation.isPending ? t('common.requesting') : t('unmaskDialog.submitButton')}
               </Button>
             </DialogFooter>
           </form>
@@ -181,18 +182,18 @@ export function UnmaskDialog({ open, onOpenChange, employee }: UnmaskDialogProps
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Clock className="h-4 w-4" />
-              <span>유효 시간: {formatValidUntil(unmaskedData.validUntil)}</span>
+              <span>{t('unmaskDialog.validUntil', { time: formatValidUntil(unmaskedData.validUntil) })}</span>
             </div>
 
             <div className="space-y-3">
               {selectedFields.map((field) => {
-                const option = privacyFieldOptions.find((o) => o.value === field);
+                const option = privacyFieldKeys.find((o) => o.value === field);
                 const value = unmaskedData.data[field];
                 return (
                   <div key={field} className="p-3 rounded-lg border bg-muted/30">
                     <div className="flex items-center gap-2 mb-1">
                       <Eye className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-medium">{option?.label}</span>
+                      <span className="text-sm font-medium">{option ? t(option.labelKey) : field}</span>
                     </div>
                     <p className="font-mono text-sm pl-6">{value || '-'}</p>
                   </div>
@@ -203,14 +204,14 @@ export function UnmaskDialog({ open, onOpenChange, employee }: UnmaskDialogProps
             <Alert>
               <Shield className="h-4 w-4" />
               <AlertDescription className="text-sm">
-                열람 기록이 감사 로그에 저장되었습니다.
+                {t('unmaskDialog.accessLogSaved')}
                 <br />
-                로그 ID: {unmaskedData.accessLogId}
+                {t('unmaskDialog.logId', { id: unmaskedData.accessLogId })}
               </AlertDescription>
             </Alert>
 
             <DialogFooter>
-              <Button onClick={handleClose}>닫기</Button>
+              <Button onClick={handleClose}>{t('common.close')}</Button>
             </DialogFooter>
           </div>
         )}

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
   Table,
@@ -25,35 +26,20 @@ interface FamilyAllowanceMappingProps {
 }
 
 const ALLOWANCE_RULES: Record<string, number> = {
-  '배우자': 100000,
-  '자녀': 50000,
-  '부모': 30000,
-  '형제자매': 0,
-  '조부모': 20000,
+  'SPOUSE': 100000,
+  'CHILD': 50000,
+  'PARENT': 30000,
+  'SIBLING': 0,
+  'GRANDPARENT': 20000,
 };
-
-/**
- * Maps the relationship code (e.g., SPOUSE, CHILD) to the Korean label used for allowance lookup.
- */
-const RELATIONSHIP_LABEL_MAP: Record<string, string> = {
-  SPOUSE: '배우자',
-  CHILD: '자녀',
-  PARENT: '부모',
-  SIBLING: '형제자매',
-  GRANDPARENT: '조부모',
-  OTHER: '기타',
-};
-
-function getRelationshipLabel(relationship: string): string {
-  return RELATIONSHIP_LABEL_MAP[relationship] || relationship;
-}
 
 function getAllowanceAmount(relationship: string): number {
-  const label = getRelationshipLabel(relationship);
-  return ALLOWANCE_RULES[label] ?? 0;
+  return ALLOWANCE_RULES[relationship] ?? 0;
 }
 
 export function FamilyAllowanceMapping({ familyMembers }: FamilyAllowanceMappingProps) {
+  const { t } = useTranslation('employee');
+
   const [enabledMap, setEnabledMap] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     familyMembers.forEach((member) => {
@@ -81,41 +67,47 @@ export function FamilyAllowanceMapping({ familyMembers }: FamilyAllowanceMapping
     return null;
   }
 
+  // Build display labels for allowance rules
+  const allowanceDisplayEntries = Object.entries(ALLOWANCE_RULES)
+    .filter(([, amount]) => amount > 0)
+    .map(([key, amount]) => ({
+      label: t(`familyInfo.relationshipOptions.${key}`, key),
+      amount,
+    }));
+
   return (
     <Card>
       <CardHeader className="pb-4">
         <CardTitle className="text-lg flex items-center gap-2">
           <DollarSign className="h-5 w-5 text-primary" />
-          가족수당 매핑
+          {t('familyAllowance.title')}
         </CardTitle>
         <CardDescription>
-          가족 구성원별 수당 적용 여부를 설정합니다. 관계 유형에 따라 수당 금액이 결정됩니다.
+          {t('familyAllowance.description')}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="mb-4 flex flex-wrap gap-2">
-          {Object.entries(ALLOWANCE_RULES)
-            .filter(([, amount]) => amount > 0)
-            .map(([label, amount]) => (
-              <Badge key={label} variant="outline" className="text-xs">
-                {label}: {amount.toLocaleString()}원/월
-              </Badge>
-            ))}
+          {allowanceDisplayEntries.map(({ label, amount }) => (
+            <Badge key={label} variant="outline" className="text-xs">
+              {label}: {amount.toLocaleString()}{t('common.wonPerMonth')}
+            </Badge>
+          ))}
         </div>
 
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>이름</TableHead>
-              <TableHead>관계</TableHead>
-              <TableHead>생년월일</TableHead>
-              <TableHead className="text-right">월 수당액</TableHead>
-              <TableHead className="text-center w-[120px]">가족 수당 적용</TableHead>
+              <TableHead>{t('familyInfo.name')}</TableHead>
+              <TableHead>{t('familyInfo.relationship')}</TableHead>
+              <TableHead>{t('familyInfo.birthDate')}</TableHead>
+              <TableHead className="text-right">{t('familyAllowance.monthlyAmount')}</TableHead>
+              <TableHead className="text-center w-[120px]">{t('familyAllowance.applyLabel')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {familyMembers.map((member) => {
-              const label = getRelationshipLabel(member.relationship);
+              const label = t(`familyInfo.relationshipOptions.${member.relationship}`, member.relationship);
               const amount = getAllowanceAmount(member.relationship);
               const isEnabled = enabledMap[member.id] ?? false;
               const isEligible = amount > 0;
@@ -128,7 +120,7 @@ export function FamilyAllowanceMapping({ familyMembers }: FamilyAllowanceMapping
                   <TableCell className="text-right">
                     {isEligible ? (
                       <span className={isEnabled ? 'font-medium' : 'text-muted-foreground'}>
-                        {amount.toLocaleString()}원
+                        {amount.toLocaleString()}{t('common.won')}
                       </span>
                     ) : (
                       <span className="text-muted-foreground">-</span>
@@ -139,10 +131,10 @@ export function FamilyAllowanceMapping({ familyMembers }: FamilyAllowanceMapping
                       <Switch
                         checked={isEnabled}
                         onCheckedChange={(checked) => handleToggle(member.id, checked)}
-                        aria-label={`${member.name} 가족 수당 적용`}
+                        aria-label={t('familyAllowance.ariaLabel', { name: member.name })}
                       />
                     ) : (
-                      <span className="text-xs text-muted-foreground">대상 외</span>
+                      <span className="text-xs text-muted-foreground">{t('common.notApplicable')}</span>
                     )}
                   </TableCell>
                 </TableRow>
@@ -152,10 +144,10 @@ export function FamilyAllowanceMapping({ familyMembers }: FamilyAllowanceMapping
           <TableFooter>
             <TableRow>
               <TableCell colSpan={3} className="text-right font-medium">
-                월 가족수당 합계
+                {t('familyAllowance.totalMonthly')}
               </TableCell>
               <TableCell className="text-right font-bold text-primary">
-                {totalAllowance.toLocaleString()}원
+                {totalAllowance.toLocaleString()}{t('common.won')}
               </TableCell>
               <TableCell />
             </TableRow>

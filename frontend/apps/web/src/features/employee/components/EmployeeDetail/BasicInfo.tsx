@@ -1,7 +1,10 @@
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import {
   Form,
   FormControl,
@@ -23,21 +26,22 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MaskedField } from '@/components/common/MaskedField';
 
-const basicInfoSchema = z.object({
-  employeeNumber: z.string().min(1, '사번은 필수입니다'),
-  name: z.string().min(1, '이름은 필수입니다'),
-  nameEn: z.string().optional(),
-  email: z.string().email('올바른 이메일을 입력하세요'),
-  mobile: z.string().min(1, '연락처는 필수입니다'),
-  birthDate: z.date().optional(),
-  gender: z.enum(['MALE', 'FEMALE']).optional(),
-  nationalIdNumber: z.string().optional(),
-  address: z.string().optional(),
-  detailAddress: z.string().optional(),
-  zipCode: z.string().optional(),
-});
+const createBasicInfoSchema = (t: TFunction) =>
+  z.object({
+    employeeNumber: z.string().min(1, t('basicInfo.employeeNumberRequired')),
+    name: z.string().min(1, t('basicInfo.nameRequired')),
+    nameEn: z.string().optional(),
+    email: z.string().email(t('basicInfo.emailRequired')),
+    mobile: z.string().min(1, t('basicInfo.mobileRequired')),
+    birthDate: z.date().optional(),
+    gender: z.enum(['MALE', 'FEMALE']).optional(),
+    nationalIdNumber: z.string().optional(),
+    address: z.string().optional(),
+    detailAddress: z.string().optional(),
+    zipCode: z.string().optional(),
+  });
 
-type BasicInfoFormData = z.infer<typeof basicInfoSchema>;
+type BasicInfoFormData = z.infer<ReturnType<typeof createBasicInfoSchema>>;
 
 export interface EmployeeBasicInfo {
   employeeNumber: string;
@@ -66,6 +70,9 @@ export function BasicInfo({
   onSave,
   isLoading,
 }: BasicInfoProps) {
+  const { t } = useTranslation('employee');
+  const basicInfoSchema = React.useMemo(() => createBasicInfoSchema(t), [t]);
+
   const form = useForm<BasicInfoFormData>({
     resolver: zodResolver(basicInfoSchema),
     defaultValues: {
@@ -91,42 +98,42 @@ export function BasicInfo({
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">기본 정보</CardTitle>
+          <CardTitle className="text-lg">{t('basicInfo.title')}</CardTitle>
         </CardHeader>
         <CardContent>
           <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <InfoItem label="사번" value={data?.employeeNumber} />
-            <InfoItem label="이름" value={data?.name} />
-            <InfoItem label="영문 이름" value={data?.nameEn} />
-            <InfoItem label="이메일" value={data?.email} />
+            <InfoItem label={t('employeeNumber')} value={data?.employeeNumber} />
+            <InfoItem label={t('name')} value={data?.name} />
+            <InfoItem label={t('basicInfo.nameEn')} value={data?.nameEn} />
+            <InfoItem label={t('email')} value={data?.email} />
             <InfoItem
-              label="연락처"
+              label={t('phone')}
               value={data?.mobile}
               masked
               maskType="phone"
             />
             <InfoItem
-              label="생년월일"
+              label={t('basicInfo.birthDate')}
               value={data?.birthDate ? format(data.birthDate, 'yyyy-MM-dd') : undefined}
             />
             <InfoItem
-              label="성별"
-              value={data?.gender === 'MALE' ? '남성' : data?.gender === 'FEMALE' ? '여성' : undefined}
+              label={t('gender.label')}
+              value={data?.gender === 'MALE' ? t('gender.male') : data?.gender === 'FEMALE' ? t('gender.female') : undefined}
             />
             <InfoItem
-              label="주민등록번호"
+              label={t('basicInfo.nationalIdNumber')}
               value={data?.nationalIdNumber}
               masked
               maskType="ssn"
             />
-            <InfoItem label="우편번호" value={data?.zipCode} className="sm:col-span-2" />
+            <InfoItem label={t('basicInfo.zipCode')} value={data?.zipCode} className="sm:col-span-2" />
             <InfoItem
-              label="주소"
+              label={t('basicInfo.address')}
               value={data?.address}
               className="sm:col-span-2"
             />
             <InfoItem
-              label="상세주소"
+              label={t('basicInfo.detailAddress')}
               value={data?.detailAddress}
               className="sm:col-span-2"
             />
@@ -139,7 +146,7 @@ export function BasicInfo({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">기본 정보</CardTitle>
+        <CardTitle className="text-lg">{t('basicInfo.title')}</CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -150,7 +157,7 @@ export function BasicInfo({
                 name="employeeNumber"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>사번 *</FormLabel>
+                    <FormLabel>{t('accountInfo.employeeNumber')} *</FormLabel>
                     <FormControl>
                       <Input {...field} disabled />
                     </FormControl>
@@ -163,7 +170,7 @@ export function BasicInfo({
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>이름 *</FormLabel>
+                    <FormLabel>{t('basicInfo.nameLabel')}</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -176,7 +183,7 @@ export function BasicInfo({
                 name="nameEn"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>영문 이름</FormLabel>
+                    <FormLabel>{t('basicInfo.nameEnLabel')}</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -189,7 +196,7 @@ export function BasicInfo({
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>이메일 *</FormLabel>
+                    <FormLabel>{t('basicInfo.emailLabel')}</FormLabel>
                     <FormControl>
                       <Input type="email" {...field} />
                     </FormControl>
@@ -202,9 +209,9 @@ export function BasicInfo({
                 name="mobile"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>연락처 *</FormLabel>
+                    <FormLabel>{t('basicInfo.mobileLabel')}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="010-0000-0000" />
+                      <Input {...field} placeholder={t('basicInfo.mobilePlaceholder')} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -215,12 +222,12 @@ export function BasicInfo({
                 name="birthDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>생년월일</FormLabel>
+                    <FormLabel>{t('basicInfo.birthDate')}</FormLabel>
                     <FormControl>
                       <DatePicker
                         value={field.value}
                         onChange={field.onChange}
-                        placeholder="생년월일 선택"
+                        placeholder={t('basicInfo.birthDatePlaceholder')}
                       />
                     </FormControl>
                     <FormMessage />
@@ -232,16 +239,16 @@ export function BasicInfo({
                 name="gender"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>성별</FormLabel>
+                    <FormLabel>{t('gender.label')}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="성별 선택" />
+                          <SelectValue placeholder={t('gender.selectPlaceholder')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="MALE">남성</SelectItem>
-                        <SelectItem value="FEMALE">여성</SelectItem>
+                        <SelectItem value="MALE">{t('gender.male')}</SelectItem>
+                        <SelectItem value="FEMALE">{t('gender.female')}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -253,9 +260,9 @@ export function BasicInfo({
                 name="nationalIdNumber"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>주민등록번호</FormLabel>
+                    <FormLabel>{t('basicInfo.nationalIdNumber')}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="000000-0000000" />
+                      <Input {...field} placeholder={t('basicInfo.nationalIdPlaceholder')} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -269,7 +276,7 @@ export function BasicInfo({
                 name="zipCode"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>우편번호</FormLabel>
+                    <FormLabel>{t('basicInfo.zipCode')}</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -282,7 +289,7 @@ export function BasicInfo({
                 name="address"
                 render={({ field }) => (
                   <FormItem className="sm:col-span-2">
-                    <FormLabel>주소</FormLabel>
+                    <FormLabel>{t('basicInfo.address')}</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -295,7 +302,7 @@ export function BasicInfo({
                 name="detailAddress"
                 render={({ field }) => (
                   <FormItem className="sm:col-span-3">
-                    <FormLabel>상세주소</FormLabel>
+                    <FormLabel>{t('basicInfo.detailAddress')}</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -307,7 +314,7 @@ export function BasicInfo({
 
             <div className="flex justify-end">
               <Button type="submit" disabled={isLoading}>
-                {isLoading ? '저장 중...' : '저장'}
+                {isLoading ? t('common.saving') : t('common.save')}
               </Button>
             </div>
           </form>

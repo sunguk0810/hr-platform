@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
 import { Plus, Pencil, Trash2, Award } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import {
   Form,
   FormControl,
@@ -25,17 +27,18 @@ import {
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { Badge } from '@/components/ui/badge';
 
-const certificateSchema = z.object({
-  name: z.string().min(1, '자격증명은 필수입니다'),
-  issuer: z.string().min(1, '발급기관은 필수입니다'),
-  certificateNumber: z.string().optional(),
-  issueDate: z.date({ required_error: '취득일은 필수입니다' }),
-  expiryDate: z.date().optional(),
-  grade: z.string().optional(),
-  score: z.string().optional(),
-});
+const createCertificateSchema = (t: TFunction) =>
+  z.object({
+    name: z.string().min(1, t('certificateInfo.certificateNameRequired')),
+    issuer: z.string().min(1, t('certificateInfo.issuerRequired')),
+    certificateNumber: z.string().optional(),
+    issueDate: z.date({ required_error: t('certificateInfo.issueDateRequired') }),
+    expiryDate: z.date().optional(),
+    grade: z.string().optional(),
+    score: z.string().optional(),
+  });
 
-type CertificateFormData = z.infer<typeof certificateSchema>;
+type CertificateFormData = z.infer<ReturnType<typeof createCertificateSchema>>;
 
 export interface CertificateRecord {
   id: string;
@@ -65,6 +68,9 @@ export function CertificateInfo({
   onDelete,
   isLoading,
 }: CertificateInfoProps) {
+  const { t } = useTranslation('employee');
+  const certificateSchema = React.useMemo(() => createCertificateSchema(t), [t]);
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCertificate, setEditingCertificate] = useState<CertificateRecord | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -147,18 +153,18 @@ export function CertificateInfo({
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-lg">자격증/어학</CardTitle>
+        <CardTitle className="text-lg">{t('certificateInfo.title')}</CardTitle>
         {editable && (
           <Button size="sm" onClick={() => handleOpenDialog()}>
             <Plus className="mr-1 h-4 w-4" />
-            추가
+            {t('common.add')}
           </Button>
         )}
       </CardHeader>
       <CardContent>
         {sortedData.length === 0 ? (
           <p className="py-8 text-center text-muted-foreground">
-            등록된 자격증/어학 정보가 없습니다.
+            {t('certificateInfo.empty')}
           </p>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
@@ -207,7 +213,7 @@ export function CertificateInfo({
                     </div>
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                       <span className="text-xs text-muted-foreground">
-                        {format(certificate.issueDate, 'yyyy.MM.dd')} 취득
+                        {format(certificate.issueDate, 'yyyy.MM.dd')} {t('certificateInfo.acquired')}
                       </span>
                       {certificate.grade && (
                         <Badge variant="secondary" className="text-xs">
@@ -221,18 +227,18 @@ export function CertificateInfo({
                       )}
                       {expired && (
                         <Badge variant="destructive" className="text-xs">
-                          만료됨
+                          {t('certificateInfo.expired')}
                         </Badge>
                       )}
                       {expiringSoon && (
                         <Badge variant="outline" className="text-xs border-amber-500 text-amber-500">
-                          만료 임박
+                          {t('certificateInfo.expiringSoon')}
                         </Badge>
                       )}
                     </div>
                     {certificate.expiryDate && (
                       <p className="mt-1 text-xs text-muted-foreground">
-                        유효기간: {format(certificate.expiryDate, 'yyyy.MM.dd')}
+                        {t('certificateInfo.expiryDate')}: {format(certificate.expiryDate, 'yyyy.MM.dd')}
                       </p>
                     )}
                   </div>
@@ -247,7 +253,7 @@ export function CertificateInfo({
           <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>
-                {editingCertificate ? '자격증 수정' : '자격증 추가'}
+                {editingCertificate ? t('certificateInfo.editDialog') : t('certificateInfo.addDialog')}
               </DialogTitle>
             </DialogHeader>
             <Form {...form}>
@@ -260,9 +266,9 @@ export function CertificateInfo({
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>자격증명 *</FormLabel>
+                      <FormLabel>{t('certificateInfo.certificateName')}</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="예: 정보처리기사, TOEIC" />
+                        <Input {...field} placeholder={t('certificateInfo.certificateNamePlaceholder')} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -274,7 +280,7 @@ export function CertificateInfo({
                     name="issuer"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>발급기관 *</FormLabel>
+                        <FormLabel>{t('certificateInfo.issuer')}</FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
@@ -287,7 +293,7 @@ export function CertificateInfo({
                     name="certificateNumber"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>자격증 번호</FormLabel>
+                        <FormLabel>{t('certificateInfo.certificateNumber')}</FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
@@ -300,7 +306,7 @@ export function CertificateInfo({
                     name="issueDate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>취득일 *</FormLabel>
+                        <FormLabel>{t('certificateInfo.issueDate')}</FormLabel>
                         <FormControl>
                           <DatePicker
                             value={field.value}
@@ -316,7 +322,7 @@ export function CertificateInfo({
                     name="expiryDate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>유효기간</FormLabel>
+                        <FormLabel>{t('certificateInfo.expiryDate')}</FormLabel>
                         <FormControl>
                           <DatePicker
                             value={field.value}
@@ -332,9 +338,9 @@ export function CertificateInfo({
                     name="grade"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>등급</FormLabel>
+                        <FormLabel>{t('certificateInfo.gradeLabelField')}</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="예: 1급, 고급" />
+                          <Input {...field} placeholder={t('certificateInfo.gradePlaceholder')} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -345,9 +351,9 @@ export function CertificateInfo({
                     name="score"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>점수</FormLabel>
+                        <FormLabel>{t('certificateInfo.score')}</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="예: 900점" />
+                          <Input {...field} placeholder={t('certificateInfo.scorePlaceholder')} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -360,10 +366,10 @@ export function CertificateInfo({
                     variant="outline"
                     onClick={handleCloseDialog}
                   >
-                    취소
+                    {t('common.cancel')}
                   </Button>
                   <Button type="submit" disabled={isLoading}>
-                    {isLoading ? '저장 중...' : '저장'}
+                    {isLoading ? t('common.saving') : t('common.save')}
                   </Button>
                 </div>
               </form>
@@ -375,10 +381,10 @@ export function CertificateInfo({
         <ConfirmDialog
           open={!!deleteId}
           onOpenChange={(open) => !open && setDeleteId(null)}
-          title="자격증 삭제"
-          description="선택한 자격증 정보를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
-          confirmText="삭제"
-          cancelText="취소"
+          title={t('certificateInfo.deleteTitle')}
+          description={t('certificateInfo.deleteDescription')}
+          confirmText={t('common.delete')}
+          cancelText={t('common.cancel')}
           variant="destructive"
           onConfirm={handleDelete}
         />

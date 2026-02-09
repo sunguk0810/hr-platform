@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -23,6 +24,8 @@ export function EmployeeCard({
   showCheckbox = true,
   className,
 }: EmployeeCardProps) {
+  const { t } = useTranslation('employee');
+
   const getInitials = (name: string) => name.slice(0, 2);
 
   const formatDate = (dateString: string) =>
@@ -77,7 +80,7 @@ export function EmployeeCard({
 
               {employee.gradeName && (
                 <div className="flex items-center gap-2">
-                  <span className="h-3.5 w-3.5 flex-shrink-0 text-center text-xs">직급</span>
+                  <span className="h-3.5 w-3.5 flex-shrink-0 text-center text-xs">{t('employeeCard.gradeLabel')}</span>
                   <span className="truncate">{employee.gradeName}</span>
                 </div>
               )}
@@ -91,7 +94,7 @@ export function EmployeeCard({
 
               <div className="flex items-center gap-2">
                 <Calendar className="h-3.5 w-3.5 flex-shrink-0" />
-                <span>입사일: {formatDate(employee.hireDate)}</span>
+                <span>{t('employeeCard.hireDateLabel', { date: formatDate(employee.hireDate) })}</span>
               </div>
             </div>
           </div>

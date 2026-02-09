@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { RecordCardHeader } from './RecordCardHeader';
 import { RecordCardBasic } from './RecordCardBasic';
 import { RecordCardFamily } from './RecordCardFamily';
@@ -31,6 +32,7 @@ function RecordCardSkeleton() {
 }
 
 export function RecordCard({ employeeId }: RecordCardProps) {
+  const { t } = useTranslation('employee');
   const { toast } = useToast();
   const { data, isLoading, isError } = useRecordCard(employeeId);
   const pdfMutation = useRecordCardPdf();
@@ -43,19 +45,19 @@ export function RecordCard({ employeeId }: RecordCardProps) {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `인사기록카드_${recordCard?.employee.name}_${recordCard?.employee.employeeNumber}.pdf`;
+      link.download = `${t('recordCard.title')}_${recordCard?.employee.name}_${recordCard?.employee.employeeNumber}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
       toast({
-        title: '다운로드 완료',
-        description: 'PDF 파일이 다운로드되었습니다.',
+        title: t('toast.downloadComplete'),
+        description: t('recordCard.downloadComplete'),
       });
     } catch {
       toast({
-        title: '다운로드 실패',
-        description: 'PDF 다운로드 중 오류가 발생했습니다.',
+        title: t('toast.downloadFailure'),
+        description: t('recordCard.downloadFailure'),
         variant: 'destructive',
       });
     }
@@ -73,7 +75,7 @@ export function RecordCard({ employeeId }: RecordCardProps) {
     return (
       <div className="text-center py-12">
         <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-        <p className="text-muted-foreground">인사기록카드를 불러올 수 없습니다.</p>
+        <p className="text-muted-foreground">{t('recordCard.cannotLoad')}</p>
       </div>
     );
   }
@@ -87,19 +89,19 @@ export function RecordCard({ employeeId }: RecordCardProps) {
       {/* Header with actions */}
       <div className="flex items-center justify-between print:hidden">
         <div>
-          <h2 className="text-2xl font-bold">인사기록카드</h2>
+          <h2 className="text-2xl font-bold">{t('recordCard.title')}</h2>
           <p className="text-sm text-muted-foreground">
-            생성일시: {formatGeneratedAt(recordCard.generatedAt)}
+            {t('recordCard.generatedAt', { date: formatGeneratedAt(recordCard.generatedAt) })}
           </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={handlePrint}>
             <Printer className="h-4 w-4 mr-2" />
-            인쇄
+            {t('common.print')}
           </Button>
           <Button onClick={handleDownloadPdf} disabled={pdfMutation.isPending}>
             <Download className="h-4 w-4 mr-2" />
-            {pdfMutation.isPending ? '생성 중...' : 'PDF 다운로드'}
+            {pdfMutation.isPending ? t('recordCard.pdfGenerating') : t('recordCard.pdfDownload')}
           </Button>
         </div>
       </div>

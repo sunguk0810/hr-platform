@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MaskedField } from '@/components/common/MaskedField';
 import { User } from 'lucide-react';
@@ -21,20 +22,21 @@ function InfoRow({ label, value }: InfoRowProps) {
   );
 }
 
-const genderLabels: Record<string, string> = {
-  MALE: '남성',
-  FEMALE: '여성',
+const genderKeys: Record<string, string> = {
+  MALE: 'gender.male',
+  FEMALE: 'gender.female',
 };
 
-const militaryStatusLabels: Record<string, string> = {
-  NOT_APPLICABLE: '해당없음',
-  COMPLETED: '군필',
-  EXEMPT: '면제',
-  SERVING: '복무중',
-  NOT_SERVED: '미필',
+const militaryStatusKeys: Record<string, string> = {
+  NOT_APPLICABLE: 'recordCard.basic.militaryStatusOptions.NOT_APPLICABLE',
+  COMPLETED: 'recordCard.basic.militaryStatusOptions.COMPLETED',
+  EXEMPT: 'recordCard.basic.militaryStatusOptions.EXEMPT',
+  SERVING: 'recordCard.basic.militaryStatusOptions.SERVING',
+  NOT_SERVED: 'recordCard.basic.militaryStatusOptions.NOT_SERVED',
 };
 
 export function RecordCardBasic({ detail }: RecordCardBasicProps) {
+  const { t } = useTranslation('employee');
   const formatDate = (dateString?: string) => {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('ko-KR');
@@ -45,20 +47,20 @@ export function RecordCardBasic({ detail }: RecordCardBasicProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <User className="h-4 w-4" />
-          인적사항
+          {t('recordCard.basic.title')}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
           <dl>
-            <InfoRow label="생년월일" value={formatDate(detail.birthDate)} />
-            <InfoRow label="성별" value={detail.gender ? genderLabels[detail.gender] : '-'} />
-            <InfoRow label="국적" value={detail.nationality} />
-            <InfoRow label="혈액형" value={detail.bloodType} />
+            <InfoRow label={t('recordCard.basic.birthDate')} value={formatDate(detail.birthDate)} />
+            <InfoRow label={t('recordCard.basic.gender')} value={detail.gender ? t(genderKeys[detail.gender]) : '-'} />
+            <InfoRow label={t('recordCard.basic.nationality')} value={detail.nationality} />
+            <InfoRow label={t('recordCard.basic.bloodType')} value={detail.bloodType} />
           </dl>
           <dl>
             <InfoRow
-              label="주소"
+              label={t('recordCard.basic.address')}
               value={
                 detail.address
                   ? <MaskedField
@@ -69,9 +71,9 @@ export function RecordCardBasic({ detail }: RecordCardBasicProps) {
                   : '-'
               }
             />
-            <InfoRow label="비상연락처" value={detail.emergencyPhone ? <MaskedField value={detail.emergencyPhone} type="phone" /> : '-'} />
+            <InfoRow label={t('recordCard.basic.emergencyPhone')} value={detail.emergencyPhone ? <MaskedField value={detail.emergencyPhone} type="phone" /> : '-'} />
             <InfoRow
-              label="비상연락(관계)"
+              label={t('recordCard.basic.emergencyRelation')}
               value={
                 detail.emergencyContact
                   ? `${detail.emergencyContact} (${detail.emergencyRelation || ''})`
@@ -82,19 +84,19 @@ export function RecordCardBasic({ detail }: RecordCardBasicProps) {
         </div>
 
         <div className="mt-4 pt-4 border-t">
-          <h4 className="text-sm font-medium mb-3">병역사항</h4>
+          <h4 className="text-sm font-medium mb-3">{t('recordCard.basic.military')}</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
             <dl>
               <InfoRow
-                label="병역"
-                value={detail.militaryStatus ? militaryStatusLabels[detail.militaryStatus] : '-'}
+                label={t('recordCard.basic.militaryStatus')}
+                value={detail.militaryStatus ? t(militaryStatusKeys[detail.militaryStatus]) : '-'}
               />
-              <InfoRow label="군별" value={detail.militaryBranch} />
+              <InfoRow label={t('recordCard.basic.militaryBranch')} value={detail.militaryBranch} />
             </dl>
             <dl>
-              <InfoRow label="계급" value={detail.militaryRank} />
+              <InfoRow label={t('recordCard.basic.militaryRank')} value={detail.militaryRank} />
               <InfoRow
-                label="복무기간"
+                label={t('recordCard.basic.militaryPeriod')}
                 value={
                   detail.militaryStartDate
                     ? `${formatDate(detail.militaryStartDate)} ~ ${formatDate(detail.militaryEndDate)}`
@@ -107,22 +109,22 @@ export function RecordCardBasic({ detail }: RecordCardBasicProps) {
 
         {(detail.disabilityGrade || detail.disabilityType) && (
           <div className="mt-4 pt-4 border-t">
-            <h4 className="text-sm font-medium mb-3">장애사항</h4>
+            <h4 className="text-sm font-medium mb-3">{t('recordCard.basic.disability')}</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
               <dl>
-                <InfoRow label="장애등급" value={detail.disabilityGrade} />
-                <InfoRow label="장애유형" value={detail.disabilityType} />
+                <InfoRow label={t('recordCard.basic.disabilityGrade')} value={detail.disabilityGrade} />
+                <InfoRow label={t('recordCard.basic.disabilityType')} value={detail.disabilityType} />
               </dl>
             </div>
           </div>
         )}
 
         <div className="mt-4 pt-4 border-t">
-          <h4 className="text-sm font-medium mb-3">금융정보</h4>
+          <h4 className="text-sm font-medium mb-3">{t('recordCard.basic.finance')}</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
             <dl>
-              <InfoRow label="은행" value={detail.bankName || detail.bankCode} />
-              <InfoRow label="계좌번호" value={detail.bankAccount ? <MaskedField value={detail.bankAccount} type="bankAccount" /> : '-'} />
+              <InfoRow label={t('recordCard.basic.bank')} value={detail.bankName || detail.bankCode} />
+              <InfoRow label={t('recordCard.basic.bankAccount')} value={detail.bankAccount ? <MaskedField value={detail.bankAccount} type="bankAccount" /> : '-'} />
             </dl>
           </div>
         </div>

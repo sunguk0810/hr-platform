@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -55,11 +56,7 @@ const mockDepartments = [
   { id: 'dept-004', name: '경영지원본부 > 재무팀' },
 ];
 
-const transferTypeOptions: { value: EmployeeTransferType; label: string; description: string }[] = [
-  { value: 'PERMANENT', label: '영구 전출', description: '완전한 소속 변경' },
-  { value: 'TEMPORARY', label: '임시 전출', description: '일정 기간 후 복귀 예정' },
-  { value: 'DISPATCH', label: '파견', description: '소속은 유지하며 파견 근무' },
-];
+const TRANSFER_TYPE_KEYS: EmployeeTransferType[] = ['PERMANENT', 'TEMPORARY', 'DISPATCH'];
 
 export function TransferDialog({
   open,
@@ -67,6 +64,7 @@ export function TransferDialog({
   employee,
   onSuccess,
 }: TransferDialogProps) {
+  const { t } = useTranslation('employee');
   const { toast } = useToast();
   const transferMutation = useRequestTransfer();
   const [selectedTenant, setSelectedTenant] = useState<string>('');
@@ -88,8 +86,8 @@ export function TransferDialog({
   const onSubmit = async (data: FormData) => {
     if (!selectedTenant || !selectedDepartment) {
       toast({
-        title: '입력 오류',
-        description: '전출 대상 회사와 부서를 선택해주세요.',
+        title: t('transfer.inputError'),
+        description: t('transfer.inputErrorDesc'),
         variant: 'destructive',
       });
       return;
@@ -106,15 +104,15 @@ export function TransferDialog({
     try {
       await transferMutation.mutateAsync({ id: employee.id, data: request });
       toast({
-        title: '전출 요청 완료',
-        description: `${employee.name}님의 전출 요청이 접수되었습니다.`,
+        title: t('transfer.successTitle'),
+        description: t('transfer.successDescription', { name: employee.name }),
       });
       handleClose();
       onSuccess?.();
     } catch {
       toast({
-        title: '전출 요청 실패',
-        description: '전출 요청 중 오류가 발생했습니다.',
+        title: t('transfer.failureTitle'),
+        description: t('transfer.failureDescription'),
         variant: 'destructive',
       });
     }
@@ -132,18 +130,18 @@ export function TransferDialog({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
-          <DialogTitle>계열사 전출 요청</DialogTitle>
+          <DialogTitle>{t('transfer.dialogTitle')}</DialogTitle>
           <DialogDescription>
-            {employee.name}({employee.employeeNumber})님의 계열사 전출을 요청합니다.
+            {t('transfer.dialogDescription', { name: employee.name, employeeNumber: employee.employeeNumber })}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label>전출 대상 회사 *</Label>
+            <Label>{t('transfer.targetCompany')}</Label>
             <Select value={selectedTenant} onValueChange={setSelectedTenant}>
               <SelectTrigger>
-                <SelectValue placeholder="전출 대상 회사 선택" />
+                <SelectValue placeholder={t('transfer.targetCompanyPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
                 {mockTenants.map((tenant) => (
@@ -156,14 +154,14 @@ export function TransferDialog({
           </div>
 
           <div className="space-y-2">
-            <Label>전입 부서 *</Label>
+            <Label>{t('transfer.targetDepartment')}</Label>
             <Select
               value={selectedDepartment}
               onValueChange={setSelectedDepartment}
               disabled={!selectedTenant}
             >
               <SelectTrigger>
-                <SelectValue placeholder={selectedTenant ? '전입 부서 선택' : '회사를 먼저 선택해주세요'} />
+                <SelectValue placeholder={selectedTenant ? t('transfer.targetDepartmentPlaceholder') : t('transfer.targetDepartmentDisabled')} />
               </SelectTrigger>
               <SelectContent>
                 {mockDepartments.map((dept) => (
@@ -176,11 +174,11 @@ export function TransferDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="effectiveDate">발령일 *</Label>
+            <Label htmlFor="effectiveDate">{t('transfer.effectiveDate')}</Label>
             <Input
               id="effectiveDate"
               type="date"
-              {...register('effectiveDate', { required: '발령일을 입력해주세요.' })}
+              {...register('effectiveDate', { required: t('transfer.effectiveDateRequired') })}
             />
             {errors.effectiveDate && (
               <p className="text-sm text-destructive">{errors.effectiveDate.message}</p>
@@ -188,20 +186,20 @@ export function TransferDialog({
           </div>
 
           <div className="space-y-3">
-            <Label>전출 유형 *</Label>
+            <Label>{t('transfer.transferType')}</Label>
             <RadioGroup
               value={transferType}
               onValueChange={(value: string) => setTransferType(value as EmployeeTransferType)}
               className="space-y-2"
             >
-              {transferTypeOptions.map((option) => (
-                <div key={option.value} className="flex items-start space-x-3">
-                  <RadioGroupItem value={option.value} id={option.value} className="mt-1" />
+              {TRANSFER_TYPE_KEYS.map((key) => (
+                <div key={key} className="flex items-start space-x-3">
+                  <RadioGroupItem value={key} id={key} className="mt-1" />
                   <div className="grid gap-0.5">
-                    <Label htmlFor={option.value} className="font-normal cursor-pointer">
-                      {option.label}
+                    <Label htmlFor={key} className="font-normal cursor-pointer">
+                      {t(`transfer.typeOptions.${key}`)}
                     </Label>
-                    <p className="text-xs text-muted-foreground">{option.description}</p>
+                    <p className="text-xs text-muted-foreground">{t(`transfer.typeOptions.${key}_DESC`)}</p>
                   </div>
                 </div>
               ))}
@@ -209,30 +207,30 @@ export function TransferDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="reason">전출 사유</Label>
+            <Label htmlFor="reason">{t('transfer.reason')}</Label>
             <Textarea
               id="reason"
-              placeholder="전출 사유를 입력해주세요."
+              placeholder={t('transfer.reasonPlaceholder')}
               rows={3}
               {...register('reason')}
             />
           </div>
 
           <div className="rounded-lg bg-muted/50 p-3 text-sm">
-            <p className="font-medium mb-1">전출 절차 안내</p>
+            <p className="font-medium mb-1">{t('transfer.processNoticeTitle')}</p>
             <ol className="list-decimal list-inside text-muted-foreground space-y-1 text-xs">
-              <li>전출 요청 접수 후 현 소속사 승인이 필요합니다.</li>
-              <li>현 소속사 승인 후 전입사 승인이 진행됩니다.</li>
-              <li>양측 승인 완료 시 발령일에 전출이 확정됩니다.</li>
+              <li>{t('transfer.processStep1')}</li>
+              <li>{t('transfer.processStep2')}</li>
+              <li>{t('transfer.processStep3')}</li>
             </ol>
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0">
             <Button type="button" variant="outline" onClick={handleClose}>
-              취소
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={transferMutation.isPending}>
-              {transferMutation.isPending ? '요청 중...' : '전출 요청'}
+              {transferMutation.isPending ? t('common.requesting') : t('transfer.submitButton')}
             </Button>
           </DialogFooter>
         </form>

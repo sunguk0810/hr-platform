@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,6 +38,7 @@ interface EmployeeNumberPreview {
 export default function EmployeeCreatePage() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { t } = useTranslation('employee');
   const { data: orgTreeData } = useOrganizationTree();
   const createMutation = useCreateEmployee();
 
@@ -206,8 +208,8 @@ export default function EmployeeCreatePage() {
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div>
-            <h1 className="text-xl font-bold">직원 등록</h1>
-            <p className="text-sm text-muted-foreground">새로운 직원 등록</p>
+            <h1 className="text-xl font-bold">{t('createPage.title')}</h1>
+            <p className="text-sm text-muted-foreground">{t('createPage.mobileDescription')}</p>
           </div>
         </div>
 
@@ -223,7 +225,7 @@ export default function EmployeeCreatePage() {
             <Label htmlFor="mobile-profile-image" className="cursor-pointer">
               <div className="flex items-center gap-2 text-sm text-primary hover:underline">
                 <Upload className="h-4 w-4" />
-                프로필 사진 업로드
+                {t('createPage.profileUpload')}
               </div>
             </Label>
             <input
@@ -233,16 +235,16 @@ export default function EmployeeCreatePage() {
               className="hidden"
               onChange={handleImageUpload}
             />
-            <p className="text-xs text-muted-foreground mt-1">JPG, PNG (최대 5MB)</p>
+            <p className="text-xs text-muted-foreground mt-1">{t('createPage.profileUploadFormatShort')}</p>
           </div>
         </div>
 
         {/* 기본 정보 섹션 */}
         <div className="bg-card rounded-xl border p-4 space-y-4">
-          <h3 className="text-sm font-medium">기본 정보</h3>
+          <h3 className="text-sm font-medium">{t('basicInfo.title')}</h3>
 
           <div className="space-y-2">
-            <Label htmlFor="mobile-name">이름 *</Label>
+            <Label htmlFor="mobile-name">{t('basicInfo.nameLabel')}</Label>
             <Input
               id="mobile-name"
               value={formData.name}
@@ -255,7 +257,7 @@ export default function EmployeeCreatePage() {
             <Alert variant="warning">
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>
-                동명이인 알림: &apos;{formData.name.trim()}&apos;과(와) 동일한 이름의 직원이 {homonymResults.length}명 존재합니다.
+                {t('createPage.homonymAlert', { name: formData.name.trim(), count: homonymResults.length })}
               </AlertTitle>
               <AlertDescription>
                 <ul className="mt-2 space-y-1">
@@ -270,7 +272,7 @@ export default function EmployeeCreatePage() {
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="mobile-nameEn">영문명</Label>
+            <Label htmlFor="mobile-nameEn">{t('basicInfo.nameEn')}</Label>
             <Input
               id="mobile-nameEn"
               value={formData.nameEn}
@@ -280,7 +282,7 @@ export default function EmployeeCreatePage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="mobile-email">이메일 *</Label>
+            <Label htmlFor="mobile-email">{t('basicInfo.emailLabel')}</Label>
             <Input
               id="mobile-email"
               type="email"
@@ -291,7 +293,7 @@ export default function EmployeeCreatePage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="mobile-mobile">휴대전화</Label>
+            <Label htmlFor="mobile-mobile">{t('basicInfo.mobile')}</Label>
             <Input
               id="mobile-mobile"
               value={formData.mobile}
@@ -302,7 +304,7 @@ export default function EmployeeCreatePage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="mobile-birthDate">생년월일</Label>
+              <Label htmlFor="mobile-birthDate">{t('basicInfo.birthDate')}</Label>
               <Input
                 id="mobile-birthDate"
                 type="date"
@@ -311,17 +313,17 @@ export default function EmployeeCreatePage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="mobile-gender">성별</Label>
+              <Label htmlFor="mobile-gender">{t('gender.label')}</Label>
               <Select
                 value={formData.gender || ''}
                 onValueChange={(value) => handleInputChange('gender', value as Gender)}
               >
                 <SelectTrigger id="mobile-gender">
-                  <SelectValue placeholder="선택" />
+                  <SelectValue placeholder={t('common.selectPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="MALE">남성</SelectItem>
-                  <SelectItem value="FEMALE">여성</SelectItem>
+                  <SelectItem value="MALE">{t('gender.male')}</SelectItem>
+                  <SelectItem value="FEMALE">{t('gender.female')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -330,16 +332,16 @@ export default function EmployeeCreatePage() {
 
         {/* 소속 정보 섹션 */}
         <div className="bg-card rounded-xl border p-4 space-y-4">
-          <h3 className="text-sm font-medium">소속 정보</h3>
+          <h3 className="text-sm font-medium">{t('organizationInfo.title')}</h3>
 
           <div className="space-y-2">
-            <Label htmlFor="mobile-departmentId">부서 *</Label>
+            <Label htmlFor="mobile-departmentId">{t('organizationInfo.department')}</Label>
             <Select
               value={formData.departmentId}
               onValueChange={(value) => handleInputChange('departmentId', value)}
             >
               <SelectTrigger id="mobile-departmentId">
-                <SelectValue placeholder="부서 선택" />
+                <SelectValue placeholder={t('organizationInfo.departmentPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
                 {departments.map((dept) => (
@@ -354,13 +356,13 @@ export default function EmployeeCreatePage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="mobile-gradeId">직급</Label>
+              <Label htmlFor="mobile-gradeId">{t('organizationInfo.grade')}</Label>
               <Select
                 value={formData.gradeId || ''}
                 onValueChange={(value) => handleInputChange('gradeId', value)}
               >
                 <SelectTrigger id="mobile-gradeId">
-                  <SelectValue placeholder="선택" />
+                  <SelectValue placeholder={t('common.selectPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {grades.map((grade) => (
@@ -372,13 +374,13 @@ export default function EmployeeCreatePage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="mobile-positionId">직책</Label>
+              <Label htmlFor="mobile-positionId">{t('organizationInfo.position')}</Label>
               <Select
                 value={formData.positionId || ''}
                 onValueChange={(value) => handleInputChange('positionId', value)}
               >
                 <SelectTrigger id="mobile-positionId">
-                  <SelectValue placeholder="선택" />
+                  <SelectValue placeholder={t('common.selectPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {positions.map((pos) => (
@@ -392,7 +394,7 @@ export default function EmployeeCreatePage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="mobile-hireDate">입사일 *</Label>
+            <Label htmlFor="mobile-hireDate">{t('organizationInfo.hireDate')}</Label>
             <Input
               id="mobile-hireDate"
               type="date"
@@ -404,12 +406,12 @@ export default function EmployeeCreatePage() {
 
         {/* 계정 정보 섹션 */}
         <div className="bg-card rounded-xl border p-4 space-y-4">
-          <h3 className="text-sm font-medium">계정 정보</h3>
+          <h3 className="text-sm font-medium">{t('accountInfo.title')}</h3>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="mobile-employeeNumber">사번</Label>
-              <Badge variant="secondary" className="text-xs">자동 생성</Badge>
+              <Label htmlFor="mobile-employeeNumber">{t('accountInfo.employeeNumber')}</Label>
+              <Badge variant="secondary" className="text-xs">{t('accountInfo.autoGenerate')}</Badge>
             </div>
             <div className="flex items-center gap-2 p-3 rounded-md bg-muted/50 border">
               <Hash className="h-4 w-4 text-primary shrink-0" />
@@ -421,13 +423,13 @@ export default function EmployeeCreatePage() {
             </div>
             {formatDescription && (
               <p className="text-xs text-muted-foreground">
-                형식: {formatDescription}
+                {t('accountInfo.format', { description: formatDescription })}
               </p>
             )}
           </div>
 
           <p className="text-xs text-muted-foreground">
-            초기 비밀번호는 이메일로 전송됩니다.
+            {t('accountInfo.initialPasswordDescription')}
           </p>
         </div>
 
@@ -440,7 +442,7 @@ export default function EmployeeCreatePage() {
               onClick={() => navigate('/employees')}
               className="flex-1"
             >
-              취소
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={!isFormValid || createMutation.isPending} className="flex-1">
               {createMutation.isPending ? (
@@ -448,7 +450,7 @@ export default function EmployeeCreatePage() {
               ) : (
                 <Save className="mr-2 h-4 w-4" />
               )}
-              등록
+              {t('common.register')}
             </Button>
           </div>
         </div>
@@ -460,12 +462,12 @@ export default function EmployeeCreatePage() {
   return (
     <>
       <PageHeader
-        title="직원 등록"
-        description="새로운 직원 정보를 등록합니다."
+        title={t('createPage.title')}
+        description={t('createPage.description')}
         actions={
           <Button variant="outline" onClick={() => navigate('/employees')}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            목록으로
+            {t('common.backToList')}
           </Button>
         }
       />
@@ -474,7 +476,7 @@ export default function EmployeeCreatePage() {
         {/* Basic Info */}
         <Card>
           <CardHeader>
-            <CardTitle>기본 정보</CardTitle>
+            <CardTitle>{t('basicInfo.title')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Profile Image */}
@@ -489,7 +491,7 @@ export default function EmployeeCreatePage() {
                 <Label htmlFor="profile-image" className="cursor-pointer">
                   <div className="flex items-center gap-2 text-sm text-primary hover:underline">
                     <Upload className="h-4 w-4" />
-                    프로필 사진 업로드
+                    {t('createPage.profileUpload')}
                   </div>
                 </Label>
                 <input
@@ -500,14 +502,14 @@ export default function EmployeeCreatePage() {
                   onChange={handleImageUpload}
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  JPG, PNG 형식 (최대 5MB)
+                  {t('createPage.profileUploadFormat')}
                 </p>
               </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="name">이름 *</Label>
+                <Label htmlFor="name">{t('basicInfo.nameLabel')}</Label>
                 <Input
                   id="name"
                   value={formData.name}
@@ -517,7 +519,7 @@ export default function EmployeeCreatePage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="nameEn">영문명</Label>
+                <Label htmlFor="nameEn">{t('basicInfo.nameEn')}</Label>
                 <Input
                   id="nameEn"
                   value={formData.nameEn}
@@ -531,7 +533,7 @@ export default function EmployeeCreatePage() {
               <Alert variant="warning">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>
-                  동명이인 알림: &apos;{formData.name.trim()}&apos;과(와) 동일한 이름의 직원이 {homonymResults.length}명 존재합니다.
+                  {t('createPage.homonymAlert', { name: formData.name.trim(), count: homonymResults.length })}
                 </AlertTitle>
                 <AlertDescription>
                   <ul className="mt-2 space-y-1">
@@ -547,7 +549,7 @@ export default function EmployeeCreatePage() {
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="email">이메일 *</Label>
+                <Label htmlFor="email">{t('basicInfo.emailLabel')}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -558,7 +560,7 @@ export default function EmployeeCreatePage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="mobile">휴대전화</Label>
+                <Label htmlFor="mobile">{t('basicInfo.mobile')}</Label>
                 <Input
                   id="mobile"
                   value={formData.mobile}
@@ -567,7 +569,7 @@ export default function EmployeeCreatePage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="birthDate">생년월일</Label>
+                <Label htmlFor="birthDate">{t('basicInfo.birthDate')}</Label>
                 <Input
                   id="birthDate"
                   type="date"
@@ -576,17 +578,17 @@ export default function EmployeeCreatePage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="gender">성별</Label>
+                <Label htmlFor="gender">{t('gender.label')}</Label>
                 <Select
                   value={formData.gender || ''}
                   onValueChange={(value) => handleInputChange('gender', value as Gender)}
                 >
                   <SelectTrigger id="gender">
-                    <SelectValue placeholder="선택" />
+                    <SelectValue placeholder={t('common.selectPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="MALE">남성</SelectItem>
-                    <SelectItem value="FEMALE">여성</SelectItem>
+                    <SelectItem value="MALE">{t('gender.male')}</SelectItem>
+                    <SelectItem value="FEMALE">{t('gender.female')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -597,18 +599,18 @@ export default function EmployeeCreatePage() {
         {/* Organization Info */}
         <Card>
           <CardHeader>
-            <CardTitle>소속 정보</CardTitle>
+            <CardTitle>{t('organizationInfo.title')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="departmentId">부서 *</Label>
+                <Label htmlFor="departmentId">{t('organizationInfo.department')}</Label>
                 <Select
                   value={formData.departmentId}
                   onValueChange={(value) => handleInputChange('departmentId', value)}
                 >
                   <SelectTrigger id="departmentId">
-                    <SelectValue placeholder="부서 선택" />
+                    <SelectValue placeholder={t('organizationInfo.departmentPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {departments.map((dept) => (
@@ -621,13 +623,13 @@ export default function EmployeeCreatePage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="gradeId">직급</Label>
+                <Label htmlFor="gradeId">{t('organizationInfo.grade')}</Label>
                 <Select
                   value={formData.gradeId || ''}
                   onValueChange={(value) => handleInputChange('gradeId', value)}
                 >
                   <SelectTrigger id="gradeId">
-                    <SelectValue placeholder="직급 선택" />
+                    <SelectValue placeholder={t('organizationInfo.gradePlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {grades.map((grade) => (
@@ -639,13 +641,13 @@ export default function EmployeeCreatePage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="positionId">직책</Label>
+                <Label htmlFor="positionId">{t('organizationInfo.position')}</Label>
                 <Select
                   value={formData.positionId || ''}
                   onValueChange={(value) => handleInputChange('positionId', value)}
                 >
                   <SelectTrigger id="positionId">
-                    <SelectValue placeholder="직책 선택" />
+                    <SelectValue placeholder={t('organizationInfo.positionPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {positions.map((pos) => (
@@ -657,7 +659,7 @@ export default function EmployeeCreatePage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="hireDate">입사일 *</Label>
+                <Label htmlFor="hireDate">{t('organizationInfo.hireDate')}</Label>
                 <Input
                   id="hireDate"
                   type="date"
@@ -673,14 +675,14 @@ export default function EmployeeCreatePage() {
         {/* Account Info */}
         <Card>
           <CardHeader>
-            <CardTitle>계정 정보</CardTitle>
+            <CardTitle>{t('accountInfo.title')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Label htmlFor="employeeNumber">사번</Label>
-                  <Badge variant="secondary" className="text-xs">자동 생성</Badge>
+                  <Label htmlFor="employeeNumber">{t('accountInfo.employeeNumber')}</Label>
+                  <Badge variant="secondary" className="text-xs">{t('accountInfo.autoGenerate')}</Badge>
                 </div>
                 <div className="flex items-center gap-2 p-3 rounded-md bg-muted/50 border">
                   <Hash className="h-4 w-4 text-primary shrink-0" />
@@ -694,14 +696,14 @@ export default function EmployeeCreatePage() {
                 </div>
                 {formatDescription && (
                   <p className="text-xs text-muted-foreground">
-                    형식: {formatDescription}
+                    {t('accountInfo.format', { description: formatDescription })}
                   </p>
                 )}
               </div>
               <div className="space-y-2">
-                <Label>초기 비밀번호</Label>
+                <Label>{t('accountInfo.initialPassword')}</Label>
                 <p className="text-sm text-muted-foreground mt-2">
-                  초기 비밀번호는 이메일로 전송됩니다.
+                  {t('accountInfo.initialPasswordDescription')}
                 </p>
               </div>
             </div>
@@ -715,11 +717,11 @@ export default function EmployeeCreatePage() {
             variant="outline"
             onClick={() => navigate('/employees')}
           >
-            취소
+            {t('common.cancel')}
           </Button>
           <Button type="submit" disabled={!isFormValid || createMutation.isPending}>
             <Save className="mr-2 h-4 w-4" />
-            {createMutation.isPending ? '등록 중...' : '등록'}
+            {createMutation.isPending ? t('common.registering') : t('common.register')}
           </Button>
         </div>
       </form>

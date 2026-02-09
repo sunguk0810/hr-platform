@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -15,14 +16,15 @@ interface RecordCardEducationProps {
   education: Education[];
 }
 
-const graduationStatusMap: Record<string, { type: StatusType; label: string }> = {
-  GRADUATED: { type: 'success', label: '졸업' },
-  ENROLLED: { type: 'info', label: '재학' },
-  DROPPED_OUT: { type: 'default', label: '중퇴' },
-  ON_LEAVE: { type: 'warning', label: '휴학' },
+const graduationStatusTypeMap: Record<string, StatusType> = {
+  GRADUATED: 'success',
+  ENROLLED: 'info',
+  DROPPED_OUT: 'default',
+  ON_LEAVE: 'warning',
 };
 
 export function RecordCardEducation({ education }: RecordCardEducationProps) {
+  const { t } = useTranslation('employee');
   const formatDate = (dateString?: string) => {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('ko-KR', {
@@ -37,12 +39,12 @@ export function RecordCardEducation({ education }: RecordCardEducationProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <GraduationCap className="h-4 w-4" />
-            학력사항
+            {t('recordCard.education.title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground text-center py-4">
-            등록된 학력정보가 없습니다.
+            {t('recordCard.education.empty')}
           </p>
         </CardContent>
       </Card>
@@ -54,28 +56,27 @@ export function RecordCardEducation({ education }: RecordCardEducationProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <GraduationCap className="h-4 w-4" />
-          학력사항
-          <span className="text-sm font-normal text-muted-foreground">({education.length}건)</span>
+          {t('recordCard.education.title')}
+          <span className="text-sm font-normal text-muted-foreground">({t('recordCard.education.count', { count: education.length })})</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>학교구분</TableHead>
-              <TableHead>학교명</TableHead>
-              <TableHead>전공</TableHead>
-              <TableHead>학위</TableHead>
-              <TableHead>기간</TableHead>
-              <TableHead>상태</TableHead>
+              <TableHead>{t('recordCard.education.schoolType')}</TableHead>
+              <TableHead>{t('recordCard.education.schoolName')}</TableHead>
+              <TableHead>{t('recordCard.education.major')}</TableHead>
+              <TableHead>{t('recordCard.education.degree')}</TableHead>
+              <TableHead>{t('recordCard.education.period')}</TableHead>
+              <TableHead>{t('recordCard.education.status')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {education.map((edu) => {
-              const status = graduationStatusMap[edu.graduationStatus] || {
-                type: 'default' as StatusType,
-                label: edu.graduationStatus,
-              };
+              const statusType = graduationStatusTypeMap[edu.graduationStatus] || ('default' as StatusType);
+              const statusLabel = t(`educationInfo.graduationStatusOptions.${edu.graduationStatus}`, edu.graduationStatus);
+              const status = { type: statusType, label: statusLabel };
               return (
                 <TableRow key={edu.id}>
                   <TableCell className="font-medium">{edu.schoolType}</TableCell>

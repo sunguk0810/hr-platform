@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -38,12 +39,12 @@ interface FormData {
   handoverEmployeeId: string;
 }
 
-const resignationTypeOptions: { value: ResignationType; label: string }[] = [
-  { value: 'VOLUNTARY', label: '자발적 퇴사' },
-  { value: 'DISMISSAL', label: '해고' },
-  { value: 'RETIREMENT', label: '정년퇴직' },
-  { value: 'CONTRACT_END', label: '계약만료' },
-  { value: 'TRANSFER', label: '전출' },
+const RESIGNATION_TYPE_KEYS: ResignationType[] = [
+  'VOLUNTARY',
+  'DISMISSAL',
+  'RETIREMENT',
+  'CONTRACT_END',
+  'TRANSFER',
 ];
 
 export function ResignationDialog({
@@ -52,6 +53,7 @@ export function ResignationDialog({
   employee,
   onSuccess,
 }: ResignationDialogProps) {
+  const { t } = useTranslation('employee');
   const { toast } = useToast();
   const resignationMutation = useResignation();
   const [selectedType, setSelectedType] = useState<ResignationType>('VOLUNTARY');
@@ -83,16 +85,16 @@ export function ResignationDialog({
     try {
       await resignationMutation.mutateAsync({ id: employee.id, data: request });
       toast({
-        title: '퇴직 처리 완료',
-        description: `${employee.name}님의 퇴직 처리가 완료되었습니다.`,
+        title: t('resignation.successTitle'),
+        description: t('resignation.successDescription', { name: employee.name }),
       });
       reset();
       onOpenChange(false);
       onSuccess?.();
     } catch {
       toast({
-        title: '퇴직 처리 실패',
-        description: '퇴직 처리 중 오류가 발생했습니다.',
+        title: t('resignation.failureTitle'),
+        description: t('resignation.failureDescription'),
         variant: 'destructive',
       });
     }
@@ -107,26 +109,26 @@ export function ResignationDialog({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>퇴직 처리</DialogTitle>
+          <DialogTitle>{t('resignation.dialogTitle')}</DialogTitle>
           <DialogDescription>
-            {employee.name}({employee.employeeNumber})님의 퇴직 처리를 진행합니다.
+            {t('resignation.dialogDescription', { name: employee.name, employeeNumber: employee.employeeNumber })}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="resignationType">퇴직 유형 *</Label>
+            <Label htmlFor="resignationType">{t('resignation.type')}</Label>
             <Select
               value={selectedType}
               onValueChange={(value) => setSelectedType(value as ResignationType)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="퇴직 유형 선택" />
+                <SelectValue placeholder={t('resignation.typePlaceholder')} />
               </SelectTrigger>
               <SelectContent>
-                {resignationTypeOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
+                {RESIGNATION_TYPE_KEYS.map((key) => (
+                  <SelectItem key={key} value={key}>
+                    {t(`resignation.typeOptions.${key}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -135,11 +137,11 @@ export function ResignationDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="resignationDate">퇴직일 *</Label>
+              <Label htmlFor="resignationDate">{t('resignation.resignDate')}</Label>
               <Input
                 id="resignationDate"
                 type="date"
-                {...register('resignDate', { required: '퇴직일을 입력해주세요.' })}
+                {...register('resignDate', { required: t('resignation.resignDateRequired') })}
               />
               {errors.resignDate && (
                 <p className="text-sm text-destructive">{errors.resignDate.message}</p>
@@ -147,11 +149,11 @@ export function ResignationDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="lastWorkingDate">최종 근무일 *</Label>
+              <Label htmlFor="lastWorkingDate">{t('resignation.lastWorkingDate')}</Label>
               <Input
                 id="lastWorkingDate"
                 type="date"
-                {...register('lastWorkingDate', { required: '최종 근무일을 입력해주세요.' })}
+                {...register('lastWorkingDate', { required: t('resignation.lastWorkingDateRequired') })}
               />
               {errors.lastWorkingDate && (
                 <p className="text-sm text-destructive">{errors.lastWorkingDate.message}</p>
@@ -160,22 +162,22 @@ export function ResignationDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="handoverEmployeeId">인수인계 담당자</Label>
+            <Label htmlFor="handoverEmployeeId">{t('resignation.handoverEmployee')}</Label>
             <Input
               id="handoverEmployeeId"
-              placeholder="사번 또는 이름으로 검색"
+              placeholder={t('resignation.handoverPlaceholder')}
               {...register('handoverEmployeeId')}
             />
             <p className="text-xs text-muted-foreground">
-              업무 인수인계를 담당할 직원을 지정할 수 있습니다.
+              {t('resignation.handoverDescription')}
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="resignationReason">퇴직 사유</Label>
+            <Label htmlFor="resignationReason">{t('resignation.reason')}</Label>
             <Textarea
               id="resignationReason"
-              placeholder="퇴직 사유를 입력해주세요."
+              placeholder={t('resignation.reasonPlaceholder')}
               rows={3}
               {...register('resignationReason')}
             />
@@ -183,14 +185,14 @@ export function ResignationDialog({
 
           <DialogFooter className="gap-2 sm:gap-0">
             <Button type="button" variant="outline" onClick={handleClose}>
-              취소
+              {t('common.cancel')}
             </Button>
             <Button
               type="submit"
               variant="destructive"
               disabled={resignationMutation.isPending}
             >
-              {resignationMutation.isPending ? '처리 중...' : '퇴직 처리'}
+              {resignationMutation.isPending ? t('common.processing') : t('resignation.submitButton')}
             </Button>
           </DialogFooter>
         </form>

@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/ui/button';
 import { RecordCard } from '../components/RecordCard';
@@ -7,13 +8,14 @@ import { ArrowLeft } from 'lucide-react';
 export default function RecordCardPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation('employee');
 
   if (!id) {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground">잘못된 접근입니다.</p>
+        <p className="text-muted-foreground">{t('common.invalidAccess')}</p>
         <Button variant="outline" onClick={() => navigate('/employees')} className="mt-4">
-          목록으로 돌아가기
+          {t('common.backToListLong')}
         </Button>
       </div>
     );
@@ -22,12 +24,12 @@ export default function RecordCardPage() {
   return (
     <>
       <PageHeader
-        title="인사기록카드"
-        description="직원의 상세 인사정보를 확인합니다."
+        title={t('recordCard.pageTitle')}
+        description={t('recordCard.pageDescription')}
         actions={
           <Button variant="outline" onClick={() => navigate(-1)}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            돌아가기
+            {t('common.back')}
           </Button>
         }
       />

@@ -1,8 +1,10 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import {
   Dialog,
   DialogContent,
@@ -40,17 +42,18 @@ import {
 } from '../../hooks/useEmployees';
 import type { ConcurrentPosition, DepartmentTreeNode } from '@hr-platform/shared-types';
 
-const concurrentPositionSchema = z.object({
-  departmentId: z.string().min(1, '부서를 선택해주세요'),
-  positionId: z.string().optional(),
-  gradeId: z.string().optional(),
-  isPrimary: z.boolean().default(false),
-  startDate: z.date({ required_error: '시작일을 선택해주세요' }),
-  endDate: z.date().optional().nullable(),
-  reason: z.string().optional(),
-});
+const createConcurrentPositionSchema = (t: TFunction) =>
+  z.object({
+    departmentId: z.string().min(1, t('concurrentPosition.departmentRequired')),
+    positionId: z.string().optional(),
+    gradeId: z.string().optional(),
+    isPrimary: z.boolean().default(false),
+    startDate: z.date({ required_error: t('concurrentPosition.startDateRequired') }),
+    endDate: z.date().optional().nullable(),
+    reason: z.string().optional(),
+  });
 
-type ConcurrentPositionFormData = z.infer<typeof concurrentPositionSchema>;
+type ConcurrentPositionFormData = z.infer<ReturnType<typeof createConcurrentPositionSchema>>;
 
 interface ConcurrentPositionDialogProps {
   open: boolean;
@@ -69,6 +72,9 @@ export function ConcurrentPositionDialog({
   position,
   existingPositions = [],
 }: ConcurrentPositionDialogProps) {
+  const { t } = useTranslation('employee');
+  const concurrentPositionSchema = React.useMemo(() => createConcurrentPositionSchema(t), [t]);
+
   const { toast } = useToast();
   const isEditing = !!position;
 
@@ -168,8 +174,8 @@ export function ConcurrentPositionDialog({
           },
         });
         toast({
-          title: '수정 완료',
-          description: '소속 정보가 수정되었습니다.',
+          title: t('toast.updateComplete'),
+          description: t('concurrentPosition.updateSuccess'),
         });
       } else {
         await createMutation.mutateAsync({
@@ -183,17 +189,17 @@ export function ConcurrentPositionDialog({
           reason: values.reason || undefined,
         });
         toast({
-          title: '추가 완료',
+          title: t('toast.addComplete'),
           description: values.isPrimary
-            ? '주소속이 추가되었습니다.'
-            : '겸직이 추가되었습니다.',
+            ? t('concurrentPosition.addPrimarySuccess')
+            : t('concurrentPosition.addSuccess'),
         });
       }
       onOpenChange(false);
     } catch {
       toast({
-        title: isEditing ? '수정 실패' : '추가 실패',
-        description: '소속 정보 처리 중 오류가 발생했습니다.',
+        title: isEditing ? t('concurrentPosition.updateFailure') : t('concurrentPosition.addFailure'),
+        description: t('concurrentPosition.processFailure'),
         variant: 'destructive',
       });
     }
@@ -205,13 +211,15 @@ export function ConcurrentPositionDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{isEditing ? '소속 정보 수정' : '겸직 추가'}</DialogTitle>
+          <DialogTitle>{isEditing ? t('concurrentPosition.editDialogTitle') : t('concurrentPosition.addDialogTitle')}</DialogTitle>
           <DialogDescription>
             {employeeName
-              ? `${employeeName} 직원의 ${isEditing ? '소속 정보를 수정합니다.' : '새로운 겸직을 추가합니다.'}`
+              ? isEditing
+                ? t('concurrentPosition.editDescriptionWithName', { name: employeeName })
+                : t('concurrentPosition.addDescriptionWithName', { name: employeeName })
               : isEditing
-                ? '소속 정보를 수정합니다.'
-                : '새로운 겸직을 추가합니다.'}
+                ? t('concurrentPosition.editDescription')
+                : t('concurrentPosition.addDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -222,7 +230,7 @@ export function ConcurrentPositionDialog({
               name="departmentId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>부서 *</FormLabel>
+                  <FormLabel>{t('concurrentPosition.department')}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     value={field.value}
@@ -230,7 +238,7 @@ export function ConcurrentPositionDialog({
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="부서 선택" />
+                        <SelectValue placeholder={t('concurrentPosition.departmentPlaceholder')} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -240,9 +248,9 @@ export function ConcurrentPositionDialog({
                           value={dept.id}
                           disabled={disabledDepartments.includes(dept.id)}
                         >
-                          {'　'.repeat(dept.level)}
+                          {'\u3000'.repeat(dept.level)}
                           {dept.name}
-                          {disabledDepartments.includes(dept.id) && ' (이미 소속됨)'}
+                          {disabledDepartments.includes(dept.id) && ` ${t('concurrentPosition.alreadyAssigned')}`}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -258,15 +266,15 @@ export function ConcurrentPositionDialog({
                 name="positionId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>직위</FormLabel>
+                    <FormLabel>{t('concurrentPosition.positionLabel')}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value || ''}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="직위 선택" />
+                          <SelectValue placeholder={t('concurrentPosition.positionPlaceholder')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">선택 안함</SelectItem>
+                        <SelectItem value="">{t('common.noSelection')}</SelectItem>
                         {positions_list.map((pos) => (
                           <SelectItem key={pos.id} value={pos.id}>
                             {pos.name}
@@ -284,15 +292,15 @@ export function ConcurrentPositionDialog({
                 name="gradeId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>직급</FormLabel>
+                    <FormLabel>{t('concurrentPosition.gradeLabel')}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value || ''}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="직급 선택" />
+                          <SelectValue placeholder={t('concurrentPosition.gradePlaceholder')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">선택 안함</SelectItem>
+                        <SelectItem value="">{t('common.noSelection')}</SelectItem>
                         {grades.map((grade) => (
                           <SelectItem key={grade.id} value={grade.id}>
                             {grade.name}
@@ -312,12 +320,12 @@ export function ConcurrentPositionDialog({
                 name="startDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>시작일 *</FormLabel>
+                    <FormLabel>{t('concurrentPosition.startDate')}</FormLabel>
                     <FormControl>
                       <DatePicker
                         value={field.value}
                         onChange={field.onChange}
-                        placeholder="시작일 선택"
+                        placeholder={t('concurrentPosition.startDatePlaceholder')}
                         disabled={isEditing}
                       />
                     </FormControl>
@@ -331,15 +339,15 @@ export function ConcurrentPositionDialog({
                 name="endDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>종료일</FormLabel>
+                    <FormLabel>{t('concurrentPosition.endDate')}</FormLabel>
                     <FormControl>
                       <DatePicker
                         value={field.value ?? undefined}
                         onChange={field.onChange}
-                        placeholder="종료일 선택 (선택)"
+                        placeholder={t('concurrentPosition.endDatePlaceholder')}
                       />
                     </FormControl>
-                    <FormDescription>미입력 시 기간 제한 없음</FormDescription>
+                    <FormDescription>{t('concurrentPosition.endDateDescription')}</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -360,11 +368,11 @@ export function ConcurrentPositionDialog({
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
-                      <FormLabel>주소속으로 설정</FormLabel>
+                      <FormLabel>{t('concurrentPosition.setPrimary')}</FormLabel>
                       <FormDescription>
                         {hasPrimaryPosition
-                          ? '이미 주소속이 있습니다. 주소속을 변경하려면 기존 주소속을 먼저 변경해주세요.'
-                          : '이 부서를 주소속으로 설정합니다. 주소속은 1개만 지정할 수 있습니다.'}
+                          ? t('concurrentPosition.setPrimaryAlreadyExists')
+                          : t('concurrentPosition.setPrimaryDescription')}
                       </FormDescription>
                     </div>
                   </FormItem>
@@ -377,11 +385,11 @@ export function ConcurrentPositionDialog({
               name="reason"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>사유</FormLabel>
+                  <FormLabel>{t('concurrentPosition.reasonLabel')}</FormLabel>
                   <FormControl>
                     <Textarea
                       {...field}
-                      placeholder="겸직 사유를 입력하세요 (선택)"
+                      placeholder={t('concurrentPosition.reasonPlaceholder')}
                       rows={2}
                     />
                   </FormControl>
@@ -397,10 +405,10 @@ export function ConcurrentPositionDialog({
                 onClick={() => onOpenChange(false)}
                 disabled={isLoading}
               >
-                취소
+                {t('common.cancel')}
               </Button>
               <Button type="submit" disabled={isLoading}>
-                {isLoading ? '처리 중...' : isEditing ? '수정' : '추가'}
+                {isLoading ? t('common.processing') : isEditing ? t('common.edit') : t('common.add')}
               </Button>
             </DialogFooter>
           </form>

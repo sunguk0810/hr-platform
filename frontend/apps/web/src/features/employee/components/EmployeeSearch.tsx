@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -37,13 +38,7 @@ export interface EmployeeSearchProps {
   onSearch?: () => void;
 }
 
-const EMPLOYMENT_STATUS_OPTIONS: { value: EmploymentStatus | ''; label: string }[] = [
-  { value: '', label: '전체 상태' },
-  { value: 'ACTIVE', label: '재직' },
-  { value: 'ON_LEAVE', label: '휴직' },
-  { value: 'RESIGNED', label: '퇴직' },
-  { value: 'RETIRED', label: '정년퇴직' },
-];
+const EMPLOYMENT_STATUS_KEYS: (EmploymentStatus | '')[] = ['', 'ACTIVE', 'ON_LEAVE', 'RESIGNED', 'RETIRED'];
 
 export function EmployeeSearch({
   filters,
@@ -53,6 +48,7 @@ export function EmployeeSearch({
   positions = [],
   onSearch,
 }: EmployeeSearchProps) {
+  const { t } = useTranslation('employee');
   const [isAdvancedOpen, setIsAdvancedOpen] = React.useState(false);
 
   // Flatten department tree
@@ -113,7 +109,7 @@ export function EmployeeSearch({
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="이름, 사번, 이메일로 검색..."
+              placeholder={t('search.keywordPlaceholder')}
               value={filters.keyword}
               onChange={(e) => updateFilter('keyword', e.target.value)}
               onKeyDown={handleKeyDown}
@@ -127,12 +123,12 @@ export function EmployeeSearch({
             onValueChange={(value) => updateFilter('status', value as EmploymentStatus | '')}
           >
             <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="전체 상태" />
+              <SelectValue placeholder={t('search.allStatus')} />
             </SelectTrigger>
             <SelectContent>
-              {EMPLOYMENT_STATUS_OPTIONS.map((option) => (
-                <SelectItem key={option.value || 'all'} value={option.value}>
-                  {option.label}
+              {EMPLOYMENT_STATUS_KEYS.map((key) => (
+                <SelectItem key={key || 'all'} value={key}>
+                  {key === '' ? t('search.allStatus') : t(`employmentStatus.${key}`)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -143,7 +139,7 @@ export function EmployeeSearch({
             <PopoverTrigger asChild>
               <Button variant="outline" className="relative">
                 <Filter className="mr-2 h-4 w-4" />
-                상세 검색
+                {t('search.advancedSearch')}
                 {activeFilterCount > 0 && (
                   <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center">
                     {activeFilterCount}
@@ -154,29 +150,29 @@ export function EmployeeSearch({
             <PopoverContent className="w-80" align="end">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-medium">상세 검색</h4>
+                  <h4 className="font-medium">{t('search.advancedSearch')}</h4>
                   <Button variant="ghost" size="sm" onClick={handleReset}>
                     <RotateCcw className="mr-1 h-3 w-3" />
-                    초기화
+                    {t('common.reset')}
                   </Button>
                 </div>
 
                 {/* Department */}
                 {flatDepartments.length > 0 && (
                   <div className="space-y-2">
-                    <Label>부서</Label>
+                    <Label>{t('search.department')}</Label>
                     <Select
                       value={filters.departmentId || '__all__'}
                       onValueChange={(value) => updateFilter('departmentId', value === '__all__' ? '' : value)}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="전체 부서" />
+                        <SelectValue placeholder={t('search.allDepartments')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="__all__">전체 부서</SelectItem>
+                        <SelectItem value="__all__">{t('search.allDepartments')}</SelectItem>
                         {flatDepartments.map((dept) => (
                           <SelectItem key={dept.id} value={dept.id}>
-                            {'　'.repeat(dept.level - 1)}
+                            {'\u3000'.repeat(dept.level - 1)}
                             {dept.name}
                           </SelectItem>
                         ))}
@@ -188,16 +184,16 @@ export function EmployeeSearch({
                 {/* Grade */}
                 {grades.length > 0 && (
                   <div className="space-y-2">
-                    <Label>직급</Label>
+                    <Label>{t('search.grade')}</Label>
                     <Select
                       value={filters.gradeId || '__all__'}
                       onValueChange={(value) => updateFilter('gradeId', value === '__all__' ? '' : value)}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="전체 직급" />
+                        <SelectValue placeholder={t('search.allGrades')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="__all__">전체 직급</SelectItem>
+                        <SelectItem value="__all__">{t('search.allGrades')}</SelectItem>
                         {grades.map((grade) => (
                           <SelectItem key={grade.id} value={grade.id}>
                             {grade.name}
@@ -211,16 +207,16 @@ export function EmployeeSearch({
                 {/* Position */}
                 {positions.length > 0 && (
                   <div className="space-y-2">
-                    <Label>직책</Label>
+                    <Label>{t('search.position')}</Label>
                     <Select
                       value={filters.positionId || '__all__'}
                       onValueChange={(value) => updateFilter('positionId', value === '__all__' ? '' : value)}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="전체 직책" />
+                        <SelectValue placeholder={t('search.allPositions')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="__all__">전체 직책</SelectItem>
+                        <SelectItem value="__all__">{t('search.allPositions')}</SelectItem>
                         {positions.map((pos) => (
                           <SelectItem key={pos.id} value={pos.id}>
                             {pos.name}
@@ -233,7 +229,7 @@ export function EmployeeSearch({
 
                 {/* Hire Date Range */}
                 <div className="space-y-2">
-                  <Label>입사일</Label>
+                  <Label>{t('search.hireDate')}</Label>
                   <div className="flex gap-2 items-center">
                     <Input
                       type="date"
@@ -260,7 +256,7 @@ export function EmployeeSearch({
                   }}
                 >
                   <Search className="mr-2 h-4 w-4" />
-                  검색
+                  {t('common.search')}
                 </Button>
               </div>
             </PopoverContent>
@@ -269,7 +265,7 @@ export function EmployeeSearch({
           {/* Search Button */}
           <Button onClick={onSearch}>
             <Search className="mr-2 h-4 w-4" />
-            검색
+            {t('common.search')}
           </Button>
         </div>
 
@@ -278,31 +274,31 @@ export function EmployeeSearch({
           <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t">
             {filters.departmentId && (
               <FilterTag
-                label={`부서: ${flatDepartments.find((d) => d.id === filters.departmentId)?.name || filters.departmentId}`}
+                label={t('search.departmentFilter', { name: flatDepartments.find((d) => d.id === filters.departmentId)?.name || filters.departmentId })}
                 onRemove={() => updateFilter('departmentId', '')}
               />
             )}
             {filters.gradeId && (
               <FilterTag
-                label={`직급: ${grades.find((g) => g.id === filters.gradeId)?.name || filters.gradeId}`}
+                label={t('search.gradeFilter', { name: grades.find((g) => g.id === filters.gradeId)?.name || filters.gradeId })}
                 onRemove={() => updateFilter('gradeId', '')}
               />
             )}
             {filters.positionId && (
               <FilterTag
-                label={`직책: ${positions.find((p) => p.id === filters.positionId)?.name || filters.positionId}`}
+                label={t('search.positionFilter', { name: positions.find((p) => p.id === filters.positionId)?.name || filters.positionId })}
                 onRemove={() => updateFilter('positionId', '')}
               />
             )}
             {filters.hireDateFrom && (
               <FilterTag
-                label={`입사일 시작: ${filters.hireDateFrom}`}
+                label={t('search.hireDateStart', { date: filters.hireDateFrom })}
                 onRemove={() => updateFilter('hireDateFrom', '')}
               />
             )}
             {filters.hireDateTo && (
               <FilterTag
-                label={`입사일 종료: ${filters.hireDateTo}`}
+                label={t('search.hireDateEnd', { date: filters.hireDateTo })}
                 onRemove={() => updateFilter('hireDateTo', '')}
               />
             )}

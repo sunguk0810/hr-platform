@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -16,6 +17,7 @@ interface RecordCardCareerProps {
 }
 
 export function RecordCardCareer({ career }: RecordCardCareerProps) {
+  const { t } = useTranslation('employee');
   const formatDate = (dateString?: string) => {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('ko-KR', {
@@ -32,11 +34,11 @@ export function RecordCardCareer({ career }: RecordCardCareerProps) {
     const remainingMonths = months % 12;
 
     if (years > 0 && remainingMonths > 0) {
-      return `${years}년 ${remainingMonths}개월`;
+      return t('common.yearsMonths', { years, months: remainingMonths });
     } else if (years > 0) {
-      return `${years}년`;
+      return t('common.years', { count: years });
     } else {
-      return `${remainingMonths}개월`;
+      return t('common.months', { count: remainingMonths });
     }
   };
 
@@ -46,12 +48,12 @@ export function RecordCardCareer({ career }: RecordCardCareerProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Briefcase className="h-4 w-4" />
-            경력사항
+            {t('recordCard.career.title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground text-center py-4">
-            등록된 경력정보가 없습니다.
+            {t('recordCard.career.empty')}
           </p>
         </CardContent>
       </Card>
@@ -63,20 +65,20 @@ export function RecordCardCareer({ career }: RecordCardCareerProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <Briefcase className="h-4 w-4" />
-          경력사항
-          <span className="text-sm font-normal text-muted-foreground">({career.length}건)</span>
+          {t('recordCard.career.title')}
+          <span className="text-sm font-normal text-muted-foreground">({t('recordCard.career.count', { count: career.length })})</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>회사명</TableHead>
-              <TableHead>부서</TableHead>
-              <TableHead>직위</TableHead>
-              <TableHead>기간</TableHead>
-              <TableHead>재직기간</TableHead>
-              <TableHead>담당업무</TableHead>
+              <TableHead>{t('recordCard.career.companyName')}</TableHead>
+              <TableHead>{t('recordCard.career.department')}</TableHead>
+              <TableHead>{t('recordCard.career.position')}</TableHead>
+              <TableHead>{t('recordCard.career.period')}</TableHead>
+              <TableHead>{t('recordCard.career.duration')}</TableHead>
+              <TableHead>{t('recordCard.career.duties')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -86,14 +88,14 @@ export function RecordCardCareer({ career }: RecordCardCareerProps) {
                   <div className="flex items-center gap-2">
                     {item.companyName}
                     {item.isCurrent && (
-                      <Badge variant="secondary" className="text-xs">현재</Badge>
+                      <Badge variant="secondary" className="text-xs">{t('recordCard.career.currentBadge')}</Badge>
                     )}
                   </div>
                 </TableCell>
                 <TableCell>{item.department || '-'}</TableCell>
                 <TableCell>{item.position || '-'}</TableCell>
                 <TableCell>
-                  {formatDate(item.startDate)} ~ {item.isCurrent ? '현재' : formatDate(item.endDate)}
+                  {formatDate(item.startDate)} ~ {item.isCurrent ? t('common.present') : formatDate(item.endDate)}
                 </TableCell>
                 <TableCell>{calculateDuration(item.startDate, item.endDate)}</TableCell>
                 <TableCell>

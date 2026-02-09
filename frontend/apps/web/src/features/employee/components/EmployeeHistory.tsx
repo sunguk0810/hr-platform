@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import {
   Select,
   SelectContent,
@@ -28,18 +29,18 @@ interface EmployeeHistoryProps {
   employeeId: string;
 }
 
-const historyTypeOptions: { value: HistoryType | ''; label: string }[] = [
-  { value: '', label: '전체' },
-  { value: 'CREATE', label: '입사' },
-  { value: 'UPDATE', label: '정보변경' },
-  { value: 'STATUS_CHANGE', label: '상태변경' },
-  { value: 'TRANSFER', label: '전출/전입' },
-  { value: 'PROMOTION', label: '승진' },
-  { value: 'RESIGNATION', label: '퇴직' },
-  { value: 'REINSTATEMENT', label: '복직' },
-  { value: 'DEPARTMENT_CHANGE', label: '부서이동' },
-  { value: 'GRADE_CHANGE', label: '직급변경' },
-  { value: 'POSITION_CHANGE', label: '직책변경' },
+const HISTORY_TYPE_KEYS: (HistoryType | '')[] = [
+  '',
+  'CREATE',
+  'UPDATE',
+  'STATUS_CHANGE',
+  'TRANSFER',
+  'PROMOTION',
+  'RESIGNATION',
+  'REINSTATEMENT',
+  'DEPARTMENT_CHANGE',
+  'GRADE_CHANGE',
+  'POSITION_CHANGE',
 ];
 
 function getHistoryIcon(historyType: HistoryType) {
@@ -75,6 +76,8 @@ function getHistoryColor(historyType: HistoryType): string {
 }
 
 function HistoryItem({ history }: { history: EmployeeHistoryType }) {
+  const { t } = useTranslation('employee');
+
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
     return {
@@ -119,13 +122,13 @@ function HistoryItem({ history }: { history: EmployeeHistoryType }) {
           <div className="mt-2 rounded-lg bg-muted/50 p-3 text-sm">
             {history.oldValue && (
               <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">이전:</span>
+                <span className="text-muted-foreground">{t('history.previousValue')}</span>
                 <span className="line-through">{history.oldValue}</span>
               </div>
             )}
             {history.newValue && (
               <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">변경:</span>
+                <span className="text-muted-foreground">{t('history.newValue')}</span>
                 <span className="font-medium">{history.newValue}</span>
               </div>
             )}
@@ -134,12 +137,12 @@ function HistoryItem({ history }: { history: EmployeeHistoryType }) {
 
         {/* Reason */}
         {history.reason && (
-          <p className="mt-2 text-sm text-muted-foreground">사유: {history.reason}</p>
+          <p className="mt-2 text-sm text-muted-foreground">{t('history.reasonPrefix', { reason: history.reason })}</p>
         )}
 
         {/* Metadata */}
         <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
-          <span>변경자: {history.changedByName}</span>
+          <span>{t('history.changedBy', { name: history.changedByName })}</span>
           {history.ipAddress && <span>IP: {history.ipAddress}</span>}
         </div>
       </div>
@@ -148,6 +151,7 @@ function HistoryItem({ history }: { history: EmployeeHistoryType }) {
 }
 
 export function EmployeeHistory({ employeeId }: EmployeeHistoryProps) {
+  const { t } = useTranslation('employee');
   const { params, searchState, setHistoryType, setPage, resetFilters } = useHistorySearchParams();
   const { data, isLoading, refetch } = useEmployeeHistory(employeeId, params);
 
@@ -161,7 +165,7 @@ export function EmployeeHistory({ employeeId }: EmployeeHistoryProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <History className="h-5 w-5" />
-            인사정보 변경 이력
+            {t('history.title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -187,10 +191,10 @@ export function EmployeeHistory({ employeeId }: EmployeeHistoryProps) {
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <History className="h-5 w-5" />
-            인사정보 변경 이력
+            {t('history.title')}
             {totalElements > 0 && (
               <span className="text-sm font-normal text-muted-foreground">
-                ({totalElements}건)
+                ({t('common.totalItems', { count: totalElements })})
               </span>
             )}
           </CardTitle>
@@ -200,12 +204,12 @@ export function EmployeeHistory({ employeeId }: EmployeeHistoryProps) {
               onValueChange={(value) => setHistoryType(value as HistoryType | '')}
             >
               <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="유형 필터" />
+                <SelectValue placeholder={t('history.typeFilter')} />
               </SelectTrigger>
               <SelectContent>
-                {historyTypeOptions.map((option) => (
-                  <SelectItem key={option.value || 'all'} value={option.value}>
-                    {option.label}
+                {HISTORY_TYPE_KEYS.map((key) => (
+                  <SelectItem key={key || 'all'} value={key}>
+                    {t(`history.typeOptions.${key || 'ALL'}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -215,7 +219,7 @@ export function EmployeeHistory({ employeeId }: EmployeeHistoryProps) {
             </Button>
             {searchState.historyType && (
               <Button variant="ghost" size="sm" onClick={resetFilters}>
-                필터 초기화
+                {t('common.filterReset')}
               </Button>
             )}
           </div>
@@ -224,7 +228,7 @@ export function EmployeeHistory({ employeeId }: EmployeeHistoryProps) {
       <CardContent>
         {histories.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
-            변경 이력이 없습니다.
+            {t('history.empty')}
           </div>
         ) : (
           <>
@@ -246,7 +250,7 @@ export function EmployeeHistory({ employeeId }: EmployeeHistoryProps) {
                   onClick={() => setPage(searchState.page - 1)}
                   disabled={searchState.page === 0}
                 >
-                  이전
+                  {t('common.previous')}
                 </Button>
                 <span className="flex items-center px-3 text-sm">
                   {searchState.page + 1} / {totalPages}
@@ -257,7 +261,7 @@ export function EmployeeHistory({ employeeId }: EmployeeHistoryProps) {
                   onClick={() => setPage(searchState.page + 1)}
                   disabled={searchState.page >= totalPages - 1}
                 >
-                  다음
+                  {t('common.next')}
                 </Button>
               </div>
             )}

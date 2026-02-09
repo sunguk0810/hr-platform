@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
 import { Plus, Pencil, Trash2, GraduationCap } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import {
   Form,
   FormControl,
@@ -31,19 +33,24 @@ import {
 } from '@/components/ui/dialog';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 
-const educationSchema = z.object({
-  schoolType: z.string().min(1, '학교 구분은 필수입니다'),
-  schoolName: z.string().min(1, '학교명은 필수입니다'),
-  major: z.string().optional(),
-  degree: z.string().optional(),
-  enrollmentDate: z.date().optional(),
-  graduationDate: z.date().optional(),
-  graduationStatus: z.string().min(1, '졸업 상태는 필수입니다'),
-  gpa: z.string().optional(),
-  maxGpa: z.string().optional(),
-});
+const SCHOOL_TYPE_KEYS = ['HIGH_SCHOOL', 'COLLEGE', 'UNIVERSITY', 'GRADUATE', 'DOCTORATE', 'OTHER'] as const;
 
-type EducationFormData = z.infer<typeof educationSchema>;
+const GRADUATION_STATUS_KEYS = ['GRADUATED', 'ENROLLED', 'LEAVE_OF_ABSENCE', 'DROPPED_OUT', 'EXPECTED'] as const;
+
+const createEducationSchema = (t: TFunction) =>
+  z.object({
+    schoolType: z.string().min(1, t('educationInfo.schoolTypeRequired')),
+    schoolName: z.string().min(1, t('educationInfo.schoolNameRequired')),
+    major: z.string().optional(),
+    degree: z.string().optional(),
+    enrollmentDate: z.date().optional(),
+    graduationDate: z.date().optional(),
+    graduationStatus: z.string().min(1, t('educationInfo.graduationStatusRequired')),
+    gpa: z.string().optional(),
+    maxGpa: z.string().optional(),
+  });
+
+type EducationFormData = z.infer<ReturnType<typeof createEducationSchema>>;
 
 export interface EducationRecord {
   id: string;
@@ -67,23 +74,6 @@ interface EducationInfoProps {
   isLoading?: boolean;
 }
 
-const schoolTypeOptions = [
-  { value: 'HIGH_SCHOOL', label: '고등학교' },
-  { value: 'COLLEGE', label: '전문대학' },
-  { value: 'UNIVERSITY', label: '대학교' },
-  { value: 'GRADUATE', label: '대학원(석사)' },
-  { value: 'DOCTORATE', label: '대학원(박사)' },
-  { value: 'OTHER', label: '기타' },
-];
-
-const graduationStatusOptions = [
-  { value: 'GRADUATED', label: '졸업' },
-  { value: 'ENROLLED', label: '재학' },
-  { value: 'LEAVE_OF_ABSENCE', label: '휴학' },
-  { value: 'DROPPED_OUT', label: '중퇴' },
-  { value: 'EXPECTED', label: '졸업예정' },
-];
-
 export function EducationInfo({
   data = [],
   editable = false,
@@ -92,6 +82,9 @@ export function EducationInfo({
   onDelete,
   isLoading,
 }: EducationInfoProps) {
+  const { t } = useTranslation('employee');
+  const educationSchema = React.useMemo(() => createEducationSchema(t), [t]);
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEducation, setEditingEducation] = useState<EducationRecord | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -161,11 +154,11 @@ export function EducationInfo({
   };
 
   const getSchoolTypeLabel = (value: string) => {
-    return schoolTypeOptions.find((opt) => opt.value === value)?.label || value;
+    return t(`educationInfo.schoolTypeOptions.${value}`, value);
   };
 
   const getGraduationStatusLabel = (value: string) => {
-    return graduationStatusOptions.find((opt) => opt.value === value)?.label || value;
+    return t(`educationInfo.graduationStatusOptions.${value}`, value);
   };
 
   // Sort by graduation date descending
@@ -178,18 +171,18 @@ export function EducationInfo({
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-lg">학력 사항</CardTitle>
+        <CardTitle className="text-lg">{t('educationInfo.title')}</CardTitle>
         {editable && (
           <Button size="sm" onClick={() => handleOpenDialog()}>
             <Plus className="mr-1 h-4 w-4" />
-            추가
+            {t('common.add')}
           </Button>
         )}
       </CardHeader>
       <CardContent>
         {sortedData.length === 0 ? (
           <p className="py-8 text-center text-muted-foreground">
-            등록된 학력 사항이 없습니다.
+            {t('educationInfo.empty')}
           </p>
         ) : (
           <div className="space-y-3">
@@ -261,7 +254,7 @@ export function EducationInfo({
           <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>
-                {editingEducation ? '학력 수정' : '학력 추가'}
+                {editingEducation ? t('educationInfo.editDialog') : t('educationInfo.addDialog')}
               </DialogTitle>
             </DialogHeader>
             <Form {...form}>
@@ -275,20 +268,20 @@ export function EducationInfo({
                     name="schoolType"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>학교 구분 *</FormLabel>
+                        <FormLabel>{t('educationInfo.schoolType')}</FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="선택" />
+                              <SelectValue placeholder={t('common.selectPlaceholder')} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {schoolTypeOptions.map((opt) => (
-                              <SelectItem key={opt.value} value={opt.value}>
-                                {opt.label}
+                            {SCHOOL_TYPE_KEYS.map((key) => (
+                              <SelectItem key={key} value={key}>
+                                {t(`educationInfo.schoolTypeOptions.${key}`)}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -302,7 +295,7 @@ export function EducationInfo({
                     name="schoolName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>학교명 *</FormLabel>
+                        <FormLabel>{t('educationInfo.schoolName')}</FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
@@ -315,7 +308,7 @@ export function EducationInfo({
                     name="major"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>전공</FormLabel>
+                        <FormLabel>{t('educationInfo.major')}</FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
@@ -328,9 +321,9 @@ export function EducationInfo({
                     name="degree"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>학위</FormLabel>
+                        <FormLabel>{t('educationInfo.degree')}</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="예: 학사, 석사" />
+                          <Input {...field} placeholder={t('educationInfo.degreePlaceholder')} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -341,7 +334,7 @@ export function EducationInfo({
                     name="enrollmentDate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>입학일</FormLabel>
+                        <FormLabel>{t('educationInfo.enrollmentDate')}</FormLabel>
                         <FormControl>
                           <DatePicker
                             value={field.value}
@@ -357,7 +350,7 @@ export function EducationInfo({
                     name="graduationDate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>졸업일</FormLabel>
+                        <FormLabel>{t('educationInfo.graduationDate')}</FormLabel>
                         <FormControl>
                           <DatePicker
                             value={field.value}
@@ -373,20 +366,20 @@ export function EducationInfo({
                     name="graduationStatus"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>졸업 상태 *</FormLabel>
+                        <FormLabel>{t('educationInfo.graduationStatus')}</FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="선택" />
+                              <SelectValue placeholder={t('common.selectPlaceholder')} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {graduationStatusOptions.map((opt) => (
-                              <SelectItem key={opt.value} value={opt.value}>
-                                {opt.label}
+                            {GRADUATION_STATUS_KEYS.map((key) => (
+                              <SelectItem key={key} value={key}>
+                                {t(`educationInfo.graduationStatusOptions.${key}`)}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -401,7 +394,7 @@ export function EducationInfo({
                       name="gpa"
                       render={({ field }) => (
                         <FormItem className="flex-1">
-                          <FormLabel>학점</FormLabel>
+                          <FormLabel>{t('educationInfo.gpa')}</FormLabel>
                           <FormControl>
                             <Input {...field} placeholder="3.5" />
                           </FormControl>
@@ -414,7 +407,7 @@ export function EducationInfo({
                       name="maxGpa"
                       render={({ field }) => (
                         <FormItem className="flex-1">
-                          <FormLabel>만점</FormLabel>
+                          <FormLabel>{t('educationInfo.maxGpa')}</FormLabel>
                           <FormControl>
                             <Input {...field} placeholder="4.5" />
                           </FormControl>
@@ -430,10 +423,10 @@ export function EducationInfo({
                     variant="outline"
                     onClick={handleCloseDialog}
                   >
-                    취소
+                    {t('common.cancel')}
                   </Button>
                   <Button type="submit" disabled={isLoading}>
-                    {isLoading ? '저장 중...' : '저장'}
+                    {isLoading ? t('common.saving') : t('common.save')}
                   </Button>
                 </div>
               </form>
@@ -445,10 +438,10 @@ export function EducationInfo({
         <ConfirmDialog
           open={!!deleteId}
           onOpenChange={(open) => !open && setDeleteId(null)}
-          title="학력 삭제"
-          description="선택한 학력 정보를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
-          confirmText="삭제"
-          cancelText="취소"
+          title={t('educationInfo.deleteTitle')}
+          description={t('educationInfo.deleteDescription')}
+          confirmText={t('common.delete')}
+          cancelText={t('common.cancel')}
           variant="destructive"
           onConfirm={handleDelete}
         />

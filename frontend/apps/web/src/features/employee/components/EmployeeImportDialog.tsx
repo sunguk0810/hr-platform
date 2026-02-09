@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -42,6 +43,7 @@ export function EmployeeImportDialog({
   onOpenChange,
   onSuccess,
 }: EmployeeImportDialogProps) {
+  const { t } = useTranslation('employee');
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -64,8 +66,8 @@ export function EmployeeImportDialog({
 
     if (!validTypes.includes(file.type) && !hasValidExtension) {
       toast({
-        title: '지원하지 않는 파일 형식',
-        description: 'Excel(.xlsx, .xls) 또는 CSV(.csv) 파일만 업로드 가능합니다.',
+        title: t('importDialog.unsupportedFileType'),
+        description: t('importDialog.unsupportedFileTypeDesc'),
         variant: 'destructive',
       });
       return;
@@ -73,8 +75,8 @@ export function EmployeeImportDialog({
 
     if (file.size > 10 * 1024 * 1024) {
       toast({
-        title: '파일 크기 초과',
-        description: '파일 크기는 10MB를 초과할 수 없습니다.',
+        title: t('importDialog.fileSizeExceeded'),
+        description: t('importDialog.fileSizeExceededDesc'),
         variant: 'destructive',
       });
       return;
@@ -123,13 +125,13 @@ export function EmployeeImportDialog({
       URL.revokeObjectURL(url);
 
       toast({
-        title: '템플릿 다운로드',
-        description: '템플릿 파일이 다운로드되었습니다.',
+        title: t('toast.templateDownload'),
+        description: t('importDialog.templateDownloadSuccess'),
       });
     } catch {
       toast({
-        title: '다운로드 실패',
-        description: '템플릿 다운로드에 실패했습니다.',
+        title: t('toast.downloadFailure'),
+        description: t('importDialog.templateDownloadFailure'),
         variant: 'destructive',
       });
     }
@@ -156,8 +158,8 @@ export function EmployeeImportDialog({
 
         if (response.data.success > 0) {
           toast({
-            title: '가져오기 완료',
-            description: `${response.data.success}명의 직원 정보를 가져왔습니다.`,
+            title: t('importDialog.importComplete'),
+            description: t('importDialog.importCompleteDesc', { count: response.data.success }),
           });
           onSuccess?.();
         }
@@ -168,12 +170,12 @@ export function EmployeeImportDialog({
       setResult({
         success: 0,
         failed: 1,
-        errors: ['파일 처리 중 오류가 발생했습니다.'],
+        errors: [t('importDialog.importFailureDesc')],
       });
 
       toast({
-        title: '가져오기 실패',
-        description: '파일 처리 중 오류가 발생했습니다.',
+        title: t('importDialog.importFailure'),
+        description: t('importDialog.importFailureDesc'),
         variant: 'destructive',
       });
     }
@@ -198,9 +200,9 @@ export function EmployeeImportDialog({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>직원 데이터 가져오기</DialogTitle>
+          <DialogTitle>{t('importDialog.title')}</DialogTitle>
           <DialogDescription>
-            Excel 또는 CSV 파일로 직원 정보를 일괄 등록합니다.
+            {t('importDialog.description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -209,10 +211,10 @@ export function EmployeeImportDialog({
           <Alert>
             <FileSpreadsheet className="h-4 w-4" />
             <AlertDescription className="flex items-center justify-between">
-              <span>템플릿 양식을 먼저 다운로드하세요.</span>
+              <span>{t('importDialog.templateDownload')}</span>
               <Button variant="link" size="sm" onClick={handleDownloadTemplate}>
                 <Download className="mr-1 h-4 w-4" />
-                템플릿
+                {t('importDialog.templateButton')}
               </Button>
             </AlertDescription>
           </Alert>
@@ -233,10 +235,10 @@ export function EmployeeImportDialog({
             >
               <Upload className="mb-4 h-10 w-10 text-muted-foreground" />
               <p className="mb-1 text-sm font-medium">
-                파일을 드래그하거나 클릭하여 선택
+                {t('importDialog.dropzone')}
               </p>
               <p className="text-xs text-muted-foreground">
-                Excel(.xlsx, .xls) 또는 CSV 파일 (최대 10MB)
+                {t('importDialog.dropzoneDescription')}
               </p>
             </div>
           ) : (
@@ -263,7 +265,7 @@ export function EmployeeImportDialog({
                 <div className="mt-4 space-y-2">
                   <Progress value={progress} />
                   <p className="text-center text-xs text-muted-foreground">
-                    처리 중... {progress}%
+                    {t('importDialog.processing', { progress })}
                   </p>
                 </div>
               )}
@@ -275,13 +277,13 @@ export function EmployeeImportDialog({
                     {result.success > 0 && (
                       <div className="flex items-center gap-1 text-green-600">
                         <CheckCircle className="h-4 w-4" />
-                        <span>성공: {result.success}건</span>
+                        <span>{t('importDialog.success', { count: result.success })}</span>
                       </div>
                     )}
                     {result.failed > 0 && (
                       <div className="flex items-center gap-1 text-red-600">
                         <XCircle className="h-4 w-4" />
-                        <span>실패: {result.failed}건</span>
+                        <span>{t('importDialog.failure', { count: result.failed })}</span>
                       </div>
                     )}
                   </div>
@@ -295,7 +297,7 @@ export function EmployeeImportDialog({
                             <li key={index}>{error}</li>
                           ))}
                           {result.errors.length > 5 && (
-                            <li>...외 {result.errors.length - 5}건</li>
+                            <li>{t('importDialog.moreErrors', { count: result.errors.length - 5 })}</li>
                           )}
                         </ul>
                       </AlertDescription>
@@ -317,16 +319,16 @@ export function EmployeeImportDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={handleClose}>
-            {status === 'success' ? '닫기' : '취소'}
+            {status === 'success' ? t('common.close') : t('common.cancel')}
           </Button>
           {status === 'idle' && selectedFile && (
             <Button onClick={handleImport}>
               <Upload className="mr-2 h-4 w-4" />
-              가져오기
+              {t('importDialog.importButton')}
             </Button>
           )}
           {(status === 'success' || status === 'error') && (
-            <Button onClick={handleReset}>새 파일 선택</Button>
+            <Button onClick={handleReset}>{t('importDialog.newFile')}</Button>
           )}
         </DialogFooter>
       </DialogContent>

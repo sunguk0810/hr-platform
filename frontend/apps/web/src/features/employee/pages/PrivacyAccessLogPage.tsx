@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { format, subDays } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { Pagination } from '@/components/common/Pagination';
@@ -47,21 +48,21 @@ import type { PrivacyField, PrivacyAccessStatus } from '@hr-platform/shared-type
 import { cn } from '@/lib/utils';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 
-const FIELD_LABELS: Record<PrivacyField, string> = {
-  residentNumber: '주민등록번호',
-  bankAccount: '계좌번호',
-  address: '주소',
-  mobile: '휴대전화',
-  email: '이메일',
-  birthDate: '생년월일',
-  phone: '전화번호',
+const FIELD_KEYS: Record<PrivacyField, string> = {
+  residentNumber: 'privacyAccessLog.fieldLabels.residentNumber',
+  bankAccount: 'privacyAccessLog.fieldLabels.bankAccount',
+  address: 'privacyAccessLog.fieldLabels.address',
+  mobile: 'privacyAccessLog.fieldLabels.mobile',
+  email: 'privacyAccessLog.fieldLabels.email',
+  birthDate: 'privacyAccessLog.fieldLabels.birthDate',
+  phone: 'privacyAccessLog.fieldLabels.phone',
 };
 
-const STATUS_LABELS: Record<PrivacyAccessStatus, string> = {
-  PENDING: '대기중',
-  APPROVED: '승인됨',
-  REJECTED: '반려됨',
-  EXPIRED: '만료됨',
+const STATUS_KEYS: Record<PrivacyAccessStatus, string> = {
+  PENDING: 'privacyAccessLog.statusOptions.PENDING',
+  APPROVED: 'privacyAccessLog.statusOptions.APPROVED',
+  REJECTED: 'privacyAccessLog.statusOptions.REJECTED',
+  EXPIRED: 'privacyAccessLog.statusOptions.EXPIRED',
 };
 
 const STATUS_COLORS: Record<PrivacyAccessStatus, string> = {
@@ -79,6 +80,7 @@ const STATUS_ICONS: Record<PrivacyAccessStatus, React.ElementType> = {
 };
 
 export default function PrivacyAccessLogPage() {
+  const { t } = useTranslation('employee');
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<'logs' | 'requests'>('logs');
   const [showFilters, setShowFilters] = useState(false);
@@ -150,13 +152,13 @@ export default function PrivacyAccessLogPage() {
         data: { approved: true },
       });
       toast({
-        title: '승인 완료',
-        description: '개인정보 열람 요청이 승인되었습니다.',
+        title: t('toast.approveComplete'),
+        description: t('privacyAccessLog.approveSuccess'),
       });
     } catch {
       toast({
-        title: '승인 실패',
-        description: '요청 승인 중 오류가 발생했습니다.',
+        title: t('toast.approveFailure'),
+        description: t('privacyAccessLog.approveFailure'),
         variant: 'destructive',
       });
     }
@@ -170,18 +172,18 @@ export default function PrivacyAccessLogPage() {
         requestId: rejectingRequestId,
         data: {
           approved: false,
-          rejectionReason: '요청 사유가 부적절합니다.',
+          rejectionReason: t('privacyAccessLog.rejectDefaultReason'),
         },
       });
       toast({
-        title: '반려 완료',
-        description: '개인정보 열람 요청이 반려되었습니다.',
+        title: t('toast.rejectComplete'),
+        description: t('privacyAccessLog.rejectSuccess'),
       });
       setRejectingRequestId(null);
     } catch {
       toast({
-        title: '반려 실패',
-        description: '요청 반려 중 오류가 발생했습니다.',
+        title: t('toast.rejectFailure'),
+        description: t('privacyAccessLog.rejectFailure'),
         variant: 'destructive',
       });
     }
@@ -192,7 +194,7 @@ export default function PrivacyAccessLogPage() {
     return (
       <Badge className={cn('gap-1', STATUS_COLORS[status])}>
         <Icon className="h-3 w-3" />
-        {STATUS_LABELS[status]}
+        {t(STATUS_KEYS[status])}
       </Badge>
     );
   };
@@ -200,8 +202,8 @@ export default function PrivacyAccessLogPage() {
   return (
     <>
       <PageHeader
-        title="개인정보 열람 이력"
-        description="개인정보 열람 요청 및 이력을 관리합니다."
+        title={t('privacyAccessLog.pageTitle')}
+        description={t('privacyAccessLog.pageDescription')}
         actions={
           <div className="flex gap-2">
             <Button
@@ -212,14 +214,14 @@ export default function PrivacyAccessLogPage() {
               }}
             >
               <RefreshCw className="mr-2 h-4 w-4" />
-              새로고침
+              {t('common.refresh')}
             </Button>
             <Button
               variant={showFilters ? 'secondary' : 'outline'}
               onClick={() => setShowFilters(!showFilters)}
             >
               <Filter className="mr-2 h-4 w-4" />
-              필터
+              {t('common.filter')}
             </Button>
           </div>
         }
@@ -229,25 +231,25 @@ export default function PrivacyAccessLogPage() {
       {showFilters && (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-base">검색 필터</CardTitle>
+            <CardTitle className="text-base">{t('privacyAccessLog.searchFilter')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {activeTab === 'logs' && (
                 <div className="space-y-2">
-                  <Label>필드 유형</Label>
+                  <Label>{t('privacyAccessLog.fieldType')}</Label>
                   <Select
                     value={logSearchState.field || 'all'}
                     onValueChange={(value) => setField(value === 'all' ? '' : (value as PrivacyField))}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="전체" />
+                      <SelectValue placeholder={t('common.all')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">전체</SelectItem>
-                      {Object.entries(FIELD_LABELS).map(([value, label]) => (
+                      <SelectItem value="all">{t('common.all')}</SelectItem>
+                      {(Object.keys(FIELD_KEYS) as PrivacyField[]).map((value) => (
                         <SelectItem key={value} value={value}>
-                          {label}
+                          {t(FIELD_KEYS[value])}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -257,7 +259,7 @@ export default function PrivacyAccessLogPage() {
 
               {activeTab === 'requests' && (
                 <div className="space-y-2">
-                  <Label>상태</Label>
+                  <Label>{t('privacyAccessLog.statusLabel')}</Label>
                   <Select
                     value={requestSearchState.status || 'all'}
                     onValueChange={(value) =>
@@ -265,13 +267,13 @@ export default function PrivacyAccessLogPage() {
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="전체" />
+                      <SelectValue placeholder={t('common.all')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">전체</SelectItem>
-                      {Object.entries(STATUS_LABELS).map(([value, label]) => (
+                      <SelectItem value="all">{t('common.all')}</SelectItem>
+                      {(Object.keys(STATUS_KEYS) as PrivacyAccessStatus[]).map((value) => (
                         <SelectItem key={value} value={value}>
-                          {label}
+                          {t(STATUS_KEYS[value])}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -280,29 +282,29 @@ export default function PrivacyAccessLogPage() {
               )}
 
               <div className="space-y-2">
-                <Label>시작일</Label>
+                <Label>{t('privacyAccessLog.startDate')}</Label>
                 <DatePicker
                   value={startDate}
                   onChange={setStartDate}
-                  placeholder="시작일 선택"
+                  placeholder={t('privacyAccessLog.startDatePlaceholder')}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>종료일</Label>
+                <Label>{t('privacyAccessLog.endDate')}</Label>
                 <DatePicker
                   value={endDate}
                   onChange={setEndDate}
-                  placeholder="종료일 선택"
+                  placeholder={t('privacyAccessLog.endDatePlaceholder')}
                 />
               </div>
             </div>
 
             <div className="flex justify-end gap-2 mt-4">
               <Button variant="outline" onClick={handleResetFilters}>
-                초기화
+                {t('common.reset')}
               </Button>
-              <Button onClick={handleApplyDateFilter}>적용</Button>
+              <Button onClick={handleApplyDateFilter}>{t('common.apply')}</Button>
             </div>
           </CardContent>
         </Card>
@@ -312,11 +314,11 @@ export default function PrivacyAccessLogPage() {
         <TabsList>
           <TabsTrigger value="logs">
             <Eye className="mr-2 h-4 w-4" />
-            열람 이력
+            {t('privacyAccessLog.logsTab')}
           </TabsTrigger>
           <TabsTrigger value="requests">
             <Shield className="mr-2 h-4 w-4" />
-            열람 요청
+            {t('privacyAccessLog.requestsTab')}
           </TabsTrigger>
         </TabsList>
 
@@ -325,7 +327,7 @@ export default function PrivacyAccessLogPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Eye className="h-5 w-5" />
-                개인정보 열람 이력
+                {t('privacyAccessLog.logsTitle')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -336,20 +338,20 @@ export default function PrivacyAccessLogPage() {
               ) : logs.length === 0 ? (
                 <EmptyState
                   icon={Eye}
-                  title="열람 이력 없음"
-                  description="선택한 기간 내 개인정보 열람 이력이 없습니다."
+                  title={t('privacyAccessLog.emptyLogs')}
+                  description={t('privacyAccessLog.emptyLogsDescription')}
                 />
               ) : (
                 <>
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>열람일시</TableHead>
-                        <TableHead>열람자</TableHead>
-                        <TableHead>대상 직원</TableHead>
-                        <TableHead>열람 필드</TableHead>
-                        <TableHead>열람 목적</TableHead>
-                        <TableHead>승인 상태</TableHead>
+                        <TableHead>{t('privacyAccessLog.tableAccessDate')}</TableHead>
+                        <TableHead>{t('privacyAccessLog.tableAccessor')}</TableHead>
+                        <TableHead>{t('privacyAccessLog.tableTargetEmployee')}</TableHead>
+                        <TableHead>{t('privacyAccessLog.tableField')}</TableHead>
+                        <TableHead>{t('privacyAccessLog.tablePurpose')}</TableHead>
+                        <TableHead>{t('privacyAccessLog.tableApprovalStatus')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -377,7 +379,7 @@ export default function PrivacyAccessLogPage() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline">{FIELD_LABELS[log.field]}</Badge>
+                            <Badge variant="outline">{t(FIELD_KEYS[log.field])}</Badge>
                           </TableCell>
                           <TableCell className="max-w-[200px] truncate">{log.purpose}</TableCell>
                           <TableCell>
@@ -408,7 +410,7 @@ export default function PrivacyAccessLogPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="h-5 w-5" />
-                개인정보 열람 요청
+                {t('privacyAccessLog.requestsTitle')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -419,21 +421,21 @@ export default function PrivacyAccessLogPage() {
               ) : requests.length === 0 ? (
                 <EmptyState
                   icon={Shield}
-                  title="열람 요청 없음"
-                  description="개인정보 열람 요청이 없습니다."
+                  title={t('privacyAccessLog.emptyRequests')}
+                  description={t('privacyAccessLog.emptyRequestsDescription')}
                 />
               ) : (
                 <>
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>요청일시</TableHead>
-                        <TableHead>요청자</TableHead>
-                        <TableHead>대상 직원</TableHead>
-                        <TableHead>요청 필드</TableHead>
-                        <TableHead>요청 목적</TableHead>
-                        <TableHead>상태</TableHead>
-                        <TableHead className="w-[100px]">처리</TableHead>
+                        <TableHead>{t('privacyAccessLog.tableRequestDate')}</TableHead>
+                        <TableHead>{t('privacyAccessLog.tableRequester')}</TableHead>
+                        <TableHead>{t('privacyAccessLog.tableTargetEmployee')}</TableHead>
+                        <TableHead>{t('privacyAccessLog.tableRequestField')}</TableHead>
+                        <TableHead>{t('privacyAccessLog.tableRequestPurpose')}</TableHead>
+                        <TableHead>{t('privacyAccessLog.statusLabel')}</TableHead>
+                        <TableHead className="w-[100px]">{t('privacyAccessLog.tableAction')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -464,7 +466,7 @@ export default function PrivacyAccessLogPage() {
                             <div className="flex flex-wrap gap-1">
                               {request.fields.map((field) => (
                                 <Badge key={field} variant="outline" className="text-xs">
-                                  {FIELD_LABELS[field]}
+                                  {t(FIELD_KEYS[field])}
                                 </Badge>
                               ))}
                             </div>
@@ -520,9 +522,9 @@ export default function PrivacyAccessLogPage() {
       <ConfirmDialog
         open={!!rejectingRequestId}
         onOpenChange={(open) => !open && setRejectingRequestId(null)}
-        title="열람 요청 반려"
-        description="해당 개인정보 열람 요청을 반려하시겠습니까?"
-        confirmLabel="반려"
+        title={t('privacyAccessLog.rejectTitle')}
+        description={t('privacyAccessLog.rejectDescription')}
+        confirmLabel={t('privacyAccessLog.rejectLabel')}
         variant="destructive"
         onConfirm={handleReject}
         isLoading={approveMutation.isPending}

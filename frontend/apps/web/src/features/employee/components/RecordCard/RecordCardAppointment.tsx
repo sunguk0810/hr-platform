@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -16,6 +17,7 @@ interface RecordCardAppointmentProps {
 }
 
 export function RecordCardAppointment({ appointments }: RecordCardAppointmentProps) {
+  const { t } = useTranslation('employee');
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('ko-KR');
   };
@@ -26,12 +28,12 @@ export function RecordCardAppointment({ appointments }: RecordCardAppointmentPro
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <FileText className="h-4 w-4" />
-            발령사항
+            {t('recordCard.appointment.title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground text-center py-4">
-            등록된 발령사항이 없습니다.
+            {t('recordCard.appointment.empty')}
           </p>
         </CardContent>
       </Card>
@@ -43,20 +45,20 @@ export function RecordCardAppointment({ appointments }: RecordCardAppointmentPro
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <FileText className="h-4 w-4" />
-          발령사항
-          <span className="text-sm font-normal text-muted-foreground">({appointments.length}건)</span>
+          {t('recordCard.appointment.title')}
+          <span className="text-sm font-normal text-muted-foreground">({t('recordCard.appointment.count', { count: appointments.length })})</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[100px]">발령일</TableHead>
-              <TableHead className="w-[100px]">유형</TableHead>
-              <TableHead>부서</TableHead>
-              <TableHead>직급</TableHead>
-              <TableHead>직책</TableHead>
-              <TableHead>사유</TableHead>
+              <TableHead className="w-[100px]">{t('recordCard.appointment.effectiveDate')}</TableHead>
+              <TableHead className="w-[100px]">{t('recordCard.appointment.type')}</TableHead>
+              <TableHead>{t('recordCard.appointment.department')}</TableHead>
+              <TableHead>{t('recordCard.appointment.grade')}</TableHead>
+              <TableHead>{t('recordCard.appointment.position')}</TableHead>
+              <TableHead>{t('recordCard.appointment.reason')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

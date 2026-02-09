@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Table,
   TableBody,
@@ -24,37 +25,30 @@ import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import type { EmployeeTransferStatus, EmployeeTransfer } from '@hr-platform/shared-types';
 import { Check, X, Eye, ArrowRightLeft, RefreshCw } from 'lucide-react';
 
-const statusOptions: { value: EmployeeTransferStatus | ''; label: string }[] = [
-  { value: '', label: '전체' },
-  { value: 'PENDING_SOURCE_APPROVAL', label: '전출승인대기' },
-  { value: 'PENDING_TARGET_APPROVAL', label: '전입승인대기' },
-  { value: 'COMPLETED', label: '완료' },
-  { value: 'REJECTED', label: '반려' },
-  { value: 'CANCELLED', label: '취소' },
+const statusOptionValues: (EmployeeTransferStatus | '')[] = [
+  '', 'PENDING_SOURCE_APPROVAL', 'PENDING_TARGET_APPROVAL', 'COMPLETED', 'REJECTED', 'CANCELLED',
 ];
 
-const transferTypeLabels: Record<string, string> = {
-  PERMANENT: '영구 전출',
-  TEMPORARY: '임시 전출',
-  DISPATCH: '파견',
+const transferTypeKeys: Record<string, string> = {
+  PERMANENT: 'transfer.typeOptions.PERMANENT',
+  TEMPORARY: 'transfer.typeOptions.TEMPORARY',
+  DISPATCH: 'transfer.typeOptions.DISPATCH',
 };
 
-function getStatusBadgeProps(status: EmployeeTransferStatus): { type: StatusType; label: string } {
-  const statusMap: Record<EmployeeTransferStatus, { type: StatusType; label: string }> = {
-    PENDING_SOURCE_APPROVAL: { type: 'pending', label: '전출승인대기' },
-    PENDING_TARGET_APPROVAL: { type: 'warning', label: '전입승인대기' },
-    COMPLETED: { type: 'success', label: '완료' },
-    REJECTED: { type: 'error', label: '반려' },
-    CANCELLED: { type: 'default', label: '취소' },
-  };
-  return statusMap[status] || { type: 'default', label: status };
-}
+const statusBadgeTypeMap: Record<EmployeeTransferStatus, StatusType> = {
+  PENDING_SOURCE_APPROVAL: 'pending',
+  PENDING_TARGET_APPROVAL: 'warning',
+  COMPLETED: 'success',
+  REJECTED: 'error',
+  CANCELLED: 'default',
+};
 
 interface TransferListProps {
   showActions?: boolean;
 }
 
 export function TransferList({ showActions = true }: TransferListProps) {
+  const { t } = useTranslation('employee');
   const { toast } = useToast();
   const { params, searchState, setStatus, setPage } = useTransferSearchParams();
   const { data, isLoading, refetch } = useTransferList(params);
@@ -82,16 +76,16 @@ export function TransferList({ showActions = true }: TransferListProps) {
         await approveTargetMutation.mutateAsync({ transferId: selectedTransfer.id });
       }
       toast({
-        title: '승인 완료',
-        description: '전출 요청이 승인되었습니다.',
+        title: t('toast.approveComplete'),
+        description: t('transferList.approveSuccess'),
       });
       setDialogType(null);
       setSelectedTransfer(null);
       refetch();
     } catch {
       toast({
-        title: '승인 실패',
-        description: '전출 승인 처리 중 오류가 발생했습니다.',
+        title: t('toast.approveFailure'),
+        description: t('transferList.approveFailure'),
         variant: 'destructive',
       });
     }
@@ -103,16 +97,16 @@ export function TransferList({ showActions = true }: TransferListProps) {
     try {
       await rejectMutation.mutateAsync({ transferId: selectedTransfer.id, reason: '반려 처리됨' });
       toast({
-        title: '반려 완료',
-        description: '전출 요청이 반려되었습니다.',
+        title: t('toast.rejectComplete'),
+        description: t('transferList.rejectSuccess'),
       });
       setDialogType(null);
       setSelectedTransfer(null);
       refetch();
     } catch {
       toast({
-        title: '반려 실패',
-        description: '전출 반려 처리 중 오류가 발생했습니다.',
+        title: t('toast.rejectFailure'),
+        description: t('transferList.rejectFailure'),
         variant: 'destructive',
       });
     }
@@ -124,16 +118,16 @@ export function TransferList({ showActions = true }: TransferListProps) {
     try {
       await cancelMutation.mutateAsync({ transferId: selectedTransfer.id, reason: '요청자에 의한 취소' });
       toast({
-        title: '취소 완료',
-        description: '전출 요청이 취소되었습니다.',
+        title: t('toast.cancelComplete'),
+        description: t('transferList.cancelSuccess'),
       });
       setDialogType(null);
       setSelectedTransfer(null);
       refetch();
     } catch {
       toast({
-        title: '취소 실패',
-        description: '전출 취소 처리 중 오류가 발생했습니다.',
+        title: t('toast.cancelFailure'),
+        description: t('transferList.cancelFailure'),
         variant: 'destructive',
       });
     }
@@ -154,7 +148,7 @@ export function TransferList({ showActions = true }: TransferListProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <ArrowRightLeft className="h-5 w-5" />
-            전출/전입 현황
+            {t('transferList.title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -175,7 +169,7 @@ export function TransferList({ showActions = true }: TransferListProps) {
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <ArrowRightLeft className="h-5 w-5" />
-              전출/전입 현황
+              {t('transferList.title')}
             </CardTitle>
             <div className="flex items-center gap-2">
               <Select
@@ -183,12 +177,12 @@ export function TransferList({ showActions = true }: TransferListProps) {
                 onValueChange={(value) => setStatus(value as EmployeeTransferStatus | '')}
               >
                 <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="상태 필터" />
+                  <SelectValue placeholder={t('transferList.statusFilter')} />
                 </SelectTrigger>
                 <SelectContent>
-                  {statusOptions.map((option) => (
-                    <SelectItem key={option.value || 'all'} value={option.value}>
-                      {option.label}
+                  {statusOptionValues.map((value) => (
+                    <SelectItem key={value || 'all'} value={value}>
+                      {value ? t(`transferList.statusOptions.${value}`) : t('common.all')}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -202,25 +196,28 @@ export function TransferList({ showActions = true }: TransferListProps) {
         <CardContent>
           {transfers.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              전출/전입 요청 내역이 없습니다.
+              {t('transferList.empty')}
             </div>
           ) : (
             <>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>사원명</TableHead>
-                    <TableHead>전출처</TableHead>
-                    <TableHead>전입처</TableHead>
-                    <TableHead>유형</TableHead>
-                    <TableHead>발령일</TableHead>
-                    <TableHead>상태</TableHead>
-                    {showActions && <TableHead className="text-right">액션</TableHead>}
+                    <TableHead>{t('transferList.tableEmployee')}</TableHead>
+                    <TableHead>{t('transferList.tableSource')}</TableHead>
+                    <TableHead>{t('transferList.tableTarget')}</TableHead>
+                    <TableHead>{t('transferList.tableType')}</TableHead>
+                    <TableHead>{t('transferList.tableEffectiveDate')}</TableHead>
+                    <TableHead>{t('transferList.tableStatus')}</TableHead>
+                    {showActions && <TableHead className="text-right">{t('transferList.tableAction')}</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {transfers.map((transfer) => {
-                    const statusBadge = getStatusBadgeProps(transfer.status);
+                    const statusBadge = {
+                      type: statusBadgeTypeMap[transfer.status] || ('default' as StatusType),
+                      label: t(`transferList.statusOptions.${transfer.status}`, transfer.status),
+                    };
                     const canApprove =
                       transfer.status === 'PENDING_SOURCE_APPROVAL' ||
                       transfer.status === 'PENDING_TARGET_APPROVAL';
@@ -254,7 +251,7 @@ export function TransferList({ showActions = true }: TransferListProps) {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>{transferTypeLabels[transfer.transferType]}</TableCell>
+                        <TableCell>{t(transferTypeKeys[transfer.transferType])}</TableCell>
                         <TableCell>{formatDate(transfer.effectiveDate)}</TableCell>
                         <TableCell>
                           <StatusBadge status={statusBadge.type} label={statusBadge.label} />
@@ -262,7 +259,7 @@ export function TransferList({ showActions = true }: TransferListProps) {
                         {showActions && (
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-1">
-                              <Button variant="ghost" size="icon" title="상세 보기">
+                              <Button variant="ghost" size="icon" title={t('transferList.viewDetail')}>
                                 <Eye className="h-4 w-4" />
                               </Button>
                               {canApprove && (
@@ -271,7 +268,7 @@ export function TransferList({ showActions = true }: TransferListProps) {
                                     variant="ghost"
                                     size="icon"
                                     className="text-green-600 hover:text-green-700"
-                                    title="승인"
+                                    title={t('transferList.approve')}
                                     onClick={() => openDialog(transfer, 'approve')}
                                   >
                                     <Check className="h-4 w-4" />
@@ -280,7 +277,7 @@ export function TransferList({ showActions = true }: TransferListProps) {
                                     variant="ghost"
                                     size="icon"
                                     className="text-destructive hover:text-destructive"
-                                    title="반려"
+                                    title={t('transferList.reject')}
                                     onClick={() => openDialog(transfer, 'reject')}
                                   >
                                     <X className="h-4 w-4" />
@@ -292,7 +289,7 @@ export function TransferList({ showActions = true }: TransferListProps) {
                                   variant="ghost"
                                   size="icon"
                                   className="text-muted-foreground"
-                                  title="취소"
+                                  title={t('transferList.cancelAction')}
                                   onClick={() => openDialog(transfer, 'cancel')}
                                 >
                                   <X className="h-4 w-4" />
@@ -316,7 +313,7 @@ export function TransferList({ showActions = true }: TransferListProps) {
                     onClick={() => setPage(searchState.page - 1)}
                     disabled={searchState.page === 0}
                   >
-                    이전
+                    {t('common.previous')}
                   </Button>
                   <span className="flex items-center px-3 text-sm">
                     {searchState.page + 1} / {totalPages}
@@ -327,7 +324,7 @@ export function TransferList({ showActions = true }: TransferListProps) {
                     onClick={() => setPage(searchState.page + 1)}
                     disabled={searchState.page >= totalPages - 1}
                   >
-                    다음
+                    {t('common.next')}
                   </Button>
                 </div>
               )}
@@ -340,9 +337,9 @@ export function TransferList({ showActions = true }: TransferListProps) {
       <ConfirmDialog
         open={dialogType === 'approve'}
         onOpenChange={(open) => !open && setDialogType(null)}
-        title="전출 승인"
-        description={`${selectedTransfer?.employeeName}님의 전출 요청을 승인하시겠습니까?`}
-        confirmLabel="승인"
+        title={t('transferList.approveTitle')}
+        description={t('transferList.approveDescription', { name: selectedTransfer?.employeeName })}
+        confirmLabel={t('transferList.approve')}
         onConfirm={handleApprove}
         isLoading={isApproving}
       />
@@ -351,9 +348,9 @@ export function TransferList({ showActions = true }: TransferListProps) {
       <ConfirmDialog
         open={dialogType === 'reject'}
         onOpenChange={(open) => !open && setDialogType(null)}
-        title="전출 반려"
-        description={`${selectedTransfer?.employeeName}님의 전출 요청을 반려하시겠습니까?`}
-        confirmLabel="반려"
+        title={t('transferList.rejectTitle')}
+        description={t('transferList.rejectDescription', { name: selectedTransfer?.employeeName })}
+        confirmLabel={t('transferList.reject')}
         variant="destructive"
         onConfirm={handleReject}
         isLoading={rejectMutation.isPending}
@@ -363,9 +360,9 @@ export function TransferList({ showActions = true }: TransferListProps) {
       <ConfirmDialog
         open={dialogType === 'cancel'}
         onOpenChange={(open) => !open && setDialogType(null)}
-        title="전출 요청 취소"
-        description={`${selectedTransfer?.employeeName}님의 전출 요청을 취소하시겠습니까?`}
-        confirmLabel="취소하기"
+        title={t('transferList.cancelTitle')}
+        description={t('transferList.cancelDescription', { name: selectedTransfer?.employeeName })}
+        confirmLabel={t('transferList.cancelLabel')}
         variant="destructive"
         onConfirm={handleCancel}
         isLoading={cancelMutation.isPending}

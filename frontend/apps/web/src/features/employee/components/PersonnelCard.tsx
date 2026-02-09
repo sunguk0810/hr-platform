@@ -1,4 +1,5 @@
 import { forwardRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -46,6 +47,7 @@ function getInitials(name: string) {
 
 export const PersonnelCard = forwardRef<HTMLDivElement, PersonnelCardProps>(
   ({ data, className }, ref) => {
+    const { t } = useTranslation('employee');
     const printDate = format(new Date(), 'yyyy년 M월 d일', { locale: ko });
 
     return (
@@ -69,10 +71,10 @@ export const PersonnelCard = forwardRef<HTMLDivElement, PersonnelCardProps>(
               )}
               <div>
                 <h1 className="text-2xl font-bold">{data.tenantName}</h1>
-                <p className="text-sm text-gray-600">인사기록카드</p>
+                <p className="text-sm text-gray-600">{t('recordCard.personnelCard.printTitle')}</p>
               </div>
             </div>
-            <p className="text-sm text-gray-600">출력일: {printDate}</p>
+            <p className="text-sm text-gray-600">{t('recordCard.printDate', { date: printDate })}</p>
           </div>
         </div>
 
@@ -97,17 +99,17 @@ export const PersonnelCard = forwardRef<HTMLDivElement, PersonnelCardProps>(
             </div>
             <div className="flex-1">
               <h2 className="border-b border-gray-300 pb-2 text-lg font-bold">
-                기본 정보
+                {t('recordCard.personnelCard.basicInfo')}
               </h2>
               <table className="mt-3 w-full text-sm">
                 <tbody>
                   <tr>
                     <th className="w-24 py-1.5 text-left font-medium text-gray-600">
-                      사번
+                      {t('recordCard.personnelCard.employeeNumber')}
                     </th>
                     <td className="py-1.5">{data.employeeNumber}</td>
                     <th className="w-24 py-1.5 text-left font-medium text-gray-600">
-                      이름
+                      {t('recordCard.personnelCard.name')}
                     </th>
                     <td className="py-1.5">
                       {data.name}
@@ -120,7 +122,7 @@ export const PersonnelCard = forwardRef<HTMLDivElement, PersonnelCardProps>(
                   </tr>
                   <tr>
                     <th className="py-1.5 text-left font-medium text-gray-600">
-                      생년월일
+                      {t('recordCard.personnelCard.birthDate')}
                     </th>
                     <td className="py-1.5">
                       {data.birthDate
@@ -130,19 +132,19 @@ export const PersonnelCard = forwardRef<HTMLDivElement, PersonnelCardProps>(
                         : '-'}
                     </td>
                     <th className="py-1.5 text-left font-medium text-gray-600">
-                      성별
+                      {t('recordCard.personnelCard.gender')}
                     </th>
                     <td className="py-1.5">
                       {data.gender === 'MALE'
-                        ? '남성'
+                        ? t('gender.male')
                         : data.gender === 'FEMALE'
-                        ? '여성'
+                        ? t('gender.female')
                         : '-'}
                     </td>
                   </tr>
                   <tr>
                     <th className="py-1.5 text-left font-medium text-gray-600">
-                      이메일
+                      {t('recordCard.personnelCard.email')}
                     </th>
                     <td className="py-1.5" colSpan={3}>
                       {data.email}
@@ -150,7 +152,7 @@ export const PersonnelCard = forwardRef<HTMLDivElement, PersonnelCardProps>(
                   </tr>
                   <tr>
                     <th className="py-1.5 text-left font-medium text-gray-600">
-                      연락처
+                      {t('recordCard.personnelCard.phone')}
                     </th>
                     <td className="py-1.5" colSpan={3}>
                       {data.mobile}
@@ -158,7 +160,7 @@ export const PersonnelCard = forwardRef<HTMLDivElement, PersonnelCardProps>(
                   </tr>
                   <tr>
                     <th className="py-1.5 text-left font-medium text-gray-600">
-                      주소
+                      {t('recordCard.personnelCard.address')}
                     </th>
                     <td className="py-1.5" colSpan={3}>
                       {data.address || '-'}
@@ -172,35 +174,35 @@ export const PersonnelCard = forwardRef<HTMLDivElement, PersonnelCardProps>(
           {/* Employment Section */}
           <section>
             <h2 className="border-b border-gray-300 pb-2 text-lg font-bold">
-              근무 정보
+              {t('recordCard.personnelCard.employmentInfo')}
             </h2>
             <table className="mt-3 w-full text-sm">
               <tbody>
                 <tr>
                   <th className="w-24 py-1.5 text-left font-medium text-gray-600">
-                    입사일
+                    {t('recordCard.personnelCard.hireDate')}
                   </th>
                   <td className="py-1.5">
                     {format(data.hireDate, 'yyyy년 M월 d일', { locale: ko })}
                   </td>
                   <th className="w-24 py-1.5 text-left font-medium text-gray-600">
-                    고용형태
+                    {t('recordCard.personnelCard.employmentType')}
                   </th>
                   <td className="py-1.5">{data.employmentType}</td>
                 </tr>
                 <tr>
                   <th className="py-1.5 text-left font-medium text-gray-600">
-                    부서
+                    {t('recordCard.personnelCard.department')}
                   </th>
                   <td className="py-1.5">{data.department}</td>
                   <th className="py-1.5 text-left font-medium text-gray-600">
-                    직위
+                    {t('recordCard.personnelCard.position')}
                   </th>
                   <td className="py-1.5">{data.position}</td>
                 </tr>
                 <tr>
                   <th className="py-1.5 text-left font-medium text-gray-600">
-                    직급
+                    {t('recordCard.personnelCard.grade')}
                   </th>
                   <td className="py-1.5" colSpan={3}>
                     {data.grade}
@@ -213,23 +215,23 @@ export const PersonnelCard = forwardRef<HTMLDivElement, PersonnelCardProps>(
           {/* Placeholder sections for print */}
           <section>
             <h2 className="border-b border-gray-300 pb-2 text-lg font-bold">
-              학력 사항
+              {t('recordCard.personnelCard.educationSection')}
             </h2>
             <table className="mt-3 w-full border text-sm">
               <thead>
                 <tr className="bg-gray-50">
-                  <th className="border px-3 py-2 text-left">학교 구분</th>
-                  <th className="border px-3 py-2 text-left">학교명</th>
-                  <th className="border px-3 py-2 text-left">전공</th>
-                  <th className="border px-3 py-2 text-left">입학일</th>
-                  <th className="border px-3 py-2 text-left">졸업일</th>
-                  <th className="border px-3 py-2 text-left">상태</th>
+                  <th className="border px-3 py-2 text-left">{t('recordCard.personnelCard.educationSchoolType')}</th>
+                  <th className="border px-3 py-2 text-left">{t('recordCard.personnelCard.educationSchoolName')}</th>
+                  <th className="border px-3 py-2 text-left">{t('recordCard.personnelCard.educationMajor')}</th>
+                  <th className="border px-3 py-2 text-left">{t('recordCard.personnelCard.educationAdmission')}</th>
+                  <th className="border px-3 py-2 text-left">{t('recordCard.personnelCard.educationGraduation')}</th>
+                  <th className="border px-3 py-2 text-left">{t('recordCard.personnelCard.educationStatus')}</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
                   <td className="border px-3 py-8 text-center text-gray-400" colSpan={6}>
-                    학력 정보가 표시됩니다
+                    {t('recordCard.personnelCard.educationPlaceholder')}
                   </td>
                 </tr>
               </tbody>
@@ -238,23 +240,23 @@ export const PersonnelCard = forwardRef<HTMLDivElement, PersonnelCardProps>(
 
           <section>
             <h2 className="border-b border-gray-300 pb-2 text-lg font-bold">
-              경력 사항
+              {t('recordCard.personnelCard.careerSection')}
             </h2>
             <table className="mt-3 w-full border text-sm">
               <thead>
                 <tr className="bg-gray-50">
-                  <th className="border px-3 py-2 text-left">회사명</th>
-                  <th className="border px-3 py-2 text-left">부서</th>
-                  <th className="border px-3 py-2 text-left">직위</th>
-                  <th className="border px-3 py-2 text-left">입사일</th>
-                  <th className="border px-3 py-2 text-left">퇴사일</th>
-                  <th className="border px-3 py-2 text-left">담당업무</th>
+                  <th className="border px-3 py-2 text-left">{t('recordCard.personnelCard.careerCompanyName')}</th>
+                  <th className="border px-3 py-2 text-left">{t('recordCard.personnelCard.careerDepartment')}</th>
+                  <th className="border px-3 py-2 text-left">{t('recordCard.personnelCard.careerPosition')}</th>
+                  <th className="border px-3 py-2 text-left">{t('recordCard.personnelCard.careerStartDate')}</th>
+                  <th className="border px-3 py-2 text-left">{t('recordCard.personnelCard.careerEndDate')}</th>
+                  <th className="border px-3 py-2 text-left">{t('recordCard.personnelCard.careerDuties')}</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
                   <td className="border px-3 py-8 text-center text-gray-400" colSpan={6}>
-                    경력 정보가 표시됩니다
+                    {t('recordCard.personnelCard.careerPlaceholder')}
                   </td>
                 </tr>
               </tbody>
@@ -263,22 +265,22 @@ export const PersonnelCard = forwardRef<HTMLDivElement, PersonnelCardProps>(
 
           <section>
             <h2 className="border-b border-gray-300 pb-2 text-lg font-bold">
-              자격증/어학
+              {t('recordCard.personnelCard.certificateSection')}
             </h2>
             <table className="mt-3 w-full border text-sm">
               <thead>
                 <tr className="bg-gray-50">
-                  <th className="border px-3 py-2 text-left">자격증명</th>
-                  <th className="border px-3 py-2 text-left">발급기관</th>
-                  <th className="border px-3 py-2 text-left">취득일</th>
-                  <th className="border px-3 py-2 text-left">등급/점수</th>
-                  <th className="border px-3 py-2 text-left">유효기간</th>
+                  <th className="border px-3 py-2 text-left">{t('recordCard.personnelCard.certificateName')}</th>
+                  <th className="border px-3 py-2 text-left">{t('recordCard.personnelCard.certificateIssuer')}</th>
+                  <th className="border px-3 py-2 text-left">{t('recordCard.personnelCard.certificateAcquiredDate')}</th>
+                  <th className="border px-3 py-2 text-left">{t('recordCard.personnelCard.certificateGradeScore')}</th>
+                  <th className="border px-3 py-2 text-left">{t('recordCard.personnelCard.certificateExpiry')}</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
                   <td className="border px-3 py-8 text-center text-gray-400" colSpan={5}>
-                    자격증 정보가 표시됩니다
+                    {t('recordCard.personnelCard.certificatePlaceholder')}
                   </td>
                 </tr>
               </tbody>
@@ -287,22 +289,22 @@ export const PersonnelCard = forwardRef<HTMLDivElement, PersonnelCardProps>(
 
           <section>
             <h2 className="border-b border-gray-300 pb-2 text-lg font-bold">
-              가족 관계
+              {t('recordCard.personnelCard.familySection')}
             </h2>
             <table className="mt-3 w-full border text-sm">
               <thead>
                 <tr className="bg-gray-50">
-                  <th className="border px-3 py-2 text-left">관계</th>
-                  <th className="border px-3 py-2 text-left">이름</th>
-                  <th className="border px-3 py-2 text-left">생년월일</th>
-                  <th className="border px-3 py-2 text-left">직업</th>
-                  <th className="border px-3 py-2 text-left">동거여부</th>
+                  <th className="border px-3 py-2 text-left">{t('recordCard.personnelCard.familyRelation')}</th>
+                  <th className="border px-3 py-2 text-left">{t('recordCard.personnelCard.familyName')}</th>
+                  <th className="border px-3 py-2 text-left">{t('recordCard.personnelCard.familyBirthDate')}</th>
+                  <th className="border px-3 py-2 text-left">{t('recordCard.personnelCard.familyOccupation')}</th>
+                  <th className="border px-3 py-2 text-left">{t('recordCard.personnelCard.familyCohabiting')}</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
                   <td className="border px-3 py-8 text-center text-gray-400" colSpan={5}>
-                    가족 정보가 표시됩니다
+                    {t('recordCard.personnelCard.familyPlaceholder')}
                   </td>
                 </tr>
               </tbody>
@@ -313,7 +315,7 @@ export const PersonnelCard = forwardRef<HTMLDivElement, PersonnelCardProps>(
         {/* Footer */}
         <div className="mt-8 border-t pt-4">
           <p className="text-center text-xs text-gray-500">
-            본 인사기록카드는 {data.tenantName}에서 발급한 공식 문서입니다.
+            {t('recordCard.officialDoc', { tenantName: data.tenantName })}
           </p>
         </div>
       </div>

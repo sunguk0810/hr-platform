@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import {
   Form,
   FormControl,
@@ -40,18 +42,21 @@ import {
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { FamilyAllowanceMapping } from './FamilyAllowanceMapping';
 
-const familyMemberSchema = z.object({
-  relationship: z.string().min(1, '관계는 필수입니다'),
-  name: z.string().min(1, '이름은 필수입니다'),
-  birthDate: z.date().optional(),
-  occupation: z.string().optional(),
-  contact: z.string().optional(),
-  isCohabiting: z.boolean().default(false),
-  isDependent: z.boolean().default(false),
-  remarks: z.string().optional(),
-});
+const RELATIONSHIP_KEYS = ['SPOUSE', 'CHILD', 'PARENT', 'SIBLING', 'GRANDPARENT', 'OTHER'] as const;
 
-type FamilyMemberFormData = z.infer<typeof familyMemberSchema>;
+const createFamilyMemberSchema = (t: TFunction) =>
+  z.object({
+    relationship: z.string().min(1, t('familyInfo.relationshipRequired')),
+    name: z.string().min(1, t('familyInfo.nameRequired')),
+    birthDate: z.date().optional(),
+    occupation: z.string().optional(),
+    contact: z.string().optional(),
+    isCohabiting: z.boolean().default(false),
+    isDependent: z.boolean().default(false),
+    remarks: z.string().optional(),
+  });
+
+type FamilyMemberFormData = z.infer<ReturnType<typeof createFamilyMemberSchema>>;
 
 export interface FamilyMember {
   id: string;
@@ -74,15 +79,6 @@ interface FamilyInfoProps {
   isLoading?: boolean;
 }
 
-const relationshipOptions = [
-  { value: 'SPOUSE', label: '배우자' },
-  { value: 'CHILD', label: '자녀' },
-  { value: 'PARENT', label: '부모' },
-  { value: 'SIBLING', label: '형제/자매' },
-  { value: 'GRANDPARENT', label: '조부모' },
-  { value: 'OTHER', label: '기타' },
-];
-
 export function FamilyInfo({
   data = [],
   editable = false,
@@ -91,6 +87,9 @@ export function FamilyInfo({
   onDelete,
   isLoading,
 }: FamilyInfoProps) {
+  const { t } = useTranslation('employee');
+  const familyMemberSchema = React.useMemo(() => createFamilyMemberSchema(t), [t]);
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<FamilyMember | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -159,7 +158,7 @@ export function FamilyInfo({
   };
 
   const getRelationshipLabel = (value: string) => {
-    return relationshipOptions.find((opt) => opt.value === value)?.label || value;
+    return t(`familyInfo.relationshipOptions.${value}`, value);
   };
 
   const familyMembersForAllowance = data.map((member) => ({
@@ -173,30 +172,30 @@ export function FamilyInfo({
     <div className="space-y-6">
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-lg">가족 정보</CardTitle>
+        <CardTitle className="text-lg">{t('familyInfo.title')}</CardTitle>
         {editable && (
           <Button size="sm" onClick={() => handleOpenDialog()}>
             <Plus className="mr-1 h-4 w-4" />
-            추가
+            {t('common.add')}
           </Button>
         )}
       </CardHeader>
       <CardContent>
         {data.length === 0 ? (
           <p className="py-8 text-center text-muted-foreground">
-            등록된 가족 정보가 없습니다.
+            {t('familyInfo.empty')}
           </p>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>관계</TableHead>
-                <TableHead>이름</TableHead>
-                <TableHead>생년월일</TableHead>
-                <TableHead>직업</TableHead>
-                <TableHead>동거여부</TableHead>
-                <TableHead>부양가족</TableHead>
-                {editable && <TableHead className="w-[100px]">관리</TableHead>}
+                <TableHead>{t('familyInfo.relationship')}</TableHead>
+                <TableHead>{t('familyInfo.name')}</TableHead>
+                <TableHead>{t('familyInfo.birthDate')}</TableHead>
+                <TableHead>{t('familyInfo.occupation')}</TableHead>
+                <TableHead>{t('familyInfo.cohabiting')}</TableHead>
+                <TableHead>{t('familyInfo.dependent')}</TableHead>
+                {editable && <TableHead className="w-[100px]">{t('familyInfo.manage')}</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -243,7 +242,7 @@ export function FamilyInfo({
           <DialogContent>
             <DialogHeader>
               <DialogTitle>
-                {editingMember ? '가족 정보 수정' : '가족 정보 추가'}
+                {editingMember ? t('familyInfo.editDialog') : t('familyInfo.addDialog')}
               </DialogTitle>
             </DialogHeader>
             <Form {...form}>
@@ -257,20 +256,20 @@ export function FamilyInfo({
                     name="relationship"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>관계 *</FormLabel>
+                        <FormLabel>{t('familyInfo.relationship')}</FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="관계 선택" />
+                              <SelectValue placeholder={t('familyInfo.relationshipPlaceholder')} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {relationshipOptions.map((opt) => (
-                              <SelectItem key={opt.value} value={opt.value}>
-                                {opt.label}
+                            {RELATIONSHIP_KEYS.map((key) => (
+                              <SelectItem key={key} value={key}>
+                                {t(`familyInfo.relationshipOptions.${key}`)}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -284,7 +283,7 @@ export function FamilyInfo({
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>이름 *</FormLabel>
+                        <FormLabel>{t('familyInfo.name')}</FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
@@ -297,7 +296,7 @@ export function FamilyInfo({
                     name="birthDate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>생년월일</FormLabel>
+                        <FormLabel>{t('familyInfo.birthDate')}</FormLabel>
                         <FormControl>
                           <DatePicker
                             value={field.value}
@@ -313,7 +312,7 @@ export function FamilyInfo({
                     name="occupation"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>직업</FormLabel>
+                        <FormLabel>{t('familyInfo.occupation')}</FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
@@ -326,7 +325,7 @@ export function FamilyInfo({
                     name="contact"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>연락처</FormLabel>
+                        <FormLabel>{t('familyInfo.contact')}</FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
@@ -341,10 +340,10 @@ export function FamilyInfo({
                     variant="outline"
                     onClick={handleCloseDialog}
                   >
-                    취소
+                    {t('common.cancel')}
                   </Button>
                   <Button type="submit" disabled={isLoading}>
-                    {isLoading ? '저장 중...' : '저장'}
+                    {isLoading ? t('common.saving') : t('common.save')}
                   </Button>
                 </div>
               </form>
@@ -356,10 +355,10 @@ export function FamilyInfo({
         <ConfirmDialog
           open={!!deleteId}
           onOpenChange={(open) => !open && setDeleteId(null)}
-          title="가족 정보 삭제"
-          description="선택한 가족 정보를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
-          confirmText="삭제"
-          cancelText="취소"
+          title={t('familyInfo.deleteTitle')}
+          description={t('familyInfo.deleteDescription')}
+          confirmText={t('common.delete')}
+          cancelText={t('common.cancel')}
           variant="destructive"
           onConfirm={handleDelete}
         />
