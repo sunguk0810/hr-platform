@@ -24,6 +24,9 @@ dependencies {
     runtimeOnly 'org.postgresql:postgresql'
     implementation 'org.flywaydb:flyway-core'
 
+    // Excel support
+    implementation 'org.apache.poi:poi-ooxml:5.2.5'
+
     // Documentation
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
 

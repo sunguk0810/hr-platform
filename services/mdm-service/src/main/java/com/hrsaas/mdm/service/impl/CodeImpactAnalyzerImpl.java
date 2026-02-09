@@ -4,8 +4,10 @@ import com.hrsaas.common.core.exception.NotFoundException;
 import com.hrsaas.common.tenant.TenantContext;
 import com.hrsaas.mdm.domain.dto.response.CodeImpactResponse;
 import com.hrsaas.mdm.domain.dto.response.CodeImpactResponse.ImpactedResource;
+import com.hrsaas.mdm.domain.entity.CodeUsageMapping;
 import com.hrsaas.mdm.domain.entity.CommonCode;
 import com.hrsaas.mdm.repository.CodeTenantMappingRepository;
+import com.hrsaas.mdm.repository.CodeUsageMappingRepository;
 import com.hrsaas.mdm.repository.CommonCodeRepository;
 import com.hrsaas.mdm.service.CodeImpactAnalyzer;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +15,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * 코드 변경 영향도 분석 서비스 구현
@@ -21,7 +25,7 @@ import java.util.*;
  * 분석 기준:
  * - 하위 코드 존재 여부 (계층형 코드)
  * - 테넌트별 커스터마이징 존재 여부
- * - 코드가 참조되는 테이블/서비스 (설정 기반)
+ * - 코드가 참조되는 테이블/서비스 (DB 기반 code_usage_mapping)
  */
 @Slf4j
 @Service
@@ -31,85 +35,7 @@ public class CodeImpactAnalyzerImpl implements CodeImpactAnalyzer {
 
     private final CommonCodeRepository commonCodeRepository;
     private final CodeTenantMappingRepository codeTenantMappingRepository;
-
-    /**
-     * 코드 그룹별 참조 테이블 매핑
-     * 실제 환경에서는 DB 테이블이나 설정 파일에서 관리
-     */
-    private static final Map<String, List<ImpactedResource>> CODE_USAGE_MAP = new HashMap<>();
-
-    static {
-        // 예시: 휴가 유형 코드가 사용되는 곳
-        CODE_USAGE_MAP.put("LEAVE_TYPE", List.of(
-            ImpactedResource.builder()
-                .resourceType("TABLE")
-                .resourceName("leave_request")
-                .description("휴가 신청 테이블")
-                .build(),
-            ImpactedResource.builder()
-                .resourceType("TABLE")
-                .resourceName("leave_balance")
-                .description("휴가 잔여 테이블")
-                .build(),
-            ImpactedResource.builder()
-                .resourceType("SERVICE")
-                .resourceName("attendance-service")
-                .description("근태 관리 서비스")
-                .build()
-        ));
-
-        // 직급 코드
-        CODE_USAGE_MAP.put("GRADE", List.of(
-            ImpactedResource.builder()
-                .resourceType("TABLE")
-                .resourceName("employee")
-                .description("직원 테이블")
-                .build(),
-            ImpactedResource.builder()
-                .resourceType("TABLE")
-                .resourceName("employee_history")
-                .description("인사이력 테이블")
-                .build(),
-            ImpactedResource.builder()
-                .resourceType("SERVICE")
-                .resourceName("employee-service")
-                .description("직원 관리 서비스")
-                .build()
-        ));
-
-        // 직책 코드
-        CODE_USAGE_MAP.put("POSITION", List.of(
-            ImpactedResource.builder()
-                .resourceType("TABLE")
-                .resourceName("employee")
-                .description("직원 테이블")
-                .build(),
-            ImpactedResource.builder()
-                .resourceType("TABLE")
-                .resourceName("approval_line")
-                .description("결재선 테이블")
-                .build(),
-            ImpactedResource.builder()
-                .resourceType("SERVICE")
-                .resourceName("approval-service")
-                .description("결재 서비스")
-                .build()
-        ));
-
-        // 부서 유형
-        CODE_USAGE_MAP.put("DEPT_TYPE", List.of(
-            ImpactedResource.builder()
-                .resourceType("TABLE")
-                .resourceName("department")
-                .description("부서 테이블")
-                .build(),
-            ImpactedResource.builder()
-                .resourceType("SERVICE")
-                .resourceName("organization-service")
-                .description("조직 관리 서비스")
-                .build()
-        ));
-    }
+    private final CodeUsageMappingRepository codeUsageMappingRepository;
 
     @Override
     public CodeImpactResponse analyzeImpact(UUID codeId) {
@@ -190,8 +116,18 @@ public class CodeImpactAnalyzerImpl implements CodeImpactAnalyzer {
         int tenantMappingCount = countTenantMappings(code.getId(), tenantId);
         response.setTenantMappingCount(tenantMappingCount);
 
-        // 참조 테이블/서비스 추가
-        List<ImpactedResource> impactedResources = CODE_USAGE_MAP.getOrDefault(groupCode, Collections.emptyList());
+        // G02: DB 기반 참조 테이블/서비스 조회
+        List<CodeUsageMapping> usageMappings = codeUsageMappingRepository.findByGroupCode(groupCode);
+        List<ImpactedResource> impactedResources = usageMappings.isEmpty()
+            ? Collections.emptyList()
+            : usageMappings.stream()
+                .map(mapping -> ImpactedResource.builder()
+                    .resourceType(mapping.getResourceType())
+                    .resourceName(mapping.getResourceName())
+                    .description(mapping.getDescription())
+                    .build())
+                .toList();
+
         for (ImpactedResource resource : impactedResources) {
             response.addImpactedResource(resource);
         }

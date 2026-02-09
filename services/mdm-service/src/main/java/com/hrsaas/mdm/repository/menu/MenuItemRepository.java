@@ -86,4 +86,18 @@ public interface MenuItemRepository extends JpaRepository<MenuItem, UUID> {
      */
     @Query("UPDATE MenuItem m SET m.sortOrder = :sortOrder WHERE m.id = :id")
     void updateSortOrder(@Param("id") UUID id, @Param("sortOrder") Integer sortOrder);
+
+    /**
+     * Find menus by tenant ID.
+     */
+    @Query("SELECT m FROM MenuItem m WHERE m.tenantId = :tenantId AND m.isActive = true ORDER BY m.sortOrder")
+    List<MenuItem> findByTenantId(@Param("tenantId") UUID tenantId);
+
+    /**
+     * Find all menus with permissions for a specific tenant (including system menus).
+     */
+    @Query("SELECT DISTINCT m FROM MenuItem m LEFT JOIN FETCH m.permissions " +
+           "WHERE m.isActive = true AND (m.tenantId IS NULL OR m.tenantId = :tenantId) " +
+           "ORDER BY m.level, m.sortOrder")
+    List<MenuItem> findAllWithPermissionsForTenant(@Param("tenantId") UUID tenantId);
 }

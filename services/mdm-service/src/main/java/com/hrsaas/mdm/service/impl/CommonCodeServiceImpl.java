@@ -5,9 +5,13 @@ import com.hrsaas.common.core.exception.BusinessException;
 import com.hrsaas.common.core.exception.DuplicateException;
 import com.hrsaas.common.core.exception.NotFoundException;
 import com.hrsaas.common.event.EventPublisher;
+import com.hrsaas.common.security.PermissionChecker;
 import com.hrsaas.common.tenant.TenantContext;
+import com.hrsaas.mdm.domain.dto.request.BulkCodeStatusChangeRequest;
 import com.hrsaas.mdm.domain.dto.request.CreateCommonCodeRequest;
+import com.hrsaas.mdm.domain.dto.request.DeprecateCodeRequest;
 import com.hrsaas.mdm.domain.dto.request.UpdateCommonCodeRequest;
+import com.hrsaas.mdm.domain.dto.response.BulkCodeStatusChangeResponse;
 import com.hrsaas.mdm.domain.dto.response.CodeTreeResponse;
 import com.hrsaas.mdm.domain.dto.response.CommonCodeResponse;
 import com.hrsaas.mdm.domain.entity.CodeGroup;
@@ -28,6 +32,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +48,7 @@ public class CommonCodeServiceImpl implements CommonCodeService {
     private final CommonCodeRepository commonCodeRepository;
     private final CodeGroupRepository codeGroupRepository;
     private final EventPublisher eventPublisher;
+    private final PermissionChecker permissionChecker;
 
     @Override
     @Transactional
@@ -52,6 +58,9 @@ public class CommonCodeServiceImpl implements CommonCodeService {
 
         CodeGroup codeGroup = codeGroupRepository.findById(request.getCodeGroupId())
             .orElseThrow(() -> new NotFoundException("MDM_001", "코드 그룹을 찾을 수 없습니다."));
+
+        // G01: 시스템 코드 권한 체크
+        requireSystemCodePermission(codeGroup);
 
         if (commonCodeRepository.existsByCodeGroupIdAndCodeAndTenantId(
                 request.getCodeGroupId(), request.getCode(), tenantId)) {
@@ -147,6 +156,9 @@ public class CommonCodeServiceImpl implements CommonCodeService {
     public CommonCodeResponse update(UUID id, UpdateCommonCodeRequest request) {
         CommonCode commonCode = findById(id);
 
+        // G01: 시스템 코드 권한 체크
+        requireSystemCodePermission(commonCode);
+
         commonCode.update(
             request.getCodeName(),
             request.getCodeNameEn(),
@@ -189,6 +201,10 @@ public class CommonCodeServiceImpl implements CommonCodeService {
     @CacheEvict(value = CacheNames.COMMON_CODE, allEntries = true)
     public CommonCodeResponse activate(UUID id) {
         CommonCode commonCode = findById(id);
+
+        // G01: 시스템 코드 권한 체크
+        requireSystemCodePermission(commonCode);
+
         commonCode.activate();
         CommonCode saved = commonCodeRepository.save(commonCode);
         log.info("Common code activated: id={}", id);
@@ -200,6 +216,10 @@ public class CommonCodeServiceImpl implements CommonCodeService {
     @CacheEvict(value = CacheNames.COMMON_CODE, allEntries = true)
     public CommonCodeResponse deactivate(UUID id) {
         CommonCode commonCode = findById(id);
+
+        // G01: 시스템 코드 권한 체크
+        requireSystemCodePermission(commonCode);
+
         commonCode.deactivate();
         CommonCode saved = commonCodeRepository.save(commonCode);
         log.info("Common code deactivated: id={}", id);
@@ -211,6 +231,10 @@ public class CommonCodeServiceImpl implements CommonCodeService {
     @CacheEvict(value = CacheNames.COMMON_CODE, allEntries = true)
     public CommonCodeResponse deprecate(UUID id) {
         CommonCode commonCode = findById(id);
+
+        // G01: 시스템 코드 권한 체크
+        requireSystemCodePermission(commonCode);
+
         commonCode.deprecate();
         CommonCode saved = commonCodeRepository.save(commonCode);
         log.info("Common code deprecated: id={}", id);
@@ -220,8 +244,37 @@ public class CommonCodeServiceImpl implements CommonCodeService {
     @Override
     @Transactional
     @CacheEvict(value = CacheNames.COMMON_CODE, allEntries = true)
+    public CommonCodeResponse deprecate(UUID id, DeprecateCodeRequest request) {
+        CommonCode commonCode = findById(id);
+
+        // G01: 시스템 코드 권한 체크
+        requireSystemCodePermission(commonCode);
+
+        UUID replacementCodeId = null;
+        Integer gracePeriodDays = null;
+        if (request != null) {
+            replacementCodeId = request.getReplacementCodeId();
+            gracePeriodDays = request.getGracePeriodDays();
+        }
+
+        commonCode.deprecate(replacementCodeId, gracePeriodDays);
+        CommonCode saved = commonCodeRepository.save(commonCode);
+
+        eventPublisher.publish(CommonCodeUpdatedEvent.of(saved));
+        log.info("Common code deprecated with grace period: id={}, gracePeriodDays={}",
+                 id, commonCode.getDeprecationGracePeriodDays());
+        return CommonCodeResponse.from(saved);
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(value = CacheNames.COMMON_CODE, allEntries = true)
     public void delete(UUID id) {
         CommonCode commonCode = findById(id);
+
+        // G01: 시스템 코드 권한 체크
+        requireSystemCodePermission(commonCode);
+
         commonCodeRepository.delete(commonCode);
         log.info("Common code deleted: id={}", id);
     }
@@ -256,9 +309,66 @@ public class CommonCodeServiceImpl implements CommonCodeService {
         return rootNodes;
     }
 
+    @Override
+    @Transactional
+    @CacheEvict(value = CacheNames.COMMON_CODE, allEntries = true)
+    public BulkCodeStatusChangeResponse bulkChangeStatus(BulkCodeStatusChangeRequest request) {
+        BulkCodeStatusChangeResponse response = BulkCodeStatusChangeResponse.builder()
+            .totalRequested(request.getCodeIds().size())
+            .build();
+
+        int successCount = 0;
+
+        for (UUID codeId : request.getCodeIds()) {
+            try {
+                CommonCode commonCode = commonCodeRepository.findById(codeId)
+                    .orElseThrow(() -> new NotFoundException("MDM_002", "코드를 찾을 수 없습니다: " + codeId));
+
+                // G01: 시스템 코드 권한 체크
+                requireSystemCodePermission(commonCode);
+
+                switch (request.getTargetStatus()) {
+                    case ACTIVE -> commonCode.activate();
+                    case INACTIVE -> commonCode.deactivate();
+                    case DEPRECATED -> commonCode.deprecate();
+                }
+
+                commonCodeRepository.save(commonCode);
+                successCount++;
+            } catch (Exception e) {
+                response.addError(codeId.toString(), e.getMessage());
+            }
+        }
+
+        response.setSuccessCount(successCount);
+        response.setFailedCount(request.getCodeIds().size() - successCount);
+
+        log.info("Bulk status change completed: total={}, success={}, failed={}",
+                 request.getCodeIds().size(), successCount, response.getFailedCount());
+        return response;
+    }
+
     private CommonCode findById(UUID id) {
         return commonCodeRepository.findById(id)
             .orElseThrow(() -> new NotFoundException("MDM_002", "코드를 찾을 수 없습니다: " + id));
+    }
+
+    /**
+     * G01: 시스템 코드(tenantId == null) 수정 시 SUPER_ADMIN 권한 체크
+     */
+    private void requireSystemCodePermission(CommonCode commonCode) {
+        if (commonCode.getTenantId() == null) {
+            permissionChecker.requireRole("ROLE_SUPER_ADMIN");
+        }
+    }
+
+    /**
+     * G01: 시스템 코드 그룹의 코드 생성 시 SUPER_ADMIN 권한 체크
+     */
+    private void requireSystemCodePermission(CodeGroup codeGroup) {
+        if (codeGroup.getTenantId() == null) {
+            permissionChecker.requireRole("ROLE_SUPER_ADMIN");
+        }
     }
 
     /**

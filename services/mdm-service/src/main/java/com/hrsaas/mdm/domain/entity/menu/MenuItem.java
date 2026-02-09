@@ -117,6 +117,9 @@ public class MenuItem {
     @Column(name = "updated_by", length = 100)
     private String updatedBy;
 
+    @Column(name = "tenant_id")
+    private UUID tenantId;
+
     // Helper methods
 
     public void addChild(MenuItem child) {

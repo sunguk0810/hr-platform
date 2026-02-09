@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -77,4 +78,24 @@ public interface CommonCodeRepository extends JpaRepository<CommonCode, UUID> {
         @Param("groupCode") String groupCode,
         @Param("status") CodeStatus status,
         Pageable pageable);
+
+    /**
+     * G04: 폐기된 코드 중 deprecatedAt이 있는 코드 조회
+     */
+    @Query("SELECT cc FROM CommonCode cc WHERE cc.status = 'DEPRECATED' AND cc.deprecatedAt IS NOT NULL")
+    List<CommonCode> findAllDeprecatedWithTimestamp();
+
+    /**
+     * G09: 유효기간 시작일이 오늘 이전이고 비활성인 코드 (활성화 대상)
+     */
+    @Query("SELECT cc FROM CommonCode cc WHERE cc.effectiveFrom <= :today AND cc.active = false " +
+           "AND cc.status != 'DEPRECATED' AND cc.effectiveFrom IS NOT NULL")
+    List<CommonCode> findCodesBecomingEffective(@Param("today") LocalDate today);
+
+    /**
+     * G09: 유효기간 종료일이 오늘 이전이고 활성인 코드 (비활성화 대상)
+     */
+    @Query("SELECT cc FROM CommonCode cc WHERE cc.effectiveTo < :today AND cc.active = true " +
+           "AND cc.effectiveTo IS NOT NULL")
+    List<CommonCode> findExpiredCodes(@Param("today") LocalDate today);
 }

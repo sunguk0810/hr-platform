@@ -140,6 +140,25 @@ public interface MenuService {
     void resetAllTenantMenuConfigs(UUID tenantId);
 
     // ============================================
+    // Tenant Custom Menu Operations
+    // ============================================
+
+    /**
+     * Create a tenant-specific custom menu item.
+     */
+    MenuItemResponse createTenantMenu(UUID tenantId, CreateMenuItemRequest request);
+
+    /**
+     * Update a tenant-specific custom menu item.
+     */
+    MenuItemResponse updateTenantMenu(UUID tenantId, UUID menuId, UpdateMenuItemRequest request);
+
+    /**
+     * Delete a tenant-specific custom menu item.
+     */
+    void deleteTenantMenu(UUID tenantId, UUID menuId);
+
+    // ============================================
     // Internal Operations
     // ============================================
 

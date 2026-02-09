@@ -5,6 +5,7 @@ import com.hrsaas.mdm.domain.dto.request.CodeImportBatchRequest;
 import com.hrsaas.mdm.domain.dto.response.CodeExportResponse;
 import com.hrsaas.mdm.domain.dto.response.ImportResultResponse;
 import com.hrsaas.mdm.service.CodeImportExportService;
+import com.hrsaas.mdm.service.ExcelCodeImportExportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -23,6 +25,7 @@ import java.util.List;
 public class CodeImportExportController {
 
     private final CodeImportExportService codeImportExportService;
+    private final ExcelCodeImportExportService excelCodeImportExportService;
 
     @PostMapping("/import")
     @Operation(summary = "코드 일괄 임포트", description = "JSON 형태의 코드 데이터를 일괄 임포트합니다.")
@@ -67,5 +70,39 @@ public class CodeImportExportController {
     public ResponseEntity<ApiResponse<CodeExportResponse>> exportSystemCodes() {
         CodeExportResponse response = codeImportExportService.exportSystemCodes();
         return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PostMapping("/import/excel")
+    @Operation(summary = "Excel 코드 임포트", description = "Excel 파일에서 코드를 일괄 임포트합니다.")
+    @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<ImportResultResponse>> importExcel(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(defaultValue = "false") boolean overwrite,
+            @RequestParam(defaultValue = "false") boolean validateOnly) {
+        ImportResultResponse response = excelCodeImportExportService.importFromExcel(file, overwrite, validateOnly);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @GetMapping("/export/excel")
+    @Operation(summary = "Excel 코드 엑스포트", description = "코드를 Excel 파일로 다운로드합니다.")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<byte[]> exportExcel(
+            @RequestParam(required = false) List<String> groupCodes) {
+        byte[] bytes = excelCodeImportExportService.exportToExcel(groupCodes);
+        return ResponseEntity.ok()
+            .header("Content-Disposition", "attachment; filename=codes.xlsx")
+            .header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            .body(bytes);
+    }
+
+    @GetMapping("/export/excel/template")
+    @Operation(summary = "Excel 임포트 템플릿 다운로드", description = "코드 임포트용 Excel 템플릿을 다운로드합니다.")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<byte[]> downloadTemplate() {
+        byte[] bytes = excelCodeImportExportService.generateImportTemplate();
+        return ResponseEntity.ok()
+            .header("Content-Disposition", "attachment; filename=code_import_template.xlsx")
+            .header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            .body(bytes);
     }
 }

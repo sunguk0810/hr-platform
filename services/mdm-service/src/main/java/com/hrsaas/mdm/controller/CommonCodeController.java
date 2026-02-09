@@ -2,9 +2,12 @@ package com.hrsaas.mdm.controller;
 
 import com.hrsaas.common.response.ApiResponse;
 import com.hrsaas.common.response.PageResponse;
+import com.hrsaas.mdm.domain.dto.request.BulkCodeStatusChangeRequest;
 import com.hrsaas.mdm.domain.dto.request.CodeSearchRequest;
 import com.hrsaas.mdm.domain.dto.request.CreateCommonCodeRequest;
+import com.hrsaas.mdm.domain.dto.request.DeprecateCodeRequest;
 import com.hrsaas.mdm.domain.dto.request.UpdateCommonCodeRequest;
+import com.hrsaas.mdm.domain.dto.response.BulkCodeStatusChangeResponse;
 import com.hrsaas.mdm.domain.dto.response.CodeHistoryResponse;
 import com.hrsaas.mdm.domain.dto.response.CodeImpactResponse;
 import com.hrsaas.mdm.domain.dto.response.CodeTreeResponse;
@@ -128,8 +131,24 @@ public class CommonCodeController {
     @PutMapping("/{id}/deprecate")
     @Operation(summary = "공통 코드 폐기")
     @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'SUPER_ADMIN')")
-    public ResponseEntity<ApiResponse<CommonCodeResponse>> deprecate(@PathVariable UUID id) {
-        CommonCodeResponse response = commonCodeService.deprecate(id);
+    public ResponseEntity<ApiResponse<CommonCodeResponse>> deprecate(
+            @PathVariable UUID id,
+            @RequestBody(required = false) DeprecateCodeRequest request) {
+        CommonCodeResponse response;
+        if (request != null) {
+            response = commonCodeService.deprecate(id, request);
+        } else {
+            response = commonCodeService.deprecate(id);
+        }
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PatchMapping("/bulk-status")
+    @Operation(summary = "일괄 상태 변경")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<BulkCodeStatusChangeResponse>> bulkChangeStatus(
+            @Valid @RequestBody BulkCodeStatusChangeRequest request) {
+        BulkCodeStatusChangeResponse response = commonCodeService.bulkChangeStatus(request);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

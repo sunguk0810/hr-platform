@@ -42,6 +42,12 @@ public class CommonCodeResponse {
     private Instant createdAt;
     private Instant updatedAt;
 
+    // G04: 폐기 관련 필드
+    private UUID replacementCodeId;
+    private Instant deprecatedAt;
+    private Integer deprecationGracePeriodDays;
+    private Boolean gracePeriodActive;
+
     public static CommonCodeResponse from(CommonCode commonCode) {
         return CommonCodeResponse.builder()
             .id(commonCode.getId())
@@ -65,6 +71,10 @@ public class CommonCodeResponse {
             .sortOrder(commonCode.getSortOrder())
             .createdAt(commonCode.getCreatedAt())
             .updatedAt(commonCode.getUpdatedAt())
+            .replacementCodeId(commonCode.getReplacementCodeId())
+            .deprecatedAt(commonCode.getDeprecatedAt())
+            .deprecationGracePeriodDays(commonCode.getDeprecationGracePeriodDays())
+            .gracePeriodActive(commonCode.isGracePeriodActive())
             .build();
     }
 

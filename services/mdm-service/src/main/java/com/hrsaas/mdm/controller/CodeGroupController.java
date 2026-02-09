@@ -2,6 +2,7 @@ package com.hrsaas.mdm.controller;
 
 import com.hrsaas.common.response.ApiResponse;
 import com.hrsaas.mdm.domain.dto.request.CreateCodeGroupRequest;
+import com.hrsaas.mdm.domain.dto.request.UpdateCodeGroupRequest;
 import com.hrsaas.mdm.domain.dto.response.CodeGroupResponse;
 import com.hrsaas.mdm.service.CodeGroupService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -48,6 +49,16 @@ public class CodeGroupController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<List<CodeGroupResponse>>> getAll() {
         List<CodeGroupResponse> response = codeGroupService.getAll();
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "코드 그룹 수정")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<CodeGroupResponse>> update(
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateCodeGroupRequest request) {
+        CodeGroupResponse response = codeGroupService.update(id, request);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

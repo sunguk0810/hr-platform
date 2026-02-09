@@ -4,6 +4,7 @@ import com.hrsaas.common.entity.AuditableEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -72,6 +73,16 @@ public class CommonCode extends AuditableEntity {
     @Column(name = "sort_order")
     private Integer sortOrder;
 
+    // G04: 폐기 관련 필드
+    @Column(name = "replacement_code_id")
+    private UUID replacementCodeId;
+
+    @Column(name = "deprecated_at")
+    private Instant deprecatedAt;
+
+    @Column(name = "deprecation_grace_period_days")
+    private Integer deprecationGracePeriodDays = 90;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_code_id", insertable = false, updatable = false)
     private CommonCode parentCode;
@@ -119,6 +130,42 @@ public class CommonCode extends AuditableEntity {
     public void deprecate() {
         this.status = CodeStatus.DEPRECATED;
         this.active = false;
+        this.deprecatedAt = Instant.now();
+    }
+
+    /**
+     * 대체 코드 및 유예기간을 지정하여 폐기
+     */
+    public void deprecate(UUID replacementCodeId, Integer gracePeriodDays) {
+        this.status = CodeStatus.DEPRECATED;
+        this.active = false;
+        this.deprecatedAt = Instant.now();
+        this.replacementCodeId = replacementCodeId;
+        if (gracePeriodDays != null) {
+            this.deprecationGracePeriodDays = gracePeriodDays;
+        }
+    }
+
+    /**
+     * 유예기간이 활성 상태인지 확인
+     */
+    public boolean isGracePeriodActive() {
+        if (deprecatedAt == null || deprecationGracePeriodDays == null) {
+            return false;
+        }
+        Instant graceEnd = deprecatedAt.plusSeconds((long) deprecationGracePeriodDays * 24 * 60 * 60);
+        return Instant.now().isBefore(graceEnd);
+    }
+
+    /**
+     * 유예기간이 만료되었는지 확인
+     */
+    public boolean isGracePeriodExpired() {
+        if (deprecatedAt == null || deprecationGracePeriodDays == null) {
+            return false;
+        }
+        Instant graceEnd = deprecatedAt.plusSeconds((long) deprecationGracePeriodDays * 24 * 60 * 60);
+        return !Instant.now().isBefore(graceEnd);
     }
 
     public boolean isEffective() {

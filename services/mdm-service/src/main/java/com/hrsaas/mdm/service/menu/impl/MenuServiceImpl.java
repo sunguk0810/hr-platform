@@ -516,6 +516,103 @@ public class MenuServiceImpl implements MenuService {
     }
 
     // ============================================
+    // Tenant Custom Menu Operations
+    // ============================================
+
+    @Override
+    @Transactional
+    public MenuItemResponse createTenantMenu(UUID tenantId, CreateMenuItemRequest request) {
+        // Validate unique code
+        if (menuItemRepository.existsByCode(request.getCode())) {
+            throw new ValidationException("MDM_MENU_002", "이미 존재하는 메뉴 코드입니다: " + request.getCode());
+        }
+
+        MenuItem menu = MenuItem.builder()
+            .code(request.getCode())
+            .name(request.getName())
+            .nameEn(request.getNameEn())
+            .path(request.getPath())
+            .icon(request.getIcon())
+            .menuType(request.getMenuType() != null ? request.getMenuType() : MenuType.INTERNAL)
+            .externalUrl(request.getExternalUrl())
+            .sortOrder(request.getSortOrder() != null ? request.getSortOrder() : 0)
+            .featureCode(request.getFeatureCode())
+            .isSystem(false) // 커스텀 메뉴는 항상 non-system
+            .isActive(true)
+            .showInNav(request.getShowInNav() != null ? request.getShowInNav() : true)
+            .showInMobile(request.getShowInMobile() != null ? request.getShowInMobile() : false)
+            .mobileSortOrder(request.getMobileSortOrder())
+            .tenantId(tenantId)
+            .build();
+
+        // Set parent if provided
+        if (request.getParentId() != null) {
+            MenuItem parent = getMenuEntityById(request.getParentId());
+            menu.setParent(parent);
+            menu.setLevel(parent.getLevel() + 1);
+        }
+
+        // Add permissions
+        if (request.getRoles() != null) {
+            for (String role : request.getRoles()) {
+                menu.addPermission(MenuPermission.ofRole(role));
+            }
+        }
+        if (request.getPermissions() != null) {
+            for (String permission : request.getPermissions()) {
+                menu.addPermission(MenuPermission.ofPermission(permission));
+            }
+        }
+
+        menu = menuItemRepository.save(menu);
+        menuCacheService.invalidateMenuCache();
+
+        log.info("Created tenant custom menu: {} ({}) for tenant {}", menu.getCode(), menu.getId(), tenantId);
+        return MenuItemResponse.from(menu);
+    }
+
+    @Override
+    @Transactional
+    public MenuItemResponse updateTenantMenu(UUID tenantId, UUID menuId, UpdateMenuItemRequest request) {
+        MenuItem menu = getMenuEntityById(menuId);
+
+        // 시스템 메뉴 보호
+        if (Boolean.TRUE.equals(menu.getIsSystem())) {
+            throw new ValidationException("MDM_MENU_005", "시스템 메뉴는 테넌트에서 수정할 수 없습니다");
+        }
+
+        // 테넌트 소유권 체크
+        if (menu.getTenantId() == null || !menu.getTenantId().equals(tenantId)) {
+            throw new ValidationException("MDM_MENU_006", "이 테넌트의 메뉴가 아닙니다");
+        }
+
+        // 기존 updateMenu 로직 재사용
+        return updateMenu(menuId, request);
+    }
+
+    @Override
+    @Transactional
+    public void deleteTenantMenu(UUID tenantId, UUID menuId) {
+        MenuItem menu = getMenuEntityById(menuId);
+
+        // 시스템 메뉴 보호
+        if (Boolean.TRUE.equals(menu.getIsSystem())) {
+            throw new ValidationException("MDM_MENU_005", "시스템 메뉴는 삭제할 수 없습니다");
+        }
+
+        // 테넌트 소유권 체크
+        if (menu.getTenantId() == null || !menu.getTenantId().equals(tenantId)) {
+            throw new ValidationException("MDM_MENU_006", "이 테넌트의 메뉴가 아닙니다");
+        }
+
+        menu.setIsActive(false);
+        menuItemRepository.save(menu);
+        menuCacheService.invalidateMenuCache();
+
+        log.info("Deleted tenant custom menu: {} ({}) for tenant {}", menu.getCode(), menu.getId(), tenantId);
+    }
+
+    // ============================================
     // Internal Operations
     // ============================================
 
