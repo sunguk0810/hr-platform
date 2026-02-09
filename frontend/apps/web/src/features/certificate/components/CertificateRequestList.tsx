@@ -3,6 +3,13 @@ import { ko } from 'date-fns/locale';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { EmptyState } from '@/components/common/EmptyState';
 import { SkeletonTable } from '@/components/common/Skeleton';
 import { Pagination } from '@/components/common/Pagination';
@@ -51,30 +58,35 @@ export function CertificateRequestList({
       <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-4">
         <CardTitle>{t('requestList.title')}</CardTitle>
         <div className="flex gap-2">
-          <select
-            value={selectedTypeCode}
-            onChange={(e) => onTypeCodeChange(e.target.value)}
-            className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm"
-          >
-            <option value="">{t('requestList.allTypes')}</option>
-            {certificateTypes.map((type) => (
-              <option key={type.code} value={type.code}>
-                {type.name}
-              </option>
-            ))}
-          </select>
-          <select
+          <Select value={selectedTypeCode} onValueChange={onTypeCodeChange}>
+            <SelectTrigger className="h-9 w-[180px]">
+              <SelectValue placeholder={t('requestList.allTypes')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">{t('requestList.allTypes')}</SelectItem>
+              {certificateTypes.map((type) => (
+                <SelectItem key={type.code} value={type.code}>
+                  {type.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
             value={selectedStatus}
-            onChange={(e) => onStatusChange(e.target.value as RequestStatus | '')}
-            className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm"
+            onValueChange={(value) => onStatusChange(value as RequestStatus | '')}
           >
-            <option value="">{t('requestList.allStatuses')}</option>
-            {Object.entries(REQUEST_STATUS_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="h-9 w-[160px]">
+              <SelectValue placeholder={t('requestList.allStatuses')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">{t('requestList.allStatuses')}</SelectItem>
+              {Object.entries(REQUEST_STATUS_LABELS).map(([value, label]) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </CardHeader>
       <CardContent className="p-0">
