@@ -46,6 +46,10 @@ spring:
       port: ${REDIS_PORT:6381}
       password: ${REDIS_PASSWORD:redis_password}
 
+app:
+  encryption:
+    key: ${ENCRYPTION_KEY:}
+
 management:
   endpoints:
     web:
@@ -69,3 +73,5 @@ feign:
       url: ${TENANT_SERVICE_URL:http://localhost:8082}
     organization-service:
       url: ${ORGANIZATION_SERVICE_URL:http://localhost:8083}
+    approval-service:
+      url: ${APPROVAL_SERVICE_URL:http://localhost:8086}

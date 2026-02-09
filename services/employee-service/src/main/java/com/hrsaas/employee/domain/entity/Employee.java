@@ -1,6 +1,7 @@
 package com.hrsaas.employee.domain.entity;
 
 import com.hrsaas.common.entity.TenantAwareEntity;
+import com.hrsaas.employee.config.ResidentNumberConverter;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -61,7 +62,8 @@ public class Employee extends TenantAwareEntity {
     @Column(name = "user_id")
     private UUID userId;
 
-    @Column(name = "resident_number", length = 20)
+    @Convert(converter = ResidentNumberConverter.class)
+    @Column(name = "resident_number", length = 500)
     private String residentNumber;
 
     @Builder
