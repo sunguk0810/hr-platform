@@ -5,10 +5,14 @@ import com.hrsaas.common.response.PageResponse;
 import com.hrsaas.tenant.domain.dto.policy.PasswordPolicyData;
 import com.hrsaas.tenant.domain.dto.request.CreateTenantRequest;
 import com.hrsaas.tenant.domain.dto.request.UpdateTenantRequest;
+import com.hrsaas.tenant.domain.dto.response.TenantDetailResponse;
+import com.hrsaas.tenant.domain.dto.response.TenantListItemResponse;
 import com.hrsaas.tenant.domain.dto.response.TenantResponse;
 import com.hrsaas.tenant.domain.entity.PlanType;
 import com.hrsaas.tenant.domain.entity.TenantStatus;
-import com.hrsaas.tenant.service.TenantService;
+import com.hrsaas.tenant.repository.PolicyChangeHistoryRepository;
+import com.hrsaas.tenant.repository.TenantRepository;
+import com.hrsaas.tenant.service.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -42,6 +46,21 @@ class TenantControllerTest {
     private TenantService tenantService;
 
     @MockBean
+    private TenantBrandingService brandingService;
+
+    @MockBean
+    private TenantHierarchyService hierarchyService;
+
+    @MockBean
+    private PolicyInheritanceService policyInheritanceService;
+
+    @MockBean
+    private PolicyChangeHistoryRepository policyChangeHistoryRepository;
+
+    @MockBean
+    private TenantRepository tenantRepository;
+
+    @MockBean
     private com.hrsaas.common.security.SecurityFilter securityFilter;
 
     @MockBean
@@ -51,6 +70,16 @@ class TenantControllerTest {
     private com.hrsaas.common.security.PermissionChecker permissionChecker;
 
     private final UUID testTenantId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+
+    private TenantDetailResponse createMockDetailResponse() {
+        return TenantDetailResponse.builder()
+                .id(testTenantId)
+                .code("ACME")
+                .name("Acme Corporation")
+                .status(TenantStatus.ACTIVE)
+                .planType(PlanType.STANDARD)
+                .build();
+    }
 
     private TenantResponse createMockTenantResponse() {
         return TenantResponse.builder()
@@ -71,8 +100,8 @@ class TenantControllerTest {
                 .planType(PlanType.STANDARD)
                 .build();
 
-        when(tenantService.create(any(CreateTenantRequest.class)))
-                .thenReturn(createMockTenantResponse());
+        when(tenantService.createWithDetail(any(CreateTenantRequest.class)))
+                .thenReturn(createMockDetailResponse());
 
         mockMvc.perform(post("/api/v1/tenants")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -86,8 +115,8 @@ class TenantControllerTest {
     @Test
     @WithMockUser(roles = "SUPER_ADMIN")
     void getById_withSuperAdmin_returns200() throws Exception {
-        when(tenantService.getById(testTenantId))
-                .thenReturn(createMockTenantResponse());
+        when(tenantService.getDetailById(testTenantId))
+                .thenReturn(createMockDetailResponse());
 
         mockMvc.perform(get("/api/v1/tenants/{id}", testTenantId))
                 .andExpect(status().isOk())
@@ -99,8 +128,13 @@ class TenantControllerTest {
     @Test
     @WithMockUser(roles = "SUPER_ADMIN")
     void getAll_withSuperAdmin_returns200() throws Exception {
-        PageResponse<TenantResponse> pageResponse = PageResponse.<TenantResponse>builder()
-                .content(List.of(createMockTenantResponse()))
+        PageResponse<TenantListItemResponse> pageResponse = PageResponse.<TenantListItemResponse>builder()
+                .content(List.of(TenantListItemResponse.builder()
+                        .id(testTenantId)
+                        .code("ACME")
+                        .name("Acme Corporation")
+                        .status(TenantStatus.ACTIVE)
+                        .build()))
                 .page(PageResponse.PageInfo.builder()
                         .number(0)
                         .size(20)
@@ -113,7 +147,7 @@ class TenantControllerTest {
                         .build())
                 .build();
 
-        when(tenantService.getAll(any())).thenReturn(pageResponse);
+        when(tenantService.getAllList(any())).thenReturn(pageResponse);
 
         mockMvc.perform(get("/api/v1/tenants"))
                 .andExpect(status().isOk())
@@ -128,7 +162,7 @@ class TenantControllerTest {
                 .name("Acme Corp Updated")
                 .build();
 
-        TenantResponse updatedResponse = TenantResponse.builder()
+        TenantDetailResponse updatedResponse = TenantDetailResponse.builder()
                 .id(testTenantId)
                 .code("ACME")
                 .name("Acme Corp Updated")
@@ -136,7 +170,7 @@ class TenantControllerTest {
                 .planType(PlanType.STANDARD)
                 .build();
 
-        when(tenantService.update(eq(testTenantId), any(UpdateTenantRequest.class)))
+        when(tenantService.updateWithDetail(eq(testTenantId), any(UpdateTenantRequest.class)))
                 .thenReturn(updatedResponse);
 
         mockMvc.perform(put("/api/v1/tenants/{id}", testTenantId)

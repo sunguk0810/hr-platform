@@ -3,12 +3,16 @@ package com.hrsaas.tenant.service.impl;
 import com.hrsaas.common.cache.CacheNames;
 import com.hrsaas.common.core.exception.NotFoundException;
 import com.hrsaas.common.event.EventPublisher;
+import com.hrsaas.common.security.SecurityContextHolder;
+import com.hrsaas.common.security.UserContext;
 import com.hrsaas.tenant.domain.constant.DefaultPolicyData;
 import com.hrsaas.tenant.domain.dto.request.UpdateTenantPolicyRequest;
 import com.hrsaas.tenant.domain.dto.response.TenantPolicyResponse;
+import com.hrsaas.tenant.domain.entity.PolicyChangeHistory;
 import com.hrsaas.tenant.domain.entity.PolicyType;
 import com.hrsaas.tenant.domain.entity.TenantPolicy;
 import com.hrsaas.tenant.domain.event.TenantPolicyChangedEvent;
+import com.hrsaas.tenant.repository.PolicyChangeHistoryRepository;
 import com.hrsaas.tenant.repository.TenantPolicyRepository;
 import com.hrsaas.tenant.repository.TenantRepository;
 import com.hrsaas.tenant.service.PolicyDataValidator;
@@ -34,6 +38,7 @@ public class TenantPolicyServiceImpl implements TenantPolicyService {
     private final TenantRepository tenantRepository;
     private final PolicyDataValidator policyDataValidator;
     private final EventPublisher eventPublisher;
+    private final PolicyChangeHistoryRepository policyChangeHistoryRepository;
 
     @Override
     @Cacheable(value = CacheNames.TENANT_POLICY, key = "#tenantId + '-' + #policyType",
@@ -87,6 +92,8 @@ public class TenantPolicyServiceImpl implements TenantPolicyService {
                 .policyType(policyType)
                 .build());
 
+        String beforeValue = isNew ? null : policy.getPolicyData();
+
         policy.updatePolicyData(request.getPolicyData());
 
         if (request.getIsActive() != null) {
@@ -99,6 +106,10 @@ public class TenantPolicyServiceImpl implements TenantPolicyService {
 
         TenantPolicy saved = tenantPolicyRepository.save(policy);
         log.info("Tenant policy saved: tenantId={}, policyType={}", tenantId, policyType);
+
+        // Record policy change history
+        recordPolicyHistory(tenantId, policyType, isNew ? "CREATE" : "UPDATE",
+            beforeValue, request.getPolicyData());
 
         // Publish event
         eventPublisher.publish(TenantPolicyChangedEvent.builder()
@@ -116,8 +127,13 @@ public class TenantPolicyServiceImpl implements TenantPolicyService {
     public void delete(UUID tenantId, PolicyType policyType) {
         TenantPolicy policy = tenantPolicyRepository.findByTenantIdAndPolicyType(tenantId, policyType)
             .orElseThrow(() -> new NotFoundException("TNT_002", "정책을 찾을 수 없습니다: " + policyType));
+
+        String beforeValue = policy.getPolicyData();
         tenantPolicyRepository.delete(policy);
         log.info("Tenant policy deleted: tenantId={}, policyType={}", tenantId, policyType);
+
+        // Record policy change history
+        recordPolicyHistory(tenantId, policyType, "DELETE", beforeValue, "");
 
         // Publish event
         eventPublisher.publish(TenantPolicyChangedEvent.builder()
@@ -125,6 +141,27 @@ public class TenantPolicyServiceImpl implements TenantPolicyService {
             .policyType(policyType)
             .action("DELETED")
             .build());
+    }
+
+    private void recordPolicyHistory(UUID tenantId, PolicyType policyType,
+                                      String action, String beforeValue, String afterValue) {
+        try {
+            UserContext user = SecurityContextHolder.getCurrentUser();
+            String changedBy = user != null ? String.valueOf(user.getUserId()) : null;
+            String changedByName = user != null ? user.getUsername() : null;
+
+            policyChangeHistoryRepository.save(PolicyChangeHistory.builder()
+                .tenantId(tenantId)
+                .policyType(policyType.name())
+                .action(action)
+                .beforeValue(beforeValue)
+                .afterValue(afterValue != null ? afterValue : "")
+                .changedBy(changedBy)
+                .changedByName(changedByName)
+                .build());
+        } catch (Exception e) {
+            log.warn("Failed to record policy change history: tenantId={}, policyType={}", tenantId, policyType, e);
+        }
     }
 
     private void validateTenantExists(UUID tenantId) {

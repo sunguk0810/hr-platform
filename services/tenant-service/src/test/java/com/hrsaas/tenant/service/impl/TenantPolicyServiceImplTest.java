@@ -10,6 +10,7 @@ import com.hrsaas.tenant.domain.dto.response.TenantPolicyResponse;
 import com.hrsaas.tenant.domain.entity.PolicyType;
 import com.hrsaas.tenant.domain.entity.TenantPolicy;
 import com.hrsaas.tenant.domain.event.TenantPolicyChangedEvent;
+import com.hrsaas.tenant.repository.PolicyChangeHistoryRepository;
 import com.hrsaas.tenant.repository.TenantPolicyRepository;
 import com.hrsaas.tenant.repository.TenantRepository;
 import com.hrsaas.tenant.service.PolicyDataValidator;
@@ -49,6 +50,9 @@ class TenantPolicyServiceImplTest {
 
     @Mock
     private EventPublisher eventPublisher;
+
+    @Mock
+    private PolicyChangeHistoryRepository policyChangeHistoryRepository;
 
     private static final UUID TENANT_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
     private static final UUID POLICY_ID = UUID.fromString("10000000-0000-0000-0000-000000000001");

@@ -1,26 +1,28 @@
-package com.hrsaas.tenant.domain.dto.request;
+package com.hrsaas.tenant.domain.dto.response;
 
-import com.hrsaas.tenant.domain.entity.PlanType;
 import com.hrsaas.tenant.domain.entity.TenantStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+import java.time.Instant;
 import java.util.UUID;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TenantSearchRequest {
+public class TenantListItemResponse {
 
-    private String keyword;
+    private UUID id;
+    private String code;
+    private String name;
     private TenantStatus status;
-    private PlanType planType;
-    private LocalDate contractEndDateFrom;
-    private LocalDate contractEndDateTo;
+    private Integer employeeCount;
+    private String adminEmail;
+    private Instant createdAt;
     private UUID parentId;
+    private String parentName;
     private Integer level;
 }

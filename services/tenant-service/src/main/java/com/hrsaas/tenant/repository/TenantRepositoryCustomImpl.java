@@ -93,6 +93,14 @@ public class TenantRepositoryCustomImpl implements TenantRepositoryCustom {
             predicates.add(cb.lessThanOrEqualTo(root.get("contractEndDate"), request.getContractEndDateTo()));
         }
 
+        if (request.getParentId() != null) {
+            predicates.add(cb.equal(root.get("parentId"), request.getParentId()));
+        }
+
+        if (request.getLevel() != null) {
+            predicates.add(cb.equal(root.get("level"), request.getLevel()));
+        }
+
         return predicates;
     }
 }

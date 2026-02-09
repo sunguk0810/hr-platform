@@ -10,6 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Data
 @Builder
@@ -24,6 +25,11 @@ public class CreateTenantRequest {
     @NotBlank(message = "테넌트명을 입력해주세요.")
     @Size(max = 200, message = "테넌트명은 200자 이하여야 합니다.")
     private String name;
+
+    @Size(max = 200, message = "영문 테넌트명은 200자 이하여야 합니다.")
+    private String nameEn;
+
+    private String description;
 
     @Size(max = 20, message = "사업자번호는 20자 이하여야 합니다.")
     private String businessNumber;
@@ -41,6 +47,13 @@ public class CreateTenantRequest {
     @Size(max = 100, message = "이메일은 100자 이하여야 합니다.")
     private String email;
 
+    @Email(message = "올바른 이메일 형식이 아닙니다.")
+    @Size(max = 100, message = "관리자 이메일은 100자 이하여야 합니다.")
+    private String adminEmail;
+
+    @Size(max = 100, message = "관리자명은 100자 이하여야 합니다.")
+    private String adminName;
+
     private PlanType planType;
 
     private LocalDate contractStartDate;
@@ -48,4 +61,6 @@ public class CreateTenantRequest {
     private LocalDate contractEndDate;
 
     private Integer maxEmployees;
+
+    private UUID parentId;
 }

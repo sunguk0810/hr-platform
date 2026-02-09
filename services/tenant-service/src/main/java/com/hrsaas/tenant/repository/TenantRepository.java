@@ -26,4 +26,8 @@ public interface TenantRepository extends JpaRepository<Tenant, UUID>, TenantRep
     List<Tenant> findByContractEndDateBeforeAndStatus(LocalDate contractEndDate, TenantStatus status);
 
     List<Tenant> findByContractEndDateBetween(LocalDate from, LocalDate to);
+
+    List<Tenant> findByParentId(UUID parentId);
+
+    List<Tenant> findByStatusNot(TenantStatus status);
 }

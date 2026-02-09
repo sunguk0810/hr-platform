@@ -1,6 +1,8 @@
 package com.hrsaas.tenant.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hrsaas.common.response.ApiResponse;
+import com.hrsaas.tenant.domain.dto.request.ToggleFeatureRequest;
 import com.hrsaas.tenant.domain.dto.request.UpdateTenantFeatureRequest;
 import com.hrsaas.tenant.domain.dto.request.UpdateTenantPolicyRequest;
 import com.hrsaas.tenant.domain.dto.response.TenantFeatureResponse;
@@ -12,6 +14,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/tenants/{tenantId}")
 @RequiredArgsConstructor
@@ -27,8 +31,10 @@ public class TenantPolicyController {
 
     private final TenantPolicyService tenantPolicyService;
     private final TenantFeatureService tenantFeatureService;
+    private final ObjectMapper objectMapper;
 
-    // Policy APIs
+    // ===== Policy APIs =====
+
     @GetMapping("/policies")
     @Operation(summary = "테넌트 정책 목록 조회")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
@@ -57,7 +63,30 @@ public class TenantPolicyController {
     public ResponseEntity<ApiResponse<TenantPolicyResponse>> saveOrUpdatePolicy(
             @PathVariable UUID tenantId,
             @PathVariable PolicyType policyType,
-            @Valid @RequestBody UpdateTenantPolicyRequest request) {
+            @RequestBody Object body) {
+        // Support both wrapped ({policyData: "..."}) and direct policy object body from FE
+        UpdateTenantPolicyRequest request;
+        try {
+            // Try to deserialize as UpdateTenantPolicyRequest first
+            String jsonBody = objectMapper.writeValueAsString(body);
+            request = objectMapper.readValue(jsonBody, UpdateTenantPolicyRequest.class);
+            if (request.getPolicyData() == null || request.getPolicyData().isBlank()) {
+                // FE sent policy object directly → wrap it
+                request = UpdateTenantPolicyRequest.builder()
+                    .policyData(jsonBody)
+                    .build();
+            }
+        } catch (Exception e) {
+            // Fallback: treat entire body as policy data JSON
+            try {
+                String jsonBody = objectMapper.writeValueAsString(body);
+                request = UpdateTenantPolicyRequest.builder()
+                    .policyData(jsonBody)
+                    .build();
+            } catch (Exception ex) {
+                throw new com.hrsaas.common.core.exception.BusinessException("TNT_012", "정책 데이터 파싱 실패");
+            }
+        }
         TenantPolicyResponse response = tenantPolicyService.saveOrUpdate(tenantId, policyType, request);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
@@ -72,7 +101,8 @@ public class TenantPolicyController {
         return ResponseEntity.ok(ApiResponse.success(null, "정책이 삭제되었습니다."));
     }
 
-    // Feature APIs
+    // ===== Feature APIs =====
+
     @GetMapping("/features")
     @Operation(summary = "테넌트 기능 목록 조회")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
@@ -96,13 +126,39 @@ public class TenantPolicyController {
     }
 
     @PatchMapping("/features/{featureCode}")
-    @Operation(summary = "테넌트 기능 활성화/비활성화")
+    @Operation(summary = "테넌트 기능 활성화/비활성화 (PATCH)")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
-    public ResponseEntity<ApiResponse<TenantFeatureResponse>> updateFeature(
+    public ResponseEntity<ApiResponse<TenantFeatureResponse>> updateFeaturePatch(
             @PathVariable UUID tenantId,
             @PathVariable String featureCode,
             @Valid @RequestBody UpdateTenantFeatureRequest request) {
         TenantFeatureResponse response = tenantFeatureService.update(tenantId, featureCode, request);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PutMapping("/features/{featureCode}")
+    @Operation(summary = "테넌트 기능 활성화/비활성화 (PUT)")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
+    public ResponseEntity<ApiResponse<TenantFeatureResponse>> updateFeaturePut(
+            @PathVariable UUID tenantId,
+            @PathVariable String featureCode,
+            @Valid @RequestBody ToggleFeatureRequest request) {
+        // Convert ToggleFeatureRequest to UpdateTenantFeatureRequest
+        String configJson = null;
+        if (request.getConfig() != null && !request.getConfig().isEmpty()) {
+            try {
+                configJson = objectMapper.writeValueAsString(request.getConfig());
+            } catch (Exception e) {
+                log.warn("Failed to serialize feature config", e);
+            }
+        }
+
+        UpdateTenantFeatureRequest updateRequest = UpdateTenantFeatureRequest.builder()
+            .isEnabled(request.getEnabled())
+            .config(configJson)
+            .build();
+
+        TenantFeatureResponse response = tenantFeatureService.update(tenantId, featureCode, updateRequest);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

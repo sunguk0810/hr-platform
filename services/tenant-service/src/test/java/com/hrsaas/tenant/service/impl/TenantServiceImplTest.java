@@ -19,6 +19,7 @@ import com.hrsaas.tenant.domain.event.TenantUpdatedEvent;
 import com.hrsaas.tenant.repository.TenantPolicyRepository;
 import com.hrsaas.tenant.repository.TenantRepository;
 import com.hrsaas.tenant.service.PlanUpgradeService;
+import com.hrsaas.tenant.service.TenantDetailAssembler;
 import com.hrsaas.tenant.service.TenantProvisioningService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -63,6 +64,9 @@ class TenantServiceImplTest {
 
     @Mock
     private PlanUpgradeService planUpgradeService;
+
+    @Mock
+    private TenantDetailAssembler detailAssembler;
 
     @Mock
     private ObjectMapper objectMapper;
