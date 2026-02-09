@@ -23,6 +23,7 @@ import {
 import { EmptyState } from '@/components/common/EmptyState';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { Users, Plus, Trash2, UserCheck, AlertCircle } from 'lucide-react';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { format, addDays } from 'date-fns';
 import { useDelegations, useCreateDelegation, useCancelDelegation, useEmployeeSearch } from '../hooks/useApprovals';
 import type { DelegationStatus, CreateDelegationRequest } from '@hr-platform/shared-types';
@@ -35,6 +36,7 @@ const STATUS_CONFIG: Record<DelegationStatus, { label: string; variant: 'default
 
 export default function DelegationPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [cancelTargetId, setCancelTargetId] = useState<string | null>(null);
   const [employeeSearch] = useState('');
   const [formData, setFormData] = useState<CreateDelegationRequest>({
     delegateeId: '',
@@ -67,13 +69,18 @@ export default function DelegationPage() {
     }
   };
 
-  const handleCancel = async (id: string) => {
-    if (confirm('결재 위임을 취소하시겠습니까?')) {
-      try {
-        await cancelMutation.mutateAsync(id);
-      } catch (error) {
-        console.error('Failed to cancel delegation:', error);
-      }
+  const handleCancel = (id: string) => {
+    setCancelTargetId(id);
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!cancelTargetId) return;
+    try {
+      await cancelMutation.mutateAsync(cancelTargetId);
+    } catch (error) {
+      console.error('Failed to cancel delegation:', error);
+    } finally {
+      setCancelTargetId(null);
     }
   };
 
@@ -288,6 +295,15 @@ export default function DelegationPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={!!cancelTargetId}
+        onOpenChange={(open) => !open && setCancelTargetId(null)}
+        title="결재 위임 취소"
+        description="결재 위임을 취소하시겠습니까?"
+        variant="destructive"
+        onConfirm={handleConfirmCancel}
+      />
     </>
   );
 }

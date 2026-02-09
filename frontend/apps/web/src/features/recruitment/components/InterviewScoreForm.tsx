@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import type { SubmitInterviewScoreRequest, InterviewRecommendation } from '@hr-platform/shared-types';
 
 const RECOMMENDATIONS: { value: InterviewRecommendation; label: string; description: string }[] = [
@@ -70,6 +72,9 @@ export function InterviewScoreForm({
   isSubmitting = false,
   initialData,
 }: InterviewScoreFormProps) {
+  const [confirmWarning, setConfirmWarning] = useState<string | null>(null);
+  const [pendingPayload, setPendingPayload] = useState<SubmitInterviewScoreRequest | null>(null);
+
   const { register, handleSubmit, setValue, watch } = useForm<FormData>({
     defaultValues: {
       technicalScore: initialData?.technicalScore ?? 5,
@@ -122,28 +127,37 @@ export function InterviewScoreForm({
     return null;
   };
 
+  const buildPayload = (data: FormData): SubmitInterviewScoreRequest => ({
+    technicalScore: data.technicalScore,
+    communicationScore: data.communicationScore,
+    cultureFitScore: data.cultureFitScore,
+    problemSolvingScore: data.problemSolvingScore,
+    overallScore: data.overallScore,
+    strengths: data.strengths || undefined,
+    weaknesses: data.weaknesses || undefined,
+    recommendation: data.recommendation,
+    comments: data.comments || undefined,
+  });
+
   const handleFormSubmit = (data: FormData) => {
-    // 점수와 추천 의견 일관성 검증
     const consistencyError = validateScoreConsistency(data.overallScore, data.recommendation);
+    const payload = buildPayload(data);
+
     if (consistencyError) {
-      const proceed = window.confirm(
-        `${consistencyError}\n\n그래도 제출하시겠습니까?`
-      );
-      if (!proceed) return;
+      setConfirmWarning(`${consistencyError}\n\n그래도 제출하시겠습니까?`);
+      setPendingPayload(payload);
+      return;
     }
 
-    const payload: SubmitInterviewScoreRequest = {
-      technicalScore: data.technicalScore,
-      communicationScore: data.communicationScore,
-      cultureFitScore: data.cultureFitScore,
-      problemSolvingScore: data.problemSolvingScore,
-      overallScore: data.overallScore,
-      strengths: data.strengths || undefined,
-      weaknesses: data.weaknesses || undefined,
-      recommendation: data.recommendation,
-      comments: data.comments || undefined,
-    };
     onSubmit(payload);
+  };
+
+  const handleConfirmSubmit = () => {
+    if (pendingPayload) {
+      onSubmit(pendingPayload);
+    }
+    setConfirmWarning(null);
+    setPendingPayload(null);
   };
 
   return (
@@ -272,6 +286,19 @@ export function InterviewScoreForm({
           {isSubmitting ? '제출 중...' : '평가 제출'}
         </Button>
       </div>
+
+      <ConfirmDialog
+        open={!!confirmWarning}
+        onOpenChange={(open) => {
+          if (!open) {
+            setConfirmWarning(null);
+            setPendingPayload(null);
+          }
+        }}
+        title="점수 일관성 경고"
+        description={confirmWarning ?? ''}
+        onConfirm={handleConfirmSubmit}
+      />
     </form>
   );
 }

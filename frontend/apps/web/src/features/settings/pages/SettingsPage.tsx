@@ -29,6 +29,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { format } from 'date-fns';
 
 export default function SettingsPage() {
@@ -54,6 +55,10 @@ export default function SettingsPage() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [isLoadingSessions, setIsLoadingSessions] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState<string | null>(null);
+
+  // Confirm dialog state
+  const [confirmLogoutSessionId, setConfirmLogoutSessionId] = useState<string | null>(null);
+  const [confirmLogoutAll, setConfirmLogoutAll] = useState(false);
 
   // Notification settings
   const [notifications, setNotifications] = useState({
@@ -130,17 +135,19 @@ export default function SettingsPage() {
     }
   };
 
-  const handleLogoutSession = async (sessionId: string) => {
-    if (!confirm(t('security.confirmLogoutSession'))) return;
+  const handleLogoutSession = (sessionId: string) => {
+    setConfirmLogoutSessionId(sessionId);
+  };
 
-    setIsLoggingOut(sessionId);
+  const handleConfirmLogoutSession = async () => {
+    if (!confirmLogoutSessionId) return;
+    setIsLoggingOut(confirmLogoutSessionId);
     try {
-      await authService.logoutSession(sessionId);
+      await authService.logoutSession(confirmLogoutSessionId);
       toast({
         title: t('toast.sessionLogout'),
         description: t('toast.sessionLogoutDesc'),
       });
-      // Refresh session list
       fetchSessions();
     } catch {
       toast({
@@ -150,12 +157,15 @@ export default function SettingsPage() {
       });
     } finally {
       setIsLoggingOut(null);
+      setConfirmLogoutSessionId(null);
     }
   };
 
-  const handleLogoutAllSessions = async () => {
-    if (!confirm(t('security.confirmLogoutAll'))) return;
+  const handleLogoutAllSessions = () => {
+    setConfirmLogoutAll(true);
+  };
 
+  const handleConfirmLogoutAll = async () => {
     setIsLoggingOut('all');
     try {
       await authService.logoutAllSessions();
@@ -163,7 +173,6 @@ export default function SettingsPage() {
         title: t('toast.allSessionsLogout'),
         description: t('toast.allSessionsLogoutDesc'),
       });
-      // Refresh session list
       fetchSessions();
     } catch {
       toast({
@@ -173,6 +182,7 @@ export default function SettingsPage() {
       });
     } finally {
       setIsLoggingOut(null);
+      setConfirmLogoutAll(false);
     }
   };
 
@@ -779,6 +789,21 @@ export default function SettingsPage() {
         </TabsContent>
 
       </Tabs>
+
+      <ConfirmDialog
+        open={!!confirmLogoutSessionId}
+        onOpenChange={(open) => !open && setConfirmLogoutSessionId(null)}
+        title={t('security.confirmLogoutSession')}
+        variant="destructive"
+        onConfirm={handleConfirmLogoutSession}
+      />
+      <ConfirmDialog
+        open={confirmLogoutAll}
+        onOpenChange={(open) => !open && setConfirmLogoutAll(false)}
+        title={t('security.confirmLogoutAll')}
+        variant="destructive"
+        onConfirm={handleConfirmLogoutAll}
+      />
     </>
   );
 }

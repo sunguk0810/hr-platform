@@ -27,6 +27,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { Pagination } from '@/components/common/Pagination';
 import { ArrowLeft, Clock, Plus, AlertCircle, CheckCircle, XCircle, Timer } from 'lucide-react';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -52,6 +53,8 @@ export default function OvertimePage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<OvertimeStatus | 'all'>('all');
   const [page, setPage] = useState(0);
+
+  const [cancelTargetId, setCancelTargetId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<CreateOvertimeRequest>({
     date: format(new Date(), 'yyyy-MM-dd'),
@@ -88,13 +91,18 @@ export default function OvertimePage() {
     }
   };
 
-  const handleCancel = async (id: string) => {
-    if (confirm('초과근무 신청을 취소하시겠습니까?')) {
-      try {
-        await cancelMutation.mutateAsync(id);
-      } catch (error) {
-        console.error('Failed to cancel overtime:', error);
-      }
+  const handleCancel = (id: string) => {
+    setCancelTargetId(id);
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!cancelTargetId) return;
+    try {
+      await cancelMutation.mutateAsync(cancelTargetId);
+    } catch (error) {
+      console.error('Failed to cancel overtime:', error);
+    } finally {
+      setCancelTargetId(null);
     }
   };
 
@@ -326,6 +334,14 @@ export default function OvertimePage() {
         </div>
 
         {renderCreateDialog()}
+        <ConfirmDialog
+          open={!!cancelTargetId}
+          onOpenChange={(open) => !open && setCancelTargetId(null)}
+          title="초과근무 취소"
+          description="초과근무 신청을 취소하시겠습니까?"
+          variant="destructive"
+          onConfirm={handleConfirmCancel}
+        />
       </PullToRefreshContainer>
     );
   }
@@ -535,6 +551,14 @@ export default function OvertimePage() {
       </Card>
 
       {renderCreateDialog()}
+      <ConfirmDialog
+        open={!!cancelTargetId}
+        onOpenChange={(open) => !open && setCancelTargetId(null)}
+        title="초과근무 취소"
+        description="초과근무 신청을 취소하시겠습니까?"
+        variant="destructive"
+        onConfirm={handleConfirmCancel}
+      />
     </>
   );
 }
