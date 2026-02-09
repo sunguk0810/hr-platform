@@ -11,4 +11,7 @@ public interface ApprovalServiceClient {
 
     @GetMapping("/api/v1/approvals/count/pending")
     ApiResponse<Long> getPendingApprovalCount(@RequestHeader("X-Tenant-ID") String tenantId);
+
+    @GetMapping("/api/v1/approvals/statistics")
+    ApiResponse<com.hrsaas.tenant.client.dto.ApprovalStatisticsDto> getStatistics();
 }

@@ -7,6 +7,7 @@ import com.hrsaas.attendance.domain.dto.request.UpdateAttendanceRecordRequest;
 import com.hrsaas.attendance.domain.dto.response.AttendanceRecordResponse;
 import com.hrsaas.attendance.domain.dto.response.AttendanceSummaryResponse;
 import com.hrsaas.attendance.domain.dto.response.DepartmentAttendanceSummaryResponse;
+import com.hrsaas.attendance.domain.dto.response.TenantAttendanceSummaryResponse;
 import com.hrsaas.attendance.domain.dto.response.WorkHoursStatisticsResponse;
 import com.hrsaas.attendance.domain.entity.AttendanceModificationLog;
 import com.hrsaas.attendance.domain.entity.AttendanceRecord;
@@ -587,5 +588,97 @@ public class AttendanceServiceImpl implements AttendanceService {
         result.sort((a, b) -> Double.compare(b.getTotalHours(), a.getTotalHours()));
 
         return result;
+    }
+
+    @Override
+    public TenantAttendanceSummaryResponse getTenantSummary() {
+        UUID tenantId = TenantContext.getCurrentTenant();
+        LocalDate today = LocalDate.now();
+
+        // 이번 달 범위
+        YearMonth currentMonth = YearMonth.from(today);
+        LocalDate currentStart = currentMonth.atDay(1);
+        LocalDate currentEnd = today; // 오늘까지만
+
+        // 지난 달 범위
+        YearMonth previousMonth = currentMonth.minusMonths(1);
+        LocalDate previousStart = previousMonth.atDay(1);
+        LocalDate previousEnd = previousMonth.atEndOfMonth();
+
+        // 이번 달 / 지난 달 근태 기록 조회
+        List<AttendanceRecord> currentRecords = attendanceRecordRepository
+            .findByTenantIdAndDateRange(tenantId, currentStart, currentEnd);
+        List<AttendanceRecord> previousRecords = attendanceRecordRepository
+            .findByTenantIdAndDateRange(tenantId, previousStart, previousEnd);
+
+        // 출근율 계산
+        BigDecimal attendanceRate = calculateAttendanceRate(currentRecords);
+        BigDecimal previousAttendanceRate = calculateAttendanceRate(previousRecords);
+
+        // 평균 초과근무 시간
+        BigDecimal avgOvertime = calculateAvgOvertimeHours(currentRecords);
+        BigDecimal previousAvgOvertime = calculateAvgOvertimeHours(previousRecords);
+
+        // 휴가 사용률 (이번 달 승인된 휴가 건수 / 전체 근무일수 비율)
+        long currentLeaveCount = leaveRequestRepository.findCalendarEvents(tenantId, currentStart, currentEnd)
+            .stream().filter(l -> l.getStatus() == com.hrsaas.attendance.domain.entity.LeaveStatus.APPROVED).count();
+        long previousLeaveCount = leaveRequestRepository.findCalendarEvents(tenantId, previousStart, previousEnd)
+            .stream().filter(l -> l.getStatus() == com.hrsaas.attendance.domain.entity.LeaveStatus.APPROVED).count();
+
+        int currentWorkDays = calculateWorkDays(currentMonth);
+        int previousWorkDays = calculateWorkDays(previousMonth);
+
+        java.util.Set<UUID> currentEmployeeIds = currentRecords.stream()
+            .map(AttendanceRecord::getEmployeeId).collect(java.util.stream.Collectors.toSet());
+        java.util.Set<UUID> previousEmployeeIds = previousRecords.stream()
+            .map(AttendanceRecord::getEmployeeId).collect(java.util.stream.Collectors.toSet());
+
+        BigDecimal leaveUsageRate = currentEmployeeIds.isEmpty() ? BigDecimal.ZERO
+            : BigDecimal.valueOf(currentLeaveCount)
+                .divide(BigDecimal.valueOf(currentEmployeeIds.size()), 4, java.math.RoundingMode.HALF_UP)
+                .multiply(BigDecimal.valueOf(100))
+                .setScale(1, java.math.RoundingMode.HALF_UP);
+        BigDecimal previousLeaveUsageRate = previousEmployeeIds.isEmpty() ? BigDecimal.ZERO
+            : BigDecimal.valueOf(previousLeaveCount)
+                .divide(BigDecimal.valueOf(previousEmployeeIds.size()), 4, java.math.RoundingMode.HALF_UP)
+                .multiply(BigDecimal.valueOf(100))
+                .setScale(1, java.math.RoundingMode.HALF_UP);
+
+        // 오늘 휴가 중인 사람 수
+        long onLeaveToday = leaveRequestRepository.findCalendarEvents(tenantId, today, today)
+            .stream().filter(l -> l.getStatus() == com.hrsaas.attendance.domain.entity.LeaveStatus.APPROVED).count();
+
+        return TenantAttendanceSummaryResponse.builder()
+            .attendanceRate(attendanceRate)
+            .previousAttendanceRate(previousAttendanceRate)
+            .leaveUsageRate(leaveUsageRate)
+            .previousLeaveUsageRate(previousLeaveUsageRate)
+            .avgOvertimeHours(avgOvertime)
+            .previousAvgOvertimeHours(previousAvgOvertime)
+            .onLeaveToday(onLeaveToday)
+            .build();
+    }
+
+    private BigDecimal calculateAttendanceRate(List<AttendanceRecord> records) {
+        if (records.isEmpty()) return BigDecimal.ZERO;
+        long presentCount = records.stream()
+            .filter(r -> r.getCheckInTime() != null)
+            .count();
+        return BigDecimal.valueOf(presentCount)
+            .divide(BigDecimal.valueOf(records.size()), 4, java.math.RoundingMode.HALF_UP)
+            .multiply(BigDecimal.valueOf(100))
+            .setScale(1, java.math.RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal calculateAvgOvertimeHours(List<AttendanceRecord> records) {
+        if (records.isEmpty()) return BigDecimal.ZERO;
+        java.util.Set<UUID> employeeIds = records.stream()
+            .map(AttendanceRecord::getEmployeeId)
+            .collect(java.util.stream.Collectors.toSet());
+        int totalOvertimeMinutes = records.stream()
+            .mapToInt(r -> r.getOvertimeMinutes() != null ? r.getOvertimeMinutes() : 0)
+            .sum();
+        return BigDecimal.valueOf(totalOvertimeMinutes)
+            .divide(BigDecimal.valueOf(employeeIds.size() * 60L), 1, java.math.RoundingMode.HALF_UP);
     }
 }

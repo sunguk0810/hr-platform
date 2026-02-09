@@ -5,6 +5,7 @@ import com.hrsaas.approval.domain.dto.request.CreateApprovalRequest;
 import com.hrsaas.approval.domain.dto.request.ProcessApprovalRequest;
 import com.hrsaas.approval.domain.dto.response.ApprovalDocumentResponse;
 import com.hrsaas.approval.domain.dto.response.ApprovalHistoryResponse;
+import com.hrsaas.approval.domain.dto.response.ApprovalStatisticsResponse;
 import com.hrsaas.approval.domain.dto.response.ApprovalSummaryResponse;
 import com.hrsaas.approval.domain.entity.*;
 import com.hrsaas.approval.domain.event.ApprovalCompletedEvent;
@@ -25,7 +26,13 @@ import org.springframework.statemachine.StateMachine;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
@@ -366,6 +373,48 @@ public class ApprovalServiceImpl implements ApprovalService {
     private ApprovalDocument findById(UUID id) {
         return documentRepository.findByIdWithLinesAndHistories(id)
             .orElseThrow(() -> new NotFoundException("APV_001", "결재 문서를 찾을 수 없습니다: " + id));
+    }
+
+    @Override
+    public ApprovalStatisticsResponse getStatistics() {
+        UUID tenantId = TenantContext.getCurrentTenant();
+        ZoneId zone = ZoneId.systemDefault();
+
+        YearMonth currentMonth = YearMonth.now();
+        YearMonth previousMonth = currentMonth.minusMonths(1);
+
+        Instant currentStart = currentMonth.atDay(1).atStartOfDay(zone).toInstant();
+        Instant currentEnd = currentMonth.plusMonths(1).atDay(1).atStartOfDay(zone).toInstant();
+        Instant previousStart = previousMonth.atDay(1).atStartOfDay(zone).toInstant();
+        Instant previousEnd = currentStart;
+
+        BigDecimal avgCurrent = calculateAvgProcessingTime(
+            documentRepository.findCompletedBetween(tenantId, currentStart, currentEnd));
+        BigDecimal avgPrevious = calculateAvgProcessingTime(
+            documentRepository.findCompletedBetween(tenantId, previousStart, previousEnd));
+
+        return ApprovalStatisticsResponse.builder()
+            .avgProcessingTimeHours(avgCurrent)
+            .previousAvgProcessingTimeHours(avgPrevious)
+            .build();
+    }
+
+    private BigDecimal calculateAvgProcessingTime(List<ApprovalDocument> documents) {
+        if (documents.isEmpty()) return BigDecimal.ZERO;
+
+        long totalHours = documents.stream()
+            .filter(d -> d.getSubmittedAt() != null && d.getCompletedAt() != null)
+            .mapToLong(d -> Duration.between(d.getSubmittedAt(), d.getCompletedAt()).toHours())
+            .sum();
+
+        long count = documents.stream()
+            .filter(d -> d.getSubmittedAt() != null && d.getCompletedAt() != null)
+            .count();
+
+        if (count == 0) return BigDecimal.ZERO;
+
+        return BigDecimal.valueOf(totalHours)
+            .divide(BigDecimal.valueOf(count), 1, RoundingMode.HALF_UP);
     }
 
     private String generateDocumentNumber(UUID tenantId, String documentType) {

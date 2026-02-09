@@ -19,7 +19,6 @@ http:
         accessControlExposeHeaders:
           - X-Request-ID
           - X-Correlation-ID
-        accessControlAllowCredentials: true
         accessControlMaxAge: 3600
     rate-limit:
       rateLimit:

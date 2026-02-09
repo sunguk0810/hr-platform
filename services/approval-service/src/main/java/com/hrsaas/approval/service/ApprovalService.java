@@ -4,6 +4,7 @@ import com.hrsaas.approval.domain.dto.request.CreateApprovalRequest;
 import com.hrsaas.approval.domain.dto.request.ProcessApprovalRequest;
 import com.hrsaas.approval.domain.dto.response.ApprovalDocumentResponse;
 import com.hrsaas.approval.domain.dto.response.ApprovalHistoryResponse;
+import com.hrsaas.approval.domain.dto.response.ApprovalStatisticsResponse;
 import com.hrsaas.approval.domain.dto.response.ApprovalSummaryResponse;
 import com.hrsaas.common.response.PageResponse;
 import org.springframework.data.domain.Pageable;
@@ -45,4 +46,10 @@ public interface ApprovalService {
     ApprovalDocumentResponse recall(UUID documentId, UUID drafterId);
 
     ApprovalDocumentResponse cancel(UUID documentId, UUID drafterId);
+
+    /**
+     * 결재 처리 시간 통계 (대시보드 Statistics 위젯용)
+     * 이번 달 vs 지난 달 평균 결재 처리 시간 비교
+     */
+    ApprovalStatisticsResponse getStatistics();
 }

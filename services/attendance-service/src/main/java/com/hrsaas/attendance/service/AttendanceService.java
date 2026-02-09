@@ -6,6 +6,7 @@ import com.hrsaas.attendance.domain.dto.request.UpdateAttendanceRecordRequest;
 import com.hrsaas.attendance.domain.dto.response.AttendanceRecordResponse;
 import com.hrsaas.attendance.domain.dto.response.AttendanceSummaryResponse;
 import com.hrsaas.attendance.domain.dto.response.DepartmentAttendanceSummaryResponse;
+import com.hrsaas.attendance.domain.dto.response.TenantAttendanceSummaryResponse;
 import com.hrsaas.attendance.domain.dto.response.WorkHoursStatisticsResponse;
 
 import java.time.LocalDate;
@@ -47,4 +48,10 @@ public interface AttendanceService {
      * @return 부서 근태 요약 (출근, 지각, 결근, 휴가 인원 등)
      */
     DepartmentAttendanceSummaryResponse getDepartmentSummary(UUID departmentId, LocalDate date);
+
+    /**
+     * 테넌트 전체 근태 통계 (대시보드 Statistics 위젯용)
+     * 이번 달 vs 지난 달 비교 통계 반환
+     */
+    TenantAttendanceSummaryResponse getTenantSummary();
 }
