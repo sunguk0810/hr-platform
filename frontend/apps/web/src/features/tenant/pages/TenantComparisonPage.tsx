@@ -23,6 +23,7 @@ import {
   Download,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from '@/hooks/useToast';
 
 // Mock tenant data
 const mockTenants = [
@@ -163,7 +164,7 @@ export default function TenantComparisonPage() {
   const rightMetrics = mockMetrics[rightTenant];
 
   const handleExport = () => {
-    alert('비교 리포트를 내보냅니다.');
+    toast({ title: '비교 리포트를 내보냅니다.' });
   };
 
   return (

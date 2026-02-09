@@ -13,6 +13,7 @@ import type {
   UpdateJobPostingRequest,
   RecruitmentEmploymentType,
 } from '@hr-platform/shared-types';
+import { showErrorToast } from '@/components/common/Error/ErrorToast';
 
 const EMPLOYMENT_TYPES: { value: RecruitmentEmploymentType; label: string }[] = [
   { value: 'FULL_TIME', label: '정규직' },
@@ -129,7 +130,7 @@ export function JobPostingForm({
     if (!data.salaryNegotiable) {
       const salaryError = validateSalaryRange(data.salaryMin, data.salaryMax);
       if (salaryError) {
-        alert(salaryError);
+        showErrorToast(salaryError);
         return;
       }
     }
@@ -137,7 +138,7 @@ export function JobPostingForm({
     // 날짜 범위 검증
     const dateError = validateDateRange(data.openDate, data.closeDate);
     if (dateError) {
-      alert(dateError);
+      showErrorToast(dateError);
       return;
     }
 

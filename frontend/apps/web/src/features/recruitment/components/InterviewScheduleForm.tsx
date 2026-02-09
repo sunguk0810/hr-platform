@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { CreateInterviewRequest, InterviewType } from '@hr-platform/shared-types';
+import { showErrorToast } from '@/components/common/Error/ErrorToast';
 
 const INTERVIEW_TYPES: { value: InterviewType; label: string }[] = [
   { value: 'FIRST_ROUND', label: '1차면접' },
@@ -97,7 +98,7 @@ export function InterviewScheduleForm({
     // 미래 날짜/시간 검증
     const dateTimeError = validateFutureDateTime(data.scheduledDate, data.scheduledTime);
     if (dateTimeError) {
-      alert(dateTimeError);
+      showErrorToast(dateTimeError);
       return;
     }
 
