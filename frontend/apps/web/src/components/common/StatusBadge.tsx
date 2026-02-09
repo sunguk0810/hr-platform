@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 
 export type StatusType =
@@ -35,10 +36,11 @@ const dotColors: Record<StatusType, string> = {
 };
 
 export function StatusBadge({ status, label, className, dot = false, pulse = false }: StatusBadgeProps) {
+  const { t } = useTranslation('accessibility');
   return (
     <span
       role="status"
-      aria-label={`상태: ${label}`}
+      aria-label={t('statusLabel', { label })}
       className={cn(
         'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
         statusStyles[status],
@@ -68,25 +70,173 @@ export function StatusBadge({ status, label, className, dot = false, pulse = fal
   );
 }
 
-// Preset status badges for common use cases
+// --- Static type maps (locale-independent, module scope) ---
+
+const approvalTypeMap: Record<string, StatusType> = {
+  DRAFT: 'default',
+  PENDING: 'pending',
+  IN_REVIEW: 'info',
+  APPROVED: 'success',
+  REJECTED: 'error',
+  RECALLED: 'warning',
+  CANCELED: 'default',
+  CANCELLED: 'default',
+};
+
+const employmentTypeMap: Record<string, StatusType> = {
+  ACTIVE: 'success',
+  LEAVE: 'warning',
+  ON_LEAVE: 'warning',
+  RESIGNED: 'default',
+  RETIRED: 'default',
+  SUSPENDED: 'error',
+};
+
+const leaveTypeMap: Record<string, StatusType> = {
+  PENDING: 'pending',
+  APPROVED: 'success',
+  REJECTED: 'error',
+  CANCELLED: 'default',
+};
+
+const attendanceTypeMap: Record<string, StatusType> = {
+  NORMAL: 'success',
+  LATE: 'warning',
+  EARLY_LEAVE: 'warning',
+  ABSENT: 'error',
+  HOLIDAY: 'info',
+  WEEKEND: 'default',
+  LEAVE: 'info',
+  HALF_DAY: 'info',
+  OVERTIME: 'pending',
+};
+
+const tenantTypeMap: Record<string, StatusType> = {
+  ACTIVE: 'success',
+  INACTIVE: 'default',
+  SUSPENDED: 'error',
+  PENDING: 'pending',
+};
+
+const leaveKindTypeMap: Record<string, StatusType> = {
+  ANNUAL: 'info',
+  SICK: 'warning',
+  SPECIAL: 'success',
+  HALF_DAY_AM: 'default',
+  HALF_DAY_PM: 'default',
+  HOURLY: 'pending',
+  MATERNITY: 'info',
+  PATERNITY: 'info',
+  UNPAID: 'default',
+};
+
+const appointmentDraftTypeMap: Record<string, StatusType> = {
+  DRAFT: 'default',
+  PENDING_APPROVAL: 'pending',
+  APPROVED: 'info',
+  REJECTED: 'error',
+  EXECUTED: 'success',
+  CANCELLED: 'default',
+};
+
+const appointmentKindTypeMap: Record<string, StatusType> = {
+  PROMOTION: 'success',
+  TRANSFER: 'info',
+  POSITION_CHANGE: 'info',
+  JOB_CHANGE: 'info',
+  LEAVE_OF_ABSENCE: 'warning',
+  REINSTATEMENT: 'success',
+  RESIGNATION: 'default',
+  RETIREMENT: 'default',
+  DEMOTION: 'error',
+  CONCURRENT: 'pending',
+};
+
+const jobPostingTypeMap: Record<string, StatusType> = {
+  DRAFT: 'default',
+  PENDING: 'pending',
+  PUBLISHED: 'success',
+  CLOSED: 'warning',
+  CANCELLED: 'error',
+  COMPLETED: 'info',
+};
+
+const applicationTypeMap: Record<string, StatusType> = {
+  RECEIVED: 'info',
+  SCREENING: 'pending',
+  IN_PROGRESS: 'warning',
+  PASSED: 'success',
+  FAILED: 'error',
+  ON_HOLD: 'default',
+  WITHDRAWN: 'default',
+  HIRED: 'success',
+};
+
+const applicationStageTypeMap: Record<string, StatusType> = {
+  DOCUMENT: 'default',
+  FIRST_INTERVIEW: 'info',
+  SECOND_INTERVIEW: 'info',
+  FINAL_INTERVIEW: 'warning',
+  OFFER: 'success',
+};
+
+const interviewTypeMap: Record<string, StatusType> = {
+  SCHEDULING: 'default',
+  SCHEDULED: 'pending',
+  IN_PROGRESS: 'warning',
+  COMPLETED: 'success',
+  CANCELLED: 'default',
+  NO_SHOW: 'error',
+  POSTPONED: 'info',
+};
+
+const interviewKindTypeMap: Record<string, StatusType> = {
+  FIRST_ROUND: 'default',
+  SECOND_ROUND: 'info',
+  FINAL_ROUND: 'pending',
+  TECHNICAL: 'warning',
+  PERSONALITY: 'success',
+  PRESENTATION: 'info',
+  GROUP: 'default',
+  VIDEO: 'info',
+  PHONE: 'default',
+};
+
+const employmentKindTypeMap: Record<string, StatusType> = {
+  FULL_TIME: 'success',
+  CONTRACT: 'warning',
+  INTERN: 'info',
+  PART_TIME: 'default',
+};
+
+const recommendationTypeMap: Record<string, StatusType> = {
+  STRONG_HIRE: 'success',
+  HIRE: 'info',
+  NO_HIRE: 'warning',
+  STRONG_NO_HIRE: 'error',
+};
+
+const offerTypeMap: Record<string, StatusType> = {
+  DRAFT: 'default',
+  PENDING_APPROVAL: 'pending',
+  APPROVED: 'info',
+  SENT: 'pending',
+  ACCEPTED: 'success',
+  DECLINED: 'error',
+  NEGOTIATING: 'warning',
+  EXPIRED: 'default',
+  CANCELLED: 'default',
+};
+
+// --- Preset status badges ---
+
 export function ApprovalStatusBadge({
   status
 }: {
   status: 'DRAFT' | 'PENDING' | 'IN_REVIEW' | 'APPROVED' | 'REJECTED' | 'RECALLED' | 'CANCELED' | 'CANCELLED'
 }) {
-  const statusMap: Record<string, { type: StatusType; label: string }> = {
-    DRAFT: { type: 'default', label: '임시저장' },
-    PENDING: { type: 'pending', label: '결재대기' },
-    IN_REVIEW: { type: 'info', label: '검토중' },
-    APPROVED: { type: 'success', label: '승인' },
-    REJECTED: { type: 'error', label: '반려' },
-    RECALLED: { type: 'warning', label: '회수됨' },
-    CANCELED: { type: 'default', label: '취소' },
-    CANCELLED: { type: 'default', label: '취소' },
-  };
-
-  const { type, label } = statusMap[status] || { type: 'default', label: status };
-  return <StatusBadge status={type} label={label} />;
+  const { t } = useTranslation('status');
+  return <StatusBadge status={approvalTypeMap[status] ?? 'default'} label={t(`approval.${status}`, status)} />;
 }
 
 export function EmploymentStatusBadge({
@@ -94,17 +244,8 @@ export function EmploymentStatusBadge({
 }: {
   status: 'ACTIVE' | 'LEAVE' | 'ON_LEAVE' | 'RESIGNED' | 'RETIRED' | 'SUSPENDED'
 }) {
-  const statusMap: Record<string, { type: StatusType; label: string }> = {
-    ACTIVE: { type: 'success', label: '재직' },
-    LEAVE: { type: 'warning', label: '휴직' },
-    ON_LEAVE: { type: 'warning', label: '휴직' },
-    RESIGNED: { type: 'default', label: '퇴직' },
-    RETIRED: { type: 'default', label: '정년퇴직' },
-    SUSPENDED: { type: 'error', label: '정직' },
-  };
-
-  const { type, label } = statusMap[status] || { type: 'default', label: status };
-  return <StatusBadge status={type} label={label} />;
+  const { t } = useTranslation('status');
+  return <StatusBadge status={employmentTypeMap[status] ?? 'default'} label={t(`employment.${status}`, status)} />;
 }
 
 export function LeaveStatusBadge({
@@ -112,15 +253,8 @@ export function LeaveStatusBadge({
 }: {
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED'
 }) {
-  const statusMap: Record<string, { type: StatusType; label: string }> = {
-    PENDING: { type: 'pending', label: '승인대기' },
-    APPROVED: { type: 'success', label: '승인' },
-    REJECTED: { type: 'error', label: '반려' },
-    CANCELLED: { type: 'default', label: '취소' },
-  };
-
-  const { type, label } = statusMap[status] || { type: 'default', label: status };
-  return <StatusBadge status={type} label={label} />;
+  const { t } = useTranslation('status');
+  return <StatusBadge status={leaveTypeMap[status] ?? 'default'} label={t(`leave.${status}`, status)} />;
 }
 
 export function AttendanceStatusBadge({
@@ -128,20 +262,8 @@ export function AttendanceStatusBadge({
 }: {
   status: 'NORMAL' | 'LATE' | 'EARLY_LEAVE' | 'ABSENT' | 'HOLIDAY' | 'WEEKEND' | 'LEAVE' | 'HALF_DAY' | 'OVERTIME'
 }) {
-  const statusMap: Record<string, { type: StatusType; label: string }> = {
-    NORMAL: { type: 'success', label: '정상' },
-    LATE: { type: 'warning', label: '지각' },
-    EARLY_LEAVE: { type: 'warning', label: '조퇴' },
-    ABSENT: { type: 'error', label: '결근' },
-    HOLIDAY: { type: 'info', label: '휴일' },
-    WEEKEND: { type: 'default', label: '주말' },
-    LEAVE: { type: 'info', label: '휴가' },
-    HALF_DAY: { type: 'info', label: '반차' },
-    OVERTIME: { type: 'pending', label: '초과근무' },
-  };
-
-  const { type, label } = statusMap[status] || { type: 'default', label: status };
-  return <StatusBadge status={type} label={label} />;
+  const { t } = useTranslation('status');
+  return <StatusBadge status={attendanceTypeMap[status] ?? 'default'} label={t(`attendance.${status}`, status)} />;
 }
 
 export function TenantStatusBadge({
@@ -149,15 +271,8 @@ export function TenantStatusBadge({
 }: {
   status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'PENDING'
 }) {
-  const statusMap: Record<string, { type: StatusType; label: string }> = {
-    ACTIVE: { type: 'success', label: '활성' },
-    INACTIVE: { type: 'default', label: '비활성' },
-    SUSPENDED: { type: 'error', label: '정지' },
-    PENDING: { type: 'pending', label: '대기' },
-  };
-
-  const { type, label } = statusMap[status] || { type: 'default', label: status };
-  return <StatusBadge status={type} label={label} />;
+  const { t } = useTranslation('status');
+  return <StatusBadge status={tenantTypeMap[status] ?? 'default'} label={t(`tenant.${status}`, status)} />;
 }
 
 export function LeaveTypeBadge({
@@ -165,20 +280,8 @@ export function LeaveTypeBadge({
 }: {
   type: 'ANNUAL' | 'SICK' | 'SPECIAL' | 'HALF_DAY_AM' | 'HALF_DAY_PM' | 'HOURLY' | 'MATERNITY' | 'PATERNITY' | 'UNPAID'
 }) {
-  const typeMap: Record<string, { badgeType: StatusType; label: string }> = {
-    ANNUAL: { badgeType: 'info', label: '연차' },
-    SICK: { badgeType: 'warning', label: '병가' },
-    SPECIAL: { badgeType: 'success', label: '특별휴가' },
-    HALF_DAY_AM: { badgeType: 'default', label: '반차(오전)' },
-    HALF_DAY_PM: { badgeType: 'default', label: '반차(오후)' },
-    HOURLY: { badgeType: 'pending', label: '시간차' },
-    MATERNITY: { badgeType: 'info', label: '출산휴가' },
-    PATERNITY: { badgeType: 'info', label: '배우자출산휴가' },
-    UNPAID: { badgeType: 'default', label: '무급휴가' },
-  };
-
-  const { badgeType, label } = typeMap[type] || { badgeType: 'default', label: type };
-  return <StatusBadge status={badgeType} label={label} />;
+  const { t } = useTranslation('status');
+  return <StatusBadge status={leaveKindTypeMap[type] ?? 'default'} label={t(`leaveType.${type}`, type)} />;
 }
 
 // Appointment (발령) Status Badge
@@ -187,17 +290,8 @@ export function AppointmentDraftStatusBadge({
 }: {
   status: 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED' | 'EXECUTED' | 'CANCELLED'
 }) {
-  const statusMap: Record<string, { type: StatusType; label: string }> = {
-    DRAFT: { type: 'default', label: '임시저장' },
-    PENDING_APPROVAL: { type: 'pending', label: '결재대기' },
-    APPROVED: { type: 'info', label: '승인' },
-    REJECTED: { type: 'error', label: '반려' },
-    EXECUTED: { type: 'success', label: '시행완료' },
-    CANCELLED: { type: 'default', label: '취소' },
-  };
-
-  const { type, label } = statusMap[status] || { type: 'default', label: status };
-  return <StatusBadge status={type} label={label} />;
+  const { t } = useTranslation('status');
+  return <StatusBadge status={appointmentDraftTypeMap[status] ?? 'default'} label={t(`appointmentDraft.${status}`, status)} />;
 }
 
 // Appointment Type Badge
@@ -206,39 +300,18 @@ export function AppointmentTypeBadge({
 }: {
   type: 'PROMOTION' | 'TRANSFER' | 'POSITION_CHANGE' | 'JOB_CHANGE' | 'LEAVE_OF_ABSENCE' | 'REINSTATEMENT' | 'RESIGNATION' | 'RETIREMENT' | 'DEMOTION' | 'CONCURRENT'
 }) {
-  const typeMap: Record<string, { badgeType: StatusType; label: string }> = {
-    PROMOTION: { badgeType: 'success', label: '승진' },
-    TRANSFER: { badgeType: 'info', label: '전보' },
-    POSITION_CHANGE: { badgeType: 'info', label: '보직변경' },
-    JOB_CHANGE: { badgeType: 'info', label: '직무변경' },
-    LEAVE_OF_ABSENCE: { badgeType: 'warning', label: '휴직' },
-    REINSTATEMENT: { badgeType: 'success', label: '복직' },
-    RESIGNATION: { badgeType: 'default', label: '사직' },
-    RETIREMENT: { badgeType: 'default', label: '정년퇴직' },
-    DEMOTION: { badgeType: 'error', label: '강등' },
-    CONCURRENT: { badgeType: 'pending', label: '겸직' },
-  };
-
-  const { badgeType, label } = typeMap[type] || { badgeType: 'default', label: type };
-  return <StatusBadge status={badgeType} label={label} />;
+  const { t } = useTranslation('status');
+  return <StatusBadge status={appointmentKindTypeMap[type] ?? 'default'} label={t(`appointmentType.${type}`, type)} />;
 }
 
 // Job Posting Status Badge (채용공고 상태)
 export function JobStatusBadge({
   status
 }: {
-  status: 'DRAFT' | 'OPEN' | 'CLOSED' | 'CANCELLED' | 'COMPLETED'
+  status: 'DRAFT' | 'PENDING' | 'PUBLISHED' | 'CLOSED' | 'CANCELLED' | 'COMPLETED'
 }) {
-  const statusMap: Record<string, { type: StatusType; label: string }> = {
-    DRAFT: { type: 'default', label: '임시저장' },
-    OPEN: { type: 'success', label: '진행중' },
-    CLOSED: { type: 'warning', label: '마감' },
-    CANCELLED: { type: 'error', label: '취소' },
-    COMPLETED: { type: 'info', label: '완료' },
-  };
-
-  const { type, label } = statusMap[status] || { type: 'default', label: status };
-  return <StatusBadge status={type} label={label} />;
+  const { t } = useTranslation('status');
+  return <StatusBadge status={jobPostingTypeMap[status] ?? 'default'} label={t(`jobPosting.${status}`, status)} />;
 }
 
 // Application Status Badge (지원서 상태)
@@ -247,19 +320,8 @@ export function ApplicationStatusBadge({
 }: {
   status: 'RECEIVED' | 'SCREENING' | 'IN_PROGRESS' | 'PASSED' | 'FAILED' | 'ON_HOLD' | 'WITHDRAWN' | 'HIRED'
 }) {
-  const statusMap: Record<string, { type: StatusType; label: string }> = {
-    RECEIVED: { type: 'info', label: '접수' },
-    SCREENING: { type: 'pending', label: '서류심사중' },
-    IN_PROGRESS: { type: 'warning', label: '진행중' },
-    PASSED: { type: 'success', label: '합격' },
-    FAILED: { type: 'error', label: '불합격' },
-    ON_HOLD: { type: 'default', label: '보류' },
-    WITHDRAWN: { type: 'default', label: '지원취소' },
-    HIRED: { type: 'success', label: '채용확정' },
-  };
-
-  const { type, label } = statusMap[status] || { type: 'default', label: status };
-  return <StatusBadge status={type} label={label} />;
+  const { t } = useTranslation('status');
+  return <StatusBadge status={applicationTypeMap[status] ?? 'default'} label={t(`application.${status}`, status)} />;
 }
 
 // Application Stage Badge (지원 단계)
@@ -268,53 +330,28 @@ export function ApplicationStageBadge({
 }: {
   stage: 'DOCUMENT' | 'FIRST_INTERVIEW' | 'SECOND_INTERVIEW' | 'FINAL_INTERVIEW' | 'OFFER'
 }) {
-  const stageMap: Record<string, { badgeType: StatusType; label: string }> = {
-    DOCUMENT: { badgeType: 'default', label: '서류전형' },
-    FIRST_INTERVIEW: { badgeType: 'info', label: '1차면접' },
-    SECOND_INTERVIEW: { badgeType: 'info', label: '2차면접' },
-    FINAL_INTERVIEW: { badgeType: 'warning', label: '최종면접' },
-    OFFER: { badgeType: 'success', label: '오퍼' },
-  };
-
-  const { badgeType, label } = stageMap[stage] || { badgeType: 'default', label: stage };
-  return <StatusBadge status={badgeType} label={label} />;
+  const { t } = useTranslation('status');
+  return <StatusBadge status={applicationStageTypeMap[stage] ?? 'default'} label={t(`applicationStage.${stage}`, stage)} />;
 }
 
 // Interview Status Badge (면접 상태)
 export function InterviewStatusBadge({
   status
 }: {
-  status: 'SCHEDULED' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW'
+  status: 'SCHEDULING' | 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW' | 'POSTPONED'
 }) {
-  const statusMap: Record<string, { type: StatusType; label: string }> = {
-    SCHEDULED: { type: 'pending', label: '예정' },
-    CONFIRMED: { type: 'info', label: '확정' },
-    IN_PROGRESS: { type: 'warning', label: '진행중' },
-    COMPLETED: { type: 'success', label: '완료' },
-    CANCELLED: { type: 'default', label: '취소' },
-    NO_SHOW: { type: 'error', label: '불참' },
-  };
-
-  const { type, label } = statusMap[status] || { type: 'default', label: status };
-  return <StatusBadge status={type} label={label} />;
+  const { t } = useTranslation('status');
+  return <StatusBadge status={interviewTypeMap[status] ?? 'default'} label={t(`interview.${status}`, status)} />;
 }
 
 // Interview Type Badge (면접 유형)
 export function InterviewTypeBadge({
   type
 }: {
-  type: 'PHONE' | 'VIDEO' | 'ONSITE' | 'TECHNICAL' | 'FINAL'
+  type: 'FIRST_ROUND' | 'SECOND_ROUND' | 'FINAL_ROUND' | 'TECHNICAL' | 'PERSONALITY' | 'PRESENTATION' | 'GROUP' | 'VIDEO' | 'PHONE'
 }) {
-  const typeMap: Record<string, { badgeType: StatusType; label: string }> = {
-    PHONE: { badgeType: 'default', label: '전화면접' },
-    VIDEO: { badgeType: 'info', label: '화상면접' },
-    ONSITE: { badgeType: 'success', label: '대면면접' },
-    TECHNICAL: { badgeType: 'warning', label: '기술면접' },
-    FINAL: { badgeType: 'pending', label: '최종면접' },
-  };
-
-  const { badgeType, label } = typeMap[type] || { badgeType: 'default', label: type };
-  return <StatusBadge status={badgeType} label={label} />;
+  const { t } = useTranslation('status');
+  return <StatusBadge status={interviewKindTypeMap[type] ?? 'default'} label={t(`interviewType.${type}`, type)} />;
 }
 
 // Employment Type Badge (고용 유형)
@@ -323,15 +360,8 @@ export function RecruitmentEmploymentTypeBadge({
 }: {
   type: 'FULL_TIME' | 'CONTRACT' | 'INTERN' | 'PART_TIME'
 }) {
-  const typeMap: Record<string, { badgeType: StatusType; label: string }> = {
-    FULL_TIME: { badgeType: 'success', label: '정규직' },
-    CONTRACT: { badgeType: 'warning', label: '계약직' },
-    INTERN: { badgeType: 'info', label: '인턴' },
-    PART_TIME: { badgeType: 'default', label: '파트타임' },
-  };
-
-  const { badgeType, label } = typeMap[type] || { badgeType: 'default', label: type };
-  return <StatusBadge status={badgeType} label={label} />;
+  const { t } = useTranslation('status');
+  return <StatusBadge status={employmentKindTypeMap[type] ?? 'default'} label={t(`employmentType.${type}`, type)} />;
 }
 
 // Interview Recommendation Badge (면접 추천)
@@ -340,32 +370,16 @@ export function InterviewRecommendationBadge({
 }: {
   recommendation: 'STRONG_HIRE' | 'HIRE' | 'NO_HIRE' | 'STRONG_NO_HIRE'
 }) {
-  const recMap: Record<string, { badgeType: StatusType; label: string }> = {
-    STRONG_HIRE: { badgeType: 'success', label: '강력 추천' },
-    HIRE: { badgeType: 'info', label: '추천' },
-    NO_HIRE: { badgeType: 'warning', label: '비추천' },
-    STRONG_NO_HIRE: { badgeType: 'error', label: '강력 비추천' },
-  };
-
-  const { badgeType, label } = recMap[recommendation] || { badgeType: 'default', label: recommendation };
-  return <StatusBadge status={badgeType} label={label} />;
+  const { t } = useTranslation('status');
+  return <StatusBadge status={recommendationTypeMap[recommendation] ?? 'default'} label={t(`recommendation.${recommendation}`, recommendation)} />;
 }
 
 // Offer Status Badge (채용 제안 상태)
 export function OfferStatusBadge({
   status
 }: {
-  status: 'DRAFT' | 'SENT' | 'ACCEPTED' | 'REJECTED' | 'WITHDRAWN' | 'EXPIRED'
+  status: 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'SENT' | 'ACCEPTED' | 'DECLINED' | 'NEGOTIATING' | 'EXPIRED' | 'CANCELLED'
 }) {
-  const statusMap: Record<string, { type: StatusType; label: string }> = {
-    DRAFT: { type: 'default', label: '작성중' },
-    SENT: { type: 'pending', label: '발송됨' },
-    ACCEPTED: { type: 'success', label: '수락' },
-    REJECTED: { type: 'error', label: '거절' },
-    WITHDRAWN: { type: 'warning', label: '철회' },
-    EXPIRED: { type: 'default', label: '만료' },
-  };
-
-  const { type, label } = statusMap[status] || { type: 'default', label: status };
-  return <StatusBadge status={type} label={label} />;
+  const { t } = useTranslation('status');
+  return <StatusBadge status={offerTypeMap[status] ?? 'default'} label={t(`offer.${status}`, status)} />;
 }

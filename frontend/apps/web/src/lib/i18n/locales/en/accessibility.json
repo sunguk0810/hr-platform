@@ -7,5 +7,6 @@
   "notifications": "Notifications",
   "closeDialog": "Close dialog",
   "expandMenu": "Expand menu",
-  "collapseMenu": "Collapse menu"
+  "collapseMenu": "Collapse menu",
+  "statusLabel": "Status: {{label}}"
 }

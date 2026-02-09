@@ -7,5 +7,6 @@
   "notifications": "알림",
   "closeDialog": "대화상자 닫기",
   "expandMenu": "메뉴 펼치기",
-  "collapseMenu": "메뉴 접기"
+  "collapseMenu": "메뉴 접기",
+  "statusLabel": "상태: {{label}}"
 }
