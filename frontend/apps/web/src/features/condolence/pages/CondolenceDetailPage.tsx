@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -63,6 +64,7 @@ const STATUS_COLORS: Record<CondolenceRequestStatus, string> = {
 const ADMIN_ROLES = ['SUPER_ADMIN', 'GROUP_ADMIN', 'TENANT_ADMIN', 'HR_MANAGER'];
 
 export default function CondolenceDetailPage() {
+  const { t } = useTranslation('condolence');
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
@@ -92,13 +94,13 @@ export default function CondolenceDetailPage() {
     try {
       await approveMutation.mutateAsync(id);
       toast({
-        title: '승인 완료',
-        description: '경조비 신청이 승인되었습니다.',
+        title: t('detailToast.approveSuccess'),
+        description: t('detailToast.approveSuccessDesc'),
       });
     } catch {
       toast({
-        title: '승인 실패',
-        description: '경조비 승인 중 오류가 발생했습니다.',
+        title: t('detailToast.approveFailed'),
+        description: t('detailToast.approveFailedDesc'),
         variant: 'destructive',
       });
     }
@@ -111,13 +113,13 @@ export default function CondolenceDetailPage() {
       setRejectDialogOpen(false);
       setRejectReason('');
       toast({
-        title: '반려 완료',
-        description: '경조비 신청이 반려되었습니다.',
+        title: t('detailToast.rejectSuccess'),
+        description: t('detailToast.rejectSuccessDesc'),
       });
     } catch {
       toast({
-        title: '반려 실패',
-        description: '경조비 반려 중 오류가 발생했습니다.',
+        title: t('detailToast.rejectFailed'),
+        description: t('detailToast.rejectFailedDesc'),
         variant: 'destructive',
       });
     }
@@ -129,14 +131,14 @@ export default function CondolenceDetailPage() {
       await cancelMutation.mutateAsync(id);
       setCancelDialogOpen(false);
       toast({
-        title: '취소 완료',
-        description: '경조비 신청이 취소되었습니다.',
+        title: t('detailToast.cancelSuccess'),
+        description: t('detailToast.cancelSuccessDesc'),
       });
       navigate('/condolence');
     } catch {
       toast({
-        title: '취소 실패',
-        description: '경조비 취소 중 오류가 발생했습니다.',
+        title: t('detailToast.cancelFailed'),
+        description: t('detailToast.cancelFailedDesc'),
         variant: 'destructive',
       });
     }
@@ -148,14 +150,14 @@ export default function CondolenceDetailPage() {
       await deleteMutation.mutateAsync(id);
       setDeleteDialogOpen(false);
       toast({
-        title: '삭제 완료',
-        description: '경조비 신청이 삭제되었습니다.',
+        title: t('detailToast.deleteSuccess'),
+        description: t('detailToast.deleteSuccessDesc'),
       });
       navigate('/condolence');
     } catch {
       toast({
-        title: '삭제 실패',
-        description: '경조비 삭제 중 오류가 발생했습니다.',
+        title: t('detailToast.deleteFailed'),
+        description: t('detailToast.deleteFailedDesc'),
         variant: 'destructive',
       });
     }
@@ -172,9 +174,9 @@ export default function CondolenceDetailPage() {
   if (!request) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-        <p className="text-muted-foreground">경조비 신청을 찾을 수 없습니다.</p>
+        <p className="text-muted-foreground">{t('detailPage.notFound')}</p>
         <Button variant="outline" onClick={() => navigate('/condolence')}>
-          목록으로
+          {t('goToList')}
         </Button>
       </div>
     );
@@ -183,18 +185,18 @@ export default function CondolenceDetailPage() {
   return (
     <>
       <PageHeader
-        title="경조비 상세"
-        description={`요청번호: ${request.requestNumber}`}
+        title={t('detail')}
+        description={`${t('requestNumber')}: ${request.requestNumber}`}
         actions={
           <div className="flex gap-2">
             {canEdit && (
               <Button variant="outline" onClick={() => navigate(`/condolence/${id}/edit`)}>
-                수정
+                {t('detailPage.edit')}
               </Button>
             )}
             {canCancel && (
               <Button variant="outline" onClick={() => setCancelDialogOpen(true)}>
-                취소
+                {t('detailPage.cancelAction')}
               </Button>
             )}
             {canDelete && (
@@ -203,7 +205,7 @@ export default function CondolenceDetailPage() {
                 className="text-destructive"
                 onClick={() => setDeleteDialogOpen(true)}
               >
-                삭제
+                {t('detailPage.deleteAction')}
               </Button>
             )}
           </div>
@@ -217,7 +219,7 @@ export default function CondolenceDetailPage() {
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <Heart className="h-5 w-5" aria-hidden="true" />
-                경조비 신청 정보
+                {t('detailPage.requestInfo')}
               </CardTitle>
               <Badge className={cn(STATUS_COLORS[request.status])}>
                 {CONDOLENCE_STATUS_LABELS[request.status]}
@@ -227,7 +229,7 @@ export default function CondolenceDetailPage() {
           <CardContent className="space-y-6">
             {/* Employee Info */}
             <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-3">신청자 정보</h3>
+              <h3 className="text-sm font-medium text-muted-foreground mb-3">{t('detailPage.applicantInfo')}</h3>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
@@ -244,7 +246,7 @@ export default function CondolenceDetailPage() {
                   </div>
                   <div>
                     <p className="font-medium">{request.departmentName}</p>
-                    <p className="text-sm text-muted-foreground">소속 부서</p>
+                    <p className="text-sm text-muted-foreground">{t('detailPage.department')}</p>
                   </div>
                 </div>
               </div>
@@ -254,31 +256,31 @@ export default function CondolenceDetailPage() {
 
             {/* Event Info */}
             <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-3">경조 내용</h3>
+              <h3 className="text-sm font-medium text-muted-foreground mb-3">{t('detailPage.eventContent')}</h3>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <p className="text-sm text-muted-foreground">경조 유형</p>
+                  <p className="text-sm text-muted-foreground">{t('detailPage.eventType')}</p>
                   <p className="font-medium">{CONDOLENCE_TYPE_LABELS[request.eventType]}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">발생일</p>
+                  <p className="text-sm text-muted-foreground">{t('eventDate')}</p>
                   <p className="font-medium flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
                     {format(new Date(request.eventDate), 'yyyy년 M월 d일 (EEE)', { locale: ko })}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">대상자</p>
+                  <p className="text-sm text-muted-foreground">{t('detailPage.target')}</p>
                   <p className="font-medium">{request.relatedPersonName || '-'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">대상자 관계</p>
+                  <p className="text-sm text-muted-foreground">{t('detailPage.targetRelation')}</p>
                   <p className="font-medium">{request.relation || '-'}</p>
                 </div>
               </div>
               {request.description && (
                 <div className="mt-4">
-                  <p className="text-sm text-muted-foreground">비고</p>
+                  <p className="text-sm text-muted-foreground">{t('detailPage.note')}</p>
                   <p className="font-medium mt-1">{request.description}</p>
                 </div>
               )}
@@ -288,7 +290,7 @@ export default function CondolenceDetailPage() {
 
             {/* Amount */}
             <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-3">경조금</h3>
+              <h3 className="text-sm font-medium text-muted-foreground mb-3">{t('detailPage.condolenceAmount')}</h3>
               <div className="text-3xl font-bold text-primary">
                 {request.amount.toLocaleString()}원
               </div>
@@ -299,7 +301,7 @@ export default function CondolenceDetailPage() {
               <>
                 <Separator />
                 <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-3">첨부 서류</h3>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-3">{t('detailPage.attachments')}</h3>
                   <div className="space-y-2">
                     {request.attachments.map((_fileId, index) => (
                       <div
@@ -308,7 +310,7 @@ export default function CondolenceDetailPage() {
                       >
                         <div className="flex items-center gap-2">
                           <FileText className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">첨부파일 {index + 1}</span>
+                          <span className="text-sm">{t('detailPage.attachmentLabel')}{index + 1}</span>
                         </div>
                         <Button variant="ghost" size="icon">
                           <Download className="h-4 w-4" />
@@ -327,7 +329,7 @@ export default function CondolenceDetailPage() {
           {/* Status Timeline */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">처리 현황</CardTitle>
+              <CardTitle className="text-base">{t('detailPage.processingStatus')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -336,7 +338,7 @@ export default function CondolenceDetailPage() {
                     <CheckCircle className="h-4 w-4" />
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium">신청 완료</p>
+                    <p className="font-medium">{t('detailTimeline.submitted')}</p>
                     <p className="text-sm text-muted-foreground">
                       {format(new Date(request.createdAt), 'yyyy-MM-dd HH:mm')}
                     </p>
@@ -349,7 +351,7 @@ export default function CondolenceDetailPage() {
                       <CheckCircle className="h-4 w-4" />
                     </div>
                     <div className="flex-1">
-                      <p className="font-medium">승인 완료</p>
+                      <p className="font-medium">{t('detailTimeline.approved')}</p>
                       <p className="text-sm text-muted-foreground">
                         {request.approvedAt
                           ? format(new Date(request.approvedAt), 'yyyy-MM-dd HH:mm')
@@ -363,7 +365,7 @@ export default function CondolenceDetailPage() {
                       <XCircle className="h-4 w-4" />
                     </div>
                     <div className="flex-1">
-                      <p className="font-medium">반려</p>
+                      <p className="font-medium">{t('detailTimeline.rejected')}</p>
                       <p className="text-sm text-muted-foreground">{request.rejectReason}</p>
                     </div>
                   </div>
@@ -373,7 +375,7 @@ export default function CondolenceDetailPage() {
                       <XCircle className="h-4 w-4" />
                     </div>
                     <div className="flex-1">
-                      <p className="font-medium">신청 취소</p>
+                      <p className="font-medium">{t('detailTimeline.cancelled')}</p>
                     </div>
                   </div>
                 ) : (
@@ -382,8 +384,8 @@ export default function CondolenceDetailPage() {
                       <Clock className="h-4 w-4" />
                     </div>
                     <div className="flex-1">
-                      <p className="font-medium">승인 대기</p>
-                      <p className="text-sm text-muted-foreground">관리자 검토 중</p>
+                      <p className="font-medium">{t('detailTimeline.pendingApproval')}</p>
+                      <p className="text-sm text-muted-foreground">{t('detailTimeline.pendingApprovalDesc')}</p>
                     </div>
                   </div>
                 )}
@@ -394,7 +396,7 @@ export default function CondolenceDetailPage() {
                       <CheckCircle className="h-4 w-4" />
                     </div>
                     <div className="flex-1">
-                      <p className="font-medium">지급 완료</p>
+                      <p className="font-medium">{t('detailTimeline.paid')}</p>
                       <p className="text-sm text-muted-foreground">
                         {request.paidDate
                           ? format(new Date(request.paidDate), 'yyyy-MM-dd HH:mm')
@@ -411,7 +413,7 @@ export default function CondolenceDetailPage() {
           {canApprove && request.status === 'PENDING' && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">관리자 작업</CardTitle>
+                <CardTitle className="text-base">{t('detailPage.adminActions')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
                 <Button
@@ -424,7 +426,7 @@ export default function CondolenceDetailPage() {
                   ) : (
                     <CheckCircle className="mr-2 h-4 w-4" />
                   )}
-                  승인
+                  {t('detailActions.approve')}
                 </Button>
                 <Button
                   variant="outline"
@@ -432,7 +434,7 @@ export default function CondolenceDetailPage() {
                   onClick={() => setRejectDialogOpen(true)}
                 >
                   <XCircle className="mr-2 h-4 w-4" />
-                  반려
+                  {t('detailActions.reject')}
                 </Button>
               </CardContent>
             </Card>
@@ -444,24 +446,24 @@ export default function CondolenceDetailPage() {
       <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>경조비 반려</DialogTitle>
-            <DialogDescription>반려 사유를 입력해주세요.</DialogDescription>
+            <DialogTitle>{t('rejectDialog.title')}</DialogTitle>
+            <DialogDescription>{t('rejectDialog.description')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="reject-reason">반려 사유</Label>
+              <Label htmlFor="reject-reason">{t('rejectDialog.reasonLabel')}</Label>
               <Textarea
                 id="reject-reason"
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
-                placeholder="반려 사유를 입력하세요..."
+                placeholder={t('rejectDialog.reasonPlaceholder')}
                 rows={4}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRejectDialogOpen(false)}>
-              취소
+              {t('rejectDialog.cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -469,7 +471,7 @@ export default function CondolenceDetailPage() {
               disabled={!rejectReason.trim() || rejectMutation.isPending}
             >
               {rejectMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              반려
+              {t('rejectDialog.confirm')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -479,14 +481,14 @@ export default function CondolenceDetailPage() {
       <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>신청 취소</AlertDialogTitle>
+            <AlertDialogTitle>{t('cancelDialog.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              경조비 신청을 취소하시겠습니까? 이 작업은 되돌릴 수 없습니다.
+              {t('cancelDialog.description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>취소</AlertDialogCancel>
-            <AlertDialogAction onClick={handleCancel}>확인</AlertDialogAction>
+            <AlertDialogCancel>{t('cancelDialog.cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleCancel}>{t('cancelDialog.confirm')}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -495,18 +497,18 @@ export default function CondolenceDetailPage() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>신청 삭제</AlertDialogTitle>
+            <AlertDialogTitle>{t('deleteDialog.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              경조비 신청을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
+              {t('deleteDialog.description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogCancel>{t('deleteDialog.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              삭제
+              {t('deleteDialog.confirm')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

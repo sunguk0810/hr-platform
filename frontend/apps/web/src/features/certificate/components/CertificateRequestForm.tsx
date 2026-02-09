@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -30,6 +31,7 @@ interface CertificateRequestFormProps {
 }
 
 export function CertificateRequestForm({ open, onOpenChange, onSuccess }: CertificateRequestFormProps) {
+  const { t } = useTranslation('certificate');
   const { data: typesData } = useCertificateTypes();
   const createMutation = useCreateCertificateRequest();
 
@@ -93,14 +95,14 @@ export function CertificateRequestForm({ open, onOpenChange, onSuccess }: Certif
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>증명서 신청</DialogTitle>
+          <DialogTitle>{t('requestForm.title')}</DialogTitle>
           <DialogDescription>
-            필요한 증명서를 신청합니다. 승인 후 발급됩니다.
+            {t('requestForm.description')}
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <Label>증명서 유형 *</Label>
+            <Label>{t('requestForm.typeLabel')}</Label>
             <Select
               value={formData.certificateTypeId}
               onValueChange={(value) =>
@@ -108,13 +110,13 @@ export function CertificateRequestForm({ open, onOpenChange, onSuccess }: Certif
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder="증명서 유형 선택" />
+                <SelectValue placeholder={t('requestForm.typePlaceholder')} />
               </SelectTrigger>
               <SelectContent>
                 {certificateTypes.map((type) => (
                   <SelectItem key={type.id} value={type.id}>
                     {type.name}
-                    {type.fee > 0 && ` (${type.fee.toLocaleString()}원)`}
+                    {type.fee > 0 && ` (${type.fee.toLocaleString()}${t('currencyUnit')})`}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -127,9 +129,9 @@ export function CertificateRequestForm({ open, onOpenChange, onSuccess }: Certif
                 <div className="text-sm space-y-1">
                   <p>{selectedType.description}</p>
                   <div className="flex gap-4 text-muted-foreground">
-                    <span>유효기간: {selectedType.validDays}일</span>
-                    <span>최대 발급: {selectedType.maxCopiesPerRequest}부</span>
-                    {selectedType.requiresApproval && <span>결재 필요</span>}
+                    <span>{t('requestForm.validityPeriod')}{selectedType.validDays}{t('dayUnit')}</span>
+                    <span>{t('requestForm.maxCopies')}{selectedType.maxCopiesPerRequest}{t('copyUnit')}</span>
+                    {selectedType.requiresApproval && <span>{t('requestPage.approvalRequired')}</span>}
                   </div>
                 </div>
               </CardContent>
@@ -137,7 +139,7 @@ export function CertificateRequestForm({ open, onOpenChange, onSuccess }: Certif
           )}
 
           <div className="grid gap-2">
-            <Label>발급 언어 *</Label>
+            <Label>{t('requestForm.languageLabel')}</Label>
             <Select
               value={formData.language}
               onValueChange={(value) =>
@@ -158,7 +160,7 @@ export function CertificateRequestForm({ open, onOpenChange, onSuccess }: Certif
           </div>
 
           <div className="grid gap-2">
-            <Label>발급 부수 *</Label>
+            <Label>{t('requestForm.copiesLabel')}</Label>
             <Input
               type="number"
               min={1}
@@ -171,22 +173,22 @@ export function CertificateRequestForm({ open, onOpenChange, onSuccess }: Certif
           </div>
 
           <div className="grid gap-2">
-            <Label>용도</Label>
+            <Label>{t('requestForm.purposeLabel')}</Label>
             <Input
               value={formData.purpose}
               onChange={(e) => setFormData(prev => ({ ...prev, purpose: e.target.value }))}
-              placeholder="예: 대출신청, 비자발급"
+              placeholder={t('requestForm.purposePlaceholder')}
             />
           </div>
 
           <div className="grid gap-2">
-            <Label>제출처</Label>
+            <Label>{t('requestForm.recipientLabel')}</Label>
             <Input
               value={formData.submissionTarget}
               onChange={(e) =>
                 setFormData(prev => ({ ...prev, submissionTarget: e.target.value }))
               }
-              placeholder="예: 은행, 대사관"
+              placeholder={t('requestForm.recipientPlaceholder')}
             />
           </div>
 
@@ -200,15 +202,15 @@ export function CertificateRequestForm({ open, onOpenChange, onSuccess }: Certif
                 }
               />
               <Label htmlFor="includeSalary" className="text-sm font-normal">
-                급여 정보 포함
+                {t('requestForm.includeSalary')}
               </Label>
             </div>
           )}
 
           {selectedType && selectedType.fee > 0 && (
             <div className="rounded-md bg-muted p-3 text-sm">
-              발급 수수료: <strong>{calculateFee().toLocaleString()}원</strong>
-              {formData.copies > 1 && ` (${selectedType.fee.toLocaleString()}원 × ${formData.copies}부)`}
+              {t('requestForm.feeLabel')}<strong>{calculateFee().toLocaleString()}{t('currencyUnit')}</strong>
+              {formData.copies > 1 && ` (${selectedType.fee.toLocaleString()}${t('currencyUnit')} × ${formData.copies}${t('copyUnit')})`}
             </div>
           )}
         </div>
@@ -220,13 +222,13 @@ export function CertificateRequestForm({ open, onOpenChange, onSuccess }: Certif
               resetForm();
             }}
           >
-            취소
+            {t('requestForm.cancel')}
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={!formData.certificateTypeId || createMutation.isPending}
           >
-            {createMutation.isPending ? '신청 중...' : '신청하기'}
+            {createMutation.isPending ? t('requestForm.submitting') : t('requestForm.submit')}
           </Button>
         </DialogFooter>
       </DialogContent>

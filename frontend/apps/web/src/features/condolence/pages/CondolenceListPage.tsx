@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { SkeletonTable } from '@/components/common/Skeleton';
@@ -28,6 +29,7 @@ const STATUS_COLORS: Record<CondolenceRequestStatus, string> = {
 };
 
 export default function CondolenceListPage() {
+  const { t } = useTranslation('condolence');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
@@ -55,22 +57,22 @@ export default function CondolenceListPage() {
           {/* Mobile Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold">경조비 관리</h1>
-              <p className="text-sm text-muted-foreground">경조비 신청 및 지급 현황</p>
+              <h1 className="text-xl font-bold">{t('title')}</h1>
+              <p className="text-sm text-muted-foreground">{t('listPage.subtitle')}</p>
             </div>
             <Button size="sm" onClick={() => navigate('/condolence/new')}>
               <Plus className="mr-1 h-4 w-4" />
-              신청
+              {t('create')}
             </Button>
           </div>
 
           {/* Mobile Tab Filters */}
           <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
             {[
-              { value: '', label: '전체' },
-              { value: 'PENDING', label: '대기중' },
-              { value: 'APPROVED', label: '승인' },
-              { value: 'PAID', label: '지급완료' },
+              { value: '', label: t('listPage.tabs.all') },
+              { value: 'PENDING', label: t('listPage.tabs.pending') },
+              { value: 'APPROVED', label: t('listPage.tabs.approved') },
+              { value: 'PAID', label: t('listPage.tabs.paid') },
             ].map((item) => (
               <button
                 key={item.value}
@@ -96,9 +98,9 @@ export default function CondolenceListPage() {
           ) : requests.length === 0 ? (
             <EmptyState
               icon={Heart}
-              title="경조비 신청이 없습니다"
-              description="새로운 경조비를 신청하세요."
-              action={{ label: '경조비 신청', onClick: () => navigate('/condolence/new') }}
+              title={t('listPage.empty.title')}
+              description={t('listPage.empty.description')}
+              action={{ label: t('create'), onClick: () => navigate('/condolence/new') }}
             />
           ) : (
             <div className="space-y-3">
@@ -147,12 +149,12 @@ export default function CondolenceListPage() {
   return (
     <>
       <PageHeader
-        title="경조비 관리"
-        description="경조비 신청 및 지급 현황을 관리합니다."
+        title={t('title')}
+        description={t('description')}
         actions={
           <Button onClick={() => navigate('/condolence/new')}>
             <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
-            경조비 신청
+            {t('create')}
           </Button>
         }
       />
@@ -161,7 +163,7 @@ export default function CondolenceListPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Heart className="h-5 w-5" aria-hidden="true" />
-            경조비 신청 목록
+            {t('listPage.listTitle')}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -171,10 +173,10 @@ export default function CondolenceListPage() {
             className="px-4 pt-2"
           >
             <TabsList>
-              <TabsTrigger value="all">전체</TabsTrigger>
-              <TabsTrigger value="PENDING">대기중</TabsTrigger>
-              <TabsTrigger value="APPROVED">승인</TabsTrigger>
-              <TabsTrigger value="PAID">지급완료</TabsTrigger>
+              <TabsTrigger value="all">{t('listPage.tabs.all')}</TabsTrigger>
+              <TabsTrigger value="PENDING">{t('listPage.tabs.pending')}</TabsTrigger>
+              <TabsTrigger value="APPROVED">{t('listPage.tabs.approved')}</TabsTrigger>
+              <TabsTrigger value="PAID">{t('listPage.tabs.paid')}</TabsTrigger>
             </TabsList>
           </Tabs>
 
@@ -184,23 +186,23 @@ export default function CondolenceListPage() {
             ) : requests.length === 0 ? (
               <EmptyState
                 icon={Heart}
-                title="경조비 신청이 없습니다"
-                description="새로운 경조비를 신청하세요."
-                action={{ label: '경조비 신청', onClick: () => navigate('/condolence/new') }}
+                title={t('listPage.empty.title')}
+                description={t('listPage.empty.description')}
+                action={{ label: t('create'), onClick: () => navigate('/condolence/new') }}
               />
             ) : (
               <>
-                <div className="overflow-x-auto" role="region" aria-label="경조비 신청 목록">
-                  <table className="w-full" role="grid" aria-label="경조비 신청">
+                <div className="overflow-x-auto" role="region" aria-label={t('listPage.regionAriaLabel')}>
+                  <table className="w-full" role="grid" aria-label={t('listPage.searchAriaLabel')}>
                     <thead>
                       <tr className="border-b bg-muted/50">
-                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">요청번호</th>
-                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">직원</th>
-                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">부서</th>
-                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">유형</th>
-                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">발생일</th>
-                        <th scope="col" className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">금액</th>
-                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">상태</th>
+                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('requestNumber')}</th>
+                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('listPage.table.employee')}</th>
+                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('listPage.table.department')}</th>
+                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('listPage.table.type')}</th>
+                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('eventDate')}</th>
+                        <th scope="col" className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">{t('listPage.table.amount')}</th>
+                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('listPage.table.status')}</th>
                       </tr>
                     </thead>
                     <tbody>

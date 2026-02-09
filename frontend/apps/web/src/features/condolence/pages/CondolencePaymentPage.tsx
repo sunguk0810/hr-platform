@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { SkeletonTable } from '@/components/common/Skeleton';
@@ -47,6 +48,7 @@ import { ProcessPaymentRequest } from '../services/condolenceService';
 import { CONDOLENCE_TYPE_LABELS } from '@hr-platform/shared-types';
 
 export default function CondolencePaymentPage() {
+  const { t } = useTranslation('condolence');
   const { toast } = useToast();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(0);
@@ -101,8 +103,8 @@ export default function CondolencePaymentPage() {
   const handleOpenPaymentDialog = () => {
     if (selectedIds.size === 0) {
       toast({
-        title: '선택 필요',
-        description: '지급할 경조비를 선택해주세요.',
+        title: t('paymentToast.selectRequired'),
+        description: t('paymentToast.selectRequiredDesc'),
         variant: 'destructive',
       });
       return;
@@ -132,13 +134,13 @@ export default function CondolencePaymentPage() {
       setBankName('');
       setAccountNumber('');
       toast({
-        title: '지급 완료',
-        description: `${selectedIds.size}건의 경조금 지급이 처리되었습니다.`,
+        title: t('paymentToast.success'),
+        description: t('paymentToast.successDesc', { count: selectedIds.size }),
       });
     } catch {
       toast({
-        title: '지급 실패',
-        description: '경조금 지급 처리 중 오류가 발생했습니다.',
+        title: t('paymentToast.failed'),
+        description: t('paymentToast.failedDesc'),
         variant: 'destructive',
       });
     }
@@ -147,15 +149,15 @@ export default function CondolencePaymentPage() {
   return (
     <>
       <PageHeader
-        title="경조금 지급 관리"
-        description="승인된 경조비의 지급을 처리합니다."
+        title={t('paymentPage.title')}
+        description={t('paymentPage.description')}
       />
 
       <Tabs defaultValue="pending" className="space-y-6">
         <TabsList>
           <TabsTrigger value="pending" className="flex items-center gap-2">
             <DollarSign className="h-4 w-4" />
-            지급 대기
+            {t('paymentPage.pendingTab')}
             {pendingList.length > 0 && (
               <Badge variant="secondary" className="ml-1">
                 {pendingList.length}
@@ -164,7 +166,7 @@ export default function CondolencePaymentPage() {
           </TabsTrigger>
           <TabsTrigger value="history" className="flex items-center gap-2">
             <History className="h-4 w-4" />
-            지급 완료
+            {t('paymentPage.completedTab')}
           </TabsTrigger>
         </TabsList>
 
@@ -175,19 +177,19 @@ export default function CondolencePaymentPage() {
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                   <Heart className="h-5 w-5" aria-hidden="true" />
-                  지급 대기 목록
+                  {t('paymentPage.pendingTitle')}
                 </CardTitle>
                 {selectedIds.size > 0 && (
                   <div className="flex items-center gap-4">
                     <span className="text-sm text-muted-foreground">
-                      {selectedIds.size}건 선택 · 총{' '}
+                      {selectedIds.size}{t('paymentPage.selectedSummary')}{' '}
                       <span className="font-bold text-primary">
                         {totalPendingAmount.toLocaleString()}원
                       </span>
                     </span>
                     <Button onClick={handleOpenPaymentDialog}>
                       <CreditCard className="mr-2 h-4 w-4" />
-                      일괄 지급
+                      {t('paymentPage.batchPay')}
                     </Button>
                   </div>
                 )}
@@ -199,12 +201,12 @@ export default function CondolencePaymentPage() {
               ) : pendingList.length === 0 ? (
                 <EmptyState
                   icon={Heart}
-                  title="지급 대기 건이 없습니다"
-                  description="승인된 경조비가 있으면 여기에 표시됩니다."
+                  title={t('paymentPage.emptyPending')}
+                  description={t('paymentPage.emptyPendingDesc')}
                 />
               ) : (
                 <>
-                  <div className="overflow-x-auto" role="region" aria-label="지급 대기 목록">
+                  <div className="overflow-x-auto" role="region" aria-label={t('paymentPage.pendingRegion')}>
                     <table className="w-full" role="grid">
                       <thead>
                         <tr className="border-b bg-muted/50">
@@ -216,25 +218,25 @@ export default function CondolencePaymentPage() {
                             />
                           </th>
                           <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                            요청번호
+                            {t('requestNumber')}
                           </th>
                           <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                            직원
+                            {t('paymentPage.table.employee')}
                           </th>
                           <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                            부서
+                            {t('paymentPage.table.department')}
                           </th>
                           <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                            유형
+                            {t('paymentPage.table.type')}
                           </th>
                           <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                            발생일
+                            {t('eventDate')}
                           </th>
                           <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                            금액
+                            {t('paymentPage.table.amount')}
                           </th>
                           <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                            작업
+                            {t('paymentPage.table.action')}
                           </th>
                         </tr>
                       </thead>
@@ -253,7 +255,7 @@ export default function CondolencePaymentPage() {
                                 onCheckedChange={(checked) =>
                                   handleSelectOne(item.id, checked as boolean)
                                 }
-                                aria-label={`${item.employeeName} 선택`}
+                                aria-label={t('paymentPage.selectEmployee', { name: item.employeeName })}
                               />
                             </td>
                             <td className="px-4 py-3 font-mono text-sm">{item.requestNumber}</td>
@@ -280,7 +282,7 @@ export default function CondolencePaymentPage() {
                                   setPaymentDialogOpen(true);
                                 }}
                               >
-                                지급
+                                {t('paymentPage.payButton')}
                               </Button>
                             </td>
                           </tr>
@@ -301,7 +303,7 @@ export default function CondolencePaymentPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CheckCircle className="h-5 w-5" aria-hidden="true" />
-                지급 완료 내역
+                {t('paymentPage.completedTitle')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -310,29 +312,29 @@ export default function CondolencePaymentPage() {
               ) : historyList.length === 0 ? (
                 <EmptyState
                   icon={History}
-                  title="지급 내역이 없습니다"
-                  description="지급 완료된 경조비가 여기에 표시됩니다."
+                  title={t('paymentPage.emptyCompleted')}
+                  description={t('paymentPage.emptyCompletedDesc')}
                 />
               ) : (
                 <>
-                  <div className="overflow-x-auto" role="region" aria-label="지급 완료 내역">
+                  <div className="overflow-x-auto" role="region" aria-label={t('paymentPage.completedRegion')}>
                     <table className="w-full" role="grid">
                       <thead>
                         <tr className="border-b bg-muted/50">
                           <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                            지급일
+                            {t('paymentPage.table.paymentDate')}
                           </th>
                           <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                            요청번호
+                            {t('requestNumber')}
                           </th>
                           <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                            금액
+                            {t('paymentPage.table.amount')}
                           </th>
                           <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                            지급방법
+                            {t('paymentPage.table.paymentMethod')}
                           </th>
                           <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                            처리자
+                            {t('paymentPage.table.processor')}
                           </th>
                         </tr>
                       </thead>
@@ -352,8 +354,8 @@ export default function CondolencePaymentPage() {
                             </td>
                             <td className="px-4 py-3 text-sm">
                               {payment.paymentMethod === 'BANK_TRANSFER'
-                                ? `계좌이체 (${payment.bankName})`
-                                : '현금'}
+                                ? t('paymentPage.bankTransfer', { bank: payment.bankName })
+                                : t('paymentPage.cash')}
                             </td>
                             <td className="px-4 py-3 text-sm">{payment.processedByName}</td>
                           </tr>
@@ -377,15 +379,15 @@ export default function CondolencePaymentPage() {
       <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>경조금 지급</DialogTitle>
+            <DialogTitle>{t('paymentDialog.title')}</DialogTitle>
             <DialogDescription>
-              {selectedIds.size}건의 경조금을 지급합니다. 총{' '}
+              {t('paymentDialog.description', { count: selectedIds.size })}{' '}
               <span className="font-bold">{totalPendingAmount.toLocaleString()}원</span>
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="payment-method">지급 방법</Label>
+              <Label htmlFor="payment-method">{t('paymentDialog.methodLabel')}</Label>
               <Select
                 value={paymentMethod}
                 onValueChange={(value) => setPaymentMethod(value as 'BANK_TRANSFER' | 'CASH')}
@@ -394,8 +396,8 @@ export default function CondolencePaymentPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="BANK_TRANSFER">계좌이체</SelectItem>
-                  <SelectItem value="CASH">현금</SelectItem>
+                  <SelectItem value="BANK_TRANSFER">{t('paymentDialog.bankTransfer')}</SelectItem>
+                  <SelectItem value="CASH">{t('paymentDialog.cash')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -403,21 +405,21 @@ export default function CondolencePaymentPage() {
             {paymentMethod === 'BANK_TRANSFER' && (
               <>
                 <div>
-                  <Label htmlFor="bank-name">은행명</Label>
+                  <Label htmlFor="bank-name">{t('paymentDialog.bankName')}</Label>
                   <Input
                     id="bank-name"
                     value={bankName}
                     onChange={(e) => setBankName(e.target.value)}
-                    placeholder="예: 국민은행"
+                    placeholder={t('paymentDialog.bankNamePlaceholder')}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="account-number">계좌번호</Label>
+                  <Label htmlFor="account-number">{t('paymentDialog.accountNumber')}</Label>
                   <Input
                     id="account-number"
                     value={accountNumber}
                     onChange={(e) => setAccountNumber(e.target.value)}
-                    placeholder="예: 123-456-789012"
+                    placeholder={t('paymentDialog.accountNumberPlaceholder')}
                   />
                 </div>
               </>
@@ -425,7 +427,7 @@ export default function CondolencePaymentPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setPaymentDialogOpen(false)}>
-              취소
+              {t('paymentDialog.cancel')}
             </Button>
             <Button
               onClick={handleProcessPayment}
@@ -438,7 +440,7 @@ export default function CondolencePaymentPage() {
               {(processPaymentMutation.isPending || bulkProcessPaymentMutation.isPending) && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              지급 처리
+              {t('paymentDialog.processing')}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +12,7 @@ interface CertificateVerificationFormProps {
 }
 
 export function CertificateVerificationForm({ onVerify, isLoading }: CertificateVerificationFormProps) {
+  const { t } = useTranslation('certificate');
   const [verificationCode, setVerificationCode] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -32,27 +34,25 @@ export function CertificateVerificationForm({ onVerify, isLoading }: Certificate
         <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
           <ShieldCheck className="h-6 w-6 text-primary" />
         </div>
-        <CardTitle>증명서 진위확인</CardTitle>
+        <CardTitle>{t('verification.cardTitle')}</CardTitle>
         <CardDescription>
-          발급받은 증명서의 진위 여부를 확인합니다.
-          <br />
-          증명서 하단의 인증코드를 입력해주세요.
+          {t('verification.cardDescription')}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid gap-2">
-            <Label htmlFor="verificationCode">인증코드</Label>
+            <Label htmlFor="verificationCode">{t('verification.codeLabel')}</Label>
             <Input
               id="verificationCode"
               value={verificationCode}
               onChange={handleChange}
-              placeholder="예: CERT-XXXX-XXXX"
+              placeholder={t('verification.codePlaceholder')}
               className="text-center font-mono text-lg tracking-wider"
               maxLength={20}
             />
             <p className="text-xs text-muted-foreground text-center">
-              증명서 하단에 표시된 인증코드를 입력하세요
+              {t('verification.codeHelp')}
             </p>
           </div>
           <Button
@@ -61,11 +61,11 @@ export function CertificateVerificationForm({ onVerify, isLoading }: Certificate
             disabled={verificationCode.length < 8 || isLoading}
           >
             {isLoading ? (
-              '확인 중...'
+              t('verification.verifying')
             ) : (
               <>
                 <Search className="mr-2 h-4 w-4" />
-                진위 확인
+                {t('verification.verifyButton')}
               </>
             )}
           </Button>

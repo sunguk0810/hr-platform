@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -52,6 +53,7 @@ interface PolicyFormData {
 }
 
 export default function CondolencePolicyPage() {
+  const { t } = useTranslation('condolence');
   const { toast } = useToast();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -105,13 +107,13 @@ export default function CondolencePolicyPage() {
       await createMutation.mutateAsync(formData);
       setIsCreateDialogOpen(false);
       toast({
-        title: '정책 추가 완료',
-        description: '경조비 정책이 성공적으로 추가되었습니다.',
+        title: t('policyToast.addSuccess'),
+        description: t('policyToast.addSuccessDesc'),
       });
     } catch (error) {
       toast({
-        title: '정책 추가 실패',
-        description: '경조비 정책 추가 중 오류가 발생했습니다.',
+        title: t('policyToast.addFailed'),
+        description: t('policyToast.addFailedDesc'),
         variant: 'destructive',
       });
     }
@@ -127,13 +129,13 @@ export default function CondolencePolicyPage() {
       });
       setIsEditDialogOpen(false);
       toast({
-        title: '정책 수정 완료',
-        description: '경조비 정책이 성공적으로 수정되었습니다.',
+        title: t('policyToast.editSuccess'),
+        description: t('policyToast.editSuccessDesc'),
       });
     } catch (error) {
       toast({
-        title: '정책 수정 실패',
-        description: '경조비 정책 수정 중 오류가 발생했습니다.',
+        title: t('policyToast.editFailed'),
+        description: t('policyToast.editFailedDesc'),
         variant: 'destructive',
       });
     }
@@ -146,31 +148,31 @@ export default function CondolencePolicyPage() {
       await deleteMutation.mutateAsync(selectedPolicy.id);
       setIsDeleteDialogOpen(false);
       toast({
-        title: '정책 삭제 완료',
-        description: '경조비 정책이 성공적으로 삭제되었습니다.',
+        title: t('policyToast.deleteSuccess'),
+        description: t('policyToast.deleteSuccessDesc'),
       });
     } catch (error) {
       toast({
-        title: '정책 삭제 실패',
-        description: '경조비 정책 삭제 중 오류가 발생했습니다.',
+        title: t('policyToast.deleteFailed'),
+        description: t('policyToast.deleteFailedDesc'),
         variant: 'destructive',
       });
     }
   };
 
   const formatAmount = (amount: number) => {
-    return amount.toLocaleString() + '원';
+    return amount.toLocaleString() + t('policyPage.currencyUnit');
   };
 
   return (
     <>
       <PageHeader
-        title="경조비 정책 관리"
-        description="경조비 지급 정책을 설정하고 관리합니다."
+        title={t('policyPage.title')}
+        description={t('policyPage.description')}
         actions={
           <Button onClick={handleCreateOpen}>
             <Plus className="mr-2 h-4 w-4" />
-            정책 추가
+            {t('policyPage.addPolicy')}
           </Button>
         }
       />
@@ -179,7 +181,7 @@ export default function CondolencePolicyPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
-            경조비 정책 목록
+            {t('policyPage.listTitle')}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -190,13 +192,13 @@ export default function CondolencePolicyPage() {
           ) : policies.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Settings className="h-12 w-12 text-muted-foreground mb-3" />
-              <p className="font-medium">등록된 정책이 없습니다</p>
+              <p className="font-medium">{t('policyPage.emptyTitle')}</p>
               <p className="text-sm text-muted-foreground mt-1">
-                새 정책을 추가하여 경조비 지급 기준을 설정하세요.
+                {t('policyPage.emptyDescription')}
               </p>
               <Button className="mt-4" onClick={handleCreateOpen}>
                 <Plus className="mr-2 h-4 w-4" />
-                정책 추가
+                {t('policyPage.addPolicy')}
               </Button>
             </div>
           ) : (
@@ -206,22 +208,22 @@ export default function CondolencePolicyPage() {
                   <thead>
                     <tr className="border-b bg-muted/50">
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        경조 유형
+                        {t('policyPage.table.eventType')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        지급 금액
+                        {t('policyPage.table.amount')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        경조휴가
+                        {t('policyPage.table.leave')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        설명
+                        {t('policyPage.table.description')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        상태
+                        {t('policyPage.table.status')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        작업
+                        {t('policyPage.table.action')}
                       </th>
                     </tr>
                   </thead>
@@ -238,14 +240,14 @@ export default function CondolencePolicyPage() {
                           {formatAmount(policy.amount)}
                         </td>
                         <td className="px-4 py-3 text-sm">
-                          {policy.leaveDays}일
+                          {policy.leaveDays}{t('policyPage.dayUnit')}
                         </td>
                         <td className="px-4 py-3 text-sm text-muted-foreground">
                           {policy.description}
                         </td>
                         <td className="px-4 py-3">
                           <Badge variant={policy.isActive ? 'default' : 'secondary'}>
-                            {policy.isActive ? '활성' : '비활성'}
+                            {policy.isActive ? t('policyPage.active') : t('policyPage.inactive')}
                           </Badge>
                         </td>
                         <td className="px-4 py-3">
@@ -272,7 +274,7 @@ export default function CondolencePolicyPage() {
                 </table>
               </div>
               <div className="px-4 py-3 text-sm text-muted-foreground border-t">
-                총 {policies.length}개 정책
+                {t('policyPage.totalCount', { count: policies.length })}
               </div>
             </>
           )}
@@ -283,14 +285,14 @@ export default function CondolencePolicyPage() {
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>정책 추가</DialogTitle>
+            <DialogTitle>{t('policyDialog.addTitle')}</DialogTitle>
             <DialogDescription>
-              새로운 경조비 정책을 추가합니다.
+              {t('policyDialog.addDescription')}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="eventType">경조 유형 *</Label>
+              <Label htmlFor="eventType">{t('policyDialog.typeLabel')}</Label>
               <Select
                 value={formData.eventType}
                 onValueChange={(value) =>
@@ -310,7 +312,7 @@ export default function CondolencePolicyPage() {
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="amount">지급 금액 (원) *</Label>
+              <Label htmlFor="amount">{t('policyDialog.amountLabel')}</Label>
               <Input
                 id="amount"
                 type="number"
@@ -320,11 +322,11 @@ export default function CondolencePolicyPage() {
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, amount: parseInt(e.target.value) || 0 }))
                 }
-                placeholder="예: 200000"
+                placeholder={t('policyDialog.amountPlaceholder')}
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="leaveDays">경조휴가 (일) *</Label>
+              <Label htmlFor="leaveDays">{t('policyDialog.leaveLabel')}</Label>
               <Input
                 id="leaveDays"
                 type="number"
@@ -333,23 +335,23 @@ export default function CondolencePolicyPage() {
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, leaveDays: parseInt(e.target.value) || 0 }))
                 }
-                placeholder="예: 5"
+                placeholder={t('policyDialog.leavePlaceholder')}
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="description">설명 *</Label>
+              <Label htmlFor="description">{t('policyDialog.descriptionLabel')}</Label>
               <Textarea
                 id="description"
                 value={formData.description}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, description: e.target.value }))
                 }
-                placeholder="예: 본인 결혼"
+                placeholder={t('policyDialog.descriptionPlaceholder')}
                 rows={3}
               />
             </div>
             <div className="flex items-center justify-between">
-              <Label htmlFor="isActive">활성 상태</Label>
+              <Label htmlFor="isActive">{t('policyDialog.activeLabel')}</Label>
               <Switch
                 id="isActive"
                 checked={formData.isActive}
@@ -361,7 +363,7 @@ export default function CondolencePolicyPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-              취소
+              {t('policyDialog.cancel')}
             </Button>
             <Button
               onClick={handleCreate}
@@ -370,10 +372,10 @@ export default function CondolencePolicyPage() {
               {createMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  저장 중...
+                  {t('policyDialog.saving')}
                 </>
               ) : (
-                '저장'
+                t('policyDialog.save')
               )}
             </Button>
           </DialogFooter>
@@ -384,14 +386,14 @@ export default function CondolencePolicyPage() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>정책 수정</DialogTitle>
+            <DialogTitle>{t('policyDialog.editTitle')}</DialogTitle>
             <DialogDescription>
-              경조비 정책 정보를 수정합니다.
+              {t('policyDialog.editDescription')}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="edit-eventType">경조 유형 *</Label>
+              <Label htmlFor="edit-eventType">{t('policyDialog.typeLabel')}</Label>
               <Select
                 value={formData.eventType}
                 onValueChange={(value) =>
@@ -411,7 +413,7 @@ export default function CondolencePolicyPage() {
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-amount">지급 금액 (원) *</Label>
+              <Label htmlFor="edit-amount">{t('policyDialog.amountLabel')}</Label>
               <Input
                 id="edit-amount"
                 type="number"
@@ -424,7 +426,7 @@ export default function CondolencePolicyPage() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-leaveDays">경조휴가 (일) *</Label>
+              <Label htmlFor="edit-leaveDays">{t('policyDialog.leaveLabel')}</Label>
               <Input
                 id="edit-leaveDays"
                 type="number"
@@ -436,7 +438,7 @@ export default function CondolencePolicyPage() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-description">설명 *</Label>
+              <Label htmlFor="edit-description">{t('policyDialog.descriptionLabel')}</Label>
               <Textarea
                 id="edit-description"
                 value={formData.description}
@@ -447,7 +449,7 @@ export default function CondolencePolicyPage() {
               />
             </div>
             <div className="flex items-center justify-between">
-              <Label htmlFor="edit-isActive">활성 상태</Label>
+              <Label htmlFor="edit-isActive">{t('policyDialog.activeLabel')}</Label>
               <Switch
                 id="edit-isActive"
                 checked={formData.isActive}
@@ -459,7 +461,7 @@ export default function CondolencePolicyPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              취소
+              {t('policyDialog.cancel')}
             </Button>
             <Button
               onClick={handleUpdate}
@@ -468,10 +470,10 @@ export default function CondolencePolicyPage() {
               {updateMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  저장 중...
+                  {t('policyDialog.saving')}
                 </>
               ) : (
-                '저장'
+                t('policyDialog.save')
               )}
             </Button>
           </DialogFooter>
@@ -482,9 +484,9 @@ export default function CondolencePolicyPage() {
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>정책 삭제</AlertDialogTitle>
+            <AlertDialogTitle>{t('policyDeleteDialog.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              정말로 이 정책을 삭제하시겠습니까?
+              {t('policyDeleteDialog.description')}
               <br />
               <strong className="text-foreground">
                 {selectedPolicy && CONDOLENCE_TYPE_LABELS[selectedPolicy.eventType]}
@@ -492,12 +494,12 @@ export default function CondolencePolicyPage() {
               ({selectedPolicy && formatAmount(selectedPolicy.amount)})
               <br />
               <span className="text-destructive">
-                이 작업은 되돌릴 수 없습니다.
+                {t('policyDeleteDialog.warning')}
               </span>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogCancel>{t('policyDeleteDialog.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={deleteMutation.isPending}
@@ -506,10 +508,10 @@ export default function CondolencePolicyPage() {
               {deleteMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  삭제 중...
+                  {t('policyDeleteDialog.deleting')}
                 </>
               ) : (
-                '삭제'
+                t('policyDeleteDialog.confirm')
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

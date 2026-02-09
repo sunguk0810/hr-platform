@@ -1,11 +1,13 @@
 {
   "title": "Condolence Management",
+  "description": "Manage condolence requests and payment status.",
   "list": "Condolence List",
   "create": "Request Condolence",
   "detail": "Condolence Detail",
   "payment": "Condolence Payment",
   "requestNumber": "Request No.",
   "eventDate": "Event Date",
+  "goToList": "Back to List",
   "types": {
     "MARRIAGE": "Marriage",
     "CHILDBIRTH": "Childbirth",
@@ -21,5 +23,251 @@
     "REJECTED": "Rejected",
     "PAID": "Paid",
     "CANCELLED": "Cancelled"
+  },
+  "listPage": {
+    "subtitle": "Condolence requests and payment status",
+    "listTitle": "Condolence Request List",
+    "searchAriaLabel": "Condolence requests",
+    "regionAriaLabel": "Condolence request list",
+    "tabs": {
+      "all": "All",
+      "pending": "Pending",
+      "approved": "Approved",
+      "paid": "Paid"
+    },
+    "empty": {
+      "title": "No condolence requests",
+      "description": "Submit a new condolence request."
+    },
+    "table": {
+      "employee": "Employee",
+      "department": "Department",
+      "type": "Type",
+      "amount": "Amount",
+      "status": "Status"
+    }
+  },
+  "createPage": {
+    "title": "Condolence Request",
+    "description": "Submit a condolence request.",
+    "eventInfo": "Event Information",
+    "eventInfoDesc": "Enter event type and occurrence information.",
+    "typeLabel": "Event Type *",
+    "typePlaceholder": "Select type",
+    "policyInfo": "Payment Policy",
+    "paymentAmount": "Payment Amount",
+    "paymentAmountLabel": "Payment Amount:",
+    "currencyUnit": "KRW",
+    "leaveLabel": "Condolence Leave",
+    "leaveLabelColon": "Condolence Leave:",
+    "dayUnit": "days",
+    "eventDateLabel": "Event Date *",
+    "targetInfo": "Subject Information",
+    "targetInfoDesc": "Enter subject information.",
+    "targetNameLabel": "Subject Name *",
+    "targetNamePlaceholder": "Enter subject name",
+    "relationLabel": "Relationship *",
+    "relationPlaceholder": "e.g., Self, Father, Mother, Spouse",
+    "detailLabel": "Details *",
+    "detailPlaceholder": "Enter condolence details",
+    "cancel": "Cancel",
+    "submit": "Submit"
+  },
+  "createValidation": {
+    "typeRequired": "Please select an event type",
+    "targetNameRequired": "Please enter the subject name",
+    "relationRequired": "Please enter the relationship",
+    "eventDateRequired": "Please enter the event date",
+    "detailRequired": "Please enter the details"
+  },
+  "createToast": {
+    "success": "Request Submitted",
+    "successDesc": "Condolence request has been submitted.",
+    "failed": "Request Failed",
+    "failedDesc": "Failed to submit condolence request."
+  },
+  "detailPage": {
+    "notFound": "Condolence request not found.",
+    "edit": "Edit",
+    "cancelAction": "Cancel",
+    "deleteAction": "Delete",
+    "requestInfo": "Condolence Request Information",
+    "applicantInfo": "Applicant Information",
+    "department": "Department",
+    "eventContent": "Event Details",
+    "eventType": "Event Type",
+    "target": "Subject",
+    "targetRelation": "Relationship",
+    "note": "Notes",
+    "condolenceAmount": "Condolence Amount",
+    "attachments": "Attachments",
+    "attachmentLabel": "Attachment ",
+    "processingStatus": "Processing Status",
+    "adminActions": "Admin Actions"
+  },
+  "detailTimeline": {
+    "submitted": "Submitted",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "cancelled": "Cancelled",
+    "pendingApproval": "Pending Approval",
+    "pendingApprovalDesc": "Under admin review",
+    "paid": "Payment Completed"
+  },
+  "detailActions": {
+    "approve": "Approve",
+    "reject": "Reject"
+  },
+  "detailToast": {
+    "approveSuccess": "Approved",
+    "approveSuccessDesc": "Condolence request has been approved.",
+    "approveFailed": "Approval Failed",
+    "approveFailedDesc": "Failed to approve condolence request.",
+    "rejectSuccess": "Rejected",
+    "rejectSuccessDesc": "Condolence request has been rejected.",
+    "rejectFailed": "Rejection Failed",
+    "rejectFailedDesc": "Failed to reject condolence request.",
+    "cancelSuccess": "Cancelled",
+    "cancelSuccessDesc": "Condolence request has been cancelled.",
+    "cancelFailed": "Cancellation Failed",
+    "cancelFailedDesc": "Failed to cancel condolence request.",
+    "deleteSuccess": "Deleted",
+    "deleteSuccessDesc": "Condolence request has been deleted.",
+    "deleteFailed": "Deletion Failed",
+    "deleteFailedDesc": "Failed to delete condolence request."
+  },
+  "rejectDialog": {
+    "title": "Reject Condolence",
+    "description": "Please enter the rejection reason.",
+    "reasonLabel": "Rejection Reason",
+    "reasonPlaceholder": "Enter rejection reason...",
+    "cancel": "Cancel",
+    "confirm": "Reject"
+  },
+  "cancelDialog": {
+    "title": "Cancel Request",
+    "description": "Are you sure you want to cancel this condolence request? This action cannot be undone.",
+    "cancel": "Cancel",
+    "confirm": "Confirm"
+  },
+  "deleteDialog": {
+    "title": "Delete Request",
+    "description": "Are you sure you want to delete this condolence request? This action cannot be undone.",
+    "cancel": "Cancel",
+    "confirm": "Delete"
+  },
+  "paymentPage": {
+    "title": "Condolence Payment Management",
+    "description": "Process payments for approved condolence requests.",
+    "pendingTab": "Pending Payment",
+    "completedTab": "Completed",
+    "pendingTitle": "Pending Payment List",
+    "selectedSummary": "selected · Total",
+    "batchPay": "Batch Payment",
+    "emptyPending": "No pending payments",
+    "emptyPendingDesc": "Approved condolence payments will appear here.",
+    "pendingRegion": "Pending payment list",
+    "selectEmployee": "Select {{name}}",
+    "validityPeriod": "Validity",
+    "payButton": "Pay",
+    "completedTitle": "Completed Payments",
+    "emptyCompleted": "No payment history",
+    "emptyCompletedDesc": "Completed payments will appear here.",
+    "completedRegion": "Completed payment list",
+    "bankTransfer": "Bank Transfer ({{bank}})",
+    "cash": "Cash",
+    "table": {
+      "select": "",
+      "employee": "Employee",
+      "department": "Department",
+      "type": "Type",
+      "amount": "Amount",
+      "action": "Action",
+      "paymentDate": "Payment Date",
+      "paymentMethod": "Method",
+      "processor": "Processor"
+    },
+    "totalCount": "Total {{count}} items"
+  },
+  "paymentDialog": {
+    "title": "Condolence Payment",
+    "description": "Processing {{count}} condolence payments. Total",
+    "methodLabel": "Payment Method",
+    "bankTransfer": "Bank Transfer",
+    "cash": "Cash",
+    "bankName": "Bank Name",
+    "bankNamePlaceholder": "e.g., KB Bank",
+    "accountNumber": "Account Number",
+    "accountNumberPlaceholder": "e.g., 123-456-789012",
+    "cancel": "Cancel",
+    "processing": "Process Payment"
+  },
+  "paymentToast": {
+    "selectRequired": "Selection Required",
+    "selectRequiredDesc": "Please select condolence payments to process.",
+    "success": "Payment Completed",
+    "successDesc": "{{count}} condolence payments have been processed.",
+    "failed": "Payment Failed",
+    "failedDesc": "Failed to process condolence payments."
+  },
+  "policyPage": {
+    "title": "Condolence Policy Management",
+    "description": "Configure and manage condolence payment policies.",
+    "addPolicy": "Add Policy",
+    "listTitle": "Condolence Policy List",
+    "emptyTitle": "No policies registered",
+    "emptyDescription": "Add a new policy to set condolence payment standards.",
+    "table": {
+      "eventType": "Event Type",
+      "amount": "Payment Amount",
+      "leave": "Condolence Leave",
+      "description": "Description",
+      "status": "Status",
+      "action": "Action"
+    },
+    "dayUnit": "days",
+    "active": "Active",
+    "inactive": "Inactive",
+    "currencyUnit": "KRW",
+    "totalCount": "Total {{count}} items"
+  },
+  "policyDialog": {
+    "addTitle": "Add Policy",
+    "addDescription": "Add a new condolence payment policy.",
+    "editTitle": "Edit Policy",
+    "editDescription": "Edit condolence policy information.",
+    "typeLabel": "Event Type *",
+    "amountLabel": "Payment Amount (KRW) *",
+    "amountPlaceholder": "e.g., 200000",
+    "leaveLabel": "Condolence Leave (days) *",
+    "leavePlaceholder": "e.g., 5",
+    "descriptionLabel": "Description *",
+    "descriptionPlaceholder": "e.g., Employee's wedding",
+    "activeLabel": "Active Status",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "save": "Save"
+  },
+  "policyDeleteDialog": {
+    "title": "Delete Policy",
+    "description": "Are you sure you want to delete this policy?",
+    "warning": "This action cannot be undone.",
+    "cancel": "Cancel",
+    "deleting": "Deleting...",
+    "confirm": "Delete"
+  },
+  "policyToast": {
+    "addSuccess": "Policy Added",
+    "addSuccessDesc": "Condolence policy has been added successfully.",
+    "addFailed": "Add Failed",
+    "addFailedDesc": "Failed to add condolence policy.",
+    "editSuccess": "Policy Updated",
+    "editSuccessDesc": "Condolence policy has been updated successfully.",
+    "editFailed": "Update Failed",
+    "editFailedDesc": "Failed to update condolence policy.",
+    "deleteSuccess": "Policy Deleted",
+    "deleteSuccessDesc": "Condolence policy has been deleted successfully.",
+    "deleteFailed": "Delete Failed",
+    "deleteFailedDesc": "Failed to delete condolence policy."
   }
 }

@@ -1,11 +1,13 @@
 {
   "title": "경조비 관리",
+  "description": "경조비 신청 및 지급 현황을 관리합니다.",
   "list": "경조비 목록",
   "create": "경조비 신청",
   "detail": "경조비 상세",
   "payment": "경조금 지급",
   "requestNumber": "요청번호",
   "eventDate": "발생일",
+  "goToList": "목록으로",
   "types": {
     "MARRIAGE": "결혼",
     "CHILDBIRTH": "출산",
@@ -21,5 +23,251 @@
     "REJECTED": "반려",
     "PAID": "지급완료",
     "CANCELLED": "취소"
+  },
+  "listPage": {
+    "subtitle": "경조비 신청 및 지급 현황",
+    "listTitle": "경조비 신청 목록",
+    "searchAriaLabel": "경조비 신청",
+    "regionAriaLabel": "경조비 신청 목록",
+    "tabs": {
+      "all": "전체",
+      "pending": "대기중",
+      "approved": "승인",
+      "paid": "지급완료"
+    },
+    "empty": {
+      "title": "경조비 신청이 없습니다",
+      "description": "새로운 경조비를 신청하세요."
+    },
+    "table": {
+      "employee": "직원",
+      "department": "부서",
+      "type": "유형",
+      "amount": "금액",
+      "status": "상태"
+    }
+  },
+  "createPage": {
+    "title": "경조비 신청",
+    "description": "경조비를 신청합니다.",
+    "eventInfo": "경조 정보",
+    "eventInfoDesc": "경조 유형과 발생 정보를 입력합니다.",
+    "typeLabel": "경조 유형 *",
+    "typePlaceholder": "유형 선택",
+    "policyInfo": "지급 정책",
+    "paymentAmount": "지급 금액",
+    "paymentAmountLabel": "지급 금액:",
+    "currencyUnit": "원",
+    "leaveLabel": "경조휴가",
+    "leaveLabelColon": "경조휴가:",
+    "dayUnit": "일",
+    "eventDateLabel": "발생일 *",
+    "targetInfo": "대상자 정보",
+    "targetInfoDesc": "경조 대상자 정보를 입력합니다.",
+    "targetNameLabel": "대상자명 *",
+    "targetNamePlaceholder": "대상자 이름을 입력하세요",
+    "relationLabel": "관계 *",
+    "relationPlaceholder": "예: 본인, 부, 모, 배우자 등",
+    "detailLabel": "상세 내용 *",
+    "detailPlaceholder": "경조 관련 상세 내용을 입력하세요",
+    "cancel": "취소",
+    "submit": "신청"
+  },
+  "createValidation": {
+    "typeRequired": "경조 유형을 선택해주세요",
+    "targetNameRequired": "대상자명을 입력해주세요",
+    "relationRequired": "관계를 입력해주세요",
+    "eventDateRequired": "발생일을 입력해주세요",
+    "detailRequired": "상세 내용을 입력해주세요"
+  },
+  "createToast": {
+    "success": "신청 완료",
+    "successDesc": "경조비 신청이 등록되었습니다.",
+    "failed": "신청 실패",
+    "failedDesc": "경조비 신청 중 오류가 발생했습니다."
+  },
+  "detailPage": {
+    "notFound": "경조비 신청을 찾을 수 없습니다.",
+    "edit": "수정",
+    "cancelAction": "취소",
+    "deleteAction": "삭제",
+    "requestInfo": "경조비 신청 정보",
+    "applicantInfo": "신청자 정보",
+    "department": "소속 부서",
+    "eventContent": "경조 내용",
+    "eventType": "경조 유형",
+    "target": "대상자",
+    "targetRelation": "대상자 관계",
+    "note": "비고",
+    "condolenceAmount": "경조금",
+    "attachments": "첨부 서류",
+    "attachmentLabel": "첨부파일 ",
+    "processingStatus": "처리 현황",
+    "adminActions": "관리자 작업"
+  },
+  "detailTimeline": {
+    "submitted": "신청 완료",
+    "approved": "승인 완료",
+    "rejected": "반려",
+    "cancelled": "신청 취소",
+    "pendingApproval": "승인 대기",
+    "pendingApprovalDesc": "관리자 검토 중",
+    "paid": "지급 완료"
+  },
+  "detailActions": {
+    "approve": "승인",
+    "reject": "반려"
+  },
+  "detailToast": {
+    "approveSuccess": "승인 완료",
+    "approveSuccessDesc": "경조비 신청이 승인되었습니다.",
+    "approveFailed": "승인 실패",
+    "approveFailedDesc": "경조비 승인 중 오류가 발생했습니다.",
+    "rejectSuccess": "반려 완료",
+    "rejectSuccessDesc": "경조비 신청이 반려되었습니다.",
+    "rejectFailed": "반려 실패",
+    "rejectFailedDesc": "경조비 반려 중 오류가 발생했습니다.",
+    "cancelSuccess": "취소 완료",
+    "cancelSuccessDesc": "경조비 신청이 취소되었습니다.",
+    "cancelFailed": "취소 실패",
+    "cancelFailedDesc": "경조비 취소 중 오류가 발생했습니다.",
+    "deleteSuccess": "삭제 완료",
+    "deleteSuccessDesc": "경조비 신청이 삭제되었습니다.",
+    "deleteFailed": "삭제 실패",
+    "deleteFailedDesc": "경조비 삭제 중 오류가 발생했습니다."
+  },
+  "rejectDialog": {
+    "title": "경조비 반려",
+    "description": "반려 사유를 입력해주세요.",
+    "reasonLabel": "반려 사유",
+    "reasonPlaceholder": "반려 사유를 입력하세요...",
+    "cancel": "취소",
+    "confirm": "반려"
+  },
+  "cancelDialog": {
+    "title": "신청 취소",
+    "description": "경조비 신청을 취소하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+    "cancel": "취소",
+    "confirm": "확인"
+  },
+  "deleteDialog": {
+    "title": "신청 삭제",
+    "description": "경조비 신청을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+    "cancel": "취소",
+    "confirm": "삭제"
+  },
+  "paymentPage": {
+    "title": "경조금 지급 관리",
+    "description": "승인된 경조비의 지급을 처리합니다.",
+    "pendingTab": "지급 대기",
+    "completedTab": "지급 완료",
+    "pendingTitle": "지급 대기 목록",
+    "selectedSummary": "건 선택 · 총",
+    "batchPay": "일괄 지급",
+    "emptyPending": "지급 대기 건이 없습니다",
+    "emptyPendingDesc": "승인된 경조비가 있으면 여기에 표시됩니다.",
+    "pendingRegion": "지급 대기 목록",
+    "selectEmployee": "{{name}} 선택",
+    "validityPeriod": "유효기간",
+    "payButton": "지급",
+    "completedTitle": "지급 완료 내역",
+    "emptyCompleted": "지급 내역이 없습니다",
+    "emptyCompletedDesc": "지급 완료된 경조비가 여기에 표시됩니다.",
+    "completedRegion": "지급 완료 내역",
+    "bankTransfer": "계좌이체 ({{bank}})",
+    "cash": "현금",
+    "table": {
+      "select": "",
+      "employee": "직원",
+      "department": "부서",
+      "type": "유형",
+      "amount": "금액",
+      "action": "작업",
+      "paymentDate": "지급일",
+      "paymentMethod": "지급방법",
+      "processor": "처리자"
+    },
+    "totalCount": "총 {{count}}건"
+  },
+  "paymentDialog": {
+    "title": "경조금 지급",
+    "description": "{{count}}건의 경조금을 지급합니다. 총",
+    "methodLabel": "지급 방법",
+    "bankTransfer": "계좌이체",
+    "cash": "현금",
+    "bankName": "은행명",
+    "bankNamePlaceholder": "예: 국민은행",
+    "accountNumber": "계좌번호",
+    "accountNumberPlaceholder": "예: 123-456-789012",
+    "cancel": "취소",
+    "processing": "지급 처리"
+  },
+  "paymentToast": {
+    "selectRequired": "선택 필요",
+    "selectRequiredDesc": "지급할 경조비를 선택해주세요.",
+    "success": "지급 완료",
+    "successDesc": "{{count}}건의 경조금 지급이 처리되었습니다.",
+    "failed": "지급 실패",
+    "failedDesc": "경조금 지급 처리 중 오류가 발생했습니다."
+  },
+  "policyPage": {
+    "title": "경조비 정책 관리",
+    "description": "경조비 지급 정책을 설정하고 관리합니다.",
+    "addPolicy": "정책 추가",
+    "listTitle": "경조비 정책 목록",
+    "emptyTitle": "등록된 정책이 없습니다",
+    "emptyDescription": "새 정책을 추가하여 경조비 지급 기준을 설정하세요.",
+    "table": {
+      "eventType": "경조 유형",
+      "amount": "지급 금액",
+      "leave": "경조휴가",
+      "description": "설명",
+      "status": "상태",
+      "action": "작업"
+    },
+    "dayUnit": "일",
+    "active": "활성",
+    "inactive": "비활성",
+    "currencyUnit": "원",
+    "totalCount": "총 {{count}}건"
+  },
+  "policyDialog": {
+    "addTitle": "정책 추가",
+    "addDescription": "새로운 경조비 정책을 추가합니다.",
+    "editTitle": "정책 수정",
+    "editDescription": "경조비 정책 정보를 수정합니다.",
+    "typeLabel": "경조 유형 *",
+    "amountLabel": "지급 금액 (원) *",
+    "amountPlaceholder": "예: 200000",
+    "leaveLabel": "경조휴가 (일) *",
+    "leavePlaceholder": "예: 5",
+    "descriptionLabel": "설명 *",
+    "descriptionPlaceholder": "예: 본인 결혼",
+    "activeLabel": "활성 상태",
+    "cancel": "취소",
+    "saving": "저장 중...",
+    "save": "저장"
+  },
+  "policyDeleteDialog": {
+    "title": "정책 삭제",
+    "description": "정말로 이 정책을 삭제하시겠습니까?",
+    "warning": "이 작업은 되돌릴 수 없습니다.",
+    "cancel": "취소",
+    "deleting": "삭제 중...",
+    "confirm": "삭제"
+  },
+  "policyToast": {
+    "addSuccess": "정책 추가 완료",
+    "addSuccessDesc": "경조비 정책이 성공적으로 추가되었습니다.",
+    "addFailed": "정책 추가 실패",
+    "addFailedDesc": "경조비 정책 추가 중 오류가 발생했습니다.",
+    "editSuccess": "정책 수정 완료",
+    "editSuccessDesc": "경조비 정책이 성공적으로 수정되었습니다.",
+    "editFailed": "정책 수정 실패",
+    "editFailedDesc": "경조비 정책 수정 중 오류가 발생했습니다.",
+    "deleteSuccess": "정책 삭제 완료",
+    "deleteSuccessDesc": "경조비 정책이 성공적으로 삭제되었습니다.",
+    "deleteFailed": "정책 삭제 실패",
+    "deleteFailedDesc": "경조비 정책 삭제 중 오류가 발생했습니다."
   }
 }

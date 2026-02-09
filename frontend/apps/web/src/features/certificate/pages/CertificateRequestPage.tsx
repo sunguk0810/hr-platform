@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { SkeletonCard } from '@/components/common/Skeleton';
@@ -23,6 +24,7 @@ import type { CertificateLanguage, CreateCertificateRequestRequest } from '@hr-p
 import { CERTIFICATE_LANGUAGE_LABELS } from '@hr-platform/shared-types';
 
 export default function CertificateRequestPage() {
+  const { t } = useTranslation('certificate');
   const navigate = useNavigate();
   const { toast } = useToast();
   const isMobile = useIsMobile();
@@ -45,8 +47,8 @@ export default function CertificateRequestPage() {
     e.preventDefault();
     if (!selectedTypeCode) {
       toast({
-        title: '오류',
-        description: '증명서 유형을 선택해주세요.',
+        title: t('requestToast.typeRequired'),
+        description: t('requestToast.typeRequiredDesc'),
         variant: 'destructive',
       });
       return;
@@ -63,14 +65,14 @@ export default function CertificateRequestPage() {
       };
       await createMutation.mutateAsync(data);
       toast({
-        title: '신청 완료',
-        description: '증명서 신청이 접수되었습니다.',
+        title: t('requestToast.success'),
+        description: t('requestToast.successDesc'),
       });
       navigate('/certificates');
     } catch (error) {
       toast({
-        title: '신청 실패',
-        description: '증명서 신청 중 오류가 발생했습니다.',
+        title: t('requestToast.failed'),
+        description: t('requestToast.failedDesc'),
         variant: 'destructive',
       });
     }
@@ -85,8 +87,8 @@ export default function CertificateRequestPage() {
     return (
       <>
         <PageHeader
-          title="증명서 신청"
-          description="필요한 증명서를 선택하고 신청합니다."
+          title={t('requestPage.title')}
+          description={t('requestPage.description')}
         />
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
@@ -110,22 +112,22 @@ export default function CertificateRequestPage() {
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div>
-            <h1 className="text-xl font-bold">증명서 신청</h1>
-            <p className="text-sm text-muted-foreground">필요한 증명서를 선택하세요</p>
+            <h1 className="text-xl font-bold">{t('requestPage.mobileTitle')}</h1>
+            <p className="text-sm text-muted-foreground">{t('requestPage.mobileDescription')}</p>
           </div>
         </div>
 
         {certificateTypes.length === 0 ? (
           <EmptyState
             icon={FileText}
-            title="신청 가능한 증명서가 없습니다"
-            description="관리자에게 문의해주세요."
+            title={t('requestPage.emptyTitle')}
+            description={t('requestPage.emptyDescription')}
           />
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Certificate Type Selection */}
             <div className="space-y-3">
-              <h3 className="text-sm font-medium">증명서 유형</h3>
+              <h3 className="text-sm font-medium">{t('requestPage.typeSection')}</h3>
               {certificateTypes.map((type) => (
                 <button
                   key={type.code}
@@ -154,15 +156,15 @@ export default function CertificateRequestPage() {
                   <div className="mt-2 flex flex-wrap gap-2 text-xs">
                     <span className="flex items-center gap-1 text-muted-foreground">
                       <Clock className="h-3 w-3" />
-                      유효 {type.validDays}일
+                      {t('requestPage.validityDays', { days: type.validDays })}
                     </span>
                     {type.requiresApproval && (
-                      <span className="text-orange-600 dark:text-orange-400">결재 필요</span>
+                      <span className="text-orange-600 dark:text-orange-400">{t('requestPage.approvalRequired')}</span>
                     )}
                     {type.fee > 0 && (
                       <span className="flex items-center gap-1 text-muted-foreground">
                         <Coins className="h-3 w-3" />
-                        {type.fee.toLocaleString()}원
+                        {type.fee.toLocaleString()}{t('currencyUnit')}
                       </span>
                     )}
                   </div>
@@ -173,10 +175,10 @@ export default function CertificateRequestPage() {
             {/* Request Options */}
             {selectedTypeCode && (
               <div className="bg-card rounded-xl border p-4 space-y-4">
-                <h3 className="text-sm font-medium">신청 정보</h3>
+                <h3 className="text-sm font-medium">{t('requestPage.requestInfo')}</h3>
 
                 <div className="space-y-2">
-                  <Label>발급 언어</Label>
+                  <Label>{t('requestPage.languageLabel')}</Label>
                   <Select
                     value={formData.language}
                     onValueChange={(value) =>
@@ -197,7 +199,7 @@ export default function CertificateRequestPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>발급 부수</Label>
+                  <Label>{t('requestPage.copiesLabel')}</Label>
                   <Input
                     type="number"
                     min={1}
@@ -213,24 +215,24 @@ export default function CertificateRequestPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>용도</Label>
+                  <Label>{t('requestPage.purposeLabel')}</Label>
                   <Input
                     value={formData.purpose}
                     onChange={(e) =>
                       setFormData(prev => ({ ...prev, purpose: e.target.value }))
                     }
-                    placeholder="예: 대출신청, 비자발급"
+                    placeholder={t('requestPage.purposePlaceholder')}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label>제출처</Label>
+                  <Label>{t('requestPage.recipientLabel')}</Label>
                   <Input
                     value={formData.submissionTarget}
                     onChange={(e) =>
                       setFormData(prev => ({ ...prev, submissionTarget: e.target.value }))
                     }
-                    placeholder="예: 은행, 대사관"
+                    placeholder={t('requestPage.recipientPlaceholder')}
                   />
                 </div>
 
@@ -244,17 +246,17 @@ export default function CertificateRequestPage() {
                       }
                     />
                     <Label htmlFor="mobile-includeSalary" className="text-sm font-normal">
-                      급여 정보 포함
+                      {t('requestPage.includeSalary')}
                     </Label>
                   </div>
                 )}
 
                 {selectedType && selectedType.fee > 0 && (
                   <div className="rounded-lg bg-primary/10 p-3 text-sm">
-                    발급 수수료: <strong className="text-primary">{calculateFee().toLocaleString()}원</strong>
+                    {t('requestPage.feeLabel')}<strong className="text-primary">{calculateFee().toLocaleString()}{t('currencyUnit')}</strong>
                     {formData.copies > 1 && (
                       <span className="text-muted-foreground">
-                        {' '}({selectedType.fee.toLocaleString()}원 × {formData.copies}부)
+                        {' '}({selectedType.fee.toLocaleString()}{t('currencyUnit')} × {formData.copies}{t('copyUnit')})
                       </span>
                     )}
                   </div>
@@ -272,7 +274,7 @@ export default function CertificateRequestPage() {
                 {createMutation.isPending ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : null}
-                {createMutation.isPending ? '신청 중...' : '신청하기'}
+                {createMutation.isPending ? t('requestPage.submitting') : t('requestPage.submit')}
               </Button>
             </div>
           </form>
@@ -285,12 +287,12 @@ export default function CertificateRequestPage() {
   return (
     <>
       <PageHeader
-        title="증명서 신청"
-        description="필요한 증명서를 선택하고 신청합니다."
+        title={t('requestPage.title')}
+        description={t('requestPage.description')}
         actions={
           <Button variant="outline" onClick={() => navigate('/certificates')}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            목록으로
+            {t('goToList')}
           </Button>
         }
       />
@@ -298,8 +300,8 @@ export default function CertificateRequestPage() {
       {certificateTypes.length === 0 ? (
         <EmptyState
           icon={FileText}
-          title="신청 가능한 증명서가 없습니다"
-          description="관리자에게 문의해주세요."
+          title={t('requestPage.emptyTitle')}
+          description={t('requestPage.emptyDescription')}
         />
       ) : (
         <div className="grid gap-6 lg:grid-cols-3">
@@ -307,8 +309,8 @@ export default function CertificateRequestPage() {
           <div className="lg:col-span-2 space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>증명서 유형 선택</CardTitle>
-                <CardDescription>신청할 증명서를 선택하세요</CardDescription>
+                <CardTitle>{t('requestPage.typeSelectTitle')}</CardTitle>
+                <CardDescription>{t('requestPage.typeSelectDesc')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -342,17 +344,17 @@ export default function CertificateRequestPage() {
                         <div className="mt-3 flex flex-wrap gap-2 text-xs">
                           <span className="flex items-center gap-1 text-muted-foreground">
                             <Clock className="h-3 w-3" />
-                            유효 {type.validDays}일
+                            {t('requestPage.validityDays', { days: type.validDays })}
                           </span>
                           {type.requiresApproval && (
                             <span className="text-orange-600 dark:text-orange-400">
-                              결재 필요
+                              {t('requestPage.approvalRequired')}
                             </span>
                           )}
                           {type.fee > 0 && (
                             <span className="flex items-center gap-1 text-muted-foreground">
                               <Coins className="h-3 w-3" />
-                              {type.fee.toLocaleString()}원
+                              {type.fee.toLocaleString()}{t('currencyUnit')}
                             </span>
                           )}
                         </div>
@@ -368,15 +370,15 @@ export default function CertificateRequestPage() {
           <div>
             <Card className="sticky top-4">
               <CardHeader>
-                <CardTitle>신청 정보</CardTitle>
+                <CardTitle>{t('requestPage.requestInfo')}</CardTitle>
                 <CardDescription>
-                  {selectedType ? selectedType.name : '증명서를 선택하세요'}
+                  {selectedType ? selectedType.name : t('requestPage.selectCertificate')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid gap-2">
-                    <Label>발급 언어</Label>
+                    <Label>{t('requestPage.languageLabel')}</Label>
                     <Select
                       value={formData.language}
                       onValueChange={(value) =>
@@ -397,7 +399,7 @@ export default function CertificateRequestPage() {
                   </div>
 
                   <div className="grid gap-2">
-                    <Label>발급 부수</Label>
+                    <Label>{t('requestPage.copiesLabel')}</Label>
                     <Input
                       type="number"
                       min={1}
@@ -412,30 +414,30 @@ export default function CertificateRequestPage() {
                     />
                     {selectedType && (
                       <p className="text-xs text-muted-foreground">
-                        최대 {selectedType.maxCopiesPerRequest}부까지 신청 가능
+                        {t('requestPage.maxCopies', { max: selectedType.maxCopiesPerRequest })}
                       </p>
                     )}
                   </div>
 
                   <div className="grid gap-2">
-                    <Label>용도</Label>
+                    <Label>{t('requestPage.purposeLabel')}</Label>
                     <Input
                       value={formData.purpose}
                       onChange={(e) =>
                         setFormData(prev => ({ ...prev, purpose: e.target.value }))
                       }
-                      placeholder="예: 대출신청, 비자발급"
+                      placeholder={t('requestPage.purposePlaceholder')}
                     />
                   </div>
 
                   <div className="grid gap-2">
-                    <Label>제출처</Label>
+                    <Label>{t('requestPage.recipientLabel')}</Label>
                     <Input
                       value={formData.submissionTarget}
                       onChange={(e) =>
                         setFormData(prev => ({ ...prev, submissionTarget: e.target.value }))
                       }
-                      placeholder="예: 은행, 대사관"
+                      placeholder={t('requestPage.recipientPlaceholder')}
                     />
                   </div>
 
@@ -449,17 +451,17 @@ export default function CertificateRequestPage() {
                         }
                       />
                       <Label htmlFor="includeSalary" className="text-sm font-normal">
-                        급여 정보 포함
+                        {t('requestPage.includeSalary')}
                       </Label>
                     </div>
                   )}
 
                   {selectedType && selectedType.fee > 0 && (
                     <div className="rounded-md bg-muted p-3 text-sm">
-                      발급 수수료: <strong>{calculateFee().toLocaleString()}원</strong>
+                      {t('requestPage.feeLabel')}<strong>{calculateFee().toLocaleString()}{t('currencyUnit')}</strong>
                       {formData.copies > 1 && (
                         <span className="text-muted-foreground">
-                          {' '}({selectedType.fee.toLocaleString()}원 × {formData.copies}부)
+                          {' '}({selectedType.fee.toLocaleString()}{t('currencyUnit')} × {formData.copies}{t('copyUnit')})
                         </span>
                       )}
                     </div>
@@ -470,7 +472,7 @@ export default function CertificateRequestPage() {
                     className="w-full"
                     disabled={!selectedTypeCode || createMutation.isPending}
                   >
-                    {createMutation.isPending ? '신청 중...' : '신청하기'}
+                    {createMutation.isPending ? t('requestPage.submitting') : t('requestPage.submit')}
                   </Button>
                 </form>
               </CardContent>

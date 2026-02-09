@@ -1,7 +1,10 @@
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,7 +25,7 @@ import { useCreateCondolenceRequest, useCondolencePolicies } from '../hooks/useC
 import type { CondolenceType } from '@hr-platform/shared-types';
 import { CONDOLENCE_TYPE_LABELS } from '@hr-platform/shared-types';
 
-const condolenceSchema = z.object({
+const createCondolenceSchema = (t: TFunction) => z.object({
   eventType: z.enum([
     'MARRIAGE',
     'CHILDBIRTH',
@@ -35,20 +38,23 @@ const condolenceSchema = z.object({
     'HOSPITALIZATION',
     'OTHER',
   ] as const, {
-    required_error: '경조 유형을 선택해주세요',
+    required_error: t('createValidation.typeRequired'),
   }),
-  relatedPersonName: z.string().min(1, '대상자명을 입력해주세요').max(50),
-  relation: z.string().min(1, '관계를 입력해주세요').max(50),
-  eventDate: z.string().min(1, '발생일을 입력해주세요'),
-  description: z.string().min(1, '상세 내용을 입력해주세요').max(500),
+  relatedPersonName: z.string().min(1, t('createValidation.targetNameRequired')).max(50),
+  relation: z.string().min(1, t('createValidation.relationRequired')).max(50),
+  eventDate: z.string().min(1, t('createValidation.eventDateRequired')),
+  description: z.string().min(1, t('createValidation.detailRequired')).max(500),
 });
 
-type CondolenceFormData = z.infer<typeof condolenceSchema>;
+type CondolenceFormData = z.infer<ReturnType<typeof createCondolenceSchema>>;
 
 export default function CondolenceCreatePage() {
+  const { t } = useTranslation('condolence');
   const navigate = useNavigate();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+
+  const condolenceSchema = useMemo(() => createCondolenceSchema(t), [t]);
 
   const createMutation = useCreateCondolenceRequest();
   const { data: policiesData } = useCondolencePolicies();
@@ -86,15 +92,15 @@ export default function CondolenceCreatePage() {
       });
 
       toast({
-        title: '신청 완료',
-        description: '경조비 신청이 등록되었습니다.',
+        title: t('createToast.success'),
+        description: t('createToast.successDesc'),
       });
 
       navigate('/condolence');
     } catch {
       toast({
-        title: '신청 실패',
-        description: '경조비 신청 중 오류가 발생했습니다.',
+        title: t('createToast.failed'),
+        description: t('createToast.failedDesc'),
         variant: 'destructive',
       });
     }
@@ -116,29 +122,29 @@ export default function CondolenceCreatePage() {
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div>
-            <h1 className="text-xl font-bold">경조비 신청</h1>
-            <p className="text-sm text-muted-foreground">경조비를 신청합니다</p>
+            <h1 className="text-xl font-bold">{t('createPage.title')}</h1>
+            <p className="text-sm text-muted-foreground">{t('createPage.description')}</p>
           </div>
         </div>
 
         {/* Form Fields */}
         <div className="space-y-4">
-          {/* 경조 정보 섹션 */}
+          {/* Event Info Section */}
           <div className="bg-card rounded-xl border p-4 space-y-4">
             <h3 className="text-sm font-medium flex items-center gap-2">
               <Heart className="h-4 w-4" />
-              경조 정보
+              {t('createPage.eventInfo')}
             </h3>
 
             <div className="space-y-2">
-              <Label htmlFor="mobile-type">경조 유형 *</Label>
+              <Label htmlFor="mobile-type">{t('createPage.typeLabel')}</Label>
               <Controller
                 name="eventType"
                 control={control}
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="mobile-type">
-                      <SelectValue placeholder="유형 선택" />
+                      <SelectValue placeholder={t('createPage.typePlaceholder')} />
                     </SelectTrigger>
                     <SelectContent>
                       {(Object.entries(CONDOLENCE_TYPE_LABELS) as [CondolenceType, string][]).map(
@@ -160,18 +166,18 @@ export default function CondolenceCreatePage() {
             {/* Policy Info Card */}
             {selectedPolicy && (
               <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">
-                <p className="text-sm font-medium text-primary mb-2">지급 정책</p>
+                <p className="text-sm font-medium text-primary mb-2">{t('createPage.policyInfo')}</p>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="bg-background/50 rounded-lg p-3 text-center">
-                    <p className="text-xs text-muted-foreground">지급 금액</p>
+                    <p className="text-xs text-muted-foreground">{t('createPage.paymentAmount')}</p>
                     <p className="text-lg font-bold text-primary">
-                      {selectedPolicy.amount.toLocaleString()}원
+                      {selectedPolicy.amount.toLocaleString()}{t('createPage.currencyUnit')}
                     </p>
                   </div>
                   <div className="bg-background/50 rounded-lg p-3 text-center">
-                    <p className="text-xs text-muted-foreground">경조휴가</p>
+                    <p className="text-xs text-muted-foreground">{t('createPage.leaveLabel')}</p>
                     <p className="text-lg font-bold text-primary">
-                      {selectedPolicy.leaveDays}일
+                      {selectedPolicy.leaveDays}{t('createPage.dayUnit')}
                     </p>
                   </div>
                 </div>
@@ -179,7 +185,7 @@ export default function CondolenceCreatePage() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="mobile-eventDate">발생일 *</Label>
+              <Label htmlFor="mobile-eventDate">{t('createPage.eventDateLabel')}</Label>
               <Input
                 id="mobile-eventDate"
                 type="date"
@@ -191,16 +197,16 @@ export default function CondolenceCreatePage() {
             </div>
           </div>
 
-          {/* 대상자 정보 섹션 */}
+          {/* Target Info Section */}
           <div className="bg-card rounded-xl border p-4 space-y-4">
-            <h3 className="text-sm font-medium">대상자 정보</h3>
+            <h3 className="text-sm font-medium">{t('createPage.targetInfo')}</h3>
 
             <div className="space-y-2">
-              <Label htmlFor="mobile-relatedPersonName">대상자명 *</Label>
+              <Label htmlFor="mobile-relatedPersonName">{t('createPage.targetNameLabel')}</Label>
               <Input
                 id="mobile-relatedPersonName"
                 {...register('relatedPersonName')}
-                placeholder="대상자 이름을 입력하세요"
+                placeholder={t('createPage.targetNamePlaceholder')}
               />
               {errors.relatedPersonName && (
                 <p className="text-sm text-destructive">{errors.relatedPersonName.message}</p>
@@ -208,11 +214,11 @@ export default function CondolenceCreatePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="mobile-relation">관계 *</Label>
+              <Label htmlFor="mobile-relation">{t('createPage.relationLabel')}</Label>
               <Input
                 id="mobile-relation"
                 {...register('relation')}
-                placeholder="예: 본인, 부, 모, 배우자 등"
+                placeholder={t('createPage.relationPlaceholder')}
               />
               {errors.relation && (
                 <p className="text-sm text-destructive">{errors.relation.message}</p>
@@ -220,11 +226,11 @@ export default function CondolenceCreatePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="mobile-description">상세 내용 *</Label>
+              <Label htmlFor="mobile-description">{t('createPage.detailLabel')}</Label>
               <Textarea
                 id="mobile-description"
                 {...register('description')}
-                placeholder="경조 관련 상세 내용을 입력하세요"
+                placeholder={t('createPage.detailPlaceholder')}
                 rows={4}
               />
               {errors.description && (
@@ -244,7 +250,7 @@ export default function CondolenceCreatePage() {
               disabled={isPending}
               className="flex-1"
             >
-              취소
+              {t('createPage.cancel')}
             </Button>
             <Button type="submit" disabled={isPending} className="flex-1">
               {isPending ? (
@@ -252,7 +258,7 @@ export default function CondolenceCreatePage() {
               ) : (
                 <Save className="mr-2 h-4 w-4" />
               )}
-              신청
+              {t('createPage.submit')}
             </Button>
           </div>
         </div>
@@ -264,8 +270,8 @@ export default function CondolenceCreatePage() {
   return (
     <>
       <PageHeader
-        title="경조비 신청"
-        description="경조비를 신청합니다."
+        title={t('createPage.title')}
+        description={t('createPage.description')}
       />
 
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -274,20 +280,20 @@ export default function CondolenceCreatePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Heart className="h-5 w-5" aria-hidden="true" />
-                경조 정보
+                {t('createPage.eventInfo')}
               </CardTitle>
-              <CardDescription>경조 유형과 발생 정보를 입력합니다.</CardDescription>
+              <CardDescription>{t('createPage.eventInfoDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="eventType">경조 유형 *</Label>
+                <Label htmlFor="eventType">{t('createPage.typeLabel')}</Label>
                 <Controller
                   name="eventType"
                   control={control}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger id="eventType">
-                        <SelectValue placeholder="유형 선택" />
+                        <SelectValue placeholder={t('createPage.typePlaceholder')} />
                       </SelectTrigger>
                       <SelectContent>
                         {(Object.entries(CONDOLENCE_TYPE_LABELS) as [CondolenceType, string][]).map(
@@ -308,18 +314,18 @@ export default function CondolenceCreatePage() {
 
               {selectedPolicy && (
                 <div className="p-3 rounded-md bg-muted">
-                  <p className="text-sm font-medium">지급 정책</p>
+                  <p className="text-sm font-medium">{t('createPage.policyInfo')}</p>
                   <p className="text-sm text-muted-foreground mt-1">
-                    지급 금액: {selectedPolicy.amount.toLocaleString()}원
+                    {t('createPage.paymentAmountLabel')} {selectedPolicy.amount.toLocaleString()}{t('createPage.currencyUnit')}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    경조휴가: {selectedPolicy.leaveDays}일
+                    {t('createPage.leaveLabelColon')} {selectedPolicy.leaveDays}{t('createPage.dayUnit')}
                   </p>
                 </div>
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="eventDate">발생일 *</Label>
+                <Label htmlFor="eventDate">{t('createPage.eventDateLabel')}</Label>
                 <Input
                   id="eventDate"
                   type="date"
@@ -334,16 +340,16 @@ export default function CondolenceCreatePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>대상자 정보</CardTitle>
-              <CardDescription>경조 대상자 정보를 입력합니다.</CardDescription>
+              <CardTitle>{t('createPage.targetInfo')}</CardTitle>
+              <CardDescription>{t('createPage.targetInfoDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="relatedPersonName">대상자명 *</Label>
+                <Label htmlFor="relatedPersonName">{t('createPage.targetNameLabel')}</Label>
                 <Input
                   id="relatedPersonName"
                   {...register('relatedPersonName')}
-                  placeholder="대상자 이름을 입력하세요"
+                  placeholder={t('createPage.targetNamePlaceholder')}
                 />
                 {errors.relatedPersonName && (
                   <p className="text-sm text-destructive">{errors.relatedPersonName.message}</p>
@@ -351,11 +357,11 @@ export default function CondolenceCreatePage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="relation">관계 *</Label>
+                <Label htmlFor="relation">{t('createPage.relationLabel')}</Label>
                 <Input
                   id="relation"
                   {...register('relation')}
-                  placeholder="예: 본인, 부, 모, 배우자 등"
+                  placeholder={t('createPage.relationPlaceholder')}
                 />
                 {errors.relation && (
                   <p className="text-sm text-destructive">{errors.relation.message}</p>
@@ -363,11 +369,11 @@ export default function CondolenceCreatePage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">상세 내용 *</Label>
+                <Label htmlFor="description">{t('createPage.detailLabel')}</Label>
                 <Textarea
                   id="description"
                   {...register('description')}
-                  placeholder="경조 관련 상세 내용을 입력하세요"
+                  placeholder={t('createPage.detailPlaceholder')}
                   rows={4}
                 />
                 {errors.description && (
@@ -385,7 +391,7 @@ export default function CondolenceCreatePage() {
             onClick={() => navigate('/condolence')}
             disabled={isPending}
           >
-            취소
+            {t('createPage.cancel')}
           </Button>
           <Button type="submit" disabled={isPending}>
             {isPending ? (
@@ -393,7 +399,7 @@ export default function CondolenceCreatePage() {
             ) : (
               <Save className="mr-2 h-4 w-4" aria-hidden="true" />
             )}
-            신청
+            {t('createPage.submit')}
           </Button>
         </div>
       </form>

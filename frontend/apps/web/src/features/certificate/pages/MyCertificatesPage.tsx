@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { PullToRefreshContainer } from '@/components/mobile';
@@ -19,6 +20,7 @@ import { CertificateRequestForm } from '../components/CertificateRequestForm';
 import type { CertificateRequest } from '@hr-platform/shared-types';
 
 export default function MyCertificatesPage() {
+  const { t } = useTranslation('certificate');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
@@ -69,12 +71,12 @@ export default function MyCertificatesPage() {
           {/* Mobile Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold">증명서 신청</h1>
-              <p className="text-sm text-muted-foreground">증명서 발급 현황</p>
+              <h1 className="text-xl font-bold">{t('myCertificates.mobileTitle')}</h1>
+              <p className="text-sm text-muted-foreground">{t('myCertificates.mobileSubtitle')}</p>
             </div>
             <Button size="sm" onClick={() => setIsRequestDialogOpen(true)}>
               <Plus className="mr-1 h-4 w-4" />
-              신청
+              {t('myCertificates.requestButton')}
             </Button>
           </div>
 
@@ -85,7 +87,7 @@ export default function MyCertificatesPage() {
                 <div className="p-1.5 rounded-lg bg-orange-100 dark:bg-orange-900/30">
                   <Clock className="h-4 w-4 text-orange-600 dark:text-orange-400" />
                 </div>
-                <span className="text-xs text-muted-foreground">승인대기</span>
+                <span className="text-xs text-muted-foreground">{t('myCertificates.pending')}</span>
               </div>
               <p className="text-2xl font-bold">{pendingCount}</p>
             </div>
@@ -94,7 +96,7 @@ export default function MyCertificatesPage() {
                 <div className="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-900/30">
                   <CheckCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 </div>
-                <span className="text-xs text-muted-foreground">승인</span>
+                <span className="text-xs text-muted-foreground">{t('myCertificates.approved')}</span>
               </div>
               <p className="text-2xl font-bold">{approvedCount}</p>
             </div>
@@ -103,7 +105,7 @@ export default function MyCertificatesPage() {
                 <div className="p-1.5 rounded-lg bg-green-100 dark:bg-green-900/30">
                   <FileText className="h-4 w-4 text-green-600 dark:text-green-400" />
                 </div>
-                <span className="text-xs text-muted-foreground">발급완료</span>
+                <span className="text-xs text-muted-foreground">{t('myCertificates.issued')}</span>
               </div>
               <p className="text-2xl font-bold">{issuedCount}</p>
             </div>
@@ -112,7 +114,7 @@ export default function MyCertificatesPage() {
                 <div className="p-1.5 rounded-lg bg-red-100 dark:bg-red-900/30">
                   <XCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
                 </div>
-                <span className="text-xs text-muted-foreground">반려</span>
+                <span className="text-xs text-muted-foreground">{t('myCertificates.rejected')}</span>
               </div>
               <p className="text-2xl font-bold">{rejectedCount}</p>
             </div>
@@ -127,7 +129,7 @@ export default function MyCertificatesPage() {
               className="flex-1"
             >
               <FileCheck className="mr-1 h-4 w-4" />
-              발급 이력
+              {t('myCertificates.issueHistoryButton')}
             </Button>
           </div>
 
@@ -156,9 +158,9 @@ export default function MyCertificatesPage() {
           <ConfirmDialog
             open={isCancelDialogOpen}
             onOpenChange={setIsCancelDialogOpen}
-            title="신청 취소"
-            description={`정말로 이 증명서 신청을 취소하시겠습니까?\n${selectedRequest?.certificateTypeName ?? selectedRequest?.certificateType?.name ?? ''} (${selectedRequest?.requestNumber || ''})`}
-            confirmLabel="취소하기"
+            title={t('myCertificates.cancelDialog.title')}
+            description={t('myCertificates.cancelDialog.description', { typeName: selectedRequest?.certificateTypeName ?? selectedRequest?.certificateType?.name ?? '', requestNumber: selectedRequest?.requestNumber || '' })}
+            confirmLabel={t('myCertificates.cancelDialog.confirm')}
             variant="destructive"
             isLoading={cancelMutation.isPending}
             onConfirm={handleCancel}
@@ -172,24 +174,24 @@ export default function MyCertificatesPage() {
   return (
     <>
       <PageHeader
-        title="증명서 신청"
-        description="증명서를 신청하고 발급 현황을 확인합니다."
+        title={t('myCertificates.pageTitle')}
+        description={t('myCertificates.pageDescription')}
         actions={
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => navigate('/certificates/issued')}>
               <FileCheck className="mr-2 h-4 w-4" />
-              발급 이력
+              {t('myCertificates.issueHistoryButton')}
             </Button>
             <Button onClick={() => setIsRequestDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
-              증명서 신청
+              {t('myCertificates.pageTitle')}
             </Button>
           </div>
         }
       />
 
       {/* Stats Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6" role="region" aria-label="증명서 신청 현황 요약">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6" role="region" aria-label={t('myCertificates.summaryAriaLabel')}>
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
@@ -197,7 +199,7 @@ export default function MyCertificatesPage() {
                 <Clock className="h-5 w-5 text-orange-600 dark:text-orange-400" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground" id="pending-label">승인대기</p>
+                <p className="text-sm text-muted-foreground" id="pending-label">{t('myCertificates.pending')}</p>
                 <p className="text-2xl font-bold" aria-labelledby="pending-label">{pendingCount}<span className="sr-only">건</span></p>
               </div>
             </div>
@@ -210,7 +212,7 @@ export default function MyCertificatesPage() {
                 <CheckCircle className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground" id="approved-label">승인</p>
+                <p className="text-sm text-muted-foreground" id="approved-label">{t('myCertificates.approved')}</p>
                 <p className="text-2xl font-bold" aria-labelledby="approved-label">{approvedCount}<span className="sr-only">건</span></p>
               </div>
             </div>
@@ -223,7 +225,7 @@ export default function MyCertificatesPage() {
                 <FileText className="h-5 w-5 text-green-600 dark:text-green-400" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground" id="issued-label">발급완료</p>
+                <p className="text-sm text-muted-foreground" id="issued-label">{t('myCertificates.issued')}</p>
                 <p className="text-2xl font-bold" aria-labelledby="issued-label">{issuedCount}<span className="sr-only">건</span></p>
               </div>
             </div>
@@ -236,7 +238,7 @@ export default function MyCertificatesPage() {
                 <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground" id="rejected-label">반려</p>
+                <p className="text-sm text-muted-foreground" id="rejected-label">{t('myCertificates.rejected')}</p>
                 <p className="text-2xl font-bold" aria-labelledby="rejected-label">{rejectedCount}<span className="sr-only">건</span></p>
               </div>
             </div>
@@ -269,9 +271,9 @@ export default function MyCertificatesPage() {
       <ConfirmDialog
         open={isCancelDialogOpen}
         onOpenChange={setIsCancelDialogOpen}
-        title="신청 취소"
-        description={`정말로 이 증명서 신청을 취소하시겠습니까?\n${selectedRequest?.certificateTypeName ?? selectedRequest?.certificateType?.name ?? ''} (${selectedRequest?.requestNumber || ''})`}
-        confirmLabel="취소하기"
+        title={t('myCertificates.cancelDialog.title')}
+        description={t('myCertificates.cancelDialog.description', { typeName: selectedRequest?.certificateTypeName ?? selectedRequest?.certificateType?.name ?? '', requestNumber: selectedRequest?.requestNumber || '' })}
+        confirmLabel={t('myCertificates.cancelDialog.confirm')}
         variant="destructive"
         isLoading={cancelMutation.isPending}
         onConfirm={handleCancel}

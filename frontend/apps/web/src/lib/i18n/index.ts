@@ -23,6 +23,7 @@ import koAudit from './locales/ko/audit.json';
 import koTransfer from './locales/ko/transfer.json';
 import koMenu from './locales/ko/menu.json';
 import koAppointment from './locales/ko/appointment.json';
+import koCertificate from './locales/ko/certificate.json';
 
 // English
 import enCommon from './locales/en/common.json';
@@ -46,6 +47,7 @@ import enAudit from './locales/en/audit.json';
 import enTransfer from './locales/en/transfer.json';
 import enMenu from './locales/en/menu.json';
 import enAppointment from './locales/en/appointment.json';
+import enCertificate from './locales/en/certificate.json';
 
 const resources = {
   ko: {
@@ -70,6 +72,7 @@ const resources = {
     transfer: koTransfer,
     menu: koMenu,
     appointment: koAppointment,
+    certificate: koCertificate,
   },
   en: {
     common: enCommon,
@@ -93,6 +96,7 @@ const resources = {
     transfer: enTransfer,
     menu: enMenu,
     appointment: enAppointment,
+    certificate: enCertificate,
   },
 } as const;
 
@@ -122,6 +126,7 @@ i18n.use(initReactI18next).init({
     'transfer',
     'menu',
     'appointment',
+    'certificate',
   ],
   defaultNS: 'common',
   interpolation: {

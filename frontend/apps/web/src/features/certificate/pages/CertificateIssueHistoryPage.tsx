@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { SkeletonTable } from '@/components/common/Skeleton';
@@ -27,6 +28,7 @@ import { useToast } from '@/hooks/useToast';
 import type { CertificateIssue } from '@hr-platform/shared-types';
 
 export default function CertificateIssueHistoryPage() {
+  const { t } = useTranslation('certificate');
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -43,8 +45,8 @@ export default function CertificateIssueHistoryPage() {
   const handleDownload = async (issue: CertificateIssue) => {
     if (issue.revoked) {
       toast({
-        title: '다운로드 불가',
-        description: '폐기된 증명서는 다운로드할 수 없습니다.',
+        title: t('issueHistoryToast.voidedCannotDownload'),
+        description: t('issueHistoryToast.voidedCannotDownloadDesc'),
         variant: 'destructive',
       });
       return;
@@ -53,8 +55,8 @@ export default function CertificateIssueHistoryPage() {
     const isExpired = new Date(issue.expiresAt) < new Date();
     if (isExpired) {
       toast({
-        title: '다운로드 불가',
-        description: '만료된 증명서는 다운로드할 수 없습니다.',
+        title: t('issueHistoryToast.expiredCannotDownload'),
+        description: t('issueHistoryToast.expiredCannotDownloadDesc'),
         variant: 'destructive',
       });
       return;
@@ -69,13 +71,13 @@ export default function CertificateIssueHistoryPage() {
       link.click();
       URL.revokeObjectURL(url);
       toast({
-        title: '다운로드 완료',
-        description: '증명서가 다운로드되었습니다.',
+        title: t('issueHistoryToast.downloadSuccess'),
+        description: t('issueHistoryToast.downloadSuccessDesc'),
       });
     } catch (error) {
       toast({
-        title: '다운로드 실패',
-        description: '증명서 다운로드 중 오류가 발생했습니다.',
+        title: t('issueHistoryToast.downloadFailed'),
+        description: t('issueHistoryToast.downloadFailedDesc'),
         variant: 'destructive',
       });
     }
@@ -93,7 +95,7 @@ export default function CertificateIssueHistoryPage() {
     if (issue.revoked) {
       return {
         icon: XCircle,
-        label: '폐기됨',
+        label: t('issueHistory.statusVoided'),
         className: 'text-red-600 dark:text-red-400',
         bgClassName: 'bg-red-100 dark:bg-red-900/30',
       };
@@ -102,14 +104,14 @@ export default function CertificateIssueHistoryPage() {
     if (isExpired) {
       return {
         icon: AlertTriangle,
-        label: '만료',
+        label: t('issueHistory.statusExpired'),
         className: 'text-yellow-600 dark:text-yellow-400',
         bgClassName: 'bg-yellow-100 dark:bg-yellow-900/30',
       };
     }
     return {
       icon: CheckCircle,
-      label: '유효',
+      label: t('issueHistory.statusValid'),
       className: 'text-green-600 dark:text-green-400',
       bgClassName: 'bg-green-100 dark:bg-green-900/30',
     };
@@ -118,26 +120,26 @@ export default function CertificateIssueHistoryPage() {
   return (
     <>
       <PageHeader
-        title="발급 이력"
-        description="발급된 증명서를 확인하고 다운로드합니다."
+        title={t('issueHistory.pageTitle')}
+        description={t('issueHistory.pageDescription')}
         actions={
           <Button variant="outline" onClick={() => navigate('/certificates')}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            목록으로
+            {t('goToList')}
           </Button>
         }
       />
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-4">
-          <CardTitle>발급 이력</CardTitle>
+          <CardTitle>{t('issueHistory.cardTitle')}</CardTitle>
           <div className="flex items-center gap-4">
             <select
               value={searchState.typeCode}
               onChange={(e) => setTypeCode(e.target.value)}
               className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm"
             >
-              <option value="">전체 유형</option>
+              <option value="">{t('issueHistory.allTypes')}</option>
               {certificateTypes.map((type) => (
                 <option key={type.code} value={type.code}>
                   {type.name}
@@ -151,7 +153,7 @@ export default function CertificateIssueHistoryPage() {
                 onCheckedChange={(checked) => setIncludeExpired(checked as boolean)}
               />
               <Label htmlFor="includeExpired" className="text-sm font-normal">
-                만료 포함
+                {t('issueHistory.includeExpired')}
               </Label>
             </div>
           </div>
@@ -164,10 +166,10 @@ export default function CertificateIssueHistoryPage() {
           ) : issues.length === 0 ? (
             <EmptyState
               icon={FileText}
-              title="발급 이력이 없습니다"
-              description="증명서를 신청하면 발급 후 이력이 여기에 표시됩니다."
+              title={t('issueHistory.emptyTitle')}
+              description={t('issueHistory.emptyDescription')}
               action={{
-                label: '증명서 신청',
+                label: t('issueHistory.requestCertificate'),
                 onClick: () => navigate('/certificates'),
               }}
             />
@@ -178,28 +180,28 @@ export default function CertificateIssueHistoryPage() {
                   <thead>
                     <tr className="border-b bg-muted/50">
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        상태
+                        {t('issueHistory.table.status')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        발급번호
+                        {t('issueHistory.table.issueNumber')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        증명서 유형
+                        {t('issueHistory.table.certificateType')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        발급일
+                        {t('issueHistory.table.issueDate')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        유효기간
+                        {t('issueHistory.table.validityPeriod')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        인증코드
+                        {t('issueHistory.table.verificationCode')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        다운로드
+                        {t('issueHistory.table.downloadCol')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        작업
+                        {t('issueHistory.table.action')}
                       </th>
                     </tr>
                   </thead>
@@ -250,7 +252,7 @@ export default function CertificateIssueHistoryPage() {
                               disabled={!canDownload || downloadMutation.isPending}
                             >
                               <Download className="h-4 w-4 mr-1" />
-                              다운로드
+                              {t('issueHistory.download')}
                             </Button>
                           </td>
                         </tr>

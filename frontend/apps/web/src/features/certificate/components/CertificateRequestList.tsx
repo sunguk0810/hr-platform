@@ -1,5 +1,6 @@
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -39,6 +40,8 @@ export function CertificateRequestList({
   onTypeCodeChange,
   onRequestClick,
 }: CertificateRequestListProps) {
+  const { t } = useTranslation('certificate');
+
   const formatDateTime = (dateString: string) => {
     return format(new Date(dateString), 'yyyy-MM-dd HH:mm', { locale: ko });
   };
@@ -46,14 +49,14 @@ export function CertificateRequestList({
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-4">
-        <CardTitle>신청 내역</CardTitle>
+        <CardTitle>{t('requestList.title')}</CardTitle>
         <div className="flex gap-2">
           <select
             value={selectedTypeCode}
             onChange={(e) => onTypeCodeChange(e.target.value)}
             className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm"
           >
-            <option value="">전체 유형</option>
+            <option value="">{t('requestList.allTypes')}</option>
             {certificateTypes.map((type) => (
               <option key={type.code} value={type.code}>
                 {type.name}
@@ -65,7 +68,7 @@ export function CertificateRequestList({
             onChange={(e) => onStatusChange(e.target.value as RequestStatus | '')}
             className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm"
           >
-            <option value="">전체 상태</option>
+            <option value="">{t('requestList.allStatuses')}</option>
             {Object.entries(REQUEST_STATUS_LABELS).map(([value, label]) => (
               <option key={value} value={value}>
                 {label}
@@ -82,8 +85,8 @@ export function CertificateRequestList({
         ) : requests.length === 0 ? (
           <EmptyState
             icon={FileText}
-            title="신청 내역이 없습니다"
-            description="증명서를 신청하면 내역이 여기에 표시됩니다."
+            title={t('requestList.emptyTitle')}
+            description={t('requestList.emptyDescription')}
           />
         ) : (
           <>
@@ -92,28 +95,28 @@ export function CertificateRequestList({
                 <thead>
                   <tr className="border-b bg-muted/50">
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                      신청번호
+                      {t('requestList.table.requestNumber')}
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                      증명서 유형
+                      {t('requestList.table.certificateType')}
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                      언어
+                      {t('requestList.table.language')}
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                      부수
+                      {t('requestList.table.copies')}
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                      용도
+                      {t('requestList.table.purpose')}
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                      상태
+                      {t('requestList.table.status')}
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                      신청일
+                      {t('requestList.table.requestDate')}
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                      작업
+                      {t('requestList.table.action')}
                     </th>
                   </tr>
                 </thead>
@@ -133,7 +136,7 @@ export function CertificateRequestList({
                       <td className="px-4 py-3 text-sm">
                         {CERTIFICATE_LANGUAGE_LABELS[request.language]}
                       </td>
-                      <td className="px-4 py-3 text-sm">{request.copies}부</td>
+                      <td className="px-4 py-3 text-sm">{request.copies}{t('copyUnit')}</td>
                       <td className="px-4 py-3 text-sm text-muted-foreground max-w-[150px] truncate">
                         {request.purpose || '-'}
                       </td>
@@ -154,7 +157,7 @@ export function CertificateRequestList({
                             }}
                           >
                             <XCircle className="h-4 w-4 mr-1" />
-                            취소
+                            {t('requestList.cancel')}
                           </Button>
                         )}
                       </td>
