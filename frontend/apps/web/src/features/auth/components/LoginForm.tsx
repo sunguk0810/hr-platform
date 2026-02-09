@@ -1,8 +1,9 @@
+import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Eye, EyeOff, Loader2, Shield, Users, Briefcase, User, Building2, Crown, UserCog } from 'lucide-react';
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,12 +16,10 @@ import {
 import { useLogin } from '../hooks/useAuth';
 import { quickLoginAccounts } from '../services/mockAuthData';
 
-const loginSchema = z.object({
-  username: z.string().min(1, '아이디를 입력해주세요.'),
-  password: z.string().min(1, '비밀번호를 입력해주세요.'),
-});
-
-type LoginFormData = z.infer<typeof loginSchema>;
+type LoginFormData = {
+  username: string;
+  password: string;
+};
 
 // 개발 모드 확인
 const isDevelopment = import.meta.env.DEV || import.meta.env.VITE_ENABLE_MOCK === 'true';
@@ -37,9 +36,15 @@ const roleIcons: Record<string, React.ReactNode> = {
 };
 
 export function LoginForm() {
+  const { t } = useTranslation('auth');
   const [showPassword, setShowPassword] = useState(false);
   const [showQuickLogin, setShowQuickLogin] = useState(true);
   const { mutate: login, isPending, error } = useLogin();
+
+  const loginSchema = useMemo(() => z.object({
+    username: z.string().min(1, t('usernameRequired')),
+    password: z.string().min(1, t('passwordRequired')),
+  }), [t]);
 
   const {
     register,
@@ -68,11 +73,11 @@ export function LoginForm() {
     <div className="space-y-6">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="username">아이디</Label>
+          <Label htmlFor="username">{t('username')}</Label>
           <Input
             id="username"
             type="text"
-            placeholder="아이디를 입력하세요"
+            placeholder={t('usernamePlaceholder')}
             autoComplete="username"
             {...register('username')}
             className={errors.username ? 'border-destructive' : ''}
@@ -83,12 +88,12 @@ export function LoginForm() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password">비밀번호</Label>
+          <Label htmlFor="password">{t('password')}</Label>
           <div className="relative">
             <Input
               id="password"
               type={showPassword ? 'text' : 'password'}
-              placeholder="비밀번호를 입력하세요"
+              placeholder={t('passwordPlaceholder')}
               autoComplete="current-password"
               {...register('password')}
               className={errors.password ? 'border-destructive pr-10' : 'pr-10'}
@@ -108,7 +113,7 @@ export function LoginForm() {
 
         {error && (
           <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-            {(error as Error).message || '로그인에 실패했습니다.'}
+            {(error as Error).message || t('loginFailed')}
           </div>
         )}
 
@@ -116,10 +121,10 @@ export function LoginForm() {
           {isPending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              로그인 중...
+              {t('loggingIn')}
             </>
           ) : (
-            '로그인'
+            t('loginButton')
           )}
         </Button>
       </form>
@@ -136,16 +141,16 @@ export function LoginForm() {
               >
                 <span className="flex items-center gap-2">
                   <Shield className="h-4 w-4" />
-                  테스트 계정으로 빠른 로그인
+                  {t('quickLogin.title')}
                 </span>
                 <span className="text-xs">
-                  {showQuickLogin ? '접기' : '펼치기'}
+                  {showQuickLogin ? t('quickLogin.collapse') : t('quickLogin.expand')}
                 </span>
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-2 pt-2">
               <p className="text-xs text-muted-foreground mb-3">
-                개발/테스트 환경에서만 표시됩니다. 클릭하면 바로 로그인됩니다.
+                {t('quickLogin.devOnly')}
               </p>
               <div className="grid grid-cols-2 gap-2">
                 {quickLoginAccounts.map((account) => (
@@ -173,28 +178,28 @@ export function LoginForm() {
               </div>
               <div className="mt-3 rounded-md bg-muted/50 p-3">
                 <p className="text-xs text-muted-foreground">
-                  <strong>한성그룹 테스트 계정 (샘플 데이터)</strong>
+                  <strong>{t('quickLogin.sampleTitle')}</strong>
                 </p>
                 <ul className="text-xs text-muted-foreground mt-1 space-y-1">
                   <li className="flex items-center gap-2">
                     <Shield className="h-3 w-3 text-red-500" />
-                    시스템 관리자: 전체 시스템 관리
+                    {t('quickLogin.sysAdmin')}
                   </li>
                   <li className="flex items-center gap-2">
                     <Building2 className="h-3 w-3 text-indigo-500" />
-                    CEO: 계열사 전체 관리 (테넌트 관리자)
+                    {t('quickLogin.ceo')}
                   </li>
                   <li className="flex items-center gap-2">
                     <UserCog className="h-3 w-3 text-blue-500" />
-                    HR 관리자: 인사/근태/조직 관리 (인사팀장)
+                    {t('quickLogin.hrManager')}
                   </li>
                   <li className="flex items-center gap-2">
                     <Briefcase className="h-3 w-3 text-amber-500" />
-                    부서장: 팀원 관리 및 결재 승인
+                    {t('quickLogin.deptManager')}
                   </li>
                   <li className="flex items-center gap-2">
                     <User className="h-3 w-3 text-green-500" />
-                    일반 직원: 본인 정보 조회/수정
+                    {t('quickLogin.employee')}
                   </li>
                 </ul>
               </div>

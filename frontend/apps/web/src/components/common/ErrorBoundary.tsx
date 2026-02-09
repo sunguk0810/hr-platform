@@ -1,6 +1,7 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import i18n from '@/lib/i18n';
 
 interface Props {
   children: ReactNode;
@@ -43,9 +44,9 @@ export class ErrorBoundary extends Component<Props, State> {
               <AlertTriangle className="h-8 w-8 text-destructive" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold">오류가 발생했습니다</h2>
+              <h2 className="text-lg font-semibold">{i18n.t('common:errorBoundary.title')}</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                페이지를 새로고침하거나 다시 시도해주세요.
+                {i18n.t('common:errorBoundary.description')}
               </p>
               {this.state.error && (
                 <p className="mt-2 text-xs text-muted-foreground">
@@ -55,7 +56,7 @@ export class ErrorBoundary extends Component<Props, State> {
             </div>
             <Button onClick={this.handleReset} variant="outline" size="sm">
               <RefreshCw className="mr-2 h-4 w-4" />
-              다시 시도
+              {i18n.t('common:errorBoundary.retry')}
             </Button>
           </div>
         </div>

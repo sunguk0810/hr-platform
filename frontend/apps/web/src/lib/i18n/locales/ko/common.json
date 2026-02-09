@@ -34,5 +34,29 @@
   "amount": "금액",
   "noResults": "검색 결과가 없습니다",
   "loadMore": "더 보기",
-  "allLoaded": "모든 항목을 불러왔습니다"
+  "allLoaded": "모든 항목을 불러왔습니다",
+  "processing": "처리 중...",
+  "table": {
+    "totalItems": "전체 {{total}}건",
+    "perPage": "페이지당",
+    "unit": "건",
+    "pageInfo": "{{current}} / {{total}} 페이지",
+    "firstPage": "첫 페이지",
+    "previousPage": "이전 페이지",
+    "nextPage": "다음 페이지",
+    "lastPage": "마지막 페이지",
+    "columnToggle": "열 표시",
+    "columnToggleLabel": "표시할 열 선택",
+    "searchPlaceholder": "검색..."
+  },
+  "pagination": {
+    "pageInfo": "페이지 {{current}} / {{total}}",
+    "previous": "이전",
+    "next": "다음"
+  },
+  "errorBoundary": {
+    "title": "오류가 발생했습니다",
+    "description": "페이지를 새로고침하거나 다시 시도해주세요.",
+    "retry": "다시 시도"
+  }
 }

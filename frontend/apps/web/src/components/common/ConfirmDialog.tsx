@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -39,9 +40,10 @@ export function ConfirmDialog({
   onCancel,
   isLoading = false,
 }: ConfirmDialogProps) {
+  const { t } = useTranslation('common');
   // Support both new and deprecated prop names
-  const effectiveConfirmLabel = confirmLabel || confirmText || '확인';
-  const effectiveCancelLabel = cancelLabel || cancelText || '취소';
+  const effectiveConfirmLabel = confirmLabel || confirmText || t('confirm');
+  const effectiveCancelLabel = cancelLabel || cancelText || t('cancel');
   const handleCancel = () => {
     onCancel?.();
     onOpenChange(false);
@@ -67,7 +69,7 @@ export function ConfirmDialog({
             onClick={handleConfirm}
             disabled={isLoading}
           >
-            {isLoading ? '처리 중...' : effectiveConfirmLabel}
+            {isLoading ? t('processing') : effectiveConfirmLabel}
           </Button>
         </DialogFooter>
       </DialogContent>

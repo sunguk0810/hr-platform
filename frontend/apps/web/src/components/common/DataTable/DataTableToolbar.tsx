@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -21,6 +22,8 @@ export function DataTableToolbar({
   columns,
   actions,
 }: DataTableToolbarProps) {
+  const { t } = useTranslation('common');
+
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-4">
       <div className="flex flex-1 items-center gap-2">
@@ -41,11 +44,11 @@ export function DataTableToolbar({
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-9">
                 <Settings2 className="h-4 w-4 mr-2" />
-                열 표시
+                {t('table.columnToggle')}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-[180px]">
-              <DropdownMenuLabel>표시할 열 선택</DropdownMenuLabel>
+              <DropdownMenuLabel>{t('table.columnToggleLabel')}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {columns.map((column) => (
                 <DropdownMenuCheckboxItem

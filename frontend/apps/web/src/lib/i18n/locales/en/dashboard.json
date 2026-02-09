@@ -1,7 +1,9 @@
 {
   "title": "Dashboard",
   "greeting": "Hello, {{name}}",
+  "defaultUser": "User",
   "description": "Check your work status for today",
+  "widgetSettings": "Widget Settings",
   "attendance": {
     "title": "Attendance",
     "description": "Today's work status",
@@ -15,6 +17,7 @@
       "checkedOut": "Checked Out"
     },
     "workDuration": "Work Duration",
+    "workDurationValue": "Work Duration: {{duration}}",
     "goodJob": "Great job today!"
   },
   "leave": {
@@ -25,13 +28,18 @@
     "special": "Special",
     "upcoming": "Upcoming Leave",
     "remaining": "Remaining",
+    "remainingLeave": "Remaining Leave",
     "used": "Used",
-    "total": "Total"
+    "total": "Total",
+    "days": "/ {{count}} days",
+    "unit": "items"
   },
   "approvals": {
     "title": "Pending Approvals",
     "description": "{{count}} approvals pending",
     "noItems": "No pending approvals",
+    "pendingDocuments": "Pending Documents",
+    "unit": "items",
     "viewAll": "View all {{count}}",
     "types": {
       "LEAVE_REQUEST": "Leave",
@@ -48,12 +56,14 @@
       "tomorrow": "Tomorrow",
       "daysLater": "In {{days}} days",
       "empty": "No birthdays this week.",
+      "todayTitle": "Today's Birthdays",
       "todayBirthdays": "Today's Birthdays",
       "upcoming": "Upcoming Birthdays"
     },
     "announcements": {
       "title": "Announcements",
       "viewAll": "View All",
+      "important": "[Important]",
       "empty": "No announcements.",
       "category": {
         "notice": "Notice",
@@ -80,6 +90,12 @@
       "positions": "Positions",
       "newHires": "New Hires This Month",
       "resigned": "Resigned"
+    },
+    "quickLinks": {
+      "organization": "Organization",
+      "leave": "Leave",
+      "approval": "Approval",
+      "notification": "Notifications"
     }
   }
 }

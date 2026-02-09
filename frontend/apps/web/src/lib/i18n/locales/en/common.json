@@ -34,5 +34,29 @@
   "amount": "Amount",
   "noResults": "No results found",
   "loadMore": "Load more",
-  "allLoaded": "All items loaded"
+  "allLoaded": "All items loaded",
+  "processing": "Processing...",
+  "table": {
+    "totalItems": "Total {{total}} items",
+    "perPage": "Per page",
+    "unit": "items",
+    "pageInfo": "{{current}} / {{total}} pages",
+    "firstPage": "First page",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
+    "lastPage": "Last page",
+    "columnToggle": "Columns",
+    "columnToggleLabel": "Select columns to display",
+    "searchPlaceholder": "Search..."
+  },
+  "pagination": {
+    "pageInfo": "Page {{current}} / {{total}}",
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "errorBoundary": {
+    "title": "An error occurred",
+    "description": "Please refresh the page or try again.",
+    "retry": "Try again"
+  }
 }

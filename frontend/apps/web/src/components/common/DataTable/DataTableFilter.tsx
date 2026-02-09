@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/input';
 import { Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,8 +8,10 @@ import type { DataTableFilterProps } from './types';
 export function DataTableFilter({
   globalFilter,
   onGlobalFilterChange,
-  placeholder = '검색...',
+  placeholder,
 }: DataTableFilterProps) {
+  const { t } = useTranslation('common');
+  const effectivePlaceholder = placeholder || t('table.searchPlaceholder');
   const [value, setValue] = useState(globalFilter);
 
   useEffect(() => {
@@ -29,7 +32,7 @@ export function DataTableFilter({
     <div className="relative">
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
       <Input
-        placeholder={placeholder}
+        placeholder={effectivePlaceholder}
         value={value}
         onChange={(e) => setValue(e.target.value)}
         className="pl-9 pr-9 h-9 w-full sm:w-[250px]"

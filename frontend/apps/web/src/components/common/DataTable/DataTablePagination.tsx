@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -24,6 +25,7 @@ export function DataTablePagination({
   onPageChange,
   onPageSizeChange,
 }: DataTablePaginationProps) {
+  const { t } = useTranslation('common');
   const canGoPrevious = pageIndex > 0;
   const canGoNext = pageIndex < pageCount - 1;
 
@@ -35,10 +37,10 @@ export function DataTablePagination({
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 border-t">
       <div className="flex items-center gap-4 text-sm text-muted-foreground">
         {totalItems !== undefined && (
-          <span>전체 {totalItems.toLocaleString()}건</span>
+          <span>{t('table.totalItems', { total: totalItems.toLocaleString() })}</span>
         )}
         <div className="flex items-center gap-2">
-          <span>페이지당</span>
+          <span>{t('table.perPage')}</span>
           <Select
             value={String(pageSize)}
             onValueChange={(value) => onPageSizeChange(Number(value))}
@@ -54,13 +56,13 @@ export function DataTablePagination({
               ))}
             </SelectContent>
           </Select>
-          <span>건</span>
+          <span>{t('table.unit')}</span>
         </div>
       </div>
 
       <div className="flex items-center gap-2">
         <span className="text-sm text-muted-foreground">
-          {pageIndex + 1} / {pageCount} 페이지
+          {t('table.pageInfo', { current: pageIndex + 1, total: pageCount })}
         </span>
         <div className="flex items-center gap-1">
           <Button
@@ -69,7 +71,7 @@ export function DataTablePagination({
             className="h-8 w-8"
             onClick={() => onPageChange(0)}
             disabled={!canGoPrevious}
-            aria-label="첫 페이지"
+            aria-label={t('table.firstPage')}
           >
             <ChevronsLeft className="h-4 w-4" />
           </Button>
@@ -79,7 +81,7 @@ export function DataTablePagination({
             className="h-8 w-8"
             onClick={() => onPageChange(pageIndex - 1)}
             disabled={!canGoPrevious}
-            aria-label="이전 페이지"
+            aria-label={t('table.previousPage')}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -89,7 +91,7 @@ export function DataTablePagination({
             className="h-8 w-8"
             onClick={() => onPageChange(pageIndex + 1)}
             disabled={!canGoNext}
-            aria-label="다음 페이지"
+            aria-label={t('table.nextPage')}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -99,7 +101,7 @@ export function DataTablePagination({
             className="h-8 w-8"
             onClick={() => onPageChange(pageCount - 1)}
             disabled={!canGoNext}
-            aria-label="마지막 페이지"
+            aria-label={t('table.lastPage')}
           >
             <ChevronsRight className="h-4 w-4" />
           </Button>

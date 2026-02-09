@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { PageHeader } from '@/components/common/PageHeader';
 import { DashboardGrid } from '../components/DashboardGrid';
@@ -9,6 +10,7 @@ import { PullToRefreshContainer } from '@/components/mobile';
 import { queryKeys } from '@/lib/queryClient';
 
 export default function DashboardPage() {
+  const { t } = useTranslation('dashboard');
   const { user } = useAuthStore();
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
@@ -30,8 +32,8 @@ export default function DashboardPage() {
   return (
     <>
       <PageHeader
-        title={`안녕하세요, ${user?.name || '사용자'}님`}
-        description="오늘의 업무 현황을 확인하세요."
+        title={t('greeting', { name: user?.name || t('defaultUser') })}
+        description={t('description')}
         actions={<WidgetCustomizer />}
       />
       <DashboardGrid />

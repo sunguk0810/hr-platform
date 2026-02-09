@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -66,6 +67,7 @@ interface BirthdayItem {
 }
 
 export function MobileDashboard({ userName }: MobileDashboardProps) {
+  const { t } = useTranslation('dashboard');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const widgets = useDashboardStore((state) => state.widgets);
@@ -147,11 +149,11 @@ export function MobileDashboard({ userName }: MobileDashboardProps) {
   const getStatusConfig = (status?: AttendanceData['status']) => {
     switch (status) {
       case 'NOT_CHECKED_IN':
-        return { text: '미출근', color: 'text-muted-foreground', bg: 'bg-muted' };
+        return { text: t('attendance.status.notCheckedIn'), color: 'text-muted-foreground', bg: 'bg-muted' };
       case 'WORKING':
-        return { text: '근무중', color: 'text-green-600', bg: 'bg-green-50 dark:bg-green-950' };
+        return { text: t('attendance.status.working'), color: 'text-green-600', bg: 'bg-green-50 dark:bg-green-950' };
       case 'CHECKED_OUT':
-        return { text: '퇴근완료', color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-950' };
+        return { text: t('attendance.status.checkedOut'), color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-950' };
       default:
         return { text: '--', color: 'text-muted-foreground', bg: 'bg-muted' };
     }
@@ -164,14 +166,14 @@ export function MobileDashboard({ userName }: MobileDashboardProps) {
       {/* Header */}
       <div className="mb-2 flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-bold">안녕하세요, {userName || '사용자'}님</h1>
-          <p className="text-sm text-muted-foreground">오늘의 업무 현황을 확인하세요</p>
+          <h1 className="text-xl font-bold">{t('greeting', { name: userName || t('defaultUser') })}</h1>
+          <p className="text-sm text-muted-foreground">{t('description')}</p>
         </div>
         <WidgetCustomizer
           trigger={
             <Button variant="ghost" size="icon" className="h-9 w-9">
               <Settings2 className="h-5 w-5" />
-              <span className="sr-only">위젯 설정</span>
+              <span className="sr-only">{t('widgetSettings')}</span>
             </Button>
           }
         />
@@ -183,7 +185,7 @@ export function MobileDashboard({ userName }: MobileDashboardProps) {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Clock className="h-5 w-5 text-primary" />
-            <h2 className="font-semibold">출퇴근</h2>
+            <h2 className="font-semibold">{t('attendance.title')}</h2>
           </div>
           <span className={cn('text-sm font-medium px-2 py-0.5 rounded-full', statusConfig.bg, statusConfig.color)}>
             {statusConfig.text}
@@ -193,13 +195,13 @@ export function MobileDashboard({ userName }: MobileDashboardProps) {
         {/* Time Display */}
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="rounded-xl bg-muted/50 p-3 text-center">
-            <p className="text-xs text-muted-foreground">출근</p>
+            <p className="text-xs text-muted-foreground">{t('attendance.checkIn')}</p>
             <p className="text-xl font-bold tabular-nums mt-1">
               {formatTime(attendanceData?.checkInTime || null)}
             </p>
           </div>
           <div className="rounded-xl bg-muted/50 p-3 text-center">
-            <p className="text-xs text-muted-foreground">퇴근</p>
+            <p className="text-xs text-muted-foreground">{t('attendance.checkOut')}</p>
             <p className="text-xl font-bold tabular-nums mt-1">
               {formatTime(attendanceData?.checkOutTime || null)}
             </p>
@@ -209,7 +211,7 @@ export function MobileDashboard({ userName }: MobileDashboardProps) {
         {/* Work Duration */}
         {attendanceData?.status === 'WORKING' && attendanceData.workDuration && (
           <p className="text-sm text-center text-muted-foreground mb-4">
-            근무시간: {attendanceData.workDuration}
+            {t('attendance.workDurationValue', { duration: attendanceData.workDuration })}
           </p>
         )}
 
@@ -222,7 +224,7 @@ export function MobileDashboard({ userName }: MobileDashboardProps) {
               disabled={checkInMutation.isPending}
             >
               <LogIn className="mr-2 h-5 w-5" />
-              출근하기
+              {t('attendance.checkInButton')}
             </Button>
           )}
           {attendanceData?.status === 'WORKING' && (
@@ -233,12 +235,12 @@ export function MobileDashboard({ userName }: MobileDashboardProps) {
               disabled={checkOutMutation.isPending}
             >
               <LogOut className="mr-2 h-5 w-5" />
-              퇴근하기
+              {t('attendance.checkOutButton')}
             </Button>
           )}
           {attendanceData?.status === 'CHECKED_OUT' && (
             <div className="flex-1 rounded-xl bg-green-50 dark:bg-green-950 p-3 text-center text-sm text-green-700 dark:text-green-300">
-              오늘 하루도 수고하셨습니다!
+              {t('attendance.goodJob')}
             </div>
           )}
         </div>
@@ -256,10 +258,10 @@ export function MobileDashboard({ userName }: MobileDashboardProps) {
         >
           <div className="flex items-center gap-2 mb-2">
             <Calendar className="h-4 w-4 text-orange-500" />
-            <span className="text-xs text-muted-foreground">잔여 연차</span>
+            <span className="text-xs text-muted-foreground">{t('leave.remainingLeave')}</span>
           </div>
           <p className="text-2xl font-bold">{leaveData?.remainingDays ?? 0}</p>
-          <p className="text-xs text-muted-foreground">/ {leaveData?.totalDays ?? 0}일</p>
+          <p className="text-xs text-muted-foreground">{t('leave.days', { count: leaveData?.totalDays ?? 0 })}</p>
         </button>
         )}
 
@@ -271,10 +273,10 @@ export function MobileDashboard({ userName }: MobileDashboardProps) {
         >
           <div className="flex items-center gap-2 mb-2">
             <FileCheck className="h-4 w-4 text-blue-500" />
-            <span className="text-xs text-muted-foreground">결재 대기</span>
+            <span className="text-xs text-muted-foreground">{t('approvals.title')}</span>
           </div>
           <p className="text-2xl font-bold">{approvalsData?.total ?? 0}</p>
-          <p className="text-xs text-muted-foreground">건</p>
+          <p className="text-xs text-muted-foreground">{t('approvals.unit')}</p>
         </button>
         )}
       </div>
@@ -284,12 +286,12 @@ export function MobileDashboard({ userName }: MobileDashboardProps) {
       {isWidgetEnabled('pendingApprovals') && approvalsData?.items && approvalsData.items.length > 0 && (
         <div className="bg-card rounded-2xl border p-4">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-sm">결재 대기 문서</h3>
+            <h3 className="font-semibold text-sm">{t('approvals.pendingDocuments')}</h3>
             <button
               onClick={() => navigate('/approvals')}
               className="text-xs text-primary flex items-center"
             >
-              전체보기 <ChevronRight className="h-3 w-3" />
+              {t('widgets.announcements.viewAll')} <ChevronRight className="h-3 w-3" />
             </button>
           </div>
           <div className="space-y-2">
@@ -321,13 +323,13 @@ export function MobileDashboard({ userName }: MobileDashboardProps) {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Bell className="h-4 w-4 text-yellow-500" />
-              <h3 className="font-semibold text-sm">공지사항</h3>
+              <h3 className="font-semibold text-sm">{t('widgets.announcements.title')}</h3>
             </div>
             <button
               onClick={() => navigate('/announcements')}
               className="text-xs text-primary flex items-center"
             >
-              전체보기 <ChevronRight className="h-3 w-3" />
+              {t('widgets.announcements.viewAll')} <ChevronRight className="h-3 w-3" />
             </button>
           </div>
           <div className="space-y-2">
@@ -340,7 +342,7 @@ export function MobileDashboard({ userName }: MobileDashboardProps) {
                 <div className="flex-1 text-left">
                   <div className="flex items-center gap-2">
                     {item.isImportant && (
-                      <span className="text-xs text-destructive font-medium">[중요]</span>
+                      <span className="text-xs text-destructive font-medium">{t('widgets.announcements.important')}</span>
                     )}
                     <span className="text-xs text-muted-foreground">{item.category}</span>
                   </div>
@@ -358,7 +360,7 @@ export function MobileDashboard({ userName }: MobileDashboardProps) {
         <div className="bg-card rounded-2xl border p-4">
           <div className="flex items-center gap-2 mb-3">
             <Cake className="h-4 w-4 text-pink-500" />
-            <h3 className="font-semibold text-sm">오늘의 생일</h3>
+            <h3 className="font-semibold text-sm">{t('widgets.birthdays.todayTitle')}</h3>
           </div>
           <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
             {birthdaysData.map((person) => (
@@ -382,22 +384,22 @@ export function MobileDashboard({ userName }: MobileDashboardProps) {
       <div className="grid grid-cols-4 gap-2">
         <QuickLinkButton
           icon={<Users className="h-5 w-5" />}
-          label="조직도"
+          label={t('widgets.quickLinks.organization')}
           onClick={() => navigate('/organization')}
         />
         <QuickLinkButton
           icon={<Calendar className="h-5 w-5" />}
-          label="휴가"
+          label={t('widgets.quickLinks.leave')}
           onClick={() => navigate('/attendance/leave')}
         />
         <QuickLinkButton
           icon={<FileCheck className="h-5 w-5" />}
-          label="결재"
+          label={t('widgets.quickLinks.approval')}
           onClick={() => navigate('/approvals')}
         />
         <QuickLinkButton
           icon={<Bell className="h-5 w-5" />}
-          label="알림"
+          label={t('widgets.quickLinks.notification')}
           onClick={() => navigate('/notifications')}
         />
       </div>

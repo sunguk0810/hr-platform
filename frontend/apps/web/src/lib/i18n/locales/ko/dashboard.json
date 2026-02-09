@@ -1,7 +1,9 @@
 {
   "title": "대시보드",
   "greeting": "안녕하세요, {{name}}님",
+  "defaultUser": "사용자",
   "description": "오늘의 업무 현황을 확인하세요",
+  "widgetSettings": "위젯 설정",
   "attendance": {
     "title": "출퇴근",
     "description": "오늘의 근무 현황",
@@ -15,6 +17,7 @@
       "checkedOut": "퇴근완료"
     },
     "workDuration": "근무시간",
+    "workDurationValue": "근무시간: {{duration}}",
     "goodJob": "오늘 하루도 수고하셨습니다!"
   },
   "leave": {
@@ -25,13 +28,18 @@
     "special": "특별휴가",
     "upcoming": "예정된 휴가",
     "remaining": "잔여",
+    "remainingLeave": "잔여 연차",
     "used": "사용",
-    "total": "총"
+    "total": "총",
+    "days": "/ {{count}}일",
+    "unit": "건"
   },
   "approvals": {
     "title": "결재 대기",
     "description": "{{count}}건의 결재가 대기 중입니다",
     "noItems": "대기 중인 결재가 없습니다",
+    "pendingDocuments": "결재 대기 문서",
+    "unit": "건",
     "viewAll": "전체 {{count}}건 보기",
     "types": {
       "LEAVE_REQUEST": "휴가",
@@ -48,12 +56,14 @@
       "tomorrow": "내일",
       "daysLater": "{{days}}일 후",
       "empty": "이번 주 생일자가 없습니다.",
+      "todayTitle": "오늘의 생일",
       "todayBirthdays": "오늘 생일",
       "upcoming": "다가오는 생일"
     },
     "announcements": {
       "title": "공지사항",
       "viewAll": "전체보기",
+      "important": "[중요]",
       "empty": "공지사항이 없습니다.",
       "category": {
         "notice": "공지",
@@ -80,6 +90,12 @@
       "positions": "직위",
       "newHires": "이번 달 입사",
       "resigned": "퇴사"
+    },
+    "quickLinks": {
+      "organization": "조직도",
+      "leave": "휴가",
+      "approval": "결재",
+      "notification": "알림"
     }
   }
 }

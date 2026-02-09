@@ -1,9 +1,11 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { LoginForm } from '../components/LoginForm';
 
 export default function LoginPage() {
+  const { t } = useTranslation('auth');
   const navigate = useNavigate();
   const { isAuthenticated } = useAuthStore();
 
@@ -20,7 +22,7 @@ export default function LoginPage() {
           <div className="mb-8 text-center">
             <h1 className="text-2xl font-bold text-foreground">HR Platform</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              인사관리 시스템에 로그인하세요
+              {t('subtitle')}
             </p>
           </div>
 
