@@ -3,10 +3,7 @@ package com.hrsaas.attendance.controller;
 import com.hrsaas.attendance.domain.dto.request.CheckInRequest;
 import com.hrsaas.attendance.domain.dto.request.CheckOutRequest;
 import com.hrsaas.attendance.domain.dto.request.UpdateAttendanceRecordRequest;
-import com.hrsaas.attendance.domain.dto.response.AttendanceRecordResponse;
-import com.hrsaas.attendance.domain.dto.response.AttendanceSummaryResponse;
-import com.hrsaas.attendance.domain.dto.response.DepartmentAttendanceSummaryResponse;
-import com.hrsaas.attendance.domain.dto.response.WorkHoursStatisticsResponse;
+import com.hrsaas.attendance.domain.dto.response.*;
 import com.hrsaas.attendance.service.AttendanceService;
 import com.hrsaas.common.response.ApiResponse;
 import com.hrsaas.common.security.SecurityContextHolder;
@@ -112,5 +109,12 @@ public class AttendanceController {
             @PathVariable UUID departmentId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         return ApiResponse.success(attendanceService.getDepartmentSummary(departmentId, date));
+    }
+
+    @Operation(summary = "테넌트 근태 통계 (대시보드용)")
+    @GetMapping("/tenant-summary")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
+    public ApiResponse<TenantAttendanceSummaryResponse> getTenantSummary() {
+        return ApiResponse.success(attendanceService.getTenantSummary());
     }
 }

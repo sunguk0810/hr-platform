@@ -82,6 +82,48 @@ http:
       service: certificate-service
       middlewares:
         - cors-headers
+    dashboard-attendance:
+      rule: "PathPrefix(`/api/v1/dashboard/attendance`) || PathPrefix(`/api/v1/dashboard/leave-balance`) || PathPrefix(`/api/v1/dashboard/team-leave`)"
+      entryPoints:
+        - web
+      service: attendance-service
+      middlewares:
+        - cors-headers
+    dashboard-approval:
+      rule: "PathPrefix(`/api/v1/dashboard/pending-approvals`)"
+      entryPoints:
+        - web
+      service: approval-service
+      middlewares:
+        - cors-headers
+    dashboard-organization:
+      rule: "PathPrefix(`/api/v1/dashboard/announcements`)"
+      entryPoints:
+        - web
+      service: organization-service
+      middlewares:
+        - cors-headers
+    dashboard-employee:
+      rule: "PathPrefix(`/api/v1/dashboard/birthdays`)"
+      entryPoints:
+        - web
+      service: employee-service
+      middlewares:
+        - cors-headers
+    dashboard-tenant:
+      rule: "PathPrefix(`/api/v1/dashboard/org-summary`) || PathPrefix(`/api/v1/dashboard/statistics`) || PathPrefix(`/api/v1/dashboard/widgets`)"
+      entryPoints:
+        - web
+      service: tenant-service
+      middlewares:
+        - cors-headers
+    tenant:
+      rule: "PathPrefix(`/api/v1/tenants`)"
+      entryPoints:
+        - web
+      service: tenant-service
+      middlewares:
+        - cors-headers
 
   services:
     auth-service:
@@ -128,3 +170,7 @@ http:
       loadBalancer:
         servers:
           - url: "http://hr-saas-certificate:8092"
+    tenant-service:
+      loadBalancer:
+        servers:
+          - url: "http://hr-saas-tenant:8082"

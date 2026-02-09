@@ -7,6 +7,7 @@ import com.hrsaas.approval.domain.dto.request.ProcessApprovalRequest;
 import com.hrsaas.approval.domain.entity.ApprovalActionType;
 import com.hrsaas.approval.domain.dto.response.ApprovalDocumentResponse;
 import com.hrsaas.approval.domain.dto.response.ApprovalHistoryResponse;
+import com.hrsaas.approval.domain.dto.response.ApprovalStatisticsResponse;
 import com.hrsaas.approval.domain.dto.response.ApprovalSummaryResponse;
 import com.hrsaas.approval.service.ApprovalService;
 import com.hrsaas.common.response.ApiResponse;
@@ -210,5 +211,12 @@ public class ApprovalController {
             @PathVariable UUID id) {
         UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
         return ApiResponse.success(approvalService.cancel(id, userId));
+    }
+
+    @GetMapping("/statistics")
+    @Operation(summary = "결재 처리 시간 통계 (대시보드용)")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
+    public ApiResponse<ApprovalStatisticsResponse> getStatistics() {
+        return ApiResponse.success(approvalService.getStatistics());
     }
 }

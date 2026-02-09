@@ -68,4 +68,11 @@ public interface ApprovalDocumentRepository extends JpaRepository<ApprovalDocume
 
     @Query("SELECT COUNT(d) FROM ApprovalDocument d WHERE d.tenantId = :tenantId AND d.drafterId = :drafterId AND d.status = :status")
     long countByDrafterIdAndStatus(@Param("tenantId") UUID tenantId, @Param("drafterId") UUID drafterId, @Param("status") ApprovalStatus status);
+
+    @Query("SELECT d FROM ApprovalDocument d WHERE d.tenantId = :tenantId " +
+           "AND d.status IN ('APPROVED', 'REJECTED') " +
+           "AND d.completedAt >= :startInstant AND d.completedAt < :endInstant")
+    List<ApprovalDocument> findCompletedBetween(@Param("tenantId") UUID tenantId,
+                                                 @Param("startInstant") java.time.Instant startInstant,
+                                                 @Param("endInstant") java.time.Instant endInstant);
 }

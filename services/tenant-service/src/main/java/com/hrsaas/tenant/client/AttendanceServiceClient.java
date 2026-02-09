@@ -11,4 +11,7 @@ public interface AttendanceServiceClient {
 
     @GetMapping("/api/v1/leaves/count/pending")
     ApiResponse<Long> getPendingLeaveCount(@RequestHeader("X-Tenant-ID") String tenantId);
+
+    @GetMapping("/api/v1/attendances/tenant-summary")
+    ApiResponse<com.hrsaas.tenant.client.dto.TenantAttendanceSummaryDto> getTenantSummary();
 }

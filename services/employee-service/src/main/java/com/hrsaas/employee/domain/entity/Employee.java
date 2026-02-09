@@ -42,6 +42,9 @@ public class Employee extends TenantAwareEntity {
     @Column(name = "job_title_code", length = 50)
     private String jobTitleCode;
 
+    @Column(name = "birth_date")
+    private LocalDate birthDate;
+
     @Column(name = "hire_date")
     private LocalDate hireDate;
 

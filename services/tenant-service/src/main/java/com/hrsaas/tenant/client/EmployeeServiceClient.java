@@ -11,4 +11,7 @@ public interface EmployeeServiceClient {
 
     @GetMapping("/api/v1/employees/count")
     ApiResponse<Long> getEmployeeCount(@RequestHeader("X-Tenant-ID") String tenantId);
+
+    @GetMapping("/api/v1/employees/summary")
+    ApiResponse<com.hrsaas.tenant.client.dto.EmployeeSummaryDto> getEmployeeSummary();
 }

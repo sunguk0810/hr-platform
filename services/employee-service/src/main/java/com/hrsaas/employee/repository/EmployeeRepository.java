@@ -47,4 +47,30 @@ public interface EmployeeRepository extends JpaRepository<Employee, UUID> {
 
     @Query("SELECT e.departmentId, COUNT(e) FROM Employee e WHERE e.tenantId = :tenantId AND e.status = 'ACTIVE' GROUP BY e.departmentId")
     List<Object[]> countByDepartmentGrouped(@Param("tenantId") UUID tenantId);
+
+    @Query(value = "SELECT * FROM hr_core.employee e WHERE e.tenant_id = :tenantId " +
+           "AND e.status = 'ACTIVE' AND e.birth_date IS NOT NULL " +
+           "AND (EXTRACT(MONTH FROM e.birth_date) * 100 + EXTRACT(DAY FROM e.birth_date)) " +
+           "BETWEEN :startMonthDay AND :endMonthDay " +
+           "ORDER BY EXTRACT(MONTH FROM e.birth_date), EXTRACT(DAY FROM e.birth_date)",
+           nativeQuery = true)
+    List<Employee> findUpcomingBirthdays(@Param("tenantId") UUID tenantId,
+                                         @Param("startMonthDay") int startMonthDay,
+                                         @Param("endMonthDay") int endMonthDay);
+
+    long countByTenantId(UUID tenantId);
+
+    long countByTenantIdAndStatus(UUID tenantId, EmployeeStatus status);
+
+    @Query("SELECT COUNT(e) FROM Employee e WHERE e.tenantId = :tenantId " +
+           "AND e.hireDate >= :startDate AND e.hireDate <= :endDate")
+    long countNewHires(@Param("tenantId") UUID tenantId,
+                       @Param("startDate") java.time.LocalDate startDate,
+                       @Param("endDate") java.time.LocalDate endDate);
+
+    @Query("SELECT COUNT(e) FROM Employee e WHERE e.tenantId = :tenantId " +
+           "AND e.resignDate >= :startDate AND e.resignDate <= :endDate")
+    long countResigned(@Param("tenantId") UUID tenantId,
+                       @Param("startDate") java.time.LocalDate startDate,
+                       @Param("endDate") java.time.LocalDate endDate);
 }
