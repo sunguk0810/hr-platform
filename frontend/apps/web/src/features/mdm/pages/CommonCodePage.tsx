@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useToast } from '@/hooks/useToast';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -64,6 +65,7 @@ import type { CommonCodeListItem, CreateCommonCodeRequest, UpdateCommonCodeReque
 import { CodeTree } from '../components/CodeTree';
 
 export default function CommonCodePage() {
+  const { t } = useTranslation('mdm');
   const [searchInput, setSearchInput] = useState('');
   const debouncedKeyword = useDebounce(searchInput, 300);
 
@@ -96,10 +98,10 @@ export default function CommonCodePage() {
   const { toast } = useToast();
 
   const CLASSIFICATION_LABELS: Record<number, string> = {
-    1: '대분류',
-    2: '중분류',
-    3: '소분류',
-    4: '세분류',
+    1: t('commonCode.levels.major'),
+    2: t('commonCode.levels.middle'),
+    3: t('commonCode.levels.minor'),
+    4: t('commonCode.levels.detail'),
   };
 
   const CLASSIFICATION_BADGE_COLORS: Record<number, string> = {
@@ -365,16 +367,16 @@ export default function CommonCodePage() {
         status: bulkAction.action,
       });
       toast({
-        title: '일괄 상태 변경 완료',
-        description: `${selectedIds.size}개 코드의 상태가 변경되었습니다.`,
+        title: t('commonCode.bulkStatusDialog.successTitle'),
+        description: t('commonCode.bulkStatusDialog.successDescription', { count: selectedIds.size }),
       });
       setSelectedIds(new Set());
       setBulkAction(null);
     } catch (error) {
       console.error('Failed to bulk update status:', error);
       toast({
-        title: '일괄 상태 변경 실패',
-        description: '상태 변경 중 오류가 발생했습니다.',
+        title: t('commonCode.bulkStatusDialog.failTitle'),
+        description: t('commonCode.bulkStatusDialog.failDescription'),
         variant: 'destructive',
       });
     }
@@ -389,12 +391,12 @@ export default function CommonCodePage() {
   return (
     <>
       <PageHeader
-        title="공통코드 관리"
-        description="각 코드그룹의 공통코드를 관리합니다."
+        title={t('commonCode.pageTitle')}
+        description={t('commonCode.pageDescription')}
         actions={
           <Button onClick={handleCreateOpen}>
             <Plus className="mr-2 h-4 w-4" />
-            공통코드 추가
+            {t('commonCode.addButton')}
           </Button>
         }
       />
@@ -405,7 +407,7 @@ export default function CommonCodePage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="코드, 코드명으로 검색..."
+                placeholder={t('commonCode.searchPlaceholder')}
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 className="pl-9"
@@ -416,7 +418,7 @@ export default function CommonCodePage() {
               onChange={(e) => setGroupCode(e.target.value)}
               className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
             >
-              <option value="">전체 코드그룹</option>
+              <option value="">{t('common.allCodeGroups')}</option>
               {codeGroups.map((group) => (
                 <option key={group.id} value={group.groupCode}>
                   {group.groupName}
@@ -428,10 +430,10 @@ export default function CommonCodePage() {
               onChange={(e) => setStatus(e.target.value === '' ? null : e.target.value as 'ACTIVE' | 'INACTIVE' | 'DEPRECATED')}
               className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
             >
-              <option value="">전체 상태</option>
-              <option value="ACTIVE">활성</option>
-              <option value="INACTIVE">비활성</option>
-              <option value="DEPRECATED">폐기</option>
+              <option value="">{t('common.allStatus')}</option>
+              <option value="ACTIVE">{t('common.statusActive')}</option>
+              <option value="INACTIVE">{t('common.statusInactive')}</option>
+              <option value="DEPRECATED">{t('common.statusDeprecated')}</option>
             </select>
             <div className="flex items-center gap-1 border rounded-md p-0.5">
               <Button
@@ -441,7 +443,7 @@ export default function CommonCodePage() {
                 className="h-7 px-2"
               >
                 <LayoutList className="h-4 w-4 mr-1" />
-                테이블
+                {t('commonCode.viewModeTable')}
               </Button>
               <Button
                 variant={viewMode === 'tree' ? 'default' : 'ghost'}
@@ -450,7 +452,7 @@ export default function CommonCodePage() {
                 className="h-7 px-2"
               >
                 <GitBranch className="h-4 w-4 mr-1" />
-                트리
+                {t('commonCode.viewModeTree')}
               </Button>
             </div>
           </div>
@@ -467,22 +469,22 @@ export default function CommonCodePage() {
             ) : isError ? (
               <EmptyState
                 icon={Code}
-                title="데이터를 불러올 수 없습니다"
-                description="잠시 후 다시 시도해주세요."
+                title={t('common.errorLoadData')}
+                description={t('common.errorRetry')}
               />
             ) : commonCodes.length === 0 ? (
               <EmptyState
                 icon={Code}
-                title="등록된 공통코드가 없습니다"
+                title={t('commonCode.emptyTitle')}
                 description={
                   searchState.keyword || searchState.groupCode
-                    ? '검색 조건에 맞는 공통코드가 없습니다.'
-                    : '새로운 공통코드를 추가해주세요.'
+                    ? t('commonCode.emptySearchDescription')
+                    : t('commonCode.emptyDescription')
                 }
                 action={
                   !searchState.keyword && !searchState.groupCode
                     ? {
-                        label: '공통코드 추가',
+                        label: t('commonCode.addButton'),
                         onClick: handleCreateOpen,
                       }
                     : undefined
@@ -493,30 +495,30 @@ export default function CommonCodePage() {
                 {selectedIds.size > 0 && (
                   <div className="flex items-center justify-between border-b bg-blue-50 px-4 py-3 dark:bg-blue-950">
                     <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                      {selectedIds.size}개 항목 선택됨
+                      {t('commonCode.selectedCount', { count: selectedIds.size })}
                     </span>
                     <div className="flex gap-2">
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => setBulkAction({ action: 'ACTIVE', label: '활성' })}
+                        onClick={() => setBulkAction({ action: 'ACTIVE', label: t('common.statusActive') })}
                       >
-                        활성화
+                        {t('commonCode.bulkActivate')}
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => setBulkAction({ action: 'INACTIVE', label: '비활성' })}
+                        onClick={() => setBulkAction({ action: 'INACTIVE', label: t('common.statusInactive') })}
                       >
-                        비활성화
+                        {t('commonCode.bulkDeactivate')}
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
                         className="text-orange-600 hover:text-orange-700"
-                        onClick={() => setBulkAction({ action: 'DEPRECATED', label: '폐기' })}
+                        onClick={() => setBulkAction({ action: 'DEPRECATED', label: t('common.statusDeprecated') })}
                       >
-                        폐기
+                        {t('commonCode.bulkDeprecate')}
                       </Button>
                     </div>
                   </div>
@@ -529,32 +531,32 @@ export default function CommonCodePage() {
                           <Checkbox
                             checked={commonCodes.length > 0 && selectedIds.size === commonCodes.length}
                             onCheckedChange={toggleSelectAll}
-                            aria-label="전체 선택"
+                            aria-label={t('commonCode.selectAllAriaLabel')}
                           />
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          코드그룹
+                          {t('commonCode.columns.codeGroup')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          코드
+                          {t('commonCode.columns.code')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          코드명
+                          {t('commonCode.columns.codeName')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          영문명
+                          {t('commonCode.columns.englishName')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          분류 수준
+                          {t('commonCode.columns.classificationLevel')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          정렬순서
+                          {t('commonCode.columns.sortOrder')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          상태
+                          {t('commonCode.columns.status')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          작업
+                          {t('commonCode.columns.actions')}
                         </th>
                       </tr>
                     </thead>
@@ -568,7 +570,7 @@ export default function CommonCodePage() {
                             <Checkbox
                               checked={selectedIds.has(code.id)}
                               onCheckedChange={() => toggleSelect(code.id)}
-                              aria-label={`${code.codeName} 선택`}
+                              aria-label={t('commonCode.selectItemAriaLabel', { name: code.codeName })}
                             />
                           </td>
                           <td className="px-4 py-3 text-sm text-muted-foreground">
@@ -595,7 +597,7 @@ export default function CommonCodePage() {
                           <td className="px-4 py-3">
                             <StatusBadge
                               status={code.active ? 'success' : 'default'}
-                              label={code.active ? '활성' : '비활성'}
+                              label={code.active ? t('common.statusActive') : t('common.statusInactive')}
                             />
                           </td>
                           <td className="px-4 py-3">
@@ -608,26 +610,26 @@ export default function CommonCodePage() {
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={() => handleEditOpen(code)}>
                                   <Pencil className="mr-2 h-4 w-4" />
-                                  수정
+                                  {t('commonCode.dropdownMenu.edit')}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleHistoryOpen(code)}>
                                   <History className="mr-2 h-4 w-4" />
-                                  변경 이력
+                                  {t('commonCode.dropdownMenu.history')}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleImpactOpen(code)}>
                                   <AlertTriangle className="mr-2 h-4 w-4" />
-                                  영향도 분석
+                                  {t('commonCode.dropdownMenu.impactAnalysis')}
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 {code.active ? (
                                   <DropdownMenuItem onClick={() => handleStatusChangeOpen(code, 'INACTIVE')}>
                                     <RefreshCw className="mr-2 h-4 w-4" />
-                                    비활성화
+                                    {t('commonCode.dropdownMenu.deactivate')}
                                   </DropdownMenuItem>
                                 ) : (
                                   <DropdownMenuItem onClick={() => handleStatusChangeOpen(code, 'ACTIVE')}>
                                     <RefreshCw className="mr-2 h-4 w-4" />
-                                    활성화
+                                    {t('commonCode.dropdownMenu.activate')}
                                   </DropdownMenuItem>
                                 )}
                                 <DropdownMenuItem
@@ -635,7 +637,7 @@ export default function CommonCodePage() {
                                   className="text-orange-600"
                                 >
                                   <AlertTriangle className="mr-2 h-4 w-4" />
-                                  폐기(Deprecated)
+                                  {t('commonCode.dropdownMenu.deprecate')}
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
@@ -643,7 +645,7 @@ export default function CommonCodePage() {
                                   className="text-destructive"
                                 >
                                   <Trash2 className="mr-2 h-4 w-4" />
-                                  삭제
+                                  {t('commonCode.dropdownMenu.delete')}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -659,7 +661,7 @@ export default function CommonCodePage() {
                   onPageChange={setPage}
                 />
                 <div className="px-4 pb-3 text-sm text-muted-foreground">
-                  총 {totalElements}개
+                  {t('common.totalCount', { count: totalElements })}
                 </div>
               </>
             )}
@@ -679,7 +681,7 @@ export default function CommonCodePage() {
                   setSelectedTreeNode(null);
                 }}>
                   <SelectTrigger>
-                    <SelectValue placeholder="코드그룹 선택" />
+                    <SelectValue placeholder={t('commonCode.selectCodeGroup')} />
                   </SelectTrigger>
                   <SelectContent>
                     {codeGroups.map((group) => (
@@ -705,7 +707,7 @@ export default function CommonCodePage() {
                   />
                 ) : (
                   <p className="text-sm text-muted-foreground text-center py-8">
-                    코드그룹을 선택하세요.
+                    {t('commonCode.selectCodeGroupPrompt')}
                   </p>
                 )}
               </CardContent>
@@ -723,40 +725,40 @@ export default function CommonCodePage() {
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <span className="text-muted-foreground">코드</span>
+                        <span className="text-muted-foreground">{t('commonCode.treeNodeDetail.code')}</span>
                         <p className="font-mono font-medium mt-0.5">{selectedTreeNode.code}</p>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">코드명</span>
+                        <span className="text-muted-foreground">{t('commonCode.treeNodeDetail.codeName')}</span>
                         <p className="font-medium mt-0.5">{selectedTreeNode.codeName}</p>
                       </div>
                       {selectedTreeNode.codeNameEn && (
                         <div>
-                          <span className="text-muted-foreground">영문명</span>
+                          <span className="text-muted-foreground">{t('commonCode.treeNodeDetail.englishName')}</span>
                           <p className="mt-0.5">{selectedTreeNode.codeNameEn}</p>
                         </div>
                       )}
                       <div>
-                        <span className="text-muted-foreground">상태</span>
+                        <span className="text-muted-foreground">{t('commonCode.treeNodeDetail.status')}</span>
                         <p className="mt-0.5">
                           <StatusBadge
                             status={selectedTreeNode.active ? 'success' : 'default'}
-                            label={selectedTreeNode.active ? '활성' : '비활성'}
+                            label={selectedTreeNode.active ? t('common.statusActive') : t('common.statusInactive')}
                           />
                         </p>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">정렬순서</span>
+                        <span className="text-muted-foreground">{t('commonCode.treeNodeDetail.sortOrder')}</span>
                         <p className="mt-0.5">{selectedTreeNode.sortOrder}</p>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">계층 레벨</span>
-                        <p className="mt-0.5">{selectedTreeNode.level + 1}단계</p>
+                        <span className="text-muted-foreground">{t('commonCode.treeNodeDetail.hierarchyLevel')}</span>
+                        <p className="mt-0.5">{t('commonCode.treeNodeDetail.hierarchyLevelValue', { level: selectedTreeNode.level + 1 })}</p>
                       </div>
                       {selectedTreeNode.children.length > 0 && (
                         <div>
-                          <span className="text-muted-foreground">하위 코드</span>
-                          <p className="mt-0.5">{selectedTreeNode.children.length}개</p>
+                          <span className="text-muted-foreground">{t('commonCode.treeNodeDetail.childCodes')}</span>
+                          <p className="mt-0.5">{t('commonCode.treeNodeDetail.childCodeCount', { count: selectedTreeNode.children.length })}</p>
                         </div>
                       )}
                     </div>
@@ -768,7 +770,7 @@ export default function CommonCodePage() {
                         }}
                       >
                         <Pencil className="mr-1 h-3.5 w-3.5" />
-                        수정
+                        {t('common.editButton')}
                       </Button>
                       <Button
                         size="sm"
@@ -792,14 +794,14 @@ export default function CommonCodePage() {
                         }}
                       >
                         <Plus className="mr-1 h-3.5 w-3.5" />
-                        하위 코드 추가
+                        {t('commonCode.addChildCode')}
                       </Button>
                     </div>
                   </CardContent>
                 </>
               ) : (
                 <CardContent className="flex items-center justify-center py-16 text-muted-foreground">
-                  <p>트리에서 코드를 선택하세요.</p>
+                  <p>{t('commonCode.selectCodePrompt')}</p>
                 </CardContent>
               )}
             </Card>
@@ -827,7 +829,7 @@ export default function CommonCodePage() {
               }}
             >
               <Pencil className="h-3.5 w-3.5" />
-              수정
+              {t('commonCode.contextMenu.edit')}
             </button>
             <button
               className="w-full px-3 py-1.5 text-sm text-left hover:bg-muted flex items-center gap-2"
@@ -850,7 +852,7 @@ export default function CommonCodePage() {
               }}
             >
               <Plus className="h-3.5 w-3.5" />
-              하위 코드 추가
+              {t('commonCode.contextMenu.addChild')}
             </button>
             <div className="border-t my-1" />
             <button
@@ -864,12 +866,12 @@ export default function CommonCodePage() {
               {contextMenu.node.active ? (
                 <>
                   <Ban className="h-3.5 w-3.5" />
-                  비활성화
+                  {t('commonCode.contextMenu.deactivate')}
                 </>
               ) : (
                 <>
                   <CheckCircle className="h-3.5 w-3.5" />
-                  활성화
+                  {t('commonCode.contextMenu.activate')}
                 </>
               )}
             </button>
@@ -881,7 +883,7 @@ export default function CommonCodePage() {
               }}
             >
               <Trash2 className="h-3.5 w-3.5" />
-              삭제
+              {t('commonCode.contextMenu.delete')}
             </button>
           </div>
         </div>
@@ -891,20 +893,20 @@ export default function CommonCodePage() {
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>공통코드 추가</DialogTitle>
+            <DialogTitle>{t('commonCode.createDialog.title')}</DialogTitle>
             <DialogDescription>
-              새로운 공통코드를 추가합니다.
+              {t('commonCode.createDialog.description')}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="groupId">코드그룹 *</Label>
+              <Label htmlFor="groupId">{t('commonCode.createDialog.codeGroupLabel')}</Label>
               <Select
                 value={formData.groupId}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, groupId: value }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="코드그룹 선택" />
+                  <SelectValue placeholder={t('commonCode.createDialog.codeGroupPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {codeGroups.map((group) => (
@@ -916,7 +918,7 @@ export default function CommonCodePage() {
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="code">코드 *</Label>
+              <Label htmlFor="code">{t('commonCode.createDialog.codeLabel')}</Label>
               <div className="flex gap-2">
                 <Input
                   id="code"
@@ -926,7 +928,7 @@ export default function CommonCodePage() {
                     setDuplicateCheckResult(null);
                     setIgnoreDuplicate(false);
                   }}
-                  placeholder="예: ANNUAL"
+                  placeholder={t('commonCode.createDialog.codePlaceholder')}
                   className="flex-1"
                 />
                 <Button
@@ -935,12 +937,12 @@ export default function CommonCodePage() {
                   onClick={handleCheckDuplicate}
                   disabled={!formData.groupId || !formData.code || !formData.codeName || checkDuplicateMutation.isPending}
                 >
-                  {checkDuplicateMutation.isPending ? '확인 중...' : '중복 확인'}
+                  {checkDuplicateMutation.isPending ? t('commonCode.createDialog.duplicateChecking') : t('commonCode.createDialog.duplicateCheckButton')}
                 </Button>
               </div>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="codeName">코드명 *</Label>
+              <Label htmlFor="codeName">{t('commonCode.createDialog.codeNameLabel')}</Label>
               <Input
                 id="codeName"
                 value={formData.codeName}
@@ -949,12 +951,12 @@ export default function CommonCodePage() {
                   setDuplicateCheckResult(null);
                   setIgnoreDuplicate(false);
                 }}
-                placeholder="예: 연차"
+                placeholder={t('commonCode.createDialog.codeNamePlaceholder')}
               />
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="level">분류 수준 *</Label>
+              <Label htmlFor="level">{t('commonCode.createDialog.classificationLabel')}</Label>
               <Select
                 value={formData.level.toString()}
                 onValueChange={(value) => {
@@ -967,27 +969,27 @@ export default function CommonCodePage() {
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="분류 수준 선택" />
+                  <SelectValue placeholder={t('commonCode.createDialog.classificationPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">1 - 대분류</SelectItem>
-                  <SelectItem value="2">2 - 중분류</SelectItem>
-                  <SelectItem value="3">3 - 소분류</SelectItem>
-                  <SelectItem value="4">4 - 세분류</SelectItem>
+                  <SelectItem value="1">{t('commonCode.levelOption.1')}</SelectItem>
+                  <SelectItem value="2">{t('commonCode.levelOption.2')}</SelectItem>
+                  <SelectItem value="3">{t('commonCode.levelOption.3')}</SelectItem>
+                  <SelectItem value="4">{t('commonCode.levelOption.4')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             {formData.level > 1 && (
               <div className="grid gap-2">
                 <Label htmlFor="parentCodeId">
-                  상위 분류 ({CLASSIFICATION_LABELS[formData.level - 1]}) *
+                  {t('commonCode.createDialog.parentLabel', { label: CLASSIFICATION_LABELS[formData.level - 1] })}
                 </Label>
                 <Select
                   value={formData.parentCodeId}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, parentCodeId: value }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder={`상위 ${CLASSIFICATION_LABELS[formData.level - 1]} 선택`} />
+                    <SelectValue placeholder={t('commonCode.createDialog.parentPlaceholder', { label: CLASSIFICATION_LABELS[formData.level - 1] })} />
                   </SelectTrigger>
                   <SelectContent>
                     {getParentCodeOptions(formData.level, formData.groupId).map((parentCode) => (
@@ -999,7 +1001,7 @@ export default function CommonCodePage() {
                 </Select>
                 {formData.groupId && getParentCodeOptions(formData.level, formData.groupId).length === 0 && (
                   <p className="text-sm text-muted-foreground">
-                    선택한 코드그룹에 {CLASSIFICATION_LABELS[formData.level - 1]} 코드가 없습니다. 먼저 상위 분류를 등록해주세요.
+                    {t('commonCode.createDialog.noParentCodes', { label: CLASSIFICATION_LABELS[formData.level - 1] })}
                   </p>
                 )}
               </div>
@@ -1020,7 +1022,7 @@ export default function CommonCodePage() {
                             size="sm"
                             onClick={() => setIgnoreDuplicate(true)}
                           >
-                            무시하고 저장
+                            {t('commonCode.createDialog.ignoreAndSave')}
                           </Button>
                         </div>
                       )}
@@ -1030,11 +1032,11 @@ export default function CommonCodePage() {
                   <Alert>
                     <AlertTriangle className="h-4 w-4" />
                     <AlertDescription>
-                      <div>유사한 코드가 있습니다:</div>
+                      <div>{t('commonCode.createDialog.similarCodesFound')}</div>
                       <ul className="mt-2 space-y-1 text-sm">
                         {duplicateCheckResult.similarCodes.map((similar) => (
                           <li key={similar.id} className="text-muted-foreground">
-                            • {similar.code} - {similar.name} (유사도: {similar.similarity}%)
+                            {t('commonCode.createDialog.similarCodeItem', { code: similar.code, name: similar.name, similarity: similar.similarity })}
                           </li>
                         ))}
                       </ul>
@@ -1043,7 +1045,7 @@ export default function CommonCodePage() {
                 ) : (
                   <Alert className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950">
                     <AlertDescription className="text-green-800 dark:text-green-200">
-                      중복되는 코드가 없습니다. 저장할 수 있습니다.
+                      {t('commonCode.createDialog.noDuplicate')}
                     </AlertDescription>
                   </Alert>
                 )}
@@ -1053,22 +1055,22 @@ export default function CommonCodePage() {
             {ignoreDuplicate && (
               <Alert className="border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950">
                 <AlertDescription className="text-orange-800 dark:text-orange-200">
-                  중복 경고를 무시하고 저장합니다.
+                  {t('commonCode.createDialog.duplicateWarningIgnored')}
                 </AlertDescription>
               </Alert>
             )}
 
             <div className="grid gap-2">
-              <Label htmlFor="codeNameEn">영문명</Label>
+              <Label htmlFor="codeNameEn">{t('common.labelEnglishName')}</Label>
               <Input
                 id="codeNameEn"
                 value={formData.codeNameEn}
                 onChange={(e) => setFormData(prev => ({ ...prev, codeNameEn: e.target.value }))}
-                placeholder="예: Annual Leave"
+                placeholder={t('commonCode.createDialog.englishNamePlaceholder')}
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="sortOrder">정렬순서</Label>
+              <Label htmlFor="sortOrder">{t('common.labelSortOrder')}</Label>
               <Input
                 id="sortOrder"
                 type="number"
@@ -1077,18 +1079,18 @@ export default function CommonCodePage() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="description">설명</Label>
+              <Label htmlFor="description">{t('common.labelDescription')}</Label>
               <Textarea
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="코드에 대한 설명을 입력하세요."
+                placeholder={t('commonCode.createDialog.descriptionPlaceholder')}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-              취소
+              {t('common.cancelButton')}
             </Button>
             <Button
               onClick={handleCreate}
@@ -1101,7 +1103,7 @@ export default function CommonCodePage() {
                 (duplicateCheckResult?.hasDuplicate && duplicateCheckResult.duplicateType !== 'SIMILAR' && !ignoreDuplicate)
               }
             >
-              {createMutation.isPending ? '저장 중...' : duplicateCheckResult ? '저장' : '중복 확인 후 저장'}
+              {createMutation.isPending ? t('common.savingText') : duplicateCheckResult ? t('common.saveButton') : t('commonCode.createDialog.saveAfterCheck')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1111,18 +1113,18 @@ export default function CommonCodePage() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>공통코드 수정</DialogTitle>
+            <DialogTitle>{t('commonCode.editDialog.title')}</DialogTitle>
             <DialogDescription>
-              공통코드 정보를 수정합니다.
+              {t('commonCode.editDialog.description')}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="edit-code">코드</Label>
+              <Label htmlFor="edit-code">{t('commonCode.editDialog.codeLabel')}</Label>
               <Input id="edit-code" value={formData.code} disabled />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-codeName">코드명 *</Label>
+              <Label htmlFor="edit-codeName">{t('commonCode.editDialog.codeNameLabel')}</Label>
               <Input
                 id="edit-codeName"
                 value={formData.codeName}
@@ -1130,7 +1132,7 @@ export default function CommonCodePage() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-codeNameEn">영문명</Label>
+              <Label htmlFor="edit-codeNameEn">{t('commonCode.editDialog.englishNameLabel')}</Label>
               <Input
                 id="edit-codeNameEn"
                 value={formData.codeNameEn}
@@ -1138,7 +1140,7 @@ export default function CommonCodePage() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-level">분류 수준</Label>
+              <Label htmlFor="edit-level">{t('commonCode.editDialog.classificationLabel')}</Label>
               <Select
                 value={formData.level.toString()}
                 onValueChange={(value) => {
@@ -1151,27 +1153,27 @@ export default function CommonCodePage() {
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="분류 수준 선택" />
+                  <SelectValue placeholder={t('commonCode.editDialog.classificationPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">1 - 대분류</SelectItem>
-                  <SelectItem value="2">2 - 중분류</SelectItem>
-                  <SelectItem value="3">3 - 소분류</SelectItem>
-                  <SelectItem value="4">4 - 세분류</SelectItem>
+                  <SelectItem value="1">{t('commonCode.levelOption.1')}</SelectItem>
+                  <SelectItem value="2">{t('commonCode.levelOption.2')}</SelectItem>
+                  <SelectItem value="3">{t('commonCode.levelOption.3')}</SelectItem>
+                  <SelectItem value="4">{t('commonCode.levelOption.4')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             {formData.level > 1 && (
               <div className="grid gap-2">
                 <Label htmlFor="edit-parentCodeId">
-                  상위 분류 ({CLASSIFICATION_LABELS[formData.level - 1]})
+                  {t('commonCode.editDialog.parentLabel', { label: CLASSIFICATION_LABELS[formData.level - 1] })}
                 </Label>
                 <Select
                   value={formData.parentCodeId}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, parentCodeId: value }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder={`상위 ${CLASSIFICATION_LABELS[formData.level - 1]} 선택`} />
+                    <SelectValue placeholder={t('commonCode.editDialog.parentPlaceholder', { label: CLASSIFICATION_LABELS[formData.level - 1] })} />
                   </SelectTrigger>
                   <SelectContent>
                     {getParentCodeOptions(formData.level, formData.groupId).map((parentCode) => (
@@ -1184,7 +1186,7 @@ export default function CommonCodePage() {
               </div>
             )}
             <div className="grid gap-2">
-              <Label htmlFor="edit-sortOrder">정렬순서</Label>
+              <Label htmlFor="edit-sortOrder">{t('commonCode.editDialog.sortOrderLabel')}</Label>
               <Input
                 id="edit-sortOrder"
                 type="number"
@@ -1193,7 +1195,7 @@ export default function CommonCodePage() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-description">설명</Label>
+              <Label htmlFor="edit-description">{t('commonCode.editDialog.descriptionLabel')}</Label>
               <Textarea
                 id="edit-description"
                 value={formData.description}
@@ -1203,13 +1205,13 @@ export default function CommonCodePage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              취소
+              {t('common.cancelButton')}
             </Button>
             <Button
               onClick={handleUpdate}
               disabled={!formData.codeName || updateMutation.isPending}
             >
-              {updateMutation.isPending ? '저장 중...' : '저장'}
+              {updateMutation.isPending ? t('common.savingText') : t('common.saveButton')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1219,25 +1221,25 @@ export default function CommonCodePage() {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>공통코드 삭제</DialogTitle>
+            <DialogTitle>{t('commonCode.deleteDialog.title')}</DialogTitle>
             <DialogDescription>
-              정말로 이 공통코드를 삭제하시겠습니까?
+              {t('commonCode.deleteDialog.description')}
               <br />
               <strong className="text-foreground">{selectedCode?.codeName}</strong> ({selectedCode?.code})
               <br />
-              <span className="text-destructive">이 작업은 되돌릴 수 없습니다.</span>
+              <span className="text-destructive">{t('common.irreversibleAction')}</span>
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-              취소
+              {t('common.cancelButton')}
             </Button>
             <Button
               variant="destructive"
               onClick={handleDelete}
               disabled={deleteMutation.isPending}
             >
-              {deleteMutation.isPending ? '삭제 중...' : '삭제'}
+              {deleteMutation.isPending ? t('common.deletingText') : t('common.deleteButton')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1247,14 +1249,14 @@ export default function CommonCodePage() {
       <Dialog open={isStatusDialogOpen} onOpenChange={setIsStatusDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>코드 상태 변경</DialogTitle>
+            <DialogTitle>{t('commonCode.statusDialog.title')}</DialogTitle>
             <DialogDescription>
-              <strong className="text-foreground">{selectedCode?.codeName}</strong> ({selectedCode?.code})의 상태를 변경합니다.
+              {t('commonCode.statusDialog.description', { name: selectedCode?.codeName, code: selectedCode?.code })}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label>변경할 상태</Label>
+              <Label>{t('commonCode.statusDialog.targetStatusLabel')}</Label>
               <Select
                 value={statusChangeData.status}
                 onValueChange={(value) => setStatusChangeData(prev => ({ ...prev, status: value as CodeStatus }))}
@@ -1263,41 +1265,40 @@ export default function CommonCodePage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ACTIVE">활성 (ACTIVE)</SelectItem>
-                  <SelectItem value="INACTIVE">비활성 (INACTIVE)</SelectItem>
-                  <SelectItem value="DEPRECATED">폐기 (DEPRECATED)</SelectItem>
+                  <SelectItem value="ACTIVE">{t('commonCode.statusDialog.statusActive')}</SelectItem>
+                  <SelectItem value="INACTIVE">{t('commonCode.statusDialog.statusInactive')}</SelectItem>
+                  <SelectItem value="DEPRECATED">{t('commonCode.statusDialog.statusDeprecated')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="status-reason">변경 사유</Label>
+              <Label htmlFor="status-reason">{t('commonCode.statusDialog.reasonLabel')}</Label>
               <Textarea
                 id="status-reason"
                 value={statusChangeData.reason}
                 onChange={(e) => setStatusChangeData(prev => ({ ...prev, reason: e.target.value }))}
-                placeholder="상태 변경 사유를 입력하세요."
+                placeholder={t('commonCode.statusDialog.reasonPlaceholder')}
               />
             </div>
             {statusChangeData.status === 'DEPRECATED' && (
               <div className="rounded-md bg-orange-50 p-3 text-sm text-orange-800 dark:bg-orange-950 dark:text-orange-200">
                 <AlertTriangle className="mb-1 inline-block h-4 w-4" />
                 <span className="ml-2">
-                  폐기(Deprecated) 상태로 변경하면 해당 코드는 더 이상 신규 데이터에 사용되지 않습니다.
-                  기존 데이터는 유지됩니다.
+                  {t('commonCode.statusDialog.deprecatedWarning')}
                 </span>
               </div>
             )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsStatusDialogOpen(false)}>
-              취소
+              {t('common.cancelButton')}
             </Button>
             <Button
               onClick={handleStatusChange}
               disabled={statusMutation.isPending}
               variant={statusChangeData.status === 'DEPRECATED' ? 'destructive' : 'default'}
             >
-              {statusMutation.isPending ? '변경 중...' : '상태 변경'}
+              {statusMutation.isPending ? t('commonCode.statusDialog.changingStatus') : t('commonCode.statusDialog.changeStatusButton')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1307,9 +1308,9 @@ export default function CommonCodePage() {
       <Dialog open={isImpactDialogOpen} onOpenChange={setIsImpactDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>영향도 분석</DialogTitle>
+            <DialogTitle>{t('commonCode.impactDialog.title')}</DialogTitle>
             <DialogDescription>
-              <strong className="text-foreground">{selectedCode?.codeName}</strong> ({selectedCode?.code}) 코드의 사용 현황입니다.
+              {t('commonCode.impactDialog.description', { name: selectedCode?.codeName, code: selectedCode?.code })}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
@@ -1323,20 +1324,20 @@ export default function CommonCodePage() {
                   <Card>
                     <CardContent className="p-4">
                       <div className="text-2xl font-bold">{impactData.data.totalAffectedRecords}</div>
-                      <div className="text-sm text-muted-foreground">총 영향받는 레코드</div>
+                      <div className="text-sm text-muted-foreground">{t('commonCode.impactDialog.totalAffectedRecords')}</div>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="p-4">
                       <div className="text-2xl font-bold">{impactData.data.affectedEntities.length}</div>
-                      <div className="text-sm text-muted-foreground">관련 엔티티</div>
+                      <div className="text-sm text-muted-foreground">{t('commonCode.impactDialog.relatedEntities')}</div>
                     </CardContent>
                   </Card>
                 </div>
 
                 {impactData.data.affectedEntities.length > 0 ? (
                   <div className="space-y-3">
-                    <h4 className="font-medium">영향받는 데이터</h4>
+                    <h4 className="font-medium">{t('commonCode.impactDialog.affectedDataTitle')}</h4>
                     {impactData.data.affectedEntities.map((entity, idx) => (
                       <Card key={idx}>
                         <CardContent className="p-4">
@@ -1346,12 +1347,12 @@ export default function CommonCodePage() {
                               <div className="text-sm text-muted-foreground">{entity.tableName}</div>
                             </div>
                             <div className="text-right">
-                              <div className="text-lg font-semibold">{entity.recordCount}건</div>
+                              <div className="text-lg font-semibold">{t('common.recordCount', { count: entity.recordCount })}</div>
                             </div>
                           </div>
                           {entity.sampleRecords && entity.sampleRecords.length > 0 && (
                             <div className="mt-3 border-t pt-3">
-                              <div className="text-xs text-muted-foreground">샘플 데이터:</div>
+                              <div className="text-xs text-muted-foreground">{t('commonCode.impactDialog.sampleDataLabel')}</div>
                               <ul className="mt-1 space-y-1 text-sm">
                                 {entity.sampleRecords.map((record) => (
                                   <li key={record.id} className="truncate">
@@ -1367,7 +1368,7 @@ export default function CommonCodePage() {
                   </div>
                 ) : (
                   <div className="rounded-md bg-green-50 p-4 text-green-800 dark:bg-green-950 dark:text-green-200">
-                    이 코드를 사용하는 데이터가 없습니다. 안전하게 삭제할 수 있습니다.
+                    {t('commonCode.impactDialog.noAffectedData')}
                   </div>
                 )}
 
@@ -1380,13 +1381,13 @@ export default function CommonCodePage() {
               </div>
             ) : (
               <div className="py-8 text-center text-muted-foreground">
-                영향도 데이터를 불러올 수 없습니다.
+                {t('commonCode.impactDialog.errorLoadImpact')}
               </div>
             )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsImpactDialogOpen(false)}>
-              닫기
+              {t('common.closeButton')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1396,9 +1397,9 @@ export default function CommonCodePage() {
       <Dialog open={isHistoryDialogOpen} onOpenChange={setIsHistoryDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>변경 이력</DialogTitle>
+            <DialogTitle>{t('commonCode.historyDialog.title')}</DialogTitle>
             <DialogDescription>
-              <strong className="text-foreground">{selectedCode?.codeName}</strong> ({selectedCode?.code}) 코드의 변경 이력입니다.
+              {t('commonCode.historyDialog.description', { name: selectedCode?.codeName, code: selectedCode?.code })}
             </DialogDescription>
           </DialogHeader>
           <div className="max-h-96 overflow-y-auto py-4">
@@ -1429,12 +1430,12 @@ export default function CommonCodePage() {
                             'info'
                           }
                           label={
-                            history.action === 'CREATE' ? '생성' :
-                            history.action === 'DELETE' ? '삭제' :
-                            history.action === 'ACTIVATE' ? '활성화' :
-                            history.action === 'DEACTIVATE' ? '비활성화' :
-                            history.action === 'DEPRECATE' ? '폐기' :
-                            '수정'
+                            history.action === 'CREATE' ? t('commonCode.historyDialog.actionCreate') :
+                            history.action === 'DELETE' ? t('commonCode.historyDialog.actionDelete') :
+                            history.action === 'ACTIVATE' ? t('commonCode.historyDialog.actionActivate') :
+                            history.action === 'DEACTIVATE' ? t('commonCode.historyDialog.actionDeactivate') :
+                            history.action === 'DEPRECATE' ? t('commonCode.historyDialog.actionDeprecate') :
+                            t('commonCode.historyDialog.actionUpdate')
                           }
                         />
                         <span className="text-sm text-muted-foreground">
@@ -1445,7 +1446,7 @@ export default function CommonCodePage() {
                         <span className="font-medium">{history.changedBy}</span>
                         {history.fieldName && (
                           <span className="text-muted-foreground">
-                            {' '}님이 {history.fieldName} 필드를 변경
+                            {t('commonCode.historyDialog.fieldChanged', { fieldName: history.fieldName })}
                           </span>
                         )}
                       </div>
@@ -1465,7 +1466,7 @@ export default function CommonCodePage() {
                       )}
                       {history.changeReason && (
                         <div className="mt-2 text-sm text-muted-foreground">
-                          사유: {history.changeReason}
+                          {t('commonCode.historyDialog.changeReason', { reason: history.changeReason })}
                         </div>
                       )}
                     </div>
@@ -1474,13 +1475,13 @@ export default function CommonCodePage() {
               </div>
             ) : (
               <div className="py-8 text-center text-muted-foreground">
-                변경 이력이 없습니다.
+                {t('commonCode.historyDialog.noHistory')}
               </div>
             )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsHistoryDialogOpen(false)}>
-              닫기
+              {t('common.closeButton')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1490,27 +1491,27 @@ export default function CommonCodePage() {
       <AlertDialog open={bulkAction !== null} onOpenChange={(open) => { if (!open) setBulkAction(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>일괄 상태 변경</AlertDialogTitle>
+            <AlertDialogTitle>{t('commonCode.bulkStatusDialog.title')}</AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-3">
                 <p>
-                  {selectedIds.size}개의 코드를 '{bulkAction?.label}'(으)로 변경하시겠습니까?
+                  {t('commonCode.bulkStatusDialog.description', { count: selectedIds.size, label: bulkAction?.label })}
                 </p>
                 {bulkAction?.action === 'DEPRECATED' && (
                   <div className="rounded-md bg-orange-50 p-3 text-sm text-orange-800 dark:bg-orange-950 dark:text-orange-200">
                     <AlertTriangle className="mb-1 inline-block h-4 w-4" />
-                    <span className="ml-2">폐기된 코드는 복구할 수 없습니다.</span>
+                    <span className="ml-2">{t('commonCode.bulkStatusDialog.deprecatedWarning')}</span>
                   </div>
                 )}
                 <div className="rounded-md bg-muted p-3 text-sm">
-                  <div className="mb-1 font-medium">영향받는 코드:</div>
+                  <div className="mb-1 font-medium">{t('commonCode.bulkStatusDialog.affectedCodesTitle')}</div>
                   <ul className="space-y-0.5 text-muted-foreground">
                     {getSelectedCodeNames().slice(0, 5).map((name, idx) => (
                       <li key={idx}>- {name}</li>
                     ))}
                     {getSelectedCodeNames().length > 5 && (
                       <li className="text-muted-foreground">
-                        외 {getSelectedCodeNames().length - 5}건
+                        {t('commonCode.bulkStatusDialog.moreItems', { count: getSelectedCodeNames().length - 5 })}
                       </li>
                     )}
                   </ul>
@@ -1519,13 +1520,13 @@ export default function CommonCodePage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancelButton')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleBulkStatusChange}
               disabled={bulkStatusMutation.isPending}
               className={bulkAction?.action === 'DEPRECATED' ? 'bg-orange-600 hover:bg-orange-700' : ''}
             >
-              {bulkStatusMutation.isPending ? '변경 중...' : '확인'}
+              {bulkStatusMutation.isPending ? t('commonCode.bulkStatusDialog.changingStatus') : t('common.confirmButton')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

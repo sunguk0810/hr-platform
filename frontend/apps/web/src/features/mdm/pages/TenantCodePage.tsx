@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useDebounce } from '@/hooks/useDebounce';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -27,6 +28,7 @@ import {
 import type { TenantCodeSetting, UpdateTenantCodeRequest } from '@hr-platform/shared-types';
 
 export default function TenantCodePage() {
+  const { t } = useTranslation('mdm');
   const [searchInput, setSearchInput] = useState('');
   const debouncedKeyword = useDebounce(searchInput, 300);
   const [groupCode, setGroupCode] = useState('');
@@ -118,8 +120,8 @@ export default function TenantCodePage() {
   return (
     <>
       <PageHeader
-        title="테넌트 코드 관리"
-        description="테넌트별로 공통코드를 커스터마이징합니다."
+        title={t('tenantCode.pageTitle')}
+        description={t('tenantCode.pageDescription')}
       />
 
       <Card className="mb-4">
@@ -128,7 +130,7 @@ export default function TenantCodePage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="코드, 코드명으로 검색..."
+                placeholder={t('common.searchPlaceholder')}
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 className="pl-9"
@@ -139,7 +141,7 @@ export default function TenantCodePage() {
               onChange={(e) => setGroupCode(e.target.value)}
               className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
             >
-              <option value="">전체 코드그룹</option>
+              <option value="">{t('common.allCodeGroups')}</option>
               {codeGroups.map((group) => (
                 <option key={group.id} value={group.groupCode}>
                   {group.groupName}
@@ -151,9 +153,9 @@ export default function TenantCodePage() {
               onChange={(e) => setIsEnabledFilter(e.target.value === '' ? null : e.target.value === 'true')}
               className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
             >
-              <option value="">전체 상태</option>
-              <option value="true">활성화됨</option>
-              <option value="false">비활성화됨</option>
+              <option value="">{t('common.allStatus')}</option>
+              <option value="true">{t('common.statusEnabled')}</option>
+              <option value="false">{t('common.statusDisabled')}</option>
             </select>
           </div>
         </CardContent>
@@ -168,17 +170,17 @@ export default function TenantCodePage() {
           ) : isError ? (
             <EmptyState
               icon={Building2}
-              title="데이터를 불러올 수 없습니다"
-              description="잠시 후 다시 시도해주세요."
+              title={t('common.errorLoadData')}
+              description={t('common.errorRetry')}
             />
           ) : tenantCodes.length === 0 ? (
             <EmptyState
               icon={Building2}
-              title="설정된 테넌트 코드가 없습니다"
+              title={t('tenantCode.emptyTitle')}
               description={
                 searchInput || groupCode
-                  ? '검색 조건에 맞는 테넌트 코드가 없습니다.'
-                  : '공통코드에 테넌트별 설정을 추가하세요.'
+                  ? t('tenantCode.emptySearchDescription')
+                  : t('tenantCode.emptyDescription')
               }
             />
           ) : (
@@ -188,25 +190,25 @@ export default function TenantCodePage() {
                   <thead>
                     <tr className="border-b bg-muted/50">
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        코드그룹
+                        {t('tenantCode.columns.codeGroup')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        코드
+                        {t('tenantCode.columns.code')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        원본 이름
+                        {t('tenantCode.columns.originalName')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        커스텀 이름
+                        {t('tenantCode.columns.customName')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        활성화
+                        {t('tenantCode.columns.enabled')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        수정일
+                        {t('tenantCode.columns.updatedAt')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        작업
+                        {t('tenantCode.columns.actions')}
                       </th>
                     </tr>
                   </thead>
@@ -268,7 +270,7 @@ export default function TenantCodePage() {
                 onPageChange={setPage}
               />
               <div className="px-4 pb-3 text-sm text-muted-foreground">
-                총 {totalElements}개
+                {t('common.totalCount', { count: totalElements })}
               </div>
             </>
           )}
@@ -279,39 +281,39 @@ export default function TenantCodePage() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>테넌트 코드 설정</DialogTitle>
+            <DialogTitle>{t('tenantCode.editDialog.title')}</DialogTitle>
             <DialogDescription>
-              <strong className="text-foreground">{selectedSetting?.code}</strong>의 테넌트별 설정을 수정합니다.
+              {t('tenantCode.editDialog.description', { code: selectedSetting?.code })}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="rounded-md bg-muted p-3">
-              <div className="text-sm text-muted-foreground">원본 이름</div>
+              <div className="text-sm text-muted-foreground">{t('tenantCode.editDialog.originalNameLabel')}</div>
               <div className="font-medium">{selectedSetting?.originalName}</div>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="customName">커스텀 이름</Label>
+              <Label htmlFor="customName">{t('tenantCode.editDialog.customNameLabel')}</Label>
               <Input
                 id="customName"
                 value={formData.customName}
                 onChange={(e) => setFormData(prev => ({ ...prev, customName: e.target.value }))}
-                placeholder="이 테넌트에서 사용할 이름"
+                placeholder={t('tenantCode.editDialog.customNamePlaceholder')}
               />
               <p className="text-xs text-muted-foreground">
-                비워두면 원본 이름이 사용됩니다.
+                {t('tenantCode.editDialog.customNameHelp')}
               </p>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="customNameEn">커스텀 영문명</Label>
+              <Label htmlFor="customNameEn">{t('tenantCode.editDialog.customNameEnLabel')}</Label>
               <Input
                 id="customNameEn"
                 value={formData.customNameEn}
                 onChange={(e) => setFormData(prev => ({ ...prev, customNameEn: e.target.value }))}
-                placeholder="이 테넌트에서 사용할 영문명"
+                placeholder={t('tenantCode.editDialog.customNameEnPlaceholder')}
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="sortOrder">정렬순서</Label>
+              <Label htmlFor="sortOrder">{t('tenantCode.editDialog.sortOrderLabel')}</Label>
               <Input
                 id="sortOrder"
                 type="number"
@@ -320,7 +322,7 @@ export default function TenantCodePage() {
                   ...prev,
                   sortOrder: e.target.value ? parseInt(e.target.value) : undefined,
                 }))}
-                placeholder="비워두면 기본 순서 사용"
+                placeholder={t('tenantCode.editDialog.sortOrderPlaceholder')}
               />
             </div>
             <div className="flex items-center gap-2">
@@ -329,15 +331,15 @@ export default function TenantCodePage() {
                 checked={formData.enabled}
                 onCheckedChange={(checked) => setFormData(prev => ({ ...prev, enabled: checked }))}
               />
-              <Label htmlFor="enabled">이 테넌트에서 활성화</Label>
+              <Label htmlFor="enabled">{t('tenantCode.editDialog.enabledLabel')}</Label>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              취소
+              {t('common.cancelButton')}
             </Button>
             <Button onClick={handleUpdate} disabled={updateMutation.isPending}>
-              {updateMutation.isPending ? '저장 중...' : '저장'}
+              {updateMutation.isPending ? t('common.savingText') : t('common.saveButton')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -347,19 +349,19 @@ export default function TenantCodePage() {
       <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>기본값으로 초기화</DialogTitle>
+            <DialogTitle>{t('tenantCode.resetDialog.title')}</DialogTitle>
             <DialogDescription>
-              <strong className="text-foreground">{selectedSetting?.code}</strong>의 테넌트 설정을 기본값으로 초기화합니다.
+              {t('tenantCode.resetDialog.description', { code: selectedSetting?.code })}
               <br />
-              커스텀 이름이 제거되고 활성화 상태로 변경됩니다.
+              {t('tenantCode.resetDialog.detail')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsResetDialogOpen(false)}>
-              취소
+              {t('common.cancelButton')}
             </Button>
             <Button onClick={handleReset} disabled={resetMutation.isPending}>
-              {resetMutation.isPending ? '초기화 중...' : '초기화'}
+              {resetMutation.isPending ? t('tenantCode.resetDialog.resettingText') : t('tenantCode.resetDialog.resetButton')}
             </Button>
           </DialogFooter>
         </DialogContent>

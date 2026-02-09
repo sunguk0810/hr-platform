@@ -1,0 +1,409 @@
+{
+  "common": {
+    "cancelButton": "취소",
+    "saveButton": "저장",
+    "savingText": "저장 중...",
+    "deleteButton": "삭제",
+    "deletingText": "삭제 중...",
+    "editButton": "수정",
+    "closeButton": "닫기",
+    "nextButton": "다음",
+    "prevButton": "이전",
+    "confirmButton": "확인",
+    "irreversibleAction": "이 작업은 되돌릴 수 없습니다.",
+    "searchPlaceholder": "코드, 코드명으로 검색...",
+    "allStatus": "전체 상태",
+    "allCodeGroups": "전체 코드그룹",
+    "statusActive": "활성",
+    "statusInactive": "비활성",
+    "statusDeprecated": "폐기",
+    "statusEnabled": "활성화됨",
+    "statusDisabled": "비활성화됨",
+    "typeSystem": "시스템",
+    "typeUser": "사용자",
+    "totalCount": "총 {{count}}개",
+    "countUnit": "{{count}}개",
+    "recordCount": "{{count}}건",
+    "errorLoadData": "데이터를 불러올 수 없습니다",
+    "errorRetry": "잠시 후 다시 시도해주세요.",
+    "columnCode": "코드",
+    "columnCodeName": "코드명",
+    "columnEnglishName": "영문명",
+    "columnDescription": "설명",
+    "columnSortOrder": "정렬순서",
+    "columnStatus": "상태",
+    "columnActions": "작업",
+    "labelCode": "코드",
+    "labelCodeRequired": "코드 *",
+    "labelCodeName": "코드명",
+    "labelCodeNameRequired": "코드명 *",
+    "labelEnglishName": "영문명",
+    "labelDescription": "설명",
+    "labelSortOrder": "정렬순서",
+    "labelStatus": "상태",
+    "activate": "활성화",
+    "deactivate": "비활성화",
+    "deprecate": "폐기(Deprecated)"
+  },
+  "codeGroup": {
+    "pageTitle": "코드그룹 관리",
+    "pageDescription": "공통코드의 그룹을 관리합니다.",
+    "addButton": "코드그룹 추가",
+    "searchPlaceholder": "코드, 코드명으로 검색...",
+    "columns": {
+      "code": "코드",
+      "codeName": "코드명",
+      "description": "설명",
+      "childCodes": "하위코드",
+      "system": "시스템",
+      "type": "유형",
+      "status": "상태",
+      "actions": "작업"
+    },
+    "childCodeCount": "{{count}}개",
+    "childCodeLabel": "하위코드 {{count}}개",
+    "emptyTitle": "등록된 코드그룹이 없습니다",
+    "emptyDescription": "새로운 코드그룹을 추가해주세요.",
+    "emptySearchDescription": "검색 조건에 맞는 코드그룹이 없습니다.",
+    "tooltipSystemEditDisabled": "시스템 코드그룹은 수정할 수 없습니다.",
+    "tooltipSystemDeleteDisabled": "시스템 코드그룹은 삭제할 수 없습니다.",
+    "tooltipEdit": "수정",
+    "tooltipDelete": "삭제",
+    "createDialog": {
+      "title": "코드그룹 추가",
+      "description": "새로운 코드그룹을 추가합니다.",
+      "codePlaceholder": "예: LEAVE_TYPE",
+      "codeNamePlaceholder": "예: 휴가유형",
+      "englishNamePlaceholder": "예: Leave Type",
+      "descriptionPlaceholder": "코드그룹에 대한 설명을 입력하세요."
+    },
+    "editDialog": {
+      "title": "코드그룹 수정",
+      "description": "코드그룹 정보를 수정합니다."
+    },
+    "deleteDialog": {
+      "title": "코드그룹 삭제",
+      "description": "정말로 이 코드그룹을 삭제하시겠습니까?"
+    }
+  },
+  "commonCode": {
+    "pageTitle": "공통코드 관리",
+    "pageDescription": "각 코드그룹의 공통코드를 관리합니다.",
+    "addButton": "공통코드 추가",
+    "searchPlaceholder": "코드, 코드명으로 검색...",
+    "levels": {
+      "major": "대분류",
+      "middle": "중분류",
+      "minor": "소분류",
+      "detail": "세분류"
+    },
+    "levelOption": {
+      "1": "1 - 대분류",
+      "2": "2 - 중분류",
+      "3": "3 - 소분류",
+      "4": "4 - 세분류"
+    },
+    "columns": {
+      "codeGroup": "코드그룹",
+      "code": "코드",
+      "codeName": "코드명",
+      "englishName": "영문명",
+      "classificationLevel": "분류 수준",
+      "sortOrder": "정렬순서",
+      "status": "상태",
+      "actions": "작업"
+    },
+    "selectAllAriaLabel": "전체 선택",
+    "selectItemAriaLabel": "{{name}} 선택",
+    "selectedCount": "{{count}}개 항목 선택됨",
+    "bulkActivate": "활성화",
+    "bulkDeactivate": "비활성화",
+    "bulkDeprecate": "폐기",
+    "viewModeTable": "테이블",
+    "viewModeTree": "트리",
+    "selectCodeGroup": "코드그룹 선택",
+    "selectCodeGroupPrompt": "코드그룹을 선택하세요.",
+    "selectCodePrompt": "트리에서 코드를 선택하세요.",
+    "addChildCode": "하위 코드 추가",
+    "emptyTitle": "등록된 공통코드가 없습니다",
+    "emptyDescription": "새로운 공통코드를 추가해주세요.",
+    "emptySearchDescription": "검색 조건에 맞는 공통코드가 없습니다.",
+    "emptyCompactList": "코드가 없습니다.",
+    "treeNodeDetail": {
+      "code": "코드",
+      "codeName": "코드명",
+      "englishName": "영문명",
+      "status": "상태",
+      "sortOrder": "정렬순서",
+      "hierarchyLevel": "계층 레벨",
+      "hierarchyLevelValue": "{{level}}단계",
+      "childCodes": "하위 코드",
+      "childCodeCount": "{{count}}개"
+    },
+    "contextMenu": {
+      "edit": "수정",
+      "addChild": "하위 코드 추가",
+      "activate": "활성화",
+      "deactivate": "비활성화",
+      "delete": "삭제"
+    },
+    "createDialog": {
+      "title": "공통코드 추가",
+      "description": "새로운 공통코드를 추가합니다.",
+      "codeGroupLabel": "코드그룹 *",
+      "codeGroupPlaceholder": "코드그룹 선택",
+      "codeLabel": "코드 *",
+      "codePlaceholder": "예: ANNUAL",
+      "codeNameLabel": "코드명 *",
+      "codeNamePlaceholder": "예: 연차",
+      "classificationLabel": "분류 수준 *",
+      "classificationPlaceholder": "분류 수준 선택",
+      "parentLabel": "상위 분류 ({{label}}) *",
+      "parentPlaceholder": "상위 {{label}} 선택",
+      "noParentCodes": "선택한 코드그룹에 {{label}} 코드가 없습니다. 먼저 상위 분류를 등록해주세요.",
+      "englishNamePlaceholder": "예: Annual Leave",
+      "descriptionPlaceholder": "코드에 대한 설명을 입력하세요.",
+      "duplicateCheckButton": "중복 확인",
+      "duplicateChecking": "확인 중...",
+      "saveAfterCheck": "중복 확인 후 저장",
+      "ignoreAndSave": "무시하고 저장",
+      "duplicateWarningIgnored": "중복 경고를 무시하고 저장합니다.",
+      "noDuplicate": "중복되는 코드가 없습니다. 저장할 수 있습니다.",
+      "similarCodesFound": "유사한 코드가 있습니다:",
+      "similarCodeItem": "• {{code}} - {{name}} (유사도: {{similarity}}%)"
+    },
+    "editDialog": {
+      "title": "공통코드 수정",
+      "description": "공통코드 정보를 수정합니다.",
+      "codeLabel": "코드",
+      "codeNameLabel": "코드명 *",
+      "englishNameLabel": "영문명",
+      "classificationLabel": "분류 수준",
+      "classificationPlaceholder": "분류 수준 선택",
+      "parentLabel": "상위 분류 ({{label}})",
+      "parentPlaceholder": "상위 {{label}} 선택",
+      "sortOrderLabel": "정렬순서",
+      "descriptionLabel": "설명"
+    },
+    "deleteDialog": {
+      "title": "공통코드 삭제",
+      "description": "정말로 이 공통코드를 삭제하시겠습니까?"
+    },
+    "statusDialog": {
+      "title": "코드 상태 변경",
+      "description": "{{name}} ({{code}})의 상태를 변경합니다.",
+      "targetStatusLabel": "변경할 상태",
+      "statusActive": "활성 (ACTIVE)",
+      "statusInactive": "비활성 (INACTIVE)",
+      "statusDeprecated": "폐기 (DEPRECATED)",
+      "reasonLabel": "변경 사유",
+      "reasonPlaceholder": "상태 변경 사유를 입력하세요.",
+      "deprecatedWarning": "폐기(Deprecated) 상태로 변경하면 해당 코드는 더 이상 신규 데이터에 사용되지 않습니다. 기존 데이터는 유지됩니다.",
+      "changingStatus": "변경 중...",
+      "changeStatusButton": "상태 변경"
+    },
+    "impactDialog": {
+      "title": "영향도 분석",
+      "description": "{{name}} ({{code}}) 코드의 사용 현황입니다.",
+      "totalAffectedRecords": "총 영향받는 레코드",
+      "relatedEntities": "관련 엔티티",
+      "affectedDataTitle": "영향받는 데이터",
+      "sampleDataLabel": "샘플 데이터:",
+      "noAffectedData": "이 코드를 사용하는 데이터가 없습니다. 안전하게 삭제할 수 있습니다.",
+      "errorLoadImpact": "영향도 데이터를 불러올 수 없습니다."
+    },
+    "historyDialog": {
+      "title": "변경 이력",
+      "description": "{{name}} ({{code}}) 코드의 변경 이력입니다.",
+      "actionCreate": "생성",
+      "actionDelete": "삭제",
+      "actionActivate": "활성화",
+      "actionDeactivate": "비활성화",
+      "actionDeprecate": "폐기",
+      "actionUpdate": "수정",
+      "fieldChanged": " 님이 {{fieldName}} 필드를 변경",
+      "changeReason": "사유: {{reason}}",
+      "noHistory": "변경 이력이 없습니다."
+    },
+    "bulkStatusDialog": {
+      "title": "일괄 상태 변경",
+      "description": "{{count}}개의 코드를 '{{label}}'(으)로 변경하시겠습니까?",
+      "deprecatedWarning": "폐기된 코드는 복구할 수 없습니다.",
+      "affectedCodesTitle": "영향받는 코드:",
+      "moreItems": "외 {{count}}건",
+      "changingStatus": "변경 중...",
+      "successTitle": "일괄 상태 변경 완료",
+      "successDescription": "{{count}}개 코드의 상태가 변경되었습니다.",
+      "failTitle": "일괄 상태 변경 실패",
+      "failDescription": "상태 변경 중 오류가 발생했습니다."
+    },
+    "dropdownMenu": {
+      "edit": "수정",
+      "history": "변경 이력",
+      "impactAnalysis": "영향도 분석",
+      "deactivate": "비활성화",
+      "activate": "활성화",
+      "deprecate": "폐기(Deprecated)",
+      "delete": "삭제"
+    },
+    "dragToReorder": "드래그하여 순서 변경",
+    "reorderSrOnly": "순서 변경"
+  },
+  "tenantCode": {
+    "pageTitle": "테넌트 코드 관리",
+    "pageDescription": "테넌트별로 공통코드를 커스터마이징합니다.",
+    "columns": {
+      "codeGroup": "코드그룹",
+      "code": "코드",
+      "originalName": "원본 이름",
+      "customName": "커스텀 이름",
+      "enabled": "활성화",
+      "updatedAt": "수정일",
+      "actions": "작업"
+    },
+    "emptyTitle": "설정된 테넌트 코드가 없습니다",
+    "emptyDescription": "공통코드에 테넌트별 설정을 추가하세요.",
+    "emptySearchDescription": "검색 조건에 맞는 테넌트 코드가 없습니다.",
+    "editDialog": {
+      "title": "테넌트 코드 설정",
+      "description": "{{code}}의 테넌트별 설정을 수정합니다.",
+      "originalNameLabel": "원본 이름",
+      "customNameLabel": "커스텀 이름",
+      "customNamePlaceholder": "이 테넌트에서 사용할 이름",
+      "customNameHelp": "비워두면 원본 이름이 사용됩니다.",
+      "customNameEnLabel": "커스텀 영문명",
+      "customNameEnPlaceholder": "이 테넌트에서 사용할 영문명",
+      "sortOrderLabel": "정렬순서",
+      "sortOrderPlaceholder": "비워두면 기본 순서 사용",
+      "enabledLabel": "이 테넌트에서 활성화"
+    },
+    "resetDialog": {
+      "title": "기본값으로 초기화",
+      "description": "{{code}}의 테넌트 설정을 기본값으로 초기화합니다.",
+      "detail": "커스텀 이름이 제거되고 활성화 상태로 변경됩니다.",
+      "resettingText": "초기화 중...",
+      "resetButton": "초기화"
+    }
+  },
+  "migration": {
+    "wizardTitle": "코드 마이그레이션",
+    "steps": {
+      "selectDescription": "원본 코드와 대상 코드를 선택하세요.",
+      "previewDescription": "마이그레이션 영향을 확인하고 사유를 입력하세요.",
+      "completeDescription": "마이그레이션이 완료되었습니다."
+    },
+    "fields": {
+      "codeGroupLabel": "코드그룹",
+      "codeGroupPlaceholder": "코드그룹 선택",
+      "sourceCodeLabel": "원본 코드",
+      "sourceCodePlaceholder": "원본 코드 선택",
+      "targetCodeLabel": "대상 코드",
+      "targetCodePlaceholder": "대상 코드 선택",
+      "sameCodeError": "원본 코드와 대상 코드는 서로 달라야 합니다.",
+      "reasonLabel": "마이그레이션 사유 *",
+      "reasonPlaceholder": "코드를 통합하는 사유를 입력하세요.",
+      "deprecateSourceLabel": "마이그레이션 후 원본 코드를 폐기(Deprecated) 상태로 변경"
+    },
+    "impactAnalysis": {
+      "title": "영향 분석",
+      "totalAffectedRecords": "총 영향 레코드",
+      "estimatedDuration": "예상 소요 시간",
+      "affectedTables": "영향받는 테이블"
+    },
+    "previewError": "미리보기 데이터를 불러올 수 없습니다.",
+    "completion": {
+      "title": "마이그레이션 완료",
+      "description": "{{count}}건의 데이터가 성공적으로 마이그레이션되었습니다.",
+      "sourceCode": "원본 코드",
+      "targetCode": "대상 코드",
+      "migratedCount": "마이그레이션 건수",
+      "completedAt": "완료 시간",
+      "status": "상태",
+      "statusCompleted": "완료",
+      "statusFailed": "실패"
+    },
+    "migratingText": "마이그레이션 중...",
+    "migrateButton": "마이그레이션 실행"
+  },
+  "search": {
+    "dialogTitle": "코드 검색",
+    "dialogDescription": "코드명 또는 코드로 검색하여 유사한 코드를 찾습니다.",
+    "fields": {
+      "keywordLabel": "검색어",
+      "keywordPlaceholder": "코드 또는 코드명 입력...",
+      "codeGroupLabel": "코드그룹",
+      "codeGroupAll": "전체",
+      "includeInactive": "비활성 코드 포함"
+    },
+    "matchBadge": {
+      "exact": "정확 일치",
+      "partial": "부분 일치",
+      "similar": "유사"
+    },
+    "similarity": "유사도 {{similarity}}%",
+    "noResults": "검색 결과가 없습니다.",
+    "enterKeyword": "검색어를 입력하세요."
+  },
+  "codeTree": {
+    "selectGroup": "코드그룹을 선택하세요.",
+    "treeTitle": "코드 트리",
+    "selectedCode": "선택된 코드",
+    "codeLabel": "코드",
+    "codeNameLabel": "코드명",
+    "englishNameLabel": "영문명",
+    "hierarchyLevel": "계층 레벨",
+    "hierarchyLevelValue": "{{level}}단계",
+    "sortOrder": "정렬순서",
+    "statusLabel": "상태",
+    "childCodes": "하위 코드",
+    "childCodeCount": "{{count}}개",
+    "emptyTree": "등록된 코드가 없습니다.",
+    "errorLoadTree": "데이터를 불러올 수 없습니다."
+  },
+  "parentTreePicker": {
+    "placeholder": "상위 코드 선택",
+    "noCodesWithGroup": "코드가 없습니다.",
+    "selectGroupFirst": "코드그룹을 먼저 선택하세요."
+  },
+  "form": {
+    "validation": {
+      "codeMinLength": "코드는 2자 이상이어야 합니다.",
+      "codeMaxLength": "코드는 50자 이내여야 합니다.",
+      "codePattern": "영문 대문자로 시작하고, 영문 대문자/숫자/언더스코어만 사용 가능합니다.",
+      "codeNameRequired": "코드명을 입력해주세요.",
+      "maxLength100": "100자 이내로 입력해주세요.",
+      "maxLength500": "500자 이내로 입력해주세요.",
+      "codeGroupRequired": "코드그룹을 선택해주세요.",
+      "codeRequired": "코드를 입력해주세요.",
+      "commonCodePattern": "영문 대문자, 숫자, 언더스코어만 사용 가능합니다."
+    },
+    "codeHint": "영문 대문자로 시작, 영문 대문자/숫자/언더스코어 사용 가능"
+  },
+  "codeGroupForm": {
+    "createTitle": "코드그룹 추가",
+    "editTitle": "코드그룹 수정",
+    "createDescription": "새로운 코드그룹을 추가합니다.",
+    "editDescription": "코드그룹 정보를 수정합니다.",
+    "codePlaceholder": "예: LEAVE_TYPE",
+    "codeNamePlaceholder": "예: 휴가유형",
+    "englishNamePlaceholder": "예: Leave Type",
+    "descriptionPlaceholder": "코드그룹에 대한 설명을 입력하세요."
+  },
+  "commonCodeForm": {
+    "createTitle": "공통코드 추가",
+    "editTitle": "공통코드 수정",
+    "createDescription": "새로운 공통코드를 추가합니다.",
+    "editDescription": "공통코드 정보를 수정합니다.",
+    "codeGroupLabel": "코드그룹 *",
+    "codeGroupPlaceholder": "코드그룹 선택",
+    "codePlaceholder": "예: ANNUAL",
+    "codeNamePlaceholder": "예: 연차",
+    "englishNamePlaceholder": "예: Annual Leave",
+    "descriptionPlaceholder": "코드에 대한 설명을 입력하세요."
+  },
+  "deleteDialog": {
+    "confirmMessage": "정말로 삭제하시겠습니까?",
+    "childWarning": "이 코드그룹에는 {{count}}개의 하위 코드가 있습니다.",
+    "childWarningDetail": "코드그룹을 삭제하면 모든 하위 코드도 함께 삭제됩니다."
+  }
+}

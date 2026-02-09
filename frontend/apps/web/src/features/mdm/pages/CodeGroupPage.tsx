@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useDebounce } from '@/hooks/useDebounce';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -22,6 +23,7 @@ import { useCodeGroupList, useCodeGroupSearchParams, useCreateCodeGroup, useUpda
 import type { CodeGroupListItem, CreateCodeGroupRequest, UpdateCodeGroupRequest } from '@hr-platform/shared-types';
 
 export default function CodeGroupPage() {
+  const { t } = useTranslation('mdm');
   const [searchInput, setSearchInput] = useState('');
   const debouncedKeyword = useDebounce(searchInput, 300);
 
@@ -115,12 +117,12 @@ export default function CodeGroupPage() {
   return (
     <>
       <PageHeader
-        title="코드그룹 관리"
-        description="공통코드의 그룹을 관리합니다."
+        title={t('codeGroup.pageTitle')}
+        description={t('codeGroup.pageDescription')}
         actions={
           <Button onClick={handleCreateOpen}>
             <Plus className="mr-2 h-4 w-4" />
-            코드그룹 추가
+            {t('codeGroup.addButton')}
           </Button>
         }
       />
@@ -131,7 +133,7 @@ export default function CodeGroupPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="코드, 코드명으로 검색..."
+                placeholder={t('codeGroup.searchPlaceholder')}
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 className="pl-9"
@@ -142,9 +144,9 @@ export default function CodeGroupPage() {
               onChange={(e) => setActive(e.target.value === '' ? null : e.target.value === 'true')}
               className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
             >
-              <option value="">전체 상태</option>
-              <option value="true">활성</option>
-              <option value="false">비활성</option>
+              <option value="">{t('common.allStatus')}</option>
+              <option value="true">{t('common.statusActive')}</option>
+              <option value="false">{t('common.statusInactive')}</option>
             </select>
           </div>
         </CardContent>
@@ -159,22 +161,22 @@ export default function CodeGroupPage() {
           ) : isError ? (
             <EmptyState
               icon={Database}
-              title="데이터를 불러올 수 없습니다"
-              description="잠시 후 다시 시도해주세요."
+              title={t('common.errorLoadData')}
+              description={t('common.errorRetry')}
             />
           ) : codeGroups.length === 0 ? (
             <EmptyState
               icon={Database}
-              title="등록된 코드그룹이 없습니다"
+              title={t('codeGroup.emptyTitle')}
               description={
                 searchState.keyword
-                  ? '검색 조건에 맞는 코드그룹이 없습니다.'
-                  : '새로운 코드그룹을 추가해주세요.'
+                  ? t('codeGroup.emptySearchDescription')
+                  : t('codeGroup.emptyDescription')
               }
               action={
                 !searchState.keyword
                   ? {
-                      label: '코드그룹 추가',
+                      label: t('codeGroup.addButton'),
                       onClick: handleCreateOpen,
                     }
                   : undefined
@@ -187,25 +189,25 @@ export default function CodeGroupPage() {
                   <thead>
                     <tr className="border-b bg-muted/50">
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        코드
+                        {t('codeGroup.columns.code')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        코드명
+                        {t('codeGroup.columns.codeName')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        설명
+                        {t('codeGroup.columns.description')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        하위코드
+                        {t('codeGroup.columns.childCodes')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        시스템
+                        {t('codeGroup.columns.system')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        상태
+                        {t('codeGroup.columns.status')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        작업
+                        {t('codeGroup.columns.actions')}
                       </th>
                     </tr>
                   </thead>
@@ -220,18 +222,18 @@ export default function CodeGroupPage() {
                         <td className="px-4 py-3 text-sm text-muted-foreground">
                           {group.description || '-'}
                         </td>
-                        <td className="px-4 py-3 text-sm">{group.codeCount}개</td>
+                        <td className="px-4 py-3 text-sm">{t('codeGroup.childCodeCount', { count: group.codeCount })}</td>
                         <td className="px-4 py-3">
                           {group.system ? (
-                            <StatusBadge status="info" label="시스템" />
+                            <StatusBadge status="info" label={t('common.typeSystem')} />
                           ) : (
-                            <StatusBadge status="default" label="사용자" />
+                            <StatusBadge status="default" label={t('common.typeUser')} />
                           )}
                         </td>
                         <td className="px-4 py-3">
                           <StatusBadge
                             status={group.active ? 'success' : 'default'}
-                            label={group.active ? '활성' : '비활성'}
+                            label={group.active ? t('common.statusActive') : t('common.statusInactive')}
                           />
                         </td>
                         <td className="px-4 py-3">
@@ -260,7 +262,7 @@ export default function CodeGroupPage() {
                 </table>
               </div>
               <div className="px-4 py-3 text-sm text-muted-foreground">
-                총 {totalElements}개
+                {t('common.totalCount', { count: totalElements })}
               </div>
             </>
           )}
@@ -271,58 +273,58 @@ export default function CodeGroupPage() {
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>코드그룹 추가</DialogTitle>
+            <DialogTitle>{t('codeGroup.createDialog.title')}</DialogTitle>
             <DialogDescription>
-              새로운 코드그룹을 추가합니다.
+              {t('codeGroup.createDialog.description')}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="groupCode">코드 *</Label>
+              <Label htmlFor="groupCode">{t('common.labelCodeRequired')}</Label>
               <Input
                 id="groupCode"
                 value={formData.groupCode}
                 onChange={(e) => setFormData(prev => ({ ...prev, groupCode: e.target.value.toUpperCase() }))}
-                placeholder="예: LEAVE_TYPE"
+                placeholder={t('codeGroup.createDialog.codePlaceholder')}
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="groupName">코드명 *</Label>
+              <Label htmlFor="groupName">{t('common.labelCodeNameRequired')}</Label>
               <Input
                 id="groupName"
                 value={formData.groupName}
                 onChange={(e) => setFormData(prev => ({ ...prev, groupName: e.target.value }))}
-                placeholder="예: 휴가유형"
+                placeholder={t('codeGroup.createDialog.codeNamePlaceholder')}
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="groupNameEn">영문명</Label>
+              <Label htmlFor="groupNameEn">{t('common.labelEnglishName')}</Label>
               <Input
                 id="groupNameEn"
                 value={formData.groupNameEn}
                 onChange={(e) => setFormData(prev => ({ ...prev, groupNameEn: e.target.value }))}
-                placeholder="예: Leave Type"
+                placeholder={t('codeGroup.createDialog.englishNamePlaceholder')}
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="description">설명</Label>
+              <Label htmlFor="description">{t('common.labelDescription')}</Label>
               <Textarea
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="코드그룹에 대한 설명을 입력하세요."
+                placeholder={t('codeGroup.createDialog.descriptionPlaceholder')}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-              취소
+              {t('common.cancelButton')}
             </Button>
             <Button
               onClick={handleCreate}
               disabled={!formData.groupCode || !formData.groupName || createMutation.isPending}
             >
-              {createMutation.isPending ? '저장 중...' : '저장'}
+              {createMutation.isPending ? t('common.savingText') : t('common.saveButton')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -332,18 +334,18 @@ export default function CodeGroupPage() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>코드그룹 수정</DialogTitle>
+            <DialogTitle>{t('codeGroup.editDialog.title')}</DialogTitle>
             <DialogDescription>
-              코드그룹 정보를 수정합니다.
+              {t('codeGroup.editDialog.description')}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="edit-groupCode">코드</Label>
+              <Label htmlFor="edit-groupCode">{t('common.labelCode')}</Label>
               <Input id="edit-groupCode" value={formData.groupCode} disabled />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-groupName">코드명 *</Label>
+              <Label htmlFor="edit-groupName">{t('common.labelCodeNameRequired')}</Label>
               <Input
                 id="edit-groupName"
                 value={formData.groupName}
@@ -351,7 +353,7 @@ export default function CodeGroupPage() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-groupNameEn">영문명</Label>
+              <Label htmlFor="edit-groupNameEn">{t('common.labelEnglishName')}</Label>
               <Input
                 id="edit-groupNameEn"
                 value={formData.groupNameEn}
@@ -359,7 +361,7 @@ export default function CodeGroupPage() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-description">설명</Label>
+              <Label htmlFor="edit-description">{t('common.labelDescription')}</Label>
               <Textarea
                 id="edit-description"
                 value={formData.description}
@@ -369,13 +371,13 @@ export default function CodeGroupPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              취소
+              {t('common.cancelButton')}
             </Button>
             <Button
               onClick={handleUpdate}
               disabled={!formData.groupName || updateMutation.isPending}
             >
-              {updateMutation.isPending ? '저장 중...' : '저장'}
+              {updateMutation.isPending ? t('common.savingText') : t('common.saveButton')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -385,25 +387,25 @@ export default function CodeGroupPage() {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>코드그룹 삭제</DialogTitle>
+            <DialogTitle>{t('codeGroup.deleteDialog.title')}</DialogTitle>
             <DialogDescription>
-              정말로 이 코드그룹을 삭제하시겠습니까?
+              {t('codeGroup.deleteDialog.description')}
               <br />
               <strong className="text-foreground">{selectedGroup?.groupName}</strong> ({selectedGroup?.groupCode})
               <br />
-              <span className="text-destructive">이 작업은 되돌릴 수 없습니다.</span>
+              <span className="text-destructive">{t('common.irreversibleAction')}</span>
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-              취소
+              {t('common.cancelButton')}
             </Button>
             <Button
               variant="destructive"
               onClick={handleDelete}
               disabled={deleteMutation.isPending}
             >
-              {deleteMutation.isPending ? '삭제 중...' : '삭제'}
+              {deleteMutation.isPending ? t('common.deletingText') : t('common.deleteButton')}
             </Button>
           </DialogFooter>
         </DialogContent>

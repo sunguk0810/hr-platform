@@ -2,6 +2,8 @@ import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -31,22 +33,24 @@ import type {
   UpdateCommonCodeRequest,
 } from '@hr-platform/shared-types';
 
-// Code Group Form Schema
-const codeGroupSchema = z.object({
-  groupCode: z
-    .string()
-    .min(2, '코드는 2자 이상이어야 합니다.')
-    .max(50, '코드는 50자 이내여야 합니다.')
-    .regex(/^[A-Z][A-Z0-9_]*$/, '영문 대문자로 시작하고, 영문 대문자/숫자/언더스코어만 사용 가능합니다.'),
-  groupName: z
-    .string()
-    .min(1, '코드명을 입력해주세요.')
-    .max(100, '100자 이내로 입력해주세요.'),
-  nameEn: z.string().max(100, '100자 이내로 입력해주세요.').optional(),
-  description: z.string().max(500, '500자 이내로 입력해주세요.').optional(),
-});
+// Code Group Form Schema Factory
+function createCodeGroupSchema(t: TFunction) {
+  return z.object({
+    groupCode: z
+      .string()
+      .min(2, t('form.validation.codeMinLength'))
+      .max(50, t('form.validation.codeMaxLength'))
+      .regex(/^[A-Z][A-Z0-9_]*$/, t('form.validation.codePattern')),
+    groupName: z
+      .string()
+      .min(1, t('form.validation.codeNameRequired'))
+      .max(100, t('form.validation.maxLength100')),
+    nameEn: z.string().max(100, t('form.validation.maxLength100')).optional(),
+    description: z.string().max(500, t('form.validation.maxLength500')).optional(),
+  });
+}
 
-type CodeGroupFormData = z.infer<typeof codeGroupSchema>;
+type CodeGroupFormData = z.infer<ReturnType<typeof createCodeGroupSchema>>;
 
 export interface CodeGroupFormProps {
   open: boolean;
@@ -63,7 +67,10 @@ export function CodeGroupForm({
   onSubmit,
   isLoading = false,
 }: CodeGroupFormProps) {
+  const { t } = useTranslation('mdm');
   const isEditMode = !!group;
+
+  const codeGroupSchema = React.useMemo(() => createCodeGroupSchema(t), [t]);
 
   const {
     register,
@@ -123,19 +130,19 @@ export function CodeGroupForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{isEditMode ? '코드그룹 수정' : '코드그룹 추가'}</DialogTitle>
+          <DialogTitle>{isEditMode ? t('codeGroupForm.editTitle') : t('codeGroupForm.createTitle')}</DialogTitle>
           <DialogDescription>
-            {isEditMode ? '코드그룹 정보를 수정합니다.' : '새로운 코드그룹을 추가합니다.'}
+            {isEditMode ? t('codeGroupForm.editDescription') : t('codeGroupForm.createDescription')}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="groupCode">코드 *</Label>
+            <Label htmlFor="groupCode">{t('common.labelCodeRequired')}</Label>
             <Input
               id="groupCode"
               {...register('groupCode')}
-              placeholder="예: LEAVE_TYPE"
+              placeholder={t('codeGroupForm.codePlaceholder')}
               disabled={isEditMode}
               className={errors.groupCode ? 'border-destructive' : ''}
               onChange={(e) => {
@@ -147,17 +154,17 @@ export function CodeGroupForm({
             )}
             {!isEditMode && (
               <p className="text-xs text-muted-foreground">
-                영문 대문자로 시작, 영문 대문자/숫자/언더스코어 사용 가능
+                {t('form.codeHint')}
               </p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="groupName">코드명 *</Label>
+            <Label htmlFor="groupName">{t('common.labelCodeNameRequired')}</Label>
             <Input
               id="groupName"
               {...register('groupName')}
-              placeholder="예: 휴가유형"
+              placeholder={t('codeGroupForm.codeNamePlaceholder')}
               className={errors.groupName ? 'border-destructive' : ''}
             />
             {errors.groupName && (
@@ -166,20 +173,20 @@ export function CodeGroupForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="nameEn">영문명</Label>
+            <Label htmlFor="nameEn">{t('common.labelEnglishName')}</Label>
             <Input
               id="nameEn"
               {...register('nameEn')}
-              placeholder="예: Leave Type"
+              placeholder={t('codeGroupForm.englishNamePlaceholder')}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">설명</Label>
+            <Label htmlFor="description">{t('common.labelDescription')}</Label>
             <Textarea
               id="description"
               {...register('description')}
-              placeholder="코드그룹에 대한 설명을 입력하세요."
+              placeholder={t('codeGroupForm.descriptionPlaceholder')}
               rows={3}
             />
           </div>
@@ -191,18 +198,18 @@ export function CodeGroupForm({
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              취소
+              {t('common.cancelButton')}
             </Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  저장 중...
+                  {t('common.savingText')}
                 </>
               ) : (
                 <>
                   <Save className="mr-2 h-4 w-4" />
-                  저장
+                  {t('common.saveButton')}
                 </>
               )}
             </Button>
@@ -213,25 +220,27 @@ export function CodeGroupForm({
   );
 }
 
-// Common Code Form Schema
-const commonCodeSchema = z.object({
-  codeGroupId: z.string().min(1, '코드그룹을 선택해주세요.'),
-  code: z
-    .string()
-    .min(1, '코드를 입력해주세요.')
-    .max(50, '코드는 50자 이내여야 합니다.')
-    .regex(/^[A-Z0-9_]+$/, '영문 대문자, 숫자, 언더스코어만 사용 가능합니다.'),
-  codeName: z
-    .string()
-    .min(1, '코드명을 입력해주세요.')
-    .max(100, '100자 이내로 입력해주세요.'),
-  codeNameEn: z.string().max(100, '100자 이내로 입력해주세요.').optional(),
-  description: z.string().max(500, '500자 이내로 입력해주세요.').optional(),
-  sortOrder: z.number().min(0).max(99999),
-  active: z.boolean(),
-});
+// Common Code Form Schema Factory
+function createCommonCodeSchema(t: TFunction) {
+  return z.object({
+    codeGroupId: z.string().min(1, t('form.validation.codeGroupRequired')),
+    code: z
+      .string()
+      .min(1, t('form.validation.codeRequired'))
+      .max(50, t('form.validation.codeMaxLength'))
+      .regex(/^[A-Z0-9_]+$/, t('form.validation.commonCodePattern')),
+    codeName: z
+      .string()
+      .min(1, t('form.validation.codeNameRequired'))
+      .max(100, t('form.validation.maxLength100')),
+    codeNameEn: z.string().max(100, t('form.validation.maxLength100')).optional(),
+    description: z.string().max(500, t('form.validation.maxLength500')).optional(),
+    sortOrder: z.number().min(0).max(99999),
+    active: z.boolean(),
+  });
+}
 
-type CommonCodeFormData = z.infer<typeof commonCodeSchema>;
+type CommonCodeFormData = z.infer<ReturnType<typeof createCommonCodeSchema>>;
 
 export interface CommonCodeFormProps {
   open: boolean;
@@ -261,7 +270,10 @@ export function CommonCodeForm({
   onSubmit,
   isLoading = false,
 }: CommonCodeFormProps) {
+  const { t } = useTranslation('mdm');
   const isEditMode = !!code;
+
+  const commonCodeSchema = React.useMemo(() => createCommonCodeSchema(t), [t]);
 
   const {
     register,
@@ -340,22 +352,22 @@ export function CommonCodeForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{isEditMode ? '공통코드 수정' : '공통코드 추가'}</DialogTitle>
+          <DialogTitle>{isEditMode ? t('commonCodeForm.editTitle') : t('commonCodeForm.createTitle')}</DialogTitle>
           <DialogDescription>
-            {isEditMode ? '공통코드 정보를 수정합니다.' : '새로운 공통코드를 추가합니다.'}
+            {isEditMode ? t('commonCodeForm.editDescription') : t('commonCodeForm.createDescription')}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="codeGroupId">코드그룹 *</Label>
+            <Label htmlFor="codeGroupId">{t('commonCodeForm.codeGroupLabel')}</Label>
             <Select
               value={watchGroupId}
               onValueChange={(value) => setValue('codeGroupId', value)}
               disabled={isEditMode}
             >
               <SelectTrigger className={errors.codeGroupId ? 'border-destructive' : ''}>
-                <SelectValue placeholder="코드그룹 선택" />
+                <SelectValue placeholder={t('commonCodeForm.codeGroupPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
                 {codeGroups.map((group) => (
@@ -371,11 +383,11 @@ export function CommonCodeForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="code">코드 *</Label>
+            <Label htmlFor="code">{t('common.labelCodeRequired')}</Label>
             <Input
               id="code"
               {...register('code')}
-              placeholder="예: ANNUAL"
+              placeholder={t('commonCodeForm.codePlaceholder')}
               disabled={isEditMode}
               className={errors.code ? 'border-destructive' : ''}
               onChange={(e) => {
@@ -388,11 +400,11 @@ export function CommonCodeForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="codeName">코드명 *</Label>
+            <Label htmlFor="codeName">{t('common.labelCodeNameRequired')}</Label>
             <Input
               id="codeName"
               {...register('codeName')}
-              placeholder="예: 연차"
+              placeholder={t('commonCodeForm.codeNamePlaceholder')}
               className={errors.codeName ? 'border-destructive' : ''}
             />
             {errors.codeName && (
@@ -401,17 +413,17 @@ export function CommonCodeForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="codeNameEn">영문명</Label>
+            <Label htmlFor="codeNameEn">{t('common.labelEnglishName')}</Label>
             <Input
               id="codeNameEn"
               {...register('codeNameEn')}
-              placeholder="예: Annual Leave"
+              placeholder={t('commonCodeForm.englishNamePlaceholder')}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="sortOrder">정렬순서</Label>
+              <Label htmlFor="sortOrder">{t('common.labelSortOrder')}</Label>
               <Input
                 id="sortOrder"
                 type="number"
@@ -423,14 +435,14 @@ export function CommonCodeForm({
 
             {isEditMode && (
               <div className="space-y-2">
-                <Label>상태</Label>
+                <Label>{t('common.labelStatus')}</Label>
                 <div className="flex items-center gap-2 pt-2">
                   <Switch
                     checked={watchIsActive}
                     onCheckedChange={(checked) => setValue('active', checked)}
                   />
                   <span className="text-sm">
-                    {watchIsActive ? '활성' : '비활성'}
+                    {watchIsActive ? t('common.statusActive') : t('common.statusInactive')}
                   </span>
                 </div>
               </div>
@@ -438,11 +450,11 @@ export function CommonCodeForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">설명</Label>
+            <Label htmlFor="description">{t('common.labelDescription')}</Label>
             <Textarea
               id="description"
               {...register('description')}
-              placeholder="코드에 대한 설명을 입력하세요."
+              placeholder={t('commonCodeForm.descriptionPlaceholder')}
               rows={2}
             />
           </div>
@@ -454,18 +466,18 @@ export function CommonCodeForm({
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              취소
+              {t('common.cancelButton')}
             </Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  저장 중...
+                  {t('common.savingText')}
                 </>
               ) : (
                 <>
                   <Save className="mr-2 h-4 w-4" />
-                  저장
+                  {t('common.saveButton')}
                 </>
               )}
             </Button>
@@ -500,13 +512,15 @@ export function CodeDeleteDialog({
   onConfirm,
   isLoading = false,
 }: CodeDeleteDialogProps) {
+  const { t } = useTranslation('mdm');
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription className="space-y-2">
-            <p>정말로 삭제하시겠습니까?</p>
+            <p>{t('deleteDialog.confirmMessage')}</p>
             <p>
               <strong className="text-foreground">{itemName}</strong>{' '}
               <span className="font-mono text-muted-foreground">({itemCode})</span>
@@ -515,14 +529,14 @@ export function CodeDeleteDialog({
               <div className="flex items-start gap-2 p-3 mt-2 rounded-md bg-destructive/10 text-destructive">
                 <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
                 <p className="text-sm">
-                  이 코드그룹에는 {childrenCount}개의 하위 코드가 있습니다.
+                  {t('deleteDialog.childWarning', { count: childrenCount })}
                   <br />
-                  코드그룹을 삭제하면 모든 하위 코드도 함께 삭제됩니다.
+                  {t('deleteDialog.childWarningDetail')}
                 </p>
               </div>
             )}
             <p className="text-destructive text-sm pt-2">
-              이 작업은 되돌릴 수 없습니다.
+              {t('common.irreversibleAction')}
             </p>
           </DialogDescription>
         </DialogHeader>
@@ -532,7 +546,7 @@ export function CodeDeleteDialog({
             onClick={() => onOpenChange(false)}
             disabled={isLoading}
           >
-            취소
+            {t('common.cancelButton')}
           </Button>
           <Button
             variant="destructive"
@@ -542,10 +556,10 @@ export function CodeDeleteDialog({
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                삭제 중...
+                {t('common.deletingText')}
               </>
             ) : (
-              '삭제'
+              t('common.deleteButton')
             )}
           </Button>
         </DialogFooter>

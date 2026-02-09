@@ -12,6 +12,7 @@ import {
   ExternalLink,
   ChevronRight,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { CodeGroupListItem } from '@hr-platform/shared-types';
 
 export interface CodeGroupListProps {
@@ -42,9 +43,11 @@ export function CodeGroupList({
   onDelete,
   onViewCodes,
   onEmptyAction,
-  emptyMessage = '등록된 코드그룹이 없습니다.',
+  emptyMessage,
   className,
 }: CodeGroupListProps) {
+  const { t } = useTranslation('mdm');
+
   if (isLoading) {
     return (
       <Card className={className}>
@@ -61,8 +64,8 @@ export function CodeGroupList({
         <CardContent className="p-4">
           <EmptyState
             icon={Database}
-            title="데이터를 불러올 수 없습니다"
-            description="잠시 후 다시 시도해주세요."
+            title={t('common.errorLoadData')}
+            description={t('common.errorRetry')}
           />
         </CardContent>
       </Card>
@@ -75,12 +78,12 @@ export function CodeGroupList({
         <CardContent className="p-4">
           <EmptyState
             icon={Database}
-            title={emptyMessage}
-            description="새로운 코드그룹을 추가해주세요."
+            title={emptyMessage || t('codeGroup.emptyTitle')}
+            description={t('codeGroup.emptyDescription')}
             action={
               onEmptyAction
                 ? {
-                    label: '코드그룹 추가',
+                    label: t('codeGroup.addButton'),
                     onClick: onEmptyAction,
                   }
                 : undefined
@@ -99,25 +102,25 @@ export function CodeGroupList({
             <thead>
               <tr className="border-b bg-muted/50">
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  코드
+                  {t('codeGroup.columns.code')}
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  코드명
+                  {t('codeGroup.columns.codeName')}
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  설명
+                  {t('codeGroup.columns.description')}
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  하위코드
+                  {t('codeGroup.columns.childCodes')}
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  유형
+                  {t('codeGroup.columns.type')}
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  상태
+                  {t('codeGroup.columns.status')}
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  작업
+                  {t('codeGroup.columns.actions')}
                 </th>
               </tr>
             </thead>
@@ -139,21 +142,21 @@ export function CodeGroupList({
                       className="h-auto p-0 text-sm text-primary hover:text-primary/80"
                       onClick={() => onViewCodes?.(group)}
                     >
-                      {group.codeCount}개
+                      {t('codeGroup.childCodeCount', { count: group.codeCount })}
                       <ChevronRight className="ml-1 h-3 w-3" />
                     </Button>
                   </td>
                   <td className="px-4 py-3">
                     {group.system ? (
-                      <StatusBadge status="info" label="시스템" />
+                      <StatusBadge status="info" label={t('common.typeSystem')} />
                     ) : (
-                      <StatusBadge status="default" label="사용자" />
+                      <StatusBadge status="default" label={t('common.typeUser')} />
                     )}
                   </td>
                   <td className="px-4 py-3">
                     <StatusBadge
                       status={group.active ? 'success' : 'default'}
-                      label={group.active ? '활성' : '비활성'}
+                      label={group.active ? t('common.statusActive') : t('common.statusInactive')}
                     />
                   </td>
                   <td className="px-4 py-3">
@@ -163,7 +166,7 @@ export function CodeGroupList({
                         size="icon"
                         onClick={() => onEdit?.(group)}
                         disabled={group.system}
-                        title={group.system ? '시스템 코드그룹은 수정할 수 없습니다.' : '수정'}
+                        title={group.system ? t('codeGroup.tooltipSystemEditDisabled') : t('codeGroup.tooltipEdit')}
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -172,7 +175,7 @@ export function CodeGroupList({
                         size="icon"
                         onClick={() => onDelete?.(group)}
                         disabled={group.system}
-                        title={group.system ? '시스템 코드그룹은 삭제할 수 없습니다.' : '삭제'}
+                        title={group.system ? t('codeGroup.tooltipSystemDeleteDisabled') : t('codeGroup.tooltipDelete')}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -193,7 +196,7 @@ export function CodeGroupList({
         )}
 
         <div className="px-4 pb-3 text-sm text-muted-foreground">
-          총 {totalElements}개
+          {t('common.totalCount', { count: totalElements })}
         </div>
       </CardContent>
     </Card>
@@ -216,6 +219,8 @@ export function CodeGroupCard({
   onViewCodes,
   className,
 }: CodeGroupCardProps) {
+  const { t } = useTranslation('mdm');
+
   return (
     <Card className={cn('overflow-hidden', className)}>
       <CardHeader className="pb-2">
@@ -226,13 +231,13 @@ export function CodeGroupCard({
           </div>
           <div className="flex items-center gap-2">
             {group.system ? (
-              <StatusBadge status="info" label="시스템" />
+              <StatusBadge status="info" label={t('common.typeSystem')} />
             ) : (
-              <StatusBadge status="default" label="사용자" />
+              <StatusBadge status="default" label={t('common.typeUser')} />
             )}
             <StatusBadge
               status={group.active ? 'success' : 'default'}
-              label={group.active ? '활성' : '비활성'}
+              label={group.active ? t('common.statusActive') : t('common.statusInactive')}
             />
           </div>
         </div>
@@ -250,7 +255,7 @@ export function CodeGroupCard({
             onClick={onViewCodes}
             className="h-7"
           >
-            하위코드 {group.codeCount}개
+            {t('codeGroup.childCodeLabel', { count: group.codeCount })}
             <ExternalLink className="ml-1 h-3 w-3" />
           </Button>
           {!group.system && (

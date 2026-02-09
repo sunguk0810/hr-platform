@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -38,6 +39,7 @@ interface CodeMigrationWizardProps {
 type WizardStep = 'select' | 'preview' | 'complete';
 
 export function CodeMigrationWizard({ open, onOpenChange, sourceCode }: CodeMigrationWizardProps) {
+  const { t } = useTranslation('mdm');
   const [step, setStep] = useState<WizardStep>('select');
   const [selectedSourceId, setSelectedSourceId] = useState<string>(sourceCode?.id || '');
   const [selectedTargetId, setSelectedTargetId] = useState<string>('');
@@ -126,11 +128,11 @@ export function CodeMigrationWizard({ open, onOpenChange, sourceCode }: CodeMigr
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>코드 마이그레이션</DialogTitle>
+          <DialogTitle>{t('migration.wizardTitle')}</DialogTitle>
           <DialogDescription>
-            {step === 'select' && '원본 코드와 대상 코드를 선택하세요.'}
-            {step === 'preview' && '마이그레이션 영향을 확인하고 사유를 입력하세요.'}
-            {step === 'complete' && '마이그레이션이 완료되었습니다.'}
+            {step === 'select' && t('migration.steps.selectDescription')}
+            {step === 'preview' && t('migration.steps.previewDescription')}
+            {step === 'complete' && t('migration.steps.completeDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -160,7 +162,7 @@ export function CodeMigrationWizard({ open, onOpenChange, sourceCode }: CodeMigr
         {step === 'select' && (
           <div className="space-y-4">
             <div>
-              <Label>코드그룹</Label>
+              <Label>{t('migration.fields.codeGroupLabel')}</Label>
               <Select
                 value={groupCode}
                 onValueChange={(value) => {
@@ -170,7 +172,7 @@ export function CodeMigrationWizard({ open, onOpenChange, sourceCode }: CodeMigr
                 }}
               >
                 <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="코드그룹 선택" />
+                  <SelectValue placeholder={t('migration.fields.codeGroupPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {codeGroups.map((group) => (
@@ -184,10 +186,10 @@ export function CodeMigrationWizard({ open, onOpenChange, sourceCode }: CodeMigr
 
             <div className="flex gap-4">
               <div className="flex-1">
-                <Label>원본 코드</Label>
+                <Label>{t('migration.fields.sourceCodeLabel')}</Label>
                 <Select value={selectedSourceId} onValueChange={setSelectedSourceId}>
                   <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="원본 코드 선택" />
+                    <SelectValue placeholder={t('migration.fields.sourceCodePlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {codes
@@ -209,7 +211,7 @@ export function CodeMigrationWizard({ open, onOpenChange, sourceCode }: CodeMigr
                       <div className="mt-1">
                         <StatusBadge
                           status={selectedSource.active ? 'success' : 'default'}
-                          label={selectedSource.active ? '활성' : '비활성'}
+                          label={selectedSource.active ? t('common.statusActive') : t('common.statusInactive')}
                         />
                       </div>
                     </CardContent>
@@ -222,10 +224,10 @@ export function CodeMigrationWizard({ open, onOpenChange, sourceCode }: CodeMigr
               </div>
 
               <div className="flex-1">
-                <Label>대상 코드</Label>
+                <Label>{t('migration.fields.targetCodeLabel')}</Label>
                 <Select value={selectedTargetId} onValueChange={setSelectedTargetId}>
                   <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="대상 코드 선택" />
+                    <SelectValue placeholder={t('migration.fields.targetCodePlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {codes
@@ -247,7 +249,7 @@ export function CodeMigrationWizard({ open, onOpenChange, sourceCode }: CodeMigr
                       <div className="mt-1">
                         <StatusBadge
                           status={selectedTarget.active ? 'success' : 'default'}
-                          label={selectedTarget.active ? '활성' : '비활성'}
+                          label={selectedTarget.active ? t('common.statusActive') : t('common.statusInactive')}
                         />
                       </div>
                     </CardContent>
@@ -260,7 +262,7 @@ export function CodeMigrationWizard({ open, onOpenChange, sourceCode }: CodeMigr
               <Alert variant="destructive">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>
-                  원본 코드와 대상 코드는 서로 달라야 합니다.
+                  {t('migration.fields.sameCodeError')}
                 </AlertDescription>
               </Alert>
             )}
@@ -290,24 +292,24 @@ export function CodeMigrationWizard({ open, onOpenChange, sourceCode }: CodeMigr
 
                 <Card>
                   <CardContent className="p-4">
-                    <h4 className="font-medium">영향 분석</h4>
+                    <h4 className="font-medium">{t('migration.impactAnalysis.title')}</h4>
                     <div className="mt-2 space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">총 영향 레코드</span>
-                        <span className="font-medium">{previewData.data.totalAffectedRecords}건</span>
+                        <span className="text-muted-foreground">{t('migration.impactAnalysis.totalAffectedRecords')}</span>
+                        <span className="font-medium">{t('common.recordCount', { count: previewData.data.totalAffectedRecords })}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">예상 소요 시간</span>
+                        <span className="text-muted-foreground">{t('migration.impactAnalysis.estimatedDuration')}</span>
                         <span className="font-medium">{previewData.data.estimatedDuration}</span>
                       </div>
                     </div>
                     {previewData.data.affectedTables.length > 0 && (
                       <div className="mt-3 space-y-1">
-                        <div className="text-sm font-medium">영향받는 테이블</div>
+                        <div className="text-sm font-medium">{t('migration.impactAnalysis.affectedTables')}</div>
                         {previewData.data.affectedTables.map((table, idx) => (
                           <div key={idx} className="flex justify-between text-sm">
                             <span className="font-mono text-muted-foreground">{table.tableName}</span>
-                            <span>{table.recordCount}건</span>
+                            <span>{t('common.recordCount', { count: table.recordCount })}</span>
                           </div>
                         ))}
                       </div>
@@ -329,12 +331,12 @@ export function CodeMigrationWizard({ open, onOpenChange, sourceCode }: CodeMigr
                 )}
 
                 <div>
-                  <Label htmlFor="migration-reason">마이그레이션 사유 *</Label>
+                  <Label htmlFor="migration-reason">{t('migration.fields.reasonLabel')}</Label>
                   <Textarea
                     id="migration-reason"
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
-                    placeholder="코드를 통합하는 사유를 입력하세요."
+                    placeholder={t('migration.fields.reasonPlaceholder')}
                     className="mt-1"
                   />
                 </div>
@@ -348,13 +350,13 @@ export function CodeMigrationWizard({ open, onOpenChange, sourceCode }: CodeMigr
                     className="h-4 w-4 rounded border-gray-300"
                   />
                   <Label htmlFor="deprecate-source" className="text-sm font-normal">
-                    마이그레이션 후 원본 코드를 폐기(Deprecated) 상태로 변경
+                    {t('migration.fields.deprecateSourceLabel')}
                   </Label>
                 </div>
               </>
             ) : (
               <div className="py-8 text-center text-muted-foreground">
-                미리보기 데이터를 불러올 수 없습니다.
+                {t('migration.previewError')}
               </div>
             )}
           </div>
@@ -365,9 +367,9 @@ export function CodeMigrationWizard({ open, onOpenChange, sourceCode }: CodeMigr
           <div className="space-y-4 py-4">
             <div className="flex flex-col items-center justify-center text-center">
               <CheckCircle className="h-16 w-16 text-green-500" />
-              <h3 className="mt-4 text-lg font-medium">마이그레이션 완료</h3>
+              <h3 className="mt-4 text-lg font-medium">{t('migration.completion.title')}</h3>
               <p className="text-muted-foreground">
-                {result.totalMigrated}건의 데이터가 성공적으로 마이그레이션되었습니다.
+                {t('migration.completion.description', { count: result.totalMigrated })}
               </p>
             </div>
 
@@ -375,26 +377,26 @@ export function CodeMigrationWizard({ open, onOpenChange, sourceCode }: CodeMigr
               <CardContent className="p-4">
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">원본 코드</span>
+                    <span className="text-muted-foreground">{t('migration.completion.sourceCode')}</span>
                     <span className="font-mono">{result.sourceCode}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">대상 코드</span>
+                    <span className="text-muted-foreground">{t('migration.completion.targetCode')}</span>
                     <span className="font-mono">{result.targetCode}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">마이그레이션 건수</span>
-                    <span>{result.totalMigrated}건</span>
+                    <span className="text-muted-foreground">{t('migration.completion.migratedCount')}</span>
+                    <span>{t('common.recordCount', { count: result.totalMigrated })}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">완료 시간</span>
+                    <span className="text-muted-foreground">{t('migration.completion.completedAt')}</span>
                     <span>{new Date(result.completedAt).toLocaleString('ko-KR')}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">상태</span>
+                    <span className="text-muted-foreground">{t('migration.completion.status')}</span>
                     <StatusBadge
                       status={result.status === 'COMPLETED' ? 'success' : 'error'}
-                      label={result.status === 'COMPLETED' ? '완료' : '실패'}
+                      label={result.status === 'COMPLETED' ? t('migration.completion.statusCompleted') : t('migration.completion.statusFailed')}
                     />
                   </div>
                 </div>
@@ -407,17 +409,17 @@ export function CodeMigrationWizard({ open, onOpenChange, sourceCode }: CodeMigr
           {step === 'select' && (
             <>
               <Button variant="outline" onClick={() => onOpenChange(false)}>
-                취소
+                {t('common.cancelButton')}
               </Button>
               <Button onClick={handleNextStep} disabled={!canProceed()}>
-                다음
+                {t('common.nextButton')}
               </Button>
             </>
           )}
           {step === 'preview' && (
             <>
               <Button variant="outline" onClick={handlePrevStep}>
-                이전
+                {t('common.prevButton')}
               </Button>
               <Button
                 onClick={handleMigrate}
@@ -426,17 +428,17 @@ export function CodeMigrationWizard({ open, onOpenChange, sourceCode }: CodeMigr
                 {migrateMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    마이그레이션 중...
+                    {t('migration.migratingText')}
                   </>
                 ) : (
-                  '마이그레이션 실행'
+                  t('migration.migrateButton')
                 )}
               </Button>
             </>
           )}
           {step === 'complete' && (
             <Button onClick={() => onOpenChange(false)}>
-              닫기
+              {t('common.closeButton')}
             </Button>
           )}
         </DialogFooter>

@@ -1,0 +1,409 @@
+{
+  "common": {
+    "cancelButton": "Cancel",
+    "saveButton": "Save",
+    "savingText": "Saving...",
+    "deleteButton": "Delete",
+    "deletingText": "Deleting...",
+    "editButton": "Edit",
+    "closeButton": "Close",
+    "nextButton": "Next",
+    "prevButton": "Previous",
+    "confirmButton": "Confirm",
+    "irreversibleAction": "This action cannot be undone.",
+    "searchPlaceholder": "Search by code or name...",
+    "allStatus": "All statuses",
+    "allCodeGroups": "All code groups",
+    "statusActive": "Active",
+    "statusInactive": "Inactive",
+    "statusDeprecated": "Deprecated",
+    "statusEnabled": "Enabled",
+    "statusDisabled": "Disabled",
+    "typeSystem": "System",
+    "typeUser": "User",
+    "totalCount": "Total {{count}}",
+    "countUnit": "{{count}}",
+    "recordCount": "{{count}} records",
+    "errorLoadData": "Failed to load data",
+    "errorRetry": "Please try again later.",
+    "columnCode": "Code",
+    "columnCodeName": "Code Name",
+    "columnEnglishName": "English Name",
+    "columnDescription": "Description",
+    "columnSortOrder": "Sort Order",
+    "columnStatus": "Status",
+    "columnActions": "Actions",
+    "labelCode": "Code",
+    "labelCodeRequired": "Code *",
+    "labelCodeName": "Code Name",
+    "labelCodeNameRequired": "Code Name *",
+    "labelEnglishName": "English Name",
+    "labelDescription": "Description",
+    "labelSortOrder": "Sort Order",
+    "labelStatus": "Status",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "deprecate": "Deprecate"
+  },
+  "codeGroup": {
+    "pageTitle": "Code Group Management",
+    "pageDescription": "Manage code groups for common codes.",
+    "addButton": "Add Code Group",
+    "searchPlaceholder": "Search by code or name...",
+    "columns": {
+      "code": "Code",
+      "codeName": "Code Name",
+      "description": "Description",
+      "childCodes": "Child Codes",
+      "system": "System",
+      "type": "Type",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "childCodeCount": "{{count}}",
+    "childCodeLabel": "{{count}} child codes",
+    "emptyTitle": "No code groups registered",
+    "emptyDescription": "Please add a new code group.",
+    "emptySearchDescription": "No code groups match the search criteria.",
+    "tooltipSystemEditDisabled": "System code groups cannot be edited.",
+    "tooltipSystemDeleteDisabled": "System code groups cannot be deleted.",
+    "tooltipEdit": "Edit",
+    "tooltipDelete": "Delete",
+    "createDialog": {
+      "title": "Add Code Group",
+      "description": "Add a new code group.",
+      "codePlaceholder": "e.g. LEAVE_TYPE",
+      "codeNamePlaceholder": "e.g. Leave Type",
+      "englishNamePlaceholder": "e.g. Leave Type",
+      "descriptionPlaceholder": "Enter a description for the code group."
+    },
+    "editDialog": {
+      "title": "Edit Code Group",
+      "description": "Edit code group information."
+    },
+    "deleteDialog": {
+      "title": "Delete Code Group",
+      "description": "Are you sure you want to delete this code group?"
+    }
+  },
+  "commonCode": {
+    "pageTitle": "Common Code Management",
+    "pageDescription": "Manage common codes for each code group.",
+    "addButton": "Add Common Code",
+    "searchPlaceholder": "Search by code or name...",
+    "levels": {
+      "major": "Major",
+      "middle": "Middle",
+      "minor": "Minor",
+      "detail": "Detail"
+    },
+    "levelOption": {
+      "1": "1 - Major",
+      "2": "2 - Middle",
+      "3": "3 - Minor",
+      "4": "4 - Detail"
+    },
+    "columns": {
+      "codeGroup": "Code Group",
+      "code": "Code",
+      "codeName": "Code Name",
+      "englishName": "English Name",
+      "classificationLevel": "Classification Level",
+      "sortOrder": "Sort Order",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "selectAllAriaLabel": "Select all",
+    "selectItemAriaLabel": "Select {{name}}",
+    "selectedCount": "{{count}} items selected",
+    "bulkActivate": "Activate",
+    "bulkDeactivate": "Deactivate",
+    "bulkDeprecate": "Deprecate",
+    "viewModeTable": "Table",
+    "viewModeTree": "Tree",
+    "selectCodeGroup": "Select code group",
+    "selectCodeGroupPrompt": "Please select a code group.",
+    "selectCodePrompt": "Select a code from the tree.",
+    "addChildCode": "Add Child Code",
+    "emptyTitle": "No common codes registered",
+    "emptyDescription": "Please add a new common code.",
+    "emptySearchDescription": "No common codes match the search criteria.",
+    "emptyCompactList": "No codes available.",
+    "treeNodeDetail": {
+      "code": "Code",
+      "codeName": "Code Name",
+      "englishName": "English Name",
+      "status": "Status",
+      "sortOrder": "Sort Order",
+      "hierarchyLevel": "Hierarchy Level",
+      "hierarchyLevelValue": "Level {{level}}",
+      "childCodes": "Child Codes",
+      "childCodeCount": "{{count}}"
+    },
+    "contextMenu": {
+      "edit": "Edit",
+      "addChild": "Add Child Code",
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "delete": "Delete"
+    },
+    "createDialog": {
+      "title": "Add Common Code",
+      "description": "Add a new common code.",
+      "codeGroupLabel": "Code Group *",
+      "codeGroupPlaceholder": "Select code group",
+      "codeLabel": "Code *",
+      "codePlaceholder": "e.g. ANNUAL",
+      "codeNameLabel": "Code Name *",
+      "codeNamePlaceholder": "e.g. Annual Leave",
+      "classificationLabel": "Classification Level *",
+      "classificationPlaceholder": "Select classification level",
+      "parentLabel": "Parent Classification ({{label}}) *",
+      "parentPlaceholder": "Select parent {{label}}",
+      "noParentCodes": "No {{label}} codes exist in the selected code group. Please register parent classifications first.",
+      "englishNamePlaceholder": "e.g. Annual Leave",
+      "descriptionPlaceholder": "Enter a description for the code.",
+      "duplicateCheckButton": "Check Duplicates",
+      "duplicateChecking": "Checking...",
+      "saveAfterCheck": "Check & Save",
+      "ignoreAndSave": "Ignore and Save",
+      "duplicateWarningIgnored": "Ignoring duplicate warning and saving.",
+      "noDuplicate": "No duplicate codes found. You can save.",
+      "similarCodesFound": "Similar codes found:",
+      "similarCodeItem": "• {{code}} - {{name}} (Similarity: {{similarity}}%)"
+    },
+    "editDialog": {
+      "title": "Edit Common Code",
+      "description": "Edit common code information.",
+      "codeLabel": "Code",
+      "codeNameLabel": "Code Name *",
+      "englishNameLabel": "English Name",
+      "classificationLabel": "Classification Level",
+      "classificationPlaceholder": "Select classification level",
+      "parentLabel": "Parent Classification ({{label}})",
+      "parentPlaceholder": "Select parent {{label}}",
+      "sortOrderLabel": "Sort Order",
+      "descriptionLabel": "Description"
+    },
+    "deleteDialog": {
+      "title": "Delete Common Code",
+      "description": "Are you sure you want to delete this common code?"
+    },
+    "statusDialog": {
+      "title": "Change Code Status",
+      "description": "Change the status of {{name}} ({{code}}).",
+      "targetStatusLabel": "Target Status",
+      "statusActive": "Active (ACTIVE)",
+      "statusInactive": "Inactive (INACTIVE)",
+      "statusDeprecated": "Deprecated (DEPRECATED)",
+      "reasonLabel": "Reason for Change",
+      "reasonPlaceholder": "Enter the reason for the status change.",
+      "deprecatedWarning": "Changing to Deprecated status means this code will no longer be used for new data. Existing data will be preserved.",
+      "changingStatus": "Changing...",
+      "changeStatusButton": "Change Status"
+    },
+    "impactDialog": {
+      "title": "Impact Analysis",
+      "description": "Usage status of {{name}} ({{code}}) code.",
+      "totalAffectedRecords": "Total Affected Records",
+      "relatedEntities": "Related Entities",
+      "affectedDataTitle": "Affected Data",
+      "sampleDataLabel": "Sample Data:",
+      "noAffectedData": "No data is using this code. It can be safely deleted.",
+      "errorLoadImpact": "Failed to load impact analysis data."
+    },
+    "historyDialog": {
+      "title": "Change History",
+      "description": "Change history of {{name}} ({{code}}) code.",
+      "actionCreate": "Created",
+      "actionDelete": "Deleted",
+      "actionActivate": "Activated",
+      "actionDeactivate": "Deactivated",
+      "actionDeprecate": "Deprecated",
+      "actionUpdate": "Updated",
+      "fieldChanged": " changed the {{fieldName}} field",
+      "changeReason": "Reason: {{reason}}",
+      "noHistory": "No change history."
+    },
+    "bulkStatusDialog": {
+      "title": "Bulk Status Change",
+      "description": "Change {{count}} codes to '{{label}}'?",
+      "deprecatedWarning": "Deprecated codes cannot be recovered.",
+      "affectedCodesTitle": "Affected codes:",
+      "moreItems": "and {{count}} more",
+      "changingStatus": "Changing...",
+      "successTitle": "Bulk Status Change Complete",
+      "successDescription": "Status changed for {{count}} codes.",
+      "failTitle": "Bulk Status Change Failed",
+      "failDescription": "An error occurred while changing status."
+    },
+    "dropdownMenu": {
+      "edit": "Edit",
+      "history": "Change History",
+      "impactAnalysis": "Impact Analysis",
+      "deactivate": "Deactivate",
+      "activate": "Activate",
+      "deprecate": "Deprecate",
+      "delete": "Delete"
+    },
+    "dragToReorder": "Drag to reorder",
+    "reorderSrOnly": "Reorder"
+  },
+  "tenantCode": {
+    "pageTitle": "Tenant Code Management",
+    "pageDescription": "Customize common codes per tenant.",
+    "columns": {
+      "codeGroup": "Code Group",
+      "code": "Code",
+      "originalName": "Original Name",
+      "customName": "Custom Name",
+      "enabled": "Enabled",
+      "updatedAt": "Updated At",
+      "actions": "Actions"
+    },
+    "emptyTitle": "No tenant codes configured",
+    "emptyDescription": "Add tenant-specific settings to common codes.",
+    "emptySearchDescription": "No tenant codes match the search criteria.",
+    "editDialog": {
+      "title": "Tenant Code Settings",
+      "description": "Edit tenant-specific settings for {{code}}.",
+      "originalNameLabel": "Original Name",
+      "customNameLabel": "Custom Name",
+      "customNamePlaceholder": "Name to use for this tenant",
+      "customNameHelp": "If left empty, the original name will be used.",
+      "customNameEnLabel": "Custom English Name",
+      "customNameEnPlaceholder": "English name to use for this tenant",
+      "sortOrderLabel": "Sort Order",
+      "sortOrderPlaceholder": "Leave empty to use default order",
+      "enabledLabel": "Enable for this tenant"
+    },
+    "resetDialog": {
+      "title": "Reset to Default",
+      "description": "Reset tenant settings for {{code}} to default values.",
+      "detail": "Custom name will be removed and the code will be enabled.",
+      "resettingText": "Resetting...",
+      "resetButton": "Reset"
+    }
+  },
+  "migration": {
+    "wizardTitle": "Code Migration",
+    "steps": {
+      "selectDescription": "Select the source code and target code.",
+      "previewDescription": "Review migration impact and enter the reason.",
+      "completeDescription": "Migration has been completed."
+    },
+    "fields": {
+      "codeGroupLabel": "Code Group",
+      "codeGroupPlaceholder": "Select code group",
+      "sourceCodeLabel": "Source Code",
+      "sourceCodePlaceholder": "Select source code",
+      "targetCodeLabel": "Target Code",
+      "targetCodePlaceholder": "Select target code",
+      "sameCodeError": "Source code and target code must be different.",
+      "reasonLabel": "Migration Reason *",
+      "reasonPlaceholder": "Enter the reason for merging codes.",
+      "deprecateSourceLabel": "Deprecate source code after migration"
+    },
+    "impactAnalysis": {
+      "title": "Impact Analysis",
+      "totalAffectedRecords": "Total Affected Records",
+      "estimatedDuration": "Estimated Duration",
+      "affectedTables": "Affected Tables"
+    },
+    "previewError": "Failed to load preview data.",
+    "completion": {
+      "title": "Migration Complete",
+      "description": "{{count}} records have been successfully migrated.",
+      "sourceCode": "Source Code",
+      "targetCode": "Target Code",
+      "migratedCount": "Migrated Records",
+      "completedAt": "Completed At",
+      "status": "Status",
+      "statusCompleted": "Completed",
+      "statusFailed": "Failed"
+    },
+    "migratingText": "Migrating...",
+    "migrateButton": "Execute Migration"
+  },
+  "search": {
+    "dialogTitle": "Code Search",
+    "dialogDescription": "Search by code name or code to find similar codes.",
+    "fields": {
+      "keywordLabel": "Search Keyword",
+      "keywordPlaceholder": "Enter code or code name...",
+      "codeGroupLabel": "Code Group",
+      "codeGroupAll": "All",
+      "includeInactive": "Include inactive codes"
+    },
+    "matchBadge": {
+      "exact": "Exact Match",
+      "partial": "Partial Match",
+      "similar": "Similar"
+    },
+    "similarity": "Similarity {{similarity}}%",
+    "noResults": "No results found.",
+    "enterKeyword": "Enter a search keyword."
+  },
+  "codeTree": {
+    "selectGroup": "Please select a code group.",
+    "treeTitle": "Code Tree",
+    "selectedCode": "Selected Code",
+    "codeLabel": "Code",
+    "codeNameLabel": "Code Name",
+    "englishNameLabel": "English Name",
+    "hierarchyLevel": "Hierarchy Level",
+    "hierarchyLevelValue": "Level {{level}}",
+    "sortOrder": "Sort Order",
+    "statusLabel": "Status",
+    "childCodes": "Child Codes",
+    "childCodeCount": "{{count}}",
+    "emptyTree": "No codes registered.",
+    "errorLoadTree": "Failed to load data."
+  },
+  "parentTreePicker": {
+    "placeholder": "Select parent code",
+    "noCodesWithGroup": "No codes available.",
+    "selectGroupFirst": "Please select a code group first."
+  },
+  "form": {
+    "validation": {
+      "codeMinLength": "Code must be at least 2 characters.",
+      "codeMaxLength": "Code must be 50 characters or less.",
+      "codePattern": "Must start with an uppercase letter. Only uppercase letters, numbers, and underscores are allowed.",
+      "codeNameRequired": "Please enter a code name.",
+      "maxLength100": "Must be 100 characters or less.",
+      "maxLength500": "Must be 500 characters or less.",
+      "codeGroupRequired": "Please select a code group.",
+      "codeRequired": "Please enter a code.",
+      "commonCodePattern": "Only uppercase letters, numbers, and underscores are allowed."
+    },
+    "codeHint": "Start with uppercase letter. Uppercase letters, numbers, and underscores allowed."
+  },
+  "codeGroupForm": {
+    "createTitle": "Add Code Group",
+    "editTitle": "Edit Code Group",
+    "createDescription": "Add a new code group.",
+    "editDescription": "Edit code group information.",
+    "codePlaceholder": "e.g. LEAVE_TYPE",
+    "codeNamePlaceholder": "e.g. Leave Type",
+    "englishNamePlaceholder": "e.g. Leave Type",
+    "descriptionPlaceholder": "Enter a description for the code group."
+  },
+  "commonCodeForm": {
+    "createTitle": "Add Common Code",
+    "editTitle": "Edit Common Code",
+    "createDescription": "Add a new common code.",
+    "editDescription": "Edit common code information.",
+    "codeGroupLabel": "Code Group *",
+    "codeGroupPlaceholder": "Select code group",
+    "codePlaceholder": "e.g. ANNUAL",
+    "codeNamePlaceholder": "e.g. Annual Leave",
+    "englishNamePlaceholder": "e.g. Annual Leave",
+    "descriptionPlaceholder": "Enter a description for the code."
+  },
+  "deleteDialog": {
+    "confirmMessage": "Are you sure you want to delete this?",
+    "childWarning": "This code group has {{count}} child codes.",
+    "childWarningDetail": "Deleting the code group will also delete all child codes."
+  }
+}

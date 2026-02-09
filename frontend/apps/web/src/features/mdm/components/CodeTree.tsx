@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { ChevronRight, ChevronDown, Folder, FolderOpen, FileCode } from 'lucide-react';
@@ -22,6 +23,7 @@ interface TreeNodeProps {
 }
 
 function TreeNode({ node, onSelect, onContextMenu, selectedId, level }: TreeNodeProps) {
+  const { t } = useTranslation('mdm');
   const [isExpanded, setIsExpanded] = useState(level < 2);
   const hasChildren = node.children && node.children.length > 0;
   const isSelected = node.id === selectedId;
@@ -84,7 +86,7 @@ function TreeNode({ node, onSelect, onContextMenu, selectedId, level }: TreeNode
         )}
         <StatusBadge
           status={node.active ? 'success' : 'default'}
-          label={node.active ? '활성' : '비활성'}
+          label={node.active ? t('common.statusActive') : t('common.statusInactive')}
         />
       </div>
 
@@ -107,13 +109,14 @@ function TreeNode({ node, onSelect, onContextMenu, selectedId, level }: TreeNode
 }
 
 export function CodeTree({ groupCode, onSelect, onContextMenu, selectedId }: CodeTreeProps) {
+  const { t } = useTranslation('mdm');
   const { data, isLoading, isError } = useCodeTree(groupCode);
   const treeData = data?.data ?? [];
 
   if (!groupCode) {
     return (
       <div className="flex items-center justify-center py-8 text-muted-foreground">
-        코드그룹을 선택하세요.
+        {t('codeTree.selectGroup')}
       </div>
     );
   }
@@ -129,7 +132,7 @@ export function CodeTree({ groupCode, onSelect, onContextMenu, selectedId }: Cod
   if (isError) {
     return (
       <div className="flex items-center justify-center py-8 text-destructive">
-        데이터를 불러올 수 없습니다.
+        {t('codeTree.errorLoadTree')}
       </div>
     );
   }
@@ -137,7 +140,7 @@ export function CodeTree({ groupCode, onSelect, onContextMenu, selectedId }: Cod
   if (treeData.length === 0) {
     return (
       <div className="flex items-center justify-center py-8 text-muted-foreground">
-        등록된 코드가 없습니다.
+        {t('codeTree.emptyTree')}
       </div>
     );
   }
@@ -165,12 +168,13 @@ interface CodeTreeViewProps {
 }
 
 export function CodeTreeView({ groupCode, className }: CodeTreeViewProps) {
+  const { t } = useTranslation('mdm');
   const [selectedNode, setSelectedNode] = useState<CodeTreeNode | null>(null);
 
   return (
     <div className={cn('flex gap-4', className)}>
       <div className="flex-1 rounded-lg border p-4">
-        <h3 className="mb-4 font-medium">코드 트리</h3>
+        <h3 className="mb-4 font-medium">{t('codeTree.treeTitle')}</h3>
         <CodeTree
           groupCode={groupCode}
           onSelect={setSelectedNode}
@@ -180,41 +184,41 @@ export function CodeTreeView({ groupCode, className }: CodeTreeViewProps) {
 
       {selectedNode && (
         <div className="w-80 rounded-lg border p-4">
-          <h3 className="mb-4 font-medium">선택된 코드</h3>
+          <h3 className="mb-4 font-medium">{t('codeTree.selectedCode')}</h3>
           <div className="space-y-3">
             <div>
-              <div className="text-sm text-muted-foreground">코드</div>
+              <div className="text-sm text-muted-foreground">{t('codeTree.codeLabel')}</div>
               <div className="font-mono font-medium">{selectedNode.code}</div>
             </div>
             <div>
-              <div className="text-sm text-muted-foreground">코드명</div>
+              <div className="text-sm text-muted-foreground">{t('codeTree.codeNameLabel')}</div>
               <div className="font-medium">{selectedNode.codeName}</div>
             </div>
             {selectedNode.codeNameEn && (
               <div>
-                <div className="text-sm text-muted-foreground">영문명</div>
+                <div className="text-sm text-muted-foreground">{t('codeTree.englishNameLabel')}</div>
                 <div>{selectedNode.codeNameEn}</div>
               </div>
             )}
             <div>
-              <div className="text-sm text-muted-foreground">계층 레벨</div>
-              <div>{selectedNode.level + 1}단계</div>
+              <div className="text-sm text-muted-foreground">{t('codeTree.hierarchyLevel')}</div>
+              <div>{t('codeTree.hierarchyLevelValue', { level: selectedNode.level + 1 })}</div>
             </div>
             <div>
-              <div className="text-sm text-muted-foreground">정렬순서</div>
+              <div className="text-sm text-muted-foreground">{t('codeTree.sortOrder')}</div>
               <div>{selectedNode.sortOrder}</div>
             </div>
             <div>
-              <div className="text-sm text-muted-foreground">상태</div>
+              <div className="text-sm text-muted-foreground">{t('codeTree.statusLabel')}</div>
               <StatusBadge
                 status={selectedNode.active ? 'success' : 'default'}
-                label={selectedNode.active ? '활성' : '비활성'}
+                label={selectedNode.active ? t('common.statusActive') : t('common.statusInactive')}
               />
             </div>
             {selectedNode.children.length > 0 && (
               <div>
-                <div className="text-sm text-muted-foreground">하위 코드</div>
-                <div>{selectedNode.children.length}개</div>
+                <div className="text-sm text-muted-foreground">{t('codeTree.childCodes')}</div>
+                <div>{t('codeTree.childCodeCount', { count: selectedNode.children.length })}</div>
               </div>
             )}
           </div>

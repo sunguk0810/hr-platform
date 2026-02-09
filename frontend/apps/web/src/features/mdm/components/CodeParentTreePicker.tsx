@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCodeTree } from '../hooks/useMdm';
 import { Button } from '@/components/ui/button';
 import {
@@ -93,9 +94,10 @@ export function CodeParentTreePicker({
   groupCode,
   value,
   onChange,
-  placeholder = '상위 코드 선택',
+  placeholder,
   excludeId,
 }: CodeParentTreePickerProps) {
+  const { t } = useTranslation('mdm');
   const [open, setOpen] = useState(false);
   const { data } = useCodeTree(groupCode);
   const treeData = data?.data ?? [];
@@ -137,7 +139,7 @@ export function CodeParentTreePicker({
               <span className="truncate">{selectedNode.codeName}</span>
             </span>
           ) : (
-            <span className="text-muted-foreground">{placeholder}</span>
+            <span className="text-muted-foreground">{placeholder || t('parentTreePicker.placeholder')}</span>
           )}
           <div className="flex items-center gap-1">
             {value && (
@@ -164,7 +166,7 @@ export function CodeParentTreePicker({
             ))
           ) : (
             <p className="text-sm text-muted-foreground text-center py-4">
-              {groupCode ? '코드가 없습니다.' : '코드그룹을 먼저 선택하세요.'}
+              {groupCode ? t('parentTreePicker.noCodesWithGroup') : t('parentTreePicker.selectGroupFirst')}
             </p>
           )}
         </div>

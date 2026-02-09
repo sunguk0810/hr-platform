@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useDebounce } from '@/hooks/useDebounce';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,6 +30,7 @@ interface CodeSearchDialogProps {
 }
 
 export function CodeSearchDialog({ open, onOpenChange, onSelect }: CodeSearchDialogProps) {
+  const { t } = useTranslation('mdm');
   const [keyword, setKeyword] = useState('');
   const [groupCode, setGroupCode] = useState<string>('');
   const [includeInactive, setIncludeInactive] = useState(false);
@@ -65,11 +67,11 @@ export function CodeSearchDialog({ open, onOpenChange, onSelect }: CodeSearchDia
   const getMatchTypeBadge = (matchType: string) => {
     switch (matchType) {
       case 'EXACT':
-        return <StatusBadge status="success" label="정확 일치" />;
+        return <StatusBadge status="success" label={t('search.matchBadge.exact')} />;
       case 'PARTIAL':
-        return <StatusBadge status="info" label="부분 일치" />;
+        return <StatusBadge status="info" label={t('search.matchBadge.partial')} />;
       default:
-        return <StatusBadge status="default" label="유사" />;
+        return <StatusBadge status="default" label={t('search.matchBadge.similar')} />;
     }
   };
 
@@ -77,36 +79,36 @@ export function CodeSearchDialog({ open, onOpenChange, onSelect }: CodeSearchDia
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>코드 검색</DialogTitle>
+          <DialogTitle>{t('search.dialogTitle')}</DialogTitle>
           <DialogDescription>
-            코드명 또는 코드로 검색하여 유사한 코드를 찾습니다.
+            {t('search.dialogDescription')}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="flex gap-4">
             <div className="flex-1">
-              <Label htmlFor="search-keyword">검색어</Label>
+              <Label htmlFor="search-keyword">{t('search.fields.keywordLabel')}</Label>
               <div className="relative mt-1">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   id="search-keyword"
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
-                  placeholder="코드 또는 코드명 입력..."
+                  placeholder={t('search.fields.keywordPlaceholder')}
                   className="pl-9"
                   autoFocus
                 />
               </div>
             </div>
             <div className="w-48">
-              <Label>코드그룹</Label>
+              <Label>{t('search.fields.codeGroupLabel')}</Label>
               <Select value={groupCode || '__all__'} onValueChange={(value) => setGroupCode(value === '__all__' ? '' : value)}>
                 <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="전체" />
+                  <SelectValue placeholder={t('search.fields.codeGroupAll')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__all__">전체</SelectItem>
+                  <SelectItem value="__all__">{t('search.fields.codeGroupAll')}</SelectItem>
                   {codeGroups.map((group) => (
                     <SelectItem key={group.id} value={group.groupCode}>
                       {group.groupName}
@@ -126,7 +128,7 @@ export function CodeSearchDialog({ open, onOpenChange, onSelect }: CodeSearchDia
               className="h-4 w-4 rounded border-gray-300"
             />
             <Label htmlFor="include-inactive" className="text-sm font-normal">
-              비활성 코드 포함
+              {t('search.fields.includeInactive')}
             </Label>
           </div>
 
@@ -157,7 +159,7 @@ export function CodeSearchDialog({ open, onOpenChange, onSelect }: CodeSearchDia
                         <span>•</span>
                         <StatusBadge
                           status={result.active ? 'success' : 'default'}
-                          label={result.active ? '활성' : '비활성'}
+                          label={result.active ? t('common.statusActive') : t('common.statusInactive')}
                         />
                       </div>
                     </div>
@@ -165,7 +167,7 @@ export function CodeSearchDialog({ open, onOpenChange, onSelect }: CodeSearchDia
                       <div className="text-right">
                         {getMatchTypeBadge(result.matchType)}
                         <div className="mt-1 text-sm text-muted-foreground">
-                          유사도 {result.similarity}%
+                          {t('search.similarity', { similarity: result.similarity })}
                         </div>
                       </div>
                       {onSelect && (
@@ -179,11 +181,11 @@ export function CodeSearchDialog({ open, onOpenChange, onSelect }: CodeSearchDia
               </div>
             ) : keyword ? (
               <div className="py-8 text-center text-muted-foreground">
-                검색 결과가 없습니다.
+                {t('search.noResults')}
               </div>
             ) : (
               <div className="py-8 text-center text-muted-foreground">
-                검색어를 입력하세요.
+                {t('search.enterKeyword')}
               </div>
             )}
           </div>

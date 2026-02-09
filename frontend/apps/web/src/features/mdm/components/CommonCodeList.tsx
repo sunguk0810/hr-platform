@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/common/StatusBadge';
@@ -52,9 +53,10 @@ export function CommonCodeList({
   onDelete,
   onReorder,
   onEmptyAction,
-  emptyMessage = '등록된 공통코드가 없습니다.',
+  emptyMessage,
   className,
 }: CommonCodeListProps) {
+  const { t } = useTranslation('mdm');
   const [draggedItem, setDraggedItem] = React.useState<string | null>(null);
   const [dragOverItem, setDragOverItem] = React.useState<string | null>(null);
 
@@ -104,8 +106,8 @@ export function CommonCodeList({
         <CardContent className="p-4">
           <EmptyState
             icon={Code}
-            title="데이터를 불러올 수 없습니다"
-            description="잠시 후 다시 시도해주세요."
+            title={t('common.errorLoadData')}
+            description={t('common.errorRetry')}
           />
         </CardContent>
       </Card>
@@ -118,12 +120,12 @@ export function CommonCodeList({
         <CardContent className="p-4">
           <EmptyState
             icon={Code}
-            title={emptyMessage}
-            description="새로운 공통코드를 추가해주세요."
+            title={emptyMessage || t('commonCode.emptyTitle')}
+            description={t('commonCode.emptyDescription')}
             action={
               onEmptyAction
                 ? {
-                    label: '공통코드 추가',
+                    label: t('commonCode.addButton'),
                     onClick: onEmptyAction,
                   }
                 : undefined
@@ -143,31 +145,31 @@ export function CommonCodeList({
               <tr className="border-b bg-muted/50">
                 {onReorder && (
                   <th className="w-10 px-2 py-3 text-left text-sm font-medium text-muted-foreground">
-                    <span className="sr-only">순서 변경</span>
+                    <span className="sr-only">{t('commonCode.reorderSrOnly')}</span>
                   </th>
                 )}
                 {showGroupColumn && (
                   <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                    코드그룹
+                    {t('commonCode.columns.codeGroup')}
                   </th>
                 )}
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  코드
+                  {t('commonCode.columns.code')}
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  코드명
+                  {t('commonCode.columns.codeName')}
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  영문명
+                  {t('commonCode.columns.englishName')}
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  정렬순서
+                  {t('commonCode.columns.sortOrder')}
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  상태
+                  {t('commonCode.columns.status')}
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  작업
+                  {t('commonCode.columns.actions')}
                 </th>
               </tr>
             </thead>
@@ -192,7 +194,7 @@ export function CommonCodeList({
                       <button
                         type="button"
                         className="cursor-grab p-1 text-muted-foreground hover:text-foreground active:cursor-grabbing"
-                        title="드래그하여 순서 변경"
+                        title={t('commonCode.dragToReorder')}
                       >
                         <GripVertical className="h-4 w-4" />
                       </button>
@@ -214,7 +216,7 @@ export function CommonCodeList({
                   <td className="px-4 py-3">
                     <StatusBadge
                       status={code.active ? 'success' : 'default'}
-                      label={code.active ? '활성' : '비활성'}
+                      label={code.active ? t('common.statusActive') : t('common.statusInactive')}
                     />
                   </td>
                   <td className="px-4 py-3">
@@ -223,7 +225,7 @@ export function CommonCodeList({
                         variant="ghost"
                         size="icon"
                         onClick={() => onEdit?.(code)}
-                        title="수정"
+                        title={t('common.editButton')}
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -231,7 +233,7 @@ export function CommonCodeList({
                         variant="ghost"
                         size="icon"
                         onClick={() => onDelete?.(code)}
-                        title="삭제"
+                        title={t('common.deleteButton')}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -252,7 +254,7 @@ export function CommonCodeList({
         )}
 
         <div className="px-4 pb-3 text-sm text-muted-foreground">
-          총 {totalElements}개
+          {t('common.totalCount', { count: totalElements })}
         </div>
       </CardContent>
     </Card>
@@ -273,10 +275,12 @@ export function CommonCodeCompactList({
   onSelect,
   className,
 }: CommonCodeCompactListProps) {
+  const { t } = useTranslation('mdm');
+
   if (codes.length === 0) {
     return (
       <div className={cn('text-center py-4 text-sm text-muted-foreground', className)}>
-        코드가 없습니다.
+        {t('commonCode.emptyCompactList')}
       </div>
     );
   }
@@ -305,7 +309,7 @@ export function CommonCodeCompactList({
             <div className="flex items-center gap-1 ml-2">
               {!code.active && (
                 <Badge variant="secondary" className="text-[10px] px-1 py-0">
-                  비활성
+                  {t('common.statusInactive')}
                 </Badge>
               )}
               {code.codeNameEn && (
