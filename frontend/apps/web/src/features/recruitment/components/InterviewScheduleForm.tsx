@@ -7,11 +7,15 @@ import { Textarea } from '@/components/ui/textarea';
 import type { CreateInterviewRequest, InterviewType } from '@hr-platform/shared-types';
 
 const INTERVIEW_TYPES: { value: InterviewType; label: string }[] = [
-  { value: 'PHONE', label: '전화면접' },
-  { value: 'VIDEO', label: '화상면접' },
-  { value: 'ONSITE', label: '대면면접' },
+  { value: 'FIRST_ROUND', label: '1차면접' },
+  { value: 'SECOND_ROUND', label: '2차면접' },
+  { value: 'FINAL_ROUND', label: '최종면접' },
   { value: 'TECHNICAL', label: '기술면접' },
-  { value: 'FINAL', label: '최종면접' },
+  { value: 'PERSONALITY', label: '인성면접' },
+  { value: 'PRESENTATION', label: '발표면접' },
+  { value: 'GROUP', label: '그룹면접' },
+  { value: 'VIDEO', label: '화상면접' },
+  { value: 'PHONE', label: '전화면접' },
 ];
 
 const DURATION_OPTIONS = [
@@ -69,7 +73,7 @@ export function InterviewScheduleForm({
   });
 
   const interviewType = watch('interviewType');
-  const showLocation = interviewType === 'ONSITE';
+  const showLocation = interviewType !== 'VIDEO' && interviewType !== 'PHONE';
   const showMeetingUrl = interviewType === 'VIDEO' || interviewType === 'PHONE';
 
   const validateFutureDateTime = (date: string, time: string): string | null => {

@@ -114,9 +114,13 @@ export default function MyInterviewsPage() {
             interviewType={
               selectedInterview.interviewType === 'PHONE' ? '전화면접' :
               selectedInterview.interviewType === 'VIDEO' ? '화상면접' :
-              selectedInterview.interviewType === 'ONSITE' ? '대면면접' :
+              selectedInterview.interviewType === 'FIRST_ROUND' ? '1차면접' :
+              selectedInterview.interviewType === 'SECOND_ROUND' ? '2차면접' :
+              selectedInterview.interviewType === 'FINAL_ROUND' ? '최종면접' :
               selectedInterview.interviewType === 'TECHNICAL' ? '기술면접' :
-              selectedInterview.interviewType === 'FINAL' ? '최종면접' : ''
+              selectedInterview.interviewType === 'PERSONALITY' ? '인성면접' :
+              selectedInterview.interviewType === 'PRESENTATION' ? '발표면접' :
+              selectedInterview.interviewType === 'GROUP' ? '그룹면접' : ''
             }
             onSubmit={handleSubmitScore}
             onCancel={() => {

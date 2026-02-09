@@ -50,7 +50,7 @@ const mockJobPostings: JobPosting[] = [
     workLocation: '서울 강남구',
     openDate: '2024-01-01',
     closeDate: '2024-03-31',
-    status: 'OPEN',
+    status: 'PUBLISHED',
     viewCount: 1523,
     applicationCount: 45,
     recruiterId: 'emp-003',
@@ -81,7 +81,7 @@ const mockJobPostings: JobPosting[] = [
     workLocation: '서울 강남구',
     openDate: '2024-01-15',
     closeDate: '2024-04-15',
-    status: 'OPEN',
+    status: 'PUBLISHED',
     viewCount: 980,
     applicationCount: 32,
     recruiterId: 'emp-003',
@@ -265,7 +265,7 @@ const mockInterviews: Interview[] = [
     jobPostingId: 'job-001',
     jobTitle: '백엔드 개발자 (Java/Spring)',
     jobCode: 'JOB-2024-001',
-    interviewType: 'FINAL',
+    interviewType: 'FINAL_ROUND',
     scheduledDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 2일 후
     scheduledTime: '10:00',
     durationMinutes: 45,
@@ -305,7 +305,7 @@ const mockInterviews: Interview[] = [
     jobPostingId: 'job-002',
     jobTitle: '프론트엔드 개발자 (React)',
     jobCode: 'JOB-2024-002',
-    interviewType: 'ONSITE',
+    interviewType: 'FIRST_ROUND',
     scheduledDate: '2024-02-10',
     scheduledTime: '10:00',
     durationMinutes: 90,
@@ -487,10 +487,12 @@ export const recruitmentHandlers = [
 
     const summary = {
       total: mockJobPostings.length,
-      open: mockJobPostings.filter((j) => j.status === 'OPEN').length,
-      closed: mockJobPostings.filter((j) => j.status === 'CLOSED').length,
-      completed: mockJobPostings.filter((j) => j.status === 'COMPLETED').length,
       draft: mockJobPostings.filter((j) => j.status === 'DRAFT').length,
+      pending: mockJobPostings.filter((j) => j.status === 'PENDING').length,
+      published: mockJobPostings.filter((j) => j.status === 'PUBLISHED').length,
+      closed: mockJobPostings.filter((j) => j.status === 'CLOSED').length,
+      cancelled: mockJobPostings.filter((j) => j.status === 'CANCELLED').length,
+      completed: mockJobPostings.filter((j) => j.status === 'COMPLETED').length,
     };
 
     return HttpResponse.json({
@@ -596,7 +598,7 @@ export const recruitmentHandlers = [
       );
     }
 
-    mockJobPostings[index] = { ...mockJobPostings[index], status: 'OPEN', updatedAt: new Date().toISOString() };
+    mockJobPostings[index] = { ...mockJobPostings[index], status: 'PUBLISHED', updatedAt: new Date().toISOString() };
     return HttpResponse.json({ success: true, data: mockJobPostings[index], message: '채용공고가 게시되었습니다.', timestamp: new Date().toISOString() });
   }),
 
@@ -1225,7 +1227,7 @@ export const recruitmentHandlers = [
       );
     }
 
-    mockInterviews[index] = { ...mockInterviews[index], status: 'CONFIRMED', updatedAt: new Date().toISOString() };
+    mockInterviews[index] = { ...mockInterviews[index], status: 'SCHEDULED', updatedAt: new Date().toISOString() };
 
     return HttpResponse.json({ success: true, data: mockInterviews[index], message: '면접이 확정되었습니다.', timestamp: new Date().toISOString() });
   }),

@@ -42,7 +42,7 @@ export default function JobPostingListPage() {
   const { data: summaryData } = useJobPostingSummary();
   const { data, isLoading, isError } = useJobPostings(params);
 
-  const summary = summaryData?.data ?? { total: 0, open: 0, closed: 0, completed: 0, draft: 0 };
+  const summary = summaryData?.data ?? { total: 0, draft: 0, pending: 0, published: 0, closed: 0, cancelled: 0, completed: 0 };
   const jobs = data?.data?.content ?? [];
   const totalPages = data?.data?.page?.totalPages ?? 0;
 

@@ -33,7 +33,7 @@ export default function InterviewListPage() {
   const { data: summaryData } = useInterviewSummary();
   const { data, isLoading, isError } = useInterviews(params);
 
-  const summary = summaryData?.data ?? { total: 0, scheduled: 0, completed: 0, cancelled: 0, today: 0 };
+  const summary = summaryData?.data ?? { total: 0, scheduling: 0, scheduled: 0, inProgress: 0, completed: 0, noShow: 0, cancelled: 0, postponed: 0 };
   const interviews = data?.data?.content ?? [];
   const totalPages = data?.data?.page?.totalPages ?? 0;
 
@@ -73,8 +73,8 @@ export default function InterviewListPage() {
           {/* Summary Cards - 2x2 */}
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-blue-50 dark:bg-blue-900/30 rounded-xl border border-blue-200 p-4">
-              <p className="text-xs text-blue-600 dark:text-blue-400">오늘 예정</p>
-              <p className="text-2xl font-bold text-blue-600">{summary.today}</p>
+              <p className="text-xs text-blue-600 dark:text-blue-400">진행중</p>
+              <p className="text-2xl font-bold text-blue-600">{summary.inProgress}</p>
             </div>
             <div className="bg-card rounded-xl border p-4">
               <p className="text-xs text-muted-foreground">예정</p>
@@ -253,8 +253,8 @@ export default function InterviewListPage() {
         <Card className="border-blue-200 bg-blue-50/50">
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">오늘 예정</p>
-              <p className="mt-1 text-3xl font-bold text-blue-600">{summary.today}</p>
+              <p className="text-sm text-muted-foreground">진행중</p>
+              <p className="mt-1 text-3xl font-bold text-blue-600">{summary.inProgress}</p>
             </div>
           </CardContent>
         </Card>
