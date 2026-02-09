@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -109,6 +110,7 @@ function PasswordPolicyForm({
   isLoading: boolean;
   readOnly: boolean;
 }) {
+  const { t } = useTranslation('tenant');
   const methods = useForm<PasswordPolicy>({
     resolver: zodResolver(passwordPolicySchema),
     defaultValues: initialData,
@@ -123,14 +125,14 @@ function PasswordPolicyForm({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <KeyRound className="h-5 w-5" />
-              비밀번호 정책
+              {t('passwordPolicy.title')}
             </CardTitle>
-            <CardDescription>비밀번호 복잡도 및 만료 설정</CardDescription>
+            <CardDescription>{t('passwordPolicy.description')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <FormRow cols={3}>
               <div className="space-y-2">
-                <Label>최소 길이</Label>
+                <Label>{t('passwordPolicy.minLength')}</Label>
                 <Input
                   type="number"
                   {...register('minLength', { valueAsNumber: true })}
@@ -138,7 +140,7 @@ function PasswordPolicyForm({
                 />
               </div>
               <div className="space-y-2">
-                <Label>비밀번호 만료 (일)</Label>
+                <Label>{t('passwordPolicy.expiryDays')}</Label>
                 <Input
                   type="number"
                   {...register('expiryDays', { valueAsNumber: true })}
@@ -146,7 +148,7 @@ function PasswordPolicyForm({
                 />
               </div>
               <div className="space-y-2">
-                <Label>재사용 금지 개수</Label>
+                <Label>{t('passwordPolicy.historyCount')}</Label>
                 <Input
                   type="number"
                   {...register('historyCount', { valueAsNumber: true })}
@@ -155,10 +157,10 @@ function PasswordPolicyForm({
               </div>
             </FormRow>
             <div className="space-y-3 pt-2">
-              <Label className="text-base">비밀번호 복잡도</Label>
+              <Label className="text-base">{t('passwordPolicy.complexityShort')}</Label>
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex items-center justify-between rounded-lg border p-3">
-                  <Label>대문자 포함</Label>
+                  <Label>{t('passwordPolicy.requireUppercase')}</Label>
                   <Switch
                     checked={watch('requireUppercase')}
                     onCheckedChange={(checked) => setValue('requireUppercase', checked)}
@@ -166,7 +168,7 @@ function PasswordPolicyForm({
                   />
                 </div>
                 <div className="flex items-center justify-between rounded-lg border p-3">
-                  <Label>소문자 포함</Label>
+                  <Label>{t('passwordPolicy.requireLowercase')}</Label>
                   <Switch
                     checked={watch('requireLowercase')}
                     onCheckedChange={(checked) => setValue('requireLowercase', checked)}
@@ -174,7 +176,7 @@ function PasswordPolicyForm({
                   />
                 </div>
                 <div className="flex items-center justify-between rounded-lg border p-3">
-                  <Label>숫자 포함</Label>
+                  <Label>{t('passwordPolicy.requireNumber')}</Label>
                   <Switch
                     checked={watch('requireNumber')}
                     onCheckedChange={(checked) => setValue('requireNumber', checked)}
@@ -182,7 +184,7 @@ function PasswordPolicyForm({
                   />
                 </div>
                 <div className="flex items-center justify-between rounded-lg border p-3">
-                  <Label>특수문자 포함</Label>
+                  <Label>{t('passwordPolicy.requireSpecialChar')}</Label>
                   <Switch
                     checked={watch('requireSpecialChar')}
                     onCheckedChange={(checked) => setValue('requireSpecialChar', checked)}
@@ -196,7 +198,7 @@ function PasswordPolicyForm({
         {!readOnly && (
           <div className="flex justify-end">
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />저장 중...</> : '저장'}
+              {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t('common.saving')}</> : t('common.save')}
             </Button>
           </div>
         )}
@@ -216,6 +218,7 @@ function SecurityPolicyForm({
   isLoading: boolean;
   readOnly: boolean;
 }) {
+  const { t } = useTranslation('tenant');
   const methods = useForm<SecurityPolicy>({
     resolver: zodResolver(securityPolicySchema),
     defaultValues: initialData,
@@ -230,14 +233,14 @@ function SecurityPolicyForm({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
-              보안 정책
+              {t('securityPolicy.title')}
             </CardTitle>
-            <CardDescription>세션 및 로그인 보안 설정</CardDescription>
+            <CardDescription>{t('securityPolicy.description')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <FormRow cols={3}>
               <div className="space-y-2">
-                <Label>세션 타임아웃 (분)</Label>
+                <Label>{t('securityPolicy.sessionTimeout')}</Label>
                 <Input
                   type="number"
                   {...register('sessionTimeoutMinutes', { valueAsNumber: true })}
@@ -245,7 +248,7 @@ function SecurityPolicyForm({
                 />
               </div>
               <div className="space-y-2">
-                <Label>최대 로그인 시도</Label>
+                <Label>{t('securityPolicy.maxLoginAttempts')}</Label>
                 <Input
                   type="number"
                   {...register('maxLoginAttempts', { valueAsNumber: true })}
@@ -253,7 +256,7 @@ function SecurityPolicyForm({
                 />
               </div>
               <div className="space-y-2">
-                <Label>계정 잠금 시간 (분)</Label>
+                <Label>{t('securityPolicy.lockoutDuration')}</Label>
                 <Input
                   type="number"
                   {...register('lockoutDurationMinutes', { valueAsNumber: true })}
@@ -264,8 +267,8 @@ function SecurityPolicyForm({
             <div className="space-y-3">
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div>
-                  <Label>2단계 인증 (MFA)</Label>
-                  <p className="text-sm text-muted-foreground">OTP 또는 인증 앱을 통한 2단계 인증 필수</p>
+                  <Label>{t('securityPolicy.mfa')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('securityPolicy.mfaDescription')}</p>
                 </div>
                 <Switch
                   checked={watch('mfaEnabled')}
@@ -275,8 +278,8 @@ function SecurityPolicyForm({
               </div>
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div>
-                  <Label>IP 화이트리스트</Label>
-                  <p className="text-sm text-muted-foreground">허용된 IP 주소에서만 접속 가능</p>
+                  <Label>{t('securityPolicy.ipWhitelist')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('securityPolicy.ipWhitelistDescription')}</p>
                 </div>
                 <Switch
                   checked={watch('ipWhitelistEnabled')}
@@ -290,7 +293,7 @@ function SecurityPolicyForm({
         {!readOnly && (
           <div className="flex justify-end">
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />저장 중...</> : '저장'}
+              {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t('common.saving')}</> : t('common.save')}
             </Button>
           </div>
         )}
@@ -310,6 +313,7 @@ function NotificationPolicyForm({
   isLoading: boolean;
   readOnly: boolean;
 }) {
+  const { t } = useTranslation('tenant');
   const methods = useForm<NotificationPolicy>({
     resolver: zodResolver(notificationPolicySchema),
     defaultValues: initialData,
@@ -324,16 +328,16 @@ function NotificationPolicyForm({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Bell className="h-5 w-5" />
-              알림 정책
+              {t('notificationPolicy.title')}
             </CardTitle>
-            <CardDescription>알림 채널 및 방해 금지 설정</CardDescription>
+            <CardDescription>{t('notificationPolicy.description')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-3">
-              <Label className="text-base">알림 채널</Label>
+              <Label className="text-base">{t('notificationPolicy.channels')}</Label>
               <div className="grid grid-cols-3 gap-3">
                 <div className="flex items-center justify-between rounded-lg border p-3">
-                  <Label>이메일</Label>
+                  <Label>{t('notificationPolicy.emailLabel')}</Label>
                   <Switch
                     checked={watch('emailEnabled')}
                     onCheckedChange={(checked) => setValue('emailEnabled', checked)}
@@ -341,7 +345,7 @@ function NotificationPolicyForm({
                   />
                 </div>
                 <div className="flex items-center justify-between rounded-lg border p-3">
-                  <Label>푸시</Label>
+                  <Label>{t('notificationPolicy.pushLabel')}</Label>
                   <Switch
                     checked={watch('pushEnabled')}
                     onCheckedChange={(checked) => setValue('pushEnabled', checked)}
@@ -360,8 +364,8 @@ function NotificationPolicyForm({
             </div>
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div>
-                <Label>방해 금지 모드</Label>
-                <p className="text-sm text-muted-foreground">지정된 시간에 알림 발송 차단</p>
+                <Label>{t('notificationPolicy.doNotDisturbMode')}</Label>
+                <p className="text-sm text-muted-foreground">{t('notificationPolicy.doNotDisturbDescription')}</p>
               </div>
               <Switch
                 checked={watch('quietHoursEnabled')}
@@ -372,11 +376,11 @@ function NotificationPolicyForm({
             {watch('quietHoursEnabled') && (
               <FormRow cols={2}>
                 <div className="space-y-2">
-                  <Label>시작 시간</Label>
+                  <Label>{t('notificationPolicy.startTime')}</Label>
                   <Input type="time" {...register('quietHoursStart')} disabled={readOnly} />
                 </div>
                 <div className="space-y-2">
-                  <Label>종료 시간</Label>
+                  <Label>{t('notificationPolicy.endTime')}</Label>
                   <Input type="time" {...register('quietHoursEnd')} disabled={readOnly} />
                 </div>
               </FormRow>
@@ -386,7 +390,7 @@ function NotificationPolicyForm({
         {!readOnly && (
           <div className="flex justify-end">
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />저장 중...</> : '저장'}
+              {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t('common.saving')}</> : t('common.save')}
             </Button>
           </div>
         )}
@@ -406,6 +410,7 @@ function OrganizationPolicyForm({
   isLoading: boolean;
   readOnly: boolean;
 }) {
+  const { t } = useTranslation('tenant');
   const methods = useForm<OrganizationPolicy>({
     resolver: zodResolver(organizationPolicySchema),
     defaultValues: initialData,
@@ -420,13 +425,13 @@ function OrganizationPolicyForm({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Building2 className="h-5 w-5" />
-              조직 정책
+              {t('organizationPolicy.title')}
             </CardTitle>
-            <CardDescription>조직 구조 및 인사 정보 설정</CardDescription>
+            <CardDescription>{t('organizationPolicy.description')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>최대 부서 단계</Label>
+              <Label>{t('organizationPolicy.maxDepartmentLevel')}</Label>
               <Input
                 type="number"
                 {...register('maxDepartmentLevel', { valueAsNumber: true })}
@@ -437,8 +442,8 @@ function OrganizationPolicyForm({
             <div className="space-y-3">
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div>
-                  <Label>직책 필수</Label>
-                  <p className="text-sm text-muted-foreground">직원 등록 시 직책 입력 필수</p>
+                  <Label>{t('organizationPolicy.positionRequired')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('organizationPolicy.positionRequiredDescription')}</p>
                 </div>
                 <Switch
                   checked={watch('positionRequired')}
@@ -448,8 +453,8 @@ function OrganizationPolicyForm({
               </div>
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div>
-                  <Label>직급 필수</Label>
-                  <p className="text-sm text-muted-foreground">직원 등록 시 직급 입력 필수</p>
+                  <Label>{t('organizationPolicy.gradeRequired')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('organizationPolicy.gradeRequiredDescription')}</p>
                 </div>
                 <Switch
                   checked={watch('gradeRequired')}
@@ -459,8 +464,8 @@ function OrganizationPolicyForm({
               </div>
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div>
-                  <Label>복수 부서 소속 허용</Label>
-                  <p className="text-sm text-muted-foreground">한 직원이 여러 부서에 소속될 수 있음</p>
+                  <Label>{t('organizationPolicy.allowMultipleDepartments')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('organizationPolicy.allowMultipleDepartmentsDescription')}</p>
                 </div>
                 <Switch
                   checked={watch('allowMultipleDepartments')}
@@ -474,7 +479,7 @@ function OrganizationPolicyForm({
         {!readOnly && (
           <div className="flex justify-end">
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />저장 중...</> : '저장'}
+              {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t('common.saving')}</> : t('common.save')}
             </Button>
           </div>
         )}
@@ -490,6 +495,7 @@ export function PolicySettings({
   isLoading = false,
   readOnly = false,
 }: PolicySettingsProps) {
+  const { t } = useTranslation('tenant');
   const [savingPolicy, setSavingPolicy] = React.useState<PolicyType | null>(null);
 
   const handleSubmit = async (policyType: PolicyType, data: unknown) => {
@@ -504,10 +510,10 @@ export function PolicySettings({
   return (
     <Tabs defaultValue="password" className="space-y-4">
       <TabsList className="grid w-full grid-cols-4">
-        <TabsTrigger value="password">비밀번호</TabsTrigger>
-        <TabsTrigger value="security">보안</TabsTrigger>
-        <TabsTrigger value="notification">알림</TabsTrigger>
-        <TabsTrigger value="organization">조직</TabsTrigger>
+        <TabsTrigger value="password">{t('policyTabs.password')}</TabsTrigger>
+        <TabsTrigger value="security">{t('policyTabs.security')}</TabsTrigger>
+        <TabsTrigger value="notification">{t('policyTabs.notification')}</TabsTrigger>
+        <TabsTrigger value="organization">{t('policyTabs.organization')}</TabsTrigger>
       </TabsList>
 
       <TabsContent value="password">

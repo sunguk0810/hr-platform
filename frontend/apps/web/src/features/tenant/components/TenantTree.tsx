@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ChevronRight, ChevronDown, Building2, Building, Users, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { TenantStatusBadge } from '@/components/common/StatusBadge';
@@ -21,6 +22,7 @@ interface TreeNodeProps {
 }
 
 function TreeNode({ node, level, onSelect, selectedId, searchTerm }: TreeNodeProps) {
+  const { t } = useTranslation('tenant');
   const [isExpanded, setIsExpanded] = React.useState(true);
   const navigate = useNavigate();
   const hasChildren = node.children && node.children.length > 0;
@@ -111,10 +113,10 @@ function TreeNode({ node, level, onSelect, selectedId, searchTerm }: TreeNodePro
           </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Users className="h-3 w-3" />
-            <span>{node.employeeCount}명</span>
+            <span>{t('tree.employeeCount', { count: node.employeeCount })}</span>
             {hasChildren && (
               <span className="text-muted-foreground/70">
-                (계열사 {node.children.length}개)
+                ({t('tree.subsidiaryCount', { count: node.children.length })})
               </span>
             )}
           </div>
@@ -144,6 +146,7 @@ function TreeNode({ node, level, onSelect, selectedId, searchTerm }: TreeNodePro
 }
 
 export function TenantTree({ data, onSelect, selectedId }: TenantTreeProps) {
+  const { t } = useTranslation('tenant');
   const [searchTerm, setSearchTerm] = React.useState('');
 
   return (
@@ -152,7 +155,7 @@ export function TenantTree({ data, onSelect, selectedId }: TenantTreeProps) {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder="테넌트 검색..."
+          placeholder={t('tree.searchPlaceholder')}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-9"
@@ -163,7 +166,7 @@ export function TenantTree({ data, onSelect, selectedId }: TenantTreeProps) {
       <div className="border rounded-lg divide-y">
         {data.length === 0 ? (
           <div className="p-8 text-center text-muted-foreground">
-            등록된 테넌트가 없습니다.
+            {t('tree.noTenants')}
           </div>
         ) : (
           data.map((node) => (

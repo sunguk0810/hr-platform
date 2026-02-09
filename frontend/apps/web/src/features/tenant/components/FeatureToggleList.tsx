@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,7 @@ interface FeatureGroupProps {
   onConfigClick: (code: FeatureCode) => void;
   togglingCode: FeatureCode | null;
   readOnly?: boolean;
+  t: (key: string, options?: Record<string, unknown>) => string;
 }
 
 function FeatureGroup({
@@ -36,6 +38,7 @@ function FeatureGroup({
   onConfigClick,
   togglingCode,
   readOnly,
+  t,
 }: FeatureGroupProps) {
   const getFeature = (code: FeatureCode) => {
     return enabledFeatures.find(f => f.code === code);
@@ -48,24 +51,24 @@ function FeatureGroup({
       case 'PARALLEL_APPROVAL': {
         const c = config as { minApprovers?: string; approvalMode?: string };
         const labels: Record<string, string> = {
-          all: '전원',
-          majority: '과반수',
-          one: '1인',
+          all: t('featureToggle.configSummary.all'),
+          majority: t('featureToggle.configSummary.majority'),
+          one: t('featureToggle.configSummary.one'),
         };
         return labels[c.minApprovers || 'all'] || '';
       }
       case 'PROXY_APPROVAL': {
         const c = config as { maxDays?: number };
-        return c.maxDays ? `최대 ${c.maxDays}일` : '';
+        return c.maxDays ? t('featureToggle.configSummary.maxDays', { days: c.maxDays }) : '';
       }
       case 'OKR':
       case 'KPI': {
         const c = config as { evaluationCycle?: string };
         const labels: Record<string, string> = {
-          monthly: '월간',
-          quarterly: '분기',
-          half: '반기',
-          yearly: '연간',
+          monthly: t('featureToggle.configSummary.monthly'),
+          quarterly: t('featureToggle.configSummary.quarterly'),
+          half: t('featureToggle.configSummary.half'),
+          yearly: t('featureToggle.configSummary.yearly'),
         };
         return labels[c.evaluationCycle || 'quarterly'] || '';
       }
@@ -82,7 +85,7 @@ function FeatureGroup({
           {title}
         </CardTitle>
         <CardDescription>
-          {title} 관련 기능을 활성화하거나 비활성화합니다.
+          {title} {t('featureToggle.relatedFeatures')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -102,7 +105,7 @@ function FeatureGroup({
                   <Label className="font-medium">{feature.name}</Label>
                   {isEnabled && (
                     <Badge variant="secondary" className="text-xs">
-                      활성화됨
+                      {t('featureToggle.enabled')}
                     </Badge>
                   )}
                   {isEnabled && configSummary && (
@@ -121,7 +124,7 @@ function FeatureGroup({
                     variant="ghost"
                     size="icon"
                     onClick={() => onConfigClick(feature.code)}
-                    title="상세 설정"
+                    title={t('featureToggle.detailSettings')}
                   >
                     <Settings2 className="h-4 w-4" />
                   </Button>
@@ -149,6 +152,7 @@ export function FeatureToggleList({
   isLoading = false,
   readOnly = false,
 }: FeatureToggleListProps) {
+  const { t } = useTranslation('tenant');
   const [togglingCode, setTogglingCode] = React.useState<FeatureCode | null>(null);
   const [configDialogCode, setConfigDialogCode] = React.useState<FeatureCode | null>(null);
   const [savingConfig, setSavingConfig] = React.useState(false);
@@ -194,7 +198,7 @@ export function FeatureToggleList({
     <>
       <div className="space-y-6">
         <FeatureGroup
-          title="결재"
+          title={t('featureToggle.groups.approval')}
           icon={<FileCheck className="h-5 w-5" />}
           features={approvalFeatures}
           enabledFeatures={features}
@@ -202,10 +206,11 @@ export function FeatureToggleList({
           onConfigClick={setConfigDialogCode}
           togglingCode={togglingCode}
           readOnly={readOnly}
+          t={t}
         />
 
         <FeatureGroup
-          title="성과"
+          title={t('featureToggle.groups.performance')}
           icon={<Target className="h-5 w-5" />}
           features={performanceFeatures}
           enabledFeatures={features}
@@ -213,6 +218,7 @@ export function FeatureToggleList({
           onConfigClick={setConfigDialogCode}
           togglingCode={togglingCode}
           readOnly={readOnly}
+          t={t}
         />
       </div>
 

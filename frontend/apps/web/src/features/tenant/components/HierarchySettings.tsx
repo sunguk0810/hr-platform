@@ -1,6 +1,9 @@
+import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm, useFieldArray, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import type { TFunction } from 'i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,15 +20,17 @@ import { Loader2, Building2, Plus, Trash2, GripVertical, ChevronUp, ChevronDown 
 import type { OrganizationLevel } from '@hr-platform/shared-types';
 import { DEFAULT_HIERARCHY_LEVELS } from '@hr-platform/shared-types';
 
-const organizationLevelSchema = z.object({
-  levelName: z.string().min(1, '레벨명을 입력하세요'),
-  levelOrder: z.number().min(1),
-  isRequired: z.boolean(),
-});
+function createHierarchySchema(t: TFunction) {
+  const organizationLevelSchema = z.object({
+    levelName: z.string().min(1, t('validation.levelNameRequired')),
+    levelOrder: z.number().min(1),
+    isRequired: z.boolean(),
+  });
 
-const hierarchySchema = z.object({
-  levels: z.array(organizationLevelSchema).min(1, '최소 1개 이상의 레벨이 필요합니다').max(5, '최대 5개까지 설정 가능합니다'),
-});
+  return z.object({
+    levels: z.array(organizationLevelSchema).min(1, t('validation.minOneLevelRequired')).max(5, t('validation.maxFiveLevels')),
+  });
+}
 
 interface HierarchyFormData {
   levels: OrganizationLevel[];
@@ -44,6 +49,10 @@ export function HierarchySettings({
   isLoading = false,
   readOnly = false,
 }: HierarchySettingsProps) {
+  const { t } = useTranslation('tenant');
+
+  const hierarchySchema = React.useMemo(() => createHierarchySchema(t), [t]);
+
   const methods = useForm<HierarchyFormData>({
     resolver: zodResolver(hierarchySchema),
     defaultValues: {
@@ -116,16 +125,16 @@ export function HierarchySettings({
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Building2 className="h-5 w-5" />
-                조직 계층 구조
+                {t('hierarchy.title')}
               </CardTitle>
               <CardDescription>
-                조직의 계층 레벨을 설정합니다. 최대 5단계까지 설정 가능합니다.
+                {t('hierarchy.description')}
               </CardDescription>
             </div>
             {!readOnly && fields.length < 5 && (
               <Button type="button" variant="outline" size="sm" onClick={handleAddLevel}>
                 <Plus className="mr-1 h-4 w-4" />
-                레벨 추가
+                {t('hierarchy.addLevel')}
               </Button>
             )}
           </CardHeader>
@@ -134,10 +143,10 @@ export function HierarchySettings({
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-10"></TableHead>
-                  <TableHead className="w-20">순서</TableHead>
-                  <TableHead>레벨명</TableHead>
-                  <TableHead className="text-center w-24">필수 여부</TableHead>
-                  <TableHead className="w-24 text-center">이동</TableHead>
+                  <TableHead className="w-20">{t('hierarchy.order')}</TableHead>
+                  <TableHead>{t('hierarchy.levelName')}</TableHead>
+                  <TableHead className="text-center w-24">{t('hierarchy.required')}</TableHead>
+                  <TableHead className="w-24 text-center">{t('hierarchy.move')}</TableHead>
                   <TableHead className="w-16"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -154,7 +163,7 @@ export function HierarchySettings({
                       <Input
                         {...register(`levels.${index}.levelName`)}
                         disabled={readOnly}
-                        placeholder="예: 본부, 부서, 팀"
+                        placeholder={t('hierarchy.levelNamePlaceholder')}
                         className="h-8"
                       />
                       {errors.levels?.[index]?.levelName && (
@@ -216,7 +225,7 @@ export function HierarchySettings({
             )}
 
             <div className="mt-4 p-4 bg-muted/50 rounded-lg">
-              <h4 className="font-medium mb-2">미리보기</h4>
+              <h4 className="font-medium mb-2">{t('hierarchy.preview')}</h4>
               <div className="flex flex-col gap-1">
                 {fields.map((_, index) => {
                   const levelName = watch(`levels.${index}.levelName`);
@@ -224,9 +233,9 @@ export function HierarchySettings({
                   return (
                     <div key={index} className="flex items-center gap-2 text-sm" style={{ paddingLeft: `${index * 16}px` }}>
                       <span className="text-muted-foreground">└</span>
-                      <span>{levelName || `레벨 ${index + 1}`}</span>
+                      <span>{levelName || t('hierarchy.defaultLevelName', { index: index + 1 })}</span>
                       {isRequired && (
-                        <span className="text-xs text-primary">(필수)</span>
+                        <span className="text-xs text-primary">{t('hierarchy.requiredBadge')}</span>
                       )}
                     </div>
                   );
@@ -242,10 +251,10 @@ export function HierarchySettings({
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  저장 중...
+                  {t('common.saving')}
                 </>
               ) : (
-                '저장'
+                t('common.save')
               )}
             </Button>
           </div>

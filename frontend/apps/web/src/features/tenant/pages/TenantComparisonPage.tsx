@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -106,12 +107,13 @@ function MetricComparisonCard({
   format?: 'number' | 'percentage' | 'hours';
   higherIsBetter?: boolean;
 }) {
+  const { t } = useTranslation('tenant');
   const formatValue = (value: number) => {
     switch (format) {
       case 'percentage':
         return `${value}%`;
       case 'hours':
-        return `${value}시간`;
+        return t('comparison.hoursUnit', { value });
       default:
         return value.toLocaleString();
     }
@@ -157,6 +159,7 @@ function MetricComparisonCard({
 }
 
 export default function TenantComparisonPage() {
+  const { t } = useTranslation('tenant');
   const [leftTenant, setLeftTenant] = useState<string>('tenant-1');
   const [rightTenant, setRightTenant] = useState<string>('tenant-2');
 
@@ -164,18 +167,18 @@ export default function TenantComparisonPage() {
   const rightMetrics = mockMetrics[rightTenant];
 
   const handleExport = () => {
-    toast({ title: '비교 리포트를 내보냅니다.' });
+    toast({ title: t('comparison.exportToast') });
   };
 
   return (
     <>
       <PageHeader
-        title="테넌트 비교 분석"
-        description="계열사별 주요 지표를 비교합니다."
+        title={t('comparison.title')}
+        description={t('comparison.description')}
         actions={
           <Button variant="outline" onClick={handleExport}>
             <Download className="h-4 w-4 mr-2" />
-            리포트 내보내기
+            {t('comparison.exportReport')}
           </Button>
         }
       />
@@ -234,7 +237,7 @@ export default function TenantComparisonPage() {
         {/* Comparison Metrics */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <MetricComparisonCard
-            title="총 직원 수"
+            title={t('comparison.totalEmployees')}
             icon={Users}
             leftValue={leftMetrics.employeeCount}
             rightValue={rightMetrics.employeeCount}
@@ -242,7 +245,7 @@ export default function TenantComparisonPage() {
             rightLabel={rightMetrics.tenantName}
           />
           <MetricComparisonCard
-            title="활성 사용자"
+            title={t('comparison.activeUsers')}
             icon={Users}
             leftValue={leftMetrics.activeUsers}
             rightValue={rightMetrics.activeUsers}
@@ -250,7 +253,7 @@ export default function TenantComparisonPage() {
             rightLabel={rightMetrics.tenantName}
           />
           <MetricComparisonCard
-            title="월간 결재 건수"
+            title={t('comparison.monthlyApprovals')}
             icon={FileText}
             leftValue={leftMetrics.monthlyApprovals}
             rightValue={rightMetrics.monthlyApprovals}
@@ -258,7 +261,7 @@ export default function TenantComparisonPage() {
             rightLabel={rightMetrics.tenantName}
           />
           <MetricComparisonCard
-            title="평균 결재 시간"
+            title={t('comparison.avgApprovalTime')}
             icon={Clock}
             leftValue={leftMetrics.avgApprovalTime}
             rightValue={rightMetrics.avgApprovalTime}
@@ -268,7 +271,7 @@ export default function TenantComparisonPage() {
             higherIsBetter={false}
           />
           <MetricComparisonCard
-            title="휴가 사용률"
+            title={t('comparison.leaveUsageRate')}
             icon={PieChart}
             leftValue={leftMetrics.leaveUsageRate}
             rightValue={rightMetrics.leaveUsageRate}
@@ -277,7 +280,7 @@ export default function TenantComparisonPage() {
             format="percentage"
           />
           <MetricComparisonCard
-            title="월간 초과근무"
+            title={t('comparison.monthlyOvertime')}
             icon={Clock}
             leftValue={leftMetrics.overtimeHours}
             rightValue={rightMetrics.overtimeHours}
@@ -301,7 +304,7 @@ export default function TenantComparisonPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span>활성 사용자 비율</span>
+                  <span>{t('comparison.activeUserRate')}</span>
                   <span className="font-medium">
                     {((leftMetrics.activeUsers / leftMetrics.employeeCount) * 100).toFixed(1)}%
                   </span>
@@ -312,22 +315,22 @@ export default function TenantComparisonPage() {
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span>휴가 사용률</span>
+                  <span>{t('comparison.leaveUsageRate')}</span>
                   <span className="font-medium">{leftMetrics.leaveUsageRate}%</span>
                 </div>
                 <Progress value={leftMetrics.leaveUsageRate} />
               </div>
               <div className="pt-4 border-t space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">직원당 월 결재 건수</span>
+                  <span className="text-muted-foreground">{t('comparison.approvalsPerEmployee')}</span>
                   <span className="font-medium">
-                    {(leftMetrics.monthlyApprovals / leftMetrics.employeeCount).toFixed(2)}건
+                    {t('comparison.approvalsUnit', { value: (leftMetrics.monthlyApprovals / leftMetrics.employeeCount).toFixed(2) })}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">직원당 월 초과근무</span>
+                  <span className="text-muted-foreground">{t('comparison.overtimePerEmployee')}</span>
                   <span className="font-medium">
-                    {(leftMetrics.overtimeHours / leftMetrics.employeeCount).toFixed(1)}시간
+                    {t('comparison.overtimeUnit', { value: (leftMetrics.overtimeHours / leftMetrics.employeeCount).toFixed(1) })}
                   </span>
                 </div>
               </div>
@@ -345,7 +348,7 @@ export default function TenantComparisonPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span>활성 사용자 비율</span>
+                  <span>{t('comparison.activeUserRate')}</span>
                   <span className="font-medium">
                     {((rightMetrics.activeUsers / rightMetrics.employeeCount) * 100).toFixed(1)}%
                   </span>
@@ -356,22 +359,22 @@ export default function TenantComparisonPage() {
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span>휴가 사용률</span>
+                  <span>{t('comparison.leaveUsageRate')}</span>
                   <span className="font-medium">{rightMetrics.leaveUsageRate}%</span>
                 </div>
                 <Progress value={rightMetrics.leaveUsageRate} />
               </div>
               <div className="pt-4 border-t space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">직원당 월 결재 건수</span>
+                  <span className="text-muted-foreground">{t('comparison.approvalsPerEmployee')}</span>
                   <span className="font-medium">
-                    {(rightMetrics.monthlyApprovals / rightMetrics.employeeCount).toFixed(2)}건
+                    {t('comparison.approvalsUnit', { value: (rightMetrics.monthlyApprovals / rightMetrics.employeeCount).toFixed(2) })}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">직원당 월 초과근무</span>
+                  <span className="text-muted-foreground">{t('comparison.overtimePerEmployee')}</span>
                   <span className="font-medium">
-                    {(rightMetrics.overtimeHours / rightMetrics.employeeCount).toFixed(1)}시간
+                    {t('comparison.overtimeUnit', { value: (rightMetrics.overtimeHours / rightMetrics.employeeCount).toFixed(1) })}
                   </span>
                 </div>
               </div>
@@ -382,36 +385,37 @@ export default function TenantComparisonPage() {
         {/* Summary Insights */}
         <Card>
           <CardHeader>
-            <CardTitle>분석 인사이트</CardTitle>
+            <CardTitle>{t('comparison.insights')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="p-4 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
                 <h4 className="font-medium text-green-800 dark:text-green-200 mb-2">
-                  {leftMetrics.avgApprovalTime < rightMetrics.avgApprovalTime
-                    ? leftMetrics.tenantName
-                    : rightMetrics.tenantName}{' '}
-                  강점
+                  {t('comparison.strength', {
+                    name: leftMetrics.avgApprovalTime < rightMetrics.avgApprovalTime
+                      ? leftMetrics.tenantName
+                      : rightMetrics.tenantName,
+                  })}
                 </h4>
                 <ul className="text-sm text-green-700 dark:text-green-300 space-y-1">
                   <li>
-                    • 평균 결재 시간이{' '}
-                    {Math.abs(leftMetrics.avgApprovalTime - rightMetrics.avgApprovalTime).toFixed(1)}
-                    시간 더 빠름
+                    • {t('comparison.fasterApproval', {
+                      hours: Math.abs(leftMetrics.avgApprovalTime - rightMetrics.avgApprovalTime).toFixed(1),
+                    })}
                   </li>
                   {leftMetrics.leaveUsageRate > rightMetrics.leaveUsageRate ? (
-                    <li>• 휴가 사용률이 더 높아 워라밸이 양호</li>
+                    <li>• {t('comparison.betterWorkLifeBalance')}</li>
                   ) : (
-                    <li>• 초과근무 시간이 더 적음</li>
+                    <li>• {t('comparison.lessOvertime')}</li>
                   )}
                 </ul>
               </div>
               <div className="p-4 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800">
-                <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-2">개선 권장사항</h4>
+                <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-2">{t('comparison.improvementTitle')}</h4>
                 <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
-                  <li>• 결재 프로세스 간소화 검토</li>
-                  <li>• 휴가 사용 권장 정책 도입</li>
-                  <li>• 초과근무 모니터링 강화</li>
+                  <li>• {t('comparison.improvement1')}</li>
+                  <li>• {t('comparison.improvement2')}</li>
+                  <li>• {t('comparison.improvement3')}</li>
                 </ul>
               </div>
             </div>

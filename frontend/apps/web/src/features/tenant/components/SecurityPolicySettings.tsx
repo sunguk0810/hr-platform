@@ -1,6 +1,9 @@
+import React from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,14 +14,15 @@ import { FormRow } from '@/components/common/Form';
 import { Loader2, Shield } from 'lucide-react';
 import type { SecurityPolicy } from '@hr-platform/shared-types';
 
-const securityPolicySchema = z.object({
-  sessionTimeoutMinutes: z.number().min(5, '최소 5분').max(480, '최대 8시간'),
-  maxLoginAttempts: z.number().min(3, '최소 3회').max(10, '최대 10회'),
-  lockoutDurationMinutes: z.number().min(5, '최소 5분').max(1440, '최대 24시간'),
-  mfaEnabled: z.boolean(),
-  ipWhitelistEnabled: z.boolean(),
-  allowedIps: z.array(z.string()).optional(),
-});
+const createSecurityPolicySchema = (t: TFunction) =>
+  z.object({
+    sessionTimeoutMinutes: z.number().min(5, t('validation.min5minutes')).max(480, t('validation.max8hours')),
+    maxLoginAttempts: z.number().min(3, t('validation.min3attempts')).max(10, t('validation.max10attempts')),
+    lockoutDurationMinutes: z.number().min(5, t('validation.min5minutes')).max(1440, t('validation.max24hours')),
+    mfaEnabled: z.boolean(),
+    ipWhitelistEnabled: z.boolean(),
+    allowedIps: z.array(z.string()).optional(),
+  });
 
 export interface SecurityPolicySettingsProps {
   initialData?: Partial<SecurityPolicy>;
@@ -42,6 +46,9 @@ export function SecurityPolicySettings({
   isLoading = false,
   readOnly = false,
 }: SecurityPolicySettingsProps) {
+  const { t } = useTranslation('tenant');
+  const securityPolicySchema = React.useMemo(() => createSecurityPolicySchema(t), [t]);
+
   const methods = useForm<SecurityPolicy>({
     resolver: zodResolver(securityPolicySchema),
     defaultValues: { ...defaultSecurityPolicy, ...initialData },
@@ -66,14 +73,14 @@ export function SecurityPolicySettings({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
-              보안 정책
+              {t('securityPolicy.title')}
             </CardTitle>
-            <CardDescription>세션 및 로그인 보안 설정</CardDescription>
+            <CardDescription>{t('securityPolicy.description')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <FormRow cols={3}>
               <div className="space-y-2">
-                <Label>세션 타임아웃 (분)</Label>
+                <Label>{t('securityPolicy.sessionTimeout')}</Label>
                 <Input
                   type="number"
                   {...register('sessionTimeoutMinutes', { valueAsNumber: true })}
@@ -81,10 +88,10 @@ export function SecurityPolicySettings({
                   min={5}
                   max={480}
                 />
-                <p className="text-xs text-muted-foreground">5~480분</p>
+                <p className="text-xs text-muted-foreground">{t('securityPolicy.sessionTimeoutHint')}</p>
               </div>
               <div className="space-y-2">
-                <Label>최대 로그인 시도</Label>
+                <Label>{t('securityPolicy.maxLoginAttempts')}</Label>
                 <Input
                   type="number"
                   {...register('maxLoginAttempts', { valueAsNumber: true })}
@@ -92,10 +99,10 @@ export function SecurityPolicySettings({
                   min={3}
                   max={10}
                 />
-                <p className="text-xs text-muted-foreground">3~10회</p>
+                <p className="text-xs text-muted-foreground">{t('securityPolicy.maxLoginAttemptsHint')}</p>
               </div>
               <div className="space-y-2">
-                <Label>계정 잠금 시간 (분)</Label>
+                <Label>{t('securityPolicy.lockoutDuration')}</Label>
                 <Input
                   type="number"
                   {...register('lockoutDurationMinutes', { valueAsNumber: true })}
@@ -103,16 +110,16 @@ export function SecurityPolicySettings({
                   min={5}
                   max={1440}
                 />
-                <p className="text-xs text-muted-foreground">5~1440분</p>
+                <p className="text-xs text-muted-foreground">{t('securityPolicy.lockoutDurationHint')}</p>
               </div>
             </FormRow>
 
             <div className="space-y-3 pt-2">
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div>
-                  <Label>2단계 인증 (MFA)</Label>
+                  <Label>{t('securityPolicy.mfa')}</Label>
                   <p className="text-sm text-muted-foreground">
-                    OTP 또는 인증 앱을 통한 2단계 인증 필수
+                    {t('securityPolicy.mfaDescription')}
                   </p>
                 </div>
                 <Switch
@@ -124,9 +131,9 @@ export function SecurityPolicySettings({
 
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div>
-                  <Label>IP 화이트리스트</Label>
+                  <Label>{t('securityPolicy.ipWhitelist')}</Label>
                   <p className="text-sm text-muted-foreground">
-                    허용된 IP 주소에서만 접속 가능
+                    {t('securityPolicy.ipWhitelistDescription')}
                   </p>
                 </div>
                 <Switch
@@ -138,16 +145,16 @@ export function SecurityPolicySettings({
 
               {ipWhitelistEnabled && (
                 <div className="space-y-2 pl-4">
-                  <Label>허용 IP 목록</Label>
+                  <Label>{t('securityPolicy.allowedIps')}</Label>
                   <Textarea
-                    placeholder="IP 주소 또는 CIDR (한 줄에 하나씩)&#10;예: 192.168.1.0/24&#10;    10.0.0.1"
+                    placeholder={t('securityPolicy.allowedIpsPlaceholder')}
                     value={watch('allowedIps')?.join('\n') || ''}
                     onChange={(e) => handleIpChange(e.target.value)}
                     disabled={readOnly}
                     rows={4}
                   />
                   <p className="text-xs text-muted-foreground">
-                    한 줄에 하나의 IP 주소 또는 CIDR 블록 입력
+                    {t('securityPolicy.allowedIpsHint')}
                   </p>
                 </div>
               )}
@@ -161,10 +168,10 @@ export function SecurityPolicySettings({
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  저장 중...
+                  {t('common.saving')}
                 </>
               ) : (
-                '저장'
+                t('common.save')
               )}
             </Button>
           </div>

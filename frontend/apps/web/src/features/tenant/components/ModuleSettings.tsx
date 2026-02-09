@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,7 @@ export function ModuleSettings({
   isLoading = false,
   readOnly = false,
 }: ModuleSettingsProps) {
+  const { t } = useTranslation('tenant');
   const [selectedModules, setSelectedModules] = React.useState<string[]>(enabledModules);
   const [isSaving, setIsSaving] = React.useState(false);
 
@@ -72,27 +74,27 @@ export function ModuleSettings({
         <div>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            모듈 설정
+            {t('moduleSettings.title')}
           </CardTitle>
           <CardDescription>
-            테넌트에서 사용할 모듈을 선택합니다.
+            {t('moduleSettings.description')}
           </CardDescription>
         </div>
         {!readOnly && hasChanges && (
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={handleReset}>
-              되돌리기
+              {t('moduleSettings.revert')}
             </Button>
             <Button size="sm" onClick={handleSave} disabled={isSaving}>
               {isSaving ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  저장 중...
+                  {t('common.saving')}
                 </>
               ) : (
                 <>
                   <Check className="mr-2 h-4 w-4" />
-                  저장
+                  {t('common.save')}
                 </>
               )}
             </Button>
@@ -117,17 +119,17 @@ export function ModuleSettings({
                     <Label className="font-medium">{module.name}</Label>
                     {isCore && (
                       <Badge variant="secondary" className="text-xs">
-                        필수
+                        {t('moduleSettings.required')}
                       </Badge>
                     )}
                     {isEnabled && !isCore && (
                       <Badge variant="outline" className="text-xs text-green-600">
-                        활성
+                        {t('moduleSettings.active')}
                       </Badge>
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    {getModuleDescription(module.code)}
+                    {t(`moduleSettings.modules.${module.code}`)}
                   </p>
                 </div>
                 <Switch
@@ -142,24 +144,10 @@ export function ModuleSettings({
 
         <div className="mt-6 p-4 bg-muted/50 rounded-lg">
           <p className="text-sm text-muted-foreground">
-            <strong>참고:</strong> 직원 관리와 조직 관리는 기본 모듈로 항상 활성화되어 있습니다.
-            모듈을 비활성화하면 해당 기능에 대한 접근이 제한됩니다.
+            <strong>{t('common.notePrefix')}</strong> {t('moduleSettings.note')}
           </p>
         </div>
       </CardContent>
     </Card>
   );
-}
-
-function getModuleDescription(code: string): string {
-  const descriptions: Record<string, string> = {
-    EMPLOYEE: '직원 정보 등록 및 관리, 인사 발령 처리',
-    ORGANIZATION: '부서/팀 구조 관리, 직위/직급 관리',
-    ATTENDANCE: '출퇴근 기록, 근태 현황 조회',
-    LEAVE: '휴가 신청 및 승인, 휴가 잔여일수 관리',
-    APPROVAL: '전자결재 문서 작성 및 결재 처리',
-    MDM: '공통코드, 기준정보 관리',
-    NOTIFICATION: '알림 발송 및 이력 관리',
-  };
-  return descriptions[code] || '';
 }

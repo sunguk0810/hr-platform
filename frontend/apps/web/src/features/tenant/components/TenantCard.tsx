@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { TenantStatusBadge } from '@/components/common/StatusBadge';
@@ -14,6 +15,7 @@ export interface TenantCardProps {
 }
 
 export function TenantCard({ tenant, onClick, onViewDetails, className }: TenantCardProps) {
+  const { t } = useTranslation('tenant');
   const detail = tenant as TenantDetail;
   const hasBranding = 'branding' in tenant;
 
@@ -59,12 +61,12 @@ export function TenantCard({ tenant, onClick, onViewDetails, className }: Tenant
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div className="flex items-center gap-2 text-muted-foreground">
             <Users className="h-4 w-4" />
-            <span>{tenant.employeeCount}명</span>
+            <span>{t('card.employeeCount', { count: tenant.employeeCount })}</span>
           </div>
           {'departmentCount' in tenant && (
             <div className="flex items-center gap-2 text-muted-foreground">
               <Briefcase className="h-4 w-4" />
-              <span>{(tenant as TenantDetail).departmentCount}개 부서</span>
+              <span>{t('card.departmentCount', { count: (tenant as TenantDetail).departmentCount })}</span>
             </div>
           )}
         </div>
@@ -85,7 +87,7 @@ export function TenantCard({ tenant, onClick, onViewDetails, className }: Tenant
               onViewDetails();
             }}
           >
-            상세 보기
+            {t('card.viewDetails')}
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </CardFooter>

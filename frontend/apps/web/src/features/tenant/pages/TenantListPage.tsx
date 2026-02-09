@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -53,6 +54,7 @@ function useDebounce<T>(value: T, delay: number): T {
 type ViewMode = 'table' | 'tree';
 
 export default function TenantListPage() {
+  const { t } = useTranslation('tenant');
   const navigate = useNavigate();
   const [searchInput, setSearchInput] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('table');
@@ -142,12 +144,12 @@ export default function TenantListPage() {
   return (
     <>
       <PageHeader
-        title="테넌트 관리"
-        description="테넌트(회사)를 조회하고 관리합니다."
+        title={t('title')}
+        description={t('description')}
         actions={
           <Button onClick={handleCreateOpen}>
             <Plus className="mr-2 h-4 w-4" />
-            테넌트 추가
+            {t('addTenant')}
           </Button>
         }
       />
@@ -158,7 +160,7 @@ export default function TenantListPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="테넌트코드, 이름, 관리자 이메일로 검색..."
+                placeholder={t('searchPlaceholder')}
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 className="pl-9"
@@ -169,11 +171,11 @@ export default function TenantListPage() {
               onChange={(e) => setStatus(e.target.value as TenantStatus | '')}
               className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
             >
-              <option value="">전체 상태</option>
-              <option value="ACTIVE">활성</option>
-              <option value="INACTIVE">비활성</option>
-              <option value="SUSPENDED">정지</option>
-              <option value="PENDING">대기</option>
+              <option value="">{t('allStatus')}</option>
+              <option value="ACTIVE">{t('statusActive')}</option>
+              <option value="INACTIVE">{t('statusInactive')}</option>
+              <option value="SUSPENDED">{t('statusSuspended')}</option>
+              <option value="PENDING">{t('statusPending')}</option>
             </select>
 
             {/* 뷰 모드 전환 */}
@@ -183,10 +185,10 @@ export default function TenantListPage() {
               onValueChange={(value) => value && setViewMode(value as ViewMode)}
               className="border rounded-md"
             >
-              <ToggleGroupItem value="table" aria-label="테이블 뷰">
+              <ToggleGroupItem value="table" aria-label={t('tableView')}>
                 <List className="h-4 w-4" />
               </ToggleGroupItem>
-              <ToggleGroupItem value="tree" aria-label="트리 뷰">
+              <ToggleGroupItem value="tree" aria-label={t('treeView')}>
                 <Network className="h-4 w-4" />
               </ToggleGroupItem>
             </ToggleGroup>
@@ -205,10 +207,10 @@ export default function TenantListPage() {
             ) : treeNodes.length === 0 ? (
               <EmptyState
                 icon={Building}
-                title="등록된 테넌트가 없습니다"
-                description="새 테넌트를 추가해주세요."
+                title={t('noTenantsTitle')}
+                description={t('noTenantsDescription')}
                 action={{
-                  label: '테넌트 추가',
+                  label: t('addTenant'),
                   onClick: handleCreateOpen,
                 }}
               />
@@ -228,22 +230,22 @@ export default function TenantListPage() {
             ) : isError ? (
               <EmptyState
                 icon={Building}
-                title="데이터를 불러올 수 없습니다"
-                description="잠시 후 다시 시도해주세요."
+                title={t('dataLoadErrorTitle')}
+                description={t('dataLoadErrorDescription')}
               />
             ) : tenants.length === 0 ? (
               <EmptyState
                 icon={Building}
-                title="등록된 테넌트가 없습니다"
+                title={t('noTenantsTitle')}
                 description={
                   searchState.keyword || searchState.status
-                    ? '검색 조건에 맞는 테넌트가 없습니다.'
-                    : '새 테넌트를 추가해주세요.'
+                    ? t('noTenantsSearchDescription')
+                    : t('noTenantsDescription')
                 }
                 action={
                   !searchState.keyword && !searchState.status
                     ? {
-                        label: '테넌트 추가',
+                        label: t('addTenant'),
                         onClick: handleCreateOpen,
                       }
                     : undefined
@@ -256,28 +258,28 @@ export default function TenantListPage() {
                     <thead>
                       <tr className="border-b bg-muted/50">
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          유형
+                          {t('table.type')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          테넌트코드
+                          {t('table.tenantCode')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          테넌트명
+                          {t('table.tenantName')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          소속 그룹
+                          {t('table.parentGroup')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          관리자
+                          {t('table.admin')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          직원 수
+                          {t('table.employeeCount')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          상태
+                          {t('table.status')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          등록일
+                          {t('table.registeredDate')}
                         </th>
                       </tr>
                     </thead>
@@ -302,7 +304,7 @@ export default function TenantListPage() {
                           <td className="px-4 py-3 text-sm">
                             <div className="flex items-center gap-1">
                               <Users className="h-4 w-4 text-muted-foreground" />
-                              {tenant.employeeCount}명
+                              {t('tree.employeeCount', { count: tenant.employeeCount })}
                             </div>
                           </td>
                           <td className="px-4 py-3">
@@ -322,7 +324,7 @@ export default function TenantListPage() {
                   onPageChange={setPage}
                 />
                 <div className="px-4 pb-3 text-sm text-muted-foreground">
-                  총 {totalElements}개
+                  {t('table.totalCount', { count: totalElements })}
                 </div>
               </>
             )}
@@ -334,9 +336,9 @@ export default function TenantListPage() {
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>테넌트 추가</DialogTitle>
+            <DialogTitle>{t('form.createTitle')}</DialogTitle>
             <DialogDescription>
-              새로운 테넌트(회사)를 등록합니다.
+              {t('form.createDescription')}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -345,17 +347,17 @@ export default function TenantListPage() {
               <div className="grid gap-2">
                 <Label className="flex items-center gap-2">
                   <Building2 className="h-4 w-4" />
-                  소속 그룹사
+                  {t('form.parentGroup')}
                 </Label>
                 <Select
                   value={createParentId || '_none'}
                   onValueChange={(value) => setCreateParentId(value === '_none' ? '' : value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="그룹사 선택" />
+                    <SelectValue placeholder={t('form.parentGroup')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="_none">독립 테넌트 (그룹사 없음)</SelectItem>
+                    <SelectItem value="_none">{t('form.independentTenant')}</SelectItem>
                     {groupTenants.map((group) => (
                       <SelectItem key={group.id} value={group.id}>
                         {group.name} ({group.code})
@@ -365,15 +367,15 @@ export default function TenantListPage() {
                 </Select>
                 <p className="text-xs text-muted-foreground">
                   {createParentId
-                    ? '계열사로 등록됩니다.'
-                    : '독립 테넌트(그룹사)로 등록됩니다.'}
+                    ? t('form.parentGroupHintSubsidiaryShort')
+                    : t('form.parentGroupHintIndependent')}
                 </p>
               </div>
             )}
 
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="code">테넌트코드 *</Label>
+                <Label htmlFor="code">{t('form.tenantCodeLabel')}</Label>
                 <Input
                   id="code"
                   value={formData.code}
@@ -382,7 +384,7 @@ export default function TenantListPage() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="name">테넌트명 *</Label>
+                <Label htmlFor="name">{t('form.tenantName')}</Label>
                 <Input
                   id="name"
                   value={formData.name}
@@ -392,7 +394,7 @@ export default function TenantListPage() {
               </div>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="nameEn">영문명</Label>
+              <Label htmlFor="nameEn">{t('form.englishName')}</Label>
               <Input
                 id="nameEn"
                 value={formData.nameEn}
@@ -401,17 +403,17 @@ export default function TenantListPage() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="description">설명</Label>
+              <Label htmlFor="description">{t('form.descriptionLabel')}</Label>
               <Input
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="테넌트에 대한 간단한 설명"
+                placeholder={t('form.descriptionPlaceholderShort')}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="adminName">관리자명 *</Label>
+                <Label htmlFor="adminName">{t('form.adminNameLabel')}</Label>
                 <Input
                   id="adminName"
                   value={formData.adminName}
@@ -420,7 +422,7 @@ export default function TenantListPage() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="adminEmail">관리자 이메일 *</Label>
+                <Label htmlFor="adminEmail">{t('form.adminEmailLabel')}</Label>
                 <Input
                   id="adminEmail"
                   type="email"
@@ -433,7 +435,7 @@ export default function TenantListPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-              취소
+              {t('common.cancel')}
             </Button>
             <Button
               onClick={handleCreate}
@@ -445,7 +447,7 @@ export default function TenantListPage() {
                 createMutation.isPending
               }
             >
-              {createMutation.isPending ? '생성 중...' : '생성'}
+              {createMutation.isPending ? t('common.creating') : t('common.create')}
             </Button>
           </DialogFooter>
         </DialogContent>

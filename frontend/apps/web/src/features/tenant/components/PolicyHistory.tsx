@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -66,9 +67,10 @@ interface DetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   item: PolicyChangeHistory | null;
+  t: (key: string, options?: Record<string, unknown>) => string;
 }
 
-function DetailDialog({ open, onOpenChange, item }: DetailDialogProps) {
+function DetailDialog({ open, onOpenChange, item, t }: DetailDialogProps) {
   if (!item) return null;
 
   return (
@@ -77,10 +79,10 @@ function DetailDialog({ open, onOpenChange, item }: DetailDialogProps) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <History className="h-5 w-5" />
-            정책 변경 상세
+            {t('policyHistory.detailTitle')}
           </DialogTitle>
           <DialogDescription>
-            {format(new Date(item.changedAt), 'yyyy년 M월 d일 HH:mm', { locale: ko })}에 변경됨
+            {t('policyHistory.changedAt', { date: format(new Date(item.changedAt), 'yyyy년 M월 d일 HH:mm', { locale: ko }) })}
           </DialogDescription>
         </DialogHeader>
 
@@ -96,7 +98,7 @@ function DetailDialog({ open, onOpenChange, item }: DetailDialogProps) {
             <div className="flex items-start gap-2">
               <User className="h-4 w-4 mt-0.5 text-muted-foreground" />
               <div>
-                <span className="font-medium">변경자:</span>{' '}
+                <span className="font-medium">{t('policyHistory.changedBy')}</span>{' '}
                 <span>{item.changedByName}</span>
               </div>
             </div>
@@ -105,7 +107,7 @@ function DetailDialog({ open, onOpenChange, item }: DetailDialogProps) {
               <div className="flex items-start gap-2">
                 <FileText className="h-4 w-4 mt-0.5 text-muted-foreground" />
                 <div>
-                  <span className="font-medium">변경 사유:</span>{' '}
+                  <span className="font-medium">{t('policyHistory.changeReason')}</span>{' '}
                   <span>{item.reason}</span>
                 </div>
               </div>
@@ -115,7 +117,7 @@ function DetailDialog({ open, onOpenChange, item }: DetailDialogProps) {
               <div className="flex items-start gap-2">
                 <ArrowDownLeft className="h-4 w-4 mt-0.5 text-muted-foreground" />
                 <div>
-                  <span className="font-medium">상속 원본:</span>{' '}
+                  <span className="font-medium">{t('policyHistory.inheritSource')}</span>{' '}
                   <span>{item.sourceName}</span>
                 </div>
               </div>
@@ -124,7 +126,7 @@ function DetailDialog({ open, onOpenChange, item }: DetailDialogProps) {
 
           {item.beforeValue && (
             <div className="space-y-2">
-              <h4 className="text-sm font-medium">변경 전</h4>
+              <h4 className="text-sm font-medium">{t('policyHistory.beforeChange')}</h4>
               <pre className="p-3 bg-muted rounded-lg text-xs overflow-auto max-h-40">
                 {JSON.stringify(item.beforeValue, null, 2)}
               </pre>
@@ -132,7 +134,7 @@ function DetailDialog({ open, onOpenChange, item }: DetailDialogProps) {
           )}
 
           <div className="space-y-2">
-            <h4 className="text-sm font-medium">변경 후</h4>
+            <h4 className="text-sm font-medium">{t('policyHistory.afterChange')}</h4>
             <pre className="p-3 bg-muted rounded-lg text-xs overflow-auto max-h-40">
               {JSON.stringify(item.afterValue, null, 2)}
             </pre>
@@ -149,6 +151,7 @@ export function PolicyHistory({
   onFilterChange,
   selectedPolicyType = '',
 }: PolicyHistoryProps) {
+  const { t } = useTranslation('tenant');
   const [selectedItem, setSelectedItem] = React.useState<PolicyChangeHistory | null>(null);
 
   if (isLoading) {
@@ -166,10 +169,10 @@ export function PolicyHistory({
           <div>
             <CardTitle className="flex items-center gap-2">
               <History className="h-5 w-5" />
-              정책 변경 이력
+              {t('policyHistory.title')}
             </CardTitle>
             <CardDescription>
-              정책 설정의 변경 내역을 확인합니다.
+              {t('policyHistory.description')}
             </CardDescription>
           </div>
           {onFilterChange && (
@@ -178,10 +181,10 @@ export function PolicyHistory({
               onValueChange={(value) => onFilterChange(value === '__all__' ? '' : value as PolicyType)}
             >
               <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="전체 정책" />
+                <SelectValue placeholder={t('policyHistory.allPolicies')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="__all__">전체 정책</SelectItem>
+                <SelectItem value="__all__">{t('policyHistory.allPolicies')}</SelectItem>
                 {Object.entries(POLICY_TYPE_LABELS).map(([value, label]) => (
                   <SelectItem key={value} value={value}>
                     {label}
@@ -195,7 +198,7 @@ export function PolicyHistory({
           {history.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>변경 이력이 없습니다.</p>
+              <p>{t('policyHistory.noHistory')}</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -218,7 +221,7 @@ export function PolicyHistory({
                       </Badge>
                       {item.sourceName && (
                         <span className="text-xs text-muted-foreground">
-                          ({item.sourceName}에서 상속)
+                          ({t('policyHistory.inheritedFrom', { name: item.sourceName })})
                         </span>
                       )}
                     </div>
@@ -239,7 +242,7 @@ export function PolicyHistory({
                     )}
                   </div>
                   <Button variant="ghost" size="sm" className="flex-shrink-0">
-                    상세
+                    {t('policyHistory.detail')}
                     <ArrowRight className="ml-1 h-4 w-4" />
                   </Button>
                 </div>
@@ -253,6 +256,7 @@ export function PolicyHistory({
         open={!!selectedItem}
         onOpenChange={(open) => !open && setSelectedItem(null)}
         item={selectedItem}
+        t={t}
       />
     </>
   );

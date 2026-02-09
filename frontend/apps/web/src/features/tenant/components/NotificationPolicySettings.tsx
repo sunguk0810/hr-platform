@@ -1,6 +1,7 @@
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,6 +42,8 @@ export function NotificationPolicySettings({
   isLoading = false,
   readOnly = false,
 }: NotificationPolicySettingsProps) {
+  const { t } = useTranslation('tenant');
+
   const methods = useForm<NotificationPolicy>({
     resolver: zodResolver(notificationPolicySchema),
     defaultValues: { ...defaultNotificationPolicy, ...initialData },
@@ -60,19 +63,19 @@ export function NotificationPolicySettings({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Bell className="h-5 w-5" />
-              알림 정책
+              {t('notificationPolicy.title')}
             </CardTitle>
-            <CardDescription>알림 채널 및 방해 금지 설정</CardDescription>
+            <CardDescription>{t('notificationPolicy.description')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-3">
-              <Label className="text-base">알림 채널</Label>
+              <Label className="text-base">{t('notificationPolicy.channels')}</Label>
 
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div>
-                  <Label>이메일 알림</Label>
+                  <Label>{t('notificationPolicy.emailNotification')}</Label>
                   <p className="text-sm text-muted-foreground">
-                    이메일로 알림 발송
+                    {t('notificationPolicy.emailNotificationDescription')}
                   </p>
                 </div>
                 <Switch
@@ -84,9 +87,9 @@ export function NotificationPolicySettings({
 
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div>
-                  <Label>푸시 알림</Label>
+                  <Label>{t('notificationPolicy.pushNotification')}</Label>
                   <p className="text-sm text-muted-foreground">
-                    브라우저 및 앱 푸시 알림
+                    {t('notificationPolicy.pushNotificationDescription')}
                   </p>
                 </div>
                 <Switch
@@ -98,9 +101,9 @@ export function NotificationPolicySettings({
 
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div>
-                  <Label>SMS 알림</Label>
+                  <Label>{t('notificationPolicy.smsNotification')}</Label>
                   <p className="text-sm text-muted-foreground">
-                    문자 메시지 알림 (추가 비용 발생)
+                    {t('notificationPolicy.smsNotificationDescription')}
                   </p>
                 </div>
                 <Switch
@@ -112,13 +115,13 @@ export function NotificationPolicySettings({
             </div>
 
             <div className="space-y-3 pt-2">
-              <Label className="text-base">방해 금지</Label>
+              <Label className="text-base">{t('notificationPolicy.doNotDisturb')}</Label>
 
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div>
-                  <Label>방해 금지 모드</Label>
+                  <Label>{t('notificationPolicy.doNotDisturbMode')}</Label>
                   <p className="text-sm text-muted-foreground">
-                    지정된 시간에 알림 발송 차단
+                    {t('notificationPolicy.doNotDisturbDescription')}
                   </p>
                 </div>
                 <Switch
@@ -131,7 +134,7 @@ export function NotificationPolicySettings({
               {quietHoursEnabled && (
                 <FormRow cols={2} className="pl-4">
                   <div className="space-y-2">
-                    <Label>시작 시간</Label>
+                    <Label>{t('notificationPolicy.startTime')}</Label>
                     <Input
                       type="time"
                       {...register('quietHoursStart')}
@@ -139,7 +142,7 @@ export function NotificationPolicySettings({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>종료 시간</Label>
+                    <Label>{t('notificationPolicy.endTime')}</Label>
                     <Input
                       type="time"
                       {...register('quietHoursEnd')}
@@ -158,10 +161,10 @@ export function NotificationPolicySettings({
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  저장 중...
+                  {t('common.saving')}
                 </>
               ) : (
-                '저장'
+                t('common.save')
               )}
             </Button>
           </div>

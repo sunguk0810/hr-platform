@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Check, ChevronsUpDown, Building2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { OptimizedImage } from '@/components/common/OptimizedImage';
@@ -17,6 +18,7 @@ export interface TenantSelectorProps {
 }
 
 export function TenantSelector({ className }: TenantSelectorProps) {
+  const { t } = useTranslation('tenant');
   const [open, setOpen] = React.useState(false);
   const { currentTenant, availableTenants, setCurrentTenant } = useTenantStore();
   const { hasRole } = useAuthStore();
@@ -55,7 +57,7 @@ export function TenantSelector({ className }: TenantSelectorProps) {
           <div className="flex items-center gap-2 min-w-0">
             <Building2 className="h-4 w-4 shrink-0" />
             <span className="truncate">
-              {currentTenant?.name || '테넌트 선택'}
+              {currentTenant?.name || t('selector.selectTenant')}
             </span>
           </div>
           <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />

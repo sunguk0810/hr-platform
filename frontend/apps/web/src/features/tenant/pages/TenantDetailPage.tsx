@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -82,6 +83,7 @@ import type {
 import { TENANT_STATUS_LABELS } from '@hr-platform/shared-types';
 
 export default function TenantDetailPage() {
+  const { t } = useTranslation('tenant');
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
@@ -276,10 +278,10 @@ export default function TenantDetailPage() {
   if (isError || !tenant) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <p className="text-muted-foreground">테넌트를 찾을 수 없습니다.</p>
+        <p className="text-muted-foreground">{t('detail.tenantNotFound')}</p>
         <Button variant="outline" onClick={() => navigate('/admin/tenants')}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          목록으로
+          {t('detail.backToList')}
         </Button>
       </div>
     );
@@ -289,19 +291,19 @@ export default function TenantDetailPage() {
     <>
       <PageHeader
         title={tenant.name}
-        description={`테넌트 코드: ${tenant.code}${tenant.parentName ? ` | 소속: ${tenant.parentName}` : ''}`}
+        description={`${t('detail.tenantCodePrefix', { code: tenant.code })}${tenant.parentName ? ` | ${t('detail.belongsTo', { name: tenant.parentName })}` : ''}`}
         actions={
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => navigate('/admin/tenants')}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              목록으로
+              {t('detail.backToList')}
             </Button>
             <Button variant="outline" onClick={handleStatusOpen}>
-              상태 변경
+              {t('detail.changeStatus')}
             </Button>
             <Button onClick={handleEditOpen}>
               <Pencil className="mr-2 h-4 w-4" />
-              수정
+              {t('detail.edit')}
             </Button>
           </div>
         }
@@ -316,7 +318,7 @@ export default function TenantDetailPage() {
                 <Building2 className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">상태</p>
+                <p className="text-sm text-muted-foreground">{t('detail.summary.status')}</p>
                 <TenantStatusBadge status={tenant.status} />
               </div>
             </div>
@@ -329,8 +331,8 @@ export default function TenantDetailPage() {
                 <Users className="h-5 w-5 text-blue-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">직원 수</p>
-                <p className="text-xl font-bold">{tenant.employeeCount}명</p>
+                <p className="text-sm text-muted-foreground">{t('detail.summary.employeeCount')}</p>
+                <p className="text-xl font-bold">{t('detail.summary.countSuffix', { count: tenant.employeeCount })}</p>
               </div>
             </div>
           </CardContent>
@@ -342,8 +344,8 @@ export default function TenantDetailPage() {
                 <Building2 className="h-5 w-5 text-green-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">부서 수</p>
-                <p className="text-xl font-bold">{tenant.departmentCount}개</p>
+                <p className="text-sm text-muted-foreground">{t('detail.summary.departmentCount')}</p>
+                <p className="text-xl font-bold">{t('detail.summary.departmentSuffix', { count: tenant.departmentCount })}</p>
               </div>
             </div>
           </CardContent>
@@ -355,8 +357,8 @@ export default function TenantDetailPage() {
                 <Shield className="h-5 w-5 text-purple-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">최대 인원</p>
-                <p className="text-xl font-bold">{tenant.policies.maxEmployees}명</p>
+                <p className="text-sm text-muted-foreground">{t('detail.summary.maxEmployees')}</p>
+                <p className="text-xl font-bold">{t('detail.summary.countSuffix', { count: tenant.policies.maxEmployees })}</p>
               </div>
             </div>
           </CardContent>
@@ -365,49 +367,49 @@ export default function TenantDetailPage() {
 
       <Tabs defaultValue="info">
         <TabsList className="mb-4">
-          <TabsTrigger value="info">기본 정보</TabsTrigger>
-          <TabsTrigger value="hierarchy">조직 계층</TabsTrigger>
-          <TabsTrigger value="policies">정책 설정</TabsTrigger>
-          <TabsTrigger value="features">기능 관리</TabsTrigger>
-          <TabsTrigger value="branding">브랜딩</TabsTrigger>
-          <TabsTrigger value="modules">모듈 설정</TabsTrigger>
+          <TabsTrigger value="info">{t('detail.tabs.info')}</TabsTrigger>
+          <TabsTrigger value="hierarchy">{t('detail.tabs.hierarchy')}</TabsTrigger>
+          <TabsTrigger value="policies">{t('detail.tabs.policies')}</TabsTrigger>
+          <TabsTrigger value="features">{t('detail.tabs.features')}</TabsTrigger>
+          <TabsTrigger value="branding">{t('detail.tabs.branding')}</TabsTrigger>
+          <TabsTrigger value="modules">{t('detail.tabs.modules')}</TabsTrigger>
           <TabsTrigger value="history">
             <History className="mr-1 h-4 w-4" />
-            변경 이력
+            {t('detail.tabs.history')}
           </TabsTrigger>
-          {isGroup && <TabsTrigger value="subsidiaries">계열사</TabsTrigger>}
+          {isGroup && <TabsTrigger value="subsidiaries">{t('detail.tabs.subsidiaries')}</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="info" className="mt-6">
           <div className="grid gap-6 lg:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>기본 정보</CardTitle>
+                <CardTitle>{t('detail.basicInfo')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-1">
-                  <Label className="text-muted-foreground">테넌트코드</Label>
+                  <Label className="text-muted-foreground">{t('detail.tenantCode')}</Label>
                   <p className="font-mono">{tenant.code}</p>
                 </div>
                 <div className="grid gap-1">
-                  <Label className="text-muted-foreground">테넌트명</Label>
+                  <Label className="text-muted-foreground">{t('detail.tenantName')}</Label>
                   <p>{tenant.name}</p>
                 </div>
                 <div className="grid gap-1">
-                  <Label className="text-muted-foreground">영문명</Label>
+                  <Label className="text-muted-foreground">{t('detail.englishName')}</Label>
                   <p>{tenant.nameEn || '-'}</p>
                 </div>
                 <div className="grid gap-1">
-                  <Label className="text-muted-foreground">사업자등록번호</Label>
+                  <Label className="text-muted-foreground">{t('detail.businessNumber')}</Label>
                   <p className="font-mono">{tenant.businessNumber || '-'}</p>
                 </div>
                 <div className="grid gap-1">
-                  <Label className="text-muted-foreground">설명</Label>
+                  <Label className="text-muted-foreground">{t('detail.descriptionLabel')}</Label>
                   <p>{tenant.description || '-'}</p>
                 </div>
                 {tenant.parentName && (
                   <div className="grid gap-1">
-                    <Label className="text-muted-foreground">소속 그룹사</Label>
+                    <Label className="text-muted-foreground">{t('detail.parentGroup')}</Label>
                     <p>{tenant.parentName}</p>
                   </div>
                 )}
@@ -416,23 +418,23 @@ export default function TenantDetailPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>관리자 정보</CardTitle>
+                <CardTitle>{t('detail.adminInfo')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-1">
-                  <Label className="text-muted-foreground">관리자명</Label>
+                  <Label className="text-muted-foreground">{t('detail.adminName')}</Label>
                   <p>{tenant.adminName || '-'}</p>
                 </div>
                 <div className="grid gap-1">
-                  <Label className="text-muted-foreground">관리자 이메일</Label>
+                  <Label className="text-muted-foreground">{t('detail.adminEmail')}</Label>
                   <p>{tenant.adminEmail || '-'}</p>
                 </div>
                 <div className="grid gap-1">
-                  <Label className="text-muted-foreground">등록일</Label>
+                  <Label className="text-muted-foreground">{t('detail.registeredDate')}</Label>
                   <p>{format(new Date(tenant.createdAt), 'yyyy년 M월 d일', { locale: ko })}</p>
                 </div>
                 <div className="grid gap-1">
-                  <Label className="text-muted-foreground">계약 기간</Label>
+                  <Label className="text-muted-foreground">{t('detail.contractPeriod')}</Label>
                   <p>
                     {tenant.contractStartDate && tenant.contractEndDate
                       ? `${format(new Date(tenant.contractStartDate), 'yyyy.M.d')} ~ ${format(new Date(tenant.contractEndDate), 'yyyy.M.d')}`
@@ -455,13 +457,13 @@ export default function TenantDetailPage() {
         <TabsContent value="policies" className="mt-6">
           <Tabs defaultValue="leave" className="space-y-4">
             <TabsList className="grid w-full grid-cols-7">
-              <TabsTrigger value="leave">휴가</TabsTrigger>
-              <TabsTrigger value="attendance">근태</TabsTrigger>
-              <TabsTrigger value="approval">결재</TabsTrigger>
-              <TabsTrigger value="password">비밀번호</TabsTrigger>
-              <TabsTrigger value="security">보안</TabsTrigger>
-              <TabsTrigger value="notification">알림</TabsTrigger>
-              <TabsTrigger value="organization">조직</TabsTrigger>
+              <TabsTrigger value="leave">{t('policyTabs.leave')}</TabsTrigger>
+              <TabsTrigger value="attendance">{t('policyTabs.attendance')}</TabsTrigger>
+              <TabsTrigger value="approval">{t('policyTabs.approval')}</TabsTrigger>
+              <TabsTrigger value="password">{t('policyTabs.password')}</TabsTrigger>
+              <TabsTrigger value="security">{t('policyTabs.security')}</TabsTrigger>
+              <TabsTrigger value="notification">{t('policyTabs.notification')}</TabsTrigger>
+              <TabsTrigger value="organization">{t('policyTabs.organization')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="leave">
@@ -562,9 +564,9 @@ export default function TenantDetailPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
-                  <CardTitle>계열사 목록</CardTitle>
+                  <CardTitle>{t('detail.subsidiaryList')}</CardTitle>
                   <CardDescription>
-                    {tenant.name}에 소속된 계열사 {subsidiaries.length}개
+                    {t('detail.subsidiaryCount', { name: tenant.name, count: subsidiaries.length })}
                   </CardDescription>
                 </div>
                 {hasSubsidiaries && (
@@ -573,14 +575,14 @@ export default function TenantDetailPage() {
                     onClick={() => setIsInheritDialogOpen(true)}
                   >
                     <ArrowDown className="mr-2 h-4 w-4" />
-                    정책 상속
+                    {t('detail.policyInherit')}
                   </Button>
                 )}
               </CardHeader>
               <CardContent>
                 {subsidiaries.length === 0 ? (
                   <div className="py-8 text-center text-muted-foreground">
-                    소속된 계열사가 없습니다.
+                    {t('detail.noSubsidiaries')}
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -602,7 +604,7 @@ export default function TenantDetailPage() {
                         <div className="flex items-center gap-4">
                           <div className="text-sm text-muted-foreground">
                             <Users className="inline-block mr-1 h-4 w-4" />
-                            {sub.employeeCount}명
+                            {t('tree.employeeCount', { count: sub.employeeCount })}
                           </div>
                           <TenantStatusBadge status={sub.status} />
                         </div>
@@ -620,14 +622,14 @@ export default function TenantDetailPage() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>테넌트 수정</DialogTitle>
+            <DialogTitle>{t('editDialog.title')}</DialogTitle>
             <DialogDescription>
-              테넌트 정보를 수정합니다.
+              {t('editDialog.description')}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="edit-name">테넌트명 *</Label>
+              <Label htmlFor="edit-name">{t('editDialog.tenantName')}</Label>
               <Input
                 id="edit-name"
                 value={formData.name}
@@ -635,7 +637,7 @@ export default function TenantDetailPage() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-nameEn">영문명</Label>
+              <Label htmlFor="edit-nameEn">{t('editDialog.englishName')}</Label>
               <Input
                 id="edit-nameEn"
                 value={formData.nameEn}
@@ -643,7 +645,7 @@ export default function TenantDetailPage() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-businessNumber">사업자등록번호</Label>
+              <Label htmlFor="edit-businessNumber">{t('editDialog.businessNumber')}</Label>
               <Input
                 id="edit-businessNumber"
                 placeholder="000-00-00000"
@@ -661,11 +663,11 @@ export default function TenantDetailPage() {
                 }}
               />
               <p className="text-xs text-muted-foreground">
-                형식: XXX-XX-XXXXX
+                {t('form.businessNumberFormat')}
               </p>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-description">설명</Label>
+              <Label htmlFor="edit-description">{t('editDialog.descriptionLabel')}</Label>
               <Input
                 id="edit-description"
                 value={formData.description}
@@ -675,13 +677,13 @@ export default function TenantDetailPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              취소
+              {t('common.cancel')}
             </Button>
             <Button
               onClick={handleUpdate}
               disabled={!formData.name || updateMutation.isPending}
             >
-              {updateMutation.isPending ? '저장 중...' : '저장'}
+              {updateMutation.isPending ? t('common.saving') : t('common.save')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -691,14 +693,14 @@ export default function TenantDetailPage() {
       <Dialog open={isStatusDialogOpen} onOpenChange={setIsStatusDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>상태 변경</DialogTitle>
+            <DialogTitle>{t('statusDialog.title')}</DialogTitle>
             <DialogDescription>
-              테넌트 상태를 변경합니다.
+              {t('statusDialog.description')}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label>상태</Label>
+              <Label>{t('statusDialog.statusLabel')}</Label>
               <Select
                 value={newStatus}
                 onValueChange={(value) => setNewStatus(value as TenantStatus)}
@@ -716,13 +718,13 @@ export default function TenantDetailPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsStatusDialogOpen(false)}>
-              취소
+              {t('common.cancel')}
             </Button>
             <Button
               onClick={handleStatusChange}
               disabled={changeStatusMutation.isPending}
             >
-              {changeStatusMutation.isPending ? '변경 중...' : '변경'}
+              {changeStatusMutation.isPending ? t('statusDialog.changing') : t('statusDialog.change')}
             </Button>
           </DialogFooter>
         </DialogContent>

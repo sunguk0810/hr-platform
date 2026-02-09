@@ -1,6 +1,9 @@
+import React from 'react';
 import { useForm, useFieldArray, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,36 +22,38 @@ import { Loader2, Calendar, Plus, Trash2, GripVertical } from 'lucide-react';
 import type { LeavePolicy } from '@hr-platform/shared-types';
 import { DEFAULT_LEAVE_POLICY } from '@hr-platform/shared-types';
 
-const leaveTypeSchema = z.object({
-  code: z.string().min(1, '코드를 입력하세요'),
-  name: z.string().min(1, '이름을 입력하세요'),
-  paid: z.boolean(),
-  requiresApproval: z.boolean(),
-  minDays: z.number().min(0).optional(),
-  maxConsecutiveDays: z.number().min(1).optional(),
-  requiresDocument: z.boolean().optional(),
-  documentRequiredDays: z.number().min(1).optional(),
-});
+const createLeavePolicySchema = (t: TFunction) => {
+  const leaveTypeSchema = z.object({
+    code: z.string().min(1, t('validation.codeRequired')),
+    name: z.string().min(1, t('validation.nameRequired')),
+    paid: z.boolean(),
+    requiresApproval: z.boolean(),
+    minDays: z.number().min(0).optional(),
+    maxConsecutiveDays: z.number().min(1).optional(),
+    requiresDocument: z.boolean().optional(),
+    documentRequiredDays: z.number().min(1).optional(),
+  });
 
-const thresholdSchema = z.object({
-  maxDays: z.number().min(1),
-  approvalLevels: z.number().min(1).max(5),
-});
+  const thresholdSchema = z.object({
+    maxDays: z.number().min(1),
+    approvalLevels: z.number().min(1).max(5),
+  });
 
-const leavePolicySchema = z.object({
-  annualLeave: z.object({
-    baseDays: z.number().min(0).max(30),
-    additionalDaysPerYear: z.number().min(0).max(5),
-    maxAnnualDays: z.number().min(0).max(40),
-    carryoverAllowed: z.boolean(),
-    carryoverMaxDays: z.number().min(0),
-    carryoverExpireMonths: z.number().min(1).max(12),
-  }),
-  leaveTypes: z.array(leaveTypeSchema).min(1, '최소 1개 이상의 휴가 유형이 필요합니다'),
-  approvalRules: z.object({
-    daysThreshold: z.array(thresholdSchema).min(1, '최소 1개 이상의 결재 규칙이 필요합니다'),
-  }),
-});
+  return z.object({
+    annualLeave: z.object({
+      baseDays: z.number().min(0).max(30),
+      additionalDaysPerYear: z.number().min(0).max(5),
+      maxAnnualDays: z.number().min(0).max(40),
+      carryoverAllowed: z.boolean(),
+      carryoverMaxDays: z.number().min(0),
+      carryoverExpireMonths: z.number().min(1).max(12),
+    }),
+    leaveTypes: z.array(leaveTypeSchema).min(1, t('validation.minOneLeaveType')),
+    approvalRules: z.object({
+      daysThreshold: z.array(thresholdSchema).min(1, t('validation.minOneApprovalRule')),
+    }),
+  });
+};
 
 export interface LeavePolicySettingsProps {
   initialData?: LeavePolicy;
@@ -63,6 +68,9 @@ export function LeavePolicySettings({
   isLoading = false,
   readOnly = false,
 }: LeavePolicySettingsProps) {
+  const { t } = useTranslation('tenant');
+  const leavePolicySchema = React.useMemo(() => createLeavePolicySchema(t), [t]);
+
   const methods = useForm<LeavePolicy>({
     resolver: zodResolver(leavePolicySchema),
     defaultValues: initialData ?? DEFAULT_LEAVE_POLICY,
@@ -112,14 +120,14 @@ export function LeavePolicySettings({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
-              연차 설정
+              {t('leavePolicy.annualLeaveTitle')}
             </CardTitle>
-            <CardDescription>기본 연차 일수 및 이월 정책 설정</CardDescription>
+            <CardDescription>{t('leavePolicy.annualLeaveDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <FormRow cols={3}>
               <div className="space-y-2">
-                <Label>기본 연차 일수</Label>
+                <Label>{t('leavePolicy.baseDays')}</Label>
                 <Input
                   type="number"
                   {...register('annualLeave.baseDays', { valueAsNumber: true })}
@@ -130,7 +138,7 @@ export function LeavePolicySettings({
                 )}
               </div>
               <div className="space-y-2">
-                <Label>연차 증가분 (년)</Label>
+                <Label>{t('leavePolicy.additionalDaysPerYear')}</Label>
                 <Input
                   type="number"
                   {...register('annualLeave.additionalDaysPerYear', { valueAsNumber: true })}
@@ -138,7 +146,7 @@ export function LeavePolicySettings({
                 />
               </div>
               <div className="space-y-2">
-                <Label>최대 연차 일수</Label>
+                <Label>{t('leavePolicy.maxAnnualDays')}</Label>
                 <Input
                   type="number"
                   {...register('annualLeave.maxAnnualDays', { valueAsNumber: true })}
@@ -149,8 +157,8 @@ export function LeavePolicySettings({
 
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div>
-                <Label>이월 허용</Label>
-                <p className="text-sm text-muted-foreground">미사용 연차 다음 해 이월 허용</p>
+                <Label>{t('leavePolicy.carryoverAllowed')}</Label>
+                <p className="text-sm text-muted-foreground">{t('leavePolicy.carryoverAllowedDescription')}</p>
               </div>
               <Switch
                 checked={watch('annualLeave.carryoverAllowed')}
@@ -162,7 +170,7 @@ export function LeavePolicySettings({
             {watch('annualLeave.carryoverAllowed') && (
               <FormRow cols={2}>
                 <div className="space-y-2">
-                  <Label>최대 이월 일수</Label>
+                  <Label>{t('leavePolicy.maxCarryoverDays')}</Label>
                   <Input
                     type="number"
                     {...register('annualLeave.carryoverMaxDays', { valueAsNumber: true })}
@@ -170,7 +178,7 @@ export function LeavePolicySettings({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>이월 만료 기간 (개월)</Label>
+                  <Label>{t('leavePolicy.carryoverExpireMonths')}</Label>
                   <Input
                     type="number"
                     {...register('annualLeave.carryoverExpireMonths', { valueAsNumber: true })}
@@ -186,13 +194,13 @@ export function LeavePolicySettings({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>휴가 유형</CardTitle>
-              <CardDescription>사용 가능한 휴가 유형을 관리합니다</CardDescription>
+              <CardTitle>{t('leavePolicy.leaveTypes')}</CardTitle>
+              <CardDescription>{t('leavePolicy.leaveTypesDescription')}</CardDescription>
             </div>
             {!readOnly && (
               <Button type="button" variant="outline" size="sm" onClick={handleAddLeaveType}>
                 <Plus className="mr-1 h-4 w-4" />
-                유형 추가
+                {t('leavePolicy.addLeaveType')}
               </Button>
             )}
           </CardHeader>
@@ -201,13 +209,13 @@ export function LeavePolicySettings({
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-10"></TableHead>
-                  <TableHead>코드</TableHead>
-                  <TableHead>이름</TableHead>
-                  <TableHead className="text-center">유급</TableHead>
-                  <TableHead className="text-center">결재 필요</TableHead>
-                  <TableHead>최소 일수</TableHead>
-                  <TableHead>최대 연속일</TableHead>
-                  <TableHead className="text-center">증빙 필요</TableHead>
+                  <TableHead>{t('leavePolicy.tableCode')}</TableHead>
+                  <TableHead>{t('leavePolicy.tableName')}</TableHead>
+                  <TableHead className="text-center">{t('leavePolicy.tablePaid')}</TableHead>
+                  <TableHead className="text-center">{t('leavePolicy.tableApprovalRequired')}</TableHead>
+                  <TableHead>{t('leavePolicy.tableMinDays')}</TableHead>
+                  <TableHead>{t('leavePolicy.tableMaxConsecutiveDays')}</TableHead>
+                  <TableHead className="text-center">{t('leavePolicy.tableDocumentRequired')}</TableHead>
                   <TableHead className="w-16"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -301,13 +309,13 @@ export function LeavePolicySettings({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>결재 규칙</CardTitle>
-              <CardDescription>휴가 일수에 따른 결재 단계 설정</CardDescription>
+              <CardTitle>{t('leavePolicy.approvalRules')}</CardTitle>
+              <CardDescription>{t('leavePolicy.approvalRulesDescription')}</CardDescription>
             </div>
             {!readOnly && (
               <Button type="button" variant="outline" size="sm" onClick={handleAddThreshold}>
                 <Plus className="mr-1 h-4 w-4" />
-                규칙 추가
+                {t('leavePolicy.addRule')}
               </Button>
             )}
           </CardHeader>
@@ -315,8 +323,8 @@ export function LeavePolicySettings({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>최대 일수 (이하)</TableHead>
-                  <TableHead>결재 단계</TableHead>
+                  <TableHead>{t('leavePolicy.tableMaxDays')}</TableHead>
+                  <TableHead>{t('leavePolicy.tableApprovalLevels')}</TableHead>
                   <TableHead className="w-16"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -375,10 +383,10 @@ export function LeavePolicySettings({
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  저장 중...
+                  {t('common.saving')}
                 </>
               ) : (
-                '저장'
+                t('common.save')
               )}
             </Button>
           </div>

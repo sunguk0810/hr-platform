@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,28 +24,29 @@ import { cn } from '@/lib/utils';
 import type { AttendancePolicy, HourlyLeaveMinUnit } from '@hr-platform/shared-types';
 import { DEFAULT_ATTENDANCE_POLICY } from '@hr-platform/shared-types';
 
-const attendancePolicySchema = z.object({
-  workHours: z.object({
-    standardHoursPerDay: z.number().min(1).max(12),
-    standardHoursPerWeek: z.number().min(1).max(60),
-    maxHoursPerWeek: z.number().min(1).max(80),
-    flexTimeEnabled: z.boolean(),
-  }),
-  coreTime: z.object({
-    enabled: z.boolean(),
-    start: z.string().regex(/^\d{2}:\d{2}$/, '시간 형식: HH:mm'),
-    end: z.string().regex(/^\d{2}:\d{2}$/, '시간 형식: HH:mm'),
-  }),
-  overtime: z.object({
-    requiresApproval: z.boolean(),
-    maxHoursPerMonth: z.number().min(0).max(100),
-    autoCalculate: z.boolean(),
-  }),
-  latePolicy: z.object({
-    gracePeriodMinutes: z.number().min(0).max(60),
-    penaltyEnabled: z.boolean(),
-  }),
-});
+const createAttendancePolicySchema = (t: TFunction) =>
+  z.object({
+    workHours: z.object({
+      standardHoursPerDay: z.number().min(1).max(12),
+      standardHoursPerWeek: z.number().min(1).max(60),
+      maxHoursPerWeek: z.number().min(1).max(80),
+      flexTimeEnabled: z.boolean(),
+    }),
+    coreTime: z.object({
+      enabled: z.boolean(),
+      start: z.string().regex(/^\d{2}:\d{2}$/, t('validation.timeFormat')),
+      end: z.string().regex(/^\d{2}:\d{2}$/, t('validation.timeFormat')),
+    }),
+    overtime: z.object({
+      requiresApproval: z.boolean(),
+      maxHoursPerMonth: z.number().min(0).max(100),
+      autoCalculate: z.boolean(),
+    }),
+    latePolicy: z.object({
+      gracePeriodMinutes: z.number().min(0).max(60),
+      penaltyEnabled: z.boolean(),
+    }),
+  });
 
 export interface AttendancePolicySettingsProps {
   initialData?: AttendancePolicy;
@@ -57,6 +61,9 @@ export function AttendancePolicySettings({
   isLoading = false,
   readOnly = false,
 }: AttendancePolicySettingsProps) {
+  const { t } = useTranslation('tenant');
+  const attendancePolicySchema = React.useMemo(() => createAttendancePolicySchema(t), [t]);
+
   const methods = useForm<AttendancePolicy>({
     resolver: zodResolver(attendancePolicySchema),
     defaultValues: initialData ?? DEFAULT_ATTENDANCE_POLICY,
@@ -72,14 +79,14 @@ export function AttendancePolicySettings({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="h-5 w-5" />
-              근무 시간 설정
+              {t('attendancePolicy.workHoursTitle')}
             </CardTitle>
-            <CardDescription>일/주 표준 근무시간 및 유연근무 설정</CardDescription>
+            <CardDescription>{t('attendancePolicy.workHoursDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <FormRow cols={3}>
               <div className="space-y-2">
-                <Label>일 표준 근무시간</Label>
+                <Label>{t('attendancePolicy.standardHoursPerDay')}</Label>
                 <div className="flex items-center gap-2">
                   <Input
                     type="number"
@@ -87,7 +94,7 @@ export function AttendancePolicySettings({
                     disabled={readOnly}
                     className="w-24"
                   />
-                  <span className="text-sm text-muted-foreground">시간</span>
+                  <span className="text-sm text-muted-foreground">{t('attendancePolicy.hoursUnit')}</span>
                 </div>
                 {errors.workHours?.standardHoursPerDay && (
                   <p className="text-sm text-destructive">
@@ -96,7 +103,7 @@ export function AttendancePolicySettings({
                 )}
               </div>
               <div className="space-y-2">
-                <Label>주 표준 근무시간</Label>
+                <Label>{t('attendancePolicy.standardHoursPerWeek')}</Label>
                 <div className="flex items-center gap-2">
                   <Input
                     type="number"
@@ -104,11 +111,11 @@ export function AttendancePolicySettings({
                     disabled={readOnly}
                     className="w-24"
                   />
-                  <span className="text-sm text-muted-foreground">시간</span>
+                  <span className="text-sm text-muted-foreground">{t('attendancePolicy.hoursUnit')}</span>
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>주 최대 근무시간</Label>
+                <Label>{t('attendancePolicy.maxHoursPerWeek')}</Label>
                 <div className="flex items-center gap-2">
                   <Input
                     type="number"
@@ -116,16 +123,16 @@ export function AttendancePolicySettings({
                     disabled={readOnly}
                     className="w-24"
                   />
-                  <span className="text-sm text-muted-foreground">시간</span>
+                  <span className="text-sm text-muted-foreground">{t('attendancePolicy.hoursUnit')}</span>
                 </div>
               </div>
             </FormRow>
 
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div>
-                <Label>유연근무제</Label>
+                <Label>{t('attendancePolicy.flexTime')}</Label>
                 <p className="text-sm text-muted-foreground">
-                  시차출퇴근 허용 (핵심시간 내 근무 필수)
+                  {t('attendancePolicy.flexTimeDescription')}
                 </p>
               </div>
               <Switch
@@ -142,16 +149,16 @@ export function AttendancePolicySettings({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Timer className="h-5 w-5" />
-              핵심 시간 설정
+              {t('attendancePolicy.coreTimeTitle')}
             </CardTitle>
-            <CardDescription>유연근무 시 필수 근무해야 하는 핵심 시간대</CardDescription>
+            <CardDescription>{t('attendancePolicy.coreTimeDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div>
-                <Label>핵심 시간 활성화</Label>
+                <Label>{t('attendancePolicy.coreTimeEnabled')}</Label>
                 <p className="text-sm text-muted-foreground">
-                  지정된 시간대에는 반드시 근무해야 합니다
+                  {t('attendancePolicy.coreTimeEnabledDescription')}
                 </p>
               </div>
               <Switch
@@ -164,7 +171,7 @@ export function AttendancePolicySettings({
             {watch('coreTime.enabled') && (
               <FormRow cols={2}>
                 <div className="space-y-2">
-                  <Label>핵심 시간 시작</Label>
+                  <Label>{t('attendancePolicy.coreTimeStart')}</Label>
                   <Input
                     type="time"
                     {...register('coreTime.start')}
@@ -175,7 +182,7 @@ export function AttendancePolicySettings({
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label>핵심 시간 종료</Label>
+                  <Label>{t('attendancePolicy.coreTimeEnd')}</Label>
                   <Input
                     type="time"
                     {...register('coreTime.end')}
@@ -195,16 +202,16 @@ export function AttendancePolicySettings({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="h-5 w-5" />
-              연장 근무 설정
+              {t('attendancePolicy.overtimeTitle')}
             </CardTitle>
-            <CardDescription>초과근무 신청 및 자동계산 설정</CardDescription>
+            <CardDescription>{t('attendancePolicy.overtimeDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div>
-                <Label>연장근무 승인 필요</Label>
+                <Label>{t('attendancePolicy.overtimeApprovalRequired')}</Label>
                 <p className="text-sm text-muted-foreground">
-                  연장근무 시 사전 결재 승인이 필요합니다
+                  {t('attendancePolicy.overtimeApprovalRequiredDescription')}
                 </p>
               </div>
               <Switch
@@ -215,7 +222,7 @@ export function AttendancePolicySettings({
             </div>
 
             <div className="space-y-2">
-              <Label>월 최대 연장근무 시간</Label>
+              <Label>{t('attendancePolicy.maxOvertimePerMonth')}</Label>
               <div className="flex items-center gap-2">
                 <Input
                   type="number"
@@ -223,7 +230,7 @@ export function AttendancePolicySettings({
                   disabled={readOnly}
                   className="w-24"
                 />
-                <span className="text-sm text-muted-foreground">시간</span>
+                <span className="text-sm text-muted-foreground">{t('attendancePolicy.hoursUnit')}</span>
               </div>
               {errors.overtime?.maxHoursPerMonth && (
                 <p className="text-sm text-destructive">
@@ -234,9 +241,9 @@ export function AttendancePolicySettings({
 
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div>
-                <Label>연장근무 자동 계산</Label>
+                <Label>{t('attendancePolicy.autoCalculate')}</Label>
                 <p className="text-sm text-muted-foreground">
-                  표준 근무시간 초과분을 자동으로 연장근무로 계산
+                  {t('attendancePolicy.autoCalculateDescription')}
                 </p>
               </div>
               <Switch
@@ -253,13 +260,13 @@ export function AttendancePolicySettings({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlertCircle className="h-5 w-5" />
-              지각 정책
+              {t('attendancePolicy.latePolicyTitle')}
             </CardTitle>
-            <CardDescription>지각 유예 시간 및 페널티 설정</CardDescription>
+            <CardDescription>{t('attendancePolicy.latePolicyDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>지각 유예 시간</Label>
+              <Label>{t('attendancePolicy.gracePeriod')}</Label>
               <div className="flex items-center gap-2">
                 <Input
                   type="number"
@@ -267,18 +274,18 @@ export function AttendancePolicySettings({
                   disabled={readOnly}
                   className="w-24"
                 />
-                <span className="text-sm text-muted-foreground">분</span>
+                <span className="text-sm text-muted-foreground">{t('attendancePolicy.gracePeriodUnit')}</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                출근 시간 이후 유예 시간까지는 지각으로 처리하지 않습니다
+                {t('attendancePolicy.gracePeriodHint')}
               </p>
             </div>
 
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div>
-                <Label>지각 페널티 활성화</Label>
+                <Label>{t('attendancePolicy.penaltyEnabled')}</Label>
                 <p className="text-sm text-muted-foreground">
-                  지각 시 연차 차감 또는 급여 차감 적용
+                  {t('attendancePolicy.penaltyEnabledDescription')}
                 </p>
               </div>
               <Switch
@@ -296,10 +303,10 @@ export function AttendancePolicySettings({
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  저장 중...
+                  {t('common.saving')}
                 </>
               ) : (
-                '저장'
+                t('common.save')
               )}
             </Button>
           </div>
@@ -313,6 +320,7 @@ export function AttendancePolicySettings({
 }
 
 function HourlyLeavePolicyCard() {
+  const { t } = useTranslation('tenant');
   const { toast } = useToast();
   const [policy, setPolicy] = useState({
     enabled: true,
@@ -325,9 +333,9 @@ function HourlyLeavePolicyCard() {
     setIsSaving(true);
     try {
       await new Promise((resolve) => setTimeout(resolve, 500));
-      toast({ title: '저장 완료', description: '시간차 휴가 정책이 저장되었습니다.' });
+      toast({ title: t('attendancePolicy.saveSuccess'), description: t('attendancePolicy.saveSuccessDescription') });
     } catch {
-      toast({ title: '저장 실패', description: '시간차 휴가 정책 저장에 실패했습니다.', variant: 'destructive' });
+      toast({ title: t('attendancePolicy.saveError'), description: t('attendancePolicy.saveErrorDescription'), variant: 'destructive' });
     } finally {
       setIsSaving(false);
     }
@@ -338,16 +346,16 @@ function HourlyLeavePolicyCard() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Clock className="h-5 w-5 text-violet-600" />
-          시간차 휴가 정책
+          {t('attendancePolicy.hourlyLeaveTitle')}
         </CardTitle>
-        <CardDescription>시간차 휴가(시간 단위 연차)의 사용 정책을 설정합니다.</CardDescription>
+        <CardDescription>{t('attendancePolicy.hourlyLeaveDescription')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between rounded-lg border p-3">
           <div>
-            <Label>시간차 휴가 사용</Label>
+            <Label>{t('attendancePolicy.hourlyLeaveEnabled')}</Label>
             <p className="text-sm text-muted-foreground">
-              활성화하면 직원이 시간 단위로 휴가를 신청할 수 있습니다.
+              {t('attendancePolicy.hourlyLeaveEnabledDescription')}
             </p>
           </div>
           <Switch
@@ -359,7 +367,7 @@ function HourlyLeavePolicyCard() {
         {policy.enabled && (
           <>
             <div className="space-y-2">
-              <Label>최소 사용 단위</Label>
+              <Label>{t('attendancePolicy.minUnit')}</Label>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
@@ -369,7 +377,7 @@ function HourlyLeavePolicyCard() {
                     policy.minUnit === 30 ? 'border-primary bg-primary/5 font-medium' : 'border-muted'
                   )}
                 >
-                  30분
+                  {t('attendancePolicy.minUnit30')}
                 </button>
                 <button
                   type="button"
@@ -379,13 +387,13 @@ function HourlyLeavePolicyCard() {
                     policy.minUnit === 60 ? 'border-primary bg-primary/5 font-medium' : 'border-muted'
                   )}
                 >
-                  1시간
+                  {t('attendancePolicy.minUnit60')}
                 </button>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label>일일 최대 사용 횟수</Label>
+              <Label>{t('attendancePolicy.dailyMaxCount')}</Label>
               <Select
                 value={String(policy.dailyMaxCount)}
                 onValueChange={(value) => setPolicy((prev) => ({ ...prev, dailyMaxCount: parseInt(value, 10) }))}
@@ -394,19 +402,19 @@ function HourlyLeavePolicyCard() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">1회</SelectItem>
-                  <SelectItem value="2">2회</SelectItem>
-                  <SelectItem value="3">3회</SelectItem>
-                  <SelectItem value="4">4회</SelectItem>
+                  <SelectItem value="1">{t('attendancePolicy.dailyMaxCount1')}</SelectItem>
+                  <SelectItem value="2">{t('attendancePolicy.dailyMaxCount2')}</SelectItem>
+                  <SelectItem value="3">{t('attendancePolicy.dailyMaxCount3')}</SelectItem>
+                  <SelectItem value="4">{t('attendancePolicy.dailyMaxCount4')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="rounded-md bg-muted p-3 text-sm text-muted-foreground">
-              <p className="font-medium mb-1">현재 정책 요약</p>
+              <p className="font-medium mb-1">{t('attendancePolicy.policySummary')}</p>
               <ul className="space-y-0.5">
-                <li>- 최소 단위: {policy.minUnit === 30 ? '30분' : '1시간'}</li>
-                <li>- 일일 최대: {policy.dailyMaxCount}회</li>
+                <li>- {t('attendancePolicy.policySummaryMinUnit', { unit: policy.minUnit === 30 ? t('attendancePolicy.minUnit30') : t('attendancePolicy.minUnit60') })}</li>
+                <li>- {t('attendancePolicy.policySummaryDailyMax', { count: policy.dailyMaxCount })}</li>
               </ul>
             </div>
           </>
@@ -417,10 +425,10 @@ function HourlyLeavePolicyCard() {
             {isSaving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                저장 중...
+                {t('common.saving')}
               </>
             ) : (
-              '시간차 휴가 정책 저장'
+              t('attendancePolicy.saveHourlyLeave')
             )}
           </Button>
         </div>

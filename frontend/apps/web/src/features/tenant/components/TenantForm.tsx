@@ -1,5 +1,7 @@
 import * as React from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -26,28 +28,30 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, Save, Building2 } from 'lucide-react';
 import type { TenantDetail, CreateTenantRequest, UpdateTenantRequest, TenantModule, TenantListItem } from '@hr-platform/shared-types';
 
-const tenantSchema = z.object({
-  code: z.string()
-    .min(2, '코드는 2자 이상이어야 합니다.')
-    .max(20, '코드는 20자 이내여야 합니다.')
-    .regex(/^[A-Z0-9_]+$/, '영문 대문자, 숫자, 언더스코어만 사용 가능합니다.'),
-  name: z.string()
-    .min(1, '테넌트명을 입력해주세요.')
-    .max(100, '100자 이내로 입력해주세요.'),
-  nameEn: z.string().max(100, '100자 이내로 입력해주세요.').optional(),
-  businessNumber: z.string()
-    .regex(/^(\d{3}-\d{2}-\d{5})?$/, '사업자등록번호 형식이 올바르지 않습니다. (XXX-XX-XXXXX)')
-    .optional()
-    .or(z.literal('')),
-  description: z.string().max(500, '500자 이내로 입력해주세요.').optional(),
-  adminName: z.string().max(50, '50자 이내로 입력해주세요.').optional(),
-  adminEmail: z.string().email('올바른 이메일을 입력해주세요.').optional().or(z.literal('')),
-  contractStartDate: z.string().optional(),
-  contractEndDate: z.string().optional(),
-  maxEmployees: z.number().min(1, '최소 1명 이상이어야 합니다.').max(100000, '최대 100,000명까지 가능합니다.'),
-});
+function createTenantSchema(t: TFunction) {
+  return z.object({
+    code: z.string()
+      .min(2, t('validation.codeMin2'))
+      .max(20, t('validation.codeMax20'))
+      .regex(/^[A-Z0-9_]+$/, t('validation.codeFormat')),
+    name: z.string()
+      .min(1, t('validation.tenantNameRequired'))
+      .max(100, t('validation.max100')),
+    nameEn: z.string().max(100, t('validation.max100')).optional(),
+    businessNumber: z.string()
+      .regex(/^(\d{3}-\d{2}-\d{5})?$/, t('validation.businessNumberFormat'))
+      .optional()
+      .or(z.literal('')),
+    description: z.string().max(500, t('validation.max500')).optional(),
+    adminName: z.string().max(50, t('validation.max50')).optional(),
+    adminEmail: z.string().email(t('validation.validEmail')).optional().or(z.literal('')),
+    contractStartDate: z.string().optional(),
+    contractEndDate: z.string().optional(),
+    maxEmployees: z.number().min(1, t('validation.minEmployee1')).max(100000, t('validation.maxEmployee100000')),
+  });
+}
 
-type TenantFormData = z.infer<typeof tenantSchema>;
+type TenantFormData = z.infer<ReturnType<typeof createTenantSchema>>;
 
 export interface TenantFormProps {
   open: boolean;
@@ -70,6 +74,7 @@ export function TenantForm({
   onSubmit,
   isLoading = false,
 }: TenantFormProps) {
+  const { t } = useTranslation('tenant');
   const isEditMode = !!tenant;
   const [selectedModules, setSelectedModules] = React.useState<TenantModule[]>(
     (tenant?.policies?.allowedModules as TenantModule[] | undefined) || DEFAULT_MODULES
@@ -77,6 +82,8 @@ export function TenantForm({
   const [selectedParentId, setSelectedParentId] = React.useState<string | undefined>(
     tenant?.parentId
   );
+
+  const tenantSchema = React.useMemo(() => createTenantSchema(t), [t]);
 
   const {
     register,
@@ -173,9 +180,9 @@ export function TenantForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isEditMode ? '테넌트 수정' : '테넌트 등록'}</DialogTitle>
+          <DialogTitle>{isEditMode ? t('form.editFormTitle') : t('form.createFormTitle')}</DialogTitle>
           <DialogDescription>
-            {isEditMode ? '테넌트 정보를 수정합니다.' : '새로운 테넌트를 등록합니다.'}
+            {isEditMode ? t('form.editFormDescription') : t('form.createFormDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -183,7 +190,7 @@ export function TenantForm({
           {/* Basic Info */}
           <Card>
             <CardHeader className="pb-4">
-              <CardTitle className="text-base">기본 정보</CardTitle>
+              <CardTitle className="text-base">{t('form.basicInfo')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* 그룹사 선택 (생성 모드에서만) */}
@@ -191,17 +198,17 @@ export function TenantForm({
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2">
                     <Building2 className="h-4 w-4" />
-                    소속 그룹사
+                    {t('form.parentGroup')}
                   </Label>
                   <Select
                     value={selectedParentId || '_none'}
                     onValueChange={(value) => setSelectedParentId(value === '_none' ? undefined : value)}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="그룹사 선택 (선택 안하면 독립 테넌트)" />
+                      <SelectValue placeholder={t('form.parentGroupPlaceholder')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="_none">독립 테넌트 (그룹사 없음)</SelectItem>
+                      <SelectItem value="_none">{t('form.independentTenant')}</SelectItem>
                       {groupTenants.map((group) => (
                         <SelectItem key={group.id} value={group.id}>
                           {group.name} ({group.code})
@@ -211,15 +218,15 @@ export function TenantForm({
                   </Select>
                   <p className="text-xs text-muted-foreground">
                     {selectedParentId
-                      ? '계열사로 등록됩니다. 그룹사의 정책을 상속받을 수 있습니다.'
-                      : '독립 테넌트(그룹사)로 등록됩니다.'}
+                      ? t('form.parentGroupHintSubsidiary')
+                      : t('form.parentGroupHintIndependent')}
                   </p>
                 </div>
               )}
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="code">테넌트 코드 *</Label>
+                  <Label htmlFor="code">{t('form.tenantCode')}</Label>
                   <Input
                     id="code"
                     {...register('code')}
@@ -233,7 +240,7 @@ export function TenantForm({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="name">테넌트명 *</Label>
+                  <Label htmlFor="name">{t('form.tenantName')}</Label>
                   <Input
                     id="name"
                     {...register('name')}
@@ -246,7 +253,7 @@ export function TenantForm({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="nameEn">영문명</Label>
+                  <Label htmlFor="nameEn">{t('form.englishName')}</Label>
                   <Input
                     id="nameEn"
                     {...register('nameEn')}
@@ -255,7 +262,7 @@ export function TenantForm({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="businessNumber">사업자등록번호</Label>
+                  <Label htmlFor="businessNumber">{t('form.businessNumber')}</Label>
                   <Input
                     id="businessNumber"
                     {...register('businessNumber')}
@@ -280,7 +287,7 @@ export function TenantForm({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="maxEmployees">최대 인원</Label>
+                  <Label htmlFor="maxEmployees">{t('form.maxEmployees')}</Label>
                   <Input
                     id="maxEmployees"
                     type="number"
@@ -296,11 +303,11 @@ export function TenantForm({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">설명</Label>
+                <Label htmlFor="description">{t('form.descriptionLabel')}</Label>
                 <Textarea
                   id="description"
                   {...register('description')}
-                  placeholder="테넌트에 대한 설명을 입력하세요."
+                  placeholder={t('form.descriptionPlaceholder')}
                   rows={2}
                 />
               </div>
@@ -311,15 +318,15 @@ export function TenantForm({
           {!isEditMode && (
             <Card>
               <CardHeader className="pb-4">
-                <CardTitle className="text-base">관리자 정보</CardTitle>
+                <CardTitle className="text-base">{t('form.adminInfo')}</CardTitle>
                 <CardDescription>
-                  테넌트 관리자의 정보를 입력합니다. 계정 생성 후 이메일이 발송됩니다.
+                  {t('form.adminInfoDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="adminName">관리자명</Label>
+                    <Label htmlFor="adminName">{t('form.adminName')}</Label>
                     <Input
                       id="adminName"
                       {...register('adminName')}
@@ -328,7 +335,7 @@ export function TenantForm({
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="adminEmail">관리자 이메일</Label>
+                    <Label htmlFor="adminEmail">{t('form.adminEmail')}</Label>
                     <Input
                       id="adminEmail"
                       type="email"
@@ -349,12 +356,12 @@ export function TenantForm({
           {!isEditMode && (
             <Card>
               <CardHeader className="pb-4">
-                <CardTitle className="text-base">계약 정보</CardTitle>
+                <CardTitle className="text-base">{t('form.contractInfo')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="contractStartDate">계약 시작일</Label>
+                    <Label htmlFor="contractStartDate">{t('form.contractStartDate')}</Label>
                     <Input
                       id="contractStartDate"
                       type="date"
@@ -363,7 +370,7 @@ export function TenantForm({
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="contractEndDate">계약 종료일</Label>
+                    <Label htmlFor="contractEndDate">{t('form.contractEndDate')}</Label>
                     <Input
                       id="contractEndDate"
                       type="date"
@@ -379,9 +386,9 @@ export function TenantForm({
           {!isEditMode && (
             <Card>
               <CardHeader className="pb-4">
-                <CardTitle className="text-base">사용 모듈</CardTitle>
+                <CardTitle className="text-base">{t('form.modules')}</CardTitle>
                 <CardDescription>
-                  테넌트에서 사용할 수 있는 모듈을 선택합니다.
+                  {t('form.modulesDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -416,18 +423,18 @@ export function TenantForm({
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              취소
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  저장 중...
+                  {t('common.saving')}
                 </>
               ) : (
                 <>
                   <Save className="mr-2 h-4 w-4" />
-                  저장
+                  {t('common.save')}
                 </>
               )}
             </Button>

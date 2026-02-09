@@ -1,6 +1,9 @@
+import React from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,12 +12,13 @@ import { Switch } from '@/components/ui/switch';
 import { Loader2, Building2 } from 'lucide-react';
 import type { OrganizationPolicy } from '@hr-platform/shared-types';
 
-const organizationPolicySchema = z.object({
-  maxDepartmentLevel: z.number().min(1, '최소 1단계').max(10, '최대 10단계'),
-  positionRequired: z.boolean(),
-  gradeRequired: z.boolean(),
-  allowMultipleDepartments: z.boolean(),
-});
+const createOrganizationPolicySchema = (t: TFunction) =>
+  z.object({
+    maxDepartmentLevel: z.number().min(1, t('validation.min1level')).max(10, t('validation.max10levels')),
+    positionRequired: z.boolean(),
+    gradeRequired: z.boolean(),
+    allowMultipleDepartments: z.boolean(),
+  });
 
 export interface OrganizationPolicySettingsProps {
   initialData?: Partial<OrganizationPolicy>;
@@ -36,6 +40,9 @@ export function OrganizationPolicySettings({
   isLoading = false,
   readOnly = false,
 }: OrganizationPolicySettingsProps) {
+  const { t } = useTranslation('tenant');
+  const organizationPolicySchema = React.useMemo(() => createOrganizationPolicySchema(t), [t]);
+
   const methods = useForm<OrganizationPolicy>({
     resolver: zodResolver(organizationPolicySchema),
     defaultValues: { ...defaultOrganizationPolicy, ...initialData },
@@ -54,13 +61,13 @@ export function OrganizationPolicySettings({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Building2 className="h-5 w-5" />
-              조직 정책
+              {t('organizationPolicy.title')}
             </CardTitle>
-            <CardDescription>조직 구조 및 인사 정보 설정</CardDescription>
+            <CardDescription>{t('organizationPolicy.description')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>최대 부서 단계</Label>
+              <Label>{t('organizationPolicy.maxDepartmentLevel')}</Label>
               <Input
                 type="number"
                 {...register('maxDepartmentLevel', { valueAsNumber: true })}
@@ -70,18 +77,18 @@ export function OrganizationPolicySettings({
                 className="w-32"
               />
               <p className="text-xs text-muted-foreground">
-                조직도 깊이 (1~10단계)
+                {t('organizationPolicy.maxDepartmentLevelHint')}
               </p>
             </div>
 
             <div className="space-y-3 pt-2">
-              <Label className="text-base">인사 정보 필수 항목</Label>
+              <Label className="text-base">{t('organizationPolicy.requiredFields')}</Label>
 
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div>
-                  <Label>직책 필수</Label>
+                  <Label>{t('organizationPolicy.positionRequired')}</Label>
                   <p className="text-sm text-muted-foreground">
-                    직원 등록 시 직책 입력 필수
+                    {t('organizationPolicy.positionRequiredDescription')}
                   </p>
                 </div>
                 <Switch
@@ -93,9 +100,9 @@ export function OrganizationPolicySettings({
 
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div>
-                  <Label>직급 필수</Label>
+                  <Label>{t('organizationPolicy.gradeRequired')}</Label>
                   <p className="text-sm text-muted-foreground">
-                    직원 등록 시 직급 입력 필수
+                    {t('organizationPolicy.gradeRequiredDescription')}
                   </p>
                 </div>
                 <Switch
@@ -107,9 +114,9 @@ export function OrganizationPolicySettings({
 
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div>
-                  <Label>복수 부서 소속 허용</Label>
+                  <Label>{t('organizationPolicy.allowMultipleDepartments')}</Label>
                   <p className="text-sm text-muted-foreground">
-                    한 직원이 여러 부서에 소속될 수 있음
+                    {t('organizationPolicy.allowMultipleDepartmentsDescription')}
                   </p>
                 </div>
                 <Switch
@@ -128,10 +135,10 @@ export function OrganizationPolicySettings({
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  저장 중...
+                  {t('common.saving')}
                 </>
               ) : (
-                '저장'
+                t('common.save')
               )}
             </Button>
           </div>

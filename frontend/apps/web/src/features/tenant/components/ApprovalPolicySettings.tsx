@@ -3,6 +3,7 @@ import { useForm, FormProvider } from 'react-hook-form';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,20 +50,6 @@ const approvalPolicySchema = z.object({
   }),
 });
 
-const APPROVAL_LINE_BASE_OPTIONS: { value: ApprovalLineBase; label: string }[] = [
-  { value: 'ORGANIZATION', label: '조직 기반' },
-  { value: 'POSITION', label: '직책 기반' },
-  { value: 'ROLE', label: '역할 기반' },
-];
-
-const APPROVAL_SCOPE_OPTIONS: { value: ApprovalScope; label: string }[] = [
-  { value: 'LEAVE', label: '휴가' },
-  { value: 'EXPENSE', label: '지출' },
-  { value: 'DOCUMENT', label: '문서' },
-  { value: 'PURCHASE', label: '구매' },
-  { value: 'GENERAL', label: '일반' },
-];
-
 export interface ApprovalPolicySettingsProps {
   initialData?: ApprovalPolicy;
   onSubmit: (data: ApprovalPolicy) => Promise<void>;
@@ -76,6 +63,22 @@ export function ApprovalPolicySettings({
   isLoading = false,
   readOnly = false,
 }: ApprovalPolicySettingsProps) {
+  const { t } = useTranslation('tenant');
+
+  const APPROVAL_LINE_BASE_OPTIONS: { value: ApprovalLineBase; label: string }[] = [
+    { value: 'ORGANIZATION', label: t('approvalPolicy.lineBaseOrganization') },
+    { value: 'POSITION', label: t('approvalPolicy.lineBasePosition') },
+    { value: 'ROLE', label: t('approvalPolicy.lineBaseRole') },
+  ];
+
+  const APPROVAL_SCOPE_OPTIONS: { value: ApprovalScope; label: string }[] = [
+    { value: 'LEAVE', label: t('approvalPolicy.scopeLeave') },
+    { value: 'EXPENSE', label: t('approvalPolicy.scopeExpense') },
+    { value: 'DOCUMENT', label: t('approvalPolicy.scopeDocument') },
+    { value: 'PURCHASE', label: t('approvalPolicy.scopePurchase') },
+    { value: 'GENERAL', label: t('approvalPolicy.scopeGeneral') },
+  ];
+
   const methods = useForm<ApprovalPolicy>({
     resolver: zodResolver(approvalPolicySchema),
     defaultValues: initialData ?? DEFAULT_APPROVAL_POLICY,
@@ -103,16 +106,16 @@ export function ApprovalPolicySettings({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileCheck className="h-5 w-5" />
-              결재 기능 설정
+              {t('approvalPolicy.featureTitle')}
             </CardTitle>
-            <CardDescription>사용할 결재 기능을 선택합니다</CardDescription>
+            <CardDescription>{t('approvalPolicy.featureDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div>
-                  <Label>병렬 결재</Label>
-                  <p className="text-sm text-muted-foreground">동일 단계 복수 결재자</p>
+                  <Label>{t('approvalPolicy.parallelApproval')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('approvalPolicy.parallelApprovalDescription')}</p>
                 </div>
                 <Switch
                   checked={watch('features.parallelApproval')}
@@ -123,8 +126,8 @@ export function ApprovalPolicySettings({
 
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div>
-                  <Label>합의</Label>
-                  <p className="text-sm text-muted-foreground">결재 라인에 합의자 추가</p>
+                  <Label>{t('approvalPolicy.consensus')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('approvalPolicy.consensusDescription')}</p>
                 </div>
                 <Switch
                   checked={watch('features.consensus')}
@@ -135,8 +138,8 @@ export function ApprovalPolicySettings({
 
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div>
-                  <Label>전결</Label>
-                  <p className="text-sm text-muted-foreground">결재 라인 단축 처리</p>
+                  <Label>{t('approvalPolicy.directApproval')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('approvalPolicy.directApprovalDescription')}</p>
                 </div>
                 <Switch
                   checked={watch('features.directApproval')}
@@ -147,8 +150,8 @@ export function ApprovalPolicySettings({
 
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div>
-                  <Label>대결</Label>
-                  <p className="text-sm text-muted-foreground">부재 시 대리 결재</p>
+                  <Label>{t('approvalPolicy.proxyApproval')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('approvalPolicy.proxyApprovalDescription')}</p>
                 </div>
                 <Switch
                   checked={watch('features.proxyApproval')}
@@ -159,8 +162,8 @@ export function ApprovalPolicySettings({
 
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div>
-                  <Label>자동 결재선</Label>
-                  <p className="text-sm text-muted-foreground">문서별 자동 결재선 생성</p>
+                  <Label>{t('approvalPolicy.autoApprovalLine')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('approvalPolicy.autoApprovalLineDescription')}</p>
                 </div>
                 <Switch
                   checked={watch('features.autoApprovalLine')}
@@ -171,8 +174,8 @@ export function ApprovalPolicySettings({
 
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div>
-                  <Label>조건 분기</Label>
-                  <p className="text-sm text-muted-foreground">조건에 따른 결재선 분기</p>
+                  <Label>{t('approvalPolicy.conditionalBranch')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('approvalPolicy.conditionalBranchDescription')}</p>
                 </div>
                 <Switch
                   checked={watch('features.conditionalBranch')}
@@ -189,15 +192,15 @@ export function ApprovalPolicySettings({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Settings className="h-5 w-5" />
-              자동 결재선 설정
+              {t('approvalPolicy.autoApprovalLineSettingsTitle')}
             </CardTitle>
-            <CardDescription>결재선 자동 생성 규칙 설정</CardDescription>
+            <CardDescription>{t('approvalPolicy.autoApprovalLineSettingsDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div>
-                <Label>자동 결재선 활성화</Label>
-                <p className="text-sm text-muted-foreground">문서 생성 시 결재선 자동 지정</p>
+                <Label>{t('approvalPolicy.autoApprovalLineEnabled')}</Label>
+                <p className="text-sm text-muted-foreground">{t('approvalPolicy.autoApprovalLineEnabledDescription')}</p>
               </div>
               <Switch
                 checked={watch('autoApprovalLine.enabled')}
@@ -209,7 +212,7 @@ export function ApprovalPolicySettings({
             {watch('autoApprovalLine.enabled') && (
               <FormRow cols={2}>
                 <div className="space-y-2">
-                  <Label>결재선 기준</Label>
+                  <Label>{t('approvalPolicy.lineBase')}</Label>
                   <Select
                     value={watch('autoApprovalLine.baseOn')}
                     onValueChange={(value: ApprovalLineBase) =>
@@ -230,7 +233,7 @@ export function ApprovalPolicySettings({
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>최대 결재 단계</Label>
+                  <Label>{t('approvalPolicy.maxApprovalLevels')}</Label>
                   <Input
                     type="number"
                     min="1"
@@ -255,15 +258,15 @@ export function ApprovalPolicySettings({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="h-5 w-5" />
-              에스컬레이션 설정
+              {t('approvalPolicy.escalationTitle')}
             </CardTitle>
-            <CardDescription>결재 지연 시 알림 및 자동 처리 설정</CardDescription>
+            <CardDescription>{t('approvalPolicy.escalationDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div>
-                <Label>에스컬레이션 활성화</Label>
-                <p className="text-sm text-muted-foreground">결재 지연 시 자동 알림 및 상신</p>
+                <Label>{t('approvalPolicy.escalationEnabled')}</Label>
+                <p className="text-sm text-muted-foreground">{t('approvalPolicy.escalationEnabledDescription')}</p>
               </div>
               <Switch
                 checked={watch('escalation.enabled')}
@@ -275,7 +278,7 @@ export function ApprovalPolicySettings({
             {watch('escalation.enabled') && (
               <FormRow cols={3}>
                 <div className="space-y-2">
-                  <Label>알림 시간</Label>
+                  <Label>{t('approvalPolicy.reminderTime')}</Label>
                   <div className="flex items-center gap-2">
                     <Input
                       type="number"
@@ -283,12 +286,12 @@ export function ApprovalPolicySettings({
                       disabled={readOnly}
                       className="w-24"
                     />
-                    <span className="text-sm text-muted-foreground">시간 후</span>
+                    <span className="text-sm text-muted-foreground">{t('approvalPolicy.hoursAfter')}</span>
                   </div>
-                  <p className="text-xs text-muted-foreground">결재자에게 알림 발송</p>
+                  <p className="text-xs text-muted-foreground">{t('approvalPolicy.reminderHint')}</p>
                 </div>
                 <div className="space-y-2">
-                  <Label>상신 시간</Label>
+                  <Label>{t('approvalPolicy.escalateTime')}</Label>
                   <div className="flex items-center gap-2">
                     <Input
                       type="number"
@@ -296,12 +299,12 @@ export function ApprovalPolicySettings({
                       disabled={readOnly}
                       className="w-24"
                     />
-                    <span className="text-sm text-muted-foreground">시간 후</span>
+                    <span className="text-sm text-muted-foreground">{t('approvalPolicy.hoursAfter')}</span>
                   </div>
-                  <p className="text-xs text-muted-foreground">상위 결재자에게 상신</p>
+                  <p className="text-xs text-muted-foreground">{t('approvalPolicy.escalateHint')}</p>
                 </div>
                 <div className="space-y-2">
-                  <Label>자동 반려 시간</Label>
+                  <Label>{t('approvalPolicy.autoRejectTime')}</Label>
                   <div className="flex items-center gap-2">
                     <Input
                       type="number"
@@ -309,9 +312,9 @@ export function ApprovalPolicySettings({
                       disabled={readOnly}
                       className="w-24"
                     />
-                    <span className="text-sm text-muted-foreground">시간 후</span>
+                    <span className="text-sm text-muted-foreground">{t('approvalPolicy.hoursAfter')}</span>
                   </div>
-                  <p className="text-xs text-muted-foreground">자동 반려 처리</p>
+                  <p className="text-xs text-muted-foreground">{t('approvalPolicy.autoRejectHint')}</p>
                 </div>
               </FormRow>
             )}
@@ -323,14 +326,14 @@ export function ApprovalPolicySettings({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              대결 규칙
+              {t('approvalPolicy.proxyRulesTitle')}
             </CardTitle>
-            <CardDescription>부재 시 대리 결재 관련 설정</CardDescription>
+            <CardDescription>{t('approvalPolicy.proxyRulesDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <FormRow cols={2}>
               <div className="space-y-2">
-                <Label>최대 대결 기간</Label>
+                <Label>{t('approvalPolicy.maxProxyDuration')}</Label>
                 <div className="flex items-center gap-2">
                   <Input
                     type="number"
@@ -340,13 +343,13 @@ export function ApprovalPolicySettings({
                     disabled={readOnly}
                     className="w-24"
                   />
-                  <span className="text-sm text-muted-foreground">일</span>
+                  <span className="text-sm text-muted-foreground">{t('approvalPolicy.daysUnit')}</span>
                 </div>
               </div>
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div>
-                  <Label>대결 지정 승인 필요</Label>
-                  <p className="text-sm text-muted-foreground">대결자 지정 시 승인 필요</p>
+                  <Label>{t('approvalPolicy.proxyApprovalRequired')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('approvalPolicy.proxyApprovalRequiredDescription')}</p>
                 </div>
                 <Switch
                   checked={watch('proxyRules.requiresApproval')}
@@ -357,7 +360,7 @@ export function ApprovalPolicySettings({
             </FormRow>
 
             <div className="space-y-2">
-              <Label>대결 허용 범위</Label>
+              <Label>{t('approvalPolicy.proxyScope')}</Label>
               <div className="flex flex-wrap gap-4 pt-2">
                 {APPROVAL_SCOPE_OPTIONS.map((option) => (
                   <div key={option.value} className="flex items-center space-x-2">
@@ -385,10 +388,10 @@ export function ApprovalPolicySettings({
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  저장 중...
+                  {t('common.saving')}
                 </>
               ) : (
-                '저장'
+                t('common.save')
               )}
             </Button>
           </div>
@@ -402,6 +405,7 @@ export function ApprovalPolicySettings({
 }
 
 function ParallelCompletionCard() {
+  const { t } = useTranslation('tenant');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -437,10 +441,10 @@ function ParallelCompletionCard() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tenant', 'features', 'PARALLEL_APPROVAL'] });
-      toast({ title: '저장 완료', description: '병렬 결재 완료 조건이 저장되었습니다.' });
+      toast({ title: t('approvalPolicy.saveSuccess'), description: t('approvalPolicy.saveSuccessDescription') });
     },
     onError: () => {
-      toast({ title: '저장 실패', description: '병렬 결재 완료 조건 저장에 실패했습니다.', variant: 'destructive' });
+      toast({ title: t('approvalPolicy.saveError'), description: t('approvalPolicy.saveErrorDescription'), variant: 'destructive' });
     },
   });
 
@@ -449,10 +453,10 @@ function ParallelCompletionCard() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <GitFork className="h-5 w-5 text-blue-600" />
-          병렬 결재 완료 조건
+          {t('approvalPolicy.parallelCompletionTitle')}
         </CardTitle>
         <CardDescription>
-          병렬 결재 시 몇 명이 승인해야 결재가 완료되는지 설정합니다. 테넌트 전체에 적용됩니다.
+          {t('approvalPolicy.parallelCompletionDescription')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -467,18 +471,18 @@ function ParallelCompletionCard() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">전원 승인 (ALL)</SelectItem>
-                <SelectItem value="majority">과반수 승인 (MAJORITY)</SelectItem>
-                <SelectItem value="one">1인 승인 (ANY)</SelectItem>
+                <SelectItem value="all">{t('approvalPolicy.parallelAll')}</SelectItem>
+                <SelectItem value="majority">{t('approvalPolicy.parallelMajority')}</SelectItem>
+                <SelectItem value="one">{t('approvalPolicy.parallelOne')}</SelectItem>
               </SelectContent>
             </Select>
 
             <div className="rounded-md bg-muted p-3 text-sm text-muted-foreground">
-              <p className="font-medium mb-1">현재 설정</p>
+              <p className="font-medium mb-1">{t('approvalPolicy.currentSetting')}</p>
               <p>
-                {value === 'all' && '병렬 결재자 전원이 승인해야 완료됩니다.'}
-                {value === 'majority' && '병렬 결재자 과반수가 승인하면 완료됩니다.'}
-                {value === 'one' && '병렬 결재자 중 1인이 승인하면 완료됩니다.'}
+                {value === 'all' && t('approvalPolicy.parallelAllDescription')}
+                {value === 'majority' && t('approvalPolicy.parallelMajorityDescription')}
+                {value === 'one' && t('approvalPolicy.parallelOneDescription')}
               </p>
             </div>
 
@@ -487,10 +491,10 @@ function ParallelCompletionCard() {
                 {saveMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    저장 중...
+                    {t('common.saving')}
                   </>
                 ) : (
-                  '병렬 결재 설정 저장'
+                  t('approvalPolicy.saveParallelCompletion')
                 )}
               </Button>
             </div>

@@ -1,6 +1,9 @@
+import React from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,15 +13,16 @@ import { FormRow } from '@/components/common/Form';
 import { Loader2, KeyRound } from 'lucide-react';
 import type { PasswordPolicy } from '@hr-platform/shared-types';
 
-const passwordPolicySchema = z.object({
-  minLength: z.number().min(6, '최소 6자 이상').max(32, '최대 32자 이하'),
-  requireUppercase: z.boolean(),
-  requireLowercase: z.boolean(),
-  requireNumber: z.boolean(),
-  requireSpecialChar: z.boolean(),
-  expiryDays: z.number().min(0, '0 이상').max(365, '365일 이하'),
-  historyCount: z.number().min(0, '0 이상').max(24, '24개 이하'),
-});
+const createPasswordPolicySchema = (t: TFunction) =>
+  z.object({
+    minLength: z.number().min(6, t('validation.minLength6')).max(32, t('validation.maxLength32')),
+    requireUppercase: z.boolean(),
+    requireLowercase: z.boolean(),
+    requireNumber: z.boolean(),
+    requireSpecialChar: z.boolean(),
+    expiryDays: z.number().min(0, t('validation.min0')).max(365, t('validation.max365days')),
+    historyCount: z.number().min(0, t('validation.min0')).max(24, t('validation.max24')),
+  });
 
 export interface PasswordPolicySettingsProps {
   initialData?: Partial<PasswordPolicy>;
@@ -43,6 +47,9 @@ export function PasswordPolicySettings({
   isLoading = false,
   readOnly = false,
 }: PasswordPolicySettingsProps) {
+  const { t } = useTranslation('tenant');
+  const passwordPolicySchema = React.useMemo(() => createPasswordPolicySchema(t), [t]);
+
   const methods = useForm<PasswordPolicy>({
     resolver: zodResolver(passwordPolicySchema),
     defaultValues: { ...defaultPasswordPolicy, ...initialData },
@@ -61,14 +68,14 @@ export function PasswordPolicySettings({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <KeyRound className="h-5 w-5" />
-              비밀번호 정책
+              {t('passwordPolicy.title')}
             </CardTitle>
-            <CardDescription>비밀번호 복잡도 및 만료 설정</CardDescription>
+            <CardDescription>{t('passwordPolicy.description')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <FormRow cols={2}>
               <div className="space-y-2">
-                <Label>최소 길이</Label>
+                <Label>{t('passwordPolicy.minLength')}</Label>
                 <Input
                   type="number"
                   {...register('minLength', { valueAsNumber: true })}
@@ -76,10 +83,10 @@ export function PasswordPolicySettings({
                   min={6}
                   max={32}
                 />
-                <p className="text-xs text-muted-foreground">6~32자</p>
+                <p className="text-xs text-muted-foreground">{t('passwordPolicy.minLengthHint')}</p>
               </div>
               <div className="space-y-2">
-                <Label>비밀번호 만료 (일)</Label>
+                <Label>{t('passwordPolicy.expiryDays')}</Label>
                 <Input
                   type="number"
                   {...register('expiryDays', { valueAsNumber: true })}
@@ -87,12 +94,12 @@ export function PasswordPolicySettings({
                   min={0}
                   max={365}
                 />
-                <p className="text-xs text-muted-foreground">0일이면 만료 없음</p>
+                <p className="text-xs text-muted-foreground">{t('passwordPolicy.expiryDaysHint')}</p>
               </div>
             </FormRow>
 
             <div className="space-y-2">
-              <Label>재사용 금지 개수</Label>
+              <Label>{t('passwordPolicy.historyCount')}</Label>
               <Input
                 type="number"
                 {...register('historyCount', { valueAsNumber: true })}
@@ -102,17 +109,17 @@ export function PasswordPolicySettings({
                 className="w-32"
               />
               <p className="text-xs text-muted-foreground">
-                최근 N개의 비밀번호는 재사용 불가 (0이면 제한 없음)
+                {t('passwordPolicy.historyCountHint')}
               </p>
             </div>
 
             <div className="space-y-3 pt-2">
-              <Label className="text-base">비밀번호 복잡도 요구사항</Label>
+              <Label className="text-base">{t('passwordPolicy.complexity')}</Label>
 
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div>
-                  <Label>대문자 포함</Label>
-                  <p className="text-sm text-muted-foreground">A-Z 중 하나 이상</p>
+                  <Label>{t('passwordPolicy.requireUppercase')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('passwordPolicy.requireUppercaseHint')}</p>
                 </div>
                 <Switch
                   checked={watch('requireUppercase')}
@@ -123,8 +130,8 @@ export function PasswordPolicySettings({
 
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div>
-                  <Label>소문자 포함</Label>
-                  <p className="text-sm text-muted-foreground">a-z 중 하나 이상</p>
+                  <Label>{t('passwordPolicy.requireLowercase')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('passwordPolicy.requireLowercaseHint')}</p>
                 </div>
                 <Switch
                   checked={watch('requireLowercase')}
@@ -135,8 +142,8 @@ export function PasswordPolicySettings({
 
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div>
-                  <Label>숫자 포함</Label>
-                  <p className="text-sm text-muted-foreground">0-9 중 하나 이상</p>
+                  <Label>{t('passwordPolicy.requireNumber')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('passwordPolicy.requireNumberHint')}</p>
                 </div>
                 <Switch
                   checked={watch('requireNumber')}
@@ -147,8 +154,8 @@ export function PasswordPolicySettings({
 
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div>
-                  <Label>특수문자 포함</Label>
-                  <p className="text-sm text-muted-foreground">!@#$%^&* 등 하나 이상</p>
+                  <Label>{t('passwordPolicy.requireSpecialChar')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('passwordPolicy.requireSpecialCharHint')}</p>
                 </div>
                 <Switch
                   checked={watch('requireSpecialChar')}
@@ -166,10 +173,10 @@ export function PasswordPolicySettings({
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  저장 중...
+                  {t('common.saving')}
                 </>
               ) : (
-                '저장'
+                t('common.save')
               )}
             </Button>
           </div>

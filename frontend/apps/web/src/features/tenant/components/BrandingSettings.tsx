@@ -1,5 +1,7 @@
 import * as React from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,15 +14,17 @@ import { Loader2, Palette, Image as ImageIcon, Eye } from 'lucide-react';
 import type { TenantBranding } from '@hr-platform/shared-types';
 import { cn } from '@/lib/utils';
 
-const brandingSchema = z.object({
-  primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, '올바른 색상 코드를 입력하세요'),
-  secondaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, '올바른 색상 코드를 입력하세요'),
-  logoUrl: z.string().optional(),
-  faviconUrl: z.string().optional(),
-  loginBackgroundUrl: z.string().optional(),
-});
+function createBrandingSchema(t: TFunction) {
+  return z.object({
+    primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, t('validation.validColorCode')),
+    secondaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, t('validation.validColorCode')),
+    logoUrl: z.string().optional(),
+    faviconUrl: z.string().optional(),
+    loginBackgroundUrl: z.string().optional(),
+  });
+}
 
-type BrandingFormData = z.infer<typeof brandingSchema>;
+type BrandingFormData = z.infer<ReturnType<typeof createBrandingSchema>>;
 
 export interface BrandingSettingsProps {
   initialData?: Partial<TenantBranding>;
@@ -38,15 +42,6 @@ const defaultBranding: TenantBranding = {
   loginBackgroundUrl: undefined,
 };
 
-const COLOR_PRESETS = [
-  { name: '블루', primary: '#3B82F6', secondary: '#6366F1' },
-  { name: '그린', primary: '#10B981', secondary: '#059669' },
-  { name: '퍼플', primary: '#8B5CF6', secondary: '#7C3AED' },
-  { name: '레드', primary: '#EF4444', secondary: '#DC2626' },
-  { name: '오렌지', primary: '#F97316', secondary: '#EA580C' },
-  { name: '그레이', primary: '#6B7280', secondary: '#4B5563' },
-];
-
 export function BrandingSettings({
   initialData,
   onSubmit,
@@ -54,10 +49,22 @@ export function BrandingSettings({
   isLoading = false,
   readOnly = false,
 }: BrandingSettingsProps) {
+  const { t } = useTranslation('tenant');
   const [logoFile, setLogoFile] = React.useState<File | undefined>();
   const [faviconFile, setFaviconFile] = React.useState<File | undefined>();
   const [backgroundFile, setBackgroundFile] = React.useState<File | undefined>();
   const [uploading, setUploading] = React.useState(false);
+
+  const brandingSchema = React.useMemo(() => createBrandingSchema(t), [t]);
+
+  const COLOR_PRESETS = React.useMemo(() => [
+    { name: t('branding.presetBlue'), primary: '#3B82F6', secondary: '#6366F1' },
+    { name: t('branding.presetGreen'), primary: '#10B981', secondary: '#059669' },
+    { name: t('branding.presetPurple'), primary: '#8B5CF6', secondary: '#7C3AED' },
+    { name: t('branding.presetRed'), primary: '#EF4444', secondary: '#DC2626' },
+    { name: t('branding.presetOrange'), primary: '#F97316', secondary: '#EA580C' },
+    { name: t('branding.presetGray'), primary: '#6B7280', secondary: '#4B5563' },
+  ], [t]);
 
   const methods = useForm<BrandingFormData>({
     resolver: zodResolver(brandingSchema),
@@ -113,14 +120,14 @@ export function BrandingSettings({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Palette className="h-5 w-5" />
-              색상 설정
+              {t('branding.colorSettings')}
             </CardTitle>
-            <CardDescription>브랜드 색상을 설정합니다</CardDescription>
+            <CardDescription>{t('branding.colorSettingsDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Presets */}
             <div className="space-y-2">
-              <Label>프리셋</Label>
+              <Label>{t('branding.preset')}</Label>
               <div className="flex flex-wrap gap-2">
                 {COLOR_PRESETS.map((preset) => (
                   <button
@@ -146,7 +153,7 @@ export function BrandingSettings({
 
             <FormRow cols={2}>
               <div className="space-y-2">
-                <Label>주요 색상</Label>
+                <Label>{t('branding.primaryColor')}</Label>
                 <div className="flex gap-2">
                   <div
                     className="h-10 w-10 rounded-md border shrink-0"
@@ -170,7 +177,7 @@ export function BrandingSettings({
                 )}
               </div>
               <div className="space-y-2">
-                <Label>보조 색상</Label>
+                <Label>{t('branding.secondaryColor')}</Label>
                 <div className="flex gap-2">
                   <div
                     className="h-10 w-10 rounded-md border shrink-0"
@@ -199,7 +206,7 @@ export function BrandingSettings({
             <div className="space-y-2">
               <Label className="flex items-center gap-1">
                 <Eye className="h-4 w-4" />
-                미리보기
+                {t('branding.preview')}
               </Label>
               <div className="flex gap-4 p-4 rounded-lg border bg-card">
                 <button
@@ -230,15 +237,15 @@ export function BrandingSettings({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ImageIcon className="h-5 w-5" />
-              이미지 설정
+              {t('branding.imageSettings')}
             </CardTitle>
-            <CardDescription>로고 및 배경 이미지를 설정합니다</CardDescription>
+            <CardDescription>{t('branding.imageSettingsDescription')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-6 md:grid-cols-3">
               {/* Logo */}
               <div className="space-y-2">
-                <Label>로고</Label>
+                <Label>{t('branding.logo')}</Label>
                 <ImageUpload
                   value={watch('logoUrl') || logoFile}
                   onChange={(file) => {
@@ -248,18 +255,18 @@ export function BrandingSettings({
                   disabled={readOnly || uploading}
                   variant="square"
                   size="md"
-                  placeholder="로고 업로드"
+                  placeholder={t('branding.logoPlaceholder')}
                   accept="image/png,image/svg+xml"
                   maxSize={2 * 1024 * 1024}
                 />
                 <p className="text-xs text-muted-foreground">
-                  권장: 200x200 PNG/SVG
+                  {t('branding.logoRecommend')}
                 </p>
               </div>
 
               {/* Favicon */}
               <div className="space-y-2">
-                <Label>파비콘</Label>
+                <Label>{t('branding.favicon')}</Label>
                 <ImageUpload
                   value={watch('faviconUrl') || faviconFile}
                   onChange={(file) => {
@@ -269,18 +276,18 @@ export function BrandingSettings({
                   disabled={readOnly || uploading}
                   variant="square"
                   size="sm"
-                  placeholder="파비콘"
+                  placeholder={t('branding.faviconPlaceholder')}
                   accept="image/png,image/x-icon"
                   maxSize={512 * 1024}
                 />
                 <p className="text-xs text-muted-foreground">
-                  권장: 32x32 PNG/ICO
+                  {t('branding.faviconRecommend')}
                 </p>
               </div>
 
               {/* Login Background */}
               <div className="space-y-2">
-                <Label>로그인 배경</Label>
+                <Label>{t('branding.loginBackground')}</Label>
                 <ImageUpload
                   value={watch('loginBackgroundUrl') || backgroundFile}
                   onChange={(file) => {
@@ -290,12 +297,12 @@ export function BrandingSettings({
                   disabled={readOnly || uploading}
                   variant="square"
                   size="md"
-                  placeholder="배경 이미지"
+                  placeholder={t('branding.loginBackgroundPlaceholder')}
                   accept="image/jpeg,image/png"
                   maxSize={5 * 1024 * 1024}
                 />
                 <p className="text-xs text-muted-foreground">
-                  권장: 1920x1080 JPG/PNG
+                  {t('branding.loginBackgroundRecommend')}
                 </p>
               </div>
             </div>
@@ -308,10 +315,10 @@ export function BrandingSettings({
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  저장 중...
+                  {t('common.saving')}
                 </>
               ) : (
-                '브랜딩 저장'
+                t('branding.saveBranding')
               )}
             </Button>
           </div>
