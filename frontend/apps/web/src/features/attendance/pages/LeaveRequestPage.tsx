@@ -636,27 +636,35 @@ export default function LeaveRequestPage() {
 
           {/* Filter */}
           <div className="flex gap-2">
-            <select
+            <Select
               value={searchState.leaveType}
-              onChange={(e) => setLeaveType(e.target.value as LeaveType | '')}
-              className="flex-1 h-9 rounded-lg border border-input bg-background px-3 text-sm"
+              onValueChange={(value) => setLeaveType(value as LeaveType | '')}
             >
-              <option value="">{t('leaveRequestPage.filter.allTypes')}</option>
-              {Object.entries(LEAVE_TYPE_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>{label}</option>
-              ))}
-            </select>
-            <select
+              <SelectTrigger className="flex-1 h-9">
+                <SelectValue placeholder={t('leaveRequestPage.filter.allTypes')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">{t('leaveRequestPage.filter.allTypes')}</SelectItem>
+                {Object.entries(LEAVE_TYPE_LABELS).map(([value, label]) => (
+                  <SelectItem key={value} value={value}>{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
               value={searchState.status}
-              onChange={(e) => setStatus(e.target.value as LeaveStatus | '')}
-              className="flex-1 h-9 rounded-lg border border-input bg-background px-3 text-sm"
+              onValueChange={(value) => setStatus(value as LeaveStatus | '')}
             >
-              <option value="">{t('leaveRequestPage.filter.allStatus')}</option>
-              <option value="PENDING">{t('leaveRequestPage.filter.pending')}</option>
-              <option value="APPROVED">{t('leaveRequestPage.filter.approved')}</option>
-              <option value="REJECTED">{t('leaveRequestPage.filter.rejected')}</option>
-              <option value="CANCELLED">{t('leaveRequestPage.filter.cancelled')}</option>
-            </select>
+              <SelectTrigger className="flex-1 h-9">
+                <SelectValue placeholder={t('leaveRequestPage.filter.allStatus')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">{t('leaveRequestPage.filter.allStatus')}</SelectItem>
+                <SelectItem value="PENDING">{t('leaveRequestPage.filter.pending')}</SelectItem>
+                <SelectItem value="APPROVED">{t('leaveRequestPage.filter.approved')}</SelectItem>
+                <SelectItem value="REJECTED">{t('leaveRequestPage.filter.rejected')}</SelectItem>
+                <SelectItem value="CANCELLED">{t('leaveRequestPage.filter.cancelled')}</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Leave Request List */}
@@ -804,27 +812,35 @@ export default function LeaveRequestPage() {
         <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-4">
           <CardTitle>{t('leaveRequestPage.requestList.title')}</CardTitle>
           <div className="flex gap-2">
-            <select
+            <Select
               value={searchState.leaveType}
-              onChange={(e) => setLeaveType(e.target.value as LeaveType | '')}
-              className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm"
+              onValueChange={(value) => setLeaveType(value as LeaveType | '')}
             >
-              <option value="">{t('leaveRequestPage.filter.allTypes')}</option>
-              {Object.entries(LEAVE_TYPE_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>{label}</option>
-              ))}
-            </select>
-            <select
+              <SelectTrigger className="h-9 w-[180px]">
+                <SelectValue placeholder={t('leaveRequestPage.filter.allTypes')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">{t('leaveRequestPage.filter.allTypes')}</SelectItem>
+                {Object.entries(LEAVE_TYPE_LABELS).map(([value, label]) => (
+                  <SelectItem key={value} value={value}>{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
               value={searchState.status}
-              onChange={(e) => setStatus(e.target.value as LeaveStatus | '')}
-              className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm"
+              onValueChange={(value) => setStatus(value as LeaveStatus | '')}
             >
-              <option value="">{t('leaveRequestPage.filter.allStatus')}</option>
-              <option value="PENDING">{t('leaveRequestPage.filter.pending')}</option>
-              <option value="APPROVED">{t('leaveRequestPage.filter.approved')}</option>
-              <option value="REJECTED">{t('leaveRequestPage.filter.rejected')}</option>
-              <option value="CANCELLED">{t('leaveRequestPage.filter.cancelled')}</option>
-            </select>
+              <SelectTrigger className="h-9 w-[180px]">
+                <SelectValue placeholder={t('leaveRequestPage.filter.allStatus')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">{t('leaveRequestPage.filter.allStatus')}</SelectItem>
+                <SelectItem value="PENDING">{t('leaveRequestPage.filter.pending')}</SelectItem>
+                <SelectItem value="APPROVED">{t('leaveRequestPage.filter.approved')}</SelectItem>
+                <SelectItem value="REJECTED">{t('leaveRequestPage.filter.rejected')}</SelectItem>
+                <SelectItem value="CANCELLED">{t('leaveRequestPage.filter.cancelled')}</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardHeader>
         <CardContent className="p-0">

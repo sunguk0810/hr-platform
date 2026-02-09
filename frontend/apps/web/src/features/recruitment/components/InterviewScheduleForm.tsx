@@ -1,10 +1,17 @@
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { format, addHours } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import type { CreateInterviewRequest, InterviewType } from '@hr-platform/shared-types';
 import { showErrorToast } from '@/components/common/Error/ErrorToast';
 
@@ -59,6 +66,7 @@ export function InterviewScheduleForm({
 
   const {
     register,
+    control,
     handleSubmit,
     watch,
     formState: { errors },
@@ -135,17 +143,25 @@ export function InterviewScheduleForm({
 
       <div className="space-y-2">
         <Label htmlFor="interviewType">{t('interviewScheduleForm.interviewType')}</Label>
-        <select
-          id="interviewType"
-          className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-          {...register('interviewType', { required: true })}
-        >
-          {INTERVIEW_TYPE_KEYS.map((type) => (
-            <option key={type.value} value={type.value}>
-              {t(type.key)}
-            </option>
-          ))}
-        </select>
+        <Controller
+          control={control}
+          name="interviewType"
+          rules={{ required: true }}
+          render={({ field }) => (
+            <Select value={field.value} onValueChange={field.onChange}>
+              <SelectTrigger className="w-full h-10">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {INTERVIEW_TYPE_KEYS.map((type) => (
+                  <SelectItem key={type.value} value={type.value}>
+                    {t(type.key)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -175,17 +191,25 @@ export function InterviewScheduleForm({
 
       <div className="space-y-2">
         <Label htmlFor="durationMinutes">{t('interviewScheduleForm.duration')}</Label>
-        <select
-          id="durationMinutes"
-          className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-          {...register('durationMinutes', { required: true })}
-        >
-          {DURATION_OPTION_KEYS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {t(opt.key)}
-            </option>
-          ))}
-        </select>
+        <Controller
+          control={control}
+          name="durationMinutes"
+          rules={{ required: true }}
+          render={({ field }) => (
+            <Select value={field.value} onValueChange={field.onChange}>
+              <SelectTrigger className="w-full h-10">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {DURATION_OPTION_KEYS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value.toString()}>
+                    {t(opt.key)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
       </div>
 
       {showLocation && (

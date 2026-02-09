@@ -297,23 +297,26 @@ export function ApprovalLineBuilder({
               />
             )}
             {step.approverType === 'ROLE' && (
-              <select
+              <Select
                 value={step.roleName || ''}
-                onChange={(e) =>
+                onValueChange={(value) =>
                   handleUpdateStep(step.id, {
-                    roleName: e.target.value,
-                    approverName: e.target.value,
+                    roleName: value,
+                    approverName: value,
                   })
                 }
-                className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
               >
-                <option value="">{t('role.select')}</option>
-                <option value="TEAM_LEADER">{t('role.teamLeader')}</option>
-                <option value="DEPARTMENT_HEAD">{t('role.departmentHead')}</option>
-                <option value="HR_MANAGER">{t('role.hrManager')}</option>
-                <option value="CFO">{t('role.cfo')}</option>
-                <option value="CEO">{t('role.ceo')}</option>
-              </select>
+                <SelectTrigger className="h-9 w-full">
+                  <SelectValue placeholder={t('role.select')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="TEAM_LEADER">{t('role.teamLeader')}</SelectItem>
+                  <SelectItem value="DEPARTMENT_HEAD">{t('role.departmentHead')}</SelectItem>
+                  <SelectItem value="HR_MANAGER">{t('role.hrManager')}</SelectItem>
+                  <SelectItem value="CFO">{t('role.cfo')}</SelectItem>
+                  <SelectItem value="CEO">{t('role.ceo')}</SelectItem>
+                </SelectContent>
+              </Select>
             )}
             {step.approverType === 'DEPARTMENT_HEAD' && (
               <div className="flex h-9 items-center px-3 text-sm text-muted-foreground">
