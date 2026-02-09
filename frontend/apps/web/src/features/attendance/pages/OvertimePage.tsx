@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { PageHeader } from '@/components/common/PageHeader';
 import { PullToRefreshContainer } from '@/components/mobile';
@@ -39,20 +40,21 @@ import {
 } from '../hooks/useAttendance';
 import type { OvertimeStatus, CreateOvertimeRequest } from '@hr-platform/shared-types';
 
-const STATUS_CONFIG: Record<OvertimeStatus, { label: string; variant: 'default' | 'warning' | 'success' | 'error' }> = {
-  PENDING: { label: '승인대기', variant: 'warning' },
-  APPROVED: { label: '승인', variant: 'success' },
-  REJECTED: { label: '반려', variant: 'error' },
-  CANCELLED: { label: '취소', variant: 'default' },
-};
-
 export default function OvertimePage() {
+  const { t } = useTranslation('attendance');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<OvertimeStatus | 'all'>('all');
   const [page, setPage] = useState(0);
+
+  const STATUS_CONFIG: Record<OvertimeStatus, { label: string; variant: 'default' | 'warning' | 'success' | 'error' }> = {
+    PENDING: { label: t('overtimePage.statusConfig.pending'), variant: 'warning' },
+    APPROVED: { label: t('overtimePage.statusConfig.approved'), variant: 'success' },
+    REJECTED: { label: t('overtimePage.statusConfig.rejected'), variant: 'error' },
+    CANCELLED: { label: t('overtimePage.statusConfig.cancelled'), variant: 'default' },
+  };
 
   const [cancelTargetId, setCancelTargetId] = useState<string | null>(null);
 
@@ -125,12 +127,12 @@ export default function OvertimePage() {
     <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>초과근무 신청</DialogTitle>
-          <DialogDescription>초과근무 내역을 입력하고 승인을 요청합니다.</DialogDescription>
+          <DialogTitle>{t('overtimePage.createDialog.title')}</DialogTitle>
+          <DialogDescription>{t('overtimePage.createDialog.description')}</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <Label htmlFor="date">날짜 *</Label>
+            <Label htmlFor="date">{t('overtimePage.createDialog.dateLabel')}</Label>
             <Input
               id="date"
               type="date"
@@ -140,7 +142,7 @@ export default function OvertimePage() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="startTime">시작 시간 *</Label>
+              <Label htmlFor="startTime">{t('overtimePage.createDialog.startTimeLabel')}</Label>
               <Input
                 id="startTime"
                 type="time"
@@ -149,7 +151,7 @@ export default function OvertimePage() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="endTime">종료 시간 *</Label>
+              <Label htmlFor="endTime">{t('overtimePage.createDialog.endTimeLabel')}</Label>
               <Input
                 id="endTime"
                 type="time"
@@ -160,23 +162,23 @@ export default function OvertimePage() {
           </div>
           {estimatedHours > 0 && (
             <div className="text-sm text-muted-foreground">
-              예상 초과근무 시간: <span className="font-medium text-primary">{estimatedHours.toFixed(1)}시간</span>
+              {t('overtimePage.createDialog.estimatedHours', { hours: estimatedHours.toFixed(1) })}
             </div>
           )}
           <div className="grid gap-2">
-            <Label htmlFor="reason">사유 *</Label>
+            <Label htmlFor="reason">{t('overtimePage.createDialog.reasonLabel')}</Label>
             <Textarea
               id="reason"
               value={formData.reason}
               onChange={(e) => setFormData((prev) => ({ ...prev, reason: e.target.value }))}
-              placeholder="초과근무 사유를 입력하세요"
+              placeholder={t('overtimePage.createDialog.reasonPlaceholder')}
               rows={3}
             />
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-            취소
+            {t('common:cancel')}
           </Button>
           <Button
             onClick={handleCreate}
@@ -189,7 +191,7 @@ export default function OvertimePage() {
               createMutation.isPending
             }
           >
-            {createMutation.isPending ? '신청 중...' : '신청'}
+            {createMutation.isPending ? t('overtimePage.createDialog.submitting') : t('overtimePage.createDialog.submit')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -210,8 +212,8 @@ export default function OvertimePage() {
               <ArrowLeft className="h-5 w-5" />
             </button>
             <div>
-              <h1 className="text-xl font-bold">초과근무</h1>
-              <p className="text-sm text-muted-foreground">초과근무 신청 및 현황</p>
+              <h1 className="text-xl font-bold">{t('overtimePage.title')}</h1>
+              <p className="text-sm text-muted-foreground">{t('overtimePage.mobileDescription')}</p>
             </div>
           </div>
 
@@ -219,28 +221,28 @@ export default function OvertimePage() {
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-card rounded-xl border p-4">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-xs text-muted-foreground">이번 달 신청</span>
+                <span className="text-xs text-muted-foreground">{t('overtimePage.summary.monthlyRequests')}</span>
                 <Clock className="h-4 w-4 text-primary" />
               </div>
-              <p className="text-2xl font-bold">{summary?.totalRequests ?? 0}건</p>
+              <p className="text-2xl font-bold">{t('overtimePage.summary.countUnit', { count: summary?.totalRequests ?? 0 })}</p>
             </div>
             <div className="bg-card rounded-xl border p-4">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-xs text-muted-foreground">승인됨</span>
+                <span className="text-xs text-muted-foreground">{t('overtimePage.summary.approved')}</span>
                 <CheckCircle className="h-4 w-4 text-green-600" />
               </div>
-              <p className="text-2xl font-bold text-green-600">{summary?.approvedRequests ?? 0}건</p>
+              <p className="text-2xl font-bold text-green-600">{t('overtimePage.summary.countUnit', { count: summary?.approvedRequests ?? 0 })}</p>
             </div>
             <div className="bg-card rounded-xl border p-4">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-xs text-muted-foreground">대기 중</span>
+                <span className="text-xs text-muted-foreground">{t('overtimePage.summary.pending')}</span>
                 <AlertCircle className="h-4 w-4 text-yellow-600" />
               </div>
-              <p className="text-2xl font-bold text-yellow-600">{summary?.pendingRequests ?? 0}건</p>
+              <p className="text-2xl font-bold text-yellow-600">{t('overtimePage.summary.countUnit', { count: summary?.pendingRequests ?? 0 })}</p>
             </div>
             <div className="bg-card rounded-xl border p-4">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-xs text-muted-foreground">총 승인 시간</span>
+                <span className="text-xs text-muted-foreground">{t('overtimePage.summary.totalApprovedHours')}</span>
                 <Timer className="h-4 w-4 text-blue-600" />
               </div>
               <p className="text-2xl font-bold text-blue-600">{summary?.approvedHours ?? 0}h</p>
@@ -250,11 +252,11 @@ export default function OvertimePage() {
           {/* Mobile Tab Filters */}
           <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
             {[
-              { value: 'all', label: '전체' },
-              { value: 'PENDING', label: '대기' },
-              { value: 'APPROVED', label: '승인' },
-              { value: 'REJECTED', label: '반려' },
-              { value: 'CANCELLED', label: '취소' },
+              { value: 'all', label: t('overtimePage.filter.all') },
+              { value: 'PENDING', label: t('overtimePage.filter.pending') },
+              { value: 'APPROVED', label: t('overtimePage.filter.approved') },
+              { value: 'REJECTED', label: t('overtimePage.filter.rejected') },
+              { value: 'CANCELLED', label: t('overtimePage.filter.cancelled') },
             ].map((item) => (
               <button
                 key={item.value}
@@ -280,8 +282,8 @@ export default function OvertimePage() {
           ) : overtimeList.length === 0 ? (
             <EmptyState
               icon={Clock}
-              title="초과근무 신청 내역이 없습니다"
-              description="아래 버튼을 눌러 초과근무를 신청하세요."
+              title={t('overtimePage.emptyState.mobileTitle')}
+              description={t('overtimePage.emptyState.mobileDescription')}
             />
           ) : (
             <div className="space-y-3">
@@ -300,7 +302,7 @@ export default function OvertimePage() {
                         <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                           <span>{item.startTime} - {item.endTime}</span>
                           <span>·</span>
-                          <span className="font-medium text-foreground">{item.hours}시간</span>
+                          <span className="font-medium text-foreground">{t('overtimePage.hoursUnit', { count: item.hours })}</span>
                         </div>
                         <p className="text-xs text-muted-foreground mt-1 truncate">{item.reason}</p>
                       </div>
@@ -337,8 +339,8 @@ export default function OvertimePage() {
         <ConfirmDialog
           open={!!cancelTargetId}
           onOpenChange={(open) => !open && setCancelTargetId(null)}
-          title="초과근무 취소"
-          description="초과근무 신청을 취소하시겠습니까?"
+          title={t('overtimePage.cancelDialog.title')}
+          description={t('overtimePage.cancelDialog.description')}
           variant="destructive"
           onConfirm={handleConfirmCancel}
         />
@@ -350,17 +352,17 @@ export default function OvertimePage() {
   return (
     <>
       <PageHeader
-        title="초과근무"
-        description="초과근무를 신청하고 현황을 확인합니다."
+        title={t('overtimePage.title')}
+        description={t('overtimePage.description')}
         actions={
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => navigate('/attendance')}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              근태관리
+              {t('overtimePage.backToAttendance')}
             </Button>
             <Button onClick={() => setIsCreateDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
-              초과근무 신청
+              {t('overtimePage.requestButton')}
             </Button>
           </div>
         }
@@ -372,8 +374,8 @@ export default function OvertimePage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">이번 달 신청</p>
-                <p className="text-2xl font-bold">{summary?.totalRequests ?? 0}건</p>
+                <p className="text-sm text-muted-foreground">{t('overtimePage.summary.monthlyRequests')}</p>
+                <p className="text-2xl font-bold">{t('overtimePage.summary.countUnit', { count: summary?.totalRequests ?? 0 })}</p>
               </div>
               <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
                 <Clock className="h-5 w-5 text-primary" />
@@ -385,9 +387,9 @@ export default function OvertimePage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">승인됨</p>
+                <p className="text-sm text-muted-foreground">{t('overtimePage.summary.approved')}</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {summary?.approvedRequests ?? 0}건
+                  {t('overtimePage.summary.countUnit', { count: summary?.approvedRequests ?? 0 })}
                 </p>
               </div>
               <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
@@ -400,9 +402,9 @@ export default function OvertimePage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">대기 중</p>
+                <p className="text-sm text-muted-foreground">{t('overtimePage.summary.pending')}</p>
                 <p className="text-2xl font-bold text-yellow-600">
-                  {summary?.pendingRequests ?? 0}건
+                  {t('overtimePage.summary.countUnit', { count: summary?.pendingRequests ?? 0 })}
                 </p>
               </div>
               <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center">
@@ -415,9 +417,9 @@ export default function OvertimePage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">총 승인 시간</p>
+                <p className="text-sm text-muted-foreground">{t('overtimePage.summary.totalApprovedHours')}</p>
                 <p className="text-2xl font-bold text-blue-600">
-                  {summary?.approvedHours ?? 0}시간
+                  {t('overtimePage.summary.hoursUnit', { count: summary?.approvedHours ?? 0 })}
                 </p>
               </div>
               <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
@@ -432,7 +434,7 @@ export default function OvertimePage() {
       <Card className="mb-4">
         <CardContent className="p-4">
           <div className="flex items-center gap-4">
-            <Label>상태</Label>
+            <Label>{t('overtimePage.filter.statusLabel')}</Label>
             <Select
               value={statusFilter}
               onValueChange={(value) => {
@@ -444,11 +446,11 @@ export default function OvertimePage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">전체</SelectItem>
-                <SelectItem value="PENDING">승인대기</SelectItem>
-                <SelectItem value="APPROVED">승인</SelectItem>
-                <SelectItem value="REJECTED">반려</SelectItem>
-                <SelectItem value="CANCELLED">취소</SelectItem>
+                <SelectItem value="all">{t('overtimePage.filter.all')}</SelectItem>
+                <SelectItem value="PENDING">{t('overtimePage.statusConfig.pending')}</SelectItem>
+                <SelectItem value="APPROVED">{t('overtimePage.statusConfig.approved')}</SelectItem>
+                <SelectItem value="REJECTED">{t('overtimePage.statusConfig.rejected')}</SelectItem>
+                <SelectItem value="CANCELLED">{t('overtimePage.statusConfig.cancelled')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -458,7 +460,7 @@ export default function OvertimePage() {
       {/* List */}
       <Card>
         <CardHeader>
-          <CardTitle>신청 내역</CardTitle>
+          <CardTitle>{t('overtimePage.requestList.title')}</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
@@ -468,10 +470,10 @@ export default function OvertimePage() {
           ) : overtimeList.length === 0 ? (
             <EmptyState
               icon={Clock}
-              title="초과근무 신청 내역이 없습니다"
-              description="초과근무를 신청하려면 상단의 버튼을 클릭하세요."
+              title={t('overtimePage.emptyState.desktopTitle')}
+              description={t('overtimePage.emptyState.desktopDescription')}
               action={{
-                label: '초과근무 신청',
+                label: t('overtimePage.emptyState.action'),
                 onClick: () => setIsCreateDialogOpen(true),
               }}
             />
@@ -482,22 +484,22 @@ export default function OvertimePage() {
                   <thead>
                     <tr className="border-b bg-muted/50">
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        날짜
+                        {t('overtimePage.table.date')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        시간
+                        {t('overtimePage.table.time')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        근무시간
+                        {t('overtimePage.table.workingHours')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        사유
+                        {t('overtimePage.table.reason')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        상태
+                        {t('overtimePage.table.status')}
                       </th>
                       <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                        작업
+                        {t('overtimePage.table.action')}
                       </th>
                     </tr>
                   </thead>
@@ -513,7 +515,7 @@ export default function OvertimePage() {
                             {item.startTime} - {item.endTime}
                           </td>
                           <td className="px-4 py-3 text-sm font-medium">
-                            {item.hours}시간
+                            {t('overtimePage.hoursUnit', { count: item.hours })}
                           </td>
                           <td className="px-4 py-3 text-sm text-muted-foreground max-w-xs truncate">
                             {item.reason}
@@ -530,7 +532,7 @@ export default function OvertimePage() {
                                 onClick={() => handleCancel(item.id)}
                               >
                                 <XCircle className="mr-1 h-4 w-4" />
-                                취소
+                                {t('common:cancel')}
                               </Button>
                             )}
                           </td>
@@ -554,8 +556,8 @@ export default function OvertimePage() {
       <ConfirmDialog
         open={!!cancelTargetId}
         onOpenChange={(open) => !open && setCancelTargetId(null)}
-        title="초과근무 취소"
-        description="초과근무 신청을 취소하시겠습니까?"
+        title={t('overtimePage.cancelDialog.title')}
+        description={t('overtimePage.cancelDialog.description')}
         variant="destructive"
         onConfirm={handleConfirmCancel}
       />

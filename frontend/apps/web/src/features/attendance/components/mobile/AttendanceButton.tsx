@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { LogIn, LogOut, CheckCircle2, Loader2 } from 'lucide-react';
@@ -21,6 +22,7 @@ export function AttendanceButton({
   completedTime,
   onClick,
 }: AttendanceButtonProps) {
+  const { t } = useTranslation('attendance');
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -58,7 +60,7 @@ export function AttendanceButton({
       )}
 
       <span className="text-lg font-semibold">
-        {isCheckIn ? '출근' : '퇴근'}
+        {isCheckIn ? t('components.mobile.attendanceButton.checkIn') : t('components.mobile.attendanceButton.checkOut')}
       </span>
 
       {isCompleted && completedTime ? (

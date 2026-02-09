@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { format, differenceInCalendarDays } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -84,6 +85,7 @@ const DEFAULT_HOURLY_LEAVE_POLICY: HourlyLeavePolicy = {
 };
 
 export default function LeaveRequestPage() {
+  const { t } = useTranslation('attendance');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
@@ -264,9 +266,9 @@ export default function LeaveRequestPage() {
   // Render the days/hours column for a leave request
   const renderRequestDuration = (request: LeaveRequestType) => {
     if (request.leaveType === 'HOURLY' && request.hours) {
-      return <>{request.hours}시간</>;
+      return <>{t('leaveRequestPage.hoursUnit', { count: request.hours })}</>;
     }
-    return <>{request.days}일</>;
+    return <>{t('leaveRequestPage.daysUnit', { count: request.days })}</>;
   };
 
   // Create/Cancel Dialogs (shared between mobile and desktop)
@@ -276,14 +278,14 @@ export default function LeaveRequestPage() {
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent className={isMobile ? "max-w-[calc(100%-2rem)] rounded-2xl" : "sm:max-w-[500px]"}>
           <DialogHeader>
-            <DialogTitle>휴가 신청</DialogTitle>
+            <DialogTitle>{t('leaveRequestPage.createDialog.title')}</DialogTitle>
             <DialogDescription>
-              휴가를 신청합니다. 승인 후 휴가가 확정됩니다.
+              {t('leaveRequestPage.createDialog.description')}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label>휴가 유형 *</Label>
+              <Label>{t('leaveRequestPage.createDialog.leaveType')}</Label>
               <Select
                 value={formData.leaveType}
                 onValueChange={(value) => setFormData(prev => ({
@@ -295,32 +297,32 @@ export default function LeaveRequestPage() {
                 }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="휴가 유형 선택" />
+                  <SelectValue placeholder={t('leaveRequestPage.createDialog.leaveTypePlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    <SelectLabel>연차</SelectLabel>
-                    <SelectItem value="ANNUAL">연차</SelectItem>
-                    <SelectItem value="HALF_DAY_AM">반차 (오전) - 09:00~13:00</SelectItem>
-                    <SelectItem value="HALF_DAY_PM">반차 (오후) - 14:00~18:00</SelectItem>
+                    <SelectLabel>{t('leaveRequestPage.createDialog.leaveTypeGroups.annual')}</SelectLabel>
+                    <SelectItem value="ANNUAL">{t('leaveRequestPage.createDialog.leaveTypeGroups.annualLeave')}</SelectItem>
+                    <SelectItem value="HALF_DAY_AM">{t('leaveRequestPage.createDialog.leaveTypeGroups.halfDayAm')}</SelectItem>
+                    <SelectItem value="HALF_DAY_PM">{t('leaveRequestPage.createDialog.leaveTypeGroups.halfDayPm')}</SelectItem>
                     {hourlyLeavePolicy.enabled && (
-                      <SelectItem value="HOURLY">시간차 휴가</SelectItem>
+                      <SelectItem value="HOURLY">{t('leaveRequestPage.createDialog.leaveTypeGroups.hourlyLeave')}</SelectItem>
                     )}
                   </SelectGroup>
                   <SelectGroup>
-                    <SelectLabel>특별휴가</SelectLabel>
-                    <SelectItem value="SICK">병가</SelectItem>
-                    <SelectItem value="MARRIAGE">결혼휴가</SelectItem>
-                    <SelectItem value="BEREAVEMENT">경조휴가</SelectItem>
-                    <SelectItem value="MATERNITY">출산휴가</SelectItem>
-                    <SelectItem value="PATERNITY">배우자출산휴가</SelectItem>
-                    <SelectItem value="CHILDCARE">육아휴직</SelectItem>
+                    <SelectLabel>{t('leaveRequestPage.createDialog.leaveTypeGroups.specialGroup')}</SelectLabel>
+                    <SelectItem value="SICK">{t('leaveRequestPage.createDialog.leaveTypeGroups.sick')}</SelectItem>
+                    <SelectItem value="MARRIAGE">{t('leaveRequestPage.createDialog.leaveTypeGroups.marriage')}</SelectItem>
+                    <SelectItem value="BEREAVEMENT">{t('leaveRequestPage.createDialog.leaveTypeGroups.bereavement')}</SelectItem>
+                    <SelectItem value="MATERNITY">{t('leaveRequestPage.createDialog.leaveTypeGroups.maternity')}</SelectItem>
+                    <SelectItem value="PATERNITY">{t('leaveRequestPage.createDialog.leaveTypeGroups.paternity')}</SelectItem>
+                    <SelectItem value="CHILDCARE">{t('leaveRequestPage.createDialog.leaveTypeGroups.childcare')}</SelectItem>
                   </SelectGroup>
                   <SelectGroup>
-                    <SelectLabel>기타</SelectLabel>
-                    <SelectItem value="OFFICIAL">공가</SelectItem>
-                    <SelectItem value="COMPENSATION">대체휴가</SelectItem>
-                    <SelectItem value="SPECIAL">특별휴가</SelectItem>
+                    <SelectLabel>{t('leaveRequestPage.createDialog.leaveTypeGroups.otherGroup')}</SelectLabel>
+                    <SelectItem value="OFFICIAL">{t('leaveRequestPage.createDialog.leaveTypeGroups.official')}</SelectItem>
+                    <SelectItem value="COMPENSATION">{t('leaveRequestPage.createDialog.leaveTypeGroups.compensation')}</SelectItem>
+                    <SelectItem value="SPECIAL">{t('leaveRequestPage.createDialog.leaveTypeGroups.special')}</SelectItem>
                   </SelectGroup>
                 </SelectContent>
               </Select>
@@ -330,12 +332,12 @@ export default function LeaveRequestPage() {
             {isHalfDayType && (
               <div className="rounded-md bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 p-3 text-sm">
                 <span className="font-medium text-blue-700 dark:text-blue-400">
-                  {formData.leaveType === 'HALF_DAY_AM' ? '오전 반차' : '오후 반차'}
+                  {formData.leaveType === 'HALF_DAY_AM' ? t('leaveRequestPage.createDialog.halfDayInfo.am') : t('leaveRequestPage.createDialog.halfDayInfo.pm')}
                 </span>
                 <span className="text-blue-600 dark:text-blue-500 ml-2">
                   {formData.leaveType === 'HALF_DAY_AM'
-                    ? '09:00 ~ 13:00 (4시간)'
-                    : '14:00 ~ 18:00 (4시간)'}
+                    ? t('leaveRequestPage.createDialog.halfDayInfo.amTime')
+                    : t('leaveRequestPage.createDialog.halfDayInfo.pmTime')}
                 </span>
               </div>
             )}
@@ -346,25 +348,25 @@ export default function LeaveRequestPage() {
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-violet-600 dark:text-violet-400" />
                   <span className="font-medium text-violet-700 dark:text-violet-400">
-                    시간차 휴가
+                    {t('leaveRequestPage.createDialog.hourlyInfo.title')}
                   </span>
                   <span className="text-violet-600 dark:text-violet-500">
-                    (최소 단위: {hourlyLeavePolicy.minUnit}분 / 일 최대 {hourlyLeavePolicy.dailyMaxCount}회)
+                    {t('leaveRequestPage.createDialog.hourlyInfo.policy', { minUnit: hourlyLeavePolicy.minUnit, maxCount: hourlyLeavePolicy.dailyMaxCount })}
                   </span>
                 </div>
                 <div className="flex items-center gap-4 text-violet-600 dark:text-violet-500">
-                  <span>잔여: <strong className="text-violet-700 dark:text-violet-400">{hourlyLeaveBalance.remainingHours}시간</strong></span>
+                  <span>{t('leaveRequestPage.createDialog.hourlyInfo.remaining', { hours: hourlyLeaveBalance.remainingHours })}</span>
                   <span className="text-violet-400 dark:text-violet-700">|</span>
-                  <span>사용: {hourlyLeaveBalance.usedHours}시간</span>
+                  <span>{t('leaveRequestPage.createDialog.hourlyInfo.used', { hours: hourlyLeaveBalance.usedHours })}</span>
                   <span className="text-violet-400 dark:text-violet-700">|</span>
-                  <span>총: {hourlyLeaveBalance.totalHours}시간</span>
+                  <span>{t('leaveRequestPage.createDialog.hourlyInfo.total', { hours: hourlyLeaveBalance.totalHours })}</span>
                 </div>
               </div>
             )}
 
             {/* Date picker - single date for half-day and hourly, range for others */}
             <div className="grid gap-2">
-              <Label>{isHourlyType ? '날짜 *' : '시작일 *'}</Label>
+              <Label>{isHourlyType ? t('leaveRequestPage.createDialog.dateLabel') : t('leaveRequestPage.createDialog.startDateLabel')}</Label>
               <DatePicker
                 value={formData.startDate}
                 onChange={(date) => setFormData(prev => ({
@@ -379,7 +381,7 @@ export default function LeaveRequestPage() {
             {/* End date - only for non-half-day and non-hourly types */}
             {!isHalfDayType && !isHourlyType && (
               <div className="grid gap-2">
-                <Label>종료일 *</Label>
+                <Label>{t('leaveRequestPage.createDialog.endDateLabel')}</Label>
                 <DatePicker
                   value={formData.endDate}
                   onChange={(date) => setFormData(prev => ({ ...prev, endDate: date }))}
@@ -392,7 +394,7 @@ export default function LeaveRequestPage() {
             {isHourlyType && (
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label>시작 시간 *</Label>
+                  <Label>{t('leaveRequestPage.createDialog.startTimeLabel')}</Label>
                   <Select
                     value={formData.startTime}
                     onValueChange={(value) => setFormData(prev => ({
@@ -403,7 +405,7 @@ export default function LeaveRequestPage() {
                     }))}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="시작 시간" />
+                      <SelectValue placeholder={t('leaveRequestPage.createDialog.startTimePlaceholder')} />
                     </SelectTrigger>
                     <SelectContent>
                       {timeSlots.slice(0, -1).map((time) => (
@@ -415,7 +417,7 @@ export default function LeaveRequestPage() {
                   </Select>
                 </div>
                 <div className="grid gap-2">
-                  <Label>종료 시간 *</Label>
+                  <Label>{t('leaveRequestPage.createDialog.endTimeLabel')}</Label>
                   <Select
                     value={formData.endTime}
                     onValueChange={(value) => setFormData(prev => ({
@@ -425,7 +427,7 @@ export default function LeaveRequestPage() {
                     disabled={!formData.startTime}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="종료 시간" />
+                      <SelectValue placeholder={t('leaveRequestPage.createDialog.endTimePlaceholder')} />
                     </SelectTrigger>
                     <SelectContent>
                       {endTimeSlots.map((time) => (
@@ -446,7 +448,7 @@ export default function LeaveRequestPage() {
                 <span>
                   {formData.startTime} ~ {formData.endTime}
                   {' / '}
-                  총 <strong>{calculatedHours}시간</strong> 사용
+                  {t('leaveRequestPage.createDialog.calculatedHours', { hours: calculatedHours })}
                 </span>
               </div>
             )}
@@ -454,16 +456,16 @@ export default function LeaveRequestPage() {
             {/* Calculated days for non-hourly types */}
             {!isHourlyType && formData.startDate && formData.endDate && (
               <div className="rounded-md bg-muted p-3 text-sm">
-                총 <strong>{calculateDays()}</strong>일
+                {t('leaveRequestPage.createDialog.calculatedDays', { days: calculateDays() })}
               </div>
             )}
 
             <div className="grid gap-2">
-              <Label>사유 *</Label>
+              <Label>{t('leaveRequestPage.createDialog.reasonLabel')}</Label>
               <Textarea
                 value={formData.reason}
                 onChange={(e) => setFormData(prev => ({ ...prev, reason: e.target.value }))}
-                placeholder="휴가 사유를 입력하세요."
+                placeholder={t('leaveRequestPage.createDialog.reasonPlaceholder')}
                 rows={3}
               />
             </div>
@@ -471,12 +473,12 @@ export default function LeaveRequestPage() {
             {/* FR-ATT-002-03: 결재선 미리보기 */}
             {formData.leaveType && (
               <div className="space-y-2">
-                <Label className="text-sm font-medium">결재선 미리보기</Label>
+                <Label className="text-sm font-medium">{t('leaveRequestPage.createDialog.approvalLinePreview')}</Label>
                 <div className="rounded-lg border bg-muted/30 p-3">
                   {isLoadingApprovalLine ? (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>결재선을 불러오는 중...</span>
+                      <span>{t('leaveRequestPage.createDialog.loadingApprovalLine')}</span>
                     </div>
                   ) : recommendedApprovers.length > 0 ? (
                     <ApprovalLinePreview
@@ -485,26 +487,26 @@ export default function LeaveRequestPage() {
                     />
                   ) : (
                     <p className="text-sm text-muted-foreground py-2">
-                      추천 결재선 정보가 없습니다.
+                      {t('leaveRequestPage.createDialog.noApprovalLine')}
                     </p>
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  소속 부서 및 직급 기준으로 자동 추천된 결재선입니다.
+                  {t('leaveRequestPage.createDialog.approvalLineNote')}
                 </p>
               </div>
             )}
           </div>
           <DialogFooter className={isMobile ? "flex-row gap-2" : ""}>
             <Button variant="outline" className={isMobile ? "flex-1" : ""} onClick={() => setIsCreateDialogOpen(false)}>
-              취소
+              {t('common:cancel')}
             </Button>
             <Button
               className={isMobile ? "flex-1" : ""}
               onClick={handleCreate}
               disabled={isCreateDisabled}
             >
-              {createMutation.isPending ? '신청 중...' : '신청하기'}
+              {createMutation.isPending ? t('leaveRequestPage.createDialog.submitting') : t('leaveRequestPage.createDialog.submit')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -514,9 +516,9 @@ export default function LeaveRequestPage() {
       <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
         <DialogContent className={isMobile ? "max-w-[calc(100%-2rem)] rounded-2xl" : ""}>
           <DialogHeader>
-            <DialogTitle>휴가 신청 취소</DialogTitle>
+            <DialogTitle>{t('leaveRequestPage.cancelDialog.title')}</DialogTitle>
             <DialogDescription>
-              정말로 이 휴가 신청을 취소하시겠습니까?
+              {t('leaveRequestPage.cancelDialog.description')}
               <br />
               <span className="text-foreground font-medium">
                 {selectedRequest && LEAVE_TYPE_LABELS[selectedRequest.leaveType]}
@@ -529,7 +531,7 @@ export default function LeaveRequestPage() {
           </DialogHeader>
           <DialogFooter className={isMobile ? "flex-row gap-2" : ""}>
             <Button variant="outline" className={isMobile ? "flex-1" : ""} onClick={() => setIsCancelDialogOpen(false)}>
-              닫기
+              {t('common:close')}
             </Button>
             <Button
               variant="destructive"
@@ -537,7 +539,7 @@ export default function LeaveRequestPage() {
               onClick={handleCancel}
               disabled={cancelMutation.isPending}
             >
-              {cancelMutation.isPending ? '취소 중...' : '취소하기'}
+              {cancelMutation.isPending ? t('leaveRequestPage.cancelDialog.cancelling') : t('leaveRequestPage.cancelDialog.confirm')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -553,33 +555,33 @@ export default function LeaveRequestPage() {
           {/* Mobile Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold">휴가 신청</h1>
-              <p className="text-sm text-muted-foreground">승인 현황을 확인하세요</p>
+              <h1 className="text-xl font-bold">{t('leaveRequestPage.title')}</h1>
+              <p className="text-sm text-muted-foreground">{t('leaveRequestPage.mobileDescription')}</p>
             </div>
             <Button size="sm" onClick={handleCreateOpen}>
               <Plus className="mr-1 h-4 w-4" />
-              신청
+              {t('leaveRequestPage.applyButton')}
             </Button>
           </div>
 
           {/* Leave Balance Card */}
           <div className="bg-card rounded-2xl border p-4">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-sm">잔여 휴가</h3>
-              <span className="text-2xl font-bold text-primary">{balance?.remainingDays ?? 0}일</span>
+              <h3 className="font-semibold text-sm">{t('leaveRequestPage.leaveBalance.title')}</h3>
+              <span className="text-2xl font-bold text-primary">{t('leaveRequestPage.leaveBalance.daysUnit', { count: balance?.remainingDays ?? 0 })}</span>
             </div>
             <div className="grid grid-cols-3 gap-2 text-center text-xs">
               <div className="bg-muted/50 rounded-lg p-2">
-                <p className="text-muted-foreground">총 연차</p>
-                <p className="font-semibold">{balance?.totalDays ?? 0}일</p>
+                <p className="text-muted-foreground">{t('leaveRequestPage.leaveBalance.totalAnnual')}</p>
+                <p className="font-semibold">{t('leaveRequestPage.leaveBalance.daysUnit', { count: balance?.totalDays ?? 0 })}</p>
               </div>
               <div className="bg-muted/50 rounded-lg p-2">
-                <p className="text-muted-foreground">사용</p>
-                <p className="font-semibold">{balance?.usedDays ?? 0}일</p>
+                <p className="text-muted-foreground">{t('leaveRequestPage.leaveBalance.used')}</p>
+                <p className="font-semibold">{t('leaveRequestPage.leaveBalance.daysUnit', { count: balance?.usedDays ?? 0 })}</p>
               </div>
               <div className="bg-muted/50 rounded-lg p-2">
-                <p className="text-muted-foreground">예정</p>
-                <p className="font-semibold">{balance?.pendingDays ?? 0}일</p>
+                <p className="text-muted-foreground">{t('leaveRequestPage.leaveBalance.pending')}</p>
+                <p className="font-semibold">{t('leaveRequestPage.leaveBalance.daysUnit', { count: balance?.pendingDays ?? 0 })}</p>
               </div>
             </div>
           </div>
@@ -590,22 +592,22 @@ export default function LeaveRequestPage() {
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-violet-600" />
-                  <h3 className="font-semibold text-sm">시간차 휴가</h3>
+                  <h3 className="font-semibold text-sm">{t('leaveRequestPage.hourlyLeaveBalance.title')}</h3>
                 </div>
-                <span className="text-lg font-bold text-violet-600">{hourlyLeaveBalance.remainingHours}시간</span>
+                <span className="text-lg font-bold text-violet-600">{t('leaveRequestPage.hourlyLeaveBalance.hoursUnit', { count: hourlyLeaveBalance.remainingHours })}</span>
               </div>
               <div className="grid grid-cols-3 gap-2 text-center text-xs">
                 <div className="bg-muted/50 rounded-lg p-2">
-                  <p className="text-muted-foreground">총</p>
-                  <p className="font-semibold">{hourlyLeaveBalance.totalHours}시간</p>
+                  <p className="text-muted-foreground">{t('leaveRequestPage.hourlyLeaveBalance.total')}</p>
+                  <p className="font-semibold">{t('leaveRequestPage.hourlyLeaveBalance.hoursUnit', { count: hourlyLeaveBalance.totalHours })}</p>
                 </div>
                 <div className="bg-muted/50 rounded-lg p-2">
-                  <p className="text-muted-foreground">사용</p>
-                  <p className="font-semibold">{hourlyLeaveBalance.usedHours}시간</p>
+                  <p className="text-muted-foreground">{t('leaveRequestPage.hourlyLeaveBalance.used')}</p>
+                  <p className="font-semibold">{t('leaveRequestPage.hourlyLeaveBalance.hoursUnit', { count: hourlyLeaveBalance.usedHours })}</p>
                 </div>
                 <div className="bg-muted/50 rounded-lg p-2">
-                  <p className="text-muted-foreground">예정</p>
-                  <p className="font-semibold">{hourlyLeaveBalance.pendingHours}시간</p>
+                  <p className="text-muted-foreground">{t('leaveRequestPage.hourlyLeaveBalance.pending')}</p>
+                  <p className="font-semibold">{t('leaveRequestPage.hourlyLeaveBalance.hoursUnit', { count: hourlyLeaveBalance.pendingHours })}</p>
                 </div>
               </div>
             </div>
@@ -639,7 +641,7 @@ export default function LeaveRequestPage() {
               onChange={(e) => setLeaveType(e.target.value as LeaveType | '')}
               className="flex-1 h-9 rounded-lg border border-input bg-background px-3 text-sm"
             >
-              <option value="">전체 유형</option>
+              <option value="">{t('leaveRequestPage.filter.allTypes')}</option>
               {Object.entries(LEAVE_TYPE_LABELS).map(([value, label]) => (
                 <option key={value} value={value}>{label}</option>
               ))}
@@ -649,17 +651,17 @@ export default function LeaveRequestPage() {
               onChange={(e) => setStatus(e.target.value as LeaveStatus | '')}
               className="flex-1 h-9 rounded-lg border border-input bg-background px-3 text-sm"
             >
-              <option value="">전체 상태</option>
-              <option value="PENDING">승인대기</option>
-              <option value="APPROVED">승인</option>
-              <option value="REJECTED">반려</option>
-              <option value="CANCELLED">취소</option>
+              <option value="">{t('leaveRequestPage.filter.allStatus')}</option>
+              <option value="PENDING">{t('leaveRequestPage.filter.pending')}</option>
+              <option value="APPROVED">{t('leaveRequestPage.filter.approved')}</option>
+              <option value="REJECTED">{t('leaveRequestPage.filter.rejected')}</option>
+              <option value="CANCELLED">{t('leaveRequestPage.filter.cancelled')}</option>
             </select>
           </div>
 
           {/* Leave Request List */}
           <div className="space-y-3">
-            <h3 className="text-sm font-medium text-muted-foreground">신청 내역</h3>
+            <h3 className="text-sm font-medium text-muted-foreground">{t('leaveRequestPage.requestList.mobileTitle')}</h3>
             {isLoading ? (
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
@@ -669,10 +671,10 @@ export default function LeaveRequestPage() {
             ) : requests.length === 0 ? (
               <EmptyState
                 icon={Calendar}
-                title="휴가 신청 내역이 없습니다"
-                description="휴가를 신청하면 내역이 여기에 표시됩니다."
+                title={t('leaveRequestPage.emptyState.title')}
+                description={t('leaveRequestPage.emptyState.description')}
                 action={{
-                  label: '휴가 신청',
+                  label: t('leaveRequestPage.emptyState.action'),
                   onClick: handleCreateOpen,
                 }}
               />
@@ -703,17 +705,17 @@ export default function LeaveRequestPage() {
   return (
     <>
       <PageHeader
-        title="휴가 신청"
-        description="휴가를 신청하고 승인 현황을 확인합니다."
+        title={t('leaveRequestPage.title')}
+        description={t('leaveRequestPage.description')}
         actions={
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => navigate('/attendance')}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              근태관리
+              {t('leaveRequestPage.backToAttendance')}
             </Button>
             <Button onClick={handleCreateOpen}>
               <Plus className="mr-2 h-4 w-4" />
-              휴가 신청
+              {t('leaveRequestPage.title')}
             </Button>
           </div>
         }
@@ -723,26 +725,26 @@ export default function LeaveRequestPage() {
         {/* Leave Balance */}
         <Card>
           <CardHeader>
-            <CardTitle>잔여 휴가</CardTitle>
+            <CardTitle>{t('leaveRequestPage.leaveBalance.title')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="flex justify-between items-center py-2 border-b">
-                <span className="text-muted-foreground">총 연차</span>
-                <span className="text-2xl font-bold">{balance?.totalDays ?? 0}일</span>
+                <span className="text-muted-foreground">{t('leaveRequestPage.leaveBalance.totalAnnual')}</span>
+                <span className="text-2xl font-bold">{t('leaveRequestPage.leaveBalance.daysUnit', { count: balance?.totalDays ?? 0 })}</span>
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">사용</span>
-                  <span className="font-medium">{balance?.usedDays ?? 0}일</span>
+                  <span className="text-muted-foreground">{t('leaveRequestPage.leaveBalance.used')}</span>
+                  <span className="font-medium">{t('leaveRequestPage.leaveBalance.daysUnit', { count: balance?.usedDays ?? 0 })}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">예정</span>
-                  <span className="font-medium">{balance?.pendingDays ?? 0}일</span>
+                  <span className="text-muted-foreground">{t('leaveRequestPage.leaveBalance.pending')}</span>
+                  <span className="font-medium">{t('leaveRequestPage.leaveBalance.daysUnit', { count: balance?.pendingDays ?? 0 })}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">잔여</span>
-                  <span className="font-medium text-primary">{balance?.remainingDays ?? 0}일</span>
+                  <span className="text-muted-foreground">{t('leaveRequestPage.leaveBalance.remaining')}</span>
+                  <span className="font-medium text-primary">{t('leaveRequestPage.leaveBalance.daysUnit', { count: balance?.remainingDays ?? 0 })}</span>
                 </div>
               </div>
               {/* Hourly leave balance section */}
@@ -750,19 +752,19 @@ export default function LeaveRequestPage() {
                 <div className="border-t pt-4 space-y-2">
                   <div className="flex items-center gap-2 mb-2">
                     <Clock className="h-4 w-4 text-violet-600" />
-                    <span className="font-medium text-sm">시간차 휴가</span>
+                    <span className="font-medium text-sm">{t('leaveRequestPage.hourlyLeaveBalance.title')}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">총</span>
-                    <span className="font-medium">{hourlyLeaveBalance.totalHours}시간</span>
+                    <span className="text-muted-foreground">{t('leaveRequestPage.hourlyLeaveBalance.total')}</span>
+                    <span className="font-medium">{t('leaveRequestPage.hourlyLeaveBalance.hoursUnit', { count: hourlyLeaveBalance.totalHours })}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">사용</span>
-                    <span className="font-medium">{hourlyLeaveBalance.usedHours}시간</span>
+                    <span className="text-muted-foreground">{t('leaveRequestPage.hourlyLeaveBalance.used')}</span>
+                    <span className="font-medium">{t('leaveRequestPage.hourlyLeaveBalance.hoursUnit', { count: hourlyLeaveBalance.usedHours })}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">잔여</span>
-                    <span className="font-medium text-violet-600">{hourlyLeaveBalance.remainingHours}시간</span>
+                    <span className="text-muted-foreground">{t('leaveRequestPage.hourlyLeaveBalance.remaining')}</span>
+                    <span className="font-medium text-violet-600">{t('leaveRequestPage.hourlyLeaveBalance.hoursUnit', { count: hourlyLeaveBalance.remainingHours })}</span>
                   </div>
                 </div>
               )}
@@ -773,7 +775,7 @@ export default function LeaveRequestPage() {
         {/* Leave Balance by Type */}
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>휴가 유형별 현황</CardTitle>
+            <CardTitle>{t('leaveRequestPage.balanceByType.title')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 sm:grid-cols-3">
@@ -782,7 +784,7 @@ export default function LeaveRequestPage() {
                   <p className="text-sm text-muted-foreground">{item.leaveTypeName}</p>
                   <div className="mt-2 flex items-baseline gap-2">
                     <span className="text-2xl font-bold">{item.remainingDays}</span>
-                    <span className="text-sm text-muted-foreground">/ {item.totalDays}일</span>
+                    <span className="text-sm text-muted-foreground">/ {t('leaveRequestPage.daysUnit', { count: item.totalDays })}</span>
                   </div>
                   <div className="mt-2 h-2 w-full rounded-full bg-muted">
                     <div
@@ -800,14 +802,14 @@ export default function LeaveRequestPage() {
       {/* Leave Requests */}
       <Card className="mt-6">
         <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-4">
-          <CardTitle>휴가 신청 내역</CardTitle>
+          <CardTitle>{t('leaveRequestPage.requestList.title')}</CardTitle>
           <div className="flex gap-2">
             <select
               value={searchState.leaveType}
               onChange={(e) => setLeaveType(e.target.value as LeaveType | '')}
               className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm"
             >
-              <option value="">전체 유형</option>
+              <option value="">{t('leaveRequestPage.filter.allTypes')}</option>
               {Object.entries(LEAVE_TYPE_LABELS).map(([value, label]) => (
                 <option key={value} value={value}>{label}</option>
               ))}
@@ -817,11 +819,11 @@ export default function LeaveRequestPage() {
               onChange={(e) => setStatus(e.target.value as LeaveStatus | '')}
               className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm"
             >
-              <option value="">전체 상태</option>
-              <option value="PENDING">승인대기</option>
-              <option value="APPROVED">승인</option>
-              <option value="REJECTED">반려</option>
-              <option value="CANCELLED">취소</option>
+              <option value="">{t('leaveRequestPage.filter.allStatus')}</option>
+              <option value="PENDING">{t('leaveRequestPage.filter.pending')}</option>
+              <option value="APPROVED">{t('leaveRequestPage.filter.approved')}</option>
+              <option value="REJECTED">{t('leaveRequestPage.filter.rejected')}</option>
+              <option value="CANCELLED">{t('leaveRequestPage.filter.cancelled')}</option>
             </select>
           </div>
         </CardHeader>
@@ -833,10 +835,10 @@ export default function LeaveRequestPage() {
           ) : requests.length === 0 ? (
             <EmptyState
               icon={Calendar}
-              title="휴가 신청 내역이 없습니다"
-              description="휴가를 신청하면 내역이 여기에 표시됩니다."
+              title={t('leaveRequestPage.emptyState.title')}
+              description={t('leaveRequestPage.emptyState.description')}
               action={{
-                label: '휴가 신청',
+                label: t('leaveRequestPage.emptyState.action'),
                 onClick: handleCreateOpen,
               }}
             />
@@ -847,22 +849,22 @@ export default function LeaveRequestPage() {
                   <thead>
                     <tr className="border-b bg-muted/50">
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        유형
+                        {t('leaveRequestPage.table.type')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        기간
+                        {t('leaveRequestPage.table.period')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        일수/시간
+                        {t('leaveRequestPage.table.daysOrHours')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        사유
+                        {t('leaveRequestPage.table.reason')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        상태
+                        {t('leaveRequestPage.table.status')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        작업
+                        {t('leaveRequestPage.table.action')}
                       </th>
                     </tr>
                   </thead>
@@ -895,7 +897,7 @@ export default function LeaveRequestPage() {
                               onClick={() => handleCancelOpen(request)}
                             >
                               <XCircle className="h-4 w-4 mr-1" />
-                              취소
+                              {t('common:cancel')}
                             </Button>
                           )}
                         </td>
@@ -926,6 +928,7 @@ interface MobileLeaveCardProps {
 }
 
 function MobileLeaveCard({ request, onCancel }: MobileLeaveCardProps) {
+  const { t } = useTranslation('attendance');
   const isHourly = request.leaveType === 'HOURLY' && request.startTime && request.endTime;
 
   return (
@@ -940,14 +943,14 @@ function MobileLeaveCard({ request, onCancel }: MobileLeaveCardProps) {
             {format(new Date(request.startDate), 'M월 d일', { locale: ko })}
             {isHourly ? (
               <span className="text-muted-foreground ml-1">
-                {request.startTime} ~ {request.endTime} ({request.hours}시간)
+                {request.startTime} ~ {request.endTime} ({t('leaveRequestPage.hoursUnit', { count: request.hours })})
               </span>
             ) : (
               <>
                 {request.startDate !== request.endDate && (
                   <> ~ {format(new Date(request.endDate), 'M월 d일', { locale: ko })}</>
                 )}
-                <span className="text-muted-foreground ml-1">({request.days}일)</span>
+                <span className="text-muted-foreground ml-1">({t('leaveRequestPage.daysUnit', { count: request.days })})</span>
               </>
             )}
           </p>

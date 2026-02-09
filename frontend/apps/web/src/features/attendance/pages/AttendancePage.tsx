@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -32,6 +33,7 @@ import { cn } from '@/lib/utils';
 import type { AttendanceStatus, AttendanceRecord } from '@hr-platform/shared-types';
 
 export default function AttendancePage() {
+  const { t } = useTranslation('attendance');
   const navigate = useNavigate();
   const [currentTime, setCurrentTime] = useState(new Date());
   const currentYearMonth = format(new Date(), 'yyyy-MM');
@@ -122,8 +124,8 @@ export default function AttendancePage() {
 
         {/* Mobile Header */}
         <div className="mb-6">
-          <h1 className="text-xl font-bold">근태 관리</h1>
-          <p className="text-sm text-muted-foreground">출퇴근 기록 및 근태 현황</p>
+          <h1 className="text-xl font-bold">{t('attendancePage.title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('attendancePage.mobileDescription')}</p>
         </div>
 
         {/* Check In/Out Section */}
@@ -162,31 +164,31 @@ export default function AttendancePage() {
             onClick={() => navigate('/attendance/leave/calendar')}
           >
             <CalendarDays className="mr-2 h-4 w-4" />
-            휴가 캘린더
+            {t('attendancePage.leaveCalendar')}
           </Button>
           <Button
             className="flex-1"
             onClick={() => navigate('/attendance/leave')}
           >
             <Plus className="mr-2 h-4 w-4" />
-            휴가 신청
+            {t('attendancePage.leaveRequest')}
           </Button>
         </div>
 
         {/* Recent Records */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-muted-foreground">최근 근태 기록</h3>
+            <h3 className="text-sm font-medium text-muted-foreground">{t('attendancePage.recentRecords.mobileTitle')}</h3>
             <select
               value={searchState.status}
               onChange={(e) => setStatus(e.target.value as AttendanceStatus | '')}
               className="h-8 rounded-md border border-input bg-background px-2 text-xs"
             >
-              <option value="">전체</option>
-              <option value="NORMAL">정상</option>
-              <option value="LATE">지각</option>
-              <option value="EARLY_LEAVE">조퇴</option>
-              <option value="ABSENT">결근</option>
+              <option value="">{t('attendancePage.statusFilter.all')}</option>
+              <option value="NORMAL">{t('attendancePage.statusFilter.normal')}</option>
+              <option value="LATE">{t('attendancePage.statusFilter.late')}</option>
+              <option value="EARLY_LEAVE">{t('attendancePage.statusFilter.earlyLeave')}</option>
+              <option value="ABSENT">{t('attendancePage.statusFilter.absent')}</option>
             </select>
           </div>
 
@@ -199,8 +201,8 @@ export default function AttendancePage() {
           ) : records.length === 0 ? (
             <EmptyState
               icon={Calendar}
-              title="근태 기록이 없습니다"
-              description="출퇴근 기록이 여기에 표시됩니다."
+              title={t('attendancePage.emptyState.title')}
+              description={t('attendancePage.emptyState.description')}
             />
           ) : (
             <>
@@ -243,17 +245,17 @@ export default function AttendancePage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-bold">근태 관리</h1>
-            <p className="text-sm text-muted-foreground">출퇴근 기록 및 근태 현황</p>
+            <h1 className="text-2xl font-bold">{t('attendancePage.title')}</h1>
+            <p className="text-sm text-muted-foreground">{t('attendancePage.mobileDescription')}</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => navigate('/attendance/leave/calendar')}>
               <CalendarDays className="mr-2 h-4 w-4" />
-              휴가 캘린더
+              {t('attendancePage.leaveCalendar')}
             </Button>
             <Button size="sm" onClick={() => navigate('/attendance/leave')}>
               <Plus className="mr-2 h-4 w-4" />
-              휴가 신청
+              {t('attendancePage.leaveRequest')}
             </Button>
           </div>
         </div>
@@ -277,25 +279,25 @@ export default function AttendancePage() {
           {/* Monthly Summary */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">이번 달 현황</CardTitle>
+              <CardTitle className="text-base">{t('attendancePage.monthlySummary.title')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-3">
                 <div className="text-center p-2 bg-muted/50 rounded-lg">
-                  <p className="text-xs text-muted-foreground">총 근무일</p>
-                  <p className="text-xl font-bold">{summary?.attendedDays ?? 0}일</p>
+                  <p className="text-xs text-muted-foreground">{t('attendancePage.monthlySummary.totalWorkingDays')}</p>
+                  <p className="text-xl font-bold">{t('attendancePage.monthlySummary.totalWorkingDaysUnit', { count: summary?.attendedDays ?? 0 })}</p>
                 </div>
                 <div className="text-center p-2 bg-muted/50 rounded-lg">
-                  <p className="text-xs text-muted-foreground">근무시간</p>
-                  <p className="text-xl font-bold">{summary?.totalWorkingHours ? Math.round(summary.totalWorkingHours) : 0}h</p>
+                  <p className="text-xs text-muted-foreground">{t('attendancePage.monthlySummary.workingHours')}</p>
+                  <p className="text-xl font-bold">{t('attendancePage.monthlySummary.workingHoursUnit', { hours: summary?.totalWorkingHours ? Math.round(summary.totalWorkingHours) : 0 })}</p>
                 </div>
                 <div className="text-center p-2 bg-yellow-50 dark:bg-yellow-950 rounded-lg">
-                  <p className="text-xs text-muted-foreground">지각</p>
-                  <p className="text-xl font-bold text-yellow-600">{summary?.lateDays ?? 0}회</p>
+                  <p className="text-xs text-muted-foreground">{t('attendancePage.monthlySummary.late')}</p>
+                  <p className="text-xl font-bold text-yellow-600">{t('attendancePage.monthlySummary.timesUnit', { count: summary?.lateDays ?? 0 })}</p>
                 </div>
                 <div className="text-center p-2 bg-orange-50 dark:bg-orange-950 rounded-lg">
-                  <p className="text-xs text-muted-foreground">조퇴</p>
-                  <p className="text-xl font-bold text-orange-600">{summary?.earlyLeaveDays ?? 0}회</p>
+                  <p className="text-xs text-muted-foreground">{t('attendancePage.monthlySummary.earlyLeave')}</p>
+                  <p className="text-xl font-bold text-orange-600">{t('attendancePage.monthlySummary.timesUnit', { count: summary?.earlyLeaveDays ?? 0 })}</p>
                 </div>
               </div>
             </CardContent>
@@ -312,17 +314,17 @@ export default function AttendancePage() {
         {/* Recent Records */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base">근태 기록</CardTitle>
+            <CardTitle className="text-base">{t('attendancePage.recentRecords.title')}</CardTitle>
             <select
               value={searchState.status}
               onChange={(e) => setStatus(e.target.value as AttendanceStatus | '')}
               className="h-8 rounded-md border border-input bg-background px-2 text-xs"
             >
-              <option value="">전체</option>
-              <option value="NORMAL">정상</option>
-              <option value="LATE">지각</option>
-              <option value="EARLY_LEAVE">조퇴</option>
-              <option value="ABSENT">결근</option>
+              <option value="">{t('attendancePage.statusFilter.all')}</option>
+              <option value="NORMAL">{t('attendancePage.statusFilter.normal')}</option>
+              <option value="LATE">{t('attendancePage.statusFilter.late')}</option>
+              <option value="EARLY_LEAVE">{t('attendancePage.statusFilter.earlyLeave')}</option>
+              <option value="ABSENT">{t('attendancePage.statusFilter.absent')}</option>
             </select>
           </CardHeader>
           <CardContent>
@@ -335,8 +337,8 @@ export default function AttendancePage() {
             ) : records.length === 0 ? (
               <EmptyState
                 icon={Calendar}
-                title="근태 기록이 없습니다"
-                description="출퇴근 기록이 여기에 표시됩니다."
+                title={t('attendancePage.emptyState.title')}
+                description={t('attendancePage.emptyState.description')}
               />
             ) : (
               <div className="grid grid-cols-2 gap-3">
@@ -379,17 +381,17 @@ export default function AttendancePage() {
   return (
     <>
       <PageHeader
-        title="근태 관리"
-        description="출퇴근 기록 및 근태 현황을 관리합니다."
+        title={t('attendancePage.title')}
+        description={t('attendancePage.description')}
         actions={
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => navigate('/attendance/leave/calendar')}>
               <CalendarDays className="mr-2 h-4 w-4" />
-              휴가 캘린더
+              {t('attendancePage.leaveCalendar')}
             </Button>
             <Button data-tour="leave-request" onClick={() => navigate('/attendance/leave')}>
               <Plus className="mr-2 h-4 w-4" />
-              휴가 신청
+              {t('attendancePage.leaveRequest')}
             </Button>
           </div>
         }
@@ -401,7 +403,7 @@ export default function AttendancePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="h-5 w-5" />
-              출퇴근
+              {t('attendancePage.checkInOut')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -418,12 +420,12 @@ export default function AttendancePage() {
                 {isCheckedIn ? (
                   <>
                     <CheckCircle2 className="mr-2 h-4 w-4" />
-                    출근 완료
+                    {t('attendancePage.checkInDone')}
                   </>
                 ) : (
                   <>
                     <LogIn className="mr-2 h-4 w-4" />
-                    {checkInMutation.isPending ? '처리 중...' : '출근'}
+                    {checkInMutation.isPending ? t('components.checkInOutButton.processing') : t('attendancePage.checkIn')}
                   </>
                 )}
               </Button>
@@ -436,12 +438,12 @@ export default function AttendancePage() {
                 {isCheckedOut ? (
                   <>
                     <CheckCircle2 className="mr-2 h-4 w-4" />
-                    퇴근 완료
+                    {t('attendancePage.checkOutDone')}
                   </>
                 ) : (
                   <>
                     <LogOut className="mr-2 h-4 w-4" />
-                    {checkOutMutation.isPending ? '처리 중...' : '퇴근'}
+                    {checkOutMutation.isPending ? t('components.checkInOutButton.processing') : t('attendancePage.checkOut')}
                   </>
                 )}
               </Button>
@@ -452,7 +454,7 @@ export default function AttendancePage() {
         {/* Today's Record */}
         <Card>
           <CardHeader>
-            <CardTitle>오늘의 근태</CardTitle>
+            <CardTitle>{t('attendancePage.todayRecord.title')}</CardTitle>
           </CardHeader>
           <CardContent>
             {isTodayLoading ? (
@@ -464,21 +466,21 @@ export default function AttendancePage() {
             ) : (
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">출근 시간</span>
+                  <span className="text-muted-foreground">{t('attendancePage.todayRecord.checkInTime')}</span>
                   <span className="font-medium">{today?.checkInTime || '-'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">퇴근 시간</span>
+                  <span className="text-muted-foreground">{t('attendancePage.todayRecord.checkOutTime')}</span>
                   <span className="font-medium">{today?.checkOutTime || '-'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">근무 시간</span>
+                  <span className="text-muted-foreground">{t('attendancePage.todayRecord.workingHours')}</span>
                   <span className="font-medium">
-                    {today?.workingHours ? `${today.workingHours}시간` : '-'}
+                    {today?.workingHours ? t('attendancePage.todayRecord.workingHoursUnit', { hours: today.workingHours }) : '-'}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">상태</span>
+                  <span className="text-muted-foreground">{t('attendancePage.todayRecord.status')}</span>
                   <span>
                     {today?.status ? (
                       <AttendanceStatusBadge status={today.status} />
@@ -495,32 +497,32 @@ export default function AttendancePage() {
         {/* Monthly Summary */}
         <Card data-tour="attendance-calendar">
           <CardHeader>
-            <CardTitle>이번 달 현황</CardTitle>
+            <CardTitle>{t('attendancePage.monthlySummary.title')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">총 근무일</span>
-                <span className="font-medium">{summary?.attendedDays ?? 0}일</span>
+                <span className="text-muted-foreground">{t('attendancePage.monthlySummary.totalWorkingDays')}</span>
+                <span className="font-medium">{t('attendancePage.monthlySummary.totalWorkingDaysUnit', { count: summary?.attendedDays ?? 0 })}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">총 근무시간</span>
+                <span className="text-muted-foreground">{t('attendancePage.monthlySummary.totalWorkingHours')}</span>
                 <span className="font-medium">
-                  {summary?.totalWorkingHours ? `${Math.round(summary.totalWorkingHours)}시간` : '0시간'}
+                  {t('attendancePage.monthlySummary.totalWorkingHoursUnit', { hours: summary?.totalWorkingHours ? Math.round(summary.totalWorkingHours) : 0 })}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">지각</span>
-                <span className="font-medium text-warning">{summary?.lateDays ?? 0}회</span>
+                <span className="text-muted-foreground">{t('attendancePage.monthlySummary.late')}</span>
+                <span className="font-medium text-warning">{t('attendancePage.monthlySummary.timesUnit', { count: summary?.lateDays ?? 0 })}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">조퇴</span>
-                <span className="font-medium text-warning">{summary?.earlyLeaveDays ?? 0}회</span>
+                <span className="text-muted-foreground">{t('attendancePage.monthlySummary.earlyLeave')}</span>
+                <span className="font-medium text-warning">{t('attendancePage.monthlySummary.timesUnit', { count: summary?.earlyLeaveDays ?? 0 })}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">초과근무</span>
+                <span className="text-muted-foreground">{t('attendancePage.monthlySummary.overtime')}</span>
                 <span className="font-medium">
-                  {summary?.totalOvertimeHours ? `${Math.round(summary.totalOvertimeHours)}시간` : '0시간'}
+                  {t('attendancePage.monthlySummary.overtimeUnit', { hours: summary?.totalOvertimeHours ? Math.round(summary.totalOvertimeHours) : 0 })}
                 </span>
               </div>
             </div>
@@ -531,17 +533,17 @@ export default function AttendancePage() {
       {/* Attendance Records */}
       <Card className="mt-6">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>근태 기록</CardTitle>
+          <CardTitle>{t('attendancePage.recentRecords.title')}</CardTitle>
           <select
             value={searchState.status}
             onChange={(e) => setStatus(e.target.value as AttendanceStatus | '')}
             className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
           >
-            <option value="">전체</option>
-            <option value="NORMAL">정상</option>
-            <option value="LATE">지각</option>
-            <option value="EARLY_LEAVE">조퇴</option>
-            <option value="ABSENT">결근</option>
+            <option value="">{t('attendancePage.statusFilter.all')}</option>
+            <option value="NORMAL">{t('attendancePage.statusFilter.normal')}</option>
+            <option value="LATE">{t('attendancePage.statusFilter.late')}</option>
+            <option value="EARLY_LEAVE">{t('attendancePage.statusFilter.earlyLeave')}</option>
+            <option value="ABSENT">{t('attendancePage.statusFilter.absent')}</option>
           </select>
         </CardHeader>
         <CardContent className="p-0">
@@ -552,8 +554,8 @@ export default function AttendancePage() {
           ) : records.length === 0 ? (
             <EmptyState
               icon={Calendar}
-              title="근태 기록이 없습니다"
-              description="출퇴근 기록이 여기에 표시됩니다."
+              title={t('attendancePage.emptyState.title')}
+              description={t('attendancePage.emptyState.description')}
             />
           ) : (
             <>
@@ -562,23 +564,23 @@ export default function AttendancePage() {
                   <thead>
                     <tr className="border-b bg-muted/50">
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        날짜
+                        {t('attendancePage.table.date')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        출근
+                        {t('attendancePage.table.checkIn')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        퇴근
+                        {t('attendancePage.table.checkOut')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        근무시간
+                        {t('attendancePage.table.workingHours')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        상태
+                        {t('attendancePage.table.status')}
                       </th>
                       {isAdmin && (
                         <th className="w-[80px] px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                          수정
+                          {t('attendancePage.table.edit')}
                         </th>
                       )}
                     </tr>

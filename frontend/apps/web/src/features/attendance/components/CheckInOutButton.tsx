@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,7 @@ export function CheckInOutButton({
   onSuccess,
   onError,
 }: CheckInOutButtonProps) {
+  const { t } = useTranslation('attendance');
   const [currentTime, setCurrentTime] = React.useState(new Date());
   const { data: todayData, isLoading } = useTodayAttendance();
   const checkInMutation = useCheckIn();
@@ -114,17 +116,17 @@ export function CheckInOutButton({
           {checkInMutation.isPending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              처리 중...
+              {t('components.checkInOutButton.processing')}
             </>
           ) : isCheckedIn ? (
             <>
               <CheckCircle2 className="mr-2 h-4 w-4" />
-              출근 완료 {today?.checkInTime?.slice(0, 5)}
+              {t('components.checkInOutButton.checkInDone', { time: today?.checkInTime?.slice(0, 5) })}
             </>
           ) : (
             <>
               <LogIn className="mr-2 h-4 w-4" />
-              출근하기
+              {t('components.checkInOutButton.checkIn')}
             </>
           )}
         </Button>
@@ -137,17 +139,17 @@ export function CheckInOutButton({
           {checkOutMutation.isPending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              처리 중...
+              {t('components.checkInOutButton.processing')}
             </>
           ) : isCheckedOut ? (
             <>
               <CheckCircle2 className="mr-2 h-4 w-4" />
-              퇴근 완료 {today?.checkOutTime?.slice(0, 5)}
+              {t('components.checkInOutButton.checkOutDone', { time: today?.checkOutTime?.slice(0, 5) })}
             </>
           ) : (
             <>
               <LogOut className="mr-2 h-4 w-4" />
-              퇴근하기
+              {t('components.checkInOutButton.checkOut')}
             </>
           )}
         </Button>

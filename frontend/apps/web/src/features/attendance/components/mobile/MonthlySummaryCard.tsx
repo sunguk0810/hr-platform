@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Clock, AlertTriangle, LogOut, TrendingUp } from 'lucide-react';
 import { MobileCard, MobileCardContent } from '@/components/mobile';
 import { cn } from '@/lib/utils';
@@ -44,32 +45,34 @@ export function MonthlySummaryCard({
   earlyLeaveDays = 0,
   totalOvertimeHours = 0,
 }: MonthlySummaryCardProps) {
+  const { t } = useTranslation('attendance');
+
   return (
     <MobileCard>
       <MobileCardContent>
-        <h3 className="text-sm font-medium text-muted-foreground mb-3">이번 달 현황</h3>
+        <h3 className="text-sm font-medium text-muted-foreground mb-3">{t('components.mobile.monthlySummary.title')}</h3>
 
         <div className="grid grid-cols-2 gap-2">
           <SummaryItem
             icon={<Clock className="h-5 w-5 text-primary" />}
-            label="총 근무일"
-            value={`${attendedDays}일`}
+            label={t('components.mobile.monthlySummary.totalWorkingDays')}
+            value={t('components.mobile.monthlySummary.daysUnit', { count: attendedDays })}
           />
           <SummaryItem
             icon={<TrendingUp className="h-5 w-5 text-primary" />}
-            label="근무시간"
+            label={t('components.mobile.monthlySummary.workingHours')}
             value={`${Math.round(totalWorkingHours)}h`}
           />
           <SummaryItem
             icon={<AlertTriangle className="h-5 w-5 text-yellow-500" />}
-            label="지각"
-            value={`${lateDays}회`}
+            label={t('components.mobile.monthlySummary.late')}
+            value={t('components.mobile.monthlySummary.timesUnit', { count: lateDays })}
             variant={lateDays > 0 ? 'warning' : 'default'}
           />
           <SummaryItem
             icon={<LogOut className="h-5 w-5 text-orange-500" />}
-            label="조퇴"
-            value={`${earlyLeaveDays}회`}
+            label={t('components.mobile.monthlySummary.earlyLeave')}
+            value={t('components.mobile.monthlySummary.timesUnit', { count: earlyLeaveDays })}
             variant={earlyLeaveDays > 0 ? 'warning' : 'default'}
           />
         </div>
@@ -77,9 +80,9 @@ export function MonthlySummaryCard({
         {totalOvertimeHours > 0 && (
           <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-950 rounded-xl">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">초과근무</span>
+              <span className="text-sm text-muted-foreground">{t('components.mobile.monthlySummary.overtime')}</span>
               <span className="font-semibold text-blue-600 dark:text-blue-400">
-                {Math.round(totalOvertimeHours)}시간
+                {t('components.mobile.monthlySummary.hoursUnit', { count: Math.round(totalOvertimeHours) })}
               </span>
             </div>
           </div>

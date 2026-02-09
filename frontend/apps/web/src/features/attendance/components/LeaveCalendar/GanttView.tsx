@@ -1,4 +1,5 @@
 import { useMemo, useRef, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   format,
   eachDayOfInterval,
@@ -48,6 +49,7 @@ export function GanttView({
   onEventClick,
   className,
 }: GanttViewProps) {
+  const { t } = useTranslation('attendance');
   const scrollRef = useRef<HTMLDivElement>(null);
   const [hoveredEvent, setHoveredEvent] = useState<string | null>(null);
 
@@ -105,7 +107,7 @@ export function GanttView({
       {/* Header */}
       <div className="border-b px-4 py-3">
         <h3 className="text-lg font-medium">
-          {format(currentDate, 'yyyy년 M월', { locale: ko })} Gantt Chart
+          {t('components.leaveCalendar.ganttView.title', { yearMonth: format(currentDate, 'yyyy년 M월', { locale: ko }) })}
         </h3>
       </div>
 
@@ -113,7 +115,7 @@ export function GanttView({
         {/* Employee list (fixed) */}
         <div className="w-48 shrink-0 border-r">
           <div className="h-14 border-b bg-muted/30 px-3 py-2">
-            <span className="text-sm font-medium">직원</span>
+            <span className="text-sm font-medium">{t('components.leaveCalendar.ganttView.employeeColumn')}</span>
           </div>
           <div>
             {employees.map((employee) => (
@@ -131,7 +133,7 @@ export function GanttView({
             ))}
             {employees.length === 0 && (
               <div className="flex h-20 items-center justify-center text-sm text-muted-foreground">
-                표시할 데이터가 없습니다
+                {t('components.leaveCalendar.ganttView.noData')}
               </div>
             )}
           </div>
@@ -231,24 +233,14 @@ export function GanttView({
 
       {/* Legend */}
       <div className="flex flex-wrap items-center gap-4 border-t px-4 py-2">
-        <span className="text-xs text-muted-foreground">범례:</span>
+        <span className="text-xs text-muted-foreground">{t('components.leaveCalendar.ganttView.legend')}</span>
         {Object.entries(leaveTypeColors).map(
           ([type, color]) =>
             type !== 'DEFAULT' && (
               <div key={type} className="flex items-center gap-1.5">
                 <span className={cn('h-3 w-3 rounded', color)} />
                 <span className="text-xs">
-                  {type === 'ANNUAL'
-                    ? '연차'
-                    : type === 'SICK'
-                    ? '병가'
-                    : type === 'PERSONAL'
-                    ? '개인휴가'
-                    : type === 'SPECIAL'
-                    ? '특별휴가'
-                    : type === 'HALF_DAY'
-                    ? '반차'
-                    : type}
+                  {t(`components.leaveCalendar.ganttView.leaveTypes.${type}`, { defaultValue: type })}
                 </span>
               </div>
             )

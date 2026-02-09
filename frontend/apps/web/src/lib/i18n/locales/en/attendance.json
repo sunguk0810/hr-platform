@@ -1,0 +1,687 @@
+{
+  "attendancePage": {
+    "title": "Attendance Management",
+    "description": "Manage check-in/out records and attendance status.",
+    "mobileDescription": "Check-in/out records and attendance status",
+    "checkInOut": "Check In/Out",
+    "checkIn": "Check In",
+    "checkOut": "Check Out",
+    "checkInDone": "Checked In",
+    "checkOutDone": "Checked Out",
+    "leaveCalendar": "Leave Calendar",
+    "leaveRequest": "Request Leave",
+    "todayRecord": {
+      "title": "Today's Attendance",
+      "checkInTime": "Check-in Time",
+      "checkOutTime": "Check-out Time",
+      "workingHours": "Working Hours",
+      "workingHoursUnit": "{{hours}} hours",
+      "status": "Status"
+    },
+    "monthlySummary": {
+      "title": "This Month's Summary",
+      "totalWorkingDays": "Work Days",
+      "totalWorkingDaysUnit": "{{count}} days",
+      "workingHours": "Work Hours",
+      "workingHoursUnit": "{{hours}}h",
+      "totalWorkingHours": "Total Work Hours",
+      "totalWorkingHoursUnit": "{{hours}} hours",
+      "late": "Late",
+      "earlyLeave": "Early Leave",
+      "timesUnit": "{{count}} times",
+      "overtime": "Overtime",
+      "overtimeUnit": "{{hours}} hours"
+    },
+    "recentRecords": {
+      "title": "Attendance Records",
+      "mobileTitle": "Recent Attendance Records"
+    },
+    "emptyState": {
+      "title": "No attendance records",
+      "description": "Check-in/out records will appear here."
+    },
+    "table": {
+      "date": "Date",
+      "checkIn": "Check In",
+      "checkOut": "Check Out",
+      "workingHours": "Work Hours",
+      "status": "Status",
+      "edit": "Edit"
+    },
+    "statusFilter": {
+      "all": "All",
+      "normal": "Normal",
+      "late": "Late",
+      "earlyLeave": "Early Leave",
+      "absent": "Absent"
+    }
+  },
+  "leaveCalendarPage": {
+    "title": "Leave Calendar",
+    "description": "View team members' leave schedules.",
+    "mobileDescription": "Team leave schedule",
+    "backToAttendance": "Attendance",
+    "today": "Today",
+    "departmentSelect": "Select Department",
+    "monthViewTitle": "Month View",
+    "ganttViewTitle": "Gantt View",
+    "todayLeaves": {
+      "title": "On Leave Today",
+      "count": "{{count}} people",
+      "empty": "No one is on leave today",
+      "more": "+{{count}} more"
+    },
+    "monthlyStats": {
+      "title": "This Month's Summary",
+      "totalLeaves": "Total Leaves",
+      "annual": "Annual",
+      "sick": "Sick",
+      "special": "Special"
+    },
+    "schedule": {
+      "title": "Leave Schedule",
+      "empty": "No leave schedule this month"
+    },
+    "summary": {
+      "title": "This Month's Leave Summary",
+      "totalLeaveCount": "Total Leave Count"
+    },
+    "gantt": {
+      "name": "Name",
+      "department": "Dept."
+    },
+    "overflow": "+{{count}} more",
+    "leaveTypes": {
+      "ANNUAL": "Annual Leave",
+      "SICK": "Sick Leave",
+      "SPECIAL": "Special Leave",
+      "HALF_DAY_AM": "Half-day (AM)",
+      "HALF_DAY_PM": "Half-day (PM)",
+      "HOURLY": "Hourly Leave",
+      "MATERNITY": "Maternity Leave",
+      "PATERNITY": "Paternity Leave",
+      "UNPAID": "Unpaid Leave"
+    },
+    "weekDays": {
+      "sun": "Sun",
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat"
+    }
+  },
+  "leaveApprovalPage": {
+    "title": "Leave Approval",
+    "description": "Review and approve/reject pending leave requests.",
+    "mobileDescription": "Review pending leave requests",
+    "selectMode": "Select",
+    "cancelSelection": "Cancel Selection",
+    "summaryCards": {
+      "pendingCount": "Pending",
+      "pending": "Pending",
+      "selectedCount": "Selected",
+      "selected": "Selected",
+      "urgent": "Urgent",
+      "countUnit": "{{count}}"
+    },
+    "filterLeaveType": "Leave Type",
+    "filterAll": "All",
+    "resetFilter": "Reset Filter",
+    "bulkApproveButton": "Approve Selected ({{count}})",
+    "bulkRejectButton": "Reject Selected ({{count}})",
+    "pendingList": {
+      "title": "Pending List",
+      "empty": {
+        "title": "No pending leave requests",
+        "description": "All leave requests have been processed."
+      }
+    },
+    "table": {
+      "applicant": "Applicant",
+      "leaveType": "Leave Type",
+      "period": "Period",
+      "days": "Days",
+      "remainingAnnual": "Remaining",
+      "reason": "Reason",
+      "action": "Action"
+    },
+    "remaining": "Remaining {{count}} days",
+    "daysUnit": "{{count}} days",
+    "approve": "Approve",
+    "reject": "Reject",
+    "approveDialog": {
+      "title": "Approve Leave",
+      "description": "Approve {{name}}'s leave request.",
+      "leaveType": "Leave Type:",
+      "days": "Days:",
+      "period": "Period:",
+      "balanceChangeTitle": "Balance Change",
+      "currentBalance": "Current Balance: {{count}} days",
+      "afterDeduction": "After Deduction: {{count}} days",
+      "insufficientBalance": "Insufficient balance. Approval will result in negative balance.",
+      "commentLabel": "Comment (Optional)",
+      "commentPlaceholder": "Enter approval comment"
+    },
+    "rejectDialog": {
+      "title": "Reject Leave",
+      "description": "Reject {{name}}'s leave request.",
+      "reasonLabel": "Rejection Reason",
+      "reasonPlaceholder": "Enter rejection reason (required)"
+    },
+    "bulkApproveDialog": {
+      "title": "Bulk Approve",
+      "description": "Approve {{count}} selected leave requests.",
+      "commentLabel": "Comment (Optional)",
+      "commentPlaceholder": "Enter approval comment",
+      "confirmButton": "Approve {{count}}"
+    },
+    "bulkRejectDialog": {
+      "title": "Bulk Reject",
+      "description": "Reject {{count}} selected leave requests.",
+      "reasonLabel": "Rejection Reason",
+      "reasonPlaceholder": "Enter rejection reason (required)",
+      "confirmButton": "Reject {{count}}"
+    },
+    "selectedCount": "{{count}} selected",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "toast": {
+      "approveSuccess": "Approved",
+      "approveSuccessMessage": "Leave has been approved.",
+      "approveFail": "Approval Failed",
+      "approveFailMessage": "Failed to approve leave.",
+      "rejectSuccess": "Rejected",
+      "rejectSuccessMessage": "Leave has been rejected.",
+      "rejectFail": "Rejection Failed",
+      "rejectFailMessage": "Failed to reject leave.",
+      "inputError": "Input Error",
+      "rejectReasonRequired": "Please enter a rejection reason.",
+      "bulkApproveSuccess": "Bulk Approved",
+      "bulkApproveSuccessMessage": "{{count}} requests approved.",
+      "bulkApproveFail": "Bulk Approval Failed",
+      "bulkApproveFailMessage": "Some requests failed to approve.",
+      "bulkRejectSuccess": "Bulk Rejected",
+      "bulkRejectSuccessMessage": "{{count}} requests rejected.",
+      "bulkRejectFail": "Bulk Rejection Failed",
+      "bulkRejectFailMessage": "Some requests failed to reject."
+    }
+  },
+  "leaveRequestPage": {
+    "title": "Leave Request",
+    "description": "Request leave and check approval status.",
+    "mobileDescription": "Check approval status",
+    "backToAttendance": "Attendance",
+    "applyButton": "Apply",
+    "leaveBalance": {
+      "title": "Leave Balance",
+      "totalAnnual": "Total Annual",
+      "used": "Used",
+      "pending": "Pending",
+      "remaining": "Remaining",
+      "daysUnit": "{{count}} days"
+    },
+    "hourlyLeaveBalance": {
+      "title": "Hourly Leave",
+      "total": "Total",
+      "used": "Used",
+      "pending": "Pending",
+      "remaining": "Remaining",
+      "hoursUnit": "{{count}} hours"
+    },
+    "balanceByType": {
+      "title": "Leave Balance by Type"
+    },
+    "requestList": {
+      "title": "Leave Request History",
+      "mobileTitle": "Request History"
+    },
+    "filter": {
+      "allTypes": "All Types",
+      "allStatus": "All Status",
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "cancelled": "Cancelled"
+    },
+    "emptyState": {
+      "title": "No leave requests",
+      "description": "Leave requests will appear here.",
+      "action": "Request Leave"
+    },
+    "table": {
+      "type": "Type",
+      "period": "Period",
+      "daysOrHours": "Days/Hours",
+      "reason": "Reason",
+      "status": "Status",
+      "action": "Action"
+    },
+    "hoursUnit": "{{count}} hours",
+    "daysUnit": "{{count}} days",
+    "createDialog": {
+      "title": "Request Leave",
+      "description": "Submit a leave request. Leave will be confirmed after approval.",
+      "leaveType": "Leave Type *",
+      "leaveTypePlaceholder": "Select leave type",
+      "leaveTypeGroups": {
+        "annual": "Annual Leave",
+        "annualLeave": "Annual Leave",
+        "halfDayAm": "Half-day (AM) - 09:00~13:00",
+        "halfDayPm": "Half-day (PM) - 14:00~18:00",
+        "hourlyLeave": "Hourly Leave",
+        "specialGroup": "Special Leave",
+        "sick": "Sick Leave",
+        "marriage": "Marriage Leave",
+        "bereavement": "Bereavement Leave",
+        "maternity": "Maternity Leave",
+        "paternity": "Paternity Leave",
+        "childcare": "Childcare Leave",
+        "otherGroup": "Other",
+        "official": "Official Leave",
+        "compensation": "Compensatory Leave",
+        "special": "Special Leave"
+      },
+      "halfDayInfo": {
+        "am": "Morning Half-day",
+        "pm": "Afternoon Half-day",
+        "amTime": "09:00 ~ 13:00 (4 hours)",
+        "pmTime": "14:00 ~ 18:00 (4 hours)"
+      },
+      "hourlyInfo": {
+        "title": "Hourly Leave",
+        "policy": "(Min unit: {{minUnit}} min / Max {{maxCount}} per day)",
+        "remaining": "Remaining: {{hours}} hours",
+        "used": "Used: {{hours}} hours",
+        "total": "Total: {{hours}} hours"
+      },
+      "dateLabel": "Date *",
+      "startDateLabel": "Start Date *",
+      "endDateLabel": "End Date *",
+      "startTimeLabel": "Start Time *",
+      "endTimeLabel": "End Time *",
+      "startTimePlaceholder": "Start time",
+      "endTimePlaceholder": "End time",
+      "calculatedHours": "Total {{hours}} hours used",
+      "calculatedDays": "Total {{days}} days",
+      "reasonLabel": "Reason *",
+      "reasonPlaceholder": "Enter leave reason.",
+      "approvalLinePreview": "Approval Line Preview",
+      "loadingApprovalLine": "Loading approval line...",
+      "noApprovalLine": "No recommended approval line available.",
+      "approvalLineNote": "Auto-recommended approval line based on your department and position.",
+      "submitting": "Submitting...",
+      "submit": "Submit"
+    },
+    "cancelDialog": {
+      "title": "Cancel Leave Request",
+      "description": "Are you sure you want to cancel this leave request?",
+      "cancelling": "Cancelling...",
+      "confirm": "Cancel Request"
+    }
+  },
+  "overtimePage": {
+    "title": "Overtime",
+    "description": "Request overtime and check status.",
+    "mobileDescription": "Overtime request and status",
+    "backToAttendance": "Attendance",
+    "requestButton": "Request Overtime",
+    "summary": {
+      "monthlyRequests": "This Month's Requests",
+      "approved": "Approved",
+      "pending": "Pending",
+      "totalApprovedHours": "Total Approved Hours",
+      "countUnit": "{{count}}",
+      "hoursUnit": "{{count}} hours"
+    },
+    "statusConfig": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "cancelled": "Cancelled"
+    },
+    "filter": {
+      "statusLabel": "Status",
+      "all": "All",
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "cancelled": "Cancelled"
+    },
+    "requestList": {
+      "title": "Request History"
+    },
+    "emptyState": {
+      "mobileTitle": "No overtime requests",
+      "mobileDescription": "Tap the button below to request overtime.",
+      "desktopTitle": "No overtime requests",
+      "desktopDescription": "Click the button above to request overtime.",
+      "action": "Request Overtime"
+    },
+    "table": {
+      "date": "Date",
+      "time": "Time",
+      "workingHours": "Hours",
+      "reason": "Reason",
+      "status": "Status",
+      "action": "Action"
+    },
+    "hoursUnit": "{{count}} hours",
+    "createDialog": {
+      "title": "Request Overtime",
+      "description": "Enter overtime details and submit for approval.",
+      "dateLabel": "Date *",
+      "startTimeLabel": "Start Time *",
+      "endTimeLabel": "End Time *",
+      "estimatedHours": "Estimated overtime: {{hours}} hours",
+      "reasonLabel": "Reason *",
+      "reasonPlaceholder": "Enter overtime reason",
+      "submitting": "Submitting...",
+      "submit": "Submit"
+    },
+    "cancelDialog": {
+      "title": "Cancel Overtime",
+      "description": "Are you sure you want to cancel this overtime request?"
+    }
+  },
+  "myLeavePage": {
+    "title": "My Leave",
+    "description": "View leave status and history.",
+    "mobileDescription": "Leave status and history",
+    "backToAttendance": "Attendance",
+    "balance": {
+      "remainingAnnual": "Remaining Annual Leave",
+      "totalAnnual": "Total Annual",
+      "used": "Used",
+      "remaining": "Remaining",
+      "pending": "Pending",
+      "daysUnit": "{{count}} days",
+      "usageInfo": "{{used}} / {{total}} days used"
+    },
+    "balanceByType": {
+      "title": "Leave Balance by Type",
+      "mobileTitle": "By Leave Type"
+    },
+    "history": {
+      "title": "Leave History"
+    },
+    "tabs": {
+      "all": "All",
+      "pending": "Pending",
+      "pendingWithCount": "Pending ({{count}})",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "emptyState": {
+      "noLeaves": "No leave history",
+      "noPending": "No pending leaves",
+      "noApproved": "No approved leaves",
+      "noRejected": "No rejected leaves",
+      "description": "Leave usage history will appear here."
+    },
+    "table": {
+      "type": "Type",
+      "period": "Period",
+      "days": "Days",
+      "reason": "Reason",
+      "status": "Status",
+      "requestDate": "Request Date"
+    }
+  },
+  "workHourMonitoringPage": {
+    "title": "52-Hour Week Monitoring",
+    "description": "Monitor weekly work hours per employee and ensure labor law compliance.",
+    "exportExcel": "Export to Excel",
+    "exceededAlert": {
+      "title": "52-Hour Limit Exceeded",
+      "mobileTitle": "52-Hour Limit Exceeded",
+      "description": "{{count}} employees have exceeded the 52-hour weekly limit. Action is required for labor law compliance.",
+      "mobileDescription": "{{count}} exceeded"
+    },
+    "thisWeek": "This Week",
+    "summary": {
+      "totalEmployees": "Total Employees",
+      "totalMobile": "Total",
+      "normal": "Normal",
+      "normalDesc": "Under 48 hours",
+      "warning": "Warning",
+      "warningDesc": "48-52 hours",
+      "exceeded": "Exceeded",
+      "exceededDesc": "Over 52 hours",
+      "countUnit": "{{count}}"
+    },
+    "filter": {
+      "department": "Department",
+      "allDepartments": "All Departments",
+      "status": "Status",
+      "all": "All",
+      "normal": "Normal",
+      "warning": "Warning",
+      "exceeded": "Exceeded",
+      "resetFilter": "Reset Filter",
+      "filterButton": "Filter",
+      "applied": "Applied"
+    },
+    "table": {
+      "title": "Work Hours by Employee",
+      "employeeName": "Employee",
+      "department": "Department",
+      "regularHours": "Regular",
+      "overtimeHours": "Overtime",
+      "totalWorkingHours": "Total Hours",
+      "status": "Status",
+      "exceededHours": "Exceeded"
+    },
+    "employeeCard": {
+      "regularAndOvertime": "Regular {{regular}}h + Overtime {{overtime}}h",
+      "exceededBy": "+{{hours}}h exceeded"
+    },
+    "csvHeaders": {
+      "employeeName": "Employee",
+      "department": "Department",
+      "regularHours": "Regular Hours",
+      "overtimeHours": "Overtime Hours",
+      "totalWorkingHours": "Total Hours",
+      "status": "Status",
+      "exceededHours": "Exceeded Hours"
+    },
+    "emptyState": {
+      "title": "No data available",
+      "description": "No work data available for this period."
+    },
+    "statusLabels": {
+      "NORMAL": "Normal",
+      "WARNING": "Warning",
+      "EXCEEDED": "Exceeded"
+    }
+  },
+  "components": {
+    "checkInOutButton": {
+      "processing": "Processing...",
+      "checkInDone": "Checked In {{time}}",
+      "checkIn": "Check In",
+      "checkOutDone": "Checked Out {{time}}",
+      "checkOut": "Check Out"
+    },
+    "attendanceStatus": {
+      "title": "Today's Attendance",
+      "checkIn": "Check In",
+      "checkOut": "Check Out",
+      "workingHours": "Work Hours",
+      "workingHoursUnit": "{{hours}} hours",
+      "status": "Status"
+    },
+    "leaveBalanceCard": {
+      "simpleTitle": "Annual Leave Balance",
+      "detailedTitle": "Leave Status",
+      "daysUnit": "/ {{total}} days",
+      "used": "Used: {{count}} days",
+      "pendingWait": "Pending: {{count}} days",
+      "totalAnnual": "Total Annual",
+      "remaining": "Remaining",
+      "pendingApproval": "Pending {{count}} days",
+      "expiringDays": "Expiring {{count}} days",
+      "byType": "Leave by Type"
+    },
+    "teamLeaveStatus": {
+      "title": "{{team}} Leave Status",
+      "totalMembers": "Total Members",
+      "todayLeaves": "On Leave Today",
+      "pendingApproval": "Pending Approval",
+      "pendingAlert": "{{count}} pending leave requests",
+      "moreItems": "and {{count}} more",
+      "usageInfo": "{{used}}/{{total}} days used",
+      "remainingLabel": "Remaining",
+      "noMembers": "No team member information."
+    },
+    "overtimeRequestForm": {
+      "dateLabel": "Date *",
+      "datePlaceholder": "Select date",
+      "overtimeType": "Overtime Type",
+      "overtimeTypes": {
+        "weekday": "Weekday Overtime",
+        "weekend": "Weekend Work",
+        "holiday": "Holiday Work"
+      },
+      "startTimeLabel": "Start Time *",
+      "endTimeLabel": "End Time *",
+      "estimatedHours": "Estimated overtime: {{hours}} hours",
+      "longOvertimeWarning": "Overtime over 4 hours may require additional approval.",
+      "reasonLabel": "Reason *",
+      "reasonPlaceholder": "Enter overtime reason",
+      "submit": "Submit"
+    },
+    "attendanceCalendar": {
+      "today": "Today",
+      "statusLabels": {
+        "NORMAL": "Normal",
+        "LATE": "Late",
+        "EARLY_LEAVE": "Early Leave",
+        "ABSENT": "Absent",
+        "LEAVE": "Leave",
+        "HALF_DAY": "Half Day",
+        "HOLIDAY": "Holiday",
+        "OVERTIME": "Overtime",
+        "WEEKEND": "Weekend"
+      },
+      "tooltipCheckIn": "Check In: {{time}}",
+      "tooltipCheckOut": "Check Out: {{time}}",
+      "tooltipWorkingHours": "Work: {{hours}} hours"
+    },
+    "editAttendanceDialog": {
+      "title": "Edit Attendance Record",
+      "description": "Edit attendance record. Changes will be logged in the audit trail.",
+      "dateLabel": "Date",
+      "employeeLabel": "Employee",
+      "checkInTimeLabel": "Check-in Time",
+      "checkOutTimeLabel": "Check-out Time",
+      "statusLabel": "Attendance Status",
+      "statusPlaceholder": "Select status",
+      "editableStatuses": {
+        "NORMAL": "Normal",
+        "LATE": "Late",
+        "EARLY_LEAVE": "Early Leave",
+        "ABSENT": "Absent",
+        "LEAVE": "Leave",
+        "HALF_DAY": "Half Day"
+      },
+      "remarksLabel": "Edit Reason",
+      "remarksPlaceholder": "Enter edit reason (required)",
+      "remarksRequired": "Please enter an edit reason",
+      "auditWarning": "Attendance record changes are logged in the audit trail and can be reviewed by administrators.",
+      "submitButton": "Update",
+      "confirmTitle": "Confirm Attendance Edit",
+      "confirmDescription": "Are you sure you want to edit this record? This action will be logged in the audit trail.",
+      "confirmButton": "Update",
+      "toast": {
+        "inputError": "Input Error",
+        "remarksRequired": "Please enter an edit reason.",
+        "updateSuccess": "Updated",
+        "updateSuccessMessage": "Attendance record has been updated.",
+        "updateFail": "Update Failed",
+        "updateFailMessage": "Failed to update attendance record."
+      }
+    },
+    "leaveRequestForm": {
+      "availableAnnual": "Available annual leave: {{count}} days",
+      "leaveTypeLabel": "Leave Type",
+      "leaveTypePlaceholder": "Select leave type",
+      "dateLabel": "Date",
+      "periodLabel": "Period",
+      "datePlaceholder": "Select date",
+      "periodPlaceholder": "Select period",
+      "usageDays": "Days Used",
+      "daysUnit": "{{count}} days",
+      "exceedingBalance": "Exceeds available annual leave ({{count}} days).",
+      "reasonLabel": "Reason",
+      "reasonPlaceholder": "Enter leave reason",
+      "submit": "Submit"
+    },
+    "leaveCalendar": {
+      "weekView": {
+        "allDay": "All Day",
+        "moreEvents": "+{{count}} more"
+      },
+      "monthView": {
+        "weekDays": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+      },
+      "dayView": {
+        "today": "Today",
+        "leaveCount": "{{count}} leaves",
+        "leaveListTitle": "Leave List",
+        "noLeaves": "No leaves registered",
+        "statusLabels": {
+          "PENDING": "Pending",
+          "APPROVED": "Approved",
+          "REJECTED": "Rejected",
+          "CANCELLED": "Cancelled"
+        }
+      },
+      "ganttView": {
+        "title": "{{yearMonth}} Gantt Chart",
+        "employeeColumn": "Employee",
+        "noData": "No data to display",
+        "legend": "Legend:",
+        "leaveTypes": {
+          "ANNUAL": "Annual",
+          "SICK": "Sick",
+          "PERSONAL": "Personal",
+          "SPECIAL": "Special",
+          "HALF_DAY": "Half Day"
+        }
+      }
+    },
+    "mobile": {
+      "monthlySummary": {
+        "title": "This Month's Summary",
+        "totalWorkingDays": "Work Days",
+        "workingHours": "Work Hours",
+        "late": "Late",
+        "earlyLeave": "Early Leave",
+        "overtime": "Overtime",
+        "daysUnit": "{{count}} days",
+        "timesUnit": "{{count}} times",
+        "hoursUnit": "{{count}} hours"
+      },
+      "weeklyAttendance": {
+        "title": "This Week's Attendance",
+        "weekDays": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+      },
+      "attendanceButton": {
+        "checkIn": "Check In",
+        "checkOut": "Check Out"
+      }
+    }
+  },
+  "validation": {
+    "dateRequired": "Please select a date",
+    "startTimeRequired": "Please enter start time",
+    "endTimeRequired": "Please enter end time",
+    "reasonRequired": "Please enter a reason",
+    "reasonMaxLength": "Must be 500 characters or less",
+    "endTimeAfterStart": "End time must be after start time",
+    "startDateRequired": "Please select a start date",
+    "endDateRequired": "Please select an end date"
+  }
+}

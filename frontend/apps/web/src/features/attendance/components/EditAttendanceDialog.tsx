@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -42,13 +43,13 @@ interface FormData {
   remarks: string;
 }
 
-const EDITABLE_STATUSES: { value: AttendanceStatus; label: string }[] = [
-  { value: 'NORMAL', label: '정상' },
-  { value: 'LATE', label: '지각' },
-  { value: 'EARLY_LEAVE', label: '조퇴' },
-  { value: 'ABSENT', label: '결근' },
-  { value: 'LEAVE', label: '휴가' },
-  { value: 'HALF_DAY', label: '반차' },
+const EDITABLE_STATUS_KEYS: { value: AttendanceStatus; key: string }[] = [
+  { value: 'NORMAL', key: 'components.editAttendanceDialog.editableStatuses.NORMAL' },
+  { value: 'LATE', key: 'components.editAttendanceDialog.editableStatuses.LATE' },
+  { value: 'EARLY_LEAVE', key: 'components.editAttendanceDialog.editableStatuses.EARLY_LEAVE' },
+  { value: 'ABSENT', key: 'components.editAttendanceDialog.editableStatuses.ABSENT' },
+  { value: 'LEAVE', key: 'components.editAttendanceDialog.editableStatuses.LEAVE' },
+  { value: 'HALF_DAY', key: 'components.editAttendanceDialog.editableStatuses.HALF_DAY' },
 ];
 
 export function EditAttendanceDialog({
@@ -57,6 +58,7 @@ export function EditAttendanceDialog({
   record,
   onSuccess,
 }: EditAttendanceDialogProps) {
+  const { t } = useTranslation('attendance');
   const { toast } = useToast();
   const [showConfirm, setShowConfirm] = useState(false);
   const updateMutation = useUpdateAttendanceRecord();
@@ -94,8 +96,8 @@ export function EditAttendanceDialog({
   const handleFormSubmit = (data: FormData) => {
     if (!data.remarks.trim()) {
       toast({
-        title: '입력 오류',
-        description: '수정 사유를 입력해주세요.',
+        title: t('components.editAttendanceDialog.toast.inputError'),
+        description: t('components.editAttendanceDialog.toast.remarksRequired'),
         variant: 'destructive',
       });
       return;
@@ -120,8 +122,8 @@ export function EditAttendanceDialog({
       });
 
       toast({
-        title: '수정 완료',
-        description: '근태 기록이 수정되었습니다.',
+        title: t('components.editAttendanceDialog.toast.updateSuccess'),
+        description: t('components.editAttendanceDialog.toast.updateSuccessMessage'),
       });
 
       setShowConfirm(false);
@@ -129,8 +131,8 @@ export function EditAttendanceDialog({
       onSuccess?.();
     } catch (error) {
       toast({
-        title: '수정 실패',
-        description: '근태 기록 수정에 실패했습니다.',
+        title: t('components.editAttendanceDialog.toast.updateFail'),
+        description: t('components.editAttendanceDialog.toast.updateFailMessage'),
         variant: 'destructive',
       });
     }
@@ -143,9 +145,9 @@ export function EditAttendanceDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>근태 기록 수정</DialogTitle>
+            <DialogTitle>{t('components.editAttendanceDialog.title')}</DialogTitle>
             <DialogDescription>
-              근태 기록을 수정합니다. 수정 내역은 감사 로그에 기록됩니다.
+              {t('components.editAttendanceDialog.description')}
             </DialogDescription>
           </DialogHeader>
 
@@ -153,13 +155,13 @@ export function EditAttendanceDialog({
             {/* Read-only Info */}
             <div className="grid grid-cols-2 gap-4 rounded-lg bg-muted/50 p-4">
               <div>
-                <Label className="text-muted-foreground">날짜</Label>
+                <Label className="text-muted-foreground">{t('components.editAttendanceDialog.dateLabel')}</Label>
                 <p className="font-medium">
                   {format(new Date(record.date), 'yyyy년 M월 d일 (E)', { locale: ko })}
                 </p>
               </div>
               <div>
-                <Label className="text-muted-foreground">사원</Label>
+                <Label className="text-muted-foreground">{t('components.editAttendanceDialog.employeeLabel')}</Label>
                 <p className="font-medium">{record.employeeName}</p>
               </div>
             </div>
@@ -167,7 +169,7 @@ export function EditAttendanceDialog({
             {/* Editable Fields */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="checkInTime">출근 시간</Label>
+                <Label htmlFor="checkInTime">{t('components.editAttendanceDialog.checkInTimeLabel')}</Label>
                 <Input
                   id="checkInTime"
                   type="time"
@@ -175,7 +177,7 @@ export function EditAttendanceDialog({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="checkOutTime">퇴근 시간</Label>
+                <Label htmlFor="checkOutTime">{t('components.editAttendanceDialog.checkOutTimeLabel')}</Label>
                 <Input
                   id="checkOutTime"
                   type="time"
@@ -185,18 +187,18 @@ export function EditAttendanceDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="attendanceStatus">근태 상태</Label>
+              <Label htmlFor="attendanceStatus">{t('components.editAttendanceDialog.statusLabel')}</Label>
               <Select
                 value={watchStatus}
                 onValueChange={(value) => setValue('attendanceStatus', value as AttendanceStatus)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="상태 선택" />
+                  <SelectValue placeholder={t('components.editAttendanceDialog.statusPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  {EDITABLE_STATUSES.map((status) => (
+                  {EDITABLE_STATUS_KEYS.map((status) => (
                     <SelectItem key={status.value} value={status.value}>
-                      {status.label}
+                      {t(status.key)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -205,12 +207,12 @@ export function EditAttendanceDialog({
 
             <div className="space-y-2">
               <Label htmlFor="remarks">
-                수정 사유 <span className="text-destructive">*</span>
+                {t('components.editAttendanceDialog.remarksLabel')} <span className="text-destructive">*</span>
               </Label>
               <Textarea
                 id="remarks"
-                placeholder="수정 사유를 입력해주세요 (필수)"
-                {...register('remarks', { required: '수정 사유를 입력해주세요' })}
+                placeholder={t('components.editAttendanceDialog.remarksPlaceholder')}
+                {...register('remarks', { required: t('components.editAttendanceDialog.remarksRequired') })}
                 className="min-h-[80px]"
               />
               {errors.remarks && (
@@ -222,7 +224,7 @@ export function EditAttendanceDialog({
             <Alert variant="warning">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                근태 기록 수정 내역은 감사 로그에 기록되며, 관리자가 조회할 수 있습니다.
+                {t('components.editAttendanceDialog.auditWarning')}
               </AlertDescription>
             </Alert>
 
@@ -232,13 +234,13 @@ export function EditAttendanceDialog({
                 variant="outline"
                 onClick={() => onOpenChange(false)}
               >
-                취소
+                {t('common:cancel')}
               </Button>
               <Button
                 type="submit"
                 disabled={!isDirty || !watchRemarks.trim() || updateMutation.isPending}
               >
-                수정
+                {t('components.editAttendanceDialog.submitButton')}
               </Button>
             </DialogFooter>
           </form>
@@ -248,9 +250,9 @@ export function EditAttendanceDialog({
       <ConfirmDialog
         open={showConfirm}
         onOpenChange={setShowConfirm}
-        title="근태 기록 수정 확인"
-        description="근태 기록을 수정하시겠습니까? 이 작업은 감사 로그에 기록됩니다."
-        confirmLabel="수정"
+        title={t('components.editAttendanceDialog.confirmTitle')}
+        description={t('components.editAttendanceDialog.confirmDescription')}
+        confirmLabel={t('components.editAttendanceDialog.confirmButton')}
         onConfirm={handleConfirm}
         isLoading={updateMutation.isPending}
       />

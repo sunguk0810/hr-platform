@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isSameDay, getDay, isWeekend } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -33,19 +34,17 @@ const STATUS_COLORS: Record<AttendanceStatus, string> = {
   WEEKEND: 'bg-gray-200',
 };
 
-const STATUS_LABELS: Record<AttendanceStatus, string> = {
-  NORMAL: '정상',
-  LATE: '지각',
-  EARLY_LEAVE: '조퇴',
-  ABSENT: '결근',
-  LEAVE: '휴가',
-  HALF_DAY: '반차',
-  HOLIDAY: '공휴일',
-  OVERTIME: '초과근무',
-  WEEKEND: '주말',
+const STATUS_LABEL_KEYS: Record<AttendanceStatus, string> = {
+  NORMAL: 'components.attendanceCalendar.statusLabels.NORMAL',
+  LATE: 'components.attendanceCalendar.statusLabels.LATE',
+  EARLY_LEAVE: 'components.attendanceCalendar.statusLabels.EARLY_LEAVE',
+  ABSENT: 'components.attendanceCalendar.statusLabels.ABSENT',
+  LEAVE: 'components.attendanceCalendar.statusLabels.LEAVE',
+  HALF_DAY: 'components.attendanceCalendar.statusLabels.HALF_DAY',
+  HOLIDAY: 'components.attendanceCalendar.statusLabels.HOLIDAY',
+  OVERTIME: 'components.attendanceCalendar.statusLabels.OVERTIME',
+  WEEKEND: 'components.attendanceCalendar.statusLabels.WEEKEND',
 };
-
-const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
 export function AttendanceCalendar({
   records,
@@ -54,7 +53,18 @@ export function AttendanceCalendar({
   onMonthChange,
   className,
 }: AttendanceCalendarProps) {
+  const { t } = useTranslation('attendance');
   const [currentMonth, setCurrentMonth] = React.useState(new Date());
+
+  const WEEKDAYS = [
+    t('leaveCalendarPage.weekDays.sun'),
+    t('leaveCalendarPage.weekDays.mon'),
+    t('leaveCalendarPage.weekDays.tue'),
+    t('leaveCalendarPage.weekDays.wed'),
+    t('leaveCalendarPage.weekDays.thu'),
+    t('leaveCalendarPage.weekDays.fri'),
+    t('leaveCalendarPage.weekDays.sat'),
+  ];
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -108,7 +118,7 @@ export function AttendanceCalendar({
           </CardTitle>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={handleToday}>
-              오늘
+              {t('components.attendanceCalendar.today')}
             </Button>
             <Button variant="outline" size="icon" onClick={handlePrevMonth}>
               <ChevronLeft className="h-4 w-4" />
@@ -197,22 +207,22 @@ export function AttendanceCalendar({
                   {record && (
                     <TooltipContent>
                       <div className="space-y-1">
-                        <div className="font-medium">{STATUS_LABELS[record.status]}</div>
+                        <div className="font-medium">{t(STATUS_LABEL_KEYS[record.status])}</div>
                         {record.checkInTime && (
                           <div className="text-sm flex items-center gap-1">
                             <Clock className="h-3 w-3" />
-                            출근: {record.checkInTime}
+                            {t('components.attendanceCalendar.tooltipCheckIn', { time: record.checkInTime })}
                           </div>
                         )}
                         {record.checkOutTime && (
                           <div className="text-sm flex items-center gap-1">
                             <Clock className="h-3 w-3" />
-                            퇴근: {record.checkOutTime}
+                            {t('components.attendanceCalendar.tooltipCheckOut', { time: record.checkOutTime })}
                           </div>
                         )}
                         {record.workingHours && (
                           <div className="text-sm">
-                            근무: {record.workingHours}시간
+                            {t('components.attendanceCalendar.tooltipWorkingHours', { hours: record.workingHours })}
                           </div>
                         )}
                       </div>
@@ -226,10 +236,10 @@ export function AttendanceCalendar({
 
         {/* Legend */}
         <div className="flex flex-wrap gap-4 mt-4 pt-4 border-t">
-          {(Object.entries(STATUS_LABELS) as [AttendanceStatus, string][]).slice(0, 6).map(([status, label]) => (
+          {(Object.entries(STATUS_LABEL_KEYS) as [AttendanceStatus, string][]).slice(0, 6).map(([status, key]) => (
             <div key={status} className="flex items-center gap-1.5">
               <div className={cn('w-3 h-3 rounded-full', STATUS_COLORS[status])} />
-              <span className="text-xs text-muted-foreground">{label}</span>
+              <span className="text-xs text-muted-foreground">{t(key)}</span>
             </div>
           ))}
         </div>

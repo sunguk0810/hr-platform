@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -22,6 +23,7 @@ import {
 import type { LeaveStatus } from '@hr-platform/shared-types';
 
 export default function MyLeavePage() {
+  const { t } = useTranslation('attendance');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
@@ -50,6 +52,13 @@ export default function MyLeavePage() {
     await queryClient.invalidateQueries({ queryKey: ['leave-requests'] });
   };
 
+  const getEmptyTitle = () => {
+    if (!searchState.status) return t('myLeavePage.emptyState.noLeaves');
+    if (searchState.status === 'PENDING') return t('myLeavePage.emptyState.noPending');
+    if (searchState.status === 'APPROVED') return t('myLeavePage.emptyState.noApproved');
+    return t('myLeavePage.emptyState.noRejected');
+  };
+
   // Mobile Layout
   if (isMobile) {
     return (
@@ -64,8 +73,8 @@ export default function MyLeavePage() {
               <ArrowLeft className="h-5 w-5" />
             </button>
             <div>
-              <h1 className="text-xl font-bold">내 휴가</h1>
-              <p className="text-sm text-muted-foreground">휴가 현황 및 내역</p>
+              <h1 className="text-xl font-bold">{t('myLeavePage.title')}</h1>
+              <p className="text-sm text-muted-foreground">{t('myLeavePage.mobileDescription')}</p>
             </div>
           </div>
 
@@ -77,19 +86,19 @@ export default function MyLeavePage() {
           ) : (
             <div className="bg-card rounded-2xl border p-6">
               <div className="text-center">
-                <p className="text-sm text-muted-foreground mb-2">잔여 연차</p>
+                <p className="text-sm text-muted-foreground mb-2">{t('myLeavePage.balance.remainingAnnual')}</p>
                 <div className="flex items-baseline justify-center gap-1">
                   <span className="text-5xl font-bold text-primary">{balance?.remainingDays ?? 0}</span>
-                  <span className="text-xl text-muted-foreground">/ {balance?.totalDays ?? 0}일</span>
+                  <span className="text-xl text-muted-foreground">/ {t('myLeavePage.balance.daysUnit', { count: balance?.totalDays ?? 0 })}</span>
                 </div>
                 <div className="flex justify-center gap-6 mt-4 text-sm">
                   <div>
-                    <span className="text-muted-foreground">사용</span>
-                    <span className="ml-1 font-medium">{balance?.usedDays ?? 0}일</span>
+                    <span className="text-muted-foreground">{t('myLeavePage.balance.used')}</span>
+                    <span className="ml-1 font-medium">{t('myLeavePage.balance.daysUnit', { count: balance?.usedDays ?? 0 })}</span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">예정</span>
-                    <span className="ml-1 font-medium">{balance?.pendingDays ?? 0}일</span>
+                    <span className="text-muted-foreground">{t('myLeavePage.balance.pending')}</span>
+                    <span className="ml-1 font-medium">{t('myLeavePage.balance.daysUnit', { count: balance?.pendingDays ?? 0 })}</span>
                   </div>
                 </div>
               </div>
@@ -99,7 +108,7 @@ export default function MyLeavePage() {
           {/* Leave Balance by Type (Horizontal Scroll) */}
           {balanceByType.length > 0 && (
             <div className="space-y-2">
-              <h3 className="text-sm font-medium px-1">휴가 유형별</h3>
+              <h3 className="text-sm font-medium px-1">{t('myLeavePage.balanceByType.mobileTitle')}</h3>
               <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4">
                 {balanceByType.map((item) => (
                   <div
@@ -114,8 +123,8 @@ export default function MyLeavePage() {
                       />
                     </div>
                     <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">잔여</span>
-                      <span className="font-medium text-primary">{item.remainingDays}일</span>
+                      <span className="text-muted-foreground">{t('myLeavePage.balance.remaining')}</span>
+                      <span className="font-medium text-primary">{t('myLeavePage.balance.daysUnit', { count: item.remainingDays })}</span>
                     </div>
                   </div>
                 ))}
@@ -126,10 +135,10 @@ export default function MyLeavePage() {
           {/* Mobile Tab Filters */}
           <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
             {[
-              { value: '', label: '전체' },
-              { value: 'PENDING', label: `대기중${pendingCount > 0 ? ` (${pendingCount})` : ''}` },
-              { value: 'APPROVED', label: '승인' },
-              { value: 'REJECTED', label: '반려' },
+              { value: '', label: t('myLeavePage.tabs.all') },
+              { value: 'PENDING', label: pendingCount > 0 ? t('myLeavePage.tabs.pendingWithCount', { count: pendingCount }) : t('myLeavePage.tabs.pending') },
+              { value: 'APPROVED', label: t('myLeavePage.tabs.approved') },
+              { value: 'REJECTED', label: t('myLeavePage.tabs.rejected') },
             ].map((item) => (
               <button
                 key={item.value}
@@ -155,12 +164,8 @@ export default function MyLeavePage() {
           ) : requests.length === 0 ? (
             <EmptyState
               icon={Calendar}
-              title={
-                searchState.status
-                  ? `${searchState.status === 'PENDING' ? '대기중인' : searchState.status === 'APPROVED' ? '승인된' : '반려된'} 휴가가 없습니다`
-                  : '휴가 내역이 없습니다'
-              }
-              description="휴가 사용 내역이 여기에 표시됩니다."
+              title={getEmptyTitle()}
+              description={t('myLeavePage.emptyState.description')}
             />
           ) : (
             <div className="space-y-3">
@@ -182,7 +187,7 @@ export default function MyLeavePage() {
                         )}
                       </p>
                       <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                        <span>{request.days}일</span>
+                        <span>{t('myLeavePage.balance.daysUnit', { count: request.days })}</span>
                         <span>·</span>
                         <span className="truncate">{request.reason}</span>
                       </div>
@@ -211,12 +216,12 @@ export default function MyLeavePage() {
   return (
     <>
       <PageHeader
-        title="내 휴가"
-        description="휴가 현황 및 사용 내역을 확인합니다."
+        title={t('myLeavePage.title')}
+        description={t('myLeavePage.description')}
         actions={
           <Button variant="outline" onClick={() => navigate('/attendance')}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            근태관리
+            {t('myLeavePage.backToAttendance')}
           </Button>
         }
       />
@@ -239,7 +244,7 @@ export default function MyLeavePage() {
             <Card>
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <p className="text-sm text-muted-foreground">총 연차</p>
+                  <p className="text-sm text-muted-foreground">{t('myLeavePage.balance.totalAnnual')}</p>
                   <p className="mt-1 text-3xl font-bold">{balance?.totalDays ?? 0}</p>
                 </div>
               </CardContent>
@@ -247,7 +252,7 @@ export default function MyLeavePage() {
             <Card>
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <p className="text-sm text-muted-foreground">사용</p>
+                  <p className="text-sm text-muted-foreground">{t('myLeavePage.balance.used')}</p>
                   <p className="mt-1 text-3xl font-bold">{balance?.usedDays ?? 0}</p>
                 </div>
               </CardContent>
@@ -255,7 +260,7 @@ export default function MyLeavePage() {
             <Card>
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <p className="text-sm text-muted-foreground">잔여</p>
+                  <p className="text-sm text-muted-foreground">{t('myLeavePage.balance.remaining')}</p>
                   <p className="mt-1 text-3xl font-bold text-primary">{balance?.remainingDays ?? 0}</p>
                 </div>
               </CardContent>
@@ -263,7 +268,7 @@ export default function MyLeavePage() {
             <Card>
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <p className="text-sm text-muted-foreground">예정</p>
+                  <p className="text-sm text-muted-foreground">{t('myLeavePage.balance.pending')}</p>
                   <p className="mt-1 text-3xl font-bold text-muted-foreground">{balance?.pendingDays ?? 0}</p>
                 </div>
               </CardContent>
@@ -275,7 +280,7 @@ export default function MyLeavePage() {
       {/* Leave Balance by Type */}
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle>휴가 유형별 현황</CardTitle>
+          <CardTitle>{t('myLeavePage.balanceByType.title')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-3">
@@ -284,7 +289,7 @@ export default function MyLeavePage() {
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-medium">{item.leaveTypeName}</p>
                   <span className="text-sm text-muted-foreground">
-                    {item.usedDays} / {item.totalDays}일 사용
+                    {t('myLeavePage.balance.usageInfo', { used: item.usedDays, total: item.totalDays })}
                   </span>
                 </div>
                 <div className="mt-3 h-2 w-full rounded-full bg-muted">
@@ -294,8 +299,8 @@ export default function MyLeavePage() {
                   />
                 </div>
                 <div className="mt-2 flex justify-between text-sm">
-                  <span className="text-muted-foreground">잔여</span>
-                  <span className="font-medium text-primary">{item.remainingDays}일</span>
+                  <span className="text-muted-foreground">{t('myLeavePage.balance.remaining')}</span>
+                  <span className="font-medium text-primary">{t('myLeavePage.balance.daysUnit', { count: item.remainingDays })}</span>
                 </div>
               </div>
             ))}
@@ -306,7 +311,7 @@ export default function MyLeavePage() {
       {/* Leave History */}
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle>휴가 내역</CardTitle>
+          <CardTitle>{t('myLeavePage.history.title')}</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <Tabs
@@ -315,12 +320,12 @@ export default function MyLeavePage() {
             className="px-4 pt-2"
           >
             <TabsList>
-              <TabsTrigger value="all">전체</TabsTrigger>
+              <TabsTrigger value="all">{t('myLeavePage.tabs.all')}</TabsTrigger>
               <TabsTrigger value="PENDING">
-                대기중 {pendingCount > 0 && `(${pendingCount})`}
+                {t('myLeavePage.tabs.pending')} {pendingCount > 0 && `(${pendingCount})`}
               </TabsTrigger>
-              <TabsTrigger value="APPROVED">승인</TabsTrigger>
-              <TabsTrigger value="REJECTED">반려</TabsTrigger>
+              <TabsTrigger value="APPROVED">{t('myLeavePage.tabs.approved')}</TabsTrigger>
+              <TabsTrigger value="REJECTED">{t('myLeavePage.tabs.rejected')}</TabsTrigger>
             </TabsList>
           </Tabs>
 
@@ -332,12 +337,8 @@ export default function MyLeavePage() {
             ) : requests.length === 0 ? (
               <EmptyState
                 icon={Calendar}
-                title={
-                  searchState.status
-                    ? `${searchState.status === 'PENDING' ? '대기중인' : searchState.status === 'APPROVED' ? '승인된' : '반려된'} 휴가가 없습니다`
-                    : '휴가 내역이 없습니다'
-                }
-                description="휴가 사용 내역이 여기에 표시됩니다."
+                title={getEmptyTitle()}
+                description={t('myLeavePage.emptyState.description')}
               />
             ) : (
               <>
@@ -346,22 +347,22 @@ export default function MyLeavePage() {
                     <thead>
                       <tr className="border-b bg-muted/50">
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          유형
+                          {t('myLeavePage.table.type')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          기간
+                          {t('myLeavePage.table.period')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          일수
+                          {t('myLeavePage.table.days')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          사유
+                          {t('myLeavePage.table.reason')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          상태
+                          {t('myLeavePage.table.status')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          신청일
+                          {t('myLeavePage.table.requestDate')}
                         </th>
                       </tr>
                     </thead>
@@ -380,7 +381,7 @@ export default function MyLeavePage() {
                               <> ~ {format(new Date(request.endDate), 'M/d (E)', { locale: ko })}</>
                             )}
                           </td>
-                          <td className="px-4 py-3 text-sm">{request.days}일</td>
+                          <td className="px-4 py-3 text-sm">{t('myLeavePage.balance.daysUnit', { count: request.days })}</td>
                           <td className="px-4 py-3 text-sm text-muted-foreground max-w-[200px] truncate">
                             {request.reason}
                           </td>

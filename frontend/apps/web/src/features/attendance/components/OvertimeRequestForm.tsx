@@ -1,4 +1,6 @@
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -17,23 +19,25 @@ import {
 import { DatePicker } from '@/components/common/DatePicker';
 import { Loader2, Clock, AlertCircle } from 'lucide-react';
 
-const overtimeSchema = z.object({
-  date: z.string().min(1, '날짜를 선택해주세요'),
-  overtimeType: z.enum(['WEEKDAY', 'WEEKEND', 'HOLIDAY'] as const),
-  startTime: z.string().min(1, '시작 시간을 입력해주세요'),
-  endTime: z.string().min(1, '종료 시간을 입력해주세요'),
-  reason: z.string().min(1, '사유를 입력해주세요').max(500, '500자 이내로 입력해주세요'),
-}).refine((data) => {
-  if (data.startTime && data.endTime) {
-    return data.startTime < data.endTime;
-  }
-  return true;
-}, {
-  message: '종료 시간은 시작 시간보다 이후여야 합니다',
-  path: ['endTime'],
-});
+function createOvertimeSchema(t: TFunction) {
+  return z.object({
+    date: z.string().min(1, t('validation.dateRequired')),
+    overtimeType: z.enum(['WEEKDAY', 'WEEKEND', 'HOLIDAY'] as const),
+    startTime: z.string().min(1, t('validation.startTimeRequired')),
+    endTime: z.string().min(1, t('validation.endTimeRequired')),
+    reason: z.string().min(1, t('validation.reasonRequired')).max(500, t('validation.reasonMaxLength')),
+  }).refine((data) => {
+    if (data.startTime && data.endTime) {
+      return data.startTime < data.endTime;
+    }
+    return true;
+  }, {
+    message: t('validation.endTimeAfterStart'),
+    path: ['endTime'],
+  });
+}
 
-type OvertimeFormData = z.infer<typeof overtimeSchema>;
+type OvertimeFormData = z.infer<ReturnType<typeof createOvertimeSchema>>;
 
 export interface OvertimeRequestFormProps {
   onSubmit: (data: OvertimeFormData) => Promise<void>;
@@ -41,17 +45,19 @@ export interface OvertimeRequestFormProps {
   isLoading?: boolean;
 }
 
-const OVERTIME_TYPE_LABELS = {
-  WEEKDAY: '평일 초과근무',
-  WEEKEND: '주말 근무',
-  HOLIDAY: '공휴일 근무',
-};
+const OVERTIME_TYPE_KEYS = {
+  WEEKDAY: 'components.overtimeRequestForm.overtimeTypes.weekday',
+  WEEKEND: 'components.overtimeRequestForm.overtimeTypes.weekend',
+  HOLIDAY: 'components.overtimeRequestForm.overtimeTypes.holiday',
+} as const;
 
 export function OvertimeRequestForm({
   onSubmit,
   onCancel,
   isLoading = false,
 }: OvertimeRequestFormProps) {
+  const { t } = useTranslation('attendance');
+  const overtimeSchema = React.useMemo(() => createOvertimeSchema(t), [t]);
   const methods = useForm<OvertimeFormData>({
     resolver: zodResolver(overtimeSchema),
     defaultValues: {
@@ -112,11 +118,11 @@ export function OvertimeRequestForm({
       <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
         {/* Date Selection */}
         <div className="space-y-2">
-          <Label>날짜 *</Label>
+          <Label>{t('components.overtimeRequestForm.dateLabel')}</Label>
           <DatePicker
             value={date ? parseISO(date) : undefined}
             onChange={handleDateChange}
-            placeholder="날짜 선택"
+            placeholder={t('components.overtimeRequestForm.datePlaceholder')}
           />
           {errors.date && (
             <p className="text-sm text-destructive">{errors.date.message}</p>
@@ -125,7 +131,7 @@ export function OvertimeRequestForm({
 
         {/* Overtime Type */}
         <div className="space-y-2">
-          <Label>초과근무 유형</Label>
+          <Label>{t('components.overtimeRequestForm.overtimeType')}</Label>
           <Select
             value={overtimeType}
             onValueChange={(value) => setValue('overtimeType', value as OvertimeFormData['overtimeType'])}
@@ -134,9 +140,9 @@ export function OvertimeRequestForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {Object.entries(OVERTIME_TYPE_LABELS).map(([value, label]) => (
+              {Object.entries(OVERTIME_TYPE_KEYS).map(([value, key]) => (
                 <SelectItem key={value} value={value}>
-                  {label}
+                  {t(key)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -146,7 +152,7 @@ export function OvertimeRequestForm({
         {/* Time Range */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="startTime">시작 시간 *</Label>
+            <Label htmlFor="startTime">{t('components.overtimeRequestForm.startTimeLabel')}</Label>
             <Input
               id="startTime"
               type="time"
@@ -159,7 +165,7 @@ export function OvertimeRequestForm({
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="endTime">종료 시간 *</Label>
+            <Label htmlFor="endTime">{t('components.overtimeRequestForm.endTimeLabel')}</Label>
             <Input
               id="endTime"
               type="time"
@@ -178,7 +184,7 @@ export function OvertimeRequestForm({
           <div className="flex items-center gap-2 p-3 bg-primary/5 rounded-lg">
             <Clock className="h-5 w-5 text-primary" />
             <span className="text-sm">
-              예상 초과근무 시간: <strong>{calculateHours.toFixed(1)}시간</strong>
+              {t('components.overtimeRequestForm.estimatedHours', { hours: calculateHours.toFixed(1) })}
             </span>
           </div>
         )}
@@ -188,18 +194,18 @@ export function OvertimeRequestForm({
           <div className="flex items-center gap-2 p-3 bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 rounded-lg">
             <AlertCircle className="h-5 w-5" />
             <span className="text-sm">
-              4시간 이상의 초과근무는 추가 승인이 필요할 수 있습니다.
+              {t('components.overtimeRequestForm.longOvertimeWarning')}
             </span>
           </div>
         )}
 
         {/* Reason */}
         <div className="space-y-2">
-          <Label htmlFor="reason">사유 *</Label>
+          <Label htmlFor="reason">{t('components.overtimeRequestForm.reasonLabel')}</Label>
           <Textarea
             id="reason"
             {...methods.register('reason')}
-            placeholder="초과근무 사유를 입력해주세요"
+            placeholder={t('components.overtimeRequestForm.reasonPlaceholder')}
             rows={3}
             className={errors.reason ? 'border-destructive' : ''}
           />
@@ -212,17 +218,17 @@ export function OvertimeRequestForm({
         <div className="flex gap-2 justify-end">
           {onCancel && (
             <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
-              취소
+              {t('common:cancel')}
             </Button>
           )}
           <Button type="submit" disabled={isLoading}>
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                처리 중...
+                {t('components.checkInOutButton.processing')}
               </>
             ) : (
-              '신청하기'
+              t('components.overtimeRequestForm.submit')
             )}
           </Button>
         </div>

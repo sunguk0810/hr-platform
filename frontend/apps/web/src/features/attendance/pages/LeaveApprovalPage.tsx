@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -73,6 +74,7 @@ function LeaveTypeBadge({ type }: { type: LeaveType }) {
 }
 
 export default function LeaveApprovalPage() {
+  const { t } = useTranslation('attendance');
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const { toast } = useToast();
@@ -130,15 +132,15 @@ export default function LeaveApprovalPage() {
         data: comment ? { comment } : undefined,
       });
       toast({
-        title: '승인 완료',
-        description: '휴가가 승인되었습니다.',
+        title: t('leaveApprovalPage.toast.approveSuccess'),
+        description: t('leaveApprovalPage.toast.approveSuccessMessage'),
       });
       setApproveDialog({ open: false, request: null });
       setComment('');
     } catch (error) {
       toast({
-        title: '승인 실패',
-        description: '휴가 승인에 실패했습니다.',
+        title: t('leaveApprovalPage.toast.approveFail'),
+        description: t('leaveApprovalPage.toast.approveFailMessage'),
         variant: 'destructive',
       });
     }
@@ -147,8 +149,8 @@ export default function LeaveApprovalPage() {
   const handleReject = async () => {
     if (!rejectDialog.request || !rejectReason.trim()) {
       toast({
-        title: '입력 오류',
-        description: '반려 사유를 입력해주세요.',
+        title: t('leaveApprovalPage.toast.inputError'),
+        description: t('leaveApprovalPage.toast.rejectReasonRequired'),
         variant: 'destructive',
       });
       return;
@@ -160,15 +162,15 @@ export default function LeaveApprovalPage() {
         data: { reason: rejectReason },
       });
       toast({
-        title: '반려 완료',
-        description: '휴가가 반려되었습니다.',
+        title: t('leaveApprovalPage.toast.rejectSuccess'),
+        description: t('leaveApprovalPage.toast.rejectSuccessMessage'),
       });
       setRejectDialog({ open: false, request: null });
       setRejectReason('');
     } catch (error) {
       toast({
-        title: '반려 실패',
-        description: '휴가 반려에 실패했습니다.',
+        title: t('leaveApprovalPage.toast.rejectFail'),
+        description: t('leaveApprovalPage.toast.rejectFailMessage'),
         variant: 'destructive',
       });
     }
@@ -181,16 +183,16 @@ export default function LeaveApprovalPage() {
         comment: comment || undefined,
       });
       toast({
-        title: '일괄 승인 완료',
-        description: `${result.data?.successCount}건이 승인되었습니다.`,
+        title: t('leaveApprovalPage.toast.bulkApproveSuccess'),
+        description: t('leaveApprovalPage.toast.bulkApproveSuccessMessage', { count: result.data?.successCount }),
       });
       setBulkApproveDialog(false);
       setComment('');
       clearSelection();
     } catch (error) {
       toast({
-        title: '일괄 승인 실패',
-        description: '일부 항목의 승인에 실패했습니다.',
+        title: t('leaveApprovalPage.toast.bulkApproveFail'),
+        description: t('leaveApprovalPage.toast.bulkApproveFailMessage'),
         variant: 'destructive',
       });
     }
@@ -199,8 +201,8 @@ export default function LeaveApprovalPage() {
   const handleBulkReject = async () => {
     if (!rejectReason.trim()) {
       toast({
-        title: '입력 오류',
-        description: '반려 사유를 입력해주세요.',
+        title: t('leaveApprovalPage.toast.inputError'),
+        description: t('leaveApprovalPage.toast.rejectReasonRequired'),
         variant: 'destructive',
       });
       return;
@@ -212,16 +214,16 @@ export default function LeaveApprovalPage() {
         reason: rejectReason,
       });
       toast({
-        title: '일괄 반려 완료',
-        description: `${result.data?.successCount}건이 반려되었습니다.`,
+        title: t('leaveApprovalPage.toast.bulkRejectSuccess'),
+        description: t('leaveApprovalPage.toast.bulkRejectSuccessMessage', { count: result.data?.successCount }),
       });
       setBulkRejectDialog(false);
       setRejectReason('');
       clearSelection();
     } catch (error) {
       toast({
-        title: '일괄 반려 실패',
-        description: '일부 항목의 반려에 실패했습니다.',
+        title: t('leaveApprovalPage.toast.bulkRejectFail'),
+        description: t('leaveApprovalPage.toast.bulkRejectFailMessage'),
         variant: 'destructive',
       });
     }
@@ -252,8 +254,8 @@ export default function LeaveApprovalPage() {
           {/* Mobile Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold">휴가 승인</h1>
-              <p className="text-sm text-muted-foreground">대기 중인 휴가 신청 검토</p>
+              <h1 className="text-xl font-bold">{t('leaveApprovalPage.title')}</h1>
+              <p className="text-sm text-muted-foreground">{t('leaveApprovalPage.mobileDescription')}</p>
             </div>
             <button
               onClick={() => {
@@ -268,7 +270,7 @@ export default function LeaveApprovalPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              {mobileSelectionMode ? '선택 취소' : '선택'}
+              {mobileSelectionMode ? t('leaveApprovalPage.cancelSelection') : t('leaveApprovalPage.selectMode')}
             </button>
           </div>
 
@@ -277,17 +279,17 @@ export default function LeaveApprovalPage() {
             <div className="bg-card rounded-xl border p-3 text-center">
               <Clock className="h-4 w-4 text-muted-foreground mx-auto mb-1" />
               <p className="text-lg font-bold">{summary?.totalPending ?? 0}</p>
-              <p className="text-xs text-muted-foreground">대기</p>
+              <p className="text-xs text-muted-foreground">{t('leaveApprovalPage.summaryCards.pending')}</p>
             </div>
             <div className="bg-card rounded-xl border p-3 text-center">
               <FileCheck className="h-4 w-4 text-blue-500 mx-auto mb-1" />
               <p className="text-lg font-bold text-blue-600">{selectedCount}</p>
-              <p className="text-xs text-muted-foreground">선택</p>
+              <p className="text-xs text-muted-foreground">{t('leaveApprovalPage.summaryCards.selected')}</p>
             </div>
             <div className={`rounded-xl border p-3 text-center ${summary?.urgentCount ? 'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800' : 'bg-card'}`}>
               <AlertCircle className="h-4 w-4 text-red-500 mx-auto mb-1" />
               <p className="text-lg font-bold text-red-600">{summary?.urgentCount ?? 0}</p>
-              <p className="text-xs text-muted-foreground">긴급</p>
+              <p className="text-xs text-muted-foreground">{t('leaveApprovalPage.summaryCards.urgent')}</p>
             </div>
           </div>
 
@@ -301,8 +303,8 @@ export default function LeaveApprovalPage() {
           ) : requests.length === 0 ? (
             <EmptyState
               icon={FileCheck}
-              title="대기 중인 휴가 신청이 없습니다"
-              description="모든 휴가 신청이 처리되었습니다."
+              title={t('leaveApprovalPage.pendingList.empty.title')}
+              description={t('leaveApprovalPage.pendingList.empty.description')}
             />
           ) : (
             <div className="space-y-3">
@@ -333,19 +335,19 @@ export default function LeaveApprovalPage() {
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-medium text-sm">{request.employeeName}</span>
                         {request.isUrgent && (
-                          <Badge variant="destructive" className="text-xs">긴급</Badge>
+                          <Badge variant="destructive" className="text-xs">{t('leaveApprovalPage.summaryCards.urgent')}</Badge>
                         )}
                       </div>
                       <div className="flex items-center gap-2 mb-2">
                         <LeaveTypeBadge type={request.leaveType} />
                         <span className="text-xs text-muted-foreground">
-                          잔여 {request.remainingDays}일
+                          {t('leaveApprovalPage.remaining', { count: request.remainingDays })}
                         </span>
                       </div>
                       <p className="text-sm">
                         {format(new Date(request.startDate), 'M/d', { locale: ko })} ~{' '}
                         {format(new Date(request.endDate), 'M/d', { locale: ko })}
-                        <span className="ml-2 font-medium">{request.days}일</span>
+                        <span className="ml-2 font-medium">{t('leaveApprovalPage.daysUnit', { count: request.days })}</span>
                       </p>
                       <p className="text-xs text-muted-foreground mt-1 truncate">{request.reason}</p>
                     </div>
@@ -361,7 +363,7 @@ export default function LeaveApprovalPage() {
                         onClick={() => setApproveDialog({ open: true, request })}
                       >
                         <CheckCircle className="mr-1 h-4 w-4" />
-                        승인
+                        {t('leaveApprovalPage.approve')}
                       </Button>
                       <Button
                         size="sm"
@@ -370,7 +372,7 @@ export default function LeaveApprovalPage() {
                         onClick={() => setRejectDialog({ open: true, request })}
                       >
                         <XCircle className="mr-1 h-4 w-4" />
-                        반려
+                        {t('leaveApprovalPage.reject')}
                       </Button>
                     </div>
                   )}
@@ -391,12 +393,12 @@ export default function LeaveApprovalPage() {
           {mobileSelectionMode && selectedCount > 0 && (
             <div className="fixed bottom-0 left-0 right-0 bg-background border-t p-4 pb-safe z-50">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium">{selectedCount}건 선택됨</span>
+                <span className="text-sm font-medium">{t('leaveApprovalPage.selectedCount', { count: selectedCount })}</span>
                 <button
                   onClick={handleSelectAll}
                   className="text-sm text-primary"
                 >
-                  {selectedCount === requests.length ? '전체 해제' : '전체 선택'}
+                  {selectedCount === requests.length ? t('leaveApprovalPage.deselectAll') : t('leaveApprovalPage.selectAll')}
                 </button>
               </div>
               <div className="flex gap-2">
@@ -406,14 +408,14 @@ export default function LeaveApprovalPage() {
                   onClick={() => setBulkRejectDialog(true)}
                 >
                   <XCircle className="mr-2 h-4 w-4 text-red-600" />
-                  반려
+                  {t('leaveApprovalPage.reject')}
                 </Button>
                 <Button
                   className="flex-1"
                   onClick={() => setBulkApproveDialog(true)}
                 >
                   <CheckCircle className="mr-2 h-4 w-4" />
-                  승인
+                  {t('leaveApprovalPage.approve')}
                 </Button>
               </div>
             </div>
@@ -428,9 +430,9 @@ export default function LeaveApprovalPage() {
         }}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>휴가 승인</DialogTitle>
+              <DialogTitle>{t('leaveApprovalPage.approveDialog.title')}</DialogTitle>
               <DialogDescription>
-                {approveDialog.request?.employeeName}님의 휴가 신청을 승인합니다.
+                {t('leaveApprovalPage.approveDialog.description', { name: approveDialog.request?.employeeName })}
               </DialogDescription>
             </DialogHeader>
             {approveDialog.request && (
@@ -438,17 +440,17 @@ export default function LeaveApprovalPage() {
                 <div className="rounded-lg bg-muted/50 p-4">
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div>
-                      <span className="text-muted-foreground">휴가 유형:</span>{' '}
+                      <span className="text-muted-foreground">{t('leaveApprovalPage.approveDialog.leaveType')}</span>{' '}
                       <span className="font-medium">
                         {LEAVE_TYPE_LABELS[approveDialog.request.leaveType]}
                       </span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">일수:</span>{' '}
-                      <span className="font-medium">{approveDialog.request.days}일</span>
+                      <span className="text-muted-foreground">{t('leaveApprovalPage.approveDialog.days')}</span>{' '}
+                      <span className="font-medium">{t('leaveApprovalPage.daysUnit', { count: approveDialog.request.days })}</span>
                     </div>
                     <div className="col-span-2">
-                      <span className="text-muted-foreground">기간:</span>{' '}
+                      <span className="text-muted-foreground">{t('leaveApprovalPage.approveDialog.period')}</span>{' '}
                       <span className="font-medium">
                         {format(new Date(approveDialog.request.startDate), 'yyyy년 M월 d일', { locale: ko })} ~{' '}
                         {format(new Date(approveDialog.request.endDate), 'M월 d일', { locale: ko })}
@@ -459,27 +461,27 @@ export default function LeaveApprovalPage() {
                 {/* 잔여일수 차감 피드백 */}
                 <Alert variant={approveDialog.request.remainingDays - approveDialog.request.days < 0 ? 'destructive' : 'default'} role="alert">
                   <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>잔여일수 변동</AlertTitle>
+                  <AlertTitle>{t('leaveApprovalPage.approveDialog.balanceChangeTitle')}</AlertTitle>
                   <AlertDescription>
                     <div className="flex items-center gap-2 mt-1">
-                      <span>현재 잔여: <strong>{approveDialog.request.remainingDays}일</strong></span>
+                      <span>{t('leaveApprovalPage.approveDialog.currentBalance', { count: approveDialog.request.remainingDays })}</span>
                       <span>&rarr;</span>
-                      <span>차감 후: <strong className={approveDialog.request.remainingDays - approveDialog.request.days < 0 ? 'text-destructive' : ''}>
-                        {approveDialog.request.remainingDays - approveDialog.request.days}일
+                      <span><strong className={approveDialog.request.remainingDays - approveDialog.request.days < 0 ? 'text-destructive' : ''}>
+                        {t('leaveApprovalPage.approveDialog.afterDeduction', { count: approveDialog.request.remainingDays - approveDialog.request.days })}
                       </strong></span>
                     </div>
                     {approveDialog.request.remainingDays - approveDialog.request.days < 0 && (
                       <p className="text-sm text-destructive mt-1 font-medium">
-                        잔여일수가 부족합니다. 승인 시 마이너스 처리됩니다.
+                        {t('leaveApprovalPage.approveDialog.insufficientBalance')}
                       </p>
                     )}
                   </AlertDescription>
                 </Alert>
                 <div className="space-y-2">
-                  <Label htmlFor="comment">코멘트 (선택)</Label>
+                  <Label htmlFor="comment">{t('leaveApprovalPage.approveDialog.commentLabel')}</Label>
                   <Textarea
                     id="comment"
-                    placeholder="승인 코멘트를 입력하세요"
+                    placeholder={t('leaveApprovalPage.approveDialog.commentPlaceholder')}
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
                   />
@@ -491,10 +493,10 @@ export default function LeaveApprovalPage() {
                 variant="outline"
                 onClick={() => setApproveDialog({ open: false, request: null })}
               >
-                취소
+                {t('common:cancel')}
               </Button>
               <Button onClick={handleApprove} disabled={approveMutation.isPending}>
-                {approveMutation.isPending ? '처리 중...' : '승인'}
+                {approveMutation.isPending ? t('common:processing') : t('leaveApprovalPage.approve')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -507,9 +509,9 @@ export default function LeaveApprovalPage() {
         }}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>휴가 반려</DialogTitle>
+              <DialogTitle>{t('leaveApprovalPage.rejectDialog.title')}</DialogTitle>
               <DialogDescription>
-                {rejectDialog.request?.employeeName}님의 휴가 신청을 반려합니다.
+                {t('leaveApprovalPage.rejectDialog.description', { name: rejectDialog.request?.employeeName })}
               </DialogDescription>
             </DialogHeader>
             {rejectDialog.request && (
@@ -517,24 +519,24 @@ export default function LeaveApprovalPage() {
                 <div className="rounded-lg bg-muted/50 p-4">
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div>
-                      <span className="text-muted-foreground">휴가 유형:</span>{' '}
+                      <span className="text-muted-foreground">{t('leaveApprovalPage.approveDialog.leaveType')}</span>{' '}
                       <span className="font-medium">
                         {LEAVE_TYPE_LABELS[rejectDialog.request.leaveType]}
                       </span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">일수:</span>{' '}
-                      <span className="font-medium">{rejectDialog.request.days}일</span>
+                      <span className="text-muted-foreground">{t('leaveApprovalPage.approveDialog.days')}</span>{' '}
+                      <span className="font-medium">{t('leaveApprovalPage.daysUnit', { count: rejectDialog.request.days })}</span>
                     </div>
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="rejectReason">
-                    반려 사유 <span className="text-destructive">*</span>
+                    {t('leaveApprovalPage.rejectDialog.reasonLabel')} <span className="text-destructive">*</span>
                   </Label>
                   <Textarea
                     id="rejectReason"
-                    placeholder="반려 사유를 입력하세요 (필수)"
+                    placeholder={t('leaveApprovalPage.rejectDialog.reasonPlaceholder')}
                     value={rejectReason}
                     onChange={(e) => setRejectReason(e.target.value)}
                   />
@@ -546,14 +548,14 @@ export default function LeaveApprovalPage() {
                 variant="outline"
                 onClick={() => setRejectDialog({ open: false, request: null })}
               >
-                취소
+                {t('common:cancel')}
               </Button>
               <Button
                 variant="destructive"
                 onClick={handleReject}
                 disabled={!rejectReason.trim() || rejectMutation.isPending}
               >
-                {rejectMutation.isPending ? '처리 중...' : '반려'}
+                {rejectMutation.isPending ? t('common:processing') : t('leaveApprovalPage.reject')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -566,26 +568,26 @@ export default function LeaveApprovalPage() {
         }}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>일괄 승인</DialogTitle>
+              <DialogTitle>{t('leaveApprovalPage.bulkApproveDialog.title')}</DialogTitle>
               <DialogDescription>
-                선택한 {selectedCount}건의 휴가 신청을 일괄 승인합니다.
+                {t('leaveApprovalPage.bulkApproveDialog.description', { count: selectedCount })}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-2">
-              <Label htmlFor="bulkComment">코멘트 (선택)</Label>
+              <Label htmlFor="bulkComment">{t('leaveApprovalPage.bulkApproveDialog.commentLabel')}</Label>
               <Textarea
                 id="bulkComment"
-                placeholder="승인 코멘트를 입력하세요"
+                placeholder={t('leaveApprovalPage.bulkApproveDialog.commentPlaceholder')}
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
               />
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setBulkApproveDialog(false)}>
-                취소
+                {t('common:cancel')}
               </Button>
               <Button onClick={handleBulkApprove} disabled={bulkApproveMutation.isPending}>
-                {bulkApproveMutation.isPending ? '처리 중...' : `${selectedCount}건 승인`}
+                {bulkApproveMutation.isPending ? t('common:processing') : t('leaveApprovalPage.bulkApproveDialog.confirmButton', { count: selectedCount })}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -598,32 +600,32 @@ export default function LeaveApprovalPage() {
         }}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>일괄 반려</DialogTitle>
+              <DialogTitle>{t('leaveApprovalPage.bulkRejectDialog.title')}</DialogTitle>
               <DialogDescription>
-                선택한 {selectedCount}건의 휴가 신청을 일괄 반려합니다.
+                {t('leaveApprovalPage.bulkRejectDialog.description', { count: selectedCount })}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-2">
               <Label htmlFor="bulkRejectReason">
-                반려 사유 <span className="text-destructive">*</span>
+                {t('leaveApprovalPage.bulkRejectDialog.reasonLabel')} <span className="text-destructive">*</span>
               </Label>
               <Textarea
                 id="bulkRejectReason"
-                placeholder="반려 사유를 입력하세요 (필수)"
+                placeholder={t('leaveApprovalPage.bulkRejectDialog.reasonPlaceholder')}
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
               />
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setBulkRejectDialog(false)}>
-                취소
+                {t('common:cancel')}
               </Button>
               <Button
                 variant="destructive"
                 onClick={handleBulkReject}
                 disabled={!rejectReason.trim() || bulkRejectMutation.isPending}
               >
-                {bulkRejectMutation.isPending ? '처리 중...' : `${selectedCount}건 반려`}
+                {bulkRejectMutation.isPending ? t('common:processing') : t('leaveApprovalPage.bulkRejectDialog.confirmButton', { count: selectedCount })}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -636,38 +638,38 @@ export default function LeaveApprovalPage() {
   return (
     <>
       <PageHeader
-        title="휴가 승인"
-        description="대기 중인 휴가 신청을 검토하고 승인/반려합니다."
+        title={t('leaveApprovalPage.title')}
+        description={t('leaveApprovalPage.description')}
       />
 
       {/* Summary Cards */}
       <div className="mb-6 grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">대기 건수</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('leaveApprovalPage.summaryCards.pendingCount')}</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{summary?.totalPending ?? 0}건</div>
+            <div className="text-2xl font-bold">{t('leaveApprovalPage.summaryCards.countUnit', { count: summary?.totalPending ?? 0 })}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">선택 건수</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('leaveApprovalPage.summaryCards.selectedCount')}</CardTitle>
             <FileCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{selectedCount}건</div>
+            <div className="text-2xl font-bold">{t('leaveApprovalPage.summaryCards.countUnit', { count: selectedCount })}</div>
           </CardContent>
         </Card>
         <Card className={summary?.urgentCount ? 'border-red-200 bg-red-50' : ''}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-red-600">긴급</CardTitle>
+            <CardTitle className="text-sm font-medium text-red-600">{t('leaveApprovalPage.summaryCards.urgent')}</CardTitle>
             <AlertCircle className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              {summary?.urgentCount ?? 0}건
+              {t('leaveApprovalPage.summaryCards.countUnit', { count: summary?.urgentCount ?? 0 })}
             </div>
           </CardContent>
         </Card>
@@ -678,16 +680,16 @@ export default function LeaveApprovalPage() {
         <CardContent className="flex flex-wrap items-center justify-between gap-4 py-4">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">휴가 유형</span>
+              <span className="text-sm font-medium">{t('leaveApprovalPage.filterLeaveType')}</span>
               <Select
                 value={searchState.leaveType || 'all'}
                 onValueChange={(value) => setLeaveType(value === 'all' ? '' : value as LeaveType)}
               >
                 <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="전체" />
+                  <SelectValue placeholder={t('leaveApprovalPage.filterAll')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">전체</SelectItem>
+                  <SelectItem value="all">{t('leaveApprovalPage.filterAll')}</SelectItem>
                   {Object.entries(LEAVE_TYPE_LABELS).map(([value, label]) => (
                     <SelectItem key={value} value={value}>
                       {label}
@@ -698,7 +700,7 @@ export default function LeaveApprovalPage() {
             </div>
             {searchState.leaveType && (
               <Button variant="ghost" size="sm" onClick={resetFilters}>
-                필터 초기화
+                {t('leaveApprovalPage.resetFilter')}
               </Button>
             )}
           </div>
@@ -711,7 +713,7 @@ export default function LeaveApprovalPage() {
                 className="text-green-600 hover:text-green-700"
               >
                 <CheckCircle className="mr-2 h-4 w-4" />
-                선택 승인 ({selectedCount})
+                {t('leaveApprovalPage.bulkApproveButton', { count: selectedCount })}
               </Button>
               <Button
                 variant="outline"
@@ -719,7 +721,7 @@ export default function LeaveApprovalPage() {
                 className="text-red-600 hover:text-red-700"
               >
                 <XCircle className="mr-2 h-4 w-4" />
-                선택 반려 ({selectedCount})
+                {t('leaveApprovalPage.bulkRejectButton', { count: selectedCount })}
               </Button>
             </div>
           )}
@@ -729,7 +731,7 @@ export default function LeaveApprovalPage() {
       {/* Request Table */}
       <Card>
         <CardHeader>
-          <CardTitle>대기 목록</CardTitle>
+          <CardTitle>{t('leaveApprovalPage.pendingList.title')}</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
@@ -739,8 +741,8 @@ export default function LeaveApprovalPage() {
           ) : requests.length === 0 ? (
             <EmptyState
               icon={FileCheck}
-              title="대기 중인 휴가 신청이 없습니다"
-              description="모든 휴가 신청이 처리되었습니다."
+              title={t('leaveApprovalPage.pendingList.empty.title')}
+              description={t('leaveApprovalPage.pendingList.empty.description')}
             />
           ) : (
             <>
@@ -755,25 +757,25 @@ export default function LeaveApprovalPage() {
                         />
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        신청자
+                        {t('leaveApprovalPage.table.applicant')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        휴가 유형
+                        {t('leaveApprovalPage.table.leaveType')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        기간
+                        {t('leaveApprovalPage.table.period')}
                       </th>
                       <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                        일수
+                        {t('leaveApprovalPage.table.days')}
                       </th>
                       <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                        잔여연차
+                        {t('leaveApprovalPage.table.remainingAnnual')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        사유
+                        {t('leaveApprovalPage.table.reason')}
                       </th>
                       <th className="w-[180px] px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                        액션
+                        {t('leaveApprovalPage.table.action')}
                       </th>
                     </tr>
                   </thead>
@@ -796,7 +798,7 @@ export default function LeaveApprovalPage() {
                             <span className="font-medium">{request.employeeName}</span>
                             {request.isUrgent && (
                               <Badge variant="destructive" className="text-xs">
-                                긴급
+                                {t('leaveApprovalPage.summaryCards.urgent')}
                               </Badge>
                             )}
                           </div>
@@ -809,10 +811,10 @@ export default function LeaveApprovalPage() {
                           {format(new Date(request.endDate), 'M/d')}
                         </td>
                         <td className="px-4 py-3 text-right text-sm tabular-nums">
-                          {request.days}일
+                          {t('leaveApprovalPage.daysUnit', { count: request.days })}
                         </td>
                         <td className="px-4 py-3 text-right text-sm tabular-nums">
-                          {request.remainingDays}일
+                          {t('leaveApprovalPage.daysUnit', { count: request.remainingDays })}
                         </td>
                         <td className="max-w-[200px] truncate px-4 py-3 text-sm text-muted-foreground">
                           {request.reason}
@@ -826,7 +828,7 @@ export default function LeaveApprovalPage() {
                               className="text-green-600 hover:text-green-700"
                             >
                               <CheckCircle className="mr-1 h-3 w-3" />
-                              승인
+                              {t('leaveApprovalPage.approve')}
                             </Button>
                             <Button
                               size="sm"
@@ -835,7 +837,7 @@ export default function LeaveApprovalPage() {
                               className="text-red-600 hover:text-red-700"
                             >
                               <XCircle className="mr-1 h-3 w-3" />
-                              반려
+                              {t('leaveApprovalPage.reject')}
                             </Button>
                           </div>
                         </td>
@@ -861,9 +863,9 @@ export default function LeaveApprovalPage() {
       }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>휴가 승인</DialogTitle>
+            <DialogTitle>{t('leaveApprovalPage.approveDialog.title')}</DialogTitle>
             <DialogDescription>
-              {approveDialog.request?.employeeName}님의 휴가 신청을 승인합니다.
+              {t('leaveApprovalPage.approveDialog.description', { name: approveDialog.request?.employeeName })}
             </DialogDescription>
           </DialogHeader>
           {approveDialog.request && (
@@ -871,17 +873,17 @@ export default function LeaveApprovalPage() {
               <div className="rounded-lg bg-muted/50 p-4">
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
-                    <span className="text-muted-foreground">휴가 유형:</span>{' '}
+                    <span className="text-muted-foreground">{t('leaveApprovalPage.approveDialog.leaveType')}</span>{' '}
                     <span className="font-medium">
                       {LEAVE_TYPE_LABELS[approveDialog.request.leaveType]}
                     </span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">일수:</span>{' '}
-                    <span className="font-medium">{approveDialog.request.days}일</span>
+                    <span className="text-muted-foreground">{t('leaveApprovalPage.approveDialog.days')}</span>{' '}
+                    <span className="font-medium">{t('leaveApprovalPage.daysUnit', { count: approveDialog.request.days })}</span>
                   </div>
                   <div className="col-span-2">
-                    <span className="text-muted-foreground">기간:</span>{' '}
+                    <span className="text-muted-foreground">{t('leaveApprovalPage.approveDialog.period')}</span>{' '}
                     <span className="font-medium">
                       {format(new Date(approveDialog.request.startDate), 'yyyy년 M월 d일', { locale: ko })} ~{' '}
                       {format(new Date(approveDialog.request.endDate), 'M월 d일', { locale: ko })}
@@ -892,27 +894,27 @@ export default function LeaveApprovalPage() {
               {/* 잔여일수 차감 피드백 */}
               <Alert variant={approveDialog.request.remainingDays - approveDialog.request.days < 0 ? 'destructive' : 'default'} role="alert">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>잔여일수 변동</AlertTitle>
+                <AlertTitle>{t('leaveApprovalPage.approveDialog.balanceChangeTitle')}</AlertTitle>
                 <AlertDescription>
                   <div className="flex items-center gap-2 mt-1">
-                    <span>현재 잔여: <strong>{approveDialog.request.remainingDays}일</strong></span>
+                    <span>{t('leaveApprovalPage.approveDialog.currentBalance', { count: approveDialog.request.remainingDays })}</span>
                     <span>&rarr;</span>
-                    <span>차감 후: <strong className={approveDialog.request.remainingDays - approveDialog.request.days < 0 ? 'text-destructive' : ''}>
-                      {approveDialog.request.remainingDays - approveDialog.request.days}일
+                    <span><strong className={approveDialog.request.remainingDays - approveDialog.request.days < 0 ? 'text-destructive' : ''}>
+                      {t('leaveApprovalPage.approveDialog.afterDeduction', { count: approveDialog.request.remainingDays - approveDialog.request.days })}
                     </strong></span>
                   </div>
                   {approveDialog.request.remainingDays - approveDialog.request.days < 0 && (
                     <p className="text-sm text-destructive mt-1 font-medium">
-                      잔여일수가 부족합니다. 승인 시 마이너스 처리됩니다.
+                      {t('leaveApprovalPage.approveDialog.insufficientBalance')}
                     </p>
                   )}
                 </AlertDescription>
               </Alert>
               <div className="space-y-2">
-                <Label htmlFor="comment">코멘트 (선택)</Label>
+                <Label htmlFor="comment">{t('leaveApprovalPage.approveDialog.commentLabel')}</Label>
                 <Textarea
                   id="comment"
-                  placeholder="승인 코멘트를 입력하세요"
+                  placeholder={t('leaveApprovalPage.approveDialog.commentPlaceholder')}
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                 />
@@ -924,10 +926,10 @@ export default function LeaveApprovalPage() {
               variant="outline"
               onClick={() => setApproveDialog({ open: false, request: null })}
             >
-              취소
+              {t('common:cancel')}
             </Button>
             <Button onClick={handleApprove} disabled={approveMutation.isPending}>
-              {approveMutation.isPending ? '처리 중...' : '승인'}
+              {approveMutation.isPending ? t('common:processing') : t('leaveApprovalPage.approve')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -940,9 +942,9 @@ export default function LeaveApprovalPage() {
       }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>휴가 반려</DialogTitle>
+            <DialogTitle>{t('leaveApprovalPage.rejectDialog.title')}</DialogTitle>
             <DialogDescription>
-              {rejectDialog.request?.employeeName}님의 휴가 신청을 반려합니다.
+              {t('leaveApprovalPage.rejectDialog.description', { name: rejectDialog.request?.employeeName })}
             </DialogDescription>
           </DialogHeader>
           {rejectDialog.request && (
@@ -950,24 +952,24 @@ export default function LeaveApprovalPage() {
               <div className="rounded-lg bg-muted/50 p-4">
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
-                    <span className="text-muted-foreground">휴가 유형:</span>{' '}
+                    <span className="text-muted-foreground">{t('leaveApprovalPage.approveDialog.leaveType')}</span>{' '}
                     <span className="font-medium">
                       {LEAVE_TYPE_LABELS[rejectDialog.request.leaveType]}
                     </span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">일수:</span>{' '}
-                    <span className="font-medium">{rejectDialog.request.days}일</span>
+                    <span className="text-muted-foreground">{t('leaveApprovalPage.approveDialog.days')}</span>{' '}
+                    <span className="font-medium">{t('leaveApprovalPage.daysUnit', { count: rejectDialog.request.days })}</span>
                   </div>
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="rejectReason">
-                  반려 사유 <span className="text-destructive">*</span>
+                  {t('leaveApprovalPage.rejectDialog.reasonLabel')} <span className="text-destructive">*</span>
                 </Label>
                 <Textarea
                   id="rejectReason"
-                  placeholder="반려 사유를 입력하세요 (필수)"
+                  placeholder={t('leaveApprovalPage.rejectDialog.reasonPlaceholder')}
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
                 />
@@ -979,14 +981,14 @@ export default function LeaveApprovalPage() {
               variant="outline"
               onClick={() => setRejectDialog({ open: false, request: null })}
             >
-              취소
+              {t('common:cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={handleReject}
               disabled={!rejectReason.trim() || rejectMutation.isPending}
             >
-              {rejectMutation.isPending ? '처리 중...' : '반려'}
+              {rejectMutation.isPending ? t('common:processing') : t('leaveApprovalPage.reject')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -999,26 +1001,26 @@ export default function LeaveApprovalPage() {
       }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>일괄 승인</DialogTitle>
+            <DialogTitle>{t('leaveApprovalPage.bulkApproveDialog.title')}</DialogTitle>
             <DialogDescription>
-              선택한 {selectedCount}건의 휴가 신청을 일괄 승인합니다.
+              {t('leaveApprovalPage.bulkApproveDialog.description', { count: selectedCount })}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
-            <Label htmlFor="bulkComment">코멘트 (선택)</Label>
+            <Label htmlFor="bulkComment">{t('leaveApprovalPage.bulkApproveDialog.commentLabel')}</Label>
             <Textarea
               id="bulkComment"
-              placeholder="승인 코멘트를 입력하세요"
+              placeholder={t('leaveApprovalPage.bulkApproveDialog.commentPlaceholder')}
               value={comment}
               onChange={(e) => setComment(e.target.value)}
             />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setBulkApproveDialog(false)}>
-              취소
+              {t('common:cancel')}
             </Button>
             <Button onClick={handleBulkApprove} disabled={bulkApproveMutation.isPending}>
-              {bulkApproveMutation.isPending ? '처리 중...' : `${selectedCount}건 승인`}
+              {bulkApproveMutation.isPending ? t('common:processing') : t('leaveApprovalPage.bulkApproveDialog.confirmButton', { count: selectedCount })}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1031,32 +1033,32 @@ export default function LeaveApprovalPage() {
       }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>일괄 반려</DialogTitle>
+            <DialogTitle>{t('leaveApprovalPage.bulkRejectDialog.title')}</DialogTitle>
             <DialogDescription>
-              선택한 {selectedCount}건의 휴가 신청을 일괄 반려합니다.
+              {t('leaveApprovalPage.bulkRejectDialog.description', { count: selectedCount })}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
             <Label htmlFor="bulkRejectReason">
-              반려 사유 <span className="text-destructive">*</span>
+              {t('leaveApprovalPage.bulkRejectDialog.reasonLabel')} <span className="text-destructive">*</span>
             </Label>
             <Textarea
               id="bulkRejectReason"
-              placeholder="반려 사유를 입력하세요 (필수)"
+              placeholder={t('leaveApprovalPage.bulkRejectDialog.reasonPlaceholder')}
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
             />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setBulkRejectDialog(false)}>
-              취소
+              {t('common:cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={handleBulkReject}
               disabled={!rejectReason.trim() || bulkRejectMutation.isPending}
             >
-              {bulkRejectMutation.isPending ? '처리 중...' : `${selectedCount}건 반려`}
+              {bulkRejectMutation.isPending ? t('common:processing') : t('leaveApprovalPage.bulkRejectDialog.confirmButton', { count: selectedCount })}
             </Button>
           </DialogFooter>
         </DialogContent>

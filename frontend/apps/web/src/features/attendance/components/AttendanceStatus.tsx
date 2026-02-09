@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AttendanceStatusBadge } from '@/components/common/StatusBadge';
 import { Skeleton } from '@/components/common/Skeleton';
@@ -11,6 +12,7 @@ export interface AttendanceStatusProps {
 }
 
 export function AttendanceStatus({ className, showCard = true }: AttendanceStatusProps) {
+  const { t } = useTranslation('attendance');
   const { data: todayData, isLoading } = useTodayAttendance();
 
   const today = todayData?.data;
@@ -20,7 +22,7 @@ export function AttendanceStatus({ className, showCard = true }: AttendanceStatu
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-muted-foreground">
           <LogIn className="h-4 w-4" />
-          <span className="text-sm">출근</span>
+          <span className="text-sm">{t('components.attendanceStatus.checkIn')}</span>
         </div>
         <span className={cn('font-mono text-sm', today?.checkInTime && 'font-medium')}>
           {today?.checkInTime?.slice(0, 5) || '-'}
@@ -29,7 +31,7 @@ export function AttendanceStatus({ className, showCard = true }: AttendanceStatu
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-muted-foreground">
           <LogOut className="h-4 w-4" />
-          <span className="text-sm">퇴근</span>
+          <span className="text-sm">{t('components.attendanceStatus.checkOut')}</span>
         </div>
         <span className={cn('font-mono text-sm', today?.checkOutTime && 'font-medium')}>
           {today?.checkOutTime?.slice(0, 5) || '-'}
@@ -38,16 +40,16 @@ export function AttendanceStatus({ className, showCard = true }: AttendanceStatu
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-muted-foreground">
           <Timer className="h-4 w-4" />
-          <span className="text-sm">근무시간</span>
+          <span className="text-sm">{t('components.attendanceStatus.workingHours')}</span>
         </div>
         <span className="text-sm font-medium">
-          {today?.workingHours ? `${today.workingHours}시간` : '-'}
+          {today?.workingHours ? t('components.attendanceStatus.workingHoursUnit', { hours: today.workingHours }) : '-'}
         </span>
       </div>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-muted-foreground">
           <Clock className="h-4 w-4" />
-          <span className="text-sm">상태</span>
+          <span className="text-sm">{t('components.attendanceStatus.status')}</span>
         </div>
         {today?.status ? (
           <AttendanceStatusBadge status={today.status} />
@@ -89,7 +91,7 @@ export function AttendanceStatus({ className, showCard = true }: AttendanceStatu
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle className="text-base">오늘의 근태</CardTitle>
+        <CardTitle className="text-base">{t('components.attendanceStatus.title')}</CardTitle>
       </CardHeader>
       <CardContent>{content}</CardContent>
     </Card>

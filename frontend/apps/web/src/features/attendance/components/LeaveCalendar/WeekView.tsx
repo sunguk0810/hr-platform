@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   format,
   startOfWeek,
@@ -42,6 +43,7 @@ export function WeekView({
   selectedDate,
   className,
 }: WeekViewProps) {
+  const { t } = useTranslation('attendance');
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 });
 
@@ -108,7 +110,7 @@ export function WeekView({
       {/* All-day events row */}
       <div className="grid grid-cols-8 border-b bg-muted/30">
         <div className="flex w-16 items-center justify-center border-r py-2 text-xs text-muted-foreground">
-          종일
+          {t('components.leaveCalendar.weekView.allDay')}
         </div>
         {days.map((day, index) => {
           const dayEvents = getEventsForDate(day);
@@ -145,7 +147,7 @@ export function WeekView({
                 ))}
                 {dayEvents.length > 3 && (
                   <span className="block text-center text-xs text-muted-foreground">
-                    +{dayEvents.length - 3} 더보기
+                    {t('components.leaveCalendar.weekView.moreEvents', { count: dayEvents.length - 3 })}
                   </span>
                 )}
               </div>

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { format, startOfWeek, addDays, isSameDay } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -10,6 +11,7 @@ interface WeeklyAttendanceListProps {
 }
 
 export function WeeklyAttendanceList({ records, onDayClick }: WeeklyAttendanceListProps) {
+  const { t } = useTranslation('attendance');
   const today = new Date();
   const weekStart = startOfWeek(today, { weekStartsOn: 1 }); // Monday start
 
@@ -39,11 +41,11 @@ export function WeeklyAttendanceList({ records, onDayClick }: WeeklyAttendanceLi
 
   return (
     <div className="space-y-2">
-      <h3 className="text-sm font-medium text-muted-foreground mb-3">이번 주 근태</h3>
+      <h3 className="text-sm font-medium text-muted-foreground mb-3">{t('components.mobile.weeklyAttendance.title')}</h3>
 
       {/* Week Day Headers */}
       <div className="grid grid-cols-7 gap-1 text-center mb-2">
-        {['월', '화', '수', '목', '금', '토', '일'].map((day, i) => (
+        {(t('components.mobile.weeklyAttendance.weekDays', { returnObjects: true }) as string[]).map((day, i) => (
           <span
             key={day}
             className={cn(

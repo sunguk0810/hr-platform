@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { format, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Calendar, User, Clock, AlertCircle } from 'lucide-react';
@@ -42,6 +43,7 @@ export function TeamLeaveStatus({
   currentDate = new Date(),
   className,
 }: TeamLeaveStatusProps) {
+  const { t } = useTranslation('attendance');
   const todayLeaves = leaves.filter(
     (leave) =>
       isWithinInterval(currentDate, {
@@ -68,7 +70,7 @@ export function TeamLeaveStatus({
     <Card className={className}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">{teamName} 휴가 현황</CardTitle>
+          <CardTitle className="text-lg">{t('components.teamLeaveStatus.title', { team: teamName })}</CardTitle>
           <span className="text-sm text-muted-foreground">
             {format(currentDate, 'M월 d일 (EEE)', { locale: ko })}
           </span>
@@ -82,21 +84,21 @@ export function TeamLeaveStatus({
               <User className="h-5 w-5" />
               {members.length}
             </div>
-            <p className="text-xs text-muted-foreground">전체 인원</p>
+            <p className="text-xs text-muted-foreground">{t('components.teamLeaveStatus.totalMembers')}</p>
           </div>
           <div className="rounded-lg border p-3 text-center">
             <div className="flex items-center justify-center gap-1.5 text-2xl font-bold text-amber-500">
               <Calendar className="h-5 w-5" />
               {todayLeaves.length}
             </div>
-            <p className="text-xs text-muted-foreground">오늘 휴가</p>
+            <p className="text-xs text-muted-foreground">{t('components.teamLeaveStatus.todayLeaves')}</p>
           </div>
           <div className="rounded-lg border p-3 text-center">
             <div className="flex items-center justify-center gap-1.5 text-2xl font-bold text-orange-500">
               <Clock className="h-5 w-5" />
               {pendingLeaves.length}
             </div>
-            <p className="text-xs text-muted-foreground">승인 대기</p>
+            <p className="text-xs text-muted-foreground">{t('components.teamLeaveStatus.pendingApproval')}</p>
           </div>
         </div>
 
@@ -107,7 +109,7 @@ export function TeamLeaveStatus({
               <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
               <div>
                 <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-                  승인 대기 중인 휴가 {pendingLeaves.length}건
+                  {t('components.teamLeaveStatus.pendingAlert', { count: pendingLeaves.length })}
                 </p>
                 <div className="mt-1 space-y-1">
                   {pendingLeaves.slice(0, 3).map((leave) => (
@@ -122,7 +124,7 @@ export function TeamLeaveStatus({
                   ))}
                   {pendingLeaves.length > 3 && (
                     <p className="text-xs text-amber-600">
-                      외 {pendingLeaves.length - 3}건
+                      {t('components.teamLeaveStatus.moreItems', { count: pendingLeaves.length - 3 })}
                     </p>
                   )}
                 </div>
@@ -164,7 +166,7 @@ export function TeamLeaveStatus({
                   <div className="mt-1 flex items-center gap-2">
                     <Progress value={usagePercent} className="h-1.5 flex-1" />
                     <span className="text-xs text-muted-foreground shrink-0">
-                      {member.annualLeaveUsed}/{member.annualLeaveTotal}일 사용
+                      {t('components.teamLeaveStatus.usageInfo', { used: member.annualLeaveUsed, total: member.annualLeaveTotal })}
                     </span>
                   </div>
                 </div>
@@ -172,7 +174,7 @@ export function TeamLeaveStatus({
                   <p className="text-lg font-bold text-primary">
                     {member.annualLeaveRemaining}
                   </p>
-                  <p className="text-xs text-muted-foreground">잔여</p>
+                  <p className="text-xs text-muted-foreground">{t('components.teamLeaveStatus.remainingLabel')}</p>
                 </div>
               </div>
             );
@@ -181,7 +183,7 @@ export function TeamLeaveStatus({
 
         {members.length === 0 && (
           <p className="py-8 text-center text-muted-foreground">
-            팀원 정보가 없습니다.
+            {t('components.teamLeaveStatus.noMembers')}
           </p>
         )}
       </CardContent>

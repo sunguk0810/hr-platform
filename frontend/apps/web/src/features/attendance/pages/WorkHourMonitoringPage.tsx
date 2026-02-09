@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { useQueryClient } from '@tanstack/react-query';
@@ -35,12 +36,7 @@ import {
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import type { WorkHourStatus, EmployeeWorkHours } from '@hr-platform/shared-types';
 
-const STATUS_CONFIG: Record<WorkHourStatus, { label: string; color: string; bgColor: string }> = {
-  NORMAL: { label: '정상', color: 'text-green-700', bgColor: 'bg-green-100' },
-  WARNING: { label: '주의', color: 'text-yellow-700', bgColor: 'bg-yellow-100' },
-  EXCEEDED: { label: '초과', color: 'text-red-700', bgColor: 'bg-red-100' },
-};
-
+// Mock department data (department/person names are kept in Korean as mock data)
 const DEPARTMENTS = [
   { id: 'all', name: '전체 부서' },
   { id: 'dept-001', name: '개발팀' },
@@ -51,6 +47,14 @@ const DEPARTMENTS = [
 ];
 
 function WorkHourStatusBadge({ status }: { status: WorkHourStatus }) {
+  const { t } = useTranslation('attendance');
+
+  const STATUS_CONFIG: Record<WorkHourStatus, { label: string; color: string; bgColor: string }> = {
+    NORMAL: { label: t('workHourMonitoringPage.statusLabels.NORMAL'), color: 'text-green-700', bgColor: 'bg-green-100' },
+    WARNING: { label: t('workHourMonitoringPage.statusLabels.WARNING'), color: 'text-yellow-700', bgColor: 'bg-yellow-100' },
+    EXCEEDED: { label: t('workHourMonitoringPage.statusLabels.EXCEEDED'), color: 'text-red-700', bgColor: 'bg-red-100' },
+  };
+
   const config = STATUS_CONFIG[status];
   return (
     <Badge variant="outline" className={`${config.bgColor} ${config.color} border-0`}>
@@ -89,6 +93,7 @@ function WorkHourProgressBar({ employee }: { employee: EmployeeWorkHours }) {
 }
 
 export default function WorkHourMonitoringPage() {
+  const { t } = useTranslation('attendance');
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const [showFilters, setShowFilters] = useState(false);
@@ -120,14 +125,22 @@ export default function WorkHourMonitoringPage() {
   const handleExport = () => {
     // CSV export logic would go here
     const csvContent = [
-      ['사원명', '부서', '기본근무', '초과근무', '총 근무시간', '상태', '초과시간'],
+      [
+        t('workHourMonitoringPage.csvHeaders.employeeName'),
+        t('workHourMonitoringPage.csvHeaders.department'),
+        t('workHourMonitoringPage.csvHeaders.regularHours'),
+        t('workHourMonitoringPage.csvHeaders.overtimeHours'),
+        t('workHourMonitoringPage.csvHeaders.totalWorkingHours'),
+        t('workHourMonitoringPage.csvHeaders.status'),
+        t('workHourMonitoringPage.csvHeaders.exceededHours'),
+      ],
       ...employees.map(e => [
         e.employeeName,
         e.department,
         e.regularHours,
         e.overtimeHours,
         e.totalHours,
-        STATUS_CONFIG[e.status].label,
+        t(`workHourMonitoringPage.statusLabels.${e.status}`),
         e.exceededHours,
       ]),
     ]
@@ -150,7 +163,7 @@ export default function WorkHourMonitoringPage() {
         <div className="space-y-4 pb-20">
           {/* 모바일 헤더 */}
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold">주 52시간 모니터링</h1>
+            <h1 className="text-xl font-bold">{t('workHourMonitoringPage.title')}</h1>
             <Button variant="outline" size="sm" onClick={handleExport}>
               <Download className="h-4 w-4" />
             </Button>
@@ -160,9 +173,9 @@ export default function WorkHourMonitoringPage() {
           {exceededEmployees.length > 0 && (
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>주 52시간 초과</AlertTitle>
+              <AlertTitle>{t('workHourMonitoringPage.exceededAlert.mobileTitle')}</AlertTitle>
               <AlertDescription>
-                {exceededEmployees.length}명 초과
+                {t('workHourMonitoringPage.exceededAlert.mobileDescription', { count: exceededEmployees.length })}
               </AlertDescription>
             </Alert>
           )}
@@ -194,28 +207,28 @@ export default function WorkHourMonitoringPage() {
               <CardContent className="p-3 text-center">
                 <Users className="mx-auto h-5 w-5 text-muted-foreground mb-1" />
                 <p className="text-2xl font-bold">{summary?.totalEmployees ?? 0}</p>
-                <p className="text-xs text-muted-foreground">전체</p>
+                <p className="text-xs text-muted-foreground">{t('workHourMonitoringPage.summary.totalMobile')}</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-3 text-center">
                 <Clock className="mx-auto h-5 w-5 text-green-600 mb-1" />
                 <p className="text-2xl font-bold text-green-600">{summary?.normalCount ?? 0}</p>
-                <p className="text-xs text-muted-foreground">정상</p>
+                <p className="text-xs text-muted-foreground">{t('workHourMonitoringPage.summary.normal')}</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-3 text-center">
                 <Clock className="mx-auto h-5 w-5 text-yellow-600 mb-1" />
                 <p className="text-2xl font-bold text-yellow-600">{summary?.warningCount ?? 0}</p>
-                <p className="text-xs text-muted-foreground">주의</p>
+                <p className="text-xs text-muted-foreground">{t('workHourMonitoringPage.summary.warning')}</p>
               </CardContent>
             </Card>
             <Card className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
               <CardContent className="p-3 text-center">
                 <AlertTriangle className="mx-auto h-5 w-5 text-red-600 mb-1" />
                 <p className="text-2xl font-bold text-red-600">{summary?.exceededCount ?? 0}</p>
-                <p className="text-xs text-muted-foreground">초과</p>
+                <p className="text-xs text-muted-foreground">{t('workHourMonitoringPage.summary.exceeded')}</p>
               </CardContent>
             </Card>
           </div>
@@ -229,15 +242,15 @@ export default function WorkHourMonitoringPage() {
               className="gap-2"
             >
               <Filter className="h-4 w-4" />
-              필터
+              {t('workHourMonitoringPage.filter.filterButton')}
               {(searchState.departmentId || searchState.status) && (
-                <Badge variant="secondary" className="ml-1">적용됨</Badge>
+                <Badge variant="secondary" className="ml-1">{t('workHourMonitoringPage.filter.applied')}</Badge>
               )}
             </Button>
             {!isCurrentWeek && (
               <Button variant="outline" size="sm" onClick={goToCurrentWeek}>
                 <RotateCcw className="mr-1 h-3 w-3" />
-                이번 주
+                {t('workHourMonitoringPage.thisWeek')}
               </Button>
             )}
           </div>
@@ -251,7 +264,7 @@ export default function WorkHourMonitoringPage() {
                   onValueChange={(value) => setDepartmentId(value === 'all' ? '' : value)}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="전체 부서" />
+                    <SelectValue placeholder={t('workHourMonitoringPage.filter.allDepartments')} />
                   </SelectTrigger>
                   <SelectContent>
                     {DEPARTMENTS.map((dept) => (
@@ -263,10 +276,10 @@ export default function WorkHourMonitoringPage() {
                 </Select>
                 <div className="flex gap-2 overflow-x-auto py-1">
                   {[
-                    { value: '', label: '전체' },
-                    { value: 'NORMAL', label: '정상' },
-                    { value: 'WARNING', label: '주의' },
-                    { value: 'EXCEEDED', label: '초과' },
+                    { value: '', label: t('workHourMonitoringPage.filter.all') },
+                    { value: 'NORMAL', label: t('workHourMonitoringPage.filter.normal') },
+                    { value: 'WARNING', label: t('workHourMonitoringPage.filter.warning') },
+                    { value: 'EXCEEDED', label: t('workHourMonitoringPage.filter.exceeded') },
                   ].map((option) => (
                     <button
                       key={option.value}
@@ -283,7 +296,7 @@ export default function WorkHourMonitoringPage() {
                 </div>
                 {(searchState.departmentId || searchState.status) && (
                   <Button variant="ghost" size="sm" onClick={resetFilters} className="w-full">
-                    필터 초기화
+                    {t('workHourMonitoringPage.filter.resetFilter')}
                   </Button>
                 )}
               </CardContent>
@@ -300,8 +313,8 @@ export default function WorkHourMonitoringPage() {
           ) : employees.length === 0 ? (
             <EmptyState
               icon={Users}
-              title="데이터가 없습니다"
-              description="해당 기간의 근무 데이터가 없습니다."
+              title={t('workHourMonitoringPage.emptyState.title')}
+              description={t('workHourMonitoringPage.emptyState.description')}
             />
           ) : (
             <div className="space-y-3">
@@ -327,11 +340,11 @@ export default function WorkHourMonitoringPage() {
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">
-                        기본 {employee.regularHours}h + 초과 {employee.overtimeHours}h
+                        {t('workHourMonitoringPage.employeeCard.regularAndOvertime', { regular: employee.regularHours, overtime: employee.overtimeHours })}
                       </span>
                       {employee.exceededHours > 0 && (
                         <span className="font-medium text-red-600">
-                          +{employee.exceededHours}h 초과
+                          {t('workHourMonitoringPage.employeeCard.exceededBy', { hours: employee.exceededHours })}
                         </span>
                       )}
                     </div>
@@ -349,12 +362,12 @@ export default function WorkHourMonitoringPage() {
   return (
     <>
       <PageHeader
-        title="주 52시간 모니터링"
-        description="직원별 주간 근무시간 현황을 확인하고 근로기준법 준수 여부를 모니터링합니다."
+        title={t('workHourMonitoringPage.title')}
+        description={t('workHourMonitoringPage.description')}
         actions={
           <Button variant="outline" onClick={handleExport}>
             <Download className="mr-2 h-4 w-4" />
-            엑셀 내보내기
+            {t('workHourMonitoringPage.exportExcel')}
           </Button>
         }
       />
@@ -363,10 +376,9 @@ export default function WorkHourMonitoringPage() {
       {exceededEmployees.length > 0 && (
         <Alert variant="destructive" className="mb-6">
           <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>주 52시간 초과 감지</AlertTitle>
+          <AlertTitle>{t('workHourMonitoringPage.exceededAlert.title')}</AlertTitle>
           <AlertDescription>
-            {exceededEmployees.length}명의 직원이 주 52시간을 초과하였습니다.
-            근로기준법 준수를 위해 조치가 필요합니다.
+            {t('workHourMonitoringPage.exceededAlert.description', { count: exceededEmployees.length })}
           </AlertDescription>
         </Alert>
       )}
@@ -390,7 +402,7 @@ export default function WorkHourMonitoringPage() {
             {!isCurrentWeek && (
               <Button variant="outline" size="sm" onClick={goToCurrentWeek}>
                 <RotateCcw className="mr-2 h-3 w-3" />
-                이번 주
+                {t('workHourMonitoringPage.thisWeek')}
               </Button>
             )}
           </div>
@@ -404,47 +416,47 @@ export default function WorkHourMonitoringPage() {
       <div className="mb-6 grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">전체 직원</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('workHourMonitoringPage.summary.totalEmployees')}</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{summary?.totalEmployees ?? 0}명</div>
+            <div className="text-2xl font-bold">{t('workHourMonitoringPage.summary.countUnit', { count: summary?.totalEmployees ?? 0 })}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-green-600">정상</CardTitle>
+            <CardTitle className="text-sm font-medium text-green-600">{t('workHourMonitoringPage.summary.normal')}</CardTitle>
             <Clock className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {summary?.normalCount ?? 0}명
+              {t('workHourMonitoringPage.summary.countUnit', { count: summary?.normalCount ?? 0 })}
             </div>
-            <p className="text-xs text-muted-foreground">48시간 미만</p>
+            <p className="text-xs text-muted-foreground">{t('workHourMonitoringPage.summary.normalDesc')}</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-yellow-600">주의</CardTitle>
+            <CardTitle className="text-sm font-medium text-yellow-600">{t('workHourMonitoringPage.summary.warning')}</CardTitle>
             <Clock className="h-4 w-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">
-              {summary?.warningCount ?? 0}명
+              {t('workHourMonitoringPage.summary.countUnit', { count: summary?.warningCount ?? 0 })}
             </div>
-            <p className="text-xs text-muted-foreground">48~52시간</p>
+            <p className="text-xs text-muted-foreground">{t('workHourMonitoringPage.summary.warningDesc')}</p>
           </CardContent>
         </Card>
         <Card className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-red-600">초과</CardTitle>
+            <CardTitle className="text-sm font-medium text-red-600">{t('workHourMonitoringPage.summary.exceeded')}</CardTitle>
             <AlertTriangle className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              {summary?.exceededCount ?? 0}명
+              {t('workHourMonitoringPage.summary.countUnit', { count: summary?.exceededCount ?? 0 })}
             </div>
-            <p className="text-xs text-muted-foreground">52시간 초과</p>
+            <p className="text-xs text-muted-foreground">{t('workHourMonitoringPage.summary.exceededDesc')}</p>
           </CardContent>
         </Card>
       </div>
@@ -453,13 +465,13 @@ export default function WorkHourMonitoringPage() {
       <Card className="mb-6">
         <CardContent className="flex flex-wrap items-center gap-4 py-4">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">부서</span>
+            <span className="text-sm font-medium">{t('workHourMonitoringPage.filter.department')}</span>
             <Select
               value={searchState.departmentId || 'all'}
               onValueChange={(value) => setDepartmentId(value === 'all' ? '' : value)}
             >
               <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="전체 부서" />
+                <SelectValue placeholder={t('workHourMonitoringPage.filter.allDepartments')} />
               </SelectTrigger>
               <SelectContent>
                 {DEPARTMENTS.map((dept) => (
@@ -471,25 +483,25 @@ export default function WorkHourMonitoringPage() {
             </Select>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">상태</span>
+            <span className="text-sm font-medium">{t('workHourMonitoringPage.filter.status')}</span>
             <Select
               value={searchState.status || 'all'}
               onValueChange={(value) => setStatus(value === 'all' ? '' : value as WorkHourStatus)}
             >
               <SelectTrigger className="w-[120px]">
-                <SelectValue placeholder="전체" />
+                <SelectValue placeholder={t('workHourMonitoringPage.filter.all')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">전체</SelectItem>
-                <SelectItem value="NORMAL">정상</SelectItem>
-                <SelectItem value="WARNING">주의</SelectItem>
-                <SelectItem value="EXCEEDED">초과</SelectItem>
+                <SelectItem value="all">{t('workHourMonitoringPage.filter.all')}</SelectItem>
+                <SelectItem value="NORMAL">{t('workHourMonitoringPage.filter.normal')}</SelectItem>
+                <SelectItem value="WARNING">{t('workHourMonitoringPage.filter.warning')}</SelectItem>
+                <SelectItem value="EXCEEDED">{t('workHourMonitoringPage.filter.exceeded')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           {(searchState.departmentId || searchState.status) && (
             <Button variant="ghost" size="sm" onClick={resetFilters}>
-              필터 초기화
+              {t('workHourMonitoringPage.filter.resetFilter')}
             </Button>
           )}
         </CardContent>
@@ -498,7 +510,7 @@ export default function WorkHourMonitoringPage() {
       {/* Employee Table */}
       <Card>
         <CardHeader>
-          <CardTitle>직원별 근무시간 현황</CardTitle>
+          <CardTitle>{t('workHourMonitoringPage.table.title')}</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
@@ -508,8 +520,8 @@ export default function WorkHourMonitoringPage() {
           ) : employees.length === 0 ? (
             <EmptyState
               icon={Users}
-              title="데이터가 없습니다"
-              description="해당 기간의 근무 데이터가 없습니다."
+              title={t('workHourMonitoringPage.emptyState.title')}
+              description={t('workHourMonitoringPage.emptyState.description')}
             />
           ) : (
             <div className="overflow-x-auto">
@@ -517,25 +529,25 @@ export default function WorkHourMonitoringPage() {
                 <thead>
                   <tr className="border-b bg-muted/50">
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                      사원명
+                      {t('workHourMonitoringPage.table.employeeName')}
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                      부서
+                      {t('workHourMonitoringPage.table.department')}
                     </th>
                     <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                      기본근무
+                      {t('workHourMonitoringPage.table.regularHours')}
                     </th>
                     <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                      초과근무
+                      {t('workHourMonitoringPage.table.overtimeHours')}
                     </th>
                     <th className="w-[250px] px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                      총 근무시간
+                      {t('workHourMonitoringPage.table.totalWorkingHours')}
                     </th>
                     <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                      상태
+                      {t('workHourMonitoringPage.table.status')}
                     </th>
                     <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                      초과시간
+                      {t('workHourMonitoringPage.table.exceededHours')}
                     </th>
                   </tr>
                 </thead>

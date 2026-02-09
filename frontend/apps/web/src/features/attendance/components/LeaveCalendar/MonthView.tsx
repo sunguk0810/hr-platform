@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   format,
   startOfMonth,
@@ -57,6 +58,7 @@ export function MonthView({
   selectedDate,
   className,
 }: MonthViewProps) {
+  const { t } = useTranslation('attendance');
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
   const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 });
@@ -67,7 +69,7 @@ export function MonthView({
     [calendarStart, calendarEnd]
   );
 
-  const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
+  const weekDays = t('components.leaveCalendar.monthView.weekDays', { returnObjects: true }) as string[];
 
   const getEventsForDate = (date: Date) => {
     return events.filter(

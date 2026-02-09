@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   format,
   eachHourOfInterval,
@@ -29,12 +30,7 @@ const leaveTypeColors: Record<string, string> = {
   DEFAULT: 'bg-gray-500',
 };
 
-const statusLabels: Record<string, string> = {
-  PENDING: '승인 대기',
-  APPROVED: '승인됨',
-  REJECTED: '반려됨',
-  CANCELLED: '취소됨',
-};
+// statusLabels moved to translation: components.leaveCalendar.dayView.statusLabels
 
 function getInitials(name: string) {
   return name
@@ -51,6 +47,7 @@ export function DayView({
   onEventClick,
   className,
 }: DayViewProps) {
+  const { t } = useTranslation('attendance');
   const hours = useMemo(
     () =>
       eachHourOfInterval({
@@ -75,11 +72,11 @@ export function DayView({
             {format(currentDate, 'yyyy년 M월 d일 (EEEE)', { locale: ko })}
           </h3>
           {isToday(currentDate) && (
-            <span className="text-sm text-muted-foreground">오늘</span>
+            <span className="text-sm text-muted-foreground">{t('components.leaveCalendar.dayView.today')}</span>
           )}
         </div>
         <div className="text-sm text-muted-foreground">
-          {dayEvents.length}건의 휴가
+          {t('components.leaveCalendar.dayView.leaveCount', { count: dayEvents.length })}
         </div>
       </div>
 
@@ -107,12 +104,12 @@ export function DayView({
         {/* Events sidebar */}
         <div className="w-72 border-l">
           <div className="border-b px-3 py-2">
-            <h4 className="text-sm font-medium">휴가 목록</h4>
+            <h4 className="text-sm font-medium">{t('components.leaveCalendar.dayView.leaveListTitle')}</h4>
           </div>
           <ScrollArea className="h-[464px]">
             {dayEvents.length === 0 ? (
               <div className="p-4 text-center text-sm text-muted-foreground">
-                등록된 휴가가 없습니다
+                {t('components.leaveCalendar.dayView.noLeaves')}
               </div>
             ) : (
               <div className="space-y-2 p-2">
@@ -158,7 +155,7 @@ export function DayView({
                               'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
                           )}
                         >
-                          {statusLabels[event.status]}
+                          {t(`components.leaveCalendar.dayView.statusLabels.${event.status}`)}
                         </span>
                       </div>
                     </div>

@@ -1,4 +1,6 @@
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -19,17 +21,19 @@ import { useCreateLeaveRequest, useLeaveBalance } from '../hooks/useAttendance';
 import { LEAVE_TYPE_LABELS, type LeaveType } from '@hr-platform/shared-types';
 import { Loader2, CalendarDays, AlertCircle } from 'lucide-react';
 
-const leaveRequestSchema = z.object({
-  leaveType: z.enum(['ANNUAL', 'SICK', 'SPECIAL', 'HALF_DAY_AM', 'HALF_DAY_PM', 'HOURLY', 'MATERNITY', 'PATERNITY', 'UNPAID'] as const),
-  startDate: z.string().min(1, '시작일을 선택해주세요'),
-  endDate: z.string().min(1, '종료일을 선택해주세요'),
-  reason: z.string().min(1, '사유를 입력해주세요').max(500, '500자 이내로 입력해주세요'),
-  startTime: z.string().optional(), // For HOURLY leave
-  endTime: z.string().optional(),   // For HOURLY leave
-  hours: z.number().optional(),     // For HOURLY leave
-});
+function createLeaveRequestSchema(t: TFunction) {
+  return z.object({
+    leaveType: z.enum(['ANNUAL', 'SICK', 'SPECIAL', 'HALF_DAY_AM', 'HALF_DAY_PM', 'HOURLY', 'MATERNITY', 'PATERNITY', 'UNPAID'] as const),
+    startDate: z.string().min(1, t('validation.startDateRequired')),
+    endDate: z.string().min(1, t('validation.endDateRequired')),
+    reason: z.string().min(1, t('validation.reasonRequired')).max(500, t('validation.reasonMaxLength')),
+    startTime: z.string().optional(), // For HOURLY leave
+    endTime: z.string().optional(),   // For HOURLY leave
+    hours: z.number().optional(),     // For HOURLY leave
+  });
+}
 
-type LeaveRequestFormData = z.infer<typeof leaveRequestSchema>;
+type LeaveRequestFormData = z.infer<ReturnType<typeof createLeaveRequestSchema>>;
 
 export interface LeaveRequestFormProps {
   onSuccess?: () => void;
@@ -39,8 +43,10 @@ export interface LeaveRequestFormProps {
 const HALF_DAY_TYPES: LeaveType[] = ['HALF_DAY_AM', 'HALF_DAY_PM'];
 
 export function LeaveRequestForm({ onSuccess, onCancel }: LeaveRequestFormProps) {
+  const { t } = useTranslation('attendance');
   const { data: balanceData } = useLeaveBalance();
   const createMutation = useCreateLeaveRequest();
+  const leaveRequestSchema = React.useMemo(() => createLeaveRequestSchema(t), [t]);
 
   const methods = useForm<LeaveRequestFormData>({
     resolver: zodResolver(leaveRequestSchema),
@@ -118,20 +124,20 @@ export function LeaveRequestForm({ onSuccess, onCancel }: LeaveRequestFormProps)
           <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
             <CalendarDays className="h-5 w-5 text-muted-foreground" />
             <span className="text-sm">
-              사용 가능 연차: <strong>{remainingDays}일</strong>
+              {t('components.leaveRequestForm.availableAnnual', { count: remainingDays })}
             </span>
           </div>
         )}
 
         {/* Leave Type */}
         <div className="space-y-2">
-          <Label htmlFor="leaveType">휴가 유형</Label>
+          <Label htmlFor="leaveType">{t('components.leaveRequestForm.leaveTypeLabel')}</Label>
           <Select
             value={leaveType}
             onValueChange={(value) => setValue('leaveType', value as LeaveType)}
           >
             <SelectTrigger id="leaveType">
-              <SelectValue placeholder="휴가 유형 선택" />
+              <SelectValue placeholder={t('components.leaveRequestForm.leaveTypePlaceholder')} />
             </SelectTrigger>
             <SelectContent>
               {Object.entries(LEAVE_TYPE_LABELS).map(([value, label]) => (
@@ -148,12 +154,12 @@ export function LeaveRequestForm({ onSuccess, onCancel }: LeaveRequestFormProps)
 
         {/* Date Selection */}
         <div className="space-y-2">
-          <Label>{isHalfDay ? '날짜' : '기간'}</Label>
+          <Label>{isHalfDay ? t('components.leaveRequestForm.dateLabel') : t('components.leaveRequestForm.periodLabel')}</Label>
           {isHalfDay ? (
             <DatePicker
               value={startDate ? parseISO(startDate) : undefined}
               onChange={handleSingleDateChange}
-              placeholder="날짜 선택"
+              placeholder={t('components.leaveRequestForm.datePlaceholder')}
               disabledDates={(date) => isBefore(date, new Date()) || isWeekend(date)}
             />
           ) : (
@@ -164,7 +170,7 @@ export function LeaveRequestForm({ onSuccess, onCancel }: LeaveRequestFormProps)
                   : undefined
               }
               onChange={handleDateRangeChange}
-              placeholder="기간 선택"
+              placeholder={t('components.leaveRequestForm.periodPlaceholder')}
               disabledDates={(date) => isBefore(date, new Date()) || isWeekend(date)}
             />
           )}
@@ -178,8 +184,8 @@ export function LeaveRequestForm({ onSuccess, onCancel }: LeaveRequestFormProps)
         {/* Calculated Days */}
         {calculatedDays > 0 && (
           <div className="flex items-center justify-between p-3 bg-primary/5 rounded-lg">
-            <span className="text-sm">사용 일수</span>
-            <span className="font-medium">{calculatedDays}일</span>
+            <span className="text-sm">{t('components.leaveRequestForm.usageDays')}</span>
+            <span className="font-medium">{t('components.leaveRequestForm.daysUnit', { count: calculatedDays })}</span>
           </div>
         )}
 
@@ -188,18 +194,18 @@ export function LeaveRequestForm({ onSuccess, onCancel }: LeaveRequestFormProps)
           <div className="flex items-center gap-2 p-3 bg-destructive/10 text-destructive rounded-lg">
             <AlertCircle className="h-5 w-5" />
             <span className="text-sm">
-              사용 가능한 연차({remainingDays}일)를 초과합니다.
+              {t('components.leaveRequestForm.exceedingBalance', { count: remainingDays })}
             </span>
           </div>
         )}
 
         {/* Reason */}
         <div className="space-y-2">
-          <Label htmlFor="reason">사유</Label>
+          <Label htmlFor="reason">{t('components.leaveRequestForm.reasonLabel')}</Label>
           <Textarea
             id="reason"
             {...methods.register('reason')}
-            placeholder="휴가 사유를 입력해주세요"
+            placeholder={t('components.leaveRequestForm.reasonPlaceholder')}
             rows={3}
           />
           {errors.reason && (
@@ -211,7 +217,7 @@ export function LeaveRequestForm({ onSuccess, onCancel }: LeaveRequestFormProps)
         <div className="flex gap-2 justify-end">
           {onCancel && (
             <Button type="button" variant="outline" onClick={onCancel}>
-              취소
+              {t('common:cancel')}
             </Button>
           )}
           <Button
@@ -221,10 +227,10 @@ export function LeaveRequestForm({ onSuccess, onCancel }: LeaveRequestFormProps)
             {createMutation.isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                처리 중...
+                {t('components.checkInOutButton.processing')}
               </>
             ) : (
-              '신청하기'
+              t('components.leaveRequestForm.submit')
             )}
           </Button>
         </div>

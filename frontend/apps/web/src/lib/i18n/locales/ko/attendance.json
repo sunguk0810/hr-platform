@@ -1,0 +1,687 @@
+{
+  "attendancePage": {
+    "title": "근태 관리",
+    "description": "출퇴근 기록 및 근태 현황을 관리합니다.",
+    "mobileDescription": "출퇴근 기록 및 근태 현황",
+    "checkInOut": "출퇴근",
+    "checkIn": "출근",
+    "checkOut": "퇴근",
+    "checkInDone": "출근 완료",
+    "checkOutDone": "퇴근 완료",
+    "leaveCalendar": "휴가 캘린더",
+    "leaveRequest": "휴가 신청",
+    "todayRecord": {
+      "title": "오늘의 근태",
+      "checkInTime": "출근 시간",
+      "checkOutTime": "퇴근 시간",
+      "workingHours": "근무 시간",
+      "workingHoursUnit": "{{hours}}시간",
+      "status": "상태"
+    },
+    "monthlySummary": {
+      "title": "이번 달 현황",
+      "totalWorkingDays": "총 근무일",
+      "totalWorkingDaysUnit": "{{count}}일",
+      "workingHours": "근무시간",
+      "workingHoursUnit": "{{hours}}h",
+      "totalWorkingHours": "총 근무시간",
+      "totalWorkingHoursUnit": "{{hours}}시간",
+      "late": "지각",
+      "earlyLeave": "조퇴",
+      "timesUnit": "{{count}}회",
+      "overtime": "초과근무",
+      "overtimeUnit": "{{hours}}시간"
+    },
+    "recentRecords": {
+      "title": "근태 기록",
+      "mobileTitle": "최근 근태 기록"
+    },
+    "emptyState": {
+      "title": "근태 기록이 없습니다",
+      "description": "출퇴근 기록이 여기에 표시됩니다."
+    },
+    "table": {
+      "date": "날짜",
+      "checkIn": "출근",
+      "checkOut": "퇴근",
+      "workingHours": "근무시간",
+      "status": "상태",
+      "edit": "수정"
+    },
+    "statusFilter": {
+      "all": "전체",
+      "normal": "정상",
+      "late": "지각",
+      "earlyLeave": "조퇴",
+      "absent": "결근"
+    }
+  },
+  "leaveCalendarPage": {
+    "title": "휴가 캘린더",
+    "description": "팀원들의 휴가 일정을 확인합니다.",
+    "mobileDescription": "팀 휴가 일정",
+    "backToAttendance": "근태관리",
+    "today": "오늘",
+    "departmentSelect": "부서 선택",
+    "monthViewTitle": "월간 뷰",
+    "ganttViewTitle": "Gantt 뷰",
+    "todayLeaves": {
+      "title": "오늘 휴가자",
+      "count": "{{count}}명",
+      "empty": "오늘 휴가자가 없습니다",
+      "more": "+{{count}}명 더"
+    },
+    "monthlyStats": {
+      "title": "이번 달 현황",
+      "totalLeaves": "총 휴가",
+      "annual": "연차",
+      "sick": "병가",
+      "special": "특별휴가"
+    },
+    "schedule": {
+      "title": "휴가 일정",
+      "empty": "이번 달 휴가 일정이 없습니다"
+    },
+    "summary": {
+      "title": "이번 달 휴가 현황",
+      "totalLeaveCount": "총 휴가 건수"
+    },
+    "gantt": {
+      "name": "이름",
+      "department": "부서"
+    },
+    "overflow": "+{{count}}명",
+    "leaveTypes": {
+      "ANNUAL": "연차",
+      "SICK": "병가",
+      "SPECIAL": "특별휴가",
+      "HALF_DAY_AM": "반차(오전)",
+      "HALF_DAY_PM": "반차(오후)",
+      "HOURLY": "시간차",
+      "MATERNITY": "출산휴가",
+      "PATERNITY": "배우자출산휴가",
+      "UNPAID": "무급휴가"
+    },
+    "weekDays": {
+      "sun": "일",
+      "mon": "월",
+      "tue": "화",
+      "wed": "수",
+      "thu": "목",
+      "fri": "금",
+      "sat": "토"
+    }
+  },
+  "leaveApprovalPage": {
+    "title": "휴가 승인",
+    "description": "대기 중인 휴가 신청을 검토하고 승인/반려합니다.",
+    "mobileDescription": "대기 중인 휴가 신청 검토",
+    "selectMode": "선택",
+    "cancelSelection": "선택 취소",
+    "summaryCards": {
+      "pendingCount": "대기 건수",
+      "pending": "대기",
+      "selectedCount": "선택 건수",
+      "selected": "선택",
+      "urgent": "긴급",
+      "countUnit": "{{count}}건"
+    },
+    "filterLeaveType": "휴가 유형",
+    "filterAll": "전체",
+    "resetFilter": "필터 초기화",
+    "bulkApproveButton": "선택 승인 ({{count}})",
+    "bulkRejectButton": "선택 반려 ({{count}})",
+    "pendingList": {
+      "title": "대기 목록",
+      "empty": {
+        "title": "대기 중인 휴가 신청이 없습니다",
+        "description": "모든 휴가 신청이 처리되었습니다."
+      }
+    },
+    "table": {
+      "applicant": "신청자",
+      "leaveType": "휴가 유형",
+      "period": "기간",
+      "days": "일수",
+      "remainingAnnual": "잔여연차",
+      "reason": "사유",
+      "action": "액션"
+    },
+    "remaining": "잔여 {{count}}일",
+    "daysUnit": "{{count}}일",
+    "approve": "승인",
+    "reject": "반려",
+    "approveDialog": {
+      "title": "휴가 승인",
+      "description": "{{name}}님의 휴가 신청을 승인합니다.",
+      "leaveType": "휴가 유형:",
+      "days": "일수:",
+      "period": "기간:",
+      "balanceChangeTitle": "잔여일수 변동",
+      "currentBalance": "현재 잔여: {{count}}일",
+      "afterDeduction": "차감 후: {{count}}일",
+      "insufficientBalance": "잔여일수가 부족합니다. 승인 시 마이너스 처리됩니다.",
+      "commentLabel": "코멘트 (선택)",
+      "commentPlaceholder": "승인 코멘트를 입력하세요"
+    },
+    "rejectDialog": {
+      "title": "휴가 반려",
+      "description": "{{name}}님의 휴가 신청을 반려합니다.",
+      "reasonLabel": "반려 사유",
+      "reasonPlaceholder": "반려 사유를 입력하세요 (필수)"
+    },
+    "bulkApproveDialog": {
+      "title": "일괄 승인",
+      "description": "선택한 {{count}}건의 휴가 신청을 일괄 승인합니다.",
+      "commentLabel": "코멘트 (선택)",
+      "commentPlaceholder": "승인 코멘트를 입력하세요",
+      "confirmButton": "{{count}}건 승인"
+    },
+    "bulkRejectDialog": {
+      "title": "일괄 반려",
+      "description": "선택한 {{count}}건의 휴가 신청을 일괄 반려합니다.",
+      "reasonLabel": "반려 사유",
+      "reasonPlaceholder": "반려 사유를 입력하세요 (필수)",
+      "confirmButton": "{{count}}건 반려"
+    },
+    "selectedCount": "{{count}}건 선택됨",
+    "selectAll": "전체 선택",
+    "deselectAll": "전체 해제",
+    "toast": {
+      "approveSuccess": "승인 완료",
+      "approveSuccessMessage": "휴가가 승인되었습니다.",
+      "approveFail": "승인 실패",
+      "approveFailMessage": "휴가 승인에 실패했습니다.",
+      "rejectSuccess": "반려 완료",
+      "rejectSuccessMessage": "휴가가 반려되었습니다.",
+      "rejectFail": "반려 실패",
+      "rejectFailMessage": "휴가 반려에 실패했습니다.",
+      "inputError": "입력 오류",
+      "rejectReasonRequired": "반려 사유를 입력해주세요.",
+      "bulkApproveSuccess": "일괄 승인 완료",
+      "bulkApproveSuccessMessage": "{{count}}건이 승인되었습니다.",
+      "bulkApproveFail": "일괄 승인 실패",
+      "bulkApproveFailMessage": "일부 항목의 승인에 실패했습니다.",
+      "bulkRejectSuccess": "일괄 반려 완료",
+      "bulkRejectSuccessMessage": "{{count}}건이 반려되었습니다.",
+      "bulkRejectFail": "일괄 반려 실패",
+      "bulkRejectFailMessage": "일부 항목의 반려에 실패했습니다."
+    }
+  },
+  "leaveRequestPage": {
+    "title": "휴가 신청",
+    "description": "휴가를 신청하고 승인 현황을 확인합니다.",
+    "mobileDescription": "승인 현황을 확인하세요",
+    "backToAttendance": "근태관리",
+    "applyButton": "신청",
+    "leaveBalance": {
+      "title": "잔여 휴가",
+      "totalAnnual": "총 연차",
+      "used": "사용",
+      "pending": "예정",
+      "remaining": "잔여",
+      "daysUnit": "{{count}}일"
+    },
+    "hourlyLeaveBalance": {
+      "title": "시간차 휴가",
+      "total": "총",
+      "used": "사용",
+      "pending": "예정",
+      "remaining": "잔여",
+      "hoursUnit": "{{count}}시간"
+    },
+    "balanceByType": {
+      "title": "휴가 유형별 현황"
+    },
+    "requestList": {
+      "title": "휴가 신청 내역",
+      "mobileTitle": "신청 내역"
+    },
+    "filter": {
+      "allTypes": "전체 유형",
+      "allStatus": "전체 상태",
+      "pending": "승인대기",
+      "approved": "승인",
+      "rejected": "반려",
+      "cancelled": "취소"
+    },
+    "emptyState": {
+      "title": "휴가 신청 내역이 없습니다",
+      "description": "휴가를 신청하면 내역이 여기에 표시됩니다.",
+      "action": "휴가 신청"
+    },
+    "table": {
+      "type": "유형",
+      "period": "기간",
+      "daysOrHours": "일수/시간",
+      "reason": "사유",
+      "status": "상태",
+      "action": "작업"
+    },
+    "hoursUnit": "{{count}}시간",
+    "daysUnit": "{{count}}일",
+    "createDialog": {
+      "title": "휴가 신청",
+      "description": "휴가를 신청합니다. 승인 후 휴가가 확정됩니다.",
+      "leaveType": "휴가 유형 *",
+      "leaveTypePlaceholder": "휴가 유형 선택",
+      "leaveTypeGroups": {
+        "annual": "연차",
+        "annualLeave": "연차",
+        "halfDayAm": "반차 (오전) - 09:00~13:00",
+        "halfDayPm": "반차 (오후) - 14:00~18:00",
+        "hourlyLeave": "시간차 휴가",
+        "specialGroup": "특별휴가",
+        "sick": "병가",
+        "marriage": "결혼휴가",
+        "bereavement": "경조휴가",
+        "maternity": "출산휴가",
+        "paternity": "배우자출산휴가",
+        "childcare": "육아휴직",
+        "otherGroup": "기타",
+        "official": "공가",
+        "compensation": "대체휴가",
+        "special": "특별휴가"
+      },
+      "halfDayInfo": {
+        "am": "오전 반차",
+        "pm": "오후 반차",
+        "amTime": "09:00 ~ 13:00 (4시간)",
+        "pmTime": "14:00 ~ 18:00 (4시간)"
+      },
+      "hourlyInfo": {
+        "title": "시간차 휴가",
+        "policy": "(최소 단위: {{minUnit}}분 / 일 최대 {{maxCount}}회)",
+        "remaining": "잔여: {{hours}}시간",
+        "used": "사용: {{hours}}시간",
+        "total": "총: {{hours}}시간"
+      },
+      "dateLabel": "날짜 *",
+      "startDateLabel": "시작일 *",
+      "endDateLabel": "종료일 *",
+      "startTimeLabel": "시작 시간 *",
+      "endTimeLabel": "종료 시간 *",
+      "startTimePlaceholder": "시작 시간",
+      "endTimePlaceholder": "종료 시간",
+      "calculatedHours": "총 {{hours}}시간 사용",
+      "calculatedDays": "총 {{days}}일",
+      "reasonLabel": "사유 *",
+      "reasonPlaceholder": "휴가 사유를 입력하세요.",
+      "approvalLinePreview": "결재선 미리보기",
+      "loadingApprovalLine": "결재선을 불러오는 중...",
+      "noApprovalLine": "추천 결재선 정보가 없습니다.",
+      "approvalLineNote": "소속 부서 및 직급 기준으로 자동 추천된 결재선입니다.",
+      "submitting": "신청 중...",
+      "submit": "신청하기"
+    },
+    "cancelDialog": {
+      "title": "휴가 신청 취소",
+      "description": "정말로 이 휴가 신청을 취소하시겠습니까?",
+      "cancelling": "취소 중...",
+      "confirm": "취소하기"
+    }
+  },
+  "overtimePage": {
+    "title": "초과근무",
+    "description": "초과근무를 신청하고 현황을 확인합니다.",
+    "mobileDescription": "초과근무 신청 및 현황",
+    "backToAttendance": "근태관리",
+    "requestButton": "초과근무 신청",
+    "summary": {
+      "monthlyRequests": "이번 달 신청",
+      "approved": "승인됨",
+      "pending": "대기 중",
+      "totalApprovedHours": "총 승인 시간",
+      "countUnit": "{{count}}건",
+      "hoursUnit": "{{count}}시간"
+    },
+    "statusConfig": {
+      "pending": "승인대기",
+      "approved": "승인",
+      "rejected": "반려",
+      "cancelled": "취소"
+    },
+    "filter": {
+      "statusLabel": "상태",
+      "all": "전체",
+      "pending": "대기",
+      "approved": "승인",
+      "rejected": "반려",
+      "cancelled": "취소"
+    },
+    "requestList": {
+      "title": "신청 내역"
+    },
+    "emptyState": {
+      "mobileTitle": "초과근무 신청 내역이 없습니다",
+      "mobileDescription": "아래 버튼을 눌러 초과근무를 신청하세요.",
+      "desktopTitle": "초과근무 신청 내역이 없습니다",
+      "desktopDescription": "초과근무를 신청하려면 상단의 버튼을 클릭하세요.",
+      "action": "초과근무 신청"
+    },
+    "table": {
+      "date": "날짜",
+      "time": "시간",
+      "workingHours": "근무시간",
+      "reason": "사유",
+      "status": "상태",
+      "action": "작업"
+    },
+    "hoursUnit": "{{count}}시간",
+    "createDialog": {
+      "title": "초과근무 신청",
+      "description": "초과근무 내역을 입력하고 승인을 요청합니다.",
+      "dateLabel": "날짜 *",
+      "startTimeLabel": "시작 시간 *",
+      "endTimeLabel": "종료 시간 *",
+      "estimatedHours": "예상 초과근무 시간: {{hours}}시간",
+      "reasonLabel": "사유 *",
+      "reasonPlaceholder": "초과근무 사유를 입력하세요",
+      "submitting": "신청 중...",
+      "submit": "신청"
+    },
+    "cancelDialog": {
+      "title": "초과근무 취소",
+      "description": "초과근무 신청을 취소하시겠습니까?"
+    }
+  },
+  "myLeavePage": {
+    "title": "내 휴가",
+    "description": "휴가 현황 및 사용 내역을 확인합니다.",
+    "mobileDescription": "휴가 현황 및 내역",
+    "backToAttendance": "근태관리",
+    "balance": {
+      "remainingAnnual": "잔여 연차",
+      "totalAnnual": "총 연차",
+      "used": "사용",
+      "remaining": "잔여",
+      "pending": "예정",
+      "daysUnit": "{{count}}일",
+      "usageInfo": "{{used}} / {{total}}일 사용"
+    },
+    "balanceByType": {
+      "title": "휴가 유형별 현황",
+      "mobileTitle": "휴가 유형별"
+    },
+    "history": {
+      "title": "휴가 내역"
+    },
+    "tabs": {
+      "all": "전체",
+      "pending": "대기중",
+      "pendingWithCount": "대기중 ({{count}})",
+      "approved": "승인",
+      "rejected": "반려"
+    },
+    "emptyState": {
+      "noLeaves": "휴가 내역이 없습니다",
+      "noPending": "대기중인 휴가가 없습니다",
+      "noApproved": "승인된 휴가가 없습니다",
+      "noRejected": "반려된 휴가가 없습니다",
+      "description": "휴가 사용 내역이 여기에 표시됩니다."
+    },
+    "table": {
+      "type": "유형",
+      "period": "기간",
+      "days": "일수",
+      "reason": "사유",
+      "status": "상태",
+      "requestDate": "신청일"
+    }
+  },
+  "workHourMonitoringPage": {
+    "title": "주 52시간 모니터링",
+    "description": "직원별 주간 근무시간 현황을 확인하고 근로기준법 준수 여부를 모니터링합니다.",
+    "exportExcel": "엑셀 내보내기",
+    "exceededAlert": {
+      "title": "주 52시간 초과 감지",
+      "mobileTitle": "주 52시간 초과",
+      "description": "{{count}}명의 직원이 주 52시간을 초과하였습니다. 근로기준법 준수를 위해 조치가 필요합니다.",
+      "mobileDescription": "{{count}}명 초과"
+    },
+    "thisWeek": "이번 주",
+    "summary": {
+      "totalEmployees": "전체 직원",
+      "totalMobile": "전체",
+      "normal": "정상",
+      "normalDesc": "48시간 미만",
+      "warning": "주의",
+      "warningDesc": "48~52시간",
+      "exceeded": "초과",
+      "exceededDesc": "52시간 초과",
+      "countUnit": "{{count}}명"
+    },
+    "filter": {
+      "department": "부서",
+      "allDepartments": "전체 부서",
+      "status": "상태",
+      "all": "전체",
+      "normal": "정상",
+      "warning": "주의",
+      "exceeded": "초과",
+      "resetFilter": "필터 초기화",
+      "filterButton": "필터",
+      "applied": "적용됨"
+    },
+    "table": {
+      "title": "직원별 근무시간 현황",
+      "employeeName": "사원명",
+      "department": "부서",
+      "regularHours": "기본근무",
+      "overtimeHours": "초과근무",
+      "totalWorkingHours": "총 근무시간",
+      "status": "상태",
+      "exceededHours": "초과시간"
+    },
+    "employeeCard": {
+      "regularAndOvertime": "기본 {{regular}}h + 초과 {{overtime}}h",
+      "exceededBy": "+{{hours}}h 초과"
+    },
+    "csvHeaders": {
+      "employeeName": "사원명",
+      "department": "부서",
+      "regularHours": "기본근무",
+      "overtimeHours": "초과근무",
+      "totalWorkingHours": "총 근무시간",
+      "status": "상태",
+      "exceededHours": "초과시간"
+    },
+    "emptyState": {
+      "title": "데이터가 없습니다",
+      "description": "해당 기간의 근무 데이터가 없습니다."
+    },
+    "statusLabels": {
+      "NORMAL": "정상",
+      "WARNING": "주의",
+      "EXCEEDED": "초과"
+    }
+  },
+  "components": {
+    "checkInOutButton": {
+      "processing": "처리 중...",
+      "checkInDone": "출근 완료 {{time}}",
+      "checkIn": "출근하기",
+      "checkOutDone": "퇴근 완료 {{time}}",
+      "checkOut": "퇴근하기"
+    },
+    "attendanceStatus": {
+      "title": "오늘의 근태",
+      "checkIn": "출근",
+      "checkOut": "퇴근",
+      "workingHours": "근무시간",
+      "workingHoursUnit": "{{hours}}시간",
+      "status": "상태"
+    },
+    "leaveBalanceCard": {
+      "simpleTitle": "연차 잔여",
+      "detailedTitle": "휴가 현황",
+      "daysUnit": "/ {{total}}일",
+      "used": "사용: {{count}}일",
+      "pendingWait": "대기: {{count}}일",
+      "totalAnnual": "총 연차",
+      "remaining": "잔여",
+      "pendingApproval": "승인대기 {{count}}일",
+      "expiringDays": "소멸예정 {{count}}일",
+      "byType": "휴가별 현황"
+    },
+    "teamLeaveStatus": {
+      "title": "{{team}} 휴가 현황",
+      "totalMembers": "전체 인원",
+      "todayLeaves": "오늘 휴가",
+      "pendingApproval": "승인 대기",
+      "pendingAlert": "승인 대기 중인 휴가 {{count}}건",
+      "moreItems": "외 {{count}}건",
+      "usageInfo": "{{used}}/{{total}}일 사용",
+      "remainingLabel": "잔여",
+      "noMembers": "팀원 정보가 없습니다."
+    },
+    "overtimeRequestForm": {
+      "dateLabel": "날짜 *",
+      "datePlaceholder": "날짜 선택",
+      "overtimeType": "초과근무 유형",
+      "overtimeTypes": {
+        "weekday": "평일 초과근무",
+        "weekend": "주말 근무",
+        "holiday": "공휴일 근무"
+      },
+      "startTimeLabel": "시작 시간 *",
+      "endTimeLabel": "종료 시간 *",
+      "estimatedHours": "예상 초과근무 시간: {{hours}}시간",
+      "longOvertimeWarning": "4시간 이상의 초과근무는 추가 승인이 필요할 수 있습니다.",
+      "reasonLabel": "사유 *",
+      "reasonPlaceholder": "초과근무 사유를 입력해주세요",
+      "submit": "신청하기"
+    },
+    "attendanceCalendar": {
+      "today": "오늘",
+      "statusLabels": {
+        "NORMAL": "정상",
+        "LATE": "지각",
+        "EARLY_LEAVE": "조퇴",
+        "ABSENT": "결근",
+        "LEAVE": "휴가",
+        "HALF_DAY": "반차",
+        "HOLIDAY": "공휴일",
+        "OVERTIME": "초과근무",
+        "WEEKEND": "주말"
+      },
+      "tooltipCheckIn": "출근: {{time}}",
+      "tooltipCheckOut": "퇴근: {{time}}",
+      "tooltipWorkingHours": "근무: {{hours}}시간"
+    },
+    "editAttendanceDialog": {
+      "title": "근태 기록 수정",
+      "description": "근태 기록을 수정합니다. 수정 내역은 감사 로그에 기록됩니다.",
+      "dateLabel": "날짜",
+      "employeeLabel": "사원",
+      "checkInTimeLabel": "출근 시간",
+      "checkOutTimeLabel": "퇴근 시간",
+      "statusLabel": "근태 상태",
+      "statusPlaceholder": "상태 선택",
+      "editableStatuses": {
+        "NORMAL": "정상",
+        "LATE": "지각",
+        "EARLY_LEAVE": "조퇴",
+        "ABSENT": "결근",
+        "LEAVE": "휴가",
+        "HALF_DAY": "반차"
+      },
+      "remarksLabel": "수정 사유",
+      "remarksPlaceholder": "수정 사유를 입력해주세요 (필수)",
+      "remarksRequired": "수정 사유를 입력해주세요",
+      "auditWarning": "근태 기록 수정 내역은 감사 로그에 기록되며, 관리자가 조회할 수 있습니다.",
+      "submitButton": "수정",
+      "confirmTitle": "근태 기록 수정 확인",
+      "confirmDescription": "근태 기록을 수정하시겠습니까? 이 작업은 감사 로그에 기록됩니다.",
+      "confirmButton": "수정",
+      "toast": {
+        "inputError": "입력 오류",
+        "remarksRequired": "수정 사유를 입력해주세요.",
+        "updateSuccess": "수정 완료",
+        "updateSuccessMessage": "근태 기록이 수정되었습니다.",
+        "updateFail": "수정 실패",
+        "updateFailMessage": "근태 기록 수정에 실패했습니다."
+      }
+    },
+    "leaveRequestForm": {
+      "availableAnnual": "사용 가능 연차: {{count}}일",
+      "leaveTypeLabel": "휴가 유형",
+      "leaveTypePlaceholder": "휴가 유형 선택",
+      "dateLabel": "날짜",
+      "periodLabel": "기간",
+      "datePlaceholder": "날짜 선택",
+      "periodPlaceholder": "기간 선택",
+      "usageDays": "사용 일수",
+      "daysUnit": "{{count}}일",
+      "exceedingBalance": "사용 가능한 연차({{count}}일)를 초과합니다.",
+      "reasonLabel": "사유",
+      "reasonPlaceholder": "휴가 사유를 입력해주세요",
+      "submit": "신청하기"
+    },
+    "leaveCalendar": {
+      "weekView": {
+        "allDay": "종일",
+        "moreEvents": "+{{count}} 더보기"
+      },
+      "monthView": {
+        "weekDays": ["일", "월", "화", "수", "목", "금", "토"]
+      },
+      "dayView": {
+        "today": "오늘",
+        "leaveCount": "{{count}}건의 휴가",
+        "leaveListTitle": "휴가 목록",
+        "noLeaves": "등록된 휴가가 없습니다",
+        "statusLabels": {
+          "PENDING": "승인 대기",
+          "APPROVED": "승인됨",
+          "REJECTED": "반려됨",
+          "CANCELLED": "취소됨"
+        }
+      },
+      "ganttView": {
+        "title": "{{yearMonth}} Gantt Chart",
+        "employeeColumn": "직원",
+        "noData": "표시할 데이터가 없습니다",
+        "legend": "범례:",
+        "leaveTypes": {
+          "ANNUAL": "연차",
+          "SICK": "병가",
+          "PERSONAL": "개인휴가",
+          "SPECIAL": "특별휴가",
+          "HALF_DAY": "반차"
+        }
+      }
+    },
+    "mobile": {
+      "monthlySummary": {
+        "title": "이번 달 현황",
+        "totalWorkingDays": "총 근무일",
+        "workingHours": "근무시간",
+        "late": "지각",
+        "earlyLeave": "조퇴",
+        "overtime": "초과근무",
+        "daysUnit": "{{count}}일",
+        "timesUnit": "{{count}}회",
+        "hoursUnit": "{{count}}시간"
+      },
+      "weeklyAttendance": {
+        "title": "이번 주 근태",
+        "weekDays": ["월", "화", "수", "목", "금", "토", "일"]
+      },
+      "attendanceButton": {
+        "checkIn": "출근",
+        "checkOut": "퇴근"
+      }
+    }
+  },
+  "validation": {
+    "dateRequired": "날짜를 선택해주세요",
+    "startTimeRequired": "시작 시간을 입력해주세요",
+    "endTimeRequired": "종료 시간을 입력해주세요",
+    "reasonRequired": "사유를 입력해주세요",
+    "reasonMaxLength": "500자 이내로 입력해주세요",
+    "endTimeAfterStart": "종료 시간은 시작 시간보다 이후여야 합니다",
+    "startDateRequired": "시작일을 선택해주세요",
+    "endDateRequired": "종료일을 선택해주세요"
+  }
+}

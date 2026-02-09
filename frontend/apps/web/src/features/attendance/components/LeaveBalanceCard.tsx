@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { CalendarDays, Clock, AlertCircle } from 'lucide-react';
@@ -14,6 +15,7 @@ export function LeaveBalanceCard({
   variant = 'simple',
   className,
 }: LeaveBalanceCardProps) {
+  const { t } = useTranslation('attendance');
   const { data: balanceData, isLoading } = useLeaveBalance();
   const { data: balanceByTypeData, isLoading: isLoadingByType } = useLeaveBalanceByType();
 
@@ -51,19 +53,19 @@ export function LeaveBalanceCard({
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <CalendarDays className="h-5 w-5" />
-            연차 잔여
+            {t('components.leaveBalanceCard.simpleTitle')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-baseline gap-2">
             <span className="text-4xl font-bold">{balance.remainingDays}</span>
-            <span className="text-muted-foreground">/ {balance.totalDays}일</span>
+            <span className="text-muted-foreground">{t('components.leaveBalanceCard.daysUnit', { total: balance.totalDays })}</span>
           </div>
           <Progress value={100 - usagePercent} className="mt-4" />
           <div className="mt-2 flex justify-between text-sm text-muted-foreground">
-            <span>사용: {balance.usedDays}일</span>
+            <span>{t('components.leaveBalanceCard.used', { count: balance.usedDays })}</span>
             {balance.pendingDays > 0 && (
-              <span className="text-warning">대기: {balance.pendingDays}일</span>
+              <span className="text-warning">{t('components.leaveBalanceCard.pendingWait', { count: balance.pendingDays })}</span>
             )}
           </div>
         </CardContent>
@@ -76,7 +78,7 @@ export function LeaveBalanceCard({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <CalendarDays className="h-5 w-5" />
-          휴가 현황
+          {t('components.leaveBalanceCard.detailedTitle')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -84,15 +86,15 @@ export function LeaveBalanceCard({
         <div className="grid grid-cols-3 gap-4">
           <div className="text-center">
             <p className="text-2xl font-bold">{balance.totalDays}</p>
-            <p className="text-sm text-muted-foreground">총 연차</p>
+            <p className="text-sm text-muted-foreground">{t('components.leaveBalanceCard.totalAnnual')}</p>
           </div>
           <div className="text-center">
             <p className="text-2xl font-bold text-primary">{balance.remainingDays}</p>
-            <p className="text-sm text-muted-foreground">잔여</p>
+            <p className="text-sm text-muted-foreground">{t('components.leaveBalanceCard.remaining')}</p>
           </div>
           <div className="text-center">
             <p className="text-2xl font-bold text-muted-foreground">{balance.usedDays}</p>
-            <p className="text-sm text-muted-foreground">사용</p>
+            <p className="text-sm text-muted-foreground">{t('leaveRequestPage.leaveBalance.used')}</p>
           </div>
         </div>
 
@@ -104,13 +106,13 @@ export function LeaveBalanceCard({
             {balance.pendingDays > 0 && (
               <div className="flex items-center gap-1 text-warning">
                 <Clock className="h-4 w-4" />
-                승인대기 {balance.pendingDays}일
+                {t('components.leaveBalanceCard.pendingApproval', { count: balance.pendingDays })}
               </div>
             )}
             {balance.expiredDays > 0 && (
               <div className="flex items-center gap-1 text-destructive">
                 <AlertCircle className="h-4 w-4" />
-                소멸예정 {balance.expiredDays}일
+                {t('components.leaveBalanceCard.expiringDays', { count: balance.expiredDays })}
               </div>
             )}
           </div>
@@ -119,7 +121,7 @@ export function LeaveBalanceCard({
         {/* By Type */}
         {!isLoadingByType && balanceByType.length > 0 && (
           <div className="space-y-2">
-            <p className="text-sm font-medium">휴가별 현황</p>
+            <p className="text-sm font-medium">{t('components.leaveBalanceCard.byType')}</p>
             <div className="space-y-2">
               {balanceByType.map((item) => (
                 <div
@@ -131,7 +133,7 @@ export function LeaveBalanceCard({
                   </span>
                   <span>
                     <span className="font-medium">{item.remainingDays}</span>
-                    <span className="text-muted-foreground"> / {item.totalDays}일</span>
+                    <span className="text-muted-foreground"> {t('components.leaveBalanceCard.daysUnit', { total: item.totalDays })}</span>
                   </span>
                 </div>
               ))}

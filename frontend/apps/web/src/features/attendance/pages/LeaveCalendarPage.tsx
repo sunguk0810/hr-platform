@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -46,16 +47,16 @@ const LEAVE_TYPE_COLORS: Record<LeaveType, string> = {
   UNPAID: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
 };
 
-const LEAVE_TYPE_LABELS: Record<LeaveType, string> = {
-  ANNUAL: '연차',
-  SICK: '병가',
-  SPECIAL: '특별휴가',
-  HALF_DAY_AM: '반차(오전)',
-  HALF_DAY_PM: '반차(오후)',
-  HOURLY: '시간차',
-  MATERNITY: '출산휴가',
-  PATERNITY: '배우자출산휴가',
-  UNPAID: '무급휴가',
+const LEAVE_TYPE_LABEL_KEYS: Record<LeaveType, string> = {
+  ANNUAL: 'leaveCalendarPage.leaveTypes.ANNUAL',
+  SICK: 'leaveCalendarPage.leaveTypes.SICK',
+  SPECIAL: 'leaveCalendarPage.leaveTypes.SPECIAL',
+  HALF_DAY_AM: 'leaveCalendarPage.leaveTypes.HALF_DAY_AM',
+  HALF_DAY_PM: 'leaveCalendarPage.leaveTypes.HALF_DAY_PM',
+  HOURLY: 'leaveCalendarPage.leaveTypes.HOURLY',
+  MATERNITY: 'leaveCalendarPage.leaveTypes.MATERNITY',
+  PATERNITY: 'leaveCalendarPage.leaveTypes.PATERNITY',
+  UNPAID: 'leaveCalendarPage.leaveTypes.UNPAID',
 };
 
 interface CalendarDayProps {
@@ -65,6 +66,7 @@ interface CalendarDayProps {
 }
 
 function CalendarDay({ date, isCurrentMonth, events }: CalendarDayProps) {
+  const { t } = useTranslation('attendance');
   const dayEvents = events.filter((event) => {
     const eventStart = new Date(event.startDate);
     const eventEnd = new Date(event.endDate);
@@ -89,14 +91,14 @@ function CalendarDay({ date, isCurrentMonth, events }: CalendarDayProps) {
           <div
             key={event.id}
             className={`text-xs px-1 py-0.5 rounded truncate ${LEAVE_TYPE_COLORS[event.leaveType]}`}
-            title={`${event.employeeName} - ${LEAVE_TYPE_LABELS[event.leaveType]}`}
+            title={`${event.employeeName} - ${t(LEAVE_TYPE_LABEL_KEYS[event.leaveType])}`}
           >
             {event.employeeName}
           </div>
         ))}
         {dayEvents.length > 3 && (
           <div className="text-xs text-muted-foreground px-1">
-            +{dayEvents.length - 3}명
+            {t('leaveCalendarPage.overflow', { count: dayEvents.length - 3 })}
           </div>
         )}
       </div>
@@ -111,6 +113,7 @@ interface GanttRowProps {
 }
 
 function GanttRow({ event, startDate, endDate }: GanttRowProps) {
+  const { t } = useTranslation('attendance');
   const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
   const eventStart = new Date(event.startDate);
   const eventEnd = new Date(event.endDate);
@@ -141,7 +144,7 @@ function GanttRow({ event, startDate, endDate }: GanttRowProps) {
           }}
         >
           <span className="text-xs px-1 truncate block">
-            {LEAVE_TYPE_LABELS[event.leaveType]}
+            {t(LEAVE_TYPE_LABEL_KEYS[event.leaveType])}
           </span>
         </div>
       </div>
@@ -150,6 +153,7 @@ function GanttRow({ event, startDate, endDate }: GanttRowProps) {
 }
 
 export default function LeaveCalendarPage() {
+  const { t } = useTranslation('attendance');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
@@ -174,7 +178,15 @@ export default function LeaveCalendarPage() {
     return eachDayOfInterval({ start: calendarStart, end: calendarEnd });
   }, [calendarStart, calendarEnd]);
 
-  const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
+  const weekDays = [
+    t('leaveCalendarPage.weekDays.sun'),
+    t('leaveCalendarPage.weekDays.mon'),
+    t('leaveCalendarPage.weekDays.tue'),
+    t('leaveCalendarPage.weekDays.wed'),
+    t('leaveCalendarPage.weekDays.thu'),
+    t('leaveCalendarPage.weekDays.fri'),
+    t('leaveCalendarPage.weekDays.sat'),
+  ];
 
   const handlePrevMonth = () => {
     setCurrentDate(subMonths(currentDate, 1));
@@ -217,8 +229,8 @@ export default function LeaveCalendarPage() {
           {/* Mobile Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold">휴가 캘린더</h1>
-              <p className="text-sm text-muted-foreground">팀 휴가 일정</p>
+              <h1 className="text-xl font-bold">{t('leaveCalendarPage.title')}</h1>
+              <p className="text-sm text-muted-foreground">{t('leaveCalendarPage.mobileDescription')}</p>
             </div>
           </div>
 
@@ -236,14 +248,14 @@ export default function LeaveCalendarPage() {
               </Button>
             </div>
             <Button variant="outline" size="sm" className="w-full" onClick={handleToday}>
-              오늘
+              {t('leaveCalendarPage.today')}
             </Button>
           </div>
 
           {/* Department Filter */}
           <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
             <SelectTrigger>
-              <SelectValue placeholder="부서 선택" />
+              <SelectValue placeholder={t('leaveCalendarPage.departmentSelect')} />
             </SelectTrigger>
             <SelectContent>
               {departments.map((dept) => (
@@ -258,12 +270,12 @@ export default function LeaveCalendarPage() {
           <div className="bg-card rounded-2xl border p-4">
             <div className="flex items-center gap-2 mb-3">
               <Users className="h-4 w-4 text-primary" />
-              <h3 className="font-semibold text-sm">오늘 휴가자</h3>
-              <span className="ml-auto text-lg font-bold text-primary">{todayEvents.length}명</span>
+              <h3 className="font-semibold text-sm">{t('leaveCalendarPage.todayLeaves.title')}</h3>
+              <span className="ml-auto text-lg font-bold text-primary">{t('leaveCalendarPage.todayLeaves.count', { count: todayEvents.length })}</span>
             </div>
             {todayEvents.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
-                오늘 휴가자가 없습니다
+                {t('leaveCalendarPage.todayLeaves.empty')}
               </p>
             ) : (
               <div className="space-y-2">
@@ -274,13 +286,13 @@ export default function LeaveCalendarPage() {
                       <p className="text-xs text-muted-foreground">{event.departmentName}</p>
                     </div>
                     <span className={`text-xs px-2 py-1 rounded ${LEAVE_TYPE_COLORS[event.leaveType]}`}>
-                      {LEAVE_TYPE_LABELS[event.leaveType]}
+                      {t(LEAVE_TYPE_LABEL_KEYS[event.leaveType])}
                     </span>
                   </div>
                 ))}
                 {todayEvents.length > 5 && (
                   <p className="text-xs text-muted-foreground text-center">
-                    +{todayEvents.length - 5}명 더
+                    {t('leaveCalendarPage.todayLeaves.more', { count: todayEvents.length - 5 })}
                   </p>
                 )}
               </div>
@@ -289,23 +301,23 @@ export default function LeaveCalendarPage() {
 
           {/* Monthly Stats */}
           <div className="bg-card rounded-2xl border p-4">
-            <h3 className="font-semibold text-sm mb-3">이번 달 현황</h3>
+            <h3 className="font-semibold text-sm mb-3">{t('leaveCalendarPage.monthlyStats.title')}</h3>
             <div className="grid grid-cols-2 gap-3">
               <div className="text-center p-3 bg-muted/50 rounded-xl">
                 <p className="text-2xl font-bold text-primary">{events.length}</p>
-                <p className="text-xs text-muted-foreground">총 휴가</p>
+                <p className="text-xs text-muted-foreground">{t('leaveCalendarPage.monthlyStats.totalLeaves')}</p>
               </div>
               <div className="text-center p-3 bg-blue-50 dark:bg-blue-950 rounded-xl">
                 <p className="text-2xl font-bold text-blue-600">{events.filter((e) => e.leaveType === 'ANNUAL').length}</p>
-                <p className="text-xs text-muted-foreground">연차</p>
+                <p className="text-xs text-muted-foreground">{t('leaveCalendarPage.monthlyStats.annual')}</p>
               </div>
               <div className="text-center p-3 bg-red-50 dark:bg-red-950 rounded-xl">
                 <p className="text-2xl font-bold text-red-600">{events.filter((e) => e.leaveType === 'SICK').length}</p>
-                <p className="text-xs text-muted-foreground">병가</p>
+                <p className="text-xs text-muted-foreground">{t('leaveCalendarPage.monthlyStats.sick')}</p>
               </div>
               <div className="text-center p-3 bg-purple-50 dark:bg-purple-950 rounded-xl">
                 <p className="text-2xl font-bold text-purple-600">{events.filter((e) => e.leaveType === 'SPECIAL').length}</p>
-                <p className="text-xs text-muted-foreground">특별휴가</p>
+                <p className="text-xs text-muted-foreground">{t('leaveCalendarPage.monthlyStats.special')}</p>
               </div>
             </div>
           </div>
@@ -313,7 +325,7 @@ export default function LeaveCalendarPage() {
           {/* Mobile Calendar - Simplified List View */}
           <div className="bg-card rounded-2xl border">
             <div className="p-4 border-b">
-              <h3 className="font-semibold text-sm">휴가 일정</h3>
+              <h3 className="font-semibold text-sm">{t('leaveCalendarPage.schedule.title')}</h3>
             </div>
             {isLoading ? (
               <div className="p-8 flex items-center justify-center">
@@ -321,7 +333,7 @@ export default function LeaveCalendarPage() {
               </div>
             ) : events.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground text-sm">
-                이번 달 휴가 일정이 없습니다
+                {t('leaveCalendarPage.schedule.empty')}
               </div>
             ) : (
               <div className="divide-y max-h-[400px] overflow-y-auto">
@@ -339,7 +351,7 @@ export default function LeaveCalendarPage() {
                       </div>
                     </div>
                     <span className={`text-xs px-2 py-1 rounded ${LEAVE_TYPE_COLORS[event.leaveType]}`}>
-                      {LEAVE_TYPE_LABELS[event.leaveType]}
+                      {t(LEAVE_TYPE_LABEL_KEYS[event.leaveType])}
                     </span>
                   </div>
                 ))}
@@ -349,10 +361,10 @@ export default function LeaveCalendarPage() {
 
           {/* Legend */}
           <div className="flex flex-wrap gap-2 px-1">
-            {Object.entries(LEAVE_TYPE_LABELS).slice(0, 4).map(([type, label]) => (
+            {Object.entries(LEAVE_TYPE_LABEL_KEYS).slice(0, 4).map(([type, key]) => (
               <div key={type} className="flex items-center gap-1">
                 <div className={`w-2.5 h-2.5 rounded ${LEAVE_TYPE_COLORS[type as LeaveType]}`} />
-                <span className="text-xs text-muted-foreground">{label}</span>
+                <span className="text-xs text-muted-foreground">{t(key)}</span>
               </div>
             ))}
           </div>
@@ -365,12 +377,12 @@ export default function LeaveCalendarPage() {
   return (
     <>
       <PageHeader
-        title="휴가 캘린더"
-        description="팀원들의 휴가 일정을 확인합니다."
+        title={t('leaveCalendarPage.title')}
+        description={t('leaveCalendarPage.description')}
         actions={
           <Button variant="outline" onClick={() => navigate('/attendance')}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            근태관리
+            {t('leaveCalendarPage.backToAttendance')}
           </Button>
         }
       />
@@ -384,7 +396,7 @@ export default function LeaveCalendarPage() {
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <Button variant="outline" onClick={handleToday}>
-                오늘
+                {t('leaveCalendarPage.today')}
               </Button>
               <Button variant="outline" size="icon" onClick={handleNextMonth}>
                 <ChevronRight className="h-4 w-4" />
@@ -398,7 +410,7 @@ export default function LeaveCalendarPage() {
             <div className="flex items-center gap-2">
               <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
                 <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="부서 선택" />
+                  <SelectValue placeholder={t('leaveCalendarPage.departmentSelect')} />
                 </SelectTrigger>
                 <SelectContent>
                   {departments.map((dept) => (
@@ -414,7 +426,7 @@ export default function LeaveCalendarPage() {
                   variant={viewMode === 'month' ? 'secondary' : 'ghost'}
                   size="icon"
                   onClick={() => setViewMode('month')}
-                  title="월간 뷰"
+                  title={t('leaveCalendarPage.monthViewTitle')}
                 >
                   <Calendar className="h-4 w-4" />
                 </Button>
@@ -422,7 +434,7 @@ export default function LeaveCalendarPage() {
                   variant={viewMode === 'gantt' ? 'secondary' : 'ghost'}
                   size="icon"
                   onClick={() => setViewMode('gantt')}
-                  title="Gantt 뷰"
+                  title={t('leaveCalendarPage.ganttViewTitle')}
                 >
                   <BarChart3 className="h-4 w-4" />
                 </Button>
@@ -436,12 +448,12 @@ export default function LeaveCalendarPage() {
       <Card className="mb-4">
         <CardContent className="p-3">
           <div className="flex flex-wrap gap-3">
-            {Object.entries(LEAVE_TYPE_LABELS).map(([type, label]) => (
+            {Object.entries(LEAVE_TYPE_LABEL_KEYS).map(([type, key]) => (
               <div key={type} className="flex items-center gap-1">
                 <div
                   className={`w-3 h-3 rounded ${LEAVE_TYPE_COLORS[type as LeaveType]}`}
                 />
-                <span className="text-xs text-muted-foreground">{label}</span>
+                <span className="text-xs text-muted-foreground">{t(key)}</span>
               </div>
             ))}
           </div>
@@ -495,8 +507,8 @@ export default function LeaveCalendarPage() {
           <CardContent className="p-0">
             {/* Gantt Header */}
             <div className="flex border-b bg-muted/50">
-              <div className="w-32 shrink-0 px-2 py-2 text-sm font-medium">이름</div>
-              <div className="w-24 shrink-0 px-2 py-2 text-sm font-medium">부서</div>
+              <div className="w-32 shrink-0 px-2 py-2 text-sm font-medium">{t('leaveCalendarPage.gantt.name')}</div>
+              <div className="w-24 shrink-0 px-2 py-2 text-sm font-medium">{t('leaveCalendarPage.gantt.department')}</div>
               <div className="flex-1 flex">
                 {eachDayOfInterval({ start: monthStart, end: monthEnd }).map((date) => (
                   <div
@@ -515,7 +527,7 @@ export default function LeaveCalendarPage() {
             <div className="max-h-[500px] overflow-auto">
               {events.length === 0 ? (
                 <div className="p-8 text-center text-muted-foreground">
-                  이번 달 휴가 일정이 없습니다.
+                  {t('leaveCalendarPage.schedule.empty')}
                 </div>
               ) : (
                 events.map((event) => (
@@ -535,31 +547,31 @@ export default function LeaveCalendarPage() {
       {/* Summary */}
       <Card className="mt-4">
         <CardHeader>
-          <CardTitle className="text-base">이번 달 휴가 현황</CardTitle>
+          <CardTitle className="text-base">{t('leaveCalendarPage.summary.title')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-primary">{events.length}</div>
-              <div className="text-sm text-muted-foreground">총 휴가 건수</div>
+              <div className="text-sm text-muted-foreground">{t('leaveCalendarPage.summary.totalLeaveCount')}</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">
                 {events.filter((e) => e.leaveType === 'ANNUAL').length}
               </div>
-              <div className="text-sm text-muted-foreground">연차</div>
+              <div className="text-sm text-muted-foreground">{t('leaveCalendarPage.monthlyStats.annual')}</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-red-600">
                 {events.filter((e) => e.leaveType === 'SICK').length}
               </div>
-              <div className="text-sm text-muted-foreground">병가</div>
+              <div className="text-sm text-muted-foreground">{t('leaveCalendarPage.monthlyStats.sick')}</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-purple-600">
                 {events.filter((e) => e.leaveType === 'SPECIAL').length}
               </div>
-              <div className="text-sm text-muted-foreground">특별휴가</div>
+              <div className="text-sm text-muted-foreground">{t('leaveCalendarPage.monthlyStats.special')}</div>
             </div>
           </div>
         </CardContent>
