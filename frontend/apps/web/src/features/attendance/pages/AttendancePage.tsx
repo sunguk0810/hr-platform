@@ -10,6 +10,13 @@ import { SkeletonTable } from '@/components/common/Skeleton';
 import { Pagination } from '@/components/common/Pagination';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Clock, LogIn, LogOut, Calendar, CheckCircle2, CalendarDays, Plus, Pencil, RefreshCw } from 'lucide-react';
 import {
   useTodayAttendance,
@@ -179,17 +186,21 @@ export default function AttendancePage() {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium text-muted-foreground">{t('attendancePage.recentRecords.mobileTitle')}</h3>
-            <select
+            <Select
               value={searchState.status}
-              onChange={(e) => setStatus(e.target.value as AttendanceStatus | '')}
-              className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+              onValueChange={(value) => setStatus(value as AttendanceStatus | '')}
             >
-              <option value="">{t('attendancePage.statusFilter.all')}</option>
-              <option value="NORMAL">{t('attendancePage.statusFilter.normal')}</option>
-              <option value="LATE">{t('attendancePage.statusFilter.late')}</option>
-              <option value="EARLY_LEAVE">{t('attendancePage.statusFilter.earlyLeave')}</option>
-              <option value="ABSENT">{t('attendancePage.statusFilter.absent')}</option>
-            </select>
+              <SelectTrigger className="h-8 w-[140px]">
+                <SelectValue placeholder={t('attendancePage.statusFilter.all')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">{t('attendancePage.statusFilter.all')}</SelectItem>
+                <SelectItem value="NORMAL">{t('attendancePage.statusFilter.normal')}</SelectItem>
+                <SelectItem value="LATE">{t('attendancePage.statusFilter.late')}</SelectItem>
+                <SelectItem value="EARLY_LEAVE">{t('attendancePage.statusFilter.earlyLeave')}</SelectItem>
+                <SelectItem value="ABSENT">{t('attendancePage.statusFilter.absent')}</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {isRecordsLoading ? (
@@ -315,17 +326,21 @@ export default function AttendancePage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base">{t('attendancePage.recentRecords.title')}</CardTitle>
-            <select
+            <Select
               value={searchState.status}
-              onChange={(e) => setStatus(e.target.value as AttendanceStatus | '')}
-              className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+              onValueChange={(value) => setStatus(value as AttendanceStatus | '')}
             >
-              <option value="">{t('attendancePage.statusFilter.all')}</option>
-              <option value="NORMAL">{t('attendancePage.statusFilter.normal')}</option>
-              <option value="LATE">{t('attendancePage.statusFilter.late')}</option>
-              <option value="EARLY_LEAVE">{t('attendancePage.statusFilter.earlyLeave')}</option>
-              <option value="ABSENT">{t('attendancePage.statusFilter.absent')}</option>
-            </select>
+              <SelectTrigger className="h-8 w-[140px]">
+                <SelectValue placeholder={t('attendancePage.statusFilter.all')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">{t('attendancePage.statusFilter.all')}</SelectItem>
+                <SelectItem value="NORMAL">{t('attendancePage.statusFilter.normal')}</SelectItem>
+                <SelectItem value="LATE">{t('attendancePage.statusFilter.late')}</SelectItem>
+                <SelectItem value="EARLY_LEAVE">{t('attendancePage.statusFilter.earlyLeave')}</SelectItem>
+                <SelectItem value="ABSENT">{t('attendancePage.statusFilter.absent')}</SelectItem>
+              </SelectContent>
+            </Select>
           </CardHeader>
           <CardContent>
             {isRecordsLoading ? (
@@ -534,17 +549,21 @@ export default function AttendancePage() {
       <Card className="mt-6">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>{t('attendancePage.recentRecords.title')}</CardTitle>
-          <select
+          <Select
             value={searchState.status}
-            onChange={(e) => setStatus(e.target.value as AttendanceStatus | '')}
-            className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            onValueChange={(value) => setStatus(value as AttendanceStatus | '')}
           >
-            <option value="">{t('attendancePage.statusFilter.all')}</option>
-            <option value="NORMAL">{t('attendancePage.statusFilter.normal')}</option>
-            <option value="LATE">{t('attendancePage.statusFilter.late')}</option>
-            <option value="EARLY_LEAVE">{t('attendancePage.statusFilter.earlyLeave')}</option>
-            <option value="ABSENT">{t('attendancePage.statusFilter.absent')}</option>
-          </select>
+            <SelectTrigger className="h-9 w-[160px]">
+              <SelectValue placeholder={t('attendancePage.statusFilter.all')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">{t('attendancePage.statusFilter.all')}</SelectItem>
+              <SelectItem value="NORMAL">{t('attendancePage.statusFilter.normal')}</SelectItem>
+              <SelectItem value="LATE">{t('attendancePage.statusFilter.late')}</SelectItem>
+              <SelectItem value="EARLY_LEAVE">{t('attendancePage.statusFilter.earlyLeave')}</SelectItem>
+              <SelectItem value="ABSENT">{t('attendancePage.statusFilter.absent')}</SelectItem>
+            </SelectContent>
+          </Select>
         </CardHeader>
         <CardContent className="p-0">
           {isRecordsLoading ? (

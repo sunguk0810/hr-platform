@@ -11,6 +11,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   ArrowLeft,
   Download,
   FileText,
@@ -134,18 +141,19 @@ export default function CertificateIssueHistoryPage() {
         <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-4">
           <CardTitle>{t('issueHistory.cardTitle')}</CardTitle>
           <div className="flex items-center gap-4">
-            <select
-              value={searchState.typeCode}
-              onChange={(e) => setTypeCode(e.target.value)}
-              className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm"
-            >
-              <option value="">{t('issueHistory.allTypes')}</option>
-              {certificateTypes.map((type) => (
-                <option key={type.code} value={type.code}>
-                  {type.name}
-                </option>
-              ))}
-            </select>
+            <Select value={searchState.typeCode} onValueChange={setTypeCode}>
+              <SelectTrigger className="h-9 w-[180px]">
+                <SelectValue placeholder={t('issueHistory.allTypes')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">{t('issueHistory.allTypes')}</SelectItem>
+                {certificateTypes.map((type) => (
+                  <SelectItem key={type.code} value={type.code}>
+                    {type.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="includeExpired"
