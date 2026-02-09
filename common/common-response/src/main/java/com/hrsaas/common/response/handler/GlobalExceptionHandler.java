@@ -196,7 +196,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(
-            Exception ex, HttpServletRequest request) {
+            Exception ex, HttpServletRequest request) throws Exception {
+        // Re-throw Spring Security exceptions so ExceptionTranslationFilter handles them (401/403)
+        String exClassName = ex.getClass().getName();
+        if (exClassName.contains("AccessDeniedException") || exClassName.contains("AuthenticationException")) {
+            throw ex;
+        }
+
         log.error("Unexpected error: ", ex);
 
         ErrorResponse response = ErrorResponse.of(

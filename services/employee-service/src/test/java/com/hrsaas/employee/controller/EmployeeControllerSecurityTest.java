@@ -1,8 +1,11 @@
 package com.hrsaas.employee.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hrsaas.common.response.ApiResponse;
 import com.hrsaas.common.response.PageResponse;
+import com.hrsaas.common.security.PermissionChecker;
+import com.hrsaas.common.security.SecurityFilter;
+import com.hrsaas.common.security.jwt.JwtTokenProvider;
+import com.hrsaas.employee.config.SecurityConfig;
 import com.hrsaas.employee.domain.dto.request.CreateEmployeeRequest;
 import com.hrsaas.employee.domain.dto.response.EmployeeResponse;
 import com.hrsaas.employee.service.EmployeeService;
@@ -11,11 +14,19 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
@@ -24,13 +35,40 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(EmployeeController.class)
+@WebMvcTest(
+    value = EmployeeController.class,
+    excludeFilters = @ComponentScan.Filter(
+        type = FilterType.ASSIGNABLE_TYPE,
+        classes = {SecurityFilter.class, SecurityConfig.class}
+    )
+)
+@Import(EmployeeControllerSecurityTest.TestSecurityConfig.class)
 @DisplayName("EmployeeController Security Tests")
 class EmployeeControllerSecurityTest {
+
+    @TestConfiguration
+    @EnableMethodSecurity(prePostEnabled = true)
+    static class TestSecurityConfig {
+        @Bean
+        public SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
+            return http
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session ->
+                    session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                    .requestMatchers("/actuator/**").permitAll()
+                    .anyRequest().authenticated()
+                )
+                .exceptionHandling(exceptions -> exceptions
+                    .authenticationEntryPoint((request, response, authException) ->
+                        response.sendError(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED))
+                )
+                .build();
+        }
+    }
 
     @Autowired
     private MockMvc mockMvc;
@@ -40,6 +78,12 @@ class EmployeeControllerSecurityTest {
 
     @MockBean
     private EmployeeService employeeService;
+
+    @MockBean
+    private JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
+    private PermissionChecker permissionChecker;
 
     private static final UUID EMPLOYEE_ID = UUID.randomUUID();
 
@@ -71,7 +115,6 @@ class EmployeeControllerSecurityTest {
             when(employeeService.create(any())).thenReturn(createMockResponse());
 
             mockMvc.perform(post("/api/v1/employees")
-                    .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated());
@@ -91,7 +134,6 @@ class EmployeeControllerSecurityTest {
             when(employeeService.create(any())).thenReturn(createMockResponse());
 
             mockMvc.perform(post("/api/v1/employees")
-                    .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated());
@@ -109,7 +151,6 @@ class EmployeeControllerSecurityTest {
                 .build();
 
             mockMvc.perform(post("/api/v1/employees")
-                    .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden());
@@ -126,7 +167,6 @@ class EmployeeControllerSecurityTest {
                 .build();
 
             mockMvc.perform(post("/api/v1/employees")
-                    .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized());
@@ -179,8 +219,7 @@ class EmployeeControllerSecurityTest {
         @DisplayName("SUPER_ADMIN 역할: 삭제 성공 (200)")
         @WithMockUser(roles = "SUPER_ADMIN")
         void delete_asSuperAdmin_success() throws Exception {
-            mockMvc.perform(delete("/api/v1/employees/{id}", EMPLOYEE_ID)
-                    .with(csrf()))
+            mockMvc.perform(delete("/api/v1/employees/{id}", EMPLOYEE_ID))
                 .andExpect(status().isOk());
         }
 
@@ -188,8 +227,7 @@ class EmployeeControllerSecurityTest {
         @DisplayName("HR_ADMIN 역할: 접근 거부 (403)")
         @WithMockUser(roles = "HR_ADMIN")
         void delete_asHrAdmin_forbidden() throws Exception {
-            mockMvc.perform(delete("/api/v1/employees/{id}", EMPLOYEE_ID)
-                    .with(csrf()))
+            mockMvc.perform(delete("/api/v1/employees/{id}", EMPLOYEE_ID))
                 .andExpect(status().isForbidden());
         }
 
@@ -197,8 +235,7 @@ class EmployeeControllerSecurityTest {
         @DisplayName("TENANT_ADMIN 역할: 접근 거부 (403)")
         @WithMockUser(roles = "TENANT_ADMIN")
         void delete_asTenantAdmin_forbidden() throws Exception {
-            mockMvc.perform(delete("/api/v1/employees/{id}", EMPLOYEE_ID)
-                    .with(csrf()))
+            mockMvc.perform(delete("/api/v1/employees/{id}", EMPLOYEE_ID))
                 .andExpect(status().isForbidden());
         }
 
@@ -206,8 +243,7 @@ class EmployeeControllerSecurityTest {
         @DisplayName("EMPLOYEE 역할: 접근 거부 (403)")
         @WithMockUser(roles = "EMPLOYEE")
         void delete_asEmployee_forbidden() throws Exception {
-            mockMvc.perform(delete("/api/v1/employees/{id}", EMPLOYEE_ID)
-                    .with(csrf()))
+            mockMvc.perform(delete("/api/v1/employees/{id}", EMPLOYEE_ID))
                 .andExpect(status().isForbidden());
         }
     }
@@ -246,7 +282,6 @@ class EmployeeControllerSecurityTest {
             when(employeeService.resign(any(), any())).thenReturn(createMockResponse());
 
             mockMvc.perform(post("/api/v1/employees/{id}/resign", EMPLOYEE_ID)
-                    .with(csrf())
                     .param("resignDate", "2024-12-31"))
                 .andExpect(status().isOk());
         }
@@ -256,7 +291,6 @@ class EmployeeControllerSecurityTest {
         @WithMockUser(roles = "EMPLOYEE")
         void resign_asEmployee_forbidden() throws Exception {
             mockMvc.perform(post("/api/v1/employees/{id}/resign", EMPLOYEE_ID)
-                    .with(csrf())
                     .param("resignDate", "2024-12-31"))
                 .andExpect(status().isForbidden());
         }

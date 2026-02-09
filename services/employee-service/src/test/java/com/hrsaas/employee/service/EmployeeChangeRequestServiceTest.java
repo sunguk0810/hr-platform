@@ -1,8 +1,11 @@
 package com.hrsaas.employee.service;
 
 import com.hrsaas.common.tenant.TenantContext;
+import com.hrsaas.employee.client.ApprovalServiceClient;
+import com.hrsaas.employee.domain.entity.Employee;
 import com.hrsaas.employee.domain.entity.EmployeeChangeRequest;
 import com.hrsaas.employee.repository.EmployeeChangeRequestRepository;
+import com.hrsaas.employee.repository.EmployeeRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -31,6 +34,12 @@ class EmployeeChangeRequestServiceTest {
 
     @Mock
     private EmployeeChangeRequestRepository changeRequestRepository;
+
+    @Mock
+    private EmployeeRepository employeeRepository;
+
+    @Mock
+    private ApprovalServiceClient approvalServiceClient;
 
     @InjectMocks
     private EmployeeChangeRequestService changeRequestService;
@@ -126,8 +135,15 @@ class EmployeeChangeRequestServiceTest {
             .reason("Changed phone number")
             .build();
 
+        Employee employee = Employee.builder()
+            .name("홍길동")
+            .mobile("010-1234-5678")
+            .build();
+
         when(changeRequestRepository.findById(CHANGE_REQUEST_ID))
             .thenReturn(Optional.of(pendingRequest));
+        when(employeeRepository.findById(EMPLOYEE_ID))
+            .thenReturn(Optional.of(employee));
         when(changeRequestRepository.save(any(EmployeeChangeRequest.class)))
             .thenReturn(pendingRequest);
 
@@ -136,8 +152,10 @@ class EmployeeChangeRequestServiceTest {
 
         // then
         assertThat(pendingRequest.getStatus()).isEqualTo("APPROVED");
+        assertThat(employee.getMobile()).isEqualTo("010-9999-8888");
 
         verify(changeRequestRepository).findById(CHANGE_REQUEST_ID);
+        verify(employeeRepository).findById(EMPLOYEE_ID);
         verify(changeRequestRepository).save(pendingRequest);
     }
 
@@ -231,8 +249,15 @@ class EmployeeChangeRequestServiceTest {
             .status("PENDING")
             .build();
 
+        Employee employee = Employee.builder()
+            .name("홍길동")
+            .phone("02-123-4567")
+            .build();
+
         when(changeRequestRepository.findById(CHANGE_REQUEST_ID))
             .thenReturn(Optional.of(pendingRequest));
+        when(employeeRepository.findById(EMPLOYEE_ID))
+            .thenReturn(Optional.of(employee));
         when(changeRequestRepository.save(any(EmployeeChangeRequest.class)))
             .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -244,6 +269,7 @@ class EmployeeChangeRequestServiceTest {
         EmployeeChangeRequest savedRequest = requestCaptor.getValue();
         assertThat(savedRequest.getStatus()).isEqualTo("APPROVED");
         assertThat(savedRequest.getFieldName()).isEqualTo("phone");
+        assertThat(employee.getPhone()).isEqualTo("02-987-6543");
     }
 
     @Test
