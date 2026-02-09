@@ -1,12 +1,14 @@
 package com.hrsaas.attendance.domain.dto.request;
 
 import com.hrsaas.attendance.domain.entity.LeaveType;
+import com.hrsaas.attendance.domain.entity.LeaveUnit;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -34,6 +36,10 @@ public class CreateLeaveRequest {
     private String handoverToName;
 
     private String handoverNotes;
+
+    private LeaveUnit leaveUnit;
+
+    private BigDecimal hoursCount;
 
     private boolean submitImmediately;
 }

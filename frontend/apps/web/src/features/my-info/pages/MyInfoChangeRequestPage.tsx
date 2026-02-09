@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -24,13 +25,6 @@ import {
   type MyInfoChangeRequest,
   type ChangeRequestStatus,
 } from '../services/changeRequestService';
-
-const STATUS_FILTERS: { value: string; label: string }[] = [
-  { value: 'ALL', label: '전체' },
-  { value: 'PENDING', label: '대기중' },
-  { value: 'APPROVED', label: '승인' },
-  { value: 'REJECTED', label: '반려' },
-];
 
 function getStatusIcon(status: ChangeRequestStatus) {
   switch (status) {
@@ -57,10 +51,18 @@ export default function MyInfoChangeRequestPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const { t } = useTranslation('settings');
 
   const [requests, setRequests] = useState<MyInfoChangeRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('ALL');
+
+  const STATUS_FILTERS = [
+    { value: 'ALL', label: t('myInfo.changeRequests.statusFilter.ALL') },
+    { value: 'PENDING', label: t('myInfo.changeRequests.statusFilter.PENDING') },
+    { value: 'APPROVED', label: t('myInfo.changeRequests.statusFilter.APPROVED') },
+    { value: 'REJECTED', label: t('myInfo.changeRequests.statusFilter.REJECTED') },
+  ];
 
   useEffect(() => {
     loadRequests();
@@ -75,8 +77,8 @@ export default function MyInfoChangeRequestPage() {
       }
     } catch {
       toast({
-        title: '조회 실패',
-        description: '변경 요청 목록을 불러오는 중 오류가 발생했습니다.',
+        title: t('myInfo.changeRequests.loadFailed'),
+        description: t('myInfo.changeRequests.loadFailedDesc'),
         variant: 'destructive',
       });
     } finally {
@@ -101,18 +103,18 @@ export default function MyInfoChangeRequestPage() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-lg font-semibold">변경 요청 현황</h1>
+            <h1 className="text-lg font-semibold">{t('myInfo.changeRequests.title')}</h1>
             <p className="text-xs text-muted-foreground">
-              내 정보 변경 요청 이력을 확인합니다.
+              {t('myInfo.changeRequests.description')}
             </p>
           </div>
         </div>
 
         {/* Mobile Summary */}
         <div className="grid grid-cols-3 gap-2">
-          <SummaryCard label="대기중" count={pendingCount} variant="pending" />
-          <SummaryCard label="승인" count={approvedCount} variant="approved" />
-          <SummaryCard label="반려" count={rejectedCount} variant="rejected" />
+          <SummaryCard label={t('myInfo.changeRequests.pending')} count={pendingCount} variant="pending" />
+          <SummaryCard label={t('myInfo.changeRequests.approved')} count={approvedCount} variant="approved" />
+          <SummaryCard label={t('myInfo.changeRequests.rejected')} count={rejectedCount} variant="rejected" />
         </div>
 
         {/* Mobile Filter */}
@@ -139,7 +141,7 @@ export default function MyInfoChangeRequestPage() {
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <FileText className="h-12 w-12 text-muted-foreground/50" />
             <p className="mt-3 text-sm text-muted-foreground">
-              변경 요청 내역이 없습니다.
+              {t('myInfo.changeRequests.empty')}
             </p>
           </div>
         ) : (
@@ -157,21 +159,21 @@ export default function MyInfoChangeRequestPage() {
   return (
     <>
       <PageHeader
-        title="변경 요청 현황"
-        description="내 정보 변경 요청 이력을 확인합니다."
+        title={t('myInfo.changeRequests.title')}
+        description={t('myInfo.changeRequests.description')}
         actions={
           <Button variant="outline" onClick={() => navigate('/my-info')}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            내 정보로 돌아가기
+            {t('myInfo.changeRequests.backToMyInfo')}
           </Button>
         }
       />
 
       {/* Summary Cards */}
       <div className="mb-6 grid grid-cols-3 gap-4">
-        <SummaryCard label="대기중" count={pendingCount} variant="pending" />
-        <SummaryCard label="승인" count={approvedCount} variant="approved" />
-        <SummaryCard label="반려" count={rejectedCount} variant="rejected" />
+        <SummaryCard label={t('myInfo.changeRequests.pending')} count={pendingCount} variant="pending" />
+        <SummaryCard label={t('myInfo.changeRequests.approved')} count={approvedCount} variant="approved" />
+        <SummaryCard label={t('myInfo.changeRequests.rejected')} count={rejectedCount} variant="rejected" />
       </div>
 
       {/* Filter Tabs */}
@@ -198,7 +200,7 @@ export default function MyInfoChangeRequestPage() {
           <CardContent className="flex flex-col items-center justify-center py-12">
             <FileText className="h-12 w-12 text-muted-foreground/50" />
             <p className="mt-3 text-muted-foreground">
-              변경 요청 내역이 없습니다.
+              {t('myInfo.changeRequests.empty')}
             </p>
           </CardContent>
         </Card>
@@ -249,6 +251,7 @@ interface RequestCardProps {
 }
 
 function DesktopRequestCard({ request }: RequestCardProps) {
+  const { t } = useTranslation('settings');
   const statusConfig = STATUS_CONFIG[request.status];
 
   return (
@@ -272,13 +275,13 @@ function DesktopRequestCard({ request }: RequestCardProps) {
         <div className="grid gap-3 md:grid-cols-2">
           <div className="rounded-md border bg-muted/50 p-3">
             <p className="mb-1 text-xs font-medium text-muted-foreground">
-              변경 전
+              {t('myInfo.changeRequests.beforeValue')}
             </p>
             <p className="text-sm">{request.oldValue}</p>
           </div>
           <div className="rounded-md border bg-primary/5 p-3">
             <p className="mb-1 text-xs font-medium text-muted-foreground">
-              변경 후
+              {t('myInfo.changeRequests.afterValue')}
             </p>
             <p className="text-sm font-medium">{request.newValue}</p>
           </div>
@@ -288,7 +291,7 @@ function DesktopRequestCard({ request }: RequestCardProps) {
         <div className="flex items-start gap-2 text-sm">
           <MessageSquare className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground" />
           <div>
-            <span className="font-medium text-muted-foreground">변경 사유: </span>
+            <span className="font-medium text-muted-foreground">{t('myInfo.changeRequests.reason')}: </span>
             <span>{request.reason}</span>
           </div>
         </div>
@@ -297,18 +300,18 @@ function DesktopRequestCard({ request }: RequestCardProps) {
         <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
           <div className="flex items-center gap-1">
             <CalendarDays className="h-3.5 w-3.5" />
-            <span>요청일: {formatDateTime(request.requestDate)}</span>
+            <span>{t('myInfo.changeRequests.requestDate')}: {formatDateTime(request.requestDate)}</span>
           </div>
           {request.reviewDate && (
             <div className="flex items-center gap-1">
               <CalendarDays className="h-3.5 w-3.5" />
-              <span>처리일: {formatDateTime(request.reviewDate)}</span>
+              <span>{t('myInfo.changeRequests.processDate')}: {formatDateTime(request.reviewDate)}</span>
             </div>
           )}
           {request.reviewerName && (
             <div className="flex items-center gap-1">
               <User className="h-3.5 w-3.5" />
-              <span>처리자: {request.reviewerName}</span>
+              <span>{t('myInfo.changeRequests.reviewer')}: {request.reviewerName}</span>
             </div>
           )}
         </div>
@@ -317,7 +320,7 @@ function DesktopRequestCard({ request }: RequestCardProps) {
         {request.reviewerComment && (
           <div className="rounded-md border-l-4 border-l-muted-foreground/30 bg-muted/30 p-3">
             <p className="mb-1 text-xs font-medium text-muted-foreground">
-              처리자 의견
+              {t('myInfo.changeRequests.reviewerComment')}
             </p>
             <p className="text-sm">{request.reviewerComment}</p>
           </div>
@@ -328,6 +331,7 @@ function DesktopRequestCard({ request }: RequestCardProps) {
 }
 
 function MobileRequestCard({ request }: RequestCardProps) {
+  const { t } = useTranslation('settings');
   const statusConfig = STATUS_CONFIG[request.status];
 
   return (
@@ -354,11 +358,11 @@ function MobileRequestCard({ request }: RequestCardProps) {
       {/* Values */}
       <div className="space-y-2">
         <div className="rounded-md bg-muted/50 p-2">
-          <p className="text-[10px] text-muted-foreground">변경 전</p>
+          <p className="text-[10px] text-muted-foreground">{t('myInfo.changeRequests.beforeValue')}</p>
           <p className="text-xs">{request.oldValue}</p>
         </div>
         <div className="rounded-md bg-primary/5 p-2">
-          <p className="text-[10px] text-muted-foreground">변경 후</p>
+          <p className="text-[10px] text-muted-foreground">{t('myInfo.changeRequests.afterValue')}</p>
           <p className="text-xs font-medium">{request.newValue}</p>
         </div>
       </div>
@@ -373,7 +377,7 @@ function MobileRequestCard({ request }: RequestCardProps) {
       {request.reviewerComment && (
         <div className="rounded-md border-l-2 border-l-muted-foreground/30 bg-muted/30 p-2">
           <p className="text-[10px] text-muted-foreground mb-0.5">
-            처리자 의견 ({request.reviewerName})
+            {t('myInfo.changeRequests.reviewerCommentWithName', { name: request.reviewerName })}
           </p>
           <p className="text-xs">{request.reviewerComment}</p>
         </div>

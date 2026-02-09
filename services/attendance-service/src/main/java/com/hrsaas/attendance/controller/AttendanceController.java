@@ -5,6 +5,7 @@ import com.hrsaas.attendance.domain.dto.request.CheckOutRequest;
 import com.hrsaas.attendance.domain.dto.request.UpdateAttendanceRecordRequest;
 import com.hrsaas.attendance.domain.dto.response.AttendanceRecordResponse;
 import com.hrsaas.attendance.domain.dto.response.AttendanceSummaryResponse;
+import com.hrsaas.attendance.domain.dto.response.DepartmentAttendanceSummaryResponse;
 import com.hrsaas.attendance.domain.dto.response.WorkHoursStatisticsResponse;
 import com.hrsaas.attendance.service.AttendanceService;
 import com.hrsaas.common.response.ApiResponse;
@@ -102,5 +103,14 @@ public class AttendanceController {
             @RequestParam(required = false) UUID departmentId,
             @RequestParam(required = false) String status) {
         return ApiResponse.success(attendanceService.getWorkHoursStatistics(weekPeriod, departmentId, status));
+    }
+
+    @Operation(summary = "부서별 근태 현황")
+    @GetMapping("/department/{departmentId}/summary")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
+    public ApiResponse<DepartmentAttendanceSummaryResponse> getDepartmentSummary(
+            @PathVariable UUID departmentId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        return ApiResponse.success(attendanceService.getDepartmentSummary(departmentId, date));
     }
 }

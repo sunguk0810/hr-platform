@@ -85,5 +85,26 @@
     "searchPlaceholder": "Search subsidiary...",
     "tenantList": "Subsidiary list",
     "noResults": "No results found."
-  }
+  },
+  "error": {
+    "notFound": {
+      "title": "Page not found",
+      "description": "The page you requested does not exist or has been moved.\nPlease check the URL or use the buttons below to navigate.",
+      "goBack": "Go back",
+      "goHome": "Go to dashboard"
+    },
+    "forbidden": {
+      "title": "Access denied",
+      "description": "You do not have permission to access this page.\nPlease contact your administrator if you need access.",
+      "goBack": "Go back",
+      "goHome": "Go to dashboard"
+    },
+    "server": {
+      "title": "Server error",
+      "description": "A temporary server error has occurred.\nPlease try again later. If the problem persists, please contact your administrator.",
+      "refresh": "Refresh",
+      "goHome": "Go to dashboard"
+    }
+  },
+  "goToDashboard": "Go to dashboard"
 }

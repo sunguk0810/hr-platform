@@ -1,6 +1,9 @@
 {
   "title": "파일 관리",
+  "description": "업로드된 파일을 조회하고 관리합니다.",
+  "mobileDescription": "업로드된 파일을 관리합니다",
   "upload": "파일 업로드",
+  "uploadShort": "업로드",
   "download": "다운로드",
   "delete": "삭제",
   "preview": "미리보기",
@@ -9,9 +12,35 @@
   "category": "카테고리",
   "uploadedBy": "업로드",
   "uploadedAt": "업로드일",
+  "actions": "작업",
   "dragDrop": "파일을 여기에 드래그하거나 클릭하여 선택",
   "selectFile": "파일 선택",
   "selectedFiles": "선택된 파일",
+  "fileList": "파일 목록",
+  "searchPlaceholder": "파일명으로 검색...",
+  "searchLabel": "파일명 검색",
+  "categoryFilter": "카테고리 필터",
+  "categorySelect": "카테고리 선택",
+  "uploading": "업로드 중...",
+  "deleting": "삭제 중...",
+  "empty": {
+    "title": "파일이 없습니다",
+    "description": "파일을 업로드하세요.",
+    "action": "파일 업로드"
+  },
+  "uploadDialog": {
+    "title": "파일 업로드",
+    "description": "업로드할 파일을 선택하거나 드래그하세요.",
+    "category": "카테고리"
+  },
+  "deleteDialog": {
+    "title": "파일 삭제",
+    "description": "'{{fileName}}' 파일을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+  },
+  "previewLabel": "{{fileName}} 미리보기",
+  "downloadLabel": "{{fileName}} 다운로드",
+  "deleteLabel": "{{fileName}} 삭제",
+  "removeLabel": "{{fileName}} 제거",
   "categories": {
     "PROFILE": "프로필 사진",
     "DOCUMENT": "문서",

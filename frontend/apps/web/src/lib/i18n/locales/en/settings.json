@@ -130,6 +130,31 @@
         "CAREER_HISTORY": "Career History"
       }
     },
+    "changeRequests": {
+      "title": "Change Request Status",
+      "description": "View your information change request history.",
+      "backToMyInfo": "Back to My Info",
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "empty": "No change requests found.",
+      "loadFailed": "Load failed",
+      "loadFailedDesc": "An error occurred while loading change requests.",
+      "beforeValue": "Before",
+      "afterValue": "After",
+      "reason": "Reason",
+      "requestDate": "Requested",
+      "processDate": "Processed",
+      "reviewer": "Reviewer",
+      "reviewerComment": "Reviewer comment",
+      "reviewerCommentWithName": "Reviewer comment ({{name}})",
+      "statusFilter": {
+        "ALL": "All",
+        "PENDING": "Pending",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected"
+      }
+    },
     "toast": {
       "saveSuccess": "Saved",
       "saveSuccessDesc": "Contact information has been updated.",

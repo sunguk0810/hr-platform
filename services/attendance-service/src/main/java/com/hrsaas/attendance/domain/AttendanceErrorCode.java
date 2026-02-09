@@ -20,13 +20,14 @@ public final class AttendanceErrorCode {
     public static final String HOLIDAY_DUPLICATE = "HOL_001";
     public static final String HOLIDAY_NOT_FOUND = "HOL_002";
 
-    // 휴가 (LEV_001 ~ LEV_006)
+    // 휴가 (LEV_001 ~ LEV_007)
     public static final String LEAVE_OVERLAPPING = "LEV_001";
     public static final String LEAVE_NO_BALANCE = "LEV_002";
     public static final String LEAVE_INSUFFICIENT_BALANCE = "LEV_003";
     public static final String LEAVE_FORBIDDEN = "LEV_004";
     public static final String LEAVE_NOT_FOUND = "LEV_005";
     public static final String LEAVE_INVALID_STATUS = "LEV_006";
+    public static final String LEAVE_INVALID_HOURS = "LEV_007";
 
     // 초과근무 (OVT_001)
     public static final String OVERTIME_NOT_FOUND = "OVT_001";

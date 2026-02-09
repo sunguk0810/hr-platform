@@ -85,5 +85,26 @@
     "searchPlaceholder": "계열사 검색...",
     "tenantList": "계열사 목록",
     "noResults": "검색 결과가 없습니다."
-  }
+  },
+  "error": {
+    "notFound": {
+      "title": "페이지를 찾을 수 없습니다",
+      "description": "요청하신 페이지가 존재하지 않거나 이동되었습니다.\nURL을 확인하시거나 아래 버튼을 이용해 이동해 주세요.",
+      "goBack": "이전 페이지",
+      "goHome": "대시보드로 이동"
+    },
+    "forbidden": {
+      "title": "접근 권한이 없습니다",
+      "description": "이 페이지에 접근할 수 있는 권한이 없습니다.\n필요한 권한이 있다면 관리자에게 문의해 주세요.",
+      "goBack": "이전 페이지",
+      "goHome": "대시보드로 이동"
+    },
+    "server": {
+      "title": "서버 오류가 발생했습니다",
+      "description": "일시적인 서버 오류가 발생했습니다.\n잠시 후 다시 시도해 주세요. 문제가 지속되면 관리자에게 문의해 주세요.",
+      "refresh": "새로고침",
+      "goHome": "대시보드로 이동"
+    }
+  },
+  "goToDashboard": "대시보드로 이동"
 }

@@ -41,6 +41,13 @@ public interface AttendanceRecordRepository extends JpaRepository<AttendanceReco
         @Param("startDate") LocalDate startDate,
         @Param("endDate") LocalDate endDate);
 
+    @Query("SELECT a FROM AttendanceRecord a WHERE a.tenantId = :tenantId " +
+           "AND a.workDate = :workDate AND a.employeeId IN :employeeIds")
+    List<AttendanceRecord> findByEmployeeIdsAndWorkDate(
+        @Param("tenantId") UUID tenantId,
+        @Param("employeeIds") List<UUID> employeeIds,
+        @Param("workDate") LocalDate workDate);
+
     /**
      * Aggregated work hours by employee for a date range
      */

@@ -7,6 +7,7 @@ import com.hrsaas.attendance.domain.entity.LeaveBalance;
 import com.hrsaas.attendance.domain.entity.LeaveRequest;
 import com.hrsaas.attendance.domain.entity.LeaveStatus;
 import com.hrsaas.attendance.domain.entity.LeaveType;
+import com.hrsaas.attendance.domain.entity.LeaveUnit;
 import com.hrsaas.attendance.domain.event.LeaveRequestCreatedEvent;
 import com.hrsaas.attendance.repository.LeaveBalanceRepository;
 import com.hrsaas.attendance.repository.LeaveRequestRepository;
@@ -61,13 +62,24 @@ public class LeaveServiceImpl implements LeaveService {
         // 일수 계산
         BigDecimal daysCount = calculateDaysCount(request.getLeaveType(), request.getStartDate(), request.getEndDate());
 
+        // Handle hourly leave
+        LeaveUnit leaveUnit = request.getLeaveUnit() != null ? request.getLeaveUnit() : LeaveUnit.DAY;
+        BigDecimal hoursCount = request.getHoursCount();
+
+        if (leaveUnit == LeaveUnit.HOUR) {
+            if (hoursCount == null || hoursCount.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new BusinessException(AttendanceErrorCode.LEAVE_INVALID_HOURS,
+                    "시간 단위 휴가는 시간 입력이 필수입니다", HttpStatus.BAD_REQUEST);
+            }
+        }
+
         // 잔여 휴가 체크
         int year = request.getStartDate().getYear();
         LeaveBalance balance = leaveBalanceRepository.findByEmployeeIdAndYearAndType(
             tenantId, employeeId, year, request.getLeaveType())
             .orElseThrow(() -> new NotFoundException(AttendanceErrorCode.LEAVE_NO_BALANCE, "휴가 잔여일 정보가 없습니다"));
 
-        if (!balance.hasEnoughBalance(daysCount)) {
+        if (leaveUnit != LeaveUnit.HOUR && !balance.hasEnoughBalance(daysCount)) {
             throw new BusinessException(AttendanceErrorCode.LEAVE_INSUFFICIENT_BALANCE, "휴가 잔여일이 부족합니다. 잔여: " + balance.getAvailableDays() + "일", HttpStatus.BAD_REQUEST);
         }
 
@@ -77,6 +89,8 @@ public class LeaveServiceImpl implements LeaveService {
             .departmentId(departmentId)
             .departmentName(departmentName)
             .leaveType(request.getLeaveType())
+            .leaveUnit(leaveUnit)
+            .hoursCount(hoursCount)
             .startDate(request.getStartDate())
             .endDate(request.getEndDate())
             .daysCount(daysCount)
@@ -89,8 +103,12 @@ public class LeaveServiceImpl implements LeaveService {
 
         LeaveRequest saved = leaveRequestRepository.save(leaveRequest);
 
-        // 잔여일 갱신 (pending)
-        balance.addPendingDays(daysCount);
+        // 잔여일/시간 갱신 (pending)
+        if (leaveUnit == LeaveUnit.HOUR) {
+            balance.addPendingHours(hoursCount);
+        } else {
+            balance.addPendingDays(daysCount);
+        }
         leaveBalanceRepository.save(balance);
 
         if (request.isSubmitImmediately()) {
@@ -159,9 +177,17 @@ public class LeaveServiceImpl implements LeaveService {
 
         if (balance != null) {
             if (previousStatus == LeaveStatus.PENDING) {
-                balance.releasePendingDays(leaveRequest.getDaysCount());
+                if (leaveRequest.getLeaveUnit() == LeaveUnit.HOUR) {
+                    balance.releasePendingHours(leaveRequest.getHoursCount());
+                } else {
+                    balance.releasePendingDays(leaveRequest.getDaysCount());
+                }
             } else if (previousStatus == LeaveStatus.APPROVED) {
-                balance.releaseUsedDays(leaveRequest.getDaysCount());
+                if (leaveRequest.getLeaveUnit() == LeaveUnit.HOUR) {
+                    balance.releaseUsedHours(leaveRequest.getHoursCount());
+                } else {
+                    balance.releaseUsedDays(leaveRequest.getDaysCount());
+                }
             }
             leaveBalanceRepository.save(balance);
         }
@@ -194,19 +220,27 @@ public class LeaveServiceImpl implements LeaveService {
                 tenantId, leaveRequest.getEmployeeId(), year, leaveRequest.getLeaveType()).orElse(null);
 
             if (balance != null) {
-                balance.confirmUsedDays(leaveRequest.getDaysCount());
+                if (leaveRequest.getLeaveUnit() == LeaveUnit.HOUR) {
+                    balance.confirmUsedHours(leaveRequest.getHoursCount());
+                } else {
+                    balance.confirmUsedDays(leaveRequest.getDaysCount());
+                }
                 leaveBalanceRepository.save(balance);
             }
         } else {
             leaveRequest.reject();
 
-            // pending 일수 복구
+            // pending 일수/시간 복구
             int year = leaveRequest.getStartDate().getYear();
             LeaveBalance balance = leaveBalanceRepository.findByEmployeeIdAndYearAndType(
                 tenantId, leaveRequest.getEmployeeId(), year, leaveRequest.getLeaveType()).orElse(null);
 
             if (balance != null) {
-                balance.releasePendingDays(leaveRequest.getDaysCount());
+                if (leaveRequest.getLeaveUnit() == LeaveUnit.HOUR) {
+                    balance.releasePendingHours(leaveRequest.getHoursCount());
+                } else {
+                    balance.releasePendingDays(leaveRequest.getDaysCount());
+                }
                 leaveBalanceRepository.save(balance);
             }
         }
@@ -280,7 +314,11 @@ public class LeaveServiceImpl implements LeaveService {
             tenantId, leaveRequest.getEmployeeId(), year, leaveRequest.getLeaveType()).orElse(null);
 
         if (balance != null) {
-            balance.confirmUsedDays(leaveRequest.getDaysCount());
+            if (leaveRequest.getLeaveUnit() == LeaveUnit.HOUR) {
+                balance.confirmUsedHours(leaveRequest.getHoursCount());
+            } else {
+                balance.confirmUsedDays(leaveRequest.getDaysCount());
+            }
             leaveBalanceRepository.save(balance);
         }
 
@@ -302,13 +340,17 @@ public class LeaveServiceImpl implements LeaveService {
 
         leaveRequest.reject();
 
-        // pending 일수 복구
+        // pending 일수/시간 복구
         int year = leaveRequest.getStartDate().getYear();
         LeaveBalance balance = leaveBalanceRepository.findByEmployeeIdAndYearAndType(
             tenantId, leaveRequest.getEmployeeId(), year, leaveRequest.getLeaveType()).orElse(null);
 
         if (balance != null) {
-            balance.releasePendingDays(leaveRequest.getDaysCount());
+            if (leaveRequest.getLeaveUnit() == LeaveUnit.HOUR) {
+                balance.releasePendingHours(leaveRequest.getHoursCount());
+            } else {
+                balance.releasePendingDays(leaveRequest.getDaysCount());
+            }
             leaveBalanceRepository.save(balance);
         }
 

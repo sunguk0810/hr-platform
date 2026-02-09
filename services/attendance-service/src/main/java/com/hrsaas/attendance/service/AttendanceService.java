@@ -5,6 +5,7 @@ import com.hrsaas.attendance.domain.dto.request.CheckOutRequest;
 import com.hrsaas.attendance.domain.dto.request.UpdateAttendanceRecordRequest;
 import com.hrsaas.attendance.domain.dto.response.AttendanceRecordResponse;
 import com.hrsaas.attendance.domain.dto.response.AttendanceSummaryResponse;
+import com.hrsaas.attendance.domain.dto.response.DepartmentAttendanceSummaryResponse;
 import com.hrsaas.attendance.domain.dto.response.WorkHoursStatisticsResponse;
 
 import java.time.LocalDate;
@@ -38,4 +39,12 @@ public interface AttendanceService {
      * @param status 상태 필터 (NORMAL, WARNING, EXCEEDED) (선택)
      */
     WorkHoursStatisticsResponse getWorkHoursStatistics(String weekPeriod, UUID departmentId, String status);
+
+    /**
+     * 부서별 근태 현황 요약
+     * @param departmentId 부서 ID
+     * @param date 조회 일자
+     * @return 부서 근태 요약 (출근, 지각, 결근, 휴가 인원 등)
+     */
+    DepartmentAttendanceSummaryResponse getDepartmentSummary(UUID departmentId, LocalDate date);
 }

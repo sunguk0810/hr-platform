@@ -76,4 +76,21 @@ public class LeaveBalance extends TenantAwareEntity {
     public boolean hasEnoughBalance(BigDecimal requestedDays) {
         return getAvailableDays().compareTo(requestedDays) >= 0;
     }
+
+    public void addPendingHours(BigDecimal hours) {
+        this.pendingHours = this.pendingHours.add(hours);
+    }
+
+    public void confirmUsedHours(BigDecimal hours) {
+        this.pendingHours = this.pendingHours.subtract(hours);
+        this.usedHours = this.usedHours.add(hours);
+    }
+
+    public void releasePendingHours(BigDecimal hours) {
+        this.pendingHours = this.pendingHours.subtract(hours);
+    }
+
+    public void releaseUsedHours(BigDecimal hours) {
+        this.usedHours = this.usedHours.subtract(hours);
+    }
 }

@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -64,6 +65,8 @@ import {
 export default function FileManagementPage() {
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
+  const { t } = useTranslation('file');
+  const { t: tCommon } = useTranslation('common');
   const [category, setCategory] = useState<FileCategory | ''>('');
   const [searchKeyword, setSearchKeyword] = useState('');
   const [page, setPage] = useState(0);
@@ -173,12 +176,12 @@ export default function FileManagementPage() {
         <div className="space-y-4 pb-20">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold">파일 관리</h1>
-              <p className="text-sm text-muted-foreground">업로드된 파일을 관리합니다</p>
+              <h1 className="text-xl font-bold">{t('title')}</h1>
+              <p className="text-sm text-muted-foreground">{t('mobileDescription')}</p>
             </div>
             <Button size="sm" onClick={() => setUploadDialogOpen(true)}>
               <Upload className="mr-1 h-4 w-4" aria-hidden="true" />
-              업로드
+              {t('uploadShort')}
             </Button>
           </div>
 
@@ -195,7 +198,7 @@ export default function FileManagementPage() {
                   : 'bg-muted text-muted-foreground'
               )}
             >
-              전체
+              {tCommon('all')}
             </button>
             {fileService.getCategories().map((cat) => (
               <button
@@ -225,9 +228,9 @@ export default function FileManagementPage() {
           ) : files.length === 0 ? (
             <EmptyState
               icon={FolderOpen}
-              title="파일이 없습니다"
-              description="파일을 업로드하세요."
-              action={{ label: '파일 업로드', onClick: () => setUploadDialogOpen(true) }}
+              title={t('empty.title')}
+              description={t('empty.description')}
+              action={{ label: t('empty.action'), onClick: () => setUploadDialogOpen(true) }}
             />
           ) : (
             <div className="space-y-3">
@@ -268,12 +271,12 @@ export default function FileManagementPage() {
   return (
     <>
       <PageHeader
-        title="파일 관리"
-        description="업로드된 파일을 조회하고 관리합니다."
+        title={t('title')}
+        description={t('description')}
         actions={
           <Button onClick={() => setUploadDialogOpen(true)}>
             <Upload className="mr-2 h-4 w-4" aria-hidden="true" />
-            파일 업로드
+            {t('upload')}
           </Button>
         }
       />
@@ -282,20 +285,20 @@ export default function FileManagementPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FolderOpen className="h-5 w-5" aria-hidden="true" />
-            파일 목록
+            {t('fileList')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-4 mb-6">
             <div className="flex-1">
               <Label htmlFor="file-search" className="sr-only">
-                파일명 검색
+                {t('searchLabel')}
               </Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   id="file-search"
-                  placeholder="파일명으로 검색..."
+                  placeholder={t('searchPlaceholder')}
                   value={searchKeyword}
                   onChange={(e) => {
                     setSearchKeyword(e.target.value);
@@ -307,7 +310,7 @@ export default function FileManagementPage() {
             </div>
             <div className="w-full sm:w-48">
               <Label htmlFor="category-filter" className="sr-only">
-                카테고리 필터
+                {t('categoryFilter')}
               </Label>
               <Select
                 value={category}
@@ -317,10 +320,10 @@ export default function FileManagementPage() {
                 }}
               >
                 <SelectTrigger id="category-filter">
-                  <SelectValue placeholder="카테고리 선택" />
+                  <SelectValue placeholder={t('categorySelect')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">전체</SelectItem>
+                  <SelectItem value="">{tCommon('all')}</SelectItem>
                   {fileService.getCategories().map((cat) => (
                     <SelectItem key={cat} value={cat}>
                       {FILE_CATEGORY_LABELS[cat]}
@@ -336,51 +339,51 @@ export default function FileManagementPage() {
           ) : files.length === 0 ? (
             <EmptyState
               icon={FolderOpen}
-              title="파일이 없습니다"
-              description="파일을 업로드하세요."
-              action={{ label: '파일 업로드', onClick: () => setUploadDialogOpen(true) }}
+              title={t('empty.title')}
+              description={t('empty.description')}
+              action={{ label: t('empty.action'), onClick: () => setUploadDialogOpen(true) }}
             />
           ) : (
             <>
-              <div className="overflow-x-auto" role="region" aria-label="파일 목록">
-                <table className="w-full" role="grid" aria-label="파일">
+              <div className="overflow-x-auto" role="region" aria-label={t('fileList')}>
+                <table className="w-full" role="grid" aria-label={t('fileList')}>
                   <thead>
                     <tr className="border-b bg-muted/50">
                       <th
                         scope="col"
                         className="px-4 py-3 text-left text-sm font-medium text-muted-foreground"
                       >
-                        파일명
+                        {t('fileName')}
                       </th>
                       <th
                         scope="col"
                         className="px-4 py-3 text-left text-sm font-medium text-muted-foreground"
                       >
-                        카테고리
+                        {t('category')}
                       </th>
                       <th
                         scope="col"
                         className="px-4 py-3 text-right text-sm font-medium text-muted-foreground"
                       >
-                        크기
+                        {t('fileSize')}
                       </th>
                       <th
                         scope="col"
                         className="px-4 py-3 text-left text-sm font-medium text-muted-foreground"
                       >
-                        업로드
+                        {t('uploadedBy')}
                       </th>
                       <th
                         scope="col"
                         className="px-4 py-3 text-left text-sm font-medium text-muted-foreground"
                       >
-                        업로드일
+                        {t('uploadedAt')}
                       </th>
                       <th
                         scope="col"
                         className="px-4 py-3 text-center text-sm font-medium text-muted-foreground"
                       >
-                        작업
+                        {t('actions')}
                       </th>
                     </tr>
                   </thead>
@@ -413,7 +416,7 @@ export default function FileManagementPage() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => handlePreview(file)}
-                                aria-label={`${file.originalName} 미리보기`}
+                                aria-label={t('previewLabel', { fileName: file.originalName })}
                               >
                                 <Eye className="h-4 w-4" />
                               </Button>
@@ -422,7 +425,7 @@ export default function FileManagementPage() {
                               variant="ghost"
                               size="icon"
                               onClick={() => handleDownload(file)}
-                              aria-label={`${file.originalName} 다운로드`}
+                              aria-label={t('downloadLabel', { fileName: file.originalName })}
                             >
                               <Download className="h-4 w-4" />
                             </Button>
@@ -431,7 +434,7 @@ export default function FileManagementPage() {
                               size="icon"
                               onClick={() => handleDeleteClick(file)}
                               className="text-destructive hover:text-destructive"
-                              aria-label={`${file.originalName} 삭제`}
+                              aria-label={t('deleteLabel', { fileName: file.originalName })}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -452,12 +455,12 @@ export default function FileManagementPage() {
       <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>파일 업로드</DialogTitle>
-            <DialogDescription>업로드할 파일을 선택하거나 드래그하세요.</DialogDescription>
+            <DialogTitle>{t('uploadDialog.title')}</DialogTitle>
+            <DialogDescription>{t('uploadDialog.description')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="upload-category">카테고리</Label>
+              <Label htmlFor="upload-category">{t('uploadDialog.category')}</Label>
               <Select
                 value={uploadCategory}
                 onValueChange={(value) => setUploadCategory(value as FileCategory)}
@@ -485,7 +488,7 @@ export default function FileManagementPage() {
             >
               <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
               <p className="text-sm text-muted-foreground mb-2">
-                파일을 여기에 드래그하거나 클릭하여 선택
+                {t('dragDrop')}
               </p>
               <input
                 id="file-upload"
@@ -496,13 +499,13 @@ export default function FileManagementPage() {
               />
               <Button variant="outline" asChild>
                 <label htmlFor="file-upload" className="cursor-pointer">
-                  파일 선택
+                  {t('selectFile')}
                 </label>
               </Button>
             </div>
             {uploadFiles.length > 0 && (
               <div className="space-y-2">
-                <Label>선택된 파일</Label>
+                <Label>{t('selectedFiles')}</Label>
                 <ul className="space-y-1">
                   {uploadFiles.map((file, index) => (
                     <li
@@ -515,7 +518,7 @@ export default function FileManagementPage() {
                         size="icon"
                         className="h-6 w-6"
                         onClick={() => removeUploadFile(index)}
-                        aria-label={`${file.name} 제거`}
+                        aria-label={t('removeLabel', { fileName: file.name })}
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -527,13 +530,13 @@ export default function FileManagementPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setUploadDialogOpen(false)}>
-              취소
+              {tCommon('cancel')}
             </Button>
             <Button
               onClick={handleUpload}
               disabled={uploadFiles.length === 0 || uploadMutation.isPending}
             >
-              {uploadMutation.isPending ? '업로드 중...' : '업로드'}
+              {uploadMutation.isPending ? t('uploading') : tCommon('upload')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -563,12 +566,12 @@ export default function FileManagementPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setPreviewDialogOpen(false)}>
-              닫기
+              {tCommon('close')}
             </Button>
             {selectedFile && (
               <Button onClick={() => handleDownload(selectedFile)}>
                 <Download className="mr-2 h-4 w-4" />
-                다운로드
+                {tCommon('download')}
               </Button>
             )}
           </DialogFooter>
@@ -579,19 +582,18 @@ export default function FileManagementPage() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>파일 삭제</AlertDialogTitle>
+            <AlertDialogTitle>{t('deleteDialog.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              '{selectedFile?.originalName}' 파일을 삭제하시겠습니까? 이 작업은 되돌릴 수
-              없습니다.
+              {t('deleteDialog.description', { fileName: selectedFile?.originalName })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deleteMutation.isPending ? '삭제 중...' : '삭제'}
+              {deleteMutation.isPending ? tCommon('deleting') : tCommon('delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

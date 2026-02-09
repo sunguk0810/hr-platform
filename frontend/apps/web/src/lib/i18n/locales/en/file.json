@@ -1,6 +1,9 @@
 {
   "title": "File Management",
+  "description": "View and manage uploaded files.",
+  "mobileDescription": "Manage uploaded files",
   "upload": "Upload File",
+  "uploadShort": "Upload",
   "download": "Download",
   "delete": "Delete",
   "preview": "Preview",
@@ -9,9 +12,35 @@
   "category": "Category",
   "uploadedBy": "Uploaded By",
   "uploadedAt": "Uploaded At",
+  "actions": "Actions",
   "dragDrop": "Drag and drop files here or click to select",
   "selectFile": "Select File",
   "selectedFiles": "Selected Files",
+  "fileList": "File List",
+  "searchPlaceholder": "Search by file name...",
+  "searchLabel": "Search file name",
+  "categoryFilter": "Category filter",
+  "categorySelect": "Select category",
+  "uploading": "Uploading...",
+  "deleting": "Deleting...",
+  "empty": {
+    "title": "No files",
+    "description": "Upload a file to get started.",
+    "action": "Upload File"
+  },
+  "uploadDialog": {
+    "title": "Upload File",
+    "description": "Select or drag and drop files to upload.",
+    "category": "Category"
+  },
+  "deleteDialog": {
+    "title": "Delete File",
+    "description": "Are you sure you want to delete '{{fileName}}'? This action cannot be undone."
+  },
+  "previewLabel": "Preview {{fileName}}",
+  "downloadLabel": "Download {{fileName}}",
+  "deleteLabel": "Delete {{fileName}}",
+  "removeLabel": "Remove {{fileName}}",
   "categories": {
     "PROFILE": "Profile Photo",
     "DOCUMENT": "Document",
