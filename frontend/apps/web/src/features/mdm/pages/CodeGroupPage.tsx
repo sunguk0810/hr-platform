@@ -18,6 +18,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Database, Plus, Search, Pencil, Trash2 } from 'lucide-react';
 import { useCodeGroupList, useCodeGroupSearchParams, useCreateCodeGroup, useUpdateCodeGroup, useDeleteCodeGroup } from '../hooks/useMdm';
 import type { CodeGroupListItem, CreateCodeGroupRequest, UpdateCodeGroupRequest } from '@hr-platform/shared-types';
@@ -139,15 +146,19 @@ export default function CodeGroupPage() {
                 className="pl-9"
               />
             </div>
-            <select
+            <Select
               value={searchState.active === null ? '' : searchState.active.toString()}
-              onChange={(e) => setActive(e.target.value === '' ? null : e.target.value === 'true')}
-              className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              onValueChange={(value) => setActive(value === '' ? null : value === 'true')}
             >
-              <option value="">{t('common.allStatus')}</option>
-              <option value="true">{t('common.statusActive')}</option>
-              <option value="false">{t('common.statusInactive')}</option>
-            </select>
+              <SelectTrigger className="h-10 w-[180px]">
+                <SelectValue placeholder={t('common.allStatus')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">{t('common.allStatus')}</SelectItem>
+                <SelectItem value="true">{t('common.statusActive')}</SelectItem>
+                <SelectItem value="false">{t('common.statusInactive')}</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>

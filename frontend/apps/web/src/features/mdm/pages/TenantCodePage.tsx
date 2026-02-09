@@ -18,6 +18,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Search, Pencil, RotateCcw, Building2 } from 'lucide-react';
 import {
   useTenantCodeList,
@@ -136,27 +143,32 @@ export default function TenantCodePage() {
                 className="pl-9"
               />
             </div>
-            <select
-              value={groupCode}
-              onChange={(e) => setGroupCode(e.target.value)}
-              className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-            >
-              <option value="">{t('common.allCodeGroups')}</option>
-              {codeGroups.map((group) => (
-                <option key={group.id} value={group.groupCode}>
-                  {group.groupName}
-                </option>
-              ))}
-            </select>
-            <select
+            <Select value={groupCode} onValueChange={setGroupCode}>
+              <SelectTrigger className="h-10 w-[220px]">
+                <SelectValue placeholder={t('common.allCodeGroups')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">{t('common.allCodeGroups')}</SelectItem>
+                {codeGroups.map((group) => (
+                  <SelectItem key={group.id} value={group.groupCode}>
+                    {group.groupName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
               value={isEnabledFilter === null ? '' : isEnabledFilter.toString()}
-              onChange={(e) => setIsEnabledFilter(e.target.value === '' ? null : e.target.value === 'true')}
-              className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              onValueChange={(value) => setIsEnabledFilter(value === '' ? null : value === 'true')}
             >
-              <option value="">{t('common.allStatus')}</option>
-              <option value="true">{t('common.statusEnabled')}</option>
-              <option value="false">{t('common.statusDisabled')}</option>
-            </select>
+              <SelectTrigger className="h-10 w-[180px]">
+                <SelectValue placeholder={t('common.allStatus')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">{t('common.allStatus')}</SelectItem>
+                <SelectItem value="true">{t('common.statusEnabled')}</SelectItem>
+                <SelectItem value="false">{t('common.statusDisabled')}</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
