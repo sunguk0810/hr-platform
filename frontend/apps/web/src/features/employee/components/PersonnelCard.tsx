@@ -2,6 +2,7 @@ import { forwardRef } from 'react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { OptimizedImage } from '@/components/common/OptimizedImage';
 
 export interface PersonnelCardData {
   // Basic Info
@@ -51,7 +52,7 @@ export const PersonnelCard = forwardRef<HTMLDivElement, PersonnelCardProps>(
       <div
         ref={ref}
         className={cn(
-          'w-[210mm] min-h-[297mm] bg-white p-8 text-black print:p-0',
+          'w-[210mm] min-h-[297mm] bg-background p-8 text-foreground print:p-0',
           className
         )}
       >
@@ -60,7 +61,7 @@ export const PersonnelCard = forwardRef<HTMLDivElement, PersonnelCardProps>(
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               {data.tenantLogo && (
-                <img
+                <OptimizedImage
                   src={data.tenantLogo}
                   alt={data.tenantName}
                   className="h-12 object-contain"
@@ -82,7 +83,7 @@ export const PersonnelCard = forwardRef<HTMLDivElement, PersonnelCardProps>(
             <div className="shrink-0">
               <div className="h-40 w-32 overflow-hidden rounded border">
                 {data.profileImage ? (
-                  <img
+                  <OptimizedImage
                     src={data.profileImage}
                     alt={data.name}
                     className="h-full w-full object-cover"

@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { TenantStatusBadge } from '@/components/common/StatusBadge';
 import { Building2, Users, Briefcase, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { OptimizedImage } from '@/components/common/OptimizedImage';
 import type { TenantListItem, TenantDetail } from '@hr-platform/shared-types';
 
 export interface TenantCardProps {
@@ -29,7 +30,7 @@ export function TenantCard({ tenant, onClick, onViewDetails, className }: Tenant
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
             {hasBranding && detail.logoUrl ? (
-              <img
+              <OptimizedImage
                 src={detail.logoUrl}
                 alt={tenant.name}
                 className="h-12 w-12 rounded-lg object-cover"

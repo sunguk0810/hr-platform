@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { SkeletonTable } from '@/components/common/Skeleton';
 import { Pagination } from '@/components/common/Pagination';
 import { PullToRefreshContainer } from '@/components/mobile';
+import { OptimizedImage } from '@/components/common/OptimizedImage';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -546,7 +547,7 @@ export default function FileManagementPage() {
           </DialogHeader>
           <div className="overflow-auto max-h-[60vh]">
             {selectedFile && fileService.isImageFile(selectedFile.contentType) && (
-              <img
+              <OptimizedImage
                 src={fileService.getPreviewUrl(selectedFile.id)}
                 alt={selectedFile.originalName}
                 className="w-full h-auto"

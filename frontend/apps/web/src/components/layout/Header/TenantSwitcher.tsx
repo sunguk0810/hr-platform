@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTenantStore, Tenant } from '@/stores/tenantStore';
 import { cn } from '@/lib/utils';
+import { OptimizedImage } from '@/components/common/OptimizedImage';
 
 interface TenantSwitcherProps {
   compact?: boolean;
@@ -73,7 +74,7 @@ export function TenantSwitcher({ compact = false, className }: TenantSwitcherPro
         >
           <div className="flex items-center gap-2 truncate">
             {currentTenant?.logoUrl ? (
-              <img
+              <OptimizedImage
                 src={currentTenant.logoUrl}
                 alt={currentTenant.name}
                 className="h-4 w-4 rounded object-contain"
@@ -125,7 +126,7 @@ export function TenantSwitcher({ compact = false, className }: TenantSwitcherPro
                   )}
                 >
                   {tenant.logoUrl ? (
-                    <img
+                    <OptimizedImage
                       src={tenant.logoUrl}
                       alt={tenant.name}
                       className="h-6 w-6 rounded object-contain"

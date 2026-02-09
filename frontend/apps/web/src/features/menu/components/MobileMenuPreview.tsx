@@ -28,14 +28,14 @@ export function MobileMenuPreview({ menus }: MobileMenuPreviewProps) {
 
       {/* Phone mockup */}
       <div className="flex justify-center p-6">
-        <div className="relative w-[280px] rounded-[32px] border-4 border-gray-800 bg-white shadow-xl">
+        <div className="relative w-[280px] rounded-[32px] border-4 border-gray-800 bg-background shadow-xl">
           {/* Notch */}
           <div className="absolute left-1/2 top-0 h-6 w-24 -translate-x-1/2 rounded-b-xl bg-gray-800" />
 
           {/* Screen content */}
           <div className="h-[480px] overflow-hidden rounded-[28px] bg-gray-50">
             {/* Status bar */}
-            <div className="flex h-12 items-center justify-between bg-white px-6 text-xs">
+            <div className="flex h-12 items-center justify-between bg-background px-6 text-xs">
               <span>9:41</span>
               <span>100%</span>
             </div>
@@ -46,7 +46,7 @@ export function MobileMenuPreview({ menus }: MobileMenuPreviewProps) {
             </div>
 
             {/* Bottom tab bar */}
-            <div className="absolute bottom-0 left-0 right-0 h-16 border-t bg-white">
+            <div className="absolute bottom-0 left-0 right-0 h-16 border-t bg-background">
               <div className="flex h-full items-center justify-around px-2">
                 {mobileMenus.length > 0 ? (
                   mobileMenus.map((menu, index) => {

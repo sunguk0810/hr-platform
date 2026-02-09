@@ -90,6 +90,7 @@ export function ThemeSettings() {
         <div className="mt-6">
           <p className="mb-3 text-sm font-medium">미리보기</p>
           <div className="grid gap-3 sm:grid-cols-2">
+            {/* Theme preview intentionally uses hardcoded colors to demonstrate the theme */}
             {/* Light preview */}
             <div className="rounded-lg border bg-white p-4 text-gray-900">
               <div className="mb-2 h-2 w-20 rounded bg-gray-200" />

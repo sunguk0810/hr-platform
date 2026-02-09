@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Check, ChevronsUpDown, Building2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { OptimizedImage } from '@/components/common/OptimizedImage';
 import { Button } from '@/components/ui/button';
 import {
   Popover,
@@ -73,7 +74,7 @@ export function TenantSelector({ className }: TenantSelectorProps) {
               onClick={() => handleSelect(tenant)}
             >
               {tenant.logoUrl ? (
-                <img
+                <OptimizedImage
                   src={tenant.logoUrl}
                   alt={tenant.name}
                   className="h-5 w-5 rounded object-cover"
