@@ -39,4 +39,12 @@ public interface EmployeeService {
     byte[] getImportTemplate();
 
     String unmask(UUID id, String field, String reason);
+
+    long countByDepartment(UUID departmentId);
+
+    long countByPosition(String positionCode);
+
+    long countByGrade(String jobTitleCode);
+
+    boolean existsById(UUID id);
 }

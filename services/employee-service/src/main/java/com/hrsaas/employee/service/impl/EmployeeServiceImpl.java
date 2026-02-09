@@ -17,7 +17,10 @@ import com.hrsaas.employee.domain.entity.Employee;
 import com.hrsaas.employee.domain.entity.EmployeeStatus;
 import com.hrsaas.employee.domain.event.EmployeeCreatedEvent;
 import com.hrsaas.employee.repository.EmployeeRepository;
+import com.hrsaas.employee.service.EmployeeHistoryRecorder;
 import com.hrsaas.employee.service.EmployeeService;
+import com.hrsaas.employee.service.ExcelEmployeeService;
+import com.hrsaas.employee.service.OrganizationValidationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -41,6 +44,10 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     private final EmployeeRepository employeeRepository;
     private final EventPublisher eventPublisher;
+    private final PrivacyAuditServiceImpl privacyAuditService;
+    private final EmployeeHistoryRecorder historyRecorder;
+    private final OrganizationValidationService organizationValidationService;
+    private final ExcelEmployeeService excelEmployeeService;
 
     @Override
     @Transactional
@@ -124,6 +131,11 @@ public class EmployeeServiceImpl implements EmployeeService {
     public EmployeeResponse update(UUID id, UpdateEmployeeRequest request) {
         Employee employee = findById(id);
 
+        // Capture old values for history tracking
+        UUID oldDeptId = employee.getDepartmentId();
+        String oldPositionCode = employee.getPositionCode();
+        String oldJobTitleCode = employee.getJobTitleCode();
+
         if (request.getName() != null) {
             employee.setName(request.getName());
         }
@@ -140,12 +152,15 @@ public class EmployeeServiceImpl implements EmployeeService {
             employee.setMobile(request.getMobile());
         }
         if (request.getDepartmentId() != null) {
+            organizationValidationService.validateDepartment(request.getDepartmentId());
             employee.setDepartmentId(request.getDepartmentId());
         }
         if (request.getPositionCode() != null) {
+            organizationValidationService.validatePosition(request.getPositionCode());
             employee.setPositionCode(request.getPositionCode());
         }
         if (request.getJobTitleCode() != null) {
+            organizationValidationService.validateGrade(request.getJobTitleCode());
             employee.setJobTitleCode(request.getJobTitleCode());
         }
         if (request.getManagerId() != null) {
@@ -153,6 +168,18 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
 
         Employee saved = employeeRepository.save(employee);
+
+        // Record history for org changes
+        if (request.getDepartmentId() != null && !request.getDepartmentId().equals(oldDeptId)) {
+            historyRecorder.recordDepartmentChange(saved, oldDeptId, request.getDepartmentId(), "부서 변경");
+        }
+        if (request.getPositionCode() != null && !request.getPositionCode().equals(oldPositionCode)) {
+            historyRecorder.recordPositionChange(saved, oldPositionCode, request.getPositionCode(), "직책 변경");
+        }
+        if (request.getJobTitleCode() != null && !request.getJobTitleCode().equals(oldJobTitleCode)) {
+            historyRecorder.recordGradeChange(saved, oldJobTitleCode, request.getJobTitleCode(), "직급 변경");
+        }
+
         log.info("Employee updated: id={}", id);
 
         return EmployeeResponse.from(saved);
@@ -174,8 +201,9 @@ public class EmployeeServiceImpl implements EmployeeService {
     @CacheEvict(value = CacheNames.EMPLOYEE, allEntries = true)
     public void delete(UUID id) {
         Employee employee = findById(id);
-        employeeRepository.delete(employee);
-        log.info("Employee deleted: id={}", id);
+        employee.resign(LocalDate.now());
+        employeeRepository.save(employee);
+        log.info("Employee soft-deleted (resigned): id={}", id);
     }
 
     @Override
@@ -200,59 +228,91 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Transactional
     @CacheEvict(value = CacheNames.EMPLOYEE, allEntries = true)
     public int bulkDelete(List<UUID> ids) {
-        int deleted = 0;
+        int resigned = 0;
         for (UUID id : ids) {
             try {
                 Employee employee = findById(id);
-                employeeRepository.delete(employee);
-                deleted++;
+                employee.resign(LocalDate.now());
+                employeeRepository.save(employee);
+                resigned++;
             } catch (NotFoundException e) {
                 log.warn("Employee not found for bulk delete: id={}", id);
             }
         }
-        log.info("Bulk delete completed: requested={}, deleted={}", ids.size(), deleted);
-        return deleted;
+        log.info("Bulk soft-delete completed: requested={}, resigned={}", ids.size(), resigned);
+        return resigned;
     }
 
     @Override
     public byte[] exportToExcel(EmployeeSearchCondition condition) {
-        // TODO: Implement Excel export using Apache POI or similar library
-        log.info("Export to Excel requested with condition: {}", condition);
-        // Return empty byte array as placeholder
-        return new byte[0];
+        UUID tenantId = TenantContext.getCurrentTenant();
+        Page<Employee> page = employeeRepository.search(
+            tenantId, condition.getStatus(), condition.getDepartmentId(),
+            condition.getName(), org.springframework.data.domain.Pageable.unpaged());
+        return excelEmployeeService.exportToExcel(page.getContent());
     }
 
     @Override
     @Transactional
     public BulkImportResultResponse importFromExcel(MultipartFile file) {
-        // TODO: Implement Excel import using Apache POI or similar library
         log.info("Import from Excel requested: filename={}", file.getOriginalFilename());
 
-        return BulkImportResultResponse.builder()
-            .success(true)
-            .processedAt(Instant.now())
-            .totalRequested(0)
-            .successCount(0)
-            .failedCount(0)
-            .skippedCount(0)
-            .build();
+        try {
+            List<com.hrsaas.employee.domain.dto.request.CreateEmployeeRequest> requests =
+                excelEmployeeService.importFromExcel(file.getInputStream());
+
+            int successCount = 0;
+            int failedCount = 0;
+            for (var request : requests) {
+                try {
+                    create(request);
+                    successCount++;
+                } catch (Exception e) {
+                    log.warn("Failed to import employee: {}", request.getEmployeeNumber(), e);
+                    failedCount++;
+                }
+            }
+
+            return BulkImportResultResponse.builder()
+                .success(failedCount == 0)
+                .processedAt(Instant.now())
+                .totalRequested(requests.size())
+                .successCount(successCount)
+                .failedCount(failedCount)
+                .skippedCount(0)
+                .build();
+        } catch (Exception e) {
+            log.error("Excel import failed", e);
+            return BulkImportResultResponse.builder()
+                .success(false)
+                .processedAt(Instant.now())
+                .totalRequested(0)
+                .successCount(0)
+                .failedCount(1)
+                .skippedCount(0)
+                .build();
+        }
     }
 
     @Override
     public byte[] getImportTemplate() {
-        // TODO: Generate Excel template using Apache POI or similar library
-        log.info("Import template requested");
-        // Return empty byte array as placeholder
-        return new byte[0];
+        return excelEmployeeService.generateTemplate();
     }
 
     @Override
     public String unmask(UUID id, String field, String reason) {
-        Employee employee = findById(id);
+        // 1. Validate reason
+        if (reason == null || reason.length() < 10) {
+            throw new ValidationException("EMP_030", "열람 사유는 10자 이상 입력해야 합니다.");
+        }
 
+        // 2. Log audit trail
+        privacyAuditService.logAccess(id, field, reason);
+
+        // 3. Return unmasked value
+        Employee employee = findById(id);
         log.info("Unmask requested: employeeId={}, field={}, reason={}", id, field, reason);
 
-        // Return unmasked value based on field
         return switch (field) {
             case "phone" -> employee.getPhone();
             case "mobile" -> employee.getMobile();
@@ -262,7 +322,30 @@ public class EmployeeServiceImpl implements EmployeeService {
         };
     }
 
-    private Employee findById(UUID id) {
+    @Override
+    public long countByDepartment(UUID departmentId) {
+        UUID tenantId = TenantContext.getCurrentTenant();
+        return employeeRepository.countByDepartmentIdAndTenantId(departmentId, tenantId);
+    }
+
+    @Override
+    public long countByPosition(String positionCode) {
+        UUID tenantId = TenantContext.getCurrentTenant();
+        return employeeRepository.countByPositionCodeAndTenantId(positionCode, tenantId);
+    }
+
+    @Override
+    public long countByGrade(String jobTitleCode) {
+        UUID tenantId = TenantContext.getCurrentTenant();
+        return employeeRepository.countByJobTitleCodeAndTenantId(jobTitleCode, tenantId);
+    }
+
+    @Override
+    public boolean existsById(UUID id) {
+        return employeeRepository.existsById(id);
+    }
+
+    Employee findById(UUID id) {
         return employeeRepository.findById(id)
             .orElseThrow(() -> new NotFoundException("EMP_001", "직원을 찾을 수 없습니다: " + id));
     }

@@ -38,4 +38,13 @@ public interface EmployeeRepository extends JpaRepository<Employee, UUID> {
     boolean existsByEmployeeNumberAndTenantId(String employeeNumber, UUID tenantId);
 
     boolean existsByEmailAndTenantId(String email, UUID tenantId);
+
+    long countByDepartmentIdAndTenantId(UUID departmentId, UUID tenantId);
+
+    long countByPositionCodeAndTenantId(String positionCode, UUID tenantId);
+
+    long countByJobTitleCodeAndTenantId(String jobTitleCode, UUID tenantId);
+
+    @Query("SELECT e.departmentId, COUNT(e) FROM Employee e WHERE e.tenantId = :tenantId AND e.status = 'ACTIVE' GROUP BY e.departmentId")
+    List<Object[]> countByDepartmentGrouped(@Param("tenantId") UUID tenantId);
 }

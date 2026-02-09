@@ -169,10 +169,38 @@ public class EmployeeController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "직원 삭제")
+    @Operation(summary = "직원 삭제 (소프트 삭제)")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable UUID id) {
         employeeService.delete(id);
         return ResponseEntity.ok(ApiResponse.success(null, "직원이 삭제되었습니다."));
+    }
+
+    @GetMapping("/count")
+    @Operation(summary = "직원 수 조회")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<Map<String, Long>>> count(
+            @RequestParam(required = false) UUID departmentId,
+            @RequestParam(required = false) String positionCode,
+            @RequestParam(required = false) String jobTitleCode) {
+        Map<String, Long> counts = new java.util.HashMap<>();
+        if (departmentId != null) {
+            counts.put("departmentCount", employeeService.countByDepartment(departmentId));
+        }
+        if (positionCode != null) {
+            counts.put("positionCount", employeeService.countByPosition(positionCode));
+        }
+        if (jobTitleCode != null) {
+            counts.put("gradeCount", employeeService.countByGrade(jobTitleCode));
+        }
+        return ResponseEntity.ok(ApiResponse.success(counts));
+    }
+
+    @GetMapping("/{id}/exists")
+    @Operation(summary = "직원 존재 여부 확인")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<Map<String, Boolean>>> exists(@PathVariable UUID id) {
+        boolean exists = employeeService.existsById(id);
+        return ResponseEntity.ok(ApiResponse.success(Map.of("exists", exists)));
     }
 }
