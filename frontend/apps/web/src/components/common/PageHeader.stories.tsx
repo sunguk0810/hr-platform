@@ -84,6 +84,19 @@ export const LongDescription: Story = {
   },
 };
 
+export const AnimatedEntrance: Story = {
+  args: {
+    title: '채용 공고',
+    description: '채용 공고를 생성하고 지원자를 관리합니다.',
+    actions: (
+      <>
+        <Button variant="outline">내보내기</Button>
+        <Button>새로 만들기</Button>
+      </>
+    ),
+  },
+};
+
 export const AllVariations: StoryObj = {
   render: () => (
     <div className="space-y-8">
