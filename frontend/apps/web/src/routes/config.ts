@@ -95,9 +95,13 @@ const CondolenceListPage = lazy(() => import('@/features/condolence/pages/Condol
 const CondolenceCreatePage = lazy(() => import('@/features/condolence/pages/CondolenceCreatePage'));
 const CondolenceDetailPage = lazy(() => import('@/features/condolence/pages/CondolenceDetailPage'));
 const CondolencePaymentPage = lazy(() => import('@/features/condolence/pages/CondolencePaymentPage'));
+const CondolencePolicyPage = lazy(() => import('@/features/condolence/pages/CondolencePolicyPage'));
 const CommitteeListPage = lazy(() => import('@/features/committee/pages/CommitteeListPage'));
 const CommitteeCreatePage = lazy(() => import('@/features/committee/pages/CommitteeCreatePage'));
 const EmployeeCardListPage = lazy(() => import('@/features/employee-card/pages/EmployeeCardListPage'));
+const EmployeeCardDetailPage = lazy(() => import('@/features/employee-card/pages/EmployeeCardDetailPage'));
+const CardIssueRequestPage = lazy(() => import('@/features/employee-card/pages/CardIssueRequestPage'));
+const CardIssueRequestListPage = lazy(() => import('@/features/employee-card/pages/CardIssueRequestListPage'));
 const MenuManagementPage = lazy(() => import('@/features/menu/pages/MenuManagementPage'));
 const TenantMenuConfigPage = lazy(() => import('@/features/menu/pages/TenantMenuConfigPage'));
 const FileManagementPage = lazy(() => import('@/features/file/pages/FileManagementPage'));
@@ -544,6 +548,14 @@ export const mainRoutes: RouteConfig[] = [
         showInNav: true,
       },
       {
+        path: 'policies',
+        title: '경조비 정책 관리',
+        element: CondolencePolicyPage,
+        permissions: ['condolence:admin'],
+        roles: ['SUPER_ADMIN', 'GROUP_ADMIN', 'TENANT_ADMIN', 'HR_MANAGER'],
+        showInNav: true,
+      },
+      {
         path: ':id',
         title: '경조비 상세',
         element: CondolenceDetailPage,
@@ -560,6 +572,28 @@ export const mainRoutes: RouteConfig[] = [
     permissions: ['employee-card:read'],
     roles: ['SUPER_ADMIN', 'GROUP_ADMIN', 'TENANT_ADMIN', 'HR_MANAGER', 'DEPT_MANAGER', 'TEAM_LEADER', 'EMPLOYEE'],
     showInNav: true,
+    children: [
+      {
+        path: 'issue',
+        title: '사원증 발급 신청',
+        element: CardIssueRequestPage,
+        showInNav: false,
+      },
+      {
+        path: 'requests',
+        title: '발급 요청 관리',
+        element: CardIssueRequestListPage,
+        permissions: ['employee-card:admin'],
+        roles: ['SUPER_ADMIN', 'GROUP_ADMIN', 'TENANT_ADMIN', 'HR_MANAGER'],
+        showInNav: true,
+      },
+      {
+        path: ':id',
+        title: '사원증 상세',
+        element: EmployeeCardDetailPage,
+        showInNav: false,
+      },
+    ],
   },
   {
     path: 'committee',

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { condolenceService, CondolencePaymentSearchParams, ProcessPaymentRequest } from '../services/condolenceService';
-import type { CondolenceSearchParams, CreateCondolenceRequest } from '@hr-platform/shared-types';
+import type { CondolenceSearchParams, CreateCondolenceRequest, CondolencePolicy } from '@hr-platform/shared-types';
 
 const condolenceKeys = {
   all: ['condolences'] as const,
@@ -138,5 +138,36 @@ export function usePaymentHistory(params?: CondolencePaymentSearchParams) {
   return useQuery({
     queryKey: condolenceKeys.paymentHistory(params),
     queryFn: () => condolenceService.getPaymentHistory(params),
+  });
+}
+
+export function useCreateCondolencePolicy() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Omit<CondolencePolicy, 'id'>) => condolenceService.createPolicy(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: condolenceKeys.policies() });
+    },
+  });
+}
+
+export function useUpdateCondolencePolicy() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<CondolencePolicy> }) =>
+      condolenceService.updatePolicy(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: condolenceKeys.policies() });
+    },
+  });
+}
+
+export function useDeleteCondolencePolicy() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => condolenceService.deletePolicy(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: condolenceKeys.policies() });
+    },
   });
 }

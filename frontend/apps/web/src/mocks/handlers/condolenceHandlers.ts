@@ -1,5 +1,5 @@
 import { http, HttpResponse, delay } from 'msw';
-import type { CondolenceRequestListItem, CondolenceRequestStatus } from '@hr-platform/shared-types';
+import type { CondolenceRequestListItem, CondolenceRequestStatus, CondolencePolicy } from '@hr-platform/shared-types';
 
 interface CondolencePayment {
   id: string;
@@ -92,6 +92,16 @@ const mockPaymentHistory: CondolencePayment[] = [
   },
 ];
 
+const mockPolicies: CondolencePolicy[] = [
+  { id: '1', eventType: 'MARRIAGE', amount: 200000, leaveDays: 5, description: '본인 결혼', isActive: true, sortOrder: 1 },
+  { id: '2', eventType: 'CHILDBIRTH', amount: 100000, leaveDays: 3, description: '자녀 출산', isActive: true, sortOrder: 2 },
+  { id: '3', eventType: 'DEATH_PARENT', amount: 500000, leaveDays: 5, description: '부모 사망', isActive: true, sortOrder: 3 },
+  { id: '4', eventType: 'DEATH_SPOUSE', amount: 500000, leaveDays: 5, description: '배우자 사망', isActive: true, sortOrder: 4 },
+  { id: '5', eventType: 'DEATH_CHILD', amount: 500000, leaveDays: 5, description: '자녀 사망', isActive: true, sortOrder: 5 },
+  { id: '6', eventType: 'FIRST_BIRTHDAY', amount: 50000, leaveDays: 0, description: '자녀 돌잔치', isActive: true, sortOrder: 6 },
+  { id: '7', eventType: 'HOSPITALIZATION', amount: 100000, leaveDays: 0, description: '본인 입원', isActive: false, sortOrder: 7 },
+];
+
 export const condolenceHandlers = [
   http.get('/api/v1/condolences', async ({ request }) => {
     await delay(300);
@@ -125,13 +135,56 @@ export const condolenceHandlers = [
     await delay(200);
     return HttpResponse.json({
       success: true,
-      data: [
-        { id: '1', eventType: 'MARRIAGE', amount: 200000, leaveDays: 5, description: '본인 결혼', isActive: true },
-        { id: '2', eventType: 'CHILDBIRTH', amount: 100000, leaveDays: 3, description: '자녀 출산', isActive: true },
-        { id: '3', eventType: 'DEATH_PARENT', amount: 500000, leaveDays: 5, description: '부모 사망', isActive: true },
-        { id: '4', eventType: 'DEATH_SPOUSE', amount: 500000, leaveDays: 5, description: '배우자 사망', isActive: true },
-      ],
+      data: mockPolicies,
     });
+  }),
+
+  http.post('/api/v1/condolences/policies', async ({ request }) => {
+    await delay(400);
+    const body = await request.json() as Omit<CondolencePolicy, 'id'>;
+    const newPolicy: CondolencePolicy = {
+      id: `policy-${Date.now()}`,
+      ...body,
+    };
+    mockPolicies.push(newPolicy);
+    return HttpResponse.json({
+      success: true,
+      data: newPolicy,
+    });
+  }),
+
+  http.put('/api/v1/condolences/policies/:id', async ({ params, request }) => {
+    await delay(400);
+    const { id } = params;
+    const body = await request.json() as Partial<CondolencePolicy>;
+    const policyIndex = mockPolicies.findIndex(p => p.id === id);
+
+    if (policyIndex === -1) {
+      return HttpResponse.json({ success: false, error: { code: 'NOT_FOUND', message: '정책을 찾을 수 없습니다.' } }, { status: 404 });
+    }
+
+    mockPolicies[policyIndex] = {
+      ...mockPolicies[policyIndex],
+      ...body,
+    };
+
+    return HttpResponse.json({
+      success: true,
+      data: mockPolicies[policyIndex],
+    });
+  }),
+
+  http.delete('/api/v1/condolences/policies/:id', async ({ params }) => {
+    await delay(300);
+    const { id } = params;
+    const policyIndex = mockPolicies.findIndex(p => p.id === id);
+
+    if (policyIndex === -1) {
+      return HttpResponse.json({ success: false, error: { code: 'NOT_FOUND', message: '정책을 찾을 수 없습니다.' } }, { status: 404 });
+    }
+
+    mockPolicies.splice(policyIndex, 1);
+    return HttpResponse.json({ success: true });
   }),
 
   http.post('/api/v1/condolences', async () => {

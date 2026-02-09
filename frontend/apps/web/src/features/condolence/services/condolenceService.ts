@@ -103,4 +103,19 @@ export const condolenceService = {
     const response = await apiClient.get<ApiResponse<PageResponse<CondolencePayment>>>('/condolences/payments/history', { params });
     return response.data;
   },
+
+  async createPolicy(data: Omit<CondolencePolicy, 'id'>): Promise<ApiResponse<CondolencePolicy>> {
+    const response = await apiClient.post<ApiResponse<CondolencePolicy>>('/condolences/policies', data);
+    return response.data;
+  },
+
+  async updatePolicy(id: string, data: Partial<CondolencePolicy>): Promise<ApiResponse<CondolencePolicy>> {
+    const response = await apiClient.put<ApiResponse<CondolencePolicy>>(`/condolences/policies/${id}`, data);
+    return response.data;
+  },
+
+  async deletePolicy(id: string): Promise<ApiResponse<void>> {
+    const response = await apiClient.delete<ApiResponse<void>>(`/condolences/policies/${id}`);
+    return response.data;
+  },
 };
