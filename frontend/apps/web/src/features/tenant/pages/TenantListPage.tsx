@@ -14,6 +14,13 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -21,13 +28,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Building, Building2, Plus, Search, Users, List, Network } from 'lucide-react';
 import {
@@ -166,17 +166,21 @@ export default function TenantListPage() {
                 className="pl-9"
               />
             </div>
-            <select
+            <Select
               value={searchState.status}
-              onChange={(e) => setStatus(e.target.value as TenantStatus | '')}
-              className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              onValueChange={(value) => setStatus(value as TenantStatus | '')}
             >
-              <option value="">{t('allStatus')}</option>
-              <option value="ACTIVE">{t('statusActive')}</option>
-              <option value="INACTIVE">{t('statusInactive')}</option>
-              <option value="SUSPENDED">{t('statusSuspended')}</option>
-              <option value="PENDING">{t('statusPending')}</option>
-            </select>
+              <SelectTrigger className="h-10 w-[180px]">
+                <SelectValue placeholder={t('allStatus')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">{t('allStatus')}</SelectItem>
+                <SelectItem value="ACTIVE">{t('statusActive')}</SelectItem>
+                <SelectItem value="INACTIVE">{t('statusInactive')}</SelectItem>
+                <SelectItem value="SUSPENDED">{t('statusSuspended')}</SelectItem>
+                <SelectItem value="PENDING">{t('statusPending')}</SelectItem>
+              </SelectContent>
+            </Select>
 
             {/* 뷰 모드 전환 */}
             <ToggleGroup

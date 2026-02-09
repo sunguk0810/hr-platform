@@ -507,15 +507,19 @@ export default function DepartmentListPage() {
                 className="pl-9"
               />
             </div>
-            <select
+            <Select
               value={searchState.status}
-              onChange={(e) => setStatus(e.target.value as DepartmentStatus | '')}
-              className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              onValueChange={(value) => setStatus(value as DepartmentStatus | '')}
             >
-              <option value="">{t('department.allStatuses')}</option>
-              <option value="ACTIVE">{tCommon('active')}</option>
-              <option value="INACTIVE">{tCommon('inactive')}</option>
-            </select>
+              <SelectTrigger className="h-10 w-[180px]">
+                <SelectValue placeholder={t('department.allStatuses')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">{t('department.allStatuses')}</SelectItem>
+                <SelectItem value="ACTIVE">{tCommon('active')}</SelectItem>
+                <SelectItem value="INACTIVE">{tCommon('inactive')}</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
