@@ -8,6 +8,7 @@ import com.hrsaas.approval.domain.entity.ApprovalTemplate;
 import com.hrsaas.approval.domain.entity.ApprovalTemplateLine;
 import com.hrsaas.approval.repository.ApprovalTemplateRepository;
 import com.hrsaas.approval.service.ApprovalTemplateService;
+import com.hrsaas.common.cache.CacheNames;
 import com.hrsaas.common.core.exception.DuplicateException;
 import com.hrsaas.common.core.exception.NotFoundException;
 import com.hrsaas.common.tenant.TenantContext;
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -31,7 +33,7 @@ public class ApprovalTemplateServiceImpl implements ApprovalTemplateService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "approval-template", allEntries = true)
+    @CacheEvict(value = CacheNames.APPROVAL_TEMPLATE, allEntries = true)
     public ApprovalTemplateResponse create(CreateApprovalTemplateRequest request) {
         UUID tenantId = TenantContext.getCurrentTenant();
 
@@ -67,7 +69,8 @@ public class ApprovalTemplateServiceImpl implements ApprovalTemplateService {
     }
 
     @Override
-    @Cacheable(value = "approval-template", key = "#id")
+    @Cacheable(value = CacheNames.APPROVAL_TEMPLATE,
+               key = "T(com.hrsaas.common.tenant.TenantContext).getCurrentTenant() + ':' + #id")
     public ApprovalTemplateResponse getById(UUID id) {
         ApprovalTemplate template = findById(id);
         return ApprovalTemplateResponse.from(template);
@@ -82,26 +85,35 @@ public class ApprovalTemplateServiceImpl implements ApprovalTemplateService {
     }
 
     @Override
+    @Cacheable(value = CacheNames.APPROVAL_TEMPLATE,
+               key = "'all:' + T(com.hrsaas.common.tenant.TenantContext).getCurrentTenant()",
+               unless = "#result == null || #result.isEmpty()")
     public List<ApprovalTemplateResponse> getAll() {
         UUID tenantId = TenantContext.getCurrentTenant();
         List<ApprovalTemplate> templates = approvalTemplateRepository.findAllByTenantIdWithLines(tenantId);
 
         return templates.stream()
             .map(ApprovalTemplateResponse::from)
-            .toList();
+            .collect(Collectors.toList());
     }
 
     @Override
+    @Cacheable(value = CacheNames.APPROVAL_TEMPLATE,
+               key = "'active:' + T(com.hrsaas.common.tenant.TenantContext).getCurrentTenant()",
+               unless = "#result == null || #result.isEmpty()")
     public List<ApprovalTemplateResponse> getActive() {
         UUID tenantId = TenantContext.getCurrentTenant();
         List<ApprovalTemplate> templates = approvalTemplateRepository.findActiveByTenantIdWithLines(tenantId);
 
         return templates.stream()
             .map(ApprovalTemplateResponse::from)
-            .toList();
+            .collect(Collectors.toList());
     }
 
     @Override
+    @Cacheable(value = CacheNames.APPROVAL_TEMPLATE,
+               key = "'docType:' + #documentType + ':' + T(com.hrsaas.common.tenant.TenantContext).getCurrentTenant()",
+               unless = "#result == null || #result.isEmpty()")
     public List<ApprovalTemplateResponse> getByDocumentType(String documentType) {
         UUID tenantId = TenantContext.getCurrentTenant();
         List<ApprovalTemplate> templates = approvalTemplateRepository.findByTenantIdAndDocumentTypeWithLines(
@@ -109,12 +121,12 @@ public class ApprovalTemplateServiceImpl implements ApprovalTemplateService {
 
         return templates.stream()
             .map(ApprovalTemplateResponse::from)
-            .toList();
+            .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
-    @CacheEvict(value = "approval-template", allEntries = true)
+    @CacheEvict(value = CacheNames.APPROVAL_TEMPLATE, allEntries = true)
     public ApprovalTemplateResponse update(UUID id, UpdateApprovalTemplateRequest request) {
         ApprovalTemplate template = findById(id);
 
@@ -152,7 +164,7 @@ public class ApprovalTemplateServiceImpl implements ApprovalTemplateService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "approval-template", allEntries = true)
+    @CacheEvict(value = CacheNames.APPROVAL_TEMPLATE, allEntries = true)
     public void delete(UUID id) {
         ApprovalTemplate template = findById(id);
         template.deactivate();

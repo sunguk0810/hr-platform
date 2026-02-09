@@ -1,5 +1,6 @@
 package com.hrsaas.organization.service.impl;
 
+import com.hrsaas.common.cache.CacheNames;
 import com.hrsaas.common.core.exception.DuplicateException;
 import com.hrsaas.common.core.exception.NotFoundException;
 import com.hrsaas.common.tenant.TenantContext;
@@ -16,11 +17,14 @@ import com.hrsaas.organization.repository.CommitteeRepository;
 import com.hrsaas.organization.service.CommitteeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -33,6 +37,7 @@ public class CommitteeServiceImpl implements CommitteeService {
 
     @Override
     @Transactional
+    @CacheEvict(value = CacheNames.COMMITTEE, allEntries = true)
     public CommitteeResponse create(CreateCommitteeRequest request) {
         UUID tenantId = TenantContext.getCurrentTenant();
 
@@ -59,6 +64,8 @@ public class CommitteeServiceImpl implements CommitteeService {
     }
 
     @Override
+    @Cacheable(value = CacheNames.COMMITTEE,
+               key = "T(com.hrsaas.common.tenant.TenantContext).getCurrentTenant() + ':' + #id")
     public CommitteeResponse getById(UUID id) {
         UUID tenantId = TenantContext.getCurrentTenant();
         Committee committee = findByIdAndTenantId(id, tenantId);
@@ -66,34 +73,44 @@ public class CommitteeServiceImpl implements CommitteeService {
     }
 
     @Override
+    @Cacheable(value = CacheNames.COMMITTEE,
+               key = "'all:' + T(com.hrsaas.common.tenant.TenantContext).getCurrentTenant()",
+               unless = "#result == null || #result.isEmpty()")
     public List<CommitteeResponse> getAll() {
         UUID tenantId = TenantContext.getCurrentTenant();
         List<Committee> committees = committeeRepository.findAllByTenantId(tenantId);
         return committees.stream()
             .map(CommitteeResponse::from)
-            .toList();
+            .collect(Collectors.toList());
     }
 
     @Override
+    @Cacheable(value = CacheNames.COMMITTEE,
+               key = "'status:' + #status + ':' + T(com.hrsaas.common.tenant.TenantContext).getCurrentTenant()",
+               unless = "#result == null || #result.isEmpty()")
     public List<CommitteeResponse> getByStatus(CommitteeStatus status) {
         UUID tenantId = TenantContext.getCurrentTenant();
         List<Committee> committees = committeeRepository.findByTenantIdAndStatus(tenantId, status);
         return committees.stream()
             .map(CommitteeResponse::from)
-            .toList();
+            .collect(Collectors.toList());
     }
 
     @Override
+    @Cacheable(value = CacheNames.COMMITTEE,
+               key = "'type:' + #type + ':' + T(com.hrsaas.common.tenant.TenantContext).getCurrentTenant()",
+               unless = "#result == null || #result.isEmpty()")
     public List<CommitteeResponse> getByType(CommitteeType type) {
         UUID tenantId = TenantContext.getCurrentTenant();
         List<Committee> committees = committeeRepository.findByTenantIdAndType(tenantId, type);
         return committees.stream()
             .map(CommitteeResponse::from)
-            .toList();
+            .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
+    @CacheEvict(value = CacheNames.COMMITTEE, allEntries = true)
     public CommitteeResponse update(UUID id, UpdateCommitteeRequest request) {
         UUID tenantId = TenantContext.getCurrentTenant();
         Committee committee = findByIdAndTenantId(id, tenantId);
@@ -125,6 +142,7 @@ public class CommitteeServiceImpl implements CommitteeService {
 
     @Override
     @Transactional
+    @CacheEvict(value = CacheNames.COMMITTEE, allEntries = true)
     public void delete(UUID id) {
         UUID tenantId = TenantContext.getCurrentTenant();
         Committee committee = findByIdAndTenantId(id, tenantId);
@@ -134,6 +152,7 @@ public class CommitteeServiceImpl implements CommitteeService {
 
     @Override
     @Transactional
+    @CacheEvict(value = CacheNames.COMMITTEE, allEntries = true)
     public void dissolve(UUID id) {
         UUID tenantId = TenantContext.getCurrentTenant();
         Committee committee = findByIdAndTenantId(id, tenantId);
@@ -144,6 +163,7 @@ public class CommitteeServiceImpl implements CommitteeService {
 
     @Override
     @Transactional
+    @CacheEvict(value = CacheNames.COMMITTEE, allEntries = true)
     public CommitteeResponse.MemberResponse addMember(UUID committeeId, AddCommitteeMemberRequest request) {
         UUID tenantId = TenantContext.getCurrentTenant();
         Committee committee = findByIdAndTenantId(committeeId, tenantId);
@@ -173,6 +193,7 @@ public class CommitteeServiceImpl implements CommitteeService {
 
     @Override
     @Transactional
+    @CacheEvict(value = CacheNames.COMMITTEE, allEntries = true)
     public void removeMember(UUID committeeId, UUID memberId) {
         UUID tenantId = TenantContext.getCurrentTenant();
         findByIdAndTenantId(committeeId, tenantId);
@@ -194,7 +215,7 @@ public class CommitteeServiceImpl implements CommitteeService {
         List<CommitteeMember> members = committeeMemberRepository.findActiveByCommitteeId(committeeId);
         return members.stream()
             .map(CommitteeResponse.MemberResponse::from)
-            .toList();
+            .collect(Collectors.toList());
     }
 
     private Committee findByIdAndTenantId(UUID id, UUID tenantId) {
