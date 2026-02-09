@@ -1,0 +1,77 @@
+{
+  "title": "위원회 관리",
+  "description": "사내 위원회 현황을 관리합니다.",
+  "subtitle": "사내 위원회 현황",
+  "create": "위원회 등록",
+  "list": "위원회 목록",
+  "createPage": {
+    "title": "새로운 위원회 생성",
+    "description": "새로운 위원회를 등록합니다."
+  },
+  "section": {
+    "basicInfo": "기본 정보",
+    "basicInfoDescription": "위원회의 기본 정보를 입력합니다.",
+    "activityPeriod": "활동 기간",
+    "activityPeriodDescription": "위원회의 활동 기간과 회의 일정을 설정합니다."
+  },
+  "labels": {
+    "code": "위원회 코드 *",
+    "codePlaceholder": "예: SAFETY_COMM",
+    "type": "유형 *",
+    "typeSelect": "유형 선택",
+    "name": "위원회명 *",
+    "namePlaceholder": "위원회명을 입력하세요",
+    "purpose": "설립 목적 *",
+    "purposePlaceholder": "위원회 설립 목적을 입력하세요",
+    "startDate": "시작일 *",
+    "endDate": "종료 예정일",
+    "meetingSchedule": "정기 회의 일정",
+    "meetingSchedulePlaceholder": "예: 매월 첫째 주 월요일 10:00"
+  },
+  "validation": {
+    "codeRequired": "위원회 코드를 입력해주세요",
+    "nameRequired": "위원회명을 입력해주세요",
+    "typeRequired": "위원회 유형을 선택해주세요",
+    "purposeRequired": "설립 목적을 입력해주세요",
+    "startDateRequired": "시작일을 입력해주세요"
+  },
+  "toast": {
+    "createSuccess": "등록 완료",
+    "createSuccessDesc": "위원회가 성공적으로 등록되었습니다.",
+    "createFailed": "등록 실패",
+    "createFailedDesc": "위원회 등록 중 오류가 발생했습니다."
+  },
+  "sync": {
+    "lastSync": "마지막 동기화: ",
+    "autoChangeAlert": "위원 자동 변경 알림",
+    "autoChangeMessage": "인사발령에 의한 위원 자동 변경이 {{count}}건 대기 중입니다.",
+    "confirm": "확인"
+  },
+  "tabs": {
+    "all": "전체",
+    "active": "활동중",
+    "dormant": "휴면",
+    "dissolved": "해산"
+  },
+  "empty": {
+    "title": "위원회가 없습니다",
+    "description": "새로운 위원회를 등록하세요."
+  },
+  "memberCount": {
+    "exOfficio": "당연직 {{count}}명",
+    "total": "{{count}}명"
+  },
+  "table": {
+    "code": "코드",
+    "name": "위원회명",
+    "type": "유형",
+    "memberCount": "위원 수",
+    "exOfficio": "당연직",
+    "startDate": "시작일",
+    "status": "상태"
+  },
+  "buttons": {
+    "cancel": "취소",
+    "create": "등록"
+  }
+}

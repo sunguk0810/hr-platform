@@ -1,0 +1,172 @@
+{
+  "title": "사원증 관리",
+  "description": "사원증 발급 및 현황을 관리합니다.",
+  "list": "사원증 목록",
+  "detail": "사원증 상세",
+  "cardNumber": "카드번호: {{number}}",
+  "tabs": {
+    "all": "전체",
+    "active": "사용중",
+    "pendingIssue": "발급대기",
+    "expired": "만료",
+    "lost": "분실"
+  },
+  "empty": {
+    "title": "사원증이 없습니다",
+    "description": "사원증 발급을 신청하세요."
+  },
+  "table": {
+    "cardNumber": "카드번호",
+    "employee": "직원",
+    "department": "부서",
+    "issueDate": "발급일",
+    "expiryDate": "만료일",
+    "status": "상태"
+  },
+  "issueRequest": {
+    "title": "사원증 발급 신청",
+    "description": "사원증 발급을 신청합니다.",
+    "create": "발급 신청"
+  },
+  "issueValidation": {
+    "typeRequired": "발급 유형을 선택해주세요",
+    "reasonRequired": "사유를 입력해주세요"
+  },
+  "issueSection": {
+    "title": "발급 정보",
+    "description": "발급 유형과 사유를 입력합니다.",
+    "typeLabel": "발급 유형 *",
+    "typeSelect": "유형 선택",
+    "reasonLabel": "사유 *",
+    "reasonPlaceholder": "발급 사유를 입력하세요"
+  },
+  "issueToast": {
+    "success": "신청 완료",
+    "successDesc": "사원증 발급 신청이 등록되었습니다.",
+    "failed": "신청 실패",
+    "failedDesc": "사원증 발급 신청 중 오류가 발생했습니다."
+  },
+  "issueRequestList": {
+    "title": "사원증 발급 요청 관리",
+    "description": "사원증 발급 요청을 승인하고 관리합니다.",
+    "list": "발급 요청 목록"
+  },
+  "issueRequestEmpty": {
+    "title": "발급 요청이 없습니다",
+    "description": "현재 처리할 사원증 발급 요청이 없습니다."
+  },
+  "issueRequestTable": {
+    "requestNumber": "요청번호",
+    "employee": "직원",
+    "department": "부서",
+    "issueType": "발급유형",
+    "status": "상태",
+    "requestDate": "요청일",
+    "action": "액션"
+  },
+  "statuses": {
+    "pending": "대기",
+    "approved": "승인",
+    "rejected": "반려",
+    "issued": "발급완료"
+  },
+  "approveToast": {
+    "success": "승인 완료",
+    "successDesc": "사원증 발급 요청이 승인되었습니다.",
+    "failed": "승인 실패",
+    "failedDesc": "사원증 발급 요청 승인에 실패했습니다."
+  },
+  "approveDialog": {
+    "title": "발급 요청 승인",
+    "description": "이 사원증 발급 요청을 승인하시겠습니까? 승인 후 사원증이 발급됩니다.",
+    "cancel": "취소",
+    "processing": "처리중...",
+    "confirm": "승인"
+  },
+  "notFound": {
+    "title": "사원증을 찾을 수 없습니다.",
+    "goToList": "목록으로"
+  },
+  "detailSection": {
+    "cardInfo": "사원증 정보",
+    "employeeInfo": "직원 정보",
+    "department": "소속 부서",
+    "position": "직위",
+    "grade": "직급"
+  },
+  "cardInfo": {
+    "title": "카드 정보",
+    "cardNumber": "카드번호",
+    "issueType": "발급 유형",
+    "issueDate": "발급일",
+    "expiryDate": "만료일",
+    "accessLevel": "접근 권한",
+    "rfid": "RFID",
+    "activated": "활성화",
+    "deactivated": "비활성화",
+    "qrCode": "QR 코드",
+    "remarks": "비고"
+  },
+  "lostBanner": {
+    "title": "분실 신고됨",
+    "description": "이 카드는 분실 신고되었습니다. 재발급이 필요합니다."
+  },
+  "revokedBanner": {
+    "title": "회수됨",
+    "description": "이 카드는 회수되었습니다."
+  },
+  "statusTimeline": {
+    "title": "카드 상태",
+    "issued": "발급 완료",
+    "active": "사용 중",
+    "activeDesc": "정상 사용 중입니다",
+    "lost": "분실 신고됨",
+    "lostDesc": "재발급 필요",
+    "revoked": "회수됨",
+    "revokedDesc": "카드가 회수되었습니다",
+    "expired": "만료됨",
+    "expiredDesc": "갱신이 필요합니다",
+    "pendingIssue": "발급 대기",
+    "pendingIssueDesc": "발급 처리 중입니다"
+  },
+  "actions": {
+    "title": "카드 관리",
+    "reportLost": "분실 신고",
+    "revoke": "회수"
+  },
+  "lostDialog": {
+    "title": "사원증 분실 신고",
+    "description": "분실 정보를 입력해주세요.",
+    "lostDate": "분실일",
+    "lostLocation": "분실 장소",
+    "lostLocationPlaceholder": "분실한 장소를 입력하세요...",
+    "details": "상세 설명",
+    "detailsPlaceholder": "분실 경위를 상세히 입력하세요...",
+    "cancel": "취소",
+    "confirm": "신고"
+  },
+  "revokeDialog": {
+    "title": "사원증 회수",
+    "description": "회수 사유를 입력해주세요.",
+    "reasonLabel": "회수 사유",
+    "reasonPlaceholder": "회수 사유를 입력하세요...",
+    "cancel": "취소",
+    "confirm": "회수"
+  },
+  "lostToast": {
+    "success": "분실 신고 완료",
+    "successDesc": "사원증 분실 신고가 완료되었습니다.",
+    "failed": "분실 신고 실패",
+    "failedDesc": "분실 신고 중 오류가 발생했습니다."
+  },
+  "revokeToast": {
+    "success": "회수 완료",
+    "successDesc": "사원증이 회수되었습니다.",
+    "failed": "회수 실패",
+    "failedDesc": "사원증 회수 중 오류가 발생했습니다."
+  },
+  "buttons": {
+    "cancel": "취소",
+    "apply": "신청"
+  }
+}

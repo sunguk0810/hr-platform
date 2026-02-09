@@ -1,7 +1,10 @@
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,24 +26,29 @@ import { useDepartmentList, useGrades } from '@/features/organization/hooks/useO
 import type { HeadcountRequestType } from '@hr-platform/shared-types';
 import { HEADCOUNT_REQUEST_TYPE_LABELS } from '@hr-platform/shared-types';
 
-const headcountRequestSchema = z.object({
-  type: z.enum(['INCREASE', 'DECREASE', 'TRANSFER'] as const, {
-    required_error: '요청 유형을 선택해주세요',
-  }),
-  departmentId: z.string().min(1, '부서를 선택해주세요'),
-  gradeId: z.string().min(1, '직급을 선택해주세요'),
-  requestCount: z.coerce.number().min(0, '0 이상의 숫자를 입력해주세요'),
-  reason: z.string().min(1, '요청 사유를 입력해주세요').max(500),
-  effectiveDate: z.string().min(1, '적용 예정일을 입력해주세요'),
-  remarks: z.string().max(1000).optional(),
-});
+function createHeadcountRequestSchema(t: TFunction) {
+  return z.object({
+    type: z.enum(['INCREASE', 'DECREASE', 'TRANSFER'] as const, {
+      required_error: t('requestValidation.typeRequired'),
+    }),
+    departmentId: z.string().min(1, t('requestValidation.departmentRequired')),
+    gradeId: z.string().min(1, t('requestValidation.gradeRequired')),
+    requestCount: z.coerce.number().min(0, t('requestValidation.countMin')),
+    reason: z.string().min(1, t('requestValidation.reasonRequired')).max(500),
+    effectiveDate: z.string().min(1, t('requestValidation.effectiveDateRequired')),
+    remarks: z.string().max(1000).optional(),
+  });
+}
 
-type HeadcountRequestFormData = z.infer<typeof headcountRequestSchema>;
+type HeadcountRequestFormData = z.infer<ReturnType<typeof createHeadcountRequestSchema>>;
 
 export default function HeadcountRequestCreatePage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const { t } = useTranslation('headcount');
+
+  const headcountRequestSchema = useMemo(() => createHeadcountRequestSchema(t), [t]);
 
   const createMutation = useCreateHeadcountRequest();
   const { data: departmentsData } = useDepartmentList();
@@ -80,15 +88,15 @@ export default function HeadcountRequestCreatePage() {
       });
 
       toast({
-        title: '요청 완료',
-        description: '정현원 변경 요청이 등록되었습니다.',
+        title: t('requestToast.success'),
+        description: t('requestToast.successDesc'),
       });
 
       navigate('/headcount/requests');
     } catch {
       toast({
-        title: '요청 실패',
-        description: '정현원 변경 요청 중 오류가 발생했습니다.',
+        title: t('requestToast.failed'),
+        description: t('requestToast.failedDesc'),
         variant: 'destructive',
       });
     }
@@ -110,29 +118,29 @@ export default function HeadcountRequestCreatePage() {
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div>
-            <h1 className="text-xl font-bold">정현원 변경 요청</h1>
-            <p className="text-sm text-muted-foreground">증원, 감원, 전환 요청</p>
+            <h1 className="text-xl font-bold">{t('request.title')}</h1>
+            <p className="text-sm text-muted-foreground">{t('request.subtitle')}</p>
           </div>
         </div>
 
         {/* Form Fields */}
         <div className="space-y-4">
-          {/* 요청 정보 섹션 */}
+          {/* Request Info Section */}
           <div className="bg-card rounded-xl border p-4 space-y-4">
             <h3 className="text-sm font-medium flex items-center gap-2">
               <FileText className="h-4 w-4" />
-              요청 정보
+              {t('requestSection.info')}
             </h3>
 
             <div className="space-y-2">
-              <Label htmlFor="mobile-type">요청 유형 *</Label>
+              <Label htmlFor="mobile-type">{t('requestLabels.type')}</Label>
               <Controller
                 name="type"
                 control={control}
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="mobile-type">
-                      <SelectValue placeholder="유형 선택" />
+                      <SelectValue placeholder={t('requestLabels.typeSelect')} />
                     </SelectTrigger>
                     <SelectContent>
                       {(Object.entries(HEADCOUNT_REQUEST_TYPE_LABELS) as [HeadcountRequestType, string][]).map(
@@ -152,14 +160,14 @@ export default function HeadcountRequestCreatePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="mobile-departmentId">부서 *</Label>
+              <Label htmlFor="mobile-departmentId">{t('requestLabels.department')}</Label>
               <Controller
                 name="departmentId"
                 control={control}
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="mobile-departmentId">
-                      <SelectValue placeholder="부서 선택" />
+                      <SelectValue placeholder={t('requestLabels.departmentSelect')} />
                     </SelectTrigger>
                     <SelectContent>
                       {departments.map((dept) => (
@@ -177,14 +185,14 @@ export default function HeadcountRequestCreatePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="mobile-gradeId">직급 *</Label>
+              <Label htmlFor="mobile-gradeId">{t('requestLabels.grade')}</Label>
               <Controller
                 name="gradeId"
                 control={control}
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="mobile-gradeId">
-                      <SelectValue placeholder="직급 선택" />
+                      <SelectValue placeholder={t('requestLabels.gradeSelect')} />
                     </SelectTrigger>
                     <SelectContent>
                       {grades.map((grade) => (
@@ -202,13 +210,13 @@ export default function HeadcountRequestCreatePage() {
             </div>
           </div>
 
-          {/* 요청 상세 섹션 */}
+          {/* Request Detail Section */}
           <div className="bg-card rounded-xl border p-4 space-y-4">
-            <h3 className="text-sm font-medium">요청 상세</h3>
+            <h3 className="text-sm font-medium">{t('requestSection.detail')}</h3>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="mobile-requestCount">요청 인원 *</Label>
+                <Label htmlFor="mobile-requestCount">{t('requestLabels.requestCount')}</Label>
                 <Input
                   id="mobile-requestCount"
                   type="number"
@@ -221,7 +229,7 @@ export default function HeadcountRequestCreatePage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="mobile-effectiveDate">적용 예정일 *</Label>
+                <Label htmlFor="mobile-effectiveDate">{t('requestLabels.effectiveDate')}</Label>
                 <Input
                   id="mobile-effectiveDate"
                   type="date"
@@ -234,11 +242,11 @@ export default function HeadcountRequestCreatePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="mobile-reason">요청 사유 *</Label>
+              <Label htmlFor="mobile-reason">{t('requestLabels.reason')}</Label>
               <Textarea
                 id="mobile-reason"
                 {...register('reason')}
-                placeholder="정현원 변경 요청 사유를 입력하세요"
+                placeholder={t('requestLabels.reasonPlaceholder')}
                 rows={3}
               />
               {errors.reason && (
@@ -247,11 +255,11 @@ export default function HeadcountRequestCreatePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="mobile-remarks">비고</Label>
+              <Label htmlFor="mobile-remarks">{t('requestLabels.remarks')}</Label>
               <Textarea
                 id="mobile-remarks"
                 {...register('remarks')}
-                placeholder="기타 참고사항을 입력하세요"
+                placeholder={t('requestLabels.remarksPlaceholder')}
                 rows={2}
               />
             </div>
@@ -268,7 +276,7 @@ export default function HeadcountRequestCreatePage() {
               disabled={isPending}
               className="flex-1"
             >
-              취소
+              {t('buttons.cancel')}
             </Button>
             <Button type="submit" disabled={isPending} className="flex-1">
               {isPending ? (
@@ -276,7 +284,7 @@ export default function HeadcountRequestCreatePage() {
               ) : (
                 <Save className="mr-2 h-4 w-4" />
               )}
-              요청
+              {t('buttons.submit')}
             </Button>
           </div>
         </div>
@@ -288,8 +296,8 @@ export default function HeadcountRequestCreatePage() {
   return (
     <>
       <PageHeader
-        title="정현원 변경 요청"
-        description="증원, 감원, 전환 요청을 등록합니다."
+        title={t('request.title')}
+        description={t('request.description')}
       />
 
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -298,20 +306,20 @@ export default function HeadcountRequestCreatePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" aria-hidden="true" />
-                요청 정보
+                {t('requestSection.info')}
               </CardTitle>
-              <CardDescription>변경 요청의 기본 정보를 입력합니다.</CardDescription>
+              <CardDescription>{t('requestSection.infoDescription')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="type">요청 유형 *</Label>
+                <Label htmlFor="type">{t('requestLabels.type')}</Label>
                 <Controller
                   name="type"
                   control={control}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger id="type">
-                        <SelectValue placeholder="유형 선택" />
+                        <SelectValue placeholder={t('requestLabels.typeSelect')} />
                       </SelectTrigger>
                       <SelectContent>
                         {(Object.entries(HEADCOUNT_REQUEST_TYPE_LABELS) as [HeadcountRequestType, string][]).map(
@@ -331,14 +339,14 @@ export default function HeadcountRequestCreatePage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="departmentId">부서 *</Label>
+                <Label htmlFor="departmentId">{t('requestLabels.department')}</Label>
                 <Controller
                   name="departmentId"
                   control={control}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger id="departmentId">
-                        <SelectValue placeholder="부서 선택" />
+                        <SelectValue placeholder={t('requestLabels.departmentSelect')} />
                       </SelectTrigger>
                       <SelectContent>
                         {departments.map((dept) => (
@@ -356,14 +364,14 @@ export default function HeadcountRequestCreatePage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="gradeId">직급 *</Label>
+                <Label htmlFor="gradeId">{t('requestLabels.grade')}</Label>
                 <Controller
                   name="gradeId"
                   control={control}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger id="gradeId">
-                        <SelectValue placeholder="직급 선택" />
+                        <SelectValue placeholder={t('requestLabels.gradeSelect')} />
                       </SelectTrigger>
                       <SelectContent>
                         {grades.map((grade) => (
@@ -384,13 +392,13 @@ export default function HeadcountRequestCreatePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>요청 상세</CardTitle>
-              <CardDescription>변경 내용과 사유를 입력합니다.</CardDescription>
+              <CardTitle>{t('requestSection.detail')}</CardTitle>
+              <CardDescription>{t('requestSection.detailDescription')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="requestCount">요청 인원 *</Label>
+                  <Label htmlFor="requestCount">{t('requestLabels.requestCount')}</Label>
                   <Input
                     id="requestCount"
                     type="number"
@@ -403,7 +411,7 @@ export default function HeadcountRequestCreatePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="effectiveDate">적용 예정일 *</Label>
+                  <Label htmlFor="effectiveDate">{t('requestLabels.effectiveDate')}</Label>
                   <Input
                     id="effectiveDate"
                     type="date"
@@ -416,11 +424,11 @@ export default function HeadcountRequestCreatePage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="reason">요청 사유 *</Label>
+                <Label htmlFor="reason">{t('requestLabels.reason')}</Label>
                 <Textarea
                   id="reason"
                   {...register('reason')}
-                  placeholder="정현원 변경 요청 사유를 입력하세요"
+                  placeholder={t('requestLabels.reasonPlaceholder')}
                   rows={3}
                 />
                 {errors.reason && (
@@ -429,11 +437,11 @@ export default function HeadcountRequestCreatePage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="remarks">비고</Label>
+                <Label htmlFor="remarks">{t('requestLabels.remarks')}</Label>
                 <Textarea
                   id="remarks"
                   {...register('remarks')}
-                  placeholder="기타 참고사항을 입력하세요"
+                  placeholder={t('requestLabels.remarksPlaceholder')}
                   rows={2}
                 />
               </div>
@@ -448,7 +456,7 @@ export default function HeadcountRequestCreatePage() {
             onClick={() => navigate('/headcount/requests')}
             disabled={isPending}
           >
-            취소
+            {t('buttons.cancel')}
           </Button>
           <Button type="submit" disabled={isPending}>
             {isPending ? (
@@ -456,7 +464,7 @@ export default function HeadcountRequestCreatePage() {
             ) : (
               <Save className="mr-2 h-4 w-4" aria-hidden="true" />
             )}
-            요청
+            {t('buttons.submit')}
           </Button>
         </div>
       </form>

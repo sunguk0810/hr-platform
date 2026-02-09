@@ -1,8 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,30 +27,33 @@ import {
   useUpdateAnnouncement,
 } from '../hooks/useAnnouncements';
 
-const CATEGORY_OPTIONS = [
-  { value: 'NOTICE', label: '공지' },
-  { value: 'EVENT', label: '이벤트' },
-  { value: 'UPDATE', label: '업데이트' },
-  { value: 'URGENT', label: '긴급' },
-] as const;
-
-const announcementSchema = z.object({
-  title: z.string().min(1, '제목을 입력해주세요').max(200),
-  content: z.string().min(1, '내용을 입력해주세요').max(10000),
+const createAnnouncementSchema = (t: TFunction) => z.object({
+  title: z.string().min(1, t('validation.titleRequired')).max(200),
+  content: z.string().min(1, t('validation.contentRequired')).max(10000),
   category: z.enum(['NOTICE', 'EVENT', 'UPDATE', 'URGENT'], {
-    required_error: '분류를 선택해주세요',
+    required_error: t('validation.categoryRequired'),
   }),
   isPinned: z.boolean().default(false),
 });
 
-type AnnouncementFormData = z.infer<typeof announcementSchema>;
+type AnnouncementFormData = z.infer<ReturnType<typeof createAnnouncementSchema>>;
 
 export default function AnnouncementCreatePage() {
+  const { t } = useTranslation('announcement');
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
 
   const isEditMode = !!id;
+
+  const CATEGORY_OPTIONS = useMemo(() => [
+    { value: 'NOTICE', label: t('categories.NOTICE') },
+    { value: 'EVENT', label: t('categories.EVENT') },
+    { value: 'UPDATE', label: t('categories.UPDATE') },
+    { value: 'URGENT', label: t('categories.URGENT') },
+  ] as const, [t]);
+
+  const announcementSchema = useMemo(() => createAnnouncementSchema(t), [t]);
 
   const { data: announcementData, isLoading: isLoadingDetail } = useAnnouncement(id || '');
   const createMutation = useCreateAnnouncement();
@@ -87,22 +92,22 @@ export default function AnnouncementCreatePage() {
       if (isEditMode && id) {
         await updateMutation.mutateAsync({ id, data });
         toast({
-          title: '수정 완료',
-          description: '공지사항이 수정되었습니다.',
+          title: t('toast.updateSuccess'),
+          description: t('toast.updateSuccessDesc'),
         });
       } else {
         await createMutation.mutateAsync(data);
         toast({
-          title: '등록 완료',
-          description: '공지사항이 등록되었습니다.',
+          title: t('toast.createSuccess'),
+          description: t('toast.createSuccessDesc'),
         });
       }
 
       navigate('/announcements');
     } catch {
       toast({
-        title: isEditMode ? '수정 실패' : '등록 실패',
-        description: '공지사항 처리 중 오류가 발생했습니다.',
+        title: isEditMode ? t('toast.updateFailed') : t('toast.createFailed'),
+        description: t('toast.processFailed'),
         variant: 'destructive',
       });
     }
@@ -121,8 +126,8 @@ export default function AnnouncementCreatePage() {
   return (
     <>
       <PageHeader
-        title={isEditMode ? '공지사항 수정' : '공지사항 작성'}
-        description={isEditMode ? '공지사항을 수정합니다.' : '새로운 공지사항을 작성합니다.'}
+        title={isEditMode ? t('editPage.title') : t('createPage.title')}
+        description={isEditMode ? t('editPage.description') : t('createPage.description')}
       />
 
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -130,21 +135,21 @@ export default function AnnouncementCreatePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Megaphone className="h-5 w-5" aria-hidden="true" />
-              공지사항 정보
+              {t('section.info')}
             </CardTitle>
-            <CardDescription>공지사항의 제목과 내용을 입력합니다.</CardDescription>
+            <CardDescription>{t('section.infoDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="category">분류 *</Label>
+                <Label htmlFor="category">{t('labels.category')}</Label>
                 <Controller
                   name="category"
                   control={control}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger id="category">
-                        <SelectValue placeholder="분류 선택" />
+                        <SelectValue placeholder={t('labels.categorySelect')} />
                       </SelectTrigger>
                       <SelectContent>
                         {CATEGORY_OPTIONS.map(({ value, label }) => (
@@ -173,16 +178,16 @@ export default function AnnouncementCreatePage() {
                     />
                   )}
                 />
-                <Label htmlFor="isPinned">상단 고정</Label>
+                <Label htmlFor="isPinned">{t('labels.pinned')}</Label>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="title">제목 *</Label>
+              <Label htmlFor="title">{t('labels.title')}</Label>
               <Input
                 id="title"
                 {...register('title')}
-                placeholder="공지사항 제목을 입력하세요"
+                placeholder={t('labels.titlePlaceholder')}
               />
               {errors.title && (
                 <p className="text-sm text-destructive">{errors.title.message}</p>
@@ -190,11 +195,11 @@ export default function AnnouncementCreatePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="content">내용 *</Label>
+              <Label htmlFor="content">{t('labels.content')}</Label>
               <Textarea
                 id="content"
                 {...register('content')}
-                placeholder="공지사항 내용을 입력하세요"
+                placeholder={t('labels.contentPlaceholder')}
                 rows={15}
                 className="min-h-[300px]"
               />
@@ -212,7 +217,7 @@ export default function AnnouncementCreatePage() {
             onClick={() => navigate('/announcements')}
             disabled={isPending}
           >
-            취소
+            {t('buttons.cancel')}
           </Button>
           <Button type="submit" disabled={isPending}>
             {isPending ? (
@@ -220,7 +225,7 @@ export default function AnnouncementCreatePage() {
             ) : (
               <Save className="mr-2 h-4 w-4" aria-hidden="true" />
             )}
-            {isEditMode ? '수정' : '등록'}
+            {isEditMode ? t('buttons.edit') : t('buttons.create')}
           </Button>
         </div>
       </form>

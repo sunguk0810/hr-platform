@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { PullToRefreshContainer } from '@/components/mobile';
@@ -23,14 +24,8 @@ import { useAnnouncement, useDeleteAnnouncement } from '../hooks/useAnnouncement
 
 const ADMIN_ROLES = ['SUPER_ADMIN', 'GROUP_ADMIN', 'TENANT_ADMIN', 'HR_MANAGER'];
 
-const CATEGORY_LABELS: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-  NOTICE: { label: '공지', variant: 'default' },
-  EVENT: { label: '이벤트', variant: 'secondary' },
-  UPDATE: { label: '업데이트', variant: 'outline' },
-  URGENT: { label: '긴급', variant: 'destructive' },
-};
-
 export default function AnnouncementDetailPage() {
+  const { t } = useTranslation('announcement');
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -38,6 +33,13 @@ export default function AnnouncementDetailPage() {
   const { hasAnyRole } = useAuthStore();
   const isMobile = useIsMobile();
   const canWrite = hasAnyRole(ADMIN_ROLES);
+
+  const CATEGORY_LABELS = useMemo<Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }>>(() => ({
+    NOTICE: { label: t('categories.NOTICE'), variant: 'default' },
+    EVENT: { label: t('categories.EVENT'), variant: 'secondary' },
+    UPDATE: { label: t('categories.UPDATE'), variant: 'outline' },
+    URGENT: { label: t('categories.URGENT'), variant: 'destructive' },
+  }), [t]);
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
@@ -51,14 +53,14 @@ export default function AnnouncementDetailPage() {
     try {
       await deleteMutation.mutateAsync(id);
       toast({
-        title: '삭제 완료',
-        description: '공지사항이 삭제되었습니다.',
+        title: t('toast.deleteSuccess'),
+        description: t('toast.deleteSuccessDesc'),
       });
       navigate('/announcements');
     } catch {
       toast({
-        title: '삭제 실패',
-        description: '공지사항 삭제 중 오류가 발생했습니다.',
+        title: t('toast.deleteFailed'),
+        description: t('toast.deleteFailedDesc'),
         variant: 'destructive',
       });
     }
@@ -75,10 +77,10 @@ export default function AnnouncementDetailPage() {
   if (isError || !announcement) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <p className="text-muted-foreground">공지사항을 찾을 수 없습니다.</p>
+        <p className="text-muted-foreground">{t('notFound.title')}</p>
         <Button variant="outline" onClick={() => navigate('/announcements')}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          목록으로
+          {t('notFound.goToList')}
         </Button>
       </div>
     );
@@ -104,7 +106,7 @@ export default function AnnouncementDetailPage() {
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>
-              <h1 className="text-lg font-bold">공지사항</h1>
+              <h1 className="text-lg font-bold">{t('title')}</h1>
             </div>
             {canWrite && (
               <DropdownMenu>
@@ -116,14 +118,14 @@ export default function AnnouncementDetailPage() {
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => navigate(`/announcements/${id}/edit`)}>
                     <Edit className="mr-2 h-4 w-4" />
-                    수정
+                    {t('buttons.edit')}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => setShowDeleteDialog(true)}
                     className="text-destructive"
                   >
                     <Trash2 className="mr-2 h-4 w-4" />
-                    삭제
+                    {t('buttons.delete')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -139,7 +141,7 @@ export default function AnnouncementDetailPage() {
               {announcement.isPinned && (
                 <Badge variant="outline" className="gap-1">
                   <Pin className="h-3 w-3" />
-                  고정
+                  {t('detailPage.pinned')}
                 </Badge>
               )}
             </div>
@@ -172,7 +174,7 @@ export default function AnnouncementDetailPage() {
             <div className="bg-card rounded-2xl border p-4">
               <div className="flex items-center gap-2 mb-3">
                 <FileText className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium">첨부파일 ({announcement.attachments.length})</span>
+                <span className="text-sm font-medium">{t('detailPage.attachmentWithCount', { count: announcement.attachments.length })}</span>
               </div>
               <div className="space-y-2">
                 {announcement.attachments.map((file) => (
@@ -203,9 +205,9 @@ export default function AnnouncementDetailPage() {
         <ConfirmDialog
           open={showDeleteDialog}
           onOpenChange={setShowDeleteDialog}
-          title="공지사항 삭제"
-          description="이 공지사항을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
-          confirmLabel="삭제"
+          title={t('deleteDialog.title')}
+          description={t('deleteDialog.description')}
+          confirmLabel={t('deleteDialog.confirm')}
           variant="destructive"
           onConfirm={handleDelete}
           isLoading={deleteMutation.isPending}
@@ -218,25 +220,25 @@ export default function AnnouncementDetailPage() {
   return (
     <>
       <PageHeader
-        title="공지사항"
-        description="공지사항 상세 내용"
+        title={t('title')}
+        description={t('detail')}
         actions={
           <div className="flex gap-2">
             {canWrite && (
               <>
                 <Button variant="outline" onClick={() => navigate(`/announcements/${id}/edit`)}>
                   <Edit className="mr-2 h-4 w-4" />
-                  수정
+                  {t('buttons.edit')}
                 </Button>
                 <Button variant="destructive" onClick={() => setShowDeleteDialog(true)}>
                   <Trash2 className="mr-2 h-4 w-4" />
-                  삭제
+                  {t('buttons.delete')}
                 </Button>
               </>
             )}
             <Button variant="outline" onClick={() => navigate('/announcements')}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              목록으로
+              {t('notFound.goToList')}
             </Button>
           </div>
         }
@@ -253,7 +255,7 @@ export default function AnnouncementDetailPage() {
                 {announcement.isPinned && (
                   <Badge variant="outline" className="gap-1">
                     <Pin className="h-3 w-3" />
-                    고정
+                    {t('detailPage.pinned')}
                   </Badge>
                 )}
               </div>
@@ -284,7 +286,7 @@ export default function AnnouncementDetailPage() {
 
           {announcement.attachments && announcement.attachments.length > 0 && (
             <div className="mt-8 border-t pt-6">
-              <h3 className="text-sm font-medium mb-3">첨부파일</h3>
+              <h3 className="text-sm font-medium mb-3">{t('detailPage.attachment')}</h3>
               <div className="space-y-2">
                 {announcement.attachments.map((file) => (
                   <a
@@ -313,9 +315,9 @@ export default function AnnouncementDetailPage() {
       <ConfirmDialog
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
-        title="공지사항 삭제"
-        description="이 공지사항을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
-        confirmLabel="삭제"
+        title={t('deleteDialog.title')}
+        description={t('deleteDialog.description')}
+        confirmLabel={t('deleteDialog.confirm')}
         variant="destructive"
         onConfirm={handleDelete}
         isLoading={deleteMutation.isPending}

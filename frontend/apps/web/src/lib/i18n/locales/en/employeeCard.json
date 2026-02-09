@@ -1,0 +1,172 @@
+{
+  "title": "Employee Card Management",
+  "description": "Manage employee card issuance and status.",
+  "list": "Employee Card List",
+  "detail": "Employee Card Detail",
+  "cardNumber": "Card No.: {{number}}",
+  "tabs": {
+    "all": "All",
+    "active": "Active",
+    "pendingIssue": "Pending Issue",
+    "expired": "Expired",
+    "lost": "Lost"
+  },
+  "empty": {
+    "title": "No employee cards",
+    "description": "Apply for employee card issuance."
+  },
+  "table": {
+    "cardNumber": "Card No.",
+    "employee": "Employee",
+    "department": "Department",
+    "issueDate": "Issue Date",
+    "expiryDate": "Expiry Date",
+    "status": "Status"
+  },
+  "issueRequest": {
+    "title": "Apply for Employee Card",
+    "description": "Apply for employee card issuance.",
+    "create": "Apply for Issuance"
+  },
+  "issueValidation": {
+    "typeRequired": "Please select an issue type",
+    "reasonRequired": "Please enter a reason"
+  },
+  "issueSection": {
+    "title": "Issuance Information",
+    "description": "Enter the issue type and reason.",
+    "typeLabel": "Issue Type *",
+    "typeSelect": "Select type",
+    "reasonLabel": "Reason *",
+    "reasonPlaceholder": "Enter the reason for issuance"
+  },
+  "issueToast": {
+    "success": "Submitted",
+    "successDesc": "The employee card issuance request has been submitted.",
+    "failed": "Submission Failed",
+    "failedDesc": "An error occurred while submitting the issuance request."
+  },
+  "issueRequestList": {
+    "title": "Employee Card Request Management",
+    "description": "Approve and manage employee card issuance requests.",
+    "list": "Issuance Request List"
+  },
+  "issueRequestEmpty": {
+    "title": "No issuance requests",
+    "description": "There are no employee card issuance requests to process."
+  },
+  "issueRequestTable": {
+    "requestNumber": "Request No.",
+    "employee": "Employee",
+    "department": "Department",
+    "issueType": "Issue Type",
+    "status": "Status",
+    "requestDate": "Request Date",
+    "action": "Action"
+  },
+  "statuses": {
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "issued": "Issued"
+  },
+  "approveToast": {
+    "success": "Approved",
+    "successDesc": "The employee card issuance request has been approved.",
+    "failed": "Approval Failed",
+    "failedDesc": "Failed to approve the employee card issuance request."
+  },
+  "approveDialog": {
+    "title": "Approve Issuance Request",
+    "description": "Are you sure you want to approve this employee card issuance request? The card will be issued after approval.",
+    "cancel": "Cancel",
+    "processing": "Processing...",
+    "confirm": "Approve"
+  },
+  "notFound": {
+    "title": "Employee card not found.",
+    "goToList": "Back to List"
+  },
+  "detailSection": {
+    "cardInfo": "Employee Card Information",
+    "employeeInfo": "Employee Information",
+    "department": "Department",
+    "position": "Position",
+    "grade": "Grade"
+  },
+  "cardInfo": {
+    "title": "Card Information",
+    "cardNumber": "Card No.",
+    "issueType": "Issue Type",
+    "issueDate": "Issue Date",
+    "expiryDate": "Expiry Date",
+    "accessLevel": "Access Level",
+    "rfid": "RFID",
+    "activated": "Activated",
+    "deactivated": "Deactivated",
+    "qrCode": "QR Code",
+    "remarks": "Remarks"
+  },
+  "lostBanner": {
+    "title": "Reported Lost",
+    "description": "This card has been reported lost. Reissuance is required."
+  },
+  "revokedBanner": {
+    "title": "Revoked",
+    "description": "This card has been revoked."
+  },
+  "statusTimeline": {
+    "title": "Card Status",
+    "issued": "Issued",
+    "active": "In Use",
+    "activeDesc": "Currently active",
+    "lost": "Reported Lost",
+    "lostDesc": "Reissuance required",
+    "revoked": "Revoked",
+    "revokedDesc": "The card has been revoked",
+    "expired": "Expired",
+    "expiredDesc": "Renewal is required",
+    "pendingIssue": "Pending Issue",
+    "pendingIssueDesc": "Issuance is being processed"
+  },
+  "actions": {
+    "title": "Card Management",
+    "reportLost": "Report Lost",
+    "revoke": "Revoke"
+  },
+  "lostDialog": {
+    "title": "Report Employee Card Lost",
+    "description": "Please enter the loss details.",
+    "lostDate": "Date of Loss",
+    "lostLocation": "Location of Loss",
+    "lostLocationPlaceholder": "Enter the location where the card was lost...",
+    "details": "Details",
+    "detailsPlaceholder": "Enter details about the loss...",
+    "cancel": "Cancel",
+    "confirm": "Report"
+  },
+  "revokeDialog": {
+    "title": "Revoke Employee Card",
+    "description": "Please enter the reason for revocation.",
+    "reasonLabel": "Reason for Revocation",
+    "reasonPlaceholder": "Enter the reason for revocation...",
+    "cancel": "Cancel",
+    "confirm": "Revoke"
+  },
+  "lostToast": {
+    "success": "Loss Reported",
+    "successDesc": "The employee card loss report has been submitted.",
+    "failed": "Report Failed",
+    "failedDesc": "An error occurred while reporting the loss."
+  },
+  "revokeToast": {
+    "success": "Revoked",
+    "successDesc": "The employee card has been revoked.",
+    "failed": "Revocation Failed",
+    "failedDesc": "An error occurred while revoking the employee card."
+  },
+  "buttons": {
+    "cancel": "Cancel",
+    "apply": "Apply"
+  }
+}

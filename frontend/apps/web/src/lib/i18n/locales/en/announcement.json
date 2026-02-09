@@ -1,0 +1,100 @@
+{
+  "title": "Announcements",
+  "description": "View company announcements and news.",
+  "subtitle": "Check the latest company news",
+  "list": "Announcement List",
+  "create": "Create",
+  "detail": "Announcement Details",
+  "categories": {
+    "NOTICE": "Notice",
+    "EVENT": "Event",
+    "UPDATE": "Update",
+    "URGENT": "Urgent"
+  },
+  "validation": {
+    "titleRequired": "Please enter a title",
+    "contentRequired": "Please enter content",
+    "categoryRequired": "Please select a category"
+  },
+  "toast": {
+    "updateSuccess": "Updated",
+    "updateSuccessDesc": "The announcement has been updated.",
+    "createSuccess": "Created",
+    "createSuccessDesc": "The announcement has been created.",
+    "updateFailed": "Update Failed",
+    "createFailed": "Creation Failed",
+    "processFailed": "An error occurred while processing the announcement.",
+    "deleteSuccess": "Deleted",
+    "deleteSuccessDesc": "The announcement has been deleted.",
+    "deleteFailed": "Deletion Failed",
+    "deleteFailedDesc": "An error occurred while deleting the announcement."
+  },
+  "createPage": {
+    "title": "Create Announcement",
+    "description": "Write a new announcement."
+  },
+  "editPage": {
+    "title": "Edit Announcement",
+    "description": "Edit the announcement."
+  },
+  "section": {
+    "info": "Announcement Information",
+    "infoDescription": "Enter the title and content of the announcement."
+  },
+  "labels": {
+    "category": "Category *",
+    "categorySelect": "Select category",
+    "pinned": "Pin to Top",
+    "title": "Title *",
+    "titlePlaceholder": "Enter announcement title",
+    "content": "Content *",
+    "contentPlaceholder": "Enter announcement content"
+  },
+  "detailPage": {
+    "pinned": "Pinned",
+    "attachment": "Attachment",
+    "attachmentWithCount": "Attachments ({{count}})"
+  },
+  "notFound": {
+    "title": "Announcement not found.",
+    "goToList": "Back to List"
+  },
+  "deleteDialog": {
+    "title": "Delete Announcement",
+    "description": "Are you sure you want to delete this announcement? This action cannot be undone.",
+    "confirm": "Delete"
+  },
+  "search": {
+    "placeholder": "Search...",
+    "detailedPlaceholder": "Search by title or content...",
+    "label": "Search Announcements",
+    "categoryFilterLabel": "Announcement Category Filter",
+    "allCategories": "All Categories"
+  },
+  "empty": {
+    "title": "No announcements",
+    "description": "No announcements have been posted."
+  },
+  "error": {
+    "loadFailed": "Failed to load data",
+    "loadFailedDesc": "Please try again later."
+  },
+  "table": {
+    "category": "Category",
+    "title": "Title",
+    "author": "Author",
+    "views": "Views",
+    "createdAt": "Created"
+  },
+  "accessibility": {
+    "pinned": "Pinned",
+    "hasAttachment": "Has attachment",
+    "viewCount": "{{count}} views"
+  },
+  "buttons": {
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "create": "Create",
+    "delete": "Delete"
+  }
+}

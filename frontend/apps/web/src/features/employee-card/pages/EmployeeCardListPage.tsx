@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { SkeletonTable } from '@/components/common/Skeleton';
@@ -23,6 +24,7 @@ const STATUS_COLORS: Record<EmployeeCardStatus, string> = {
 };
 
 export default function EmployeeCardListPage() {
+  const { t } = useTranslation('employeeCard');
   const navigate = useNavigate();
   const [status, setStatus] = useState<EmployeeCardStatus | ''>('');
   const [page, setPage] = useState(0);
@@ -39,12 +41,12 @@ export default function EmployeeCardListPage() {
   return (
     <>
       <PageHeader
-        title="사원증 관리"
-        description="사원증 발급 및 현황을 관리합니다."
+        title={t('title')}
+        description={t('description')}
         actions={
           <Button onClick={() => navigate('/employee-card/issue')}>
             <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
-            발급 신청
+            {t('issueRequest.create')}
           </Button>
         }
       />
@@ -53,7 +55,7 @@ export default function EmployeeCardListPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CreditCard className="h-5 w-5" aria-hidden="true" />
-            사원증 목록
+            {t('list')}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -63,11 +65,11 @@ export default function EmployeeCardListPage() {
             className="px-4 pt-2"
           >
             <TabsList>
-              <TabsTrigger value="all">전체</TabsTrigger>
-              <TabsTrigger value="ACTIVE">사용중</TabsTrigger>
-              <TabsTrigger value="PENDING">발급대기</TabsTrigger>
-              <TabsTrigger value="EXPIRED">만료</TabsTrigger>
-              <TabsTrigger value="LOST">분실</TabsTrigger>
+              <TabsTrigger value="all">{t('tabs.all')}</TabsTrigger>
+              <TabsTrigger value="ACTIVE">{t('tabs.active')}</TabsTrigger>
+              <TabsTrigger value="PENDING">{t('tabs.pendingIssue')}</TabsTrigger>
+              <TabsTrigger value="EXPIRED">{t('tabs.expired')}</TabsTrigger>
+              <TabsTrigger value="LOST">{t('tabs.lost')}</TabsTrigger>
             </TabsList>
           </Tabs>
 
@@ -77,22 +79,22 @@ export default function EmployeeCardListPage() {
             ) : cards.length === 0 ? (
               <EmptyState
                 icon={CreditCard}
-                title="사원증이 없습니다"
-                description="사원증 발급을 신청하세요."
-                action={{ label: '발급 신청', onClick: () => navigate('/employee-card/issue') }}
+                title={t('empty.title')}
+                description={t('empty.description')}
+                action={{ label: t('issueRequest.create'), onClick: () => navigate('/employee-card/issue') }}
               />
             ) : (
               <>
-                <div className="overflow-x-auto" role="region" aria-label="사원증 목록">
-                  <table className="w-full" role="grid" aria-label="사원증">
+                <div className="overflow-x-auto" role="region" aria-label={t('list')}>
+                  <table className="w-full" role="grid" aria-label={t('list')}>
                     <thead>
                       <tr className="border-b bg-muted/50">
-                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">카드번호</th>
-                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">직원</th>
-                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">부서</th>
-                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">발급일</th>
-                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">만료일</th>
-                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">상태</th>
+                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('table.cardNumber')}</th>
+                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('table.employee')}</th>
+                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('table.department')}</th>
+                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('table.issueDate')}</th>
+                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('table.expiryDate')}</th>
+                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('table.status')}</th>
                       </tr>
                     </thead>
                     <tbody>

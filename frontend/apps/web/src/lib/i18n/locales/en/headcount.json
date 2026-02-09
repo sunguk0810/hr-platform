@@ -1,0 +1,115 @@
+{
+  "title": "Headcount Management",
+  "subtitle": "Headcount by Department",
+  "description": "Manage headcount plans and status by department.",
+  "summary": {
+    "title": "Headcount Summary",
+    "authorized": "Authorized",
+    "actual": "Actual",
+    "difference": "Difference",
+    "fillRate": "Fill Rate"
+  },
+  "year": {
+    "label": "Year",
+    "value": "{{year}}",
+    "select": "Select year"
+  },
+  "tabs": {
+    "all": "All",
+    "draft": "Draft",
+    "approved": "Approved",
+    "active": "Active"
+  },
+  "empty": {
+    "noResults": "No results found",
+    "noResultsDesc": "Try selecting different filters.",
+    "noPlans": "No headcount plans",
+    "noPlansDesc": "Register a new headcount plan.",
+    "resetFilter": "Reset Filters",
+    "createPlan": "Create Plan"
+  },
+  "plan": {
+    "create": "Create Headcount Plan",
+    "title": "Headcount Plan",
+    "list": "Headcount Plan List"
+  },
+  "table": {
+    "department": "Department",
+    "grade": "Grade",
+    "authorized": "Authorized",
+    "actual": "Actual",
+    "difference": "Difference",
+    "status": "Status"
+  },
+  "request": {
+    "title": "Headcount Change Request",
+    "subtitle": "Increase, Decrease, Transfer",
+    "description": "Submit increase, decrease, or transfer requests.",
+    "listDescription": "Manage increase, decrease, and transfer requests.",
+    "create": "Change Request",
+    "list": "Change Request List",
+    "typeFilterLabel": "Request Type Filter",
+    "allTypes": "All Types"
+  },
+  "requestValidation": {
+    "typeRequired": "Please select a request type",
+    "departmentRequired": "Please select a department",
+    "gradeRequired": "Please select a grade",
+    "countMin": "Please enter a number greater than or equal to 0",
+    "reasonRequired": "Please enter a reason",
+    "effectiveDateRequired": "Please enter the effective date"
+  },
+  "requestToast": {
+    "success": "Submitted",
+    "successDesc": "The headcount change request has been submitted.",
+    "failed": "Submission Failed",
+    "failedDesc": "An error occurred while submitting the headcount change request."
+  },
+  "requestSection": {
+    "info": "Request Information",
+    "infoDescription": "Enter the basic information for the change request.",
+    "detail": "Request Details",
+    "detailDescription": "Enter the change details and reason."
+  },
+  "requestLabels": {
+    "type": "Request Type *",
+    "typeSelect": "Select type",
+    "department": "Department *",
+    "departmentSelect": "Select department",
+    "grade": "Grade *",
+    "gradeSelect": "Select grade",
+    "requestCount": "Requested Count *",
+    "effectiveDate": "Effective Date *",
+    "reason": "Reason *",
+    "reasonPlaceholder": "Enter the reason for the headcount change request",
+    "remarks": "Remarks",
+    "remarksPlaceholder": "Enter additional notes"
+  },
+  "requestTabs": {
+    "all": "All",
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected"
+  },
+  "requestEmpty": {
+    "noResults": "No results found",
+    "noRequests": "No change requests",
+    "noRequestsDesc": "Submit a headcount change request."
+  },
+  "requestTable": {
+    "requestNumber": "Request No.",
+    "type": "Type",
+    "department": "Department",
+    "grade": "Grade",
+    "current": "Current",
+    "requested": "Requested",
+    "requester": "Requester",
+    "effectiveDate": "Effective Date",
+    "status": "Status",
+    "list": "Headcount Change Request List"
+  },
+  "buttons": {
+    "cancel": "Cancel",
+    "submit": "Submit"
+  }
+}

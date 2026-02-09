@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { SkeletonTable } from '@/components/common/Skeleton';
@@ -38,6 +39,7 @@ export default function HeadcountPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
+  const { t } = useTranslation('headcount');
   const currentYear = new Date().getFullYear();
   const years = [currentYear + 1, currentYear, currentYear - 1, currentYear - 2];
 
@@ -78,12 +80,12 @@ export default function HeadcountPage() {
           {/* Mobile Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold">정현원 관리</h1>
-              <p className="text-sm text-muted-foreground">부서별 정현원 현황</p>
+              <h1 className="text-xl font-bold">{t('title')}</h1>
+              <p className="text-sm text-muted-foreground">{t('subtitle')}</p>
             </div>
             <Button size="sm" onClick={() => navigate('/headcount/plans/new')}>
               <Plus className="mr-1 h-4 w-4" />
-              등록
+              {t('empty.createPlan')}
             </Button>
           </div>
 
@@ -94,7 +96,7 @@ export default function HeadcountPage() {
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30">
                   <Users className="h-4 w-4 text-blue-600" />
                 </div>
-                <span className="text-xs text-muted-foreground">정현원</span>
+                <span className="text-xs text-muted-foreground">{t('summary.authorized')}</span>
               </div>
               <p className="text-2xl font-bold">
                 {isSummaryLoading ? '-' : (summary?.totalPlannedCount ?? 0).toLocaleString()}
@@ -105,7 +107,7 @@ export default function HeadcountPage() {
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900/30">
                   <Users className="h-4 w-4 text-green-600" />
                 </div>
-                <span className="text-xs text-muted-foreground">실현원</span>
+                <span className="text-xs text-muted-foreground">{t('summary.actual')}</span>
               </div>
               <p className="text-2xl font-bold">
                 {isSummaryLoading ? '-' : (summary?.totalCurrentCount ?? 0).toLocaleString()}
@@ -127,7 +129,7 @@ export default function HeadcountPage() {
                     <Minus className="h-4 w-4 text-gray-600" />
                   )}
                 </div>
-                <span className="text-xs text-muted-foreground">정실 차이</span>
+                <span className="text-xs text-muted-foreground">{t('summary.difference')}</span>
               </div>
               <p className={cn(
                 'text-2xl font-bold',
@@ -147,7 +149,7 @@ export default function HeadcountPage() {
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900/30">
                   <BarChart3 className="h-4 w-4 text-purple-600" />
                 </div>
-                <span className="text-xs text-muted-foreground">충원율</span>
+                <span className="text-xs text-muted-foreground">{t('summary.fillRate')}</span>
               </div>
               <p className="text-2xl font-bold">
                 {isSummaryLoading ? '-' : (
@@ -166,12 +168,12 @@ export default function HeadcountPage() {
               onValueChange={(value) => setYear(Number(value))}
             >
               <SelectTrigger className="w-[120px]">
-                <SelectValue placeholder="연도" />
+                <SelectValue placeholder={t('year.label')} />
               </SelectTrigger>
               <SelectContent>
                 {years.map((year) => (
                   <SelectItem key={year} value={String(year)}>
-                    {year}년
+                    {t('year.value', { year })}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -181,10 +183,10 @@ export default function HeadcountPage() {
           {/* Mobile Tab Filters */}
           <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
             {[
-              { value: '', label: '전체' },
-              { value: 'DRAFT', label: '초안' },
-              { value: 'APPROVED', label: '승인됨' },
-              { value: 'ACTIVE', label: '적용중' },
+              { value: '', label: t('tabs.all') },
+              { value: 'DRAFT', label: t('tabs.draft') },
+              { value: 'APPROVED', label: t('tabs.approved') },
+              { value: 'ACTIVE', label: t('tabs.active') },
             ].map((item) => (
               <button
                 key={item.value}
@@ -210,12 +212,12 @@ export default function HeadcountPage() {
           ) : plans.length === 0 ? (
             <EmptyState
               icon={Users}
-              title={searchState.status ? '검색 결과가 없습니다' : '정현원 계획이 없습니다'}
-              description={searchState.status ? '다른 필터를 선택해 보세요.' : '새로운 정현원 계획을 등록하세요.'}
+              title={searchState.status ? t('empty.noResults') : t('empty.noPlans')}
+              description={searchState.status ? t('empty.noResultsDesc') : t('empty.noPlansDesc')}
               action={
                 searchState.status
-                  ? { label: '필터 초기화', onClick: resetFilters }
-                  : { label: '계획 등록', onClick: () => navigate('/headcount/plans/new') }
+                  ? { label: t('empty.resetFilter'), onClick: resetFilters }
+                  : { label: t('empty.createPlan'), onClick: () => navigate('/headcount/plans/new') }
               }
             />
           ) : (
@@ -237,11 +239,11 @@ export default function HeadcountPage() {
                       <p className="text-xs text-muted-foreground">{plan.gradeName}</p>
                       <div className="flex items-center gap-4 mt-2">
                         <div className="text-xs">
-                          <span className="text-muted-foreground">정현원</span>
+                          <span className="text-muted-foreground">{t('summary.authorized')}</span>
                           <span className="ml-1 font-medium">{plan.plannedCount}</span>
                         </div>
                         <div className="text-xs">
-                          <span className="text-muted-foreground">실현원</span>
+                          <span className="text-muted-foreground">{t('summary.actual')}</span>
                           <span className="ml-1 font-medium">{plan.currentCount}</span>
                         </div>
                         <div className={cn(
@@ -272,18 +274,18 @@ export default function HeadcountPage() {
   return (
     <>
       <PageHeader
-        title="정현원 관리"
-        description="부서별 정현원 계획 및 현황을 관리합니다."
+        title={t('title')}
+        description={t('description')}
         actions={
           <Button onClick={() => navigate('/headcount/plans/new')}>
             <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
-            정현원 계획 등록
+            {t('plan.create')}
           </Button>
         }
       />
 
       {/* Summary Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6" role="region" aria-label="정현원 요약">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6" role="region" aria-label={t('summary.title')}>
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
@@ -291,7 +293,7 @@ export default function HeadcountPage() {
                 <Users className="h-6 w-6 text-blue-600" aria-hidden="true" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground" id="planned-label">정현원</p>
+                <p className="text-sm text-muted-foreground" id="planned-label">{t('summary.authorized')}</p>
                 <p className="text-2xl font-bold" aria-labelledby="planned-label">
                   {isSummaryLoading ? '-' : (summary?.totalPlannedCount ?? 0).toLocaleString()}
                   <span className="sr-only">명</span>
@@ -307,7 +309,7 @@ export default function HeadcountPage() {
                 <Users className="h-6 w-6 text-green-600" aria-hidden="true" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground" id="actual-label">실현원</p>
+                <p className="text-sm text-muted-foreground" id="actual-label">{t('summary.actual')}</p>
                 <p className="text-2xl font-bold" aria-labelledby="actual-label">
                   {isSummaryLoading ? '-' : (summary?.totalCurrentCount ?? 0).toLocaleString()}
                   <span className="sr-only">명</span>
@@ -334,7 +336,7 @@ export default function HeadcountPage() {
                 )}
               </div>
               <div>
-                <p className="text-sm text-muted-foreground" id="variance-label">정실 차이</p>
+                <p className="text-sm text-muted-foreground" id="variance-label">{t('summary.difference')}</p>
                 <p className={cn(
                   'text-2xl font-bold',
                   (summary?.totalVariance ?? 0) > 0 && 'text-amber-600',
@@ -359,7 +361,7 @@ export default function HeadcountPage() {
                 <BarChart3 className="h-6 w-6 text-purple-600" aria-hidden="true" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground" id="utilization-label">충원율</p>
+                <p className="text-sm text-muted-foreground" id="utilization-label">{t('summary.fillRate')}</p>
                 <p className="text-2xl font-bold" aria-labelledby="utilization-label">
                   {isSummaryLoading ? '-' : (
                     summary?.totalPlannedCount
@@ -379,20 +381,20 @@ export default function HeadcountPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" aria-hidden="true" />
-              정현원 계획
+              {t('plan.title')}
             </CardTitle>
             <div className="flex gap-2">
               <Select
                 value={String(searchState.year)}
                 onValueChange={(value) => setYear(Number(value))}
               >
-                <SelectTrigger className="w-[120px]" aria-label="연도 선택">
-                  <SelectValue placeholder="연도" />
+                <SelectTrigger className="w-[120px]" aria-label={t('year.select')}>
+                  <SelectValue placeholder={t('year.label')} />
                 </SelectTrigger>
                 <SelectContent>
                   {years.map((year) => (
                     <SelectItem key={year} value={String(year)}>
-                      {year}년
+                      {t('year.value', { year })}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -407,10 +409,10 @@ export default function HeadcountPage() {
             className="px-4 pt-2"
           >
             <TabsList>
-              <TabsTrigger value="all">전체</TabsTrigger>
-              <TabsTrigger value="DRAFT">초안</TabsTrigger>
-              <TabsTrigger value="APPROVED">승인됨</TabsTrigger>
-              <TabsTrigger value="ACTIVE">적용중</TabsTrigger>
+              <TabsTrigger value="all">{t('tabs.all')}</TabsTrigger>
+              <TabsTrigger value="DRAFT">{t('tabs.draft')}</TabsTrigger>
+              <TabsTrigger value="APPROVED">{t('tabs.approved')}</TabsTrigger>
+              <TabsTrigger value="ACTIVE">{t('tabs.active')}</TabsTrigger>
             </TabsList>
           </Tabs>
 
@@ -424,43 +426,43 @@ export default function HeadcountPage() {
                 icon={Users}
                 title={
                   searchState.status
-                    ? '검색 결과가 없습니다'
-                    : '정현원 계획이 없습니다'
+                    ? t('empty.noResults')
+                    : t('empty.noPlans')
                 }
                 description={
                   searchState.status
-                    ? '다른 필터를 선택해 보세요.'
-                    : '새로운 정현원 계획을 등록하세요.'
+                    ? t('empty.noResultsDesc')
+                    : t('empty.noPlansDesc')
                 }
                 action={
                   searchState.status
-                    ? { label: '필터 초기화', onClick: resetFilters }
-                    : { label: '계획 등록', onClick: () => navigate('/headcount/plans/new') }
+                    ? { label: t('empty.resetFilter'), onClick: resetFilters }
+                    : { label: t('empty.createPlan'), onClick: () => navigate('/headcount/plans/new') }
                 }
               />
             ) : (
               <>
-                <div className="overflow-x-auto" role="region" aria-label="정현원 계획 목록">
-                  <table className="w-full" role="grid" aria-label="정현원 계획">
+                <div className="overflow-x-auto" role="region" aria-label={t('plan.list')}>
+                  <table className="w-full" role="grid" aria-label={t('plan.title')}>
                     <thead>
                       <tr className="border-b bg-muted/50">
                         <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          부서
+                          {t('table.department')}
                         </th>
                         <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          직급
+                          {t('table.grade')}
                         </th>
                         <th scope="col" className="px-4 py-3 text-right text-sm font-medium text-muted-foreground w-[100px]">
-                          정현원
+                          {t('table.authorized')}
                         </th>
                         <th scope="col" className="px-4 py-3 text-right text-sm font-medium text-muted-foreground w-[100px]">
-                          실현원
+                          {t('table.actual')}
                         </th>
                         <th scope="col" className="px-4 py-3 text-right text-sm font-medium text-muted-foreground w-[100px]">
-                          차이
+                          {t('table.difference')}
                         </th>
                         <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground w-[100px]">
-                          상태
+                          {t('table.status')}
                         </th>
                       </tr>
                     </thead>

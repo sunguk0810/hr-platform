@@ -15,6 +15,10 @@ import koValidation from './locales/ko/validation.json';
 import koAccessibility from './locales/ko/accessibility.json';
 import koStatus from './locales/ko/status.json';
 import koOrganization from './locales/ko/organization.json';
+import koCommittee from './locales/ko/committee.json';
+import koAnnouncement from './locales/ko/announcement.json';
+import koHeadcount from './locales/ko/headcount.json';
+import koEmployeeCard from './locales/ko/employeeCard.json';
 
 // English
 import enCommon from './locales/en/common.json';
@@ -30,6 +34,10 @@ import enValidation from './locales/en/validation.json';
 import enAccessibility from './locales/en/accessibility.json';
 import enStatus from './locales/en/status.json';
 import enOrganization from './locales/en/organization.json';
+import enCommittee from './locales/en/committee.json';
+import enAnnouncement from './locales/en/announcement.json';
+import enHeadcount from './locales/en/headcount.json';
+import enEmployeeCard from './locales/en/employeeCard.json';
 
 const resources = {
   ko: {
@@ -46,6 +54,10 @@ const resources = {
     accessibility: koAccessibility,
     status: koStatus,
     organization: koOrganization,
+    committee: koCommittee,
+    announcement: koAnnouncement,
+    headcount: koHeadcount,
+    employeeCard: koEmployeeCard,
   },
   en: {
     common: enCommon,
@@ -61,6 +73,10 @@ const resources = {
     accessibility: enAccessibility,
     status: enStatus,
     organization: enOrganization,
+    committee: enCommittee,
+    announcement: enAnnouncement,
+    headcount: enHeadcount,
+    employeeCard: enEmployeeCard,
   },
 } as const;
 
@@ -82,6 +98,10 @@ i18n.use(initReactI18next).init({
     'accessibility',
     'status',
     'organization',
+    'committee',
+    'announcement',
+    'headcount',
+    'employeeCard',
   ],
   defaultNS: 'common',
   interpolation: {

@@ -1,7 +1,10 @@
+import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,24 +25,29 @@ import { useCreateCommittee } from '../hooks/useCommittee';
 import type { CommitteeType } from '@hr-platform/shared-types';
 import { COMMITTEE_TYPE_LABELS } from '@hr-platform/shared-types';
 
-const committeeSchema = z.object({
-  code: z.string().min(1, '위원회 코드를 입력해주세요').max(20),
-  name: z.string().min(1, '위원회명을 입력해주세요').max(100),
-  type: z.enum(['PERMANENT', 'TEMPORARY', 'PROJECT'] as const, {
-    required_error: '위원회 유형을 선택해주세요',
-  }),
-  purpose: z.string().min(1, '설립 목적을 입력해주세요').max(500),
-  startDate: z.string().min(1, '시작일을 입력해주세요'),
-  endDate: z.string().optional(),
-  meetingSchedule: z.string().max(200).optional(),
-});
+function createCommitteeSchema(t: TFunction) {
+  return z.object({
+    code: z.string().min(1, t('validation.codeRequired')).max(20),
+    name: z.string().min(1, t('validation.nameRequired')).max(100),
+    type: z.enum(['PERMANENT', 'TEMPORARY', 'PROJECT'] as const, {
+      required_error: t('validation.typeRequired'),
+    }),
+    purpose: z.string().min(1, t('validation.purposeRequired')).max(500),
+    startDate: z.string().min(1, t('validation.startDateRequired')),
+    endDate: z.string().optional(),
+    meetingSchedule: z.string().max(200).optional(),
+  });
+}
 
-type CommitteeFormData = z.infer<typeof committeeSchema>;
+type CommitteeFormData = z.infer<ReturnType<typeof createCommitteeSchema>>;
 
 export default function CommitteeCreatePage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const { t } = useTranslation('committee');
+
+  const committeeSchema = React.useMemo(() => createCommitteeSchema(t), [t]);
 
   const createMutation = useCreateCommittee();
 
@@ -77,15 +85,15 @@ export default function CommitteeCreatePage() {
       });
 
       toast({
-        title: '등록 완료',
-        description: '위원회가 성공적으로 등록되었습니다.',
+        title: t('toast.createSuccess'),
+        description: t('toast.createSuccessDesc'),
       });
 
       navigate('/committee');
     } catch {
       toast({
-        title: '등록 실패',
-        description: '위원회 등록 중 오류가 발생했습니다.',
+        title: t('toast.createFailed'),
+        description: t('toast.createFailedDesc'),
         variant: 'destructive',
       });
     }
@@ -107,8 +115,8 @@ export default function CommitteeCreatePage() {
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div>
-            <h1 className="text-xl font-bold">위원회 등록</h1>
-            <p className="text-sm text-muted-foreground">새로운 위원회 생성</p>
+            <h1 className="text-xl font-bold">{t('create')}</h1>
+            <p className="text-sm text-muted-foreground">{t('createPage.title')}</p>
           </div>
         </div>
 
@@ -118,15 +126,15 @@ export default function CommitteeCreatePage() {
           <div className="bg-card rounded-xl border p-4 space-y-4">
             <h3 className="text-sm font-medium flex items-center gap-2">
               <Users2 className="h-4 w-4" />
-              기본 정보
+              {t('section.basicInfo')}
             </h3>
 
             <div className="space-y-2">
-              <Label htmlFor="mobile-code">위원회 코드 *</Label>
+              <Label htmlFor="mobile-code">{t('labels.code')}</Label>
               <Input
                 id="mobile-code"
                 {...register('code')}
-                placeholder="예: SAFETY_COMM"
+                placeholder={t('labels.codePlaceholder')}
               />
               {errors.code && (
                 <p className="text-sm text-destructive">{errors.code.message}</p>
@@ -134,14 +142,14 @@ export default function CommitteeCreatePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="mobile-type">유형 *</Label>
+              <Label htmlFor="mobile-type">{t('labels.type')}</Label>
               <Controller
                 name="type"
                 control={control}
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="mobile-type">
-                      <SelectValue placeholder="유형 선택" />
+                      <SelectValue placeholder={t('labels.typeSelect')} />
                     </SelectTrigger>
                     <SelectContent>
                       {(Object.entries(COMMITTEE_TYPE_LABELS) as [CommitteeType, string][]).map(
@@ -161,11 +169,11 @@ export default function CommitteeCreatePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="mobile-name">위원회명 *</Label>
+              <Label htmlFor="mobile-name">{t('labels.name')}</Label>
               <Input
                 id="mobile-name"
                 {...register('name')}
-                placeholder="위원회명을 입력하세요"
+                placeholder={t('labels.namePlaceholder')}
               />
               {errors.name && (
                 <p className="text-sm text-destructive">{errors.name.message}</p>
@@ -173,11 +181,11 @@ export default function CommitteeCreatePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="mobile-purpose">설립 목적 *</Label>
+              <Label htmlFor="mobile-purpose">{t('labels.purpose')}</Label>
               <Textarea
                 id="mobile-purpose"
                 {...register('purpose')}
-                placeholder="위원회 설립 목적을 입력하세요"
+                placeholder={t('labels.purposePlaceholder')}
                 rows={3}
               />
               {errors.purpose && (
@@ -188,10 +196,10 @@ export default function CommitteeCreatePage() {
 
           {/* 활동 기간 섹션 */}
           <div className="bg-card rounded-xl border p-4 space-y-4">
-            <h3 className="text-sm font-medium">활동 기간</h3>
+            <h3 className="text-sm font-medium">{t('section.activityPeriod')}</h3>
 
             <div className="space-y-2">
-              <Label htmlFor="mobile-startDate">시작일 *</Label>
+              <Label htmlFor="mobile-startDate">{t('labels.startDate')}</Label>
               <Input
                 id="mobile-startDate"
                 type="date"
@@ -204,7 +212,7 @@ export default function CommitteeCreatePage() {
 
             {(selectedType === 'TEMPORARY' || selectedType === 'PROJECT') && (
               <div className="space-y-2">
-                <Label htmlFor="mobile-endDate">종료 예정일</Label>
+                <Label htmlFor="mobile-endDate">{t('labels.endDate')}</Label>
                 <Input
                   id="mobile-endDate"
                   type="date"
@@ -214,11 +222,11 @@ export default function CommitteeCreatePage() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="mobile-meetingSchedule">정기 회의 일정</Label>
+              <Label htmlFor="mobile-meetingSchedule">{t('labels.meetingSchedule')}</Label>
               <Input
                 id="mobile-meetingSchedule"
                 {...register('meetingSchedule')}
-                placeholder="예: 매월 첫째 주 월요일 10:00"
+                placeholder={t('labels.meetingSchedulePlaceholder')}
               />
             </div>
           </div>
@@ -234,7 +242,7 @@ export default function CommitteeCreatePage() {
               disabled={isPending}
               className="flex-1"
             >
-              취소
+              {t('buttons.cancel')}
             </Button>
             <Button type="submit" disabled={isPending} className="flex-1">
               {isPending ? (
@@ -242,7 +250,7 @@ export default function CommitteeCreatePage() {
               ) : (
                 <Save className="mr-2 h-4 w-4" />
               )}
-              등록
+              {t('buttons.create')}
             </Button>
           </div>
         </div>
@@ -254,8 +262,8 @@ export default function CommitteeCreatePage() {
   return (
     <>
       <PageHeader
-        title="위원회 등록"
-        description="새로운 위원회를 등록합니다."
+        title={t('create')}
+        description={t('createPage.description')}
       />
 
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -264,18 +272,18 @@ export default function CommitteeCreatePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users2 className="h-5 w-5" aria-hidden="true" />
-                기본 정보
+                {t('section.basicInfo')}
               </CardTitle>
-              <CardDescription>위원회의 기본 정보를 입력합니다.</CardDescription>
+              <CardDescription>{t('section.basicInfoDescription')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="code">위원회 코드 *</Label>
+                  <Label htmlFor="code">{t('labels.code')}</Label>
                   <Input
                     id="code"
                     {...register('code')}
-                    placeholder="예: SAFETY_COMM"
+                    placeholder={t('labels.codePlaceholder')}
                   />
                   {errors.code && (
                     <p className="text-sm text-destructive">{errors.code.message}</p>
@@ -283,14 +291,14 @@ export default function CommitteeCreatePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="type">유형 *</Label>
+                  <Label htmlFor="type">{t('labels.type')}</Label>
                   <Controller
                     name="type"
                     control={control}
                     render={({ field }) => (
                       <Select value={field.value} onValueChange={field.onChange}>
                         <SelectTrigger id="type">
-                          <SelectValue placeholder="유형 선택" />
+                          <SelectValue placeholder={t('labels.typeSelect')} />
                         </SelectTrigger>
                         <SelectContent>
                           {(Object.entries(COMMITTEE_TYPE_LABELS) as [CommitteeType, string][]).map(
@@ -311,11 +319,11 @@ export default function CommitteeCreatePage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="name">위원회명 *</Label>
+                <Label htmlFor="name">{t('labels.name')}</Label>
                 <Input
                   id="name"
                   {...register('name')}
-                  placeholder="위원회명을 입력하세요"
+                  placeholder={t('labels.namePlaceholder')}
                 />
                 {errors.name && (
                   <p className="text-sm text-destructive">{errors.name.message}</p>
@@ -323,11 +331,11 @@ export default function CommitteeCreatePage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="purpose">설립 목적 *</Label>
+                <Label htmlFor="purpose">{t('labels.purpose')}</Label>
                 <Textarea
                   id="purpose"
                   {...register('purpose')}
-                  placeholder="위원회 설립 목적을 입력하세요"
+                  placeholder={t('labels.purposePlaceholder')}
                   rows={3}
                 />
                 {errors.purpose && (
@@ -339,13 +347,13 @@ export default function CommitteeCreatePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>활동 기간</CardTitle>
-              <CardDescription>위원회의 활동 기간과 회의 일정을 설정합니다.</CardDescription>
+              <CardTitle>{t('section.activityPeriod')}</CardTitle>
+              <CardDescription>{t('section.activityPeriodDescription')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="startDate">시작일 *</Label>
+                  <Label htmlFor="startDate">{t('labels.startDate')}</Label>
                   <Input
                     id="startDate"
                     type="date"
@@ -358,7 +366,7 @@ export default function CommitteeCreatePage() {
 
                 {(selectedType === 'TEMPORARY' || selectedType === 'PROJECT') && (
                   <div className="space-y-2">
-                    <Label htmlFor="endDate">종료 예정일</Label>
+                    <Label htmlFor="endDate">{t('labels.endDate')}</Label>
                     <Input
                       id="endDate"
                       type="date"
@@ -369,11 +377,11 @@ export default function CommitteeCreatePage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="meetingSchedule">정기 회의 일정</Label>
+                <Label htmlFor="meetingSchedule">{t('labels.meetingSchedule')}</Label>
                 <Input
                   id="meetingSchedule"
                   {...register('meetingSchedule')}
-                  placeholder="예: 매월 첫째 주 월요일 10:00"
+                  placeholder={t('labels.meetingSchedulePlaceholder')}
                 />
               </div>
             </CardContent>
@@ -387,7 +395,7 @@ export default function CommitteeCreatePage() {
             onClick={() => navigate('/committee')}
             disabled={isPending}
           >
-            취소
+            {t('buttons.cancel')}
           </Button>
           <Button type="submit" disabled={isPending}>
             {isPending ? (
@@ -395,7 +403,7 @@ export default function CommitteeCreatePage() {
             ) : (
               <Save className="mr-2 h-4 w-4" aria-hidden="true" />
             )}
-            등록
+            {t('buttons.create')}
           </Button>
         </div>
       </form>

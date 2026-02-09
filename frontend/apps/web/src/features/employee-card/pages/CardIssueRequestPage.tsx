@@ -1,7 +1,10 @@
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,19 +23,22 @@ import { useCreateCardIssueRequest } from '../hooks/useEmployeeCard';
 import type { CardIssueType } from '@hr-platform/shared-types';
 import { CARD_ISSUE_TYPE_LABELS } from '@hr-platform/shared-types';
 
-const cardIssueSchema = z.object({
+const createCardIssueSchema = (t: TFunction) => z.object({
   issueType: z.enum(['NEW', 'REISSUE', 'RENEWAL'] as const, {
-    required_error: '발급 유형을 선택해주세요',
+    required_error: t('issueValidation.typeRequired'),
   }),
-  reason: z.string().min(1, '사유를 입력해주세요').max(500),
+  reason: z.string().min(1, t('issueValidation.reasonRequired')).max(500),
 });
 
-type CardIssueFormData = z.infer<typeof cardIssueSchema>;
+type CardIssueFormData = z.infer<ReturnType<typeof createCardIssueSchema>>;
 
 export default function CardIssueRequestPage() {
+  const { t } = useTranslation('employeeCard');
   const navigate = useNavigate();
   const { toast } = useToast();
   const createMutation = useCreateCardIssueRequest();
+
+  const cardIssueSchema = useMemo(() => createCardIssueSchema(t), [t]);
 
   const {
     register,
@@ -56,15 +62,15 @@ export default function CardIssueRequestPage() {
       });
 
       toast({
-        title: '신청 완료',
-        description: '사원증 발급 신청이 등록되었습니다.',
+        title: t('issueToast.success'),
+        description: t('issueToast.successDesc'),
       });
 
       navigate('/employee-card');
     } catch {
       toast({
-        title: '신청 실패',
-        description: '사원증 발급 신청 중 오류가 발생했습니다.',
+        title: t('issueToast.failed'),
+        description: t('issueToast.failedDesc'),
         variant: 'destructive',
       });
     }
@@ -75,8 +81,8 @@ export default function CardIssueRequestPage() {
   return (
     <>
       <PageHeader
-        title="사원증 발급 신청"
-        description="사원증 발급을 신청합니다."
+        title={t('issueRequest.title')}
+        description={t('issueRequest.description')}
       />
 
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -84,20 +90,20 @@ export default function CardIssueRequestPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CreditCard className="h-5 w-5" aria-hidden="true" />
-              발급 정보
+              {t('issueSection.title')}
             </CardTitle>
-            <CardDescription>발급 유형과 사유를 입력합니다.</CardDescription>
+            <CardDescription>{t('issueSection.description')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="issueType">발급 유형 *</Label>
+              <Label htmlFor="issueType">{t('issueSection.typeLabel')}</Label>
               <Controller
                 name="issueType"
                 control={control}
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger id="issueType">
-                      <SelectValue placeholder="유형 선택" />
+                      <SelectValue placeholder={t('issueSection.typeSelect')} />
                     </SelectTrigger>
                     <SelectContent>
                       {(Object.entries(CARD_ISSUE_TYPE_LABELS) as [CardIssueType, string][]).map(
@@ -117,11 +123,11 @@ export default function CardIssueRequestPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="reason">사유 *</Label>
+              <Label htmlFor="reason">{t('issueSection.reasonLabel')}</Label>
               <Textarea
                 id="reason"
                 {...register('reason')}
-                placeholder="발급 사유를 입력하세요"
+                placeholder={t('issueSection.reasonPlaceholder')}
                 rows={6}
               />
               {errors.reason && (
@@ -138,7 +144,7 @@ export default function CardIssueRequestPage() {
             onClick={() => navigate('/employee-card')}
             disabled={isPending}
           >
-            취소
+            {t('buttons.cancel')}
           </Button>
           <Button type="submit" disabled={isPending}>
             {isPending ? (
@@ -146,7 +152,7 @@ export default function CardIssueRequestPage() {
             ) : (
               <Save className="mr-2 h-4 w-4" aria-hidden="true" />
             )}
-            신청
+            {t('buttons.apply')}
           </Button>
         </div>
       </form>

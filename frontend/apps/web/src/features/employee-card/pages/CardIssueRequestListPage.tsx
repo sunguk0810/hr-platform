@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { SkeletonTable } from '@/components/common/Skeleton';
@@ -29,13 +30,6 @@ const STATUS_COLORS = {
   ISSUED: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
 };
 
-const STATUS_LABELS = {
-  PENDING: '대기',
-  APPROVED: '승인',
-  REJECTED: '반려',
-  ISSUED: '발급완료',
-};
-
 const ISSUE_TYPE_COLORS = {
   NEW: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
   REISSUE: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
@@ -43,6 +37,7 @@ const ISSUE_TYPE_COLORS = {
 };
 
 export default function CardIssueRequestListPage() {
+  const { t } = useTranslation('employeeCard');
   const { toast } = useToast();
   const [page, setPage] = useState(0);
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
@@ -53,6 +48,13 @@ export default function CardIssueRequestListPage() {
 
   const requests = data?.data?.content ?? [];
   const totalPages = data?.data?.page?.totalPages ?? 0;
+
+  const STATUS_LABELS = {
+    PENDING: t('statuses.pending'),
+    APPROVED: t('statuses.approved'),
+    REJECTED: t('statuses.rejected'),
+    ISSUED: t('statuses.issued'),
+  };
 
   const handleApproveClick = (requestId: string) => {
     setSelectedRequestId(requestId);
@@ -65,8 +67,8 @@ export default function CardIssueRequestListPage() {
     approveMutation.mutate(selectedRequestId, {
       onSuccess: () => {
         toast({
-          title: '승인 완료',
-          description: '사원증 발급 요청이 승인되었습니다.',
+          title: t('approveToast.success'),
+          description: t('approveToast.successDesc'),
         });
         setApproveDialogOpen(false);
         setSelectedRequestId(null);
@@ -74,8 +76,8 @@ export default function CardIssueRequestListPage() {
       onError: () => {
         toast({
           variant: 'destructive',
-          title: '승인 실패',
-          description: '사원증 발급 요청 승인에 실패했습니다.',
+          title: t('approveToast.failed'),
+          description: t('approveToast.failedDesc'),
         });
       },
     });
@@ -84,15 +86,15 @@ export default function CardIssueRequestListPage() {
   return (
     <>
       <PageHeader
-        title="사원증 발급 요청 관리"
-        description="사원증 발급 요청을 승인하고 관리합니다."
+        title={t('issueRequestList.title')}
+        description={t('issueRequestList.description')}
       />
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileCheck className="h-5 w-5" aria-hidden="true" />
-            발급 요청 목록
+            {t('issueRequestList.list')}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -102,22 +104,22 @@ export default function CardIssueRequestListPage() {
             ) : requests.length === 0 ? (
               <EmptyState
                 icon={FileCheck}
-                title="발급 요청이 없습니다"
-                description="현재 처리할 사원증 발급 요청이 없습니다."
+                title={t('issueRequestEmpty.title')}
+                description={t('issueRequestEmpty.description')}
               />
             ) : (
               <>
-                <div className="overflow-x-auto" role="region" aria-label="발급 요청 목록">
-                  <table className="w-full" role="grid" aria-label="발급 요청">
+                <div className="overflow-x-auto" role="region" aria-label={t('issueRequestList.list')}>
+                  <table className="w-full" role="grid" aria-label={t('issueRequestList.list')}>
                     <thead>
                       <tr className="border-b bg-muted/50">
-                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">요청번호</th>
-                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">직원</th>
-                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">부서</th>
-                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">발급유형</th>
-                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">상태</th>
-                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">요청일</th>
-                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">액션</th>
+                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('issueRequestTable.requestNumber')}</th>
+                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('issueRequestTable.employee')}</th>
+                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('issueRequestTable.department')}</th>
+                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('issueRequestTable.issueType')}</th>
+                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('issueRequestTable.status')}</th>
+                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('issueRequestTable.requestDate')}</th>
+                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('issueRequestTable.action')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -151,7 +153,7 @@ export default function CardIssueRequestListPage() {
                                 size="sm"
                                 onClick={() => handleApproveClick(request.id)}
                               >
-                                승인
+                                {t('approveDialog.confirm')}
                               </Button>
                             )}
                           </td>
@@ -170,18 +172,18 @@ export default function CardIssueRequestListPage() {
       <AlertDialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>발급 요청 승인</AlertDialogTitle>
+            <AlertDialogTitle>{t('approveDialog.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              이 사원증 발급 요청을 승인하시겠습니까? 승인 후 사원증이 발급됩니다.
+              {t('approveDialog.description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogCancel>{t('approveDialog.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleApproveConfirm}
               disabled={approveMutation.isPending}
             >
-              {approveMutation.isPending ? '처리중...' : '승인'}
+              {approveMutation.isPending ? t('approveDialog.processing') : t('approveDialog.confirm')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

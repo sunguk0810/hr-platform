@@ -1,0 +1,115 @@
+{
+  "title": "정현원 관리",
+  "subtitle": "부서별 정현원 현황",
+  "description": "부서별 정현원 계획 및 현황을 관리합니다.",
+  "summary": {
+    "title": "정현원 요약",
+    "authorized": "정현원",
+    "actual": "실현원",
+    "difference": "정실 차이",
+    "fillRate": "충원율"
+  },
+  "year": {
+    "label": "연도",
+    "value": "{{year}}년",
+    "select": "연도 선택"
+  },
+  "tabs": {
+    "all": "전체",
+    "draft": "초안",
+    "approved": "승인됨",
+    "active": "적용중"
+  },
+  "empty": {
+    "noResults": "검색 결과가 없습니다",
+    "noResultsDesc": "다른 필터를 선택해 보세요.",
+    "noPlans": "정현원 계획이 없습니다",
+    "noPlansDesc": "새로운 정현원 계획을 등록하세요.",
+    "resetFilter": "필터 초기화",
+    "createPlan": "계획 등록"
+  },
+  "plan": {
+    "create": "정현원 계획 등록",
+    "title": "정현원 계획",
+    "list": "정현원 계획 목록"
+  },
+  "table": {
+    "department": "부서",
+    "grade": "직급",
+    "authorized": "정현원",
+    "actual": "실현원",
+    "difference": "차이",
+    "status": "상태"
+  },
+  "request": {
+    "title": "정현원 변경 요청",
+    "subtitle": "증원, 감원, 전환 요청",
+    "description": "증원, 감원, 전환 요청을 등록합니다.",
+    "listDescription": "증원, 감원, 전환 요청을 관리합니다.",
+    "create": "변경 요청",
+    "list": "변경 요청 목록",
+    "typeFilterLabel": "요청 유형 필터",
+    "allTypes": "전체 유형"
+  },
+  "requestValidation": {
+    "typeRequired": "요청 유형을 선택해주세요",
+    "departmentRequired": "부서를 선택해주세요",
+    "gradeRequired": "직급을 선택해주세요",
+    "countMin": "0 이상의 숫자를 입력해주세요",
+    "reasonRequired": "요청 사유를 입력해주세요",
+    "effectiveDateRequired": "적용 예정일을 입력해주세요"
+  },
+  "requestToast": {
+    "success": "요청 완료",
+    "successDesc": "정현원 변경 요청이 등록되었습니다.",
+    "failed": "요청 실패",
+    "failedDesc": "정현원 변경 요청 중 오류가 발생했습니다."
+  },
+  "requestSection": {
+    "info": "요청 정보",
+    "infoDescription": "변경 요청의 기본 정보를 입력합니다.",
+    "detail": "요청 상세",
+    "detailDescription": "변경 내용과 사유를 입력합니다."
+  },
+  "requestLabels": {
+    "type": "요청 유형 *",
+    "typeSelect": "유형 선택",
+    "department": "부서 *",
+    "departmentSelect": "부서 선택",
+    "grade": "직급 *",
+    "gradeSelect": "직급 선택",
+    "requestCount": "요청 인원 *",
+    "effectiveDate": "적용 예정일 *",
+    "reason": "요청 사유 *",
+    "reasonPlaceholder": "정현원 변경 요청 사유를 입력하세요",
+    "remarks": "비고",
+    "remarksPlaceholder": "기타 참고사항을 입력하세요"
+  },
+  "requestTabs": {
+    "all": "전체",
+    "pending": "대기중",
+    "approved": "승인",
+    "rejected": "반려"
+  },
+  "requestEmpty": {
+    "noResults": "검색 결과가 없습니다",
+    "noRequests": "변경 요청이 없습니다",
+    "noRequestsDesc": "정현원 변경 요청을 등록하세요."
+  },
+  "requestTable": {
+    "requestNumber": "요청번호",
+    "type": "유형",
+    "department": "부서",
+    "grade": "직급",
+    "current": "현재",
+    "requested": "요청",
+    "requester": "요청자",
+    "effectiveDate": "적용일",
+    "status": "상태",
+    "list": "정현원 변경 요청 목록"
+  },
+  "buttons": {
+    "cancel": "취소",
+    "submit": "요청"
+  }
+}

@@ -1,0 +1,100 @@
+{
+  "title": "공지사항",
+  "description": "회사 공지사항 및 소식을 확인하세요.",
+  "subtitle": "회사 소식을 확인하세요",
+  "list": "공지사항 목록",
+  "create": "작성",
+  "detail": "공지사항 상세 내용",
+  "categories": {
+    "NOTICE": "공지",
+    "EVENT": "이벤트",
+    "UPDATE": "업데이트",
+    "URGENT": "긴급"
+  },
+  "validation": {
+    "titleRequired": "제목을 입력해주세요",
+    "contentRequired": "내용을 입력해주세요",
+    "categoryRequired": "분류를 선택해주세요"
+  },
+  "toast": {
+    "updateSuccess": "수정 완료",
+    "updateSuccessDesc": "공지사항이 수정되었습니다.",
+    "createSuccess": "등록 완료",
+    "createSuccessDesc": "공지사항이 등록되었습니다.",
+    "updateFailed": "수정 실패",
+    "createFailed": "등록 실패",
+    "processFailed": "공지사항 처리 중 오류가 발생했습니다.",
+    "deleteSuccess": "삭제 완료",
+    "deleteSuccessDesc": "공지사항이 삭제되었습니다.",
+    "deleteFailed": "삭제 실패",
+    "deleteFailedDesc": "공지사항 삭제 중 오류가 발생했습니다."
+  },
+  "createPage": {
+    "title": "공지사항 작성",
+    "description": "새로운 공지사항을 작성합니다."
+  },
+  "editPage": {
+    "title": "공지사항 수정",
+    "description": "공지사항을 수정합니다."
+  },
+  "section": {
+    "info": "공지사항 정보",
+    "infoDescription": "공지사항의 제목과 내용을 입력합니다."
+  },
+  "labels": {
+    "category": "분류 *",
+    "categorySelect": "분류 선택",
+    "pinned": "상단 고정",
+    "title": "제목 *",
+    "titlePlaceholder": "공지사항 제목을 입력하세요",
+    "content": "내용 *",
+    "contentPlaceholder": "공지사항 내용을 입력하세요"
+  },
+  "detailPage": {
+    "pinned": "고정",
+    "attachment": "첨부파일",
+    "attachmentWithCount": "첨부파일 ({{count}})"
+  },
+  "notFound": {
+    "title": "공지사항을 찾을 수 없습니다.",
+    "goToList": "목록으로"
+  },
+  "deleteDialog": {
+    "title": "공지사항 삭제",
+    "description": "이 공지사항을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+    "confirm": "삭제"
+  },
+  "search": {
+    "placeholder": "검색...",
+    "detailedPlaceholder": "제목, 내용 검색...",
+    "label": "공지사항 검색",
+    "categoryFilterLabel": "공지사항 분류 필터",
+    "allCategories": "전체 분류"
+  },
+  "empty": {
+    "title": "공지사항이 없습니다",
+    "description": "등록된 공지사항이 없습니다."
+  },
+  "error": {
+    "loadFailed": "데이터를 불러올 수 없습니다",
+    "loadFailedDesc": "잠시 후 다시 시도해주세요."
+  },
+  "table": {
+    "category": "분류",
+    "title": "제목",
+    "author": "작성자",
+    "views": "조회수",
+    "createdAt": "작성일"
+  },
+  "accessibility": {
+    "pinned": "고정됨",
+    "hasAttachment": "첨부파일 있음",
+    "viewCount": "조회수 {{count}}"
+  },
+  "buttons": {
+    "cancel": "취소",
+    "edit": "수정",
+    "create": "등록",
+    "delete": "삭제"
+  }
+}

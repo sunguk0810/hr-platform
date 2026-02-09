@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { SkeletonTable } from '@/components/common/Skeleton';
@@ -28,6 +29,7 @@ export default function CommitteeListPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
+  const { t } = useTranslation('committee');
   const [status, setStatus] = useState<CommitteeStatus | ''>('');
   const [page, setPage] = useState(0);
   const [showSyncBanner, setShowSyncBanner] = useState(true);
@@ -55,16 +57,16 @@ export default function CommitteeListPage() {
           {/* Mobile Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold">위원회 관리</h1>
-              <p className="text-sm text-muted-foreground">사내 위원회 현황</p>
+              <h1 className="text-xl font-bold">{t('title')}</h1>
+              <p className="text-sm text-muted-foreground">{t('subtitle')}</p>
               <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                 <RefreshCw className="h-3 w-3" />
-                마지막 동기화: {lastSyncTime}
+                {t('sync.lastSync')}{lastSyncTime}
               </p>
             </div>
             <Button size="sm" onClick={() => navigate('/committee/new')}>
               <Plus className="mr-1 h-4 w-4" />
-              등록
+              {t('buttons.create')}
             </Button>
           </div>
 
@@ -72,10 +74,10 @@ export default function CommitteeListPage() {
           {showSyncBanner && pendingSyncCount > 0 && (
             <Alert variant="info" className="mb-0">
               <Info className="h-4 w-4" />
-              <AlertTitle>위원 자동 변경 알림</AlertTitle>
+              <AlertTitle>{t('sync.autoChangeAlert')}</AlertTitle>
               <AlertDescription className="flex items-center justify-between">
-                <span>인사발령에 의한 위원 자동 변경이 {pendingSyncCount}건 대기 중입니다.</span>
-                <Button variant="outline" size="sm" onClick={() => setShowSyncBanner(false)}>확인</Button>
+                <span>{t('sync.autoChangeMessage', { count: pendingSyncCount })}</span>
+                <Button variant="outline" size="sm" onClick={() => setShowSyncBanner(false)}>{t('sync.confirm')}</Button>
               </AlertDescription>
             </Alert>
           )}
@@ -83,10 +85,10 @@ export default function CommitteeListPage() {
           {/* Mobile Tab Filters */}
           <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
             {[
-              { value: '', label: '전체' },
-              { value: 'ACTIVE', label: '활동중' },
-              { value: 'INACTIVE', label: '휴면' },
-              { value: 'DISSOLVED', label: '해산' },
+              { value: '', label: t('tabs.all') },
+              { value: 'ACTIVE', label: t('tabs.active') },
+              { value: 'INACTIVE', label: t('tabs.dormant') },
+              { value: 'DISSOLVED', label: t('tabs.dissolved') },
             ].map((item) => (
               <button
                 key={item.value}
@@ -112,9 +114,9 @@ export default function CommitteeListPage() {
           ) : committees.length === 0 ? (
             <EmptyState
               icon={Users2}
-              title="위원회가 없습니다"
-              description="새로운 위원회를 등록하세요."
-              action={{ label: '위원회 등록', onClick: () => navigate('/committee/new') }}
+              title={t('empty.title')}
+              description={t('empty.description')}
+              action={{ label: t('create'), onClick: () => navigate('/committee/new') }}
             />
           ) : (
             <div className="space-y-3">
@@ -135,7 +137,7 @@ export default function CommitteeListPage() {
                         </span>
                         {committee.exOfficioCount > 0 && (
                           <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-xs">
-                            당연직 {committee.exOfficioCount}명
+                            {t('memberCount.exOfficio', { count: committee.exOfficioCount })}
                           </Badge>
                         )}
                       </div>
@@ -143,7 +145,7 @@ export default function CommitteeListPage() {
                       <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                         <span className="font-mono">{committee.code}</span>
                         <span>·</span>
-                        <span>{committee.memberCount}명</span>
+                        <span>{t('memberCount.total', { count: committee.memberCount })}</span>
                         <span>·</span>
                         <span>{committee.startDate}</span>
                       </div>
@@ -166,28 +168,28 @@ export default function CommitteeListPage() {
   return (
     <>
       <PageHeader
-        title="위원회 관리"
-        description="사내 위원회 현황을 관리합니다."
+        title={t('title')}
+        description={t('description')}
         actions={
           <Button onClick={() => navigate('/committee/new')}>
             <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
-            위원회 등록
+            {t('create')}
           </Button>
         }
       />
 
       <p className="text-xs text-muted-foreground flex items-center gap-1 -mt-4 mb-4">
         <RefreshCw className="h-3 w-3" />
-        마지막 동기화: {lastSyncTime}
+        {t('sync.lastSync')}{lastSyncTime}
       </p>
 
       {showSyncBanner && pendingSyncCount > 0 && (
         <Alert variant="info" className="mb-4">
           <Info className="h-4 w-4" />
-          <AlertTitle>위원 자동 변경 알림</AlertTitle>
+          <AlertTitle>{t('sync.autoChangeAlert')}</AlertTitle>
           <AlertDescription className="flex items-center justify-between">
-            <span>인사발령에 의한 위원 자동 변경이 {pendingSyncCount}건 대기 중입니다.</span>
-            <Button variant="outline" size="sm" onClick={() => setShowSyncBanner(false)}>확인</Button>
+            <span>{t('sync.autoChangeMessage', { count: pendingSyncCount })}</span>
+            <Button variant="outline" size="sm" onClick={() => setShowSyncBanner(false)}>{t('sync.confirm')}</Button>
           </AlertDescription>
         </Alert>
       )}
@@ -196,7 +198,7 @@ export default function CommitteeListPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users2 className="h-5 w-5" aria-hidden="true" />
-            위원회 목록
+            {t('list')}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -206,10 +208,10 @@ export default function CommitteeListPage() {
             className="px-4 pt-2"
           >
             <TabsList>
-              <TabsTrigger value="all">전체</TabsTrigger>
-              <TabsTrigger value="ACTIVE">활동중</TabsTrigger>
-              <TabsTrigger value="INACTIVE">휴면</TabsTrigger>
-              <TabsTrigger value="DISSOLVED">해산</TabsTrigger>
+              <TabsTrigger value="all">{t('tabs.all')}</TabsTrigger>
+              <TabsTrigger value="ACTIVE">{t('tabs.active')}</TabsTrigger>
+              <TabsTrigger value="INACTIVE">{t('tabs.dormant')}</TabsTrigger>
+              <TabsTrigger value="DISSOLVED">{t('tabs.dissolved')}</TabsTrigger>
             </TabsList>
           </Tabs>
 
@@ -219,23 +221,23 @@ export default function CommitteeListPage() {
             ) : committees.length === 0 ? (
               <EmptyState
                 icon={Users2}
-                title="위원회가 없습니다"
-                description="새로운 위원회를 등록하세요."
-                action={{ label: '위원회 등록', onClick: () => navigate('/committee/new') }}
+                title={t('empty.title')}
+                description={t('empty.description')}
+                action={{ label: t('create'), onClick: () => navigate('/committee/new') }}
               />
             ) : (
               <>
-                <div className="overflow-x-auto" role="region" aria-label="위원회 목록">
-                  <table className="w-full" role="grid" aria-label="위원회">
+                <div className="overflow-x-auto" role="region" aria-label={t('list')}>
+                  <table className="w-full" role="grid" aria-label={t('list')}>
                     <thead>
                       <tr className="border-b bg-muted/50">
-                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">코드</th>
-                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">위원회명</th>
-                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">유형</th>
-                        <th scope="col" className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">위원 수</th>
-                        <th scope="col" className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">당연직</th>
-                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">시작일</th>
-                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">상태</th>
+                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('table.code')}</th>
+                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('table.name')}</th>
+                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('table.type')}</th>
+                        <th scope="col" className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">{t('table.memberCount')}</th>
+                        <th scope="col" className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">{t('table.exOfficio')}</th>
+                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('table.startDate')}</th>
+                        <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t('table.status')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -250,11 +252,11 @@ export default function CommitteeListPage() {
                           <td className="px-4 py-3 font-mono text-sm">{committee.code}</td>
                           <td className="px-4 py-3 text-sm font-medium">{committee.name}</td>
                           <td className="px-4 py-3 text-sm">{COMMITTEE_TYPE_LABELS[committee.type]}</td>
-                          <td className="px-4 py-3 text-sm text-right">{committee.memberCount}명</td>
+                          <td className="px-4 py-3 text-sm text-right">{t('memberCount.total', { count: committee.memberCount })}</td>
                           <td className="px-4 py-3 text-center">
                             {committee.exOfficioCount > 0 ? (
                               <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
-                                당연직 {committee.exOfficioCount}명
+                                {t('memberCount.exOfficio', { count: committee.exOfficioCount })}
                               </Badge>
                             ) : (
                               <span className="text-sm text-muted-foreground">-</span>

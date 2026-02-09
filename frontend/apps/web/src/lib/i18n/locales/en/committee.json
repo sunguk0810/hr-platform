@@ -1,0 +1,77 @@
+{
+  "title": "Committee Management",
+  "description": "Manage company committees.",
+  "subtitle": "Company Committee Status",
+  "create": "Create Committee",
+  "list": "Committee List",
+  "createPage": {
+    "title": "Create New Committee",
+    "description": "Register a new committee."
+  },
+  "section": {
+    "basicInfo": "Basic Information",
+    "basicInfoDescription": "Enter the basic information for the committee.",
+    "activityPeriod": "Activity Period",
+    "activityPeriodDescription": "Set the activity period and meeting schedule for the committee."
+  },
+  "labels": {
+    "code": "Committee Code *",
+    "codePlaceholder": "e.g., SAFETY_COMM",
+    "type": "Type *",
+    "typeSelect": "Select type",
+    "name": "Committee Name *",
+    "namePlaceholder": "Enter committee name",
+    "purpose": "Purpose *",
+    "purposePlaceholder": "Enter the purpose of the committee",
+    "startDate": "Start Date *",
+    "endDate": "Expected End Date",
+    "meetingSchedule": "Regular Meeting Schedule",
+    "meetingSchedulePlaceholder": "e.g., First Monday of every month at 10:00"
+  },
+  "validation": {
+    "codeRequired": "Please enter the committee code",
+    "nameRequired": "Please enter the committee name",
+    "typeRequired": "Please select a committee type",
+    "purposeRequired": "Please enter the purpose",
+    "startDateRequired": "Please enter the start date"
+  },
+  "toast": {
+    "createSuccess": "Created",
+    "createSuccessDesc": "The committee has been successfully created.",
+    "createFailed": "Creation Failed",
+    "createFailedDesc": "An error occurred while creating the committee."
+  },
+  "sync": {
+    "lastSync": "Last synced: ",
+    "autoChangeAlert": "Automatic Member Change Alert",
+    "autoChangeMessage": "{{count}} automatic member changes from appointments are pending.",
+    "confirm": "Confirm"
+  },
+  "tabs": {
+    "all": "All",
+    "active": "Active",
+    "dormant": "Dormant",
+    "dissolved": "Dissolved"
+  },
+  "empty": {
+    "title": "No committees",
+    "description": "Register a new committee."
+  },
+  "memberCount": {
+    "exOfficio": "{{count}} ex-officio",
+    "total": "{{count}} members"
+  },
+  "table": {
+    "code": "Code",
+    "name": "Committee Name",
+    "type": "Type",
+    "memberCount": "Members",
+    "exOfficio": "Ex-officio",
+    "startDate": "Start Date",
+    "status": "Status"
+  },
+  "buttons": {
+    "cancel": "Cancel",
+    "create": "Create"
+  }
+}

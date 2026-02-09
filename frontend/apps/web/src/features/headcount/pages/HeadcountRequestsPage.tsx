@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
 import { SkeletonTable } from '@/components/common/Skeleton';
@@ -43,6 +44,7 @@ const TYPE_ICONS: Record<HeadcountRequestType, React.ReactNode> = {
 
 export default function HeadcountRequestsPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation('headcount');
 
   const {
     params,
@@ -69,12 +71,12 @@ export default function HeadcountRequestsPage() {
   return (
     <>
       <PageHeader
-        title="정현원 변경 요청"
-        description="증원, 감원, 전환 요청을 관리합니다."
+        title={t('request.title')}
+        description={t('request.listDescription')}
         actions={
           <Button onClick={() => navigate('/headcount/requests/new')}>
             <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
-            변경 요청
+            {t('request.create')}
           </Button>
         }
       />
@@ -84,17 +86,17 @@ export default function HeadcountRequestsPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" aria-hidden="true" />
-              변경 요청 목록
+              {t('request.list')}
             </CardTitle>
             <Select
               value={searchState.type || 'all'}
               onValueChange={(value) => setType(value === 'all' ? '' : value as HeadcountRequestType)}
             >
-              <SelectTrigger className="w-[120px]" aria-label="요청 유형 필터">
-                <SelectValue placeholder="유형" />
+              <SelectTrigger className="w-[120px]" aria-label={t('request.typeFilterLabel')}>
+                <SelectValue placeholder={t('requestTable.type')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">전체 유형</SelectItem>
+                <SelectItem value="all">{t('request.allTypes')}</SelectItem>
                 {Object.entries(HEADCOUNT_REQUEST_TYPE_LABELS).map(([value, label]) => (
                   <SelectItem key={value} value={value}>
                     {label}
@@ -111,10 +113,10 @@ export default function HeadcountRequestsPage() {
             className="px-4 pt-2"
           >
             <TabsList>
-              <TabsTrigger value="all">전체</TabsTrigger>
-              <TabsTrigger value="PENDING">대기중</TabsTrigger>
-              <TabsTrigger value="APPROVED">승인</TabsTrigger>
-              <TabsTrigger value="REJECTED">반려</TabsTrigger>
+              <TabsTrigger value="all">{t('requestTabs.all')}</TabsTrigger>
+              <TabsTrigger value="PENDING">{t('requestTabs.pending')}</TabsTrigger>
+              <TabsTrigger value="APPROVED">{t('requestTabs.approved')}</TabsTrigger>
+              <TabsTrigger value="REJECTED">{t('requestTabs.rejected')}</TabsTrigger>
             </TabsList>
           </Tabs>
 
@@ -128,52 +130,52 @@ export default function HeadcountRequestsPage() {
                 icon={FileText}
                 title={
                   searchState.status || searchState.type
-                    ? '검색 결과가 없습니다'
-                    : '변경 요청이 없습니다'
+                    ? t('requestEmpty.noResults')
+                    : t('requestEmpty.noRequests')
                 }
                 description={
                   searchState.status || searchState.type
-                    ? '다른 필터를 선택해 보세요.'
-                    : '정현원 변경 요청을 등록하세요.'
+                    ? t('empty.noResultsDesc')
+                    : t('requestEmpty.noRequestsDesc')
                 }
                 action={
                   searchState.status || searchState.type
-                    ? { label: '필터 초기화', onClick: resetFilters }
-                    : { label: '변경 요청', onClick: () => navigate('/headcount/requests/new') }
+                    ? { label: t('empty.resetFilter'), onClick: resetFilters }
+                    : { label: t('request.create'), onClick: () => navigate('/headcount/requests/new') }
                 }
               />
             ) : (
               <>
-                <div className="overflow-x-auto" role="region" aria-label="정현원 변경 요청 목록">
-                  <table className="w-full" role="grid" aria-label="변경 요청">
+                <div className="overflow-x-auto" role="region" aria-label={t('requestTable.list')}>
+                  <table className="w-full" role="grid" aria-label={t('request.list')}>
                     <thead>
                       <tr className="border-b bg-muted/50">
                         <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground w-[130px]">
-                          요청번호
+                          {t('requestTable.requestNumber')}
                         </th>
                         <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground w-[100px]">
-                          유형
+                          {t('requestTable.type')}
                         </th>
                         <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          부서
+                          {t('requestTable.department')}
                         </th>
                         <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          직급
+                          {t('requestTable.grade')}
                         </th>
                         <th scope="col" className="px-4 py-3 text-right text-sm font-medium text-muted-foreground w-[80px]">
-                          현재
+                          {t('requestTable.current')}
                         </th>
                         <th scope="col" className="px-4 py-3 text-right text-sm font-medium text-muted-foreground w-[80px]">
-                          요청
+                          {t('requestTable.requested')}
                         </th>
                         <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground w-[100px]">
-                          요청자
+                          {t('requestTable.requester')}
                         </th>
                         <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground w-[100px]">
-                          적용일
+                          {t('requestTable.effectiveDate')}
                         </th>
                         <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-muted-foreground w-[100px]">
-                          상태
+                          {t('requestTable.status')}
                         </th>
                       </tr>
                     </thead>
