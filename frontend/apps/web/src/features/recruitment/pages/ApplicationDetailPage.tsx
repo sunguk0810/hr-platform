@@ -32,6 +32,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import {
   ArrowLeft,
@@ -267,17 +274,21 @@ export default function ApplicationDetailPage() {
           </DialogHeader>
           <div className="py-4">
             <Label>{t('application.nextStage.label')}</Label>
-            <select
-              className="w-full h-10 mt-2 rounded-md border border-input bg-background px-3 py-2 text-sm"
+            <Select
               value={nextStage}
-              onChange={(e) => setNextStage(e.target.value as ApplicationStage)}
+              onValueChange={(value) => setNextStage(value as ApplicationStage)}
             >
-              {availableNextStages.map((stage) => (
-                <option key={stage.value} value={stage.value}>
-                  {stage.label}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="w-full h-10 mt-2">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {availableNextStages.map((stage) => (
+                  <SelectItem key={stage.value} value={stage.value}>
+                    {stage.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsNextStageDialogOpen(false)}>
@@ -311,19 +322,23 @@ export default function ApplicationDetailPage() {
             </div>
             <div>
               <Label>{t('application.hire.department')}</Label>
-              <select
-                className="w-full h-10 mt-2 rounded-md border border-input bg-background px-3 py-2 text-sm"
+              <Select
                 value={hireDepartmentId}
-                onChange={(e) => setHireDepartmentId(e.target.value)}
+                onValueChange={setHireDepartmentId}
               >
-                <option value="">{t('common.select')}</option>
-                <option value="dept-001">개발팀</option>
-                <option value="dept-002">인사팀</option>
-                <option value="dept-003">재무팀</option>
-                <option value="dept-004">마케팅팀</option>
-                <option value="dept-005">디자인팀</option>
-                <option value="dept-006">영업팀</option>
-              </select>
+                <SelectTrigger className="w-full h-10 mt-2">
+                  <SelectValue placeholder={t('common.select')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">{t('common.select')}</SelectItem>
+                  <SelectItem value="dept-001">개발팀</SelectItem>
+                  <SelectItem value="dept-002">인사팀</SelectItem>
+                  <SelectItem value="dept-003">재무팀</SelectItem>
+                  <SelectItem value="dept-004">마케팅팀</SelectItem>
+                  <SelectItem value="dept-005">디자인팀</SelectItem>
+                  <SelectItem value="dept-006">영업팀</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>
