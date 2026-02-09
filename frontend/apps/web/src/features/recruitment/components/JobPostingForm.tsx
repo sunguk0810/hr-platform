@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { format, addMonths } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import type {
   JobPosting,
   CreateJobPostingRequest,
@@ -58,6 +65,7 @@ export function JobPostingForm({
 
   const {
     register,
+    control,
     handleSubmit,
     setValue,
     watch,
@@ -185,19 +193,26 @@ export function JobPostingForm({
 
             <div className="space-y-2">
               <Label htmlFor="departmentId">{t('jobPostingForm.hiringDepartment')}</Label>
-              <select
-                id="departmentId"
-                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                {...register('departmentId', { required: t('jobPostingForm.validation.departmentRequired') })}
-              >
-                <option value="">{t('common.select')}</option>
-                <option value="dept-001">개발팀</option>
-                <option value="dept-002">인사팀</option>
-                <option value="dept-003">재무팀</option>
-                <option value="dept-004">마케팅팀</option>
-                <option value="dept-005">디자인팀</option>
-                <option value="dept-006">영업팀</option>
-              </select>
+              <Controller
+                control={control}
+                name="departmentId"
+                rules={{ required: t('jobPostingForm.validation.departmentRequired') }}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="w-full h-10">
+                      <SelectValue placeholder={t('common.select')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="dept-001">개발팀</SelectItem>
+                      <SelectItem value="dept-002">인사팀</SelectItem>
+                      <SelectItem value="dept-003">재무팀</SelectItem>
+                      <SelectItem value="dept-004">마케팅팀</SelectItem>
+                      <SelectItem value="dept-005">디자인팀</SelectItem>
+                      <SelectItem value="dept-006">영업팀</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
               {errors.departmentId && (
                 <p className="text-sm text-destructive">{errors.departmentId.message}</p>
               )}
@@ -205,34 +220,49 @@ export function JobPostingForm({
 
             <div className="space-y-2">
               <Label htmlFor="positionId">{t('jobPostingForm.position')}</Label>
-              <select
-                id="positionId"
-                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                {...register('positionId')}
-              >
-                <option value="">{t('jobPostingForm.positionOptional')}</option>
-                <option value="pos-001">팀장</option>
-                <option value="pos-002">선임</option>
-                <option value="pos-003">매니저</option>
-                <option value="pos-004">주임</option>
-                <option value="pos-005">책임</option>
-                <option value="pos-006">사원</option>
-              </select>
+              <Controller
+                control={control}
+                name="positionId"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="w-full h-10">
+                      <SelectValue placeholder={t('jobPostingForm.positionOptional')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">{t('jobPostingForm.positionOptional')}</SelectItem>
+                      <SelectItem value="pos-001">팀장</SelectItem>
+                      <SelectItem value="pos-002">선임</SelectItem>
+                      <SelectItem value="pos-003">매니저</SelectItem>
+                      <SelectItem value="pos-004">주임</SelectItem>
+                      <SelectItem value="pos-005">책임</SelectItem>
+                      <SelectItem value="pos-006">사원</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="employmentType">{t('jobPostingForm.employmentType')}</Label>
-              <select
-                id="employmentType"
-                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                {...register('employmentType', { required: true })}
-              >
-                {EMPLOYMENT_TYPE_KEYS.map((type) => (
-                  <option key={type.value} value={type.value}>
-                    {t(type.key)}
-                  </option>
-                ))}
-              </select>
+              <Controller
+                control={control}
+                name="employmentType"
+                rules={{ required: true }}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="w-full h-10">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {EMPLOYMENT_TYPE_KEYS.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {t(type.key)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
 
             <div className="space-y-2">
