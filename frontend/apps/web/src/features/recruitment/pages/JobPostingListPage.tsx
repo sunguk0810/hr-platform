@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -27,6 +28,7 @@ import {
 import type { JobStatus } from '@hr-platform/shared-types';
 
 export default function JobPostingListPage() {
+  const { t } = useTranslation('recruitment');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
@@ -71,31 +73,31 @@ export default function JobPostingListPage() {
           {/* Mobile Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold">채용공고</h1>
-              <p className="text-sm text-muted-foreground">총 {summary.total}개 공고</p>
+              <h1 className="text-xl font-bold">{t('jobPosting.title')}</h1>
+              <p className="text-sm text-muted-foreground">{t('common.totalPostings', { count: summary.total })}</p>
             </div>
             <Button size="sm" onClick={() => navigate('/recruitment/jobs/new')}>
               <Plus className="mr-1 h-4 w-4" />
-              등록
+              {t('common.register')}
             </Button>
           </div>
 
           {/* Summary Cards - 2x2 */}
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-card rounded-xl border p-4">
-              <p className="text-xs text-muted-foreground">진행중</p>
+              <p className="text-xs text-muted-foreground">{t('jobPosting.summary.inProgress')}</p>
               <p className="text-2xl font-bold text-green-500">{summary.published}</p>
             </div>
             <div className="bg-card rounded-xl border p-4">
-              <p className="text-xs text-muted-foreground">마감</p>
+              <p className="text-xs text-muted-foreground">{t('jobPosting.summary.closed')}</p>
               <p className="text-2xl font-bold text-orange-500">{summary.closed}</p>
             </div>
             <div className="bg-card rounded-xl border p-4">
-              <p className="text-xs text-muted-foreground">완료</p>
+              <p className="text-xs text-muted-foreground">{t('jobPosting.summary.completed')}</p>
               <p className="text-2xl font-bold text-blue-500">{summary.completed}</p>
             </div>
             <div className="bg-card rounded-xl border p-4">
-              <p className="text-xs text-muted-foreground">임시저장</p>
+              <p className="text-xs text-muted-foreground">{t('jobPosting.summary.draft')}</p>
               <p className="text-2xl font-bold text-gray-500">{summary.draft}</p>
             </div>
           </div>
@@ -104,7 +106,7 @@ export default function JobPostingListPage() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="공고 제목, 부서..."
+              placeholder={t('jobPosting.searchPlaceholder')}
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               className="pl-9"
@@ -121,7 +123,7 @@ export default function JobPostingListPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              전체
+              {t('common.all')}
             </button>
             <button
               onClick={() => handleTabChange('PUBLISHED')}
@@ -131,7 +133,7 @@ export default function JobPostingListPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              진행중 {summary.published > 0 && `(${summary.published})`}
+              {t('jobPosting.status.inProgress')} {summary.published > 0 && `(${summary.published})`}
             </button>
             <button
               onClick={() => handleTabChange('CLOSED')}
@@ -141,7 +143,7 @@ export default function JobPostingListPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              마감
+              {t('jobPosting.status.closed')}
             </button>
             <button
               onClick={() => handleTabChange('COMPLETED')}
@@ -151,7 +153,7 @@ export default function JobPostingListPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              완료
+              {t('jobPosting.status.completed')}
             </button>
             <button
               onClick={() => handleTabChange('DRAFT')}
@@ -161,7 +163,7 @@ export default function JobPostingListPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              임시저장
+              {t('jobPosting.status.draft')}
             </button>
           </div>
 
@@ -173,17 +175,17 @@ export default function JobPostingListPage() {
           ) : isError ? (
             <div className="bg-card rounded-xl border p-8 text-center">
               <Briefcase className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-              <p className="font-medium">데이터를 불러올 수 없습니다</p>
-              <p className="text-sm text-muted-foreground mt-1">잠시 후 다시 시도해주세요.</p>
+              <p className="font-medium">{t('common.cannotLoadData')}</p>
+              <p className="text-sm text-muted-foreground mt-1">{t('common.retryLater')}</p>
             </div>
           ) : jobs.length === 0 ? (
             <div className="bg-card rounded-xl border p-8 text-center">
               <Briefcase className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-              <p className="font-medium">채용공고가 없습니다</p>
-              <p className="text-sm text-muted-foreground mt-1">새 채용공고를 등록해보세요.</p>
+              <p className="font-medium">{t('jobPosting.noPostings')}</p>
+              <p className="text-sm text-muted-foreground mt-1">{t('jobPosting.noPostingsAction')}</p>
               <Button className="mt-4" onClick={() => navigate('/recruitment/jobs/new')}>
                 <Plus className="mr-2 h-4 w-4" />
-                새 공고 등록
+                {t('jobPosting.newPosting')}
               </Button>
             </div>
           ) : (
@@ -245,12 +247,12 @@ export default function JobPostingListPage() {
   return (
     <>
       <PageHeader
-        title="채용공고 관리"
-        description="채용공고를 등록하고 관리합니다."
+        title={t('title')}
+        description={t('description')}
         actions={
           <Button onClick={() => navigate('/recruitment/jobs/new')}>
             <Plus className="mr-2 h-4 w-4" />
-            새 공고 등록
+            {t('jobPosting.newPosting')}
           </Button>
         }
       />
@@ -259,7 +261,7 @@ export default function JobPostingListPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">전체</p>
+              <p className="text-sm text-muted-foreground">{t('jobPosting.summary.total')}</p>
               <p className="mt-1 text-3xl font-bold">{summary.total}</p>
             </div>
           </CardContent>
@@ -267,7 +269,7 @@ export default function JobPostingListPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">진행중</p>
+              <p className="text-sm text-muted-foreground">{t('jobPosting.summary.inProgress')}</p>
               <p className="mt-1 text-3xl font-bold text-green-500">{summary.published}</p>
             </div>
           </CardContent>
@@ -275,7 +277,7 @@ export default function JobPostingListPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">마감</p>
+              <p className="text-sm text-muted-foreground">{t('jobPosting.summary.closed')}</p>
               <p className="mt-1 text-3xl font-bold text-orange-500">{summary.closed}</p>
             </div>
           </CardContent>
@@ -283,7 +285,7 @@ export default function JobPostingListPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">완료</p>
+              <p className="text-sm text-muted-foreground">{t('jobPosting.summary.completed')}</p>
               <p className="mt-1 text-3xl font-bold text-blue-500">{summary.completed}</p>
             </div>
           </CardContent>
@@ -291,7 +293,7 @@ export default function JobPostingListPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">임시저장</p>
+              <p className="text-sm text-muted-foreground">{t('jobPosting.summary.draft')}</p>
               <p className="mt-1 text-3xl font-bold text-gray-500">{summary.draft}</p>
             </div>
           </CardContent>
@@ -301,11 +303,11 @@ export default function JobPostingListPage() {
       <Card className="mt-6">
         <CardHeader>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <CardTitle>채용공고 목록</CardTitle>
+            <CardTitle>{t('jobPosting.listTitle')}</CardTitle>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="공고 제목, 부서..."
+                placeholder={t('jobPosting.searchPlaceholder')}
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 className="pl-9 w-[200px]"
@@ -320,14 +322,14 @@ export default function JobPostingListPage() {
             className="px-4 pt-2"
           >
             <TabsList>
-              <TabsTrigger value="all">전체</TabsTrigger>
+              <TabsTrigger value="all">{t('common.all')}</TabsTrigger>
               <TabsTrigger value="PUBLISHED">
-                진행중 {summary.published > 0 && `(${summary.published})`}
+                {t('jobPosting.status.inProgress')} {summary.published > 0 && `(${summary.published})`}
               </TabsTrigger>
-              <TabsTrigger value="CLOSED">마감</TabsTrigger>
-              <TabsTrigger value="COMPLETED">완료</TabsTrigger>
+              <TabsTrigger value="CLOSED">{t('jobPosting.status.closed')}</TabsTrigger>
+              <TabsTrigger value="COMPLETED">{t('jobPosting.status.completed')}</TabsTrigger>
               <TabsTrigger value="DRAFT">
-                임시저장 {summary.draft > 0 && `(${summary.draft})`}
+                {t('jobPosting.status.draft')} {summary.draft > 0 && `(${summary.draft})`}
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -340,16 +342,16 @@ export default function JobPostingListPage() {
             ) : isError ? (
               <EmptyState
                 icon={Briefcase}
-                title="데이터를 불러올 수 없습니다"
-                description="잠시 후 다시 시도해주세요."
+                title={t('common.cannotLoadData')}
+                description={t('common.retryLater')}
               />
             ) : jobs.length === 0 ? (
               <EmptyState
                 icon={Briefcase}
-                title="채용공고가 없습니다"
-                description="새 채용공고를 등록해보세요."
+                title={t('jobPosting.noPostings')}
+                description={t('jobPosting.noPostingsAction')}
                 action={{
-                  label: '새 공고 등록',
+                  label: t('jobPosting.newPosting'),
                   onClick: () => navigate('/recruitment/jobs/new'),
                 }}
               />
@@ -360,25 +362,25 @@ export default function JobPostingListPage() {
                     <thead>
                       <tr className="border-b bg-muted/50">
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          공고번호
+                          {t('jobPosting.table.postingNumber')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          제목
+                          {t('jobPosting.table.title')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          부서
+                          {t('jobPosting.table.department')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          고용형태
+                          {t('jobPosting.table.employmentType')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          모집/지원
+                          {t('jobPosting.table.headcountAndApplications')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          기간
+                          {t('jobPosting.table.period')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          상태
+                          {t('jobPosting.table.status')}
                         </th>
                       </tr>
                     </thead>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -58,19 +59,20 @@ import {
 import { useToast } from '@/hooks/useToast';
 import type { ApplicationStage, CreateInterviewRequest } from '@hr-platform/shared-types';
 
-const STAGE_OPTIONS: { value: ApplicationStage; label: string }[] = [
-  { value: 'DOCUMENT', label: '서류전형' },
-  { value: 'FIRST_INTERVIEW', label: '1차면접' },
-  { value: 'SECOND_INTERVIEW', label: '2차면접' },
-  { value: 'FINAL_INTERVIEW', label: '최종면접' },
-  { value: 'OFFER', label: '오퍼' },
-];
-
 export default function ApplicationDetailPage() {
+  const { t } = useTranslation('recruitment');
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+
+  const STAGE_OPTIONS: { value: ApplicationStage; label: string }[] = [
+    { value: 'DOCUMENT', label: t('stage.document') },
+    { value: 'FIRST_INTERVIEW', label: t('stage.firstInterview') },
+    { value: 'SECOND_INTERVIEW', label: t('stage.secondInterview') },
+    { value: 'FINAL_INTERVIEW', label: t('stage.finalInterview') },
+    { value: 'OFFER', label: t('stage.offer') },
+  ];
 
   const [activeTab, setActiveTab] = useState('info');
   const [isScreenDialogOpen, setIsScreenDialogOpen] = useState(false);
@@ -104,11 +106,11 @@ export default function ApplicationDetailPage() {
         id,
         data: { passed: true, comment: screeningComment || undefined },
       });
-      toast({ title: '서류 심사 합격 처리되었습니다.' });
+      toast({ title: t('application.toast.screenPassed') });
       setIsScreenDialogOpen(false);
       setScreeningComment('');
     } catch {
-      toast({ title: '처리에 실패했습니다.', variant: 'destructive' });
+      toast({ title: t('application.toast.processFailed'), variant: 'destructive' });
     }
   };
 
@@ -116,11 +118,11 @@ export default function ApplicationDetailPage() {
     if (!id || !rejectReason) return;
     try {
       await rejectMutation.mutateAsync({ id, data: { reason: rejectReason } });
-      toast({ title: '불합격 처리되었습니다.' });
+      toast({ title: t('application.toast.rejected') });
       setIsRejectDialogOpen(false);
       setRejectReason('');
     } catch {
-      toast({ title: '처리에 실패했습니다.', variant: 'destructive' });
+      toast({ title: t('application.toast.processFailed'), variant: 'destructive' });
     }
   };
 
@@ -128,10 +130,10 @@ export default function ApplicationDetailPage() {
     if (!id) return;
     try {
       await nextStageMutation.mutateAsync({ id, data: { stage: nextStage } });
-      toast({ title: '다음 단계로 이동되었습니다.' });
+      toast({ title: t('application.toast.movedToNextStage') });
       setIsNextStageDialogOpen(false);
     } catch {
-      toast({ title: '처리에 실패했습니다.', variant: 'destructive' });
+      toast({ title: t('application.toast.processFailed'), variant: 'destructive' });
     }
   };
 
@@ -142,20 +144,20 @@ export default function ApplicationDetailPage() {
         id,
         data: { departmentId: hireDepartmentId, hireDate },
       });
-      toast({ title: '채용이 확정되었습니다.' });
+      toast({ title: t('application.toast.hired') });
       setIsHireDialogOpen(false);
     } catch {
-      toast({ title: '처리에 실패했습니다.', variant: 'destructive' });
+      toast({ title: t('application.toast.processFailed'), variant: 'destructive' });
     }
   };
 
   const handleCreateInterview = async (data: CreateInterviewRequest) => {
     try {
       await createInterviewMutation.mutateAsync(data);
-      toast({ title: '면접 일정이 등록되었습니다.' });
+      toast({ title: t('interview.toast.created') });
       setIsInterviewDialogOpen(false);
     } catch {
-      toast({ title: '면접 일정 등록에 실패했습니다.', variant: 'destructive' });
+      toast({ title: t('interview.toast.createFailed'), variant: 'destructive' });
     }
   };
 
@@ -170,10 +172,10 @@ export default function ApplicationDetailPage() {
   if (isError || !application) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <p className="text-muted-foreground">지원서를 찾을 수 없습니다.</p>
+        <p className="text-muted-foreground">{t('application.notFoundMessage')}</p>
         <Button variant="outline" onClick={() => navigate('/recruitment/applications')}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          목록으로
+          {t('common.backToList')}
         </Button>
       </div>
     );
@@ -196,27 +198,27 @@ export default function ApplicationDetailPage() {
       <Dialog open={isScreenDialogOpen} onOpenChange={setIsScreenDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>서류 심사 합격</DialogTitle>
+            <DialogTitle>{t('application.screening.title')}</DialogTitle>
             <DialogDescription>
-              {application.applicantName}님의 서류 심사를 합격 처리하시겠습니까?
+              {t('application.screening.confirmMessage', { name: application.applicantName })}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <Label>심사 의견 (선택)</Label>
+            <Label>{t('application.screening.commentLabel')}</Label>
             <Textarea
               className="mt-2"
               value={screeningComment}
               onChange={(e) => setScreeningComment(e.target.value)}
-              placeholder="서류 심사 의견을 입력하세요."
+              placeholder={t('application.screening.commentPlaceholder')}
               rows={3}
             />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsScreenDialogOpen(false)}>
-              취소
+              {t('common.cancel')}
             </Button>
             <Button onClick={handleScreenPass} disabled={screenMutation.isPending}>
-              {screenMutation.isPending ? '처리 중...' : '합격 처리'}
+              {screenMutation.isPending ? t('common.processing') : t('application.screening.passButton')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -226,31 +228,31 @@ export default function ApplicationDetailPage() {
       <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>불합격 처리</DialogTitle>
+            <DialogTitle>{t('application.rejection.title')}</DialogTitle>
             <DialogDescription>
-              {application.applicantName}님을 불합격 처리하시겠습니까?
+              {t('application.rejection.confirmMessage', { name: application.applicantName })}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <Label>불합격 사유 *</Label>
+            <Label>{t('application.rejection.reasonLabel')}</Label>
             <Textarea
               className="mt-2"
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
-              placeholder="불합격 사유를 입력하세요."
+              placeholder={t('application.rejection.reasonPlaceholder')}
               rows={3}
             />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>
-              취소
+              {t('common.cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={handleReject}
               disabled={!rejectReason || rejectMutation.isPending}
             >
-              {rejectMutation.isPending ? '처리 중...' : '불합격 처리'}
+              {rejectMutation.isPending ? t('common.processing') : t('application.rejection.rejectButton')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -260,11 +262,11 @@ export default function ApplicationDetailPage() {
       <Dialog open={isNextStageDialogOpen} onOpenChange={setIsNextStageDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>다음 단계로 이동</DialogTitle>
-            <DialogDescription>진행할 다음 단계를 선택하세요.</DialogDescription>
+            <DialogTitle>{t('application.nextStage.title')}</DialogTitle>
+            <DialogDescription>{t('application.nextStage.description')}</DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <Label>다음 단계</Label>
+            <Label>{t('application.nextStage.label')}</Label>
             <select
               className="w-full h-10 mt-2 rounded-md border border-input bg-background px-3 py-2 text-sm"
               value={nextStage}
@@ -279,10 +281,10 @@ export default function ApplicationDetailPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsNextStageDialogOpen(false)}>
-              취소
+              {t('common.cancel')}
             </Button>
             <Button onClick={handleMoveToNextStage} disabled={nextStageMutation.isPending}>
-              {nextStageMutation.isPending ? '처리 중...' : '이동'}
+              {nextStageMutation.isPending ? t('common.processing') : t('application.nextStage.moveButton')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -292,14 +294,14 @@ export default function ApplicationDetailPage() {
       <Dialog open={isHireDialogOpen} onOpenChange={setIsHireDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>채용 확정</DialogTitle>
+            <DialogTitle>{t('application.hire.title')}</DialogTitle>
             <DialogDescription>
-              {application.applicantName}님의 채용을 확정합니다.
+              {t('application.hire.confirmMessage', { name: application.applicantName })}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-4">
             <div>
-              <Label>입사일 *</Label>
+              <Label>{t('application.hire.hireDate')}</Label>
               <input
                 type="date"
                 className="w-full h-10 mt-2 rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -308,13 +310,13 @@ export default function ApplicationDetailPage() {
               />
             </div>
             <div>
-              <Label>배치 부서 *</Label>
+              <Label>{t('application.hire.department')}</Label>
               <select
                 className="w-full h-10 mt-2 rounded-md border border-input bg-background px-3 py-2 text-sm"
                 value={hireDepartmentId}
                 onChange={(e) => setHireDepartmentId(e.target.value)}
               >
-                <option value="">선택</option>
+                <option value="">{t('common.select')}</option>
                 <option value="dept-001">개발팀</option>
                 <option value="dept-002">인사팀</option>
                 <option value="dept-003">재무팀</option>
@@ -326,14 +328,14 @@ export default function ApplicationDetailPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsHireDialogOpen(false)}>
-              취소
+              {t('common.cancel')}
             </Button>
             <Button
               className="bg-green-600 hover:bg-green-700"
               onClick={handleHire}
               disabled={!hireDepartmentId || !hireDate || hireMutation.isPending}
             >
-              {hireMutation.isPending ? '처리 중...' : '채용 확정'}
+              {hireMutation.isPending ? t('common.processing') : t('application.hire.confirmButton')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -343,7 +345,7 @@ export default function ApplicationDetailPage() {
       <Dialog open={isInterviewDialogOpen} onOpenChange={setIsInterviewDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>면접 일정 등록</DialogTitle>
+            <DialogTitle>{t('interview.scheduleRegister')}</DialogTitle>
           </DialogHeader>
           <InterviewScheduleForm
             applicationId={id || ''}
@@ -366,7 +368,7 @@ export default function ApplicationDetailPage() {
           <Button variant="ghost" size="icon" onClick={() => navigate('/recruitment/applications')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="font-semibold truncate flex-1 mx-2">지원서 상세</h1>
+          <h1 className="font-semibold truncate flex-1 mx-2">{t('application.detailTitle')}</h1>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
@@ -377,25 +379,25 @@ export default function ApplicationDetailPage() {
               {canScheduleInterview && (
                 <DropdownMenuItem onClick={() => setIsInterviewDialogOpen(true)}>
                   <Calendar className="mr-2 h-4 w-4" />
-                  면접 일정
+                  {t('interview.schedule')}
                 </DropdownMenuItem>
               )}
               {canScreen && (
                 <DropdownMenuItem onClick={() => setIsScreenDialogOpen(true)}>
                   <FileCheck className="mr-2 h-4 w-4" />
-                  서류 합격
+                  {t('application.screening.documentPass')}
                 </DropdownMenuItem>
               )}
               {canMoveNext && availableNextStages.length > 0 && (
                 <DropdownMenuItem onClick={() => setIsNextStageDialogOpen(true)}>
                   <ArrowRight className="mr-2 h-4 w-4" />
-                  다음 단계
+                  {t('application.nextStage.buttonLabel')}
                 </DropdownMenuItem>
               )}
               {canHire && (
                 <DropdownMenuItem onClick={() => setIsHireDialogOpen(true)}>
                   <UserCheck className="mr-2 h-4 w-4" />
-                  채용 확정
+                  {t('application.hire.title')}
                 </DropdownMenuItem>
               )}
               {canReject && (
@@ -406,7 +408,7 @@ export default function ApplicationDetailPage() {
                     className="text-destructive"
                   >
                     <FileX className="mr-2 h-4 w-4" />
-                    불합격
+                    {t('application.rejection.reject')}
                   </DropdownMenuItem>
                 </>
               )}
@@ -442,12 +444,12 @@ export default function ApplicationDetailPage() {
         {/* 진행 상태 */}
         <Card className="mb-4">
           <CardHeader className="p-4 pb-2">
-            <CardTitle className="text-base">진행 상태</CardTitle>
+            <CardTitle className="text-base">{t('application.progressStatus')}</CardTitle>
           </CardHeader>
           <CardContent className="p-4 pt-0">
             <StageProgressBar currentStage={application.currentStage} />
             <div className="mt-3 text-sm text-muted-foreground">
-              현재: {STAGE_OPTIONS.find((s) => s.value === application.currentStage)?.label}
+              {t('application.currentLabel', { stage: STAGE_OPTIONS.find((s) => s.value === application.currentStage)?.label })}
             </div>
           </CardContent>
         </Card>
@@ -455,7 +457,7 @@ export default function ApplicationDetailPage() {
         {/* 지원 공고 */}
         <Card className="mb-4">
           <CardHeader className="p-4 pb-2">
-            <CardTitle className="text-base">지원 공고</CardTitle>
+            <CardTitle className="text-base">{t('application.appliedPosting')}</CardTitle>
           </CardHeader>
           <CardContent className="p-4 pt-0">
             <p className="text-sm">
@@ -463,7 +465,7 @@ export default function ApplicationDetailPage() {
               {application.jobTitle}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              지원일: {format(new Date(application.createdAt), 'yyyy년 M월 d일', { locale: ko })}
+              {t('application.applicationDateLabel', { date: format(new Date(application.createdAt), 'yyyy년 M월 d일', { locale: ko }) })}
             </p>
           </CardContent>
         </Card>
@@ -474,7 +476,7 @@ export default function ApplicationDetailPage() {
             <CardContent className="p-4">
               <Button variant="outline" className="w-full">
                 <Download className="mr-2 h-4 w-4" />
-                {application.resumeFileName || '이력서 다운로드'}
+                {application.resumeFileName || t('application.resumeDownload')}
               </Button>
             </CardContent>
           </Card>
@@ -484,7 +486,7 @@ export default function ApplicationDetailPage() {
         {application.coverLetter && (
           <Card className="mb-4">
             <CardHeader className="p-4 pb-2">
-              <CardTitle className="text-base">자기소개서</CardTitle>
+              <CardTitle className="text-base">{t('application.coverLetter')}</CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-0">
               <div className="text-sm whitespace-pre-wrap">{application.coverLetter}</div>
@@ -496,7 +498,7 @@ export default function ApplicationDetailPage() {
         {application.screeningNotes && (
           <Card className="mb-4 border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/20">
             <CardHeader className="p-4 pb-2">
-              <CardTitle className="text-base text-blue-800 dark:text-blue-200">서류 심사 의견</CardTitle>
+              <CardTitle className="text-base text-blue-800 dark:text-blue-200">{t('application.screening.screeningNotes')}</CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-0">
               <p className="text-sm text-blue-800 dark:text-blue-200">{application.screeningNotes}</p>
@@ -514,7 +516,7 @@ export default function ApplicationDetailPage() {
         {application.rejectionReason && (
           <Card className="mb-4 border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
             <CardHeader className="p-4 pb-2">
-              <CardTitle className="text-base text-red-800 dark:text-red-200">불합격 사유</CardTitle>
+              <CardTitle className="text-base text-red-800 dark:text-red-200">{t('application.rejection.rejectionReason')}</CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-0">
               <p className="text-sm text-red-800 dark:text-red-200">{application.rejectionReason}</p>
@@ -525,17 +527,17 @@ export default function ApplicationDetailPage() {
         {/* 면접 이력 */}
         <Card className="mb-4">
           <CardHeader className="p-4 pb-2">
-            <CardTitle className="text-base">면접 ({interviews.length})</CardTitle>
+            <CardTitle className="text-base">{t('interview.interviewCount', { count: interviews.length })}</CardTitle>
           </CardHeader>
           <CardContent className="p-4 pt-0">
             {interviews.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
-                등록된 면접이 없습니다.
+                {t('interview.noRegisteredInterviews')}
               </p>
             ) : (
               <div className="space-y-3">
                 {interviews.map((interview) => (
-                  <InterviewCard key={interview.id} interview={interview} />
+                  <InterviewCard key={interview.id} interview={interview} t={t} />
                 ))}
               </div>
             )}
@@ -551,18 +553,18 @@ export default function ApplicationDetailPage() {
   return (
     <>
       <PageHeader
-        title="지원서 상세"
-        description={`지원번호: ${application.applicationNumber}`}
+        title={t('application.detailTitle')}
+        description={t('application.applicationNumberLabel', { number: application.applicationNumber })}
         actions={
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={() => navigate('/recruitment/applications')}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              목록으로
+              {t('common.backToList')}
             </Button>
             {canScheduleInterview && (
               <Button variant="outline" onClick={() => setIsInterviewDialogOpen(true)}>
                 <Calendar className="mr-2 h-4 w-4" />
-                면접 일정
+                {t('interview.schedule')}
               </Button>
             )}
             {canReject && (
@@ -572,25 +574,25 @@ export default function ApplicationDetailPage() {
                 onClick={() => setIsRejectDialogOpen(true)}
               >
                 <FileX className="mr-2 h-4 w-4" />
-                불합격
+                {t('application.rejection.reject')}
               </Button>
             )}
             {canScreen && (
               <Button onClick={() => setIsScreenDialogOpen(true)}>
                 <FileCheck className="mr-2 h-4 w-4" />
-                서류 합격
+                {t('application.screening.documentPass')}
               </Button>
             )}
             {canMoveNext && availableNextStages.length > 0 && (
               <Button onClick={() => setIsNextStageDialogOpen(true)}>
                 <ArrowRight className="mr-2 h-4 w-4" />
-                다음 단계
+                {t('application.nextStage.buttonLabel')}
               </Button>
             )}
             {canHire && (
               <Button className="bg-green-600 hover:bg-green-700" onClick={() => setIsHireDialogOpen(true)}>
                 <UserCheck className="mr-2 h-4 w-4" />
-                채용 확정
+                {t('application.hire.title')}
               </Button>
             )}
           </div>
@@ -607,23 +609,23 @@ export default function ApplicationDetailPage() {
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="mb-4">
-              <TabsTrigger value="info">지원자 정보</TabsTrigger>
-              <TabsTrigger value="interviews">면접 ({interviews.length})</TabsTrigger>
+              <TabsTrigger value="info">{t('application.applicantInfo')}</TabsTrigger>
+              <TabsTrigger value="interviews">{t('interview.interviewCount', { count: interviews.length })}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="info">
               <Card>
                 <CardHeader>
-                  <CardTitle>지원자 정보</CardTitle>
+                  <CardTitle>{t('application.applicantInfo')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="grid gap-4 md:grid-cols-2 pb-4 border-b">
                     <div>
-                      <Label className="text-muted-foreground">이름</Label>
+                      <Label className="text-muted-foreground">{t('application.applicantName')}</Label>
                       <p className="text-sm mt-1 font-medium">{application.applicantName}</p>
                     </div>
                     <div>
-                      <Label className="text-muted-foreground">이메일</Label>
+                      <Label className="text-muted-foreground">{t('application.applicantEmail')}</Label>
                       <p className="text-sm mt-1 flex items-center gap-1">
                         <Mail className="h-4 w-4" />
                         {application.applicantEmail}
@@ -631,7 +633,7 @@ export default function ApplicationDetailPage() {
                     </div>
                     {application.applicantPhone && (
                       <div>
-                        <Label className="text-muted-foreground">연락처</Label>
+                        <Label className="text-muted-foreground">{t('application.applicantPhone')}</Label>
                         <p className="text-sm mt-1 flex items-center gap-1">
                           <Phone className="h-4 w-4" />
                           {application.applicantPhone}
@@ -639,7 +641,7 @@ export default function ApplicationDetailPage() {
                       </div>
                     )}
                     <div>
-                      <Label className="text-muted-foreground">지원일</Label>
+                      <Label className="text-muted-foreground">{t('application.applicationDate')}</Label>
                       <p className="text-sm mt-1">
                         {format(new Date(application.createdAt), 'yyyy년 M월 d일 HH:mm', {
                           locale: ko,
@@ -649,7 +651,7 @@ export default function ApplicationDetailPage() {
                   </div>
 
                   <div className="pb-4 border-b">
-                    <Label className="text-muted-foreground">지원 공고</Label>
+                    <Label className="text-muted-foreground">{t('application.appliedPosting')}</Label>
                     <p className="text-sm mt-1">
                       {application.jobCode && `[${application.jobCode}] `}
                       {application.jobTitle}
@@ -658,11 +660,11 @@ export default function ApplicationDetailPage() {
 
                   {application.resumeFileId && (
                     <div>
-                      <Label className="text-muted-foreground">이력서</Label>
+                      <Label className="text-muted-foreground">{t('application.resume')}</Label>
                       <div className="mt-2">
                         <Button variant="outline" size="sm">
                           <Download className="mr-2 h-4 w-4" />
-                          {application.resumeFileName || '이력서 다운로드'}
+                          {application.resumeFileName || t('application.resumeDownload')}
                         </Button>
                       </div>
                     </div>
@@ -670,7 +672,7 @@ export default function ApplicationDetailPage() {
 
                   {application.coverLetter && (
                     <div>
-                      <Label className="text-muted-foreground">자기소개서</Label>
+                      <Label className="text-muted-foreground">{t('application.coverLetter')}</Label>
                       <div className="mt-2 p-4 rounded-lg bg-muted/50 whitespace-pre-wrap text-sm">
                         {application.coverLetter}
                       </div>
@@ -679,7 +681,7 @@ export default function ApplicationDetailPage() {
 
                   {application.screeningNotes && (
                     <div>
-                      <Label className="text-muted-foreground">서류 심사 의견</Label>
+                      <Label className="text-muted-foreground">{t('application.screening.screeningNotes')}</Label>
                       <div className="mt-2 p-4 rounded-lg bg-blue-50 text-sm">
                         <p className="text-blue-800">{application.screeningNotes}</p>
                         {application.screenedByName && (
@@ -695,7 +697,7 @@ export default function ApplicationDetailPage() {
 
                   {application.rejectionReason && (
                     <div>
-                      <Label className="text-muted-foreground">불합격 사유</Label>
+                      <Label className="text-muted-foreground">{t('application.rejection.rejectionReason')}</Label>
                       <div className="mt-2 p-4 rounded-lg bg-red-50 text-sm text-red-800">
                         {application.rejectionReason}
                       </div>
@@ -708,17 +710,17 @@ export default function ApplicationDetailPage() {
             <TabsContent value="interviews">
               <Card>
                 <CardHeader>
-                  <CardTitle>면접 이력</CardTitle>
+                  <CardTitle>{t('interview.history')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {interviews.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
-                      등록된 면접이 없습니다.
+                      {t('interview.noRegisteredInterviews')}
                     </div>
                   ) : (
                     <div className="space-y-4">
                       {interviews.map((interview) => (
-                        <InterviewCard key={interview.id} interview={interview} />
+                        <InterviewCard key={interview.id} interview={interview} t={t} />
                       ))}
                     </div>
                   )}
@@ -731,24 +733,24 @@ export default function ApplicationDetailPage() {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>현재 상태</CardTitle>
+              <CardTitle>{t('application.currentStatus')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label className="text-muted-foreground">진행 상태</Label>
+                <Label className="text-muted-foreground">{t('application.progressStatus')}</Label>
                 <div className="mt-2">
                   <ApplicationStatusBadge status={application.status} />
                 </div>
               </div>
               <div>
-                <Label className="text-muted-foreground">현재 단계</Label>
+                <Label className="text-muted-foreground">{t('application.currentStage')}</Label>
                 <p className="text-sm mt-1">
                   {STAGE_OPTIONS.find((s) => s.value === application.currentStage)?.label}
                 </p>
               </div>
               {application.statusChangedAt && (
                 <div>
-                  <Label className="text-muted-foreground">상태 변경일</Label>
+                  <Label className="text-muted-foreground">{t('application.statusChangedDate')}</Label>
                   <p className="text-sm mt-1">
                     {format(new Date(application.statusChangedAt), 'yyyy년 M월 d일 HH:mm', {
                       locale: ko,
@@ -766,7 +768,7 @@ export default function ApplicationDetailPage() {
   );
 }
 
-function InterviewCard({ interview }: { interview: any }) {
+function InterviewCard({ interview, t }: { interview: any; t: (key: string, options?: any) => string }) {
   const { data: scoresData } = useInterviewScores(interview.id);
   const scores = scoresData?.data ?? [];
 
@@ -778,38 +780,38 @@ function InterviewCard({ interview }: { interview: any }) {
           <InterviewStatusBadge status={interview.status} />
         </div>
         {interview.overallScore && (
-          <span className="text-sm font-medium">평균 {interview.overallScore.toFixed(1)}점</span>
+          <span className="text-sm font-medium">{t('interview.averageScore', { score: interview.overallScore.toFixed(1) })}</span>
         )}
       </div>
       <div className="grid gap-2 text-sm">
         <div>
-          <span className="text-muted-foreground">일시: </span>
+          <span className="text-muted-foreground">{t('interview.detail.dateTimeLabel')}</span>
           {format(new Date(interview.scheduledDate), 'yyyy년 M월 d일', { locale: ko })}
           {interview.scheduledTime && ` ${interview.scheduledTime}`}
-          <span className="text-muted-foreground"> ({interview.durationMinutes}분)</span>
+          <span className="text-muted-foreground"> ({t('common.minutesUnit', { minutes: interview.durationMinutes })})</span>
         </div>
         {interview.location && (
           <div>
-            <span className="text-muted-foreground">장소: </span>
+            <span className="text-muted-foreground">{t('interview.detail.locationLabel')}</span>
             {interview.location}
           </div>
         )}
         {interview.interviewerNames && interview.interviewerNames.length > 0 && (
           <div>
-            <span className="text-muted-foreground">면접관: </span>
+            <span className="text-muted-foreground">{t('interview.detail.interviewerLabel')}</span>
             {interview.interviewerNames.join(', ')}
           </div>
         )}
       </div>
       {scores.length > 0 && (
         <div className="pt-2 border-t">
-          <p className="text-sm font-medium mb-2">평가 결과</p>
+          <p className="text-sm font-medium mb-2">{t('interviewScore.evaluationResult')}</p>
           <div className="space-y-2">
             {scores.map((score: any) => (
               <div key={score.id} className="flex items-center justify-between text-sm">
                 <span>{score.interviewerName}</span>
                 <div className="flex items-center gap-2">
-                  <span className="font-medium">{score.overallScore}점</span>
+                  <span className="font-medium">{t('common.scoreUnit', { score: score.overallScore })}</span>
                   <InterviewRecommendationBadge recommendation={score.recommendation} />
                 </div>
               </div>

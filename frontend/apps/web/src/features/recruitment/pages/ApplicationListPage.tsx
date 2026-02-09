@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -28,6 +29,7 @@ import {
 import type { ApplicationStatus } from '@hr-platform/shared-types';
 
 export default function ApplicationListPage() {
+  const { t } = useTranslation('recruitment');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
@@ -98,8 +100,8 @@ export default function ApplicationListPage() {
           {/* Mobile Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold">지원서 관리</h1>
-              <p className="text-sm text-muted-foreground">총 {summary.total}개 지원</p>
+              <h1 className="text-xl font-bold">{t('application.title')}</h1>
+              <p className="text-sm text-muted-foreground">{t('common.totalApplications', { count: summary.total })}</p>
             </div>
             <Button
               size="sm"
@@ -113,21 +115,21 @@ export default function ApplicationListPage() {
           {/* Summary Cards - 2x2 */}
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-card rounded-xl border p-4">
-              <p className="text-xs text-muted-foreground">심사중</p>
+              <p className="text-xs text-muted-foreground">{t('application.summary.underReview')}</p>
               <p className="text-2xl font-bold text-orange-500">
                 {summary.screening + summary.inProgress}
               </p>
             </div>
             <div className="bg-card rounded-xl border p-4">
-              <p className="text-xs text-muted-foreground">합격</p>
+              <p className="text-xs text-muted-foreground">{t('application.summary.passed')}</p>
               <p className="text-2xl font-bold text-green-500">{summary.passed}</p>
             </div>
             <div className="bg-card rounded-xl border p-4">
-              <p className="text-xs text-muted-foreground">불합격</p>
+              <p className="text-xs text-muted-foreground">{t('application.status.failed')}</p>
               <p className="text-2xl font-bold text-red-500">{summary.failed}</p>
             </div>
             <div className="bg-card rounded-xl border p-4">
-              <p className="text-xs text-muted-foreground">채용확정</p>
+              <p className="text-xs text-muted-foreground">{t('application.summary.hired')}</p>
               <p className="text-2xl font-bold text-blue-500">{summary.hired}</p>
             </div>
           </div>
@@ -138,7 +140,7 @@ export default function ApplicationListPage() {
             onChange={(e) => setJobPostingId(e.target.value)}
             className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
           >
-            <option value="">전체 공고</option>
+            <option value="">{t('application.allPostings')}</option>
             {jobs.map((job) => (
               <option key={job.id} value={job.id}>
                 [{job.jobCode}] {job.title}
@@ -150,7 +152,7 @@ export default function ApplicationListPage() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="이름, 이메일..."
+              placeholder={t('application.searchPlaceholder')}
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               className="pl-9"
@@ -167,7 +169,7 @@ export default function ApplicationListPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              전체
+              {t('application.status.all')}
             </button>
             <button
               onClick={() => handleTabChange('RECEIVED')}
@@ -177,7 +179,7 @@ export default function ApplicationListPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              접수
+              {t('application.status.received')}
             </button>
             <button
               onClick={() => handleTabChange('SCREENING')}
@@ -187,7 +189,7 @@ export default function ApplicationListPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              서류심사
+              {t('application.status.screening')}
             </button>
             <button
               onClick={() => handleTabChange('IN_PROGRESS')}
@@ -197,7 +199,7 @@ export default function ApplicationListPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              진행중
+              {t('application.status.inProgress')}
             </button>
             <button
               onClick={() => handleTabChange('PASSED')}
@@ -207,7 +209,7 @@ export default function ApplicationListPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              합격
+              {t('application.status.passed')}
             </button>
             <button
               onClick={() => handleTabChange('FAILED')}
@@ -217,7 +219,7 @@ export default function ApplicationListPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              불합격
+              {t('application.status.failed')}
             </button>
           </div>
 
@@ -229,15 +231,15 @@ export default function ApplicationListPage() {
           ) : isError ? (
             <div className="bg-card rounded-xl border p-8 text-center">
               <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-              <p className="font-medium">데이터를 불러올 수 없습니다</p>
-              <p className="text-sm text-muted-foreground mt-1">잠시 후 다시 시도해주세요.</p>
+              <p className="font-medium">{t('common.cannotLoadData')}</p>
+              <p className="text-sm text-muted-foreground mt-1">{t('common.retryLater')}</p>
             </div>
           ) : applications.length === 0 ? (
             <div className="bg-card rounded-xl border p-8 text-center">
               <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-              <p className="font-medium">지원서가 없습니다</p>
+              <p className="font-medium">{t('application.noApplications')}</p>
               <p className="text-sm text-muted-foreground mt-1">
-                선택한 조건에 맞는 지원서가 없습니다.
+                {t('application.noApplicationsFiltered')}
               </p>
             </div>
           ) : (
@@ -296,12 +298,12 @@ export default function ApplicationListPage() {
   return (
     <>
       <PageHeader
-        title="지원서 관리"
-        description="채용 지원서를 심사하고 관리합니다."
+        title={t('application.title')}
+        description={t('application.description')}
         actions={
           <Button variant="outline" onClick={() => navigate('/recruitment')}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            공고 목록
+            {t('common.postingList')}
           </Button>
         }
       />
@@ -310,7 +312,7 @@ export default function ApplicationListPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">전체 지원</p>
+              <p className="text-sm text-muted-foreground">{t('application.summary.totalApplications')}</p>
               <p className="mt-1 text-3xl font-bold">{summary.total}</p>
             </div>
           </CardContent>
@@ -318,7 +320,7 @@ export default function ApplicationListPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">심사중</p>
+              <p className="text-sm text-muted-foreground">{t('application.summary.underReview')}</p>
               <p className="mt-1 text-3xl font-bold text-orange-500">
                 {summary.screening + summary.inProgress}
               </p>
@@ -328,7 +330,7 @@ export default function ApplicationListPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">합격</p>
+              <p className="text-sm text-muted-foreground">{t('application.summary.passed')}</p>
               <p className="mt-1 text-3xl font-bold text-green-500">{summary.passed}</p>
             </div>
           </CardContent>
@@ -336,7 +338,7 @@ export default function ApplicationListPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">채용확정</p>
+              <p className="text-sm text-muted-foreground">{t('application.summary.hired')}</p>
               <p className="mt-1 text-3xl font-bold text-blue-500">{summary.hired}</p>
             </div>
           </CardContent>
@@ -346,14 +348,14 @@ export default function ApplicationListPage() {
       <Card className="mt-6">
         <CardHeader>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <CardTitle>지원서 목록</CardTitle>
+            <CardTitle>{t('application.listTitle')}</CardTitle>
             <div className="flex flex-wrap gap-2">
               <select
                 value={searchState.jobPostingId}
                 onChange={(e) => setJobPostingId(e.target.value)}
                 className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
               >
-                <option value="">전체 공고</option>
+                <option value="">{t('application.allPostings')}</option>
                 {jobs.map((job) => (
                   <option key={job.id} value={job.id}>
                     [{job.jobCode}] {job.title}
@@ -363,7 +365,7 @@ export default function ApplicationListPage() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="이름, 이메일..."
+                  placeholder={t('application.searchPlaceholder')}
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   className="pl-9 w-[180px]"
@@ -379,12 +381,12 @@ export default function ApplicationListPage() {
             className="px-4 pt-2"
           >
             <TabsList>
-              <TabsTrigger value="all">전체</TabsTrigger>
-              <TabsTrigger value="RECEIVED">접수</TabsTrigger>
-              <TabsTrigger value="SCREENING">서류심사</TabsTrigger>
-              <TabsTrigger value="IN_PROGRESS">진행중</TabsTrigger>
-              <TabsTrigger value="PASSED">합격</TabsTrigger>
-              <TabsTrigger value="FAILED">불합격</TabsTrigger>
+              <TabsTrigger value="all">{t('application.status.all')}</TabsTrigger>
+              <TabsTrigger value="RECEIVED">{t('application.status.received')}</TabsTrigger>
+              <TabsTrigger value="SCREENING">{t('application.status.screening')}</TabsTrigger>
+              <TabsTrigger value="IN_PROGRESS">{t('application.status.inProgress')}</TabsTrigger>
+              <TabsTrigger value="PASSED">{t('application.status.passed')}</TabsTrigger>
+              <TabsTrigger value="FAILED">{t('application.status.failed')}</TabsTrigger>
             </TabsList>
           </Tabs>
 
@@ -396,14 +398,14 @@ export default function ApplicationListPage() {
             ) : isError ? (
               <EmptyState
                 icon={FileText}
-                title="데이터를 불러올 수 없습니다"
-                description="잠시 후 다시 시도해주세요."
+                title={t('common.cannotLoadData')}
+                description={t('common.retryLater')}
               />
             ) : applications.length === 0 ? (
               <EmptyState
                 icon={FileText}
-                title="지원서가 없습니다"
-                description="선택한 조건에 맞는 지원서가 없습니다."
+                title={t('application.noApplications')}
+                description={t('application.noApplicationsFiltered')}
               />
             ) : (
               <>
@@ -412,22 +414,22 @@ export default function ApplicationListPage() {
                     <thead>
                       <tr className="border-b bg-muted/50">
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          지원번호
+                          {t('application.table.applicationNumber')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          지원자
+                          {t('application.table.applicant')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          지원 공고
+                          {t('application.table.appliedPosting')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          단계
+                          {t('application.table.stage')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          상태
+                          {t('application.table.status')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          지원일
+                          {t('application.table.applicationDate')}
                         </th>
                       </tr>
                     </thead>

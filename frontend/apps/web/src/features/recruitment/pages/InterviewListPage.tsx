@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -24,6 +25,7 @@ import {
 import type { InterviewStatus } from '@hr-platform/shared-types';
 
 export default function InterviewListPage() {
+  const { t } = useTranslation('recruitment');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
@@ -62,8 +64,8 @@ export default function InterviewListPage() {
           {/* Mobile Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold">면접 일정</h1>
-              <p className="text-sm text-muted-foreground">총 {summary.total}건</p>
+              <h1 className="text-xl font-bold">{t('interview.title')}</h1>
+              <p className="text-sm text-muted-foreground">{t('common.totalCases', { count: summary.total })}</p>
             </div>
             <Button size="sm" variant="outline" onClick={() => navigate('/recruitment')}>
               <ArrowLeft className="h-4 w-4" />
@@ -73,19 +75,19 @@ export default function InterviewListPage() {
           {/* Summary Cards - 2x2 */}
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-blue-50 dark:bg-blue-900/30 rounded-xl border border-blue-200 p-4">
-              <p className="text-xs text-blue-600 dark:text-blue-400">진행중</p>
+              <p className="text-xs text-blue-600 dark:text-blue-400">{t('interview.summary.inProgress')}</p>
               <p className="text-2xl font-bold text-blue-600">{summary.inProgress}</p>
             </div>
             <div className="bg-card rounded-xl border p-4">
-              <p className="text-xs text-muted-foreground">예정</p>
+              <p className="text-xs text-muted-foreground">{t('interview.summary.scheduled')}</p>
               <p className="text-2xl font-bold text-orange-500">{summary.scheduled}</p>
             </div>
             <div className="bg-card rounded-xl border p-4">
-              <p className="text-xs text-muted-foreground">완료</p>
+              <p className="text-xs text-muted-foreground">{t('interview.summary.completed')}</p>
               <p className="text-2xl font-bold text-green-500">{summary.completed}</p>
             </div>
             <div className="bg-card rounded-xl border p-4">
-              <p className="text-xs text-muted-foreground">취소</p>
+              <p className="text-xs text-muted-foreground">{t('interview.summary.cancelled')}</p>
               <p className="text-2xl font-bold text-gray-500">{summary.cancelled}</p>
             </div>
           </div>
@@ -100,7 +102,7 @@ export default function InterviewListPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              전체
+              {t('interview.status.all')}
             </button>
             <button
               onClick={() => handleTabChange('SCHEDULED')}
@@ -110,7 +112,7 @@ export default function InterviewListPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              예정
+              {t('interview.status.scheduled')}
             </button>
             <button
               onClick={() => handleTabChange('IN_PROGRESS')}
@@ -120,7 +122,7 @@ export default function InterviewListPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              진행중
+              {t('interview.status.inProgress')}
             </button>
             <button
               onClick={() => handleTabChange('COMPLETED')}
@@ -130,7 +132,7 @@ export default function InterviewListPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              완료
+              {t('interview.status.completed')}
             </button>
             <button
               onClick={() => handleTabChange('CANCELLED')}
@@ -140,7 +142,7 @@ export default function InterviewListPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              취소
+              {t('interview.status.cancelled')}
             </button>
           </div>
 
@@ -152,12 +154,12 @@ export default function InterviewListPage() {
           ) : isError ? (
             <div className="bg-card rounded-xl border p-8 text-center">
               <CalendarCheck className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-              <p className="font-medium">데이터를 불러올 수 없습니다</p>
+              <p className="font-medium">{t('common.cannotLoadData')}</p>
             </div>
           ) : interviews.length === 0 ? (
             <div className="bg-card rounded-xl border p-8 text-center">
               <CalendarCheck className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-              <p className="font-medium">면접 일정이 없습니다</p>
+              <p className="font-medium">{t('interview.noInterviews')}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -188,19 +190,19 @@ export default function InterviewListPage() {
                         {format(new Date(interview.scheduledDate), 'M월 d일 (E)', { locale: ko })}
                         {interview.scheduledTime && ` ${interview.scheduledTime}`}
                       </span>
-                      <span className="text-muted-foreground">({interview.durationMinutes}분)</span>
+                      <span className="text-muted-foreground">({t('common.minutesUnit', { minutes: interview.durationMinutes })})</span>
                     </div>
                     <div className="flex items-center justify-between">
                       {interview.interviewerNames && interview.interviewerNames.length > 0 && (
                         <div className="flex items-center gap-1 text-muted-foreground">
                           <Users className="h-3.5 w-3.5" />
-                          <span>면접관 {interview.interviewerNames.length}명</span>
+                          <span>{t('interview.detail.interviewerCount', { count: interview.interviewerNames.length })}</span>
                         </div>
                       )}
                       {interview.meetingUrl ? (
                         <div className="flex items-center gap-1 text-blue-600">
                           <Video className="h-3.5 w-3.5" />
-                          <span>화상</span>
+                          <span>{t('interview.detail.video')}</span>
                         </div>
                       ) : interview.location ? (
                         <div className="flex items-center gap-1 text-muted-foreground">
@@ -231,12 +233,12 @@ export default function InterviewListPage() {
   return (
     <>
       <PageHeader
-        title="면접 일정 관리"
-        description="채용 면접 일정을 조회하고 관리합니다."
+        title={t('interview.listTitle')}
+        description={t('interview.listDescription')}
         actions={
           <Button variant="outline" onClick={() => navigate('/recruitment')}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            공고 목록
+            {t('common.postingList')}
           </Button>
         }
       />
@@ -245,7 +247,7 @@ export default function InterviewListPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">전체</p>
+              <p className="text-sm text-muted-foreground">{t('interview.summary.total')}</p>
               <p className="mt-1 text-3xl font-bold">{summary.total}</p>
             </div>
           </CardContent>
@@ -253,7 +255,7 @@ export default function InterviewListPage() {
         <Card className="border-blue-200 bg-blue-50/50">
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">진행중</p>
+              <p className="text-sm text-muted-foreground">{t('interview.summary.inProgress')}</p>
               <p className="mt-1 text-3xl font-bold text-blue-600">{summary.inProgress}</p>
             </div>
           </CardContent>
@@ -261,7 +263,7 @@ export default function InterviewListPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">예정</p>
+              <p className="text-sm text-muted-foreground">{t('interview.summary.scheduled')}</p>
               <p className="mt-1 text-3xl font-bold text-orange-500">{summary.scheduled}</p>
             </div>
           </CardContent>
@@ -269,7 +271,7 @@ export default function InterviewListPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">완료</p>
+              <p className="text-sm text-muted-foreground">{t('interview.summary.completed')}</p>
               <p className="mt-1 text-3xl font-bold text-green-500">{summary.completed}</p>
             </div>
           </CardContent>
@@ -278,7 +280,7 @@ export default function InterviewListPage() {
 
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle>면접 일정 목록</CardTitle>
+          <CardTitle>{t('interview.scheduleListTitle')}</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <Tabs
@@ -287,13 +289,13 @@ export default function InterviewListPage() {
             className="px-4 pt-2"
           >
             <TabsList>
-              <TabsTrigger value="all">전체</TabsTrigger>
+              <TabsTrigger value="all">{t('interview.status.all')}</TabsTrigger>
               <TabsTrigger value="SCHEDULED">
-                예정 {summary.scheduled > 0 && `(${summary.scheduled})`}
+                {t('interview.status.scheduled')} {summary.scheduled > 0 && `(${summary.scheduled})`}
               </TabsTrigger>
-              <TabsTrigger value="IN_PROGRESS">진행중</TabsTrigger>
-              <TabsTrigger value="COMPLETED">완료</TabsTrigger>
-              <TabsTrigger value="CANCELLED">취소</TabsTrigger>
+              <TabsTrigger value="IN_PROGRESS">{t('interview.status.inProgress')}</TabsTrigger>
+              <TabsTrigger value="COMPLETED">{t('interview.status.completed')}</TabsTrigger>
+              <TabsTrigger value="CANCELLED">{t('interview.status.cancelled')}</TabsTrigger>
             </TabsList>
           </Tabs>
 
@@ -305,14 +307,14 @@ export default function InterviewListPage() {
             ) : isError ? (
               <EmptyState
                 icon={CalendarCheck}
-                title="데이터를 불러올 수 없습니다"
-                description="잠시 후 다시 시도해주세요."
+                title={t('common.cannotLoadData')}
+                description={t('common.retryLater')}
               />
             ) : interviews.length === 0 ? (
               <EmptyState
                 icon={CalendarCheck}
-                title="면접 일정이 없습니다"
-                description="등록된 면접 일정이 없습니다."
+                title={t('interview.noInterviews')}
+                description={t('interview.noInterviewsRegistered')}
               />
             ) : (
               <>
@@ -321,25 +323,25 @@ export default function InterviewListPage() {
                     <thead>
                       <tr className="border-b bg-muted/50">
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          일시
+                          {t('interview.table.dateTime')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          지원자
+                          {t('interview.table.applicant')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          공고
+                          {t('interview.table.posting')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          유형
+                          {t('interview.table.type')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          면접관
+                          {t('interview.table.interviewer')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          장소/URL
+                          {t('interview.table.locationUrl')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          상태
+                          {t('interview.table.status')}
                         </th>
                       </tr>
                     </thead>
@@ -359,7 +361,7 @@ export default function InterviewListPage() {
                               </div>
                               <div className="text-xs text-muted-foreground">
                                 {interview.scheduledTime || '-'}
-                                <span> ({interview.durationMinutes}분)</span>
+                                <span> ({t('common.minutesUnit', { minutes: interview.durationMinutes })})</span>
                               </div>
                             </div>
                           </td>
@@ -376,7 +378,7 @@ export default function InterviewListPage() {
                             {interview.interviewerNames && interview.interviewerNames.length > 0 ? (
                               <div className="flex items-center gap-1 text-sm">
                                 <Users className="h-4 w-4 text-muted-foreground" />
-                                <span>{interview.interviewerNames.length}명</span>
+                                <span>{t('common.countWithUnit', { count: interview.interviewerNames.length })}</span>
                               </div>
                             ) : (
                               <span className="text-sm text-muted-foreground">-</span>
@@ -386,7 +388,7 @@ export default function InterviewListPage() {
                             {interview.meetingUrl ? (
                               <div className="flex items-center gap-1 text-sm text-blue-600">
                                 <Video className="h-4 w-4" />
-                                <span>화상</span>
+                                <span>{t('interview.detail.video')}</span>
                               </div>
                             ) : interview.location ? (
                               <div className="flex items-center gap-1 text-sm text-muted-foreground">

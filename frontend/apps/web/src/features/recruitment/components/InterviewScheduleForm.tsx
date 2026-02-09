@@ -1,4 +1,5 @@
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { format, addHours } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,23 +8,23 @@ import { Textarea } from '@/components/ui/textarea';
 import type { CreateInterviewRequest, InterviewType } from '@hr-platform/shared-types';
 import { showErrorToast } from '@/components/common/Error/ErrorToast';
 
-const INTERVIEW_TYPES: { value: InterviewType; label: string }[] = [
-  { value: 'FIRST_ROUND', label: '1차면접' },
-  { value: 'SECOND_ROUND', label: '2차면접' },
-  { value: 'FINAL_ROUND', label: '최종면접' },
-  { value: 'TECHNICAL', label: '기술면접' },
-  { value: 'PERSONALITY', label: '인성면접' },
-  { value: 'PRESENTATION', label: '발표면접' },
-  { value: 'GROUP', label: '그룹면접' },
-  { value: 'VIDEO', label: '화상면접' },
-  { value: 'PHONE', label: '전화면접' },
+const INTERVIEW_TYPE_KEYS: { value: InterviewType; key: string }[] = [
+  { value: 'FIRST_ROUND', key: 'interviewScheduleForm.interviewTypes.firstRound' },
+  { value: 'SECOND_ROUND', key: 'interviewScheduleForm.interviewTypes.secondRound' },
+  { value: 'FINAL_ROUND', key: 'interviewScheduleForm.interviewTypes.finalRound' },
+  { value: 'TECHNICAL', key: 'interviewScheduleForm.interviewTypes.technical' },
+  { value: 'PERSONALITY', key: 'interviewScheduleForm.interviewTypes.personality' },
+  { value: 'PRESENTATION', key: 'interviewScheduleForm.interviewTypes.presentation' },
+  { value: 'GROUP', key: 'interviewScheduleForm.interviewTypes.group' },
+  { value: 'VIDEO', key: 'interviewScheduleForm.interviewTypes.video' },
+  { value: 'PHONE', key: 'interviewScheduleForm.interviewTypes.phone' },
 ];
 
-const DURATION_OPTIONS = [
-  { value: 30, label: '30분' },
-  { value: 60, label: '1시간' },
-  { value: 90, label: '1시간 30분' },
-  { value: 120, label: '2시간' },
+const DURATION_OPTION_KEYS: { value: number; key: string }[] = [
+  { value: 30, key: 'interviewScheduleForm.durationOptions.thirtyMin' },
+  { value: 60, key: 'interviewScheduleForm.durationOptions.oneHour' },
+  { value: 90, key: 'interviewScheduleForm.durationOptions.oneHalfHour' },
+  { value: 120, key: 'interviewScheduleForm.durationOptions.twoHours' },
 ];
 
 interface InterviewScheduleFormProps {
@@ -52,6 +53,7 @@ export function InterviewScheduleForm({
   onCancel,
   isSubmitting = false,
 }: InterviewScheduleFormProps) {
+  const { t } = useTranslation('recruitment');
   const defaultDate = format(addHours(new Date(), 24), 'yyyy-MM-dd');
   const defaultTime = '10:00';
 
@@ -82,13 +84,13 @@ export function InterviewScheduleForm({
     const now = new Date();
 
     if (scheduledDateTime <= now) {
-      return '면접 일시는 현재 시간 이후여야 합니다.';
+      return t('interviewScheduleForm.validation.futureDateTime');
     }
 
     // 최소 1시간 이후 예약 권장
     const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
     if (scheduledDateTime < oneHourLater) {
-      return '면접은 최소 1시간 이후로 예약해주세요.';
+      return t('interviewScheduleForm.validation.minimumOneHour');
     }
 
     return null;
@@ -126,21 +128,21 @@ export function InterviewScheduleForm({
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
       {applicantName && (
         <div className="rounded-lg bg-muted p-3">
-          <p className="text-sm text-muted-foreground">지원자</p>
+          <p className="text-sm text-muted-foreground">{t('interviewScheduleForm.applicant')}</p>
           <p className="font-medium">{applicantName}</p>
         </div>
       )}
 
       <div className="space-y-2">
-        <Label htmlFor="interviewType">면접 유형 *</Label>
+        <Label htmlFor="interviewType">{t('interviewScheduleForm.interviewType')}</Label>
         <select
           id="interviewType"
           className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
           {...register('interviewType', { required: true })}
         >
-          {INTERVIEW_TYPES.map((type) => (
+          {INTERVIEW_TYPE_KEYS.map((type) => (
             <option key={type.value} value={type.value}>
-              {type.label}
+              {t(type.key)}
             </option>
           ))}
         </select>
@@ -148,22 +150,22 @@ export function InterviewScheduleForm({
 
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="scheduledDate">날짜 *</Label>
+          <Label htmlFor="scheduledDate">{t('interviewScheduleForm.date')}</Label>
           <Input
             id="scheduledDate"
             type="date"
-            {...register('scheduledDate', { required: '날짜를 입력해주세요.' })}
+            {...register('scheduledDate', { required: t('interviewScheduleForm.validation.dateRequired') })}
           />
           {errors.scheduledDate && (
             <p className="text-sm text-destructive">{errors.scheduledDate.message}</p>
           )}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="scheduledTime">시간 *</Label>
+          <Label htmlFor="scheduledTime">{t('interviewScheduleForm.time')}</Label>
           <Input
             id="scheduledTime"
             type="time"
-            {...register('scheduledTime', { required: '시간을 입력해주세요.' })}
+            {...register('scheduledTime', { required: t('interviewScheduleForm.validation.timeRequired') })}
           />
           {errors.scheduledTime && (
             <p className="text-sm text-destructive">{errors.scheduledTime.message}</p>
@@ -172,15 +174,15 @@ export function InterviewScheduleForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="durationMinutes">면접 시간 *</Label>
+        <Label htmlFor="durationMinutes">{t('interviewScheduleForm.duration')}</Label>
         <select
           id="durationMinutes"
           className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
           {...register('durationMinutes', { required: true })}
         >
-          {DURATION_OPTIONS.map((opt) => (
+          {DURATION_OPTION_KEYS.map((opt) => (
             <option key={opt.value} value={opt.value}>
-              {opt.label}
+              {t(opt.key)}
             </option>
           ))}
         </select>
@@ -188,10 +190,10 @@ export function InterviewScheduleForm({
 
       {showLocation && (
         <div className="space-y-2">
-          <Label htmlFor="location">면접 장소</Label>
+          <Label htmlFor="location">{t('interviewScheduleForm.location')}</Label>
           <Input
             id="location"
-            placeholder="예: 본사 3층 회의실"
+            placeholder={t('interviewScheduleForm.locationPlaceholder')}
             {...register('location')}
           />
         </div>
@@ -199,32 +201,32 @@ export function InterviewScheduleForm({
 
       {showMeetingUrl && (
         <div className="space-y-2">
-          <Label htmlFor="meetingUrl">화상회의 URL</Label>
+          <Label htmlFor="meetingUrl">{t('interviewScheduleForm.meetingUrl')}</Label>
           <Input
             id="meetingUrl"
-            placeholder="https://meet.google.com/xxx-xxxx-xxx"
+            placeholder={t('interviewScheduleForm.meetingUrlPlaceholder')}
             {...register('meetingUrl')}
           />
         </div>
       )}
 
       <div className="space-y-2">
-        <Label htmlFor="interviewerIds">면접관 (사번, 콤마로 구분)</Label>
+        <Label htmlFor="interviewerIds">{t('interviewScheduleForm.interviewerIds')}</Label>
         <Input
           id="interviewerIds"
-          placeholder="emp-001, emp-002"
+          placeholder={t('interviewScheduleForm.interviewerIdsPlaceholder')}
           {...register('interviewerIds')}
         />
         <p className="text-xs text-muted-foreground">
-          비워두면 기본 면접관이 배정됩니다.
+          {t('interviewScheduleForm.interviewerIdsHelp')}
         </p>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="notes">메모</Label>
+        <Label htmlFor="notes">{t('interviewScheduleForm.notes')}</Label>
         <Textarea
           id="notes"
-          placeholder="면접 관련 메모 (지원자에게 전달 사항 등)"
+          placeholder={t('interviewScheduleForm.notesPlaceholder')}
           rows={3}
           {...register('notes')}
         />
@@ -232,10 +234,10 @@ export function InterviewScheduleForm({
 
       <div className="flex justify-end gap-3 pt-4">
         <Button type="button" variant="outline" onClick={onCancel}>
-          취소
+          {t('common.cancel')}
         </Button>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? '저장 중...' : '면접 일정 등록'}
+          {isSubmitting ? t('common.saving') : t('interviewScheduleForm.submitButton')}
         </Button>
       </div>
     </form>

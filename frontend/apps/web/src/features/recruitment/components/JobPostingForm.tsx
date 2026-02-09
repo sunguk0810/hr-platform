@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { format, addMonths } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,11 +16,11 @@ import type {
 } from '@hr-platform/shared-types';
 import { showErrorToast } from '@/components/common/Error/ErrorToast';
 
-const EMPLOYMENT_TYPES: { value: RecruitmentEmploymentType; label: string }[] = [
-  { value: 'FULL_TIME', label: '정규직' },
-  { value: 'CONTRACT', label: '계약직' },
-  { value: 'INTERN', label: '인턴' },
-  { value: 'PART_TIME', label: '파트타임' },
+const EMPLOYMENT_TYPE_KEYS: { value: RecruitmentEmploymentType; key: string }[] = [
+  { value: 'FULL_TIME', key: 'jobPostingForm.employmentTypes.fullTime' },
+  { value: 'CONTRACT', key: 'jobPostingForm.employmentTypes.contract' },
+  { value: 'INTERN', key: 'jobPostingForm.employmentTypes.intern' },
+  { value: 'PART_TIME', key: 'jobPostingForm.employmentTypes.partTime' },
 ];
 
 interface JobPostingFormProps {
@@ -52,6 +53,7 @@ export function JobPostingForm({
   onCancel,
   isSubmitting = false,
 }: JobPostingFormProps) {
+  const { t } = useTranslation('recruitment');
   const isEditMode = !!initialData;
 
   const {
@@ -105,7 +107,7 @@ export function JobPostingForm({
     const min = parseInt(salaryMin);
     const max = parseInt(salaryMax);
     if (min > max) {
-      return '최소 연봉이 최대 연봉보다 클 수 없습니다.';
+      return t('jobPostingForm.validation.salaryMinExceedsMax');
     }
     return null;
   };
@@ -115,12 +117,12 @@ export function JobPostingForm({
     const start = new Date(startDate);
     const end = new Date(endDate);
     if (start > end) {
-      return '시작일이 종료일보다 늦을 수 없습니다.';
+      return t('jobPostingForm.validation.startDateAfterEnd');
     }
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     if (end < today) {
-      return '종료일은 오늘 이후여야 합니다.';
+      return t('jobPostingForm.validation.endDateBeforeToday');
     }
     return null;
   };
@@ -165,16 +167,16 @@ export function JobPostingForm({
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>기본 정보</CardTitle>
+          <CardTitle>{t('jobPostingForm.basicInfo')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="title">공고 제목 *</Label>
+              <Label htmlFor="title">{t('jobPostingForm.postingTitle')}</Label>
               <Input
                 id="title"
-                placeholder="예: 백엔드 개발자"
-                {...register('title', { required: '공고 제목을 입력해주세요.' })}
+                placeholder={t('jobPostingForm.postingTitlePlaceholder')}
+                {...register('title', { required: t('jobPostingForm.validation.titleRequired') })}
               />
               {errors.title && (
                 <p className="text-sm text-destructive">{errors.title.message}</p>
@@ -182,13 +184,13 @@ export function JobPostingForm({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="departmentId">채용 부서 *</Label>
+              <Label htmlFor="departmentId">{t('jobPostingForm.hiringDepartment')}</Label>
               <select
                 id="departmentId"
                 className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                {...register('departmentId', { required: '부서를 선택해주세요.' })}
+                {...register('departmentId', { required: t('jobPostingForm.validation.departmentRequired') })}
               >
-                <option value="">선택</option>
+                <option value="">{t('common.select')}</option>
                 <option value="dept-001">개발팀</option>
                 <option value="dept-002">인사팀</option>
                 <option value="dept-003">재무팀</option>
@@ -202,13 +204,13 @@ export function JobPostingForm({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="positionId">직책</Label>
+              <Label htmlFor="positionId">{t('jobPostingForm.position')}</Label>
               <select
                 id="positionId"
                 className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
                 {...register('positionId')}
               >
-                <option value="">선택 (선택사항)</option>
+                <option value="">{t('jobPostingForm.positionOptional')}</option>
                 <option value="pos-001">팀장</option>
                 <option value="pos-002">선임</option>
                 <option value="pos-003">매니저</option>
@@ -219,29 +221,29 @@ export function JobPostingForm({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="employmentType">고용 형태 *</Label>
+              <Label htmlFor="employmentType">{t('jobPostingForm.employmentType')}</Label>
               <select
                 id="employmentType"
                 className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
                 {...register('employmentType', { required: true })}
               >
-                {EMPLOYMENT_TYPES.map((type) => (
+                {EMPLOYMENT_TYPE_KEYS.map((type) => (
                   <option key={type.value} value={type.value}>
-                    {type.label}
+                    {t(type.key)}
                   </option>
                 ))}
               </select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="headcount">모집 인원 *</Label>
+              <Label htmlFor="headcount">{t('jobPostingForm.headcount')}</Label>
               <Input
                 id="headcount"
                 type="number"
                 min="1"
                 {...register('headcount', {
-                  required: '모집 인원을 입력해주세요.',
-                  min: { value: 1, message: '최소 1명 이상이어야 합니다.' },
+                  required: t('jobPostingForm.validation.headcountRequired'),
+                  min: { value: 1, message: t('jobPostingForm.validation.headcountMin') },
                 })}
               />
               {errors.headcount && (
@@ -250,10 +252,10 @@ export function JobPostingForm({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="workLocation">근무지</Label>
+              <Label htmlFor="workLocation">{t('jobPostingForm.workLocation')}</Label>
               <Input
                 id="workLocation"
-                placeholder="예: 서울 강남구"
+                placeholder={t('jobPostingForm.workLocationPlaceholder')}
                 {...register('workLocation')}
               />
             </div>
@@ -263,7 +265,7 @@ export function JobPostingForm({
 
       <Card>
         <CardHeader>
-          <CardTitle>급여 정보</CardTitle>
+          <CardTitle>{t('jobPostingForm.salaryInfo')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center gap-2">
@@ -273,14 +275,14 @@ export function JobPostingForm({
               onCheckedChange={(checked) => setValue('salaryNegotiable', checked === true)}
             />
             <Label htmlFor="salaryNegotiable" className="cursor-pointer">
-              급여 협의 가능
+              {t('jobPostingForm.salaryNegotiable')}
             </Label>
           </div>
 
           {!isSalaryNegotiable && (
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="salaryMin">최소 연봉 (만원)</Label>
+                <Label htmlFor="salaryMin">{t('jobPostingForm.salaryMin')}</Label>
                 <Input
                   id="salaryMin"
                   type="number"
@@ -289,7 +291,7 @@ export function JobPostingForm({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="salaryMax">최대 연봉 (만원)</Label>
+                <Label htmlFor="salaryMax">{t('jobPostingForm.salaryMax')}</Label>
                 <Input
                   id="salaryMax"
                   type="number"
@@ -304,27 +306,27 @@ export function JobPostingForm({
 
       <Card>
         <CardHeader>
-          <CardTitle>공고 기간</CardTitle>
+          <CardTitle>{t('jobPostingForm.postingPeriod')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="openDate">시작일 *</Label>
+              <Label htmlFor="openDate">{t('jobPostingForm.startDate')}</Label>
               <Input
                 id="openDate"
                 type="date"
-                {...register('openDate', { required: '시작일을 입력해주세요.' })}
+                {...register('openDate', { required: t('jobPostingForm.validation.startDateRequired') })}
               />
               {errors.openDate && (
                 <p className="text-sm text-destructive">{errors.openDate.message}</p>
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="closeDate">종료일 *</Label>
+              <Label htmlFor="closeDate">{t('jobPostingForm.endDate')}</Label>
               <Input
                 id="closeDate"
                 type="date"
-                {...register('closeDate', { required: '종료일을 입력해주세요.' })}
+                {...register('closeDate', { required: t('jobPostingForm.validation.endDateRequired') })}
               />
               {errors.closeDate && (
                 <p className="text-sm text-destructive">{errors.closeDate.message}</p>
@@ -336,16 +338,16 @@ export function JobPostingForm({
 
       <Card>
         <CardHeader>
-          <CardTitle>상세 내용</CardTitle>
+          <CardTitle>{t('jobPostingForm.detailContent')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="jobDescription">직무 설명 *</Label>
+            <Label htmlFor="jobDescription">{t('jobPostingForm.jobDescription')}</Label>
             <Textarea
               id="jobDescription"
-              placeholder="담당 업무와 역할에 대해 상세히 작성해주세요."
+              placeholder={t('jobPostingForm.jobDescriptionPlaceholder')}
               rows={6}
-              {...register('jobDescription', { required: '직무 설명을 입력해주세요.' })}
+              {...register('jobDescription', { required: t('jobPostingForm.validation.jobDescriptionRequired') })}
             />
             {errors.jobDescription && (
               <p className="text-sm text-destructive">{errors.jobDescription.message}</p>
@@ -353,20 +355,20 @@ export function JobPostingForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="requirements">자격 요건</Label>
+            <Label htmlFor="requirements">{t('jobPostingForm.requirements')}</Label>
             <Textarea
               id="requirements"
-              placeholder="필수 자격 요건을 작성해주세요."
+              placeholder={t('jobPostingForm.requirementsPlaceholder')}
               rows={4}
               {...register('requirements')}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="preferredQualifications">우대 사항</Label>
+            <Label htmlFor="preferredQualifications">{t('jobPostingForm.preferredQualifications')}</Label>
             <Textarea
               id="preferredQualifications"
-              placeholder="우대 사항을 작성해주세요."
+              placeholder={t('jobPostingForm.preferredQualificationsPlaceholder')}
               rows={4}
               {...register('preferredQualifications')}
             />
@@ -376,10 +378,10 @@ export function JobPostingForm({
 
       <div className="flex justify-end gap-3">
         <Button type="button" variant="outline" onClick={onCancel}>
-          취소
+          {t('common.cancel')}
         </Button>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? '저장 중...' : isEditMode ? '수정' : '등록'}
+          {isSubmitting ? t('common.saving') : isEditMode ? t('common.edit') : t('common.register')}
         </Button>
       </div>
     </form>

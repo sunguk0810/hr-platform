@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,11 +9,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import type { SubmitInterviewScoreRequest, InterviewRecommendation } from '@hr-platform/shared-types';
 
-const RECOMMENDATIONS: { value: InterviewRecommendation; label: string; description: string }[] = [
-  { value: 'STRONG_HIRE', label: '강력 추천', description: '반드시 채용해야 할 인재' },
-  { value: 'HIRE', label: '추천', description: '채용을 권장함' },
-  { value: 'NO_HIRE', label: '비추천', description: '채용을 권장하지 않음' },
-  { value: 'STRONG_NO_HIRE', label: '강력 비추천', description: '채용 불가' },
+const RECOMMENDATION_KEYS: { value: InterviewRecommendation; labelKey: string; descKey: string }[] = [
+  { value: 'STRONG_HIRE', labelKey: 'interviewScore.recommendations.strongHire', descKey: 'interviewScore.recommendations.strongHireDesc' },
+  { value: 'HIRE', labelKey: 'interviewScore.recommendations.hire', descKey: 'interviewScore.recommendations.hireDesc' },
+  { value: 'NO_HIRE', labelKey: 'interviewScore.recommendations.noHire', descKey: 'interviewScore.recommendations.noHireDesc' },
+  { value: 'STRONG_NO_HIRE', labelKey: 'interviewScore.recommendations.strongNoHire', descKey: 'interviewScore.recommendations.strongNoHireDesc' },
 ];
 
 interface InterviewScoreFormProps {
@@ -72,6 +73,7 @@ export function InterviewScoreForm({
   isSubmitting = false,
   initialData,
 }: InterviewScoreFormProps) {
+  const { t } = useTranslation('recruitment');
   const [confirmWarning, setConfirmWarning] = useState<string | null>(null);
   const [pendingPayload, setPendingPayload] = useState<SubmitInterviewScoreRequest | null>(null);
 
@@ -106,22 +108,22 @@ export function InterviewScoreForm({
 
     // 강력 추천인데 점수가 낮은 경우
     if (recommendation === 'STRONG_HIRE' && overallScore < 8) {
-      return '강력 추천의 경우 종합 평가 점수가 8점 이상이어야 합니다.';
+      return t('interviewScore.validation.strongHireMinScore');
     }
 
     // 추천인데 점수가 낮은 경우
     if (recommendation === 'HIRE' && overallScore < 6) {
-      return '추천의 경우 종합 평가 점수가 6점 이상이어야 합니다.';
+      return t('interviewScore.validation.hireMinScore');
     }
 
     // 비추천인데 점수가 높은 경우
     if (recommendation === 'NO_HIRE' && overallScore > 5) {
-      return '비추천의 경우 종합 평가 점수가 5점 이하여야 합니다.';
+      return t('interviewScore.validation.noHireMaxScore');
     }
 
     // 강력 비추천인데 점수가 높은 경우
     if (recommendation === 'STRONG_NO_HIRE' && overallScore > 3) {
-      return '강력 비추천의 경우 종합 평가 점수가 3점 이하여야 합니다.';
+      return t('interviewScore.validation.strongNoHireMaxScore');
     }
 
     return null;
@@ -144,7 +146,7 @@ export function InterviewScoreForm({
     const payload = buildPayload(data);
 
     if (consistencyError) {
-      setConfirmWarning(`${consistencyError}\n\n그래도 제출하시겠습니까?`);
+      setConfirmWarning(`${consistencyError}\n\n${t('interviewScore.consistencyConfirm')}`);
       setPendingPayload(payload);
       return;
     }
@@ -166,13 +168,13 @@ export function InterviewScoreForm({
         <div className="rounded-lg bg-muted p-4">
           {applicantName && (
             <div>
-              <p className="text-sm text-muted-foreground">지원자</p>
+              <p className="text-sm text-muted-foreground">{t('interviewScore.applicant')}</p>
               <p className="font-medium">{applicantName}</p>
             </div>
           )}
           {interviewType && (
             <div className="mt-2">
-              <p className="text-sm text-muted-foreground">면접 유형</p>
+              <p className="text-sm text-muted-foreground">{t('interviewScore.interviewType')}</p>
               <p className="font-medium">{interviewType}</p>
             </div>
           )}
@@ -181,32 +183,32 @@ export function InterviewScoreForm({
 
       <Card>
         <CardHeader>
-          <CardTitle>평가 점수</CardTitle>
+          <CardTitle>{t('interviewScore.scoreSection')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <ScoreSlider
-            label="기술 역량"
+            label={t('interviewScore.technicalSkill')}
             value={technicalScore}
             onChange={(v) => setValue('technicalScore', v)}
           />
           <ScoreSlider
-            label="커뮤니케이션"
+            label={t('interviewScore.communication')}
             value={communicationScore}
             onChange={(v) => setValue('communicationScore', v)}
           />
           <ScoreSlider
-            label="조직 문화 적합성"
+            label={t('interviewScore.cultureFit')}
             value={cultureFitScore}
             onChange={(v) => setValue('cultureFitScore', v)}
           />
           <ScoreSlider
-            label="문제 해결 능력"
+            label={t('interviewScore.problemSolving')}
             value={problemSolvingScore}
             onChange={(v) => setValue('problemSolvingScore', v)}
           />
           <div className="pt-4 border-t">
             <ScoreSlider
-              label="종합 평가"
+              label={t('interviewScore.overallScore')}
               value={overallScore}
               onChange={(v) => setValue('overallScore', v)}
             />
@@ -216,33 +218,33 @@ export function InterviewScoreForm({
 
       <Card>
         <CardHeader>
-          <CardTitle>세부 평가</CardTitle>
+          <CardTitle>{t('interviewScore.detailSection')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="strengths">강점</Label>
+            <Label htmlFor="strengths">{t('interviewScore.strengths')}</Label>
             <Textarea
               id="strengths"
-              placeholder="지원자의 강점을 작성해주세요."
+              placeholder={t('interviewScore.strengthsPlaceholder')}
               rows={3}
               {...register('strengths')}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="weaknesses">약점/개선점</Label>
+            <Label htmlFor="weaknesses">{t('interviewScore.weaknesses')}</Label>
             <Textarea
               id="weaknesses"
-              placeholder="지원자의 약점이나 개선이 필요한 부분을 작성해주세요."
+              placeholder={t('interviewScore.weaknessesPlaceholder')}
               rows={3}
               {...register('weaknesses')}
             />
           </div>
 
           <div className="space-y-2">
-            <Label>채용 추천 의견 *</Label>
+            <Label>{t('interviewScore.recommendation')}</Label>
             <div className="grid gap-2 md:grid-cols-2">
-              {RECOMMENDATIONS.map((rec) => (
+              {RECOMMENDATION_KEYS.map((rec) => (
                 <label
                   key={rec.value}
                   className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
@@ -258,8 +260,8 @@ export function InterviewScoreForm({
                     className="mt-1"
                   />
                   <div>
-                    <p className="font-medium">{rec.label}</p>
-                    <p className="text-xs text-muted-foreground">{rec.description}</p>
+                    <p className="font-medium">{t(rec.labelKey)}</p>
+                    <p className="text-xs text-muted-foreground">{t(rec.descKey)}</p>
                   </div>
                 </label>
               ))}
@@ -267,10 +269,10 @@ export function InterviewScoreForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="comments">추가 의견</Label>
+            <Label htmlFor="comments">{t('interviewScore.additionalComments')}</Label>
             <Textarea
               id="comments"
-              placeholder="추가적인 의견이나 코멘트를 작성해주세요."
+              placeholder={t('interviewScore.additionalCommentsPlaceholder')}
               rows={4}
               {...register('comments')}
             />
@@ -280,10 +282,10 @@ export function InterviewScoreForm({
 
       <div className="flex justify-end gap-3">
         <Button type="button" variant="outline" onClick={onCancel}>
-          취소
+          {t('common.cancel')}
         </Button>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? '제출 중...' : '평가 제출'}
+          {isSubmitting ? t('common.submitting') : t('interviewScore.submitButton')}
         </Button>
       </div>
 
@@ -295,7 +297,7 @@ export function InterviewScoreForm({
             setPendingPayload(null);
           }
         }}
-        title="점수 일관성 경고"
+        title={t('interviewScore.consistencyWarningTitle')}
         description={confirmWarning ?? ''}
         onConfirm={handleConfirmSubmit}
       />

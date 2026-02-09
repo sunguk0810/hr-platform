@@ -27,6 +27,7 @@ import koCertificate from './locales/ko/certificate.json';
 import koHelp from './locales/ko/help.json';
 import koNotification from './locales/ko/notification.json';
 import koMdm from './locales/ko/mdm.json';
+import koRecruitment from './locales/ko/recruitment.json';
 
 // English
 import enCommon from './locales/en/common.json';
@@ -54,6 +55,7 @@ import enCertificate from './locales/en/certificate.json';
 import enHelp from './locales/en/help.json';
 import enNotification from './locales/en/notification.json';
 import enMdm from './locales/en/mdm.json';
+import enRecruitment from './locales/en/recruitment.json';
 
 const resources = {
   ko: {
@@ -82,6 +84,7 @@ const resources = {
     help: koHelp,
     notification: koNotification,
     mdm: koMdm,
+    recruitment: koRecruitment,
   },
   en: {
     common: enCommon,
@@ -109,6 +112,7 @@ const resources = {
     help: enHelp,
     notification: enNotification,
     mdm: enMdm,
+    recruitment: enRecruitment,
   },
 } as const;
 
@@ -142,6 +146,7 @@ i18n.use(initReactI18next).init({
     'help',
     'notification',
     'mdm',
+    'recruitment',
   ],
   defaultNS: 'common',
   interpolation: {

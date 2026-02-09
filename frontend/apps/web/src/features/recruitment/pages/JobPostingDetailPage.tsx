@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -49,6 +50,7 @@ import {
 import { useToast } from '@/hooks/useToast';
 
 export default function JobPostingDetailPage() {
+  const { t } = useTranslation('recruitment');
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -77,10 +79,10 @@ export default function JobPostingDetailPage() {
     if (!id) return;
     try {
       await publishMutation.mutateAsync(id);
-      toast({ title: '채용공고가 게시되었습니다.' });
+      toast({ title: t('jobPosting.toast.published') });
       setIsPublishDialogOpen(false);
     } catch {
-      toast({ title: '게시에 실패했습니다.', variant: 'destructive' });
+      toast({ title: t('jobPosting.toast.publishFailed'), variant: 'destructive' });
     }
   };
 
@@ -88,10 +90,10 @@ export default function JobPostingDetailPage() {
     if (!id) return;
     try {
       await closeMutation.mutateAsync(id);
-      toast({ title: '채용공고가 마감되었습니다.' });
+      toast({ title: t('jobPosting.toast.closed') });
       setIsCloseDialogOpen(false);
     } catch {
-      toast({ title: '마감에 실패했습니다.', variant: 'destructive' });
+      toast({ title: t('jobPosting.toast.closeFailed'), variant: 'destructive' });
     }
   };
 
@@ -99,10 +101,10 @@ export default function JobPostingDetailPage() {
     if (!id) return;
     try {
       await completeMutation.mutateAsync(id);
-      toast({ title: '채용이 완료되었습니다.' });
+      toast({ title: t('jobPosting.toast.completed') });
       setIsCompleteDialogOpen(false);
     } catch {
-      toast({ title: '완료 처리에 실패했습니다.', variant: 'destructive' });
+      toast({ title: t('jobPosting.toast.completeFailed'), variant: 'destructive' });
     }
   };
 
@@ -110,10 +112,10 @@ export default function JobPostingDetailPage() {
     if (!id) return;
     try {
       await deleteMutation.mutateAsync(id);
-      toast({ title: '채용공고가 삭제되었습니다.' });
+      toast({ title: t('jobPosting.toast.deleted') });
       navigate('/recruitment');
     } catch {
-      toast({ title: '삭제에 실패했습니다.', variant: 'destructive' });
+      toast({ title: t('jobPosting.toast.deleteFailed'), variant: 'destructive' });
     }
   };
 
@@ -128,10 +130,10 @@ export default function JobPostingDetailPage() {
   if (isError || !job) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <p className="text-muted-foreground">채용공고를 찾을 수 없습니다.</p>
+        <p className="text-muted-foreground">{t('jobPosting.notFoundMessage')}</p>
         <Button variant="outline" onClick={() => navigate('/recruitment')}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          목록으로
+          {t('common.backToList')}
         </Button>
       </div>
     );
@@ -148,36 +150,36 @@ export default function JobPostingDetailPage() {
       <ConfirmDialog
         open={isPublishDialogOpen}
         onOpenChange={setIsPublishDialogOpen}
-        title="채용공고 게시"
-        description="이 채용공고를 게시하시겠습니까? 게시 후에는 지원자를 받을 수 있습니다."
-        confirmText="게시"
+        title={t('jobPosting.dialogs.publishTitle')}
+        description={t('jobPosting.dialogs.publishDescription')}
+        confirmText={t('jobPosting.dialogs.publishConfirm')}
         onConfirm={handlePublish}
         isLoading={publishMutation.isPending}
       />
       <ConfirmDialog
         open={isCloseDialogOpen}
         onOpenChange={setIsCloseDialogOpen}
-        title="채용공고 마감"
-        description="이 채용공고를 마감하시겠습니까? 마감 후에는 더 이상 지원을 받을 수 없습니다."
-        confirmText="마감"
+        title={t('jobPosting.dialogs.closeTitle')}
+        description={t('jobPosting.dialogs.closeDescription')}
+        confirmText={t('jobPosting.dialogs.closeConfirm')}
         onConfirm={handleClose}
         isLoading={closeMutation.isPending}
       />
       <ConfirmDialog
         open={isCompleteDialogOpen}
         onOpenChange={setIsCompleteDialogOpen}
-        title="채용 완료"
-        description="이 채용을 완료 처리하시겠습니까?"
-        confirmText="완료"
+        title={t('jobPosting.dialogs.completeTitle')}
+        description={t('jobPosting.dialogs.completeDescription')}
+        confirmText={t('jobPosting.dialogs.completeConfirm')}
         onConfirm={handleComplete}
         isLoading={completeMutation.isPending}
       />
       <ConfirmDialog
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
-        title="채용공고 삭제"
-        description="정말로 이 채용공고를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
-        confirmText="삭제"
+        title={t('jobPosting.dialogs.deleteTitle')}
+        description={t('jobPosting.dialogs.deleteDescription')}
+        confirmText={t('jobPosting.dialogs.deleteConfirm')}
         variant="destructive"
         onConfirm={handleDelete}
         isLoading={deleteMutation.isPending}
@@ -194,7 +196,7 @@ export default function JobPostingDetailPage() {
           <Button variant="ghost" size="icon" onClick={() => navigate('/recruitment')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="font-semibold truncate flex-1 mx-2">채용공고 상세</h1>
+          <h1 className="font-semibold truncate flex-1 mx-2">{t('jobPosting.detailTitle')}</h1>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
@@ -205,7 +207,7 @@ export default function JobPostingDetailPage() {
               {canEdit && (
                 <DropdownMenuItem onClick={() => navigate(`/recruitment/jobs/${id}/edit`)}>
                   <Edit className="mr-2 h-4 w-4" />
-                  수정
+                  {t('common.edit')}
                 </DropdownMenuItem>
               )}
               {canDelete && (
@@ -214,7 +216,7 @@ export default function JobPostingDetailPage() {
                   className="text-destructive"
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
-                  삭제
+                  {t('common.delete')}
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
@@ -234,11 +236,11 @@ export default function JobPostingDetailPage() {
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4 text-muted-foreground" />
-                <span>모집 {job.headcount}명</span>
+                <span>{t('common.headcountWithUnit', { count: job.headcount })}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Eye className="h-4 w-4 text-muted-foreground" />
-                <span>조회 {job.viewCount}</span>
+                <span>{t('common.viewCount', { count: job.viewCount })}</span>
               </div>
               <div className="flex items-center gap-2 col-span-2">
                 <MapPin className="h-4 w-4 text-muted-foreground" />
@@ -248,9 +250,9 @@ export default function JobPostingDetailPage() {
                 <Banknote className="h-4 w-4 text-muted-foreground" />
                 <span>
                   {job.salaryNegotiable
-                    ? '협의 가능'
+                    ? t('jobPosting.detail.salaryNegotiable')
                     : job.salaryMin && job.salaryMax
-                    ? `${job.salaryMin.toLocaleString()} ~ ${job.salaryMax.toLocaleString()} 만원`
+                    ? t('jobPosting.detail.salaryRange', { min: job.salaryMin.toLocaleString(), max: job.salaryMax.toLocaleString() })
                     : '-'}
                 </span>
               </div>
@@ -268,7 +270,7 @@ export default function JobPostingDetailPage() {
         {/* 지원 현황 */}
         <Card className="mb-4">
           <CardHeader className="p-4 pb-2">
-            <CardTitle className="text-base">지원 현황</CardTitle>
+            <CardTitle className="text-base">{t('jobPosting.detail.applicationStatus')}</CardTitle>
           </CardHeader>
           <CardContent className="p-4 pt-0">
             <StageCountBar stageCounts={stageCounts} />
@@ -277,7 +279,7 @@ export default function JobPostingDetailPage() {
               className="w-full mt-3"
               onClick={() => navigate(`/recruitment/applications?jobPostingId=${id}`)}
             >
-              전체 지원자 보기 ({job.applicationCount}명)
+              {t('jobPosting.detail.viewAllApplicantsWithCount', { count: job.applicationCount })}
               <ChevronRight className="ml-2 h-4 w-4" />
             </Button>
           </CardContent>
@@ -286,7 +288,7 @@ export default function JobPostingDetailPage() {
         {/* 직무 설명 */}
         <Card className="mb-4">
           <CardHeader className="p-4 pb-2">
-            <CardTitle className="text-base">직무 설명</CardTitle>
+            <CardTitle className="text-base">{t('jobPosting.detail.jobDescription')}</CardTitle>
           </CardHeader>
           <CardContent className="p-4 pt-0">
             <div className="text-sm whitespace-pre-wrap">{job.jobDescription}</div>
@@ -297,7 +299,7 @@ export default function JobPostingDetailPage() {
         {job.requirements && (
           <Card className="mb-4">
             <CardHeader className="p-4 pb-2">
-              <CardTitle className="text-base">자격 요건</CardTitle>
+              <CardTitle className="text-base">{t('jobPosting.detail.requirements')}</CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-0">
               <div className="text-sm whitespace-pre-wrap">{job.requirements}</div>
@@ -309,7 +311,7 @@ export default function JobPostingDetailPage() {
         {job.preferredQualifications && (
           <Card className="mb-4">
             <CardHeader className="p-4 pb-2">
-              <CardTitle className="text-base">우대 사항</CardTitle>
+              <CardTitle className="text-base">{t('jobPosting.detail.preferredQualifications')}</CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-0">
               <div className="text-sm whitespace-pre-wrap">{job.preferredQualifications}</div>
@@ -321,7 +323,7 @@ export default function JobPostingDetailPage() {
         {applications.length > 0 && (
           <Card className="mb-4">
             <CardHeader className="p-4 pb-2">
-              <CardTitle className="text-base">최근 지원자</CardTitle>
+              <CardTitle className="text-base">{t('jobPosting.detail.recentApplicants')}</CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-0 space-y-3">
               {applications.map((app) => (
@@ -347,16 +349,16 @@ export default function JobPostingDetailPage() {
         {/* 담당자 정보 */}
         <Card className="mb-4">
           <CardHeader className="p-4 pb-2">
-            <CardTitle className="text-base">담당자 정보</CardTitle>
+            <CardTitle className="text-base">{t('jobPosting.detail.managerInfo')}</CardTitle>
           </CardHeader>
           <CardContent className="p-4 pt-0">
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div>
-                <p className="text-muted-foreground">채용 담당자</p>
+                <p className="text-muted-foreground">{t('jobPosting.detail.recruiter')}</p>
                 <p className="font-medium">{job.recruiterName || '-'}</p>
               </div>
               <div>
-                <p className="text-muted-foreground">등록일</p>
+                <p className="text-muted-foreground">{t('jobPosting.detail.createdDate')}</p>
                 <p className="font-medium">
                   {format(new Date(job.createdAt), 'M/d', { locale: ko })}
                 </p>
@@ -371,7 +373,7 @@ export default function JobPostingDetailPage() {
             {canPublish && (
               <Button className="w-full" onClick={() => setIsPublishDialogOpen(true)}>
                 <Send className="mr-2 h-4 w-4" />
-                공고 게시
+                {t('jobPosting.actions.publishFull')}
               </Button>
             )}
             {canClose && (
@@ -381,13 +383,13 @@ export default function JobPostingDetailPage() {
                 onClick={() => setIsCloseDialogOpen(true)}
               >
                 <XCircle className="mr-2 h-4 w-4" />
-                공고 마감
+                {t('jobPosting.actions.closeFull')}
               </Button>
             )}
             {canComplete && (
               <Button className="w-full" onClick={() => setIsCompleteDialogOpen(true)}>
                 <CheckCircle className="mr-2 h-4 w-4" />
-                채용 완료
+                {t('jobPosting.actions.completeFull')}
               </Button>
             )}
           </div>
@@ -402,18 +404,18 @@ export default function JobPostingDetailPage() {
   return (
     <>
       <PageHeader
-        title="채용공고 상세"
-        description={`공고번호: ${job.jobCode}`}
+        title={t('jobPosting.detailTitle')}
+        description={t('jobPosting.postingNumberLabel', { code: job.jobCode })}
         actions={
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={() => navigate('/recruitment')}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              목록으로
+              {t('common.backToList')}
             </Button>
             {canEdit && (
               <Button variant="outline" onClick={() => navigate(`/recruitment/jobs/${id}/edit`)}>
                 <Edit className="mr-2 h-4 w-4" />
-                수정
+                {t('common.edit')}
               </Button>
             )}
             {canDelete && (
@@ -423,13 +425,13 @@ export default function JobPostingDetailPage() {
                 onClick={() => setIsDeleteDialogOpen(true)}
               >
                 <Trash2 className="mr-2 h-4 w-4" />
-                삭제
+                {t('common.delete')}
               </Button>
             )}
             {canPublish && (
               <Button onClick={() => setIsPublishDialogOpen(true)}>
                 <Send className="mr-2 h-4 w-4" />
-                게시
+                {t('jobPosting.actions.publish')}
               </Button>
             )}
             {canClose && (
@@ -439,13 +441,13 @@ export default function JobPostingDetailPage() {
                 onClick={() => setIsCloseDialogOpen(true)}
               >
                 <XCircle className="mr-2 h-4 w-4" />
-                마감
+                {t('jobPosting.actions.close')}
               </Button>
             )}
             {canComplete && (
               <Button onClick={() => setIsCompleteDialogOpen(true)}>
                 <CheckCircle className="mr-2 h-4 w-4" />
-                완료
+                {t('jobPosting.actions.complete')}
               </Button>
             )}
           </div>
@@ -456,8 +458,8 @@ export default function JobPostingDetailPage() {
         <div className="lg:col-span-2">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="mb-4">
-              <TabsTrigger value="detail">공고 내용</TabsTrigger>
-              <TabsTrigger value="applications">지원자 ({job.applicationCount})</TabsTrigger>
+              <TabsTrigger value="detail">{t('jobPosting.detail.postingContent')}</TabsTrigger>
+              <TabsTrigger value="applications">{t('jobPosting.detail.applicantsTab', { count: job.applicationCount })}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="detail">
@@ -474,44 +476,44 @@ export default function JobPostingDetailPage() {
                 <CardContent className="space-y-6">
                   <div className="grid gap-4 md:grid-cols-2 pb-4 border-b">
                     <div>
-                      <Label className="text-muted-foreground">채용 부서</Label>
+                      <Label className="text-muted-foreground">{t('jobPosting.detail.hiringDepartment')}</Label>
                       <p className="text-sm mt-1">{job.departmentName || '-'}</p>
                     </div>
                     <div>
-                      <Label className="text-muted-foreground">직책</Label>
+                      <Label className="text-muted-foreground">{t('jobPosting.detail.position')}</Label>
                       <p className="text-sm mt-1">{job.positionName || '-'}</p>
                     </div>
                     <div>
-                      <Label className="text-muted-foreground">모집 인원</Label>
+                      <Label className="text-muted-foreground">{t('jobPosting.detail.headcount')}</Label>
                       <p className="text-sm mt-1 flex items-center gap-1">
                         <Users className="h-4 w-4" />
-                        {job.headcount}명
+                        {t('common.countWithUnit', { count: job.headcount })}
                       </p>
                     </div>
                     <div>
-                      <Label className="text-muted-foreground">지원자 수</Label>
-                      <p className="text-sm mt-1">{job.applicationCount}명</p>
+                      <Label className="text-muted-foreground">{t('jobPosting.detail.applicantCount')}</Label>
+                      <p className="text-sm mt-1">{t('common.countWithUnit', { count: job.applicationCount })}</p>
                     </div>
                     <div>
-                      <Label className="text-muted-foreground">근무지</Label>
+                      <Label className="text-muted-foreground">{t('jobPosting.detail.workLocation')}</Label>
                       <p className="text-sm mt-1 flex items-center gap-1">
                         <MapPin className="h-4 w-4" />
                         {job.workLocation || '-'}
                       </p>
                     </div>
                     <div>
-                      <Label className="text-muted-foreground">급여</Label>
+                      <Label className="text-muted-foreground">{t('jobPosting.detail.salary')}</Label>
                       <p className="text-sm mt-1 flex items-center gap-1">
                         <Banknote className="h-4 w-4" />
                         {job.salaryNegotiable
-                          ? '협의 가능'
+                          ? t('jobPosting.detail.salaryNegotiable')
                           : job.salaryMin && job.salaryMax
-                          ? `${job.salaryMin.toLocaleString()} ~ ${job.salaryMax.toLocaleString()} 만원`
+                          ? t('jobPosting.detail.salaryRange', { min: job.salaryMin.toLocaleString(), max: job.salaryMax.toLocaleString() })
                           : '-'}
                       </p>
                     </div>
                     <div>
-                      <Label className="text-muted-foreground">공고 기간</Label>
+                      <Label className="text-muted-foreground">{t('jobPosting.detail.postingPeriod')}</Label>
                       <p className="text-sm mt-1">
                         {format(new Date(job.openDate), 'yyyy년 M월 d일', { locale: ko })}
                         {' ~ '}
@@ -519,7 +521,7 @@ export default function JobPostingDetailPage() {
                       </p>
                     </div>
                     <div>
-                      <Label className="text-muted-foreground">조회수</Label>
+                      <Label className="text-muted-foreground">{t('jobPosting.detail.viewCountLabel')}</Label>
                       <p className="text-sm mt-1 flex items-center gap-1">
                         <Eye className="h-4 w-4" />
                         {job.viewCount}
@@ -528,7 +530,7 @@ export default function JobPostingDetailPage() {
                   </div>
 
                   <div>
-                    <Label className="text-muted-foreground">직무 설명</Label>
+                    <Label className="text-muted-foreground">{t('jobPosting.detail.jobDescription')}</Label>
                     <div className="mt-2 p-4 rounded-lg bg-muted/50 whitespace-pre-wrap text-sm">
                       {job.jobDescription}
                     </div>
@@ -536,7 +538,7 @@ export default function JobPostingDetailPage() {
 
                   {job.requirements && (
                     <div>
-                      <Label className="text-muted-foreground">자격 요건</Label>
+                      <Label className="text-muted-foreground">{t('jobPosting.detail.requirements')}</Label>
                       <div className="mt-2 p-4 rounded-lg bg-muted/50 whitespace-pre-wrap text-sm">
                         {job.requirements}
                       </div>
@@ -545,7 +547,7 @@ export default function JobPostingDetailPage() {
 
                   {job.preferredQualifications && (
                     <div>
-                      <Label className="text-muted-foreground">우대 사항</Label>
+                      <Label className="text-muted-foreground">{t('jobPosting.detail.preferredQualifications')}</Label>
                       <div className="mt-2 p-4 rounded-lg bg-muted/50 whitespace-pre-wrap text-sm">
                         {job.preferredQualifications}
                       </div>
@@ -558,23 +560,23 @@ export default function JobPostingDetailPage() {
             <TabsContent value="applications">
               <Card>
                 <CardHeader>
-                  <CardTitle>최근 지원자</CardTitle>
+                  <CardTitle>{t('jobPosting.detail.recentApplicants')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {applications.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
-                      아직 지원자가 없습니다.
+                      {t('jobPosting.detail.noApplicantsYet')}
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="w-full">
                         <thead>
                           <tr className="border-b bg-muted/50">
-                            <th className="px-4 py-2 text-left text-sm font-medium">지원번호</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">이름</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">단계</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">상태</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium">지원일</th>
+                            <th className="px-4 py-2 text-left text-sm font-medium">{t('application.table.applicationNumber')}</th>
+                            <th className="px-4 py-2 text-left text-sm font-medium">{t('application.applicantName')}</th>
+                            <th className="px-4 py-2 text-left text-sm font-medium">{t('application.table.stage')}</th>
+                            <th className="px-4 py-2 text-left text-sm font-medium">{t('application.table.status')}</th>
+                            <th className="px-4 py-2 text-left text-sm font-medium">{t('application.table.applicationDate')}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -609,7 +611,7 @@ export default function JobPostingDetailPage() {
                         navigate(`/recruitment/applications?jobPostingId=${id}`)
                       }
                     >
-                      전체 지원자 보기
+                      {t('jobPosting.detail.viewAllApplicants')}
                     </Button>
                   </div>
                 </CardContent>
@@ -621,7 +623,7 @@ export default function JobPostingDetailPage() {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>지원 현황</CardTitle>
+              <CardTitle>{t('jobPosting.detail.applicationStatus')}</CardTitle>
             </CardHeader>
             <CardContent>
               <StageCountBar stageCounts={stageCounts} />
@@ -630,15 +632,15 @@ export default function JobPostingDetailPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>담당자 정보</CardTitle>
+              <CardTitle>{t('jobPosting.detail.managerInfo')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               <div>
-                <Label className="text-muted-foreground">채용 담당자</Label>
+                <Label className="text-muted-foreground">{t('jobPosting.detail.recruiter')}</Label>
                 <p className="text-sm mt-1">{job.recruiterName || '-'}</p>
               </div>
               <div>
-                <Label className="text-muted-foreground">등록일</Label>
+                <Label className="text-muted-foreground">{t('jobPosting.detail.createdDate')}</Label>
                 <p className="text-sm mt-1">
                   {format(new Date(job.createdAt), 'yyyy년 M월 d일 HH:mm', { locale: ko })}
                 </p>

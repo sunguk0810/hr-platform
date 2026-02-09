@@ -1,12 +1,13 @@
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import type { ApplicationStage } from '@hr-platform/shared-types';
 
-const STAGES: { key: ApplicationStage; label: string }[] = [
-  { key: 'DOCUMENT', label: '서류전형' },
-  { key: 'FIRST_INTERVIEW', label: '1차면접' },
-  { key: 'SECOND_INTERVIEW', label: '2차면접' },
-  { key: 'FINAL_INTERVIEW', label: '최종면접' },
-  { key: 'OFFER', label: '오퍼' },
+const STAGE_KEYS: { key: ApplicationStage; i18nKey: string }[] = [
+  { key: 'DOCUMENT', i18nKey: 'stage.document' },
+  { key: 'FIRST_INTERVIEW', i18nKey: 'stage.firstInterview' },
+  { key: 'SECOND_INTERVIEW', i18nKey: 'stage.secondInterview' },
+  { key: 'FINAL_INTERVIEW', i18nKey: 'stage.finalInterview' },
+  { key: 'OFFER', i18nKey: 'stage.offer' },
 ];
 
 interface StageProgressBarProps {
@@ -15,11 +16,12 @@ interface StageProgressBarProps {
 }
 
 export function StageProgressBar({ currentStage, className }: StageProgressBarProps) {
-  const currentIndex = STAGES.findIndex((s) => s.key === currentStage);
+  const { t } = useTranslation('recruitment');
+  const currentIndex = STAGE_KEYS.findIndex((s) => s.key === currentStage);
 
   return (
     <div className={cn('flex items-center gap-1', className)}>
-      {STAGES.map((stage, index) => {
+      {STAGE_KEYS.map((stage, index) => {
         const isCompleted = index < currentIndex;
         const isCurrent = index === currentIndex;
 
@@ -42,10 +44,10 @@ export function StageProgressBar({ currentStage, className }: StageProgressBarPr
                   isCurrent ? 'text-blue-600 font-medium' : 'text-muted-foreground'
                 )}
               >
-                {stage.label}
+                {t(stage.i18nKey)}
               </span>
             </div>
-            {index < STAGES.length - 1 && (
+            {index < STAGE_KEYS.length - 1 && (
               <div
                 className={cn(
                   'h-0.5 flex-1 -mt-5',
@@ -66,6 +68,7 @@ interface StageCountBarProps {
 }
 
 export function StageCountBar({ stageCounts, className }: StageCountBarProps) {
+  const { t } = useTranslation('recruitment');
   const total = stageCounts.reduce((sum, s) => sum + s.count, 0);
 
   const getCount = (stage: ApplicationStage) => {
@@ -75,11 +78,11 @@ export function StageCountBar({ stageCounts, className }: StageCountBarProps) {
   return (
     <div className={cn('space-y-2', className)}>
       <div className="flex items-center justify-between text-sm">
-        <span className="text-muted-foreground">전체 지원자</span>
-        <span className="font-medium">{total}명</span>
+        <span className="text-muted-foreground">{t('stage.totalApplicants')}</span>
+        <span className="font-medium">{t('common.countWithUnit', { count: total })}</span>
       </div>
       <div className="flex rounded-lg overflow-hidden h-6">
-        {STAGES.map((stage) => {
+        {STAGE_KEYS.map((stage) => {
           const count = getCount(stage.key);
           const percentage = total > 0 ? (count / total) * 100 : 0;
           if (percentage === 0) return null;
@@ -100,7 +103,7 @@ export function StageCountBar({ stageCounts, className }: StageCountBarProps) {
                 colorMap[stage.key]
               )}
               style={{ width: `${percentage}%` }}
-              title={`${stage.label}: ${count}명 (${percentage.toFixed(1)}%)`}
+              title={t('stage.stageLabel', { stage: t(stage.i18nKey), count })}
             >
               {percentage > 10 && count}
             </div>
@@ -108,7 +111,7 @@ export function StageCountBar({ stageCounts, className }: StageCountBarProps) {
         })}
       </div>
       <div className="flex flex-wrap gap-3 text-xs">
-        {STAGES.map((stage) => {
+        {STAGE_KEYS.map((stage) => {
           const count = getCount(stage.key);
           const colorMap: Record<ApplicationStage, string> = {
             DOCUMENT: 'bg-gray-400',
@@ -122,7 +125,7 @@ export function StageCountBar({ stageCounts, className }: StageCountBarProps) {
             <div key={stage.key} className="flex items-center gap-1">
               <div className={cn('w-2 h-2 rounded-full', colorMap[stage.key])} />
               <span className="text-muted-foreground">
-                {stage.label}: <span className="font-medium text-foreground">{count}</span>
+                {t(stage.i18nKey)}: <span className="font-medium text-foreground">{count}</span>
               </span>
             </div>
           );

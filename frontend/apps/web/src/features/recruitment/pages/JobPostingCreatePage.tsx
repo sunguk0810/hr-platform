@@ -1,4 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2 } from 'lucide-react';
@@ -13,6 +14,7 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import type { CreateJobPostingRequest, UpdateJobPostingRequest } from '@hr-platform/shared-types';
 
 export default function JobPostingCreatePage() {
+  const { t } = useTranslation('recruitment');
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
@@ -29,15 +31,15 @@ export default function JobPostingCreatePage() {
     try {
       if (isEditMode && id) {
         await updateMutation.mutateAsync({ id, data: formData as UpdateJobPostingRequest });
-        toast({ title: '채용공고가 수정되었습니다.' });
+        toast({ title: t('jobPosting.toast.updated') });
         navigate(`/recruitment/jobs/${id}`);
       } else {
         const result = await createMutation.mutateAsync(formData as CreateJobPostingRequest);
-        toast({ title: '채용공고가 등록되었습니다.' });
+        toast({ title: t('jobPosting.toast.created') });
         navigate(`/recruitment/jobs/${result.data.id}`);
       }
     } catch {
-      toast({ title: isEditMode ? '수정에 실패했습니다.' : '등록에 실패했습니다.', variant: 'destructive' });
+      toast({ title: isEditMode ? t('jobPosting.toast.updateFailed') : t('jobPosting.toast.createFailed'), variant: 'destructive' });
     }
   };
 
@@ -56,10 +58,10 @@ export default function JobPostingCreatePage() {
   if (isEditMode && !job) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <p className="text-muted-foreground">채용공고를 찾을 수 없습니다.</p>
+        <p className="text-muted-foreground">{t('jobPosting.notFoundMessage')}</p>
         <Button variant="outline" onClick={() => navigate('/recruitment')}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          목록으로
+          {t('common.backToList')}
         </Button>
       </div>
     );
@@ -75,7 +77,7 @@ export default function JobPostingCreatePage() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="font-semibold ml-2">
-            {isEditMode ? '채용공고 수정' : '새 채용공고'}
+            {isEditMode ? t('jobPosting.editTitle') : t('jobPosting.createTitle')}
           </h1>
         </div>
 
@@ -93,12 +95,12 @@ export default function JobPostingCreatePage() {
   return (
     <>
       <PageHeader
-        title={isEditMode ? '채용공고 수정' : '새 채용공고 등록'}
-        description={isEditMode ? `${job?.jobCode} 공고를 수정합니다.` : '새로운 채용공고를 작성합니다.'}
+        title={isEditMode ? t('jobPosting.editTitle') : t('jobPosting.createTitleFull')}
+        description={isEditMode ? t('jobPosting.editDescription', { jobCode: job?.jobCode }) : t('jobPosting.createDescription')}
         actions={
           <Button variant="outline" onClick={handleCancel}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            {isEditMode ? '상세로 돌아가기' : '목록으로'}
+            {isEditMode ? t('common.backToDetail') : t('common.backToList')}
           </Button>
         }
       />

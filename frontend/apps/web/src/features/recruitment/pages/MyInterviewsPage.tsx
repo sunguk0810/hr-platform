@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { format, isToday } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -43,6 +44,7 @@ import { useToast } from '@/hooks/useToast';
 import type { SubmitInterviewScoreRequest, InterviewListItem } from '@hr-platform/shared-types';
 
 export default function MyInterviewsPage() {
+  const { t } = useTranslation('recruitment');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -82,11 +84,11 @@ export default function MyInterviewsPage() {
         interviewId: selectedInterview.id,
         data,
       });
-      toast({ title: '평가가 제출되었습니다.' });
+      toast({ title: t('interviewScore.toast.submitted') });
       setIsScoreDialogOpen(false);
       setSelectedInterview(null);
     } catch {
-      toast({ title: '평가 제출에 실패했습니다.', variant: 'destructive' });
+      toast({ title: t('interviewScore.toast.submitFailed'), variant: 'destructive' });
     }
   };
 
@@ -105,22 +107,22 @@ export default function MyInterviewsPage() {
     <Dialog open={isScoreDialogOpen} onOpenChange={setIsScoreDialogOpen}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>면접 평가 입력</DialogTitle>
+          <DialogTitle>{t('interviewScore.title')}</DialogTitle>
         </DialogHeader>
         {selectedInterview && (
           <InterviewScoreForm
             interviewId={selectedInterview.id}
             applicantName={selectedInterview.applicantName}
             interviewType={
-              selectedInterview.interviewType === 'PHONE' ? '전화면접' :
-              selectedInterview.interviewType === 'VIDEO' ? '화상면접' :
-              selectedInterview.interviewType === 'FIRST_ROUND' ? '1차면접' :
-              selectedInterview.interviewType === 'SECOND_ROUND' ? '2차면접' :
-              selectedInterview.interviewType === 'FINAL_ROUND' ? '최종면접' :
-              selectedInterview.interviewType === 'TECHNICAL' ? '기술면접' :
-              selectedInterview.interviewType === 'PERSONALITY' ? '인성면접' :
-              selectedInterview.interviewType === 'PRESENTATION' ? '발표면접' :
-              selectedInterview.interviewType === 'GROUP' ? '그룹면접' : ''
+              selectedInterview.interviewType === 'PHONE' ? t('interviewScheduleForm.interviewTypes.phone') :
+              selectedInterview.interviewType === 'VIDEO' ? t('interviewScheduleForm.interviewTypes.video') :
+              selectedInterview.interviewType === 'FIRST_ROUND' ? t('interviewScheduleForm.interviewTypes.firstRound') :
+              selectedInterview.interviewType === 'SECOND_ROUND' ? t('interviewScheduleForm.interviewTypes.secondRound') :
+              selectedInterview.interviewType === 'FINAL_ROUND' ? t('interviewScheduleForm.interviewTypes.finalRound') :
+              selectedInterview.interviewType === 'TECHNICAL' ? t('interviewScheduleForm.interviewTypes.technical') :
+              selectedInterview.interviewType === 'PERSONALITY' ? t('interviewScheduleForm.interviewTypes.personality') :
+              selectedInterview.interviewType === 'PRESENTATION' ? t('interviewScheduleForm.interviewTypes.presentation') :
+              selectedInterview.interviewType === 'GROUP' ? t('interviewScheduleForm.interviewTypes.group') : ''
             }
             onSubmit={handleSubmitScore}
             onCancel={() => {
@@ -144,7 +146,7 @@ export default function MyInterviewsPage() {
             <InterviewStatusBadge status={interview.status} />
             {isToday(new Date(interview.scheduledDate)) && (
               <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-                오늘
+                {t('myInterview.today')}
               </span>
             )}
           </div>
@@ -158,7 +160,7 @@ export default function MyInterviewsPage() {
         <div className="flex items-center gap-2">
           <Clock className="h-3.5 w-3.5 text-muted-foreground" />
           <span>{format(new Date(interview.scheduledDate), 'M월 d일 (E)', { locale: ko })}{interview.scheduledTime && ` ${interview.scheduledTime}`}</span>
-          <span className="text-muted-foreground">({interview.durationMinutes}분)</span>
+          <span className="text-muted-foreground">({t('common.minutesUnit', { minutes: interview.durationMinutes })})</span>
         </div>
         {interview.location && (
           <div className="flex items-center gap-2 text-muted-foreground">
@@ -175,7 +177,7 @@ export default function MyInterviewsPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <Video className="h-3.5 w-3.5" />
-            화상회의 참여
+            {t('interview.detail.joinVideoMeeting')}
             <ExternalLink className="h-3 w-3" />
           </a>
         )}
@@ -184,13 +186,13 @@ export default function MyInterviewsPage() {
       <div className="flex items-center justify-between mt-3 pt-3 border-t">
         {interview.overallScore !== undefined && interview.overallScore !== null ? (
           <div className="text-sm">
-            <span className="text-muted-foreground">내 평가: </span>
-            <span className="font-medium">{interview.overallScore.toFixed(1)}점</span>
+            <span className="text-muted-foreground">{t('interviewScore.myEvaluationLabel')}</span>
+            <span className="font-medium">{t('common.scoreUnit', { score: interview.overallScore.toFixed(1) })}</span>
           </div>
         ) : showEvalButton && interview.status === 'COMPLETED' ? (
           <Button size="sm" onClick={(e) => { e.stopPropagation(); handleOpenScoreDialog(interview); }}>
             <Edit className="mr-1 h-4 w-4" />
-            평가
+            {t('interviewScore.evaluate')}
           </Button>
         ) : (
           <div />
@@ -200,7 +202,7 @@ export default function MyInterviewsPage() {
           size="sm"
           onClick={(e) => { e.stopPropagation(); navigate(`/recruitment/applications/${interview.applicationId}`); }}
         >
-          상세
+          {t('common.detail')}
         </Button>
       </div>
     </div>
@@ -210,7 +212,7 @@ export default function MyInterviewsPage() {
     if (list.length === 0) {
       return (
         <div className="text-center py-8 text-muted-foreground">
-          면접 일정이 없습니다.
+          {t('myInterview.noInterviews')}
         </div>
       );
     }
@@ -229,7 +231,7 @@ export default function MyInterviewsPage() {
                   <InterviewStatusBadge status={interview.status} />
                   {isToday(new Date(interview.scheduledDate)) && (
                     <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-                      오늘
+                      {t('myInterview.today')}
                     </span>
                   )}
                 </div>
@@ -241,7 +243,7 @@ export default function MyInterviewsPage() {
                   <div className="flex items-center gap-1">
                     <Clock className="h-4 w-4" />
                     {format(new Date(interview.scheduledDate), 'M월 d일 (E)', { locale: ko })}{interview.scheduledTime && ` ${interview.scheduledTime}`}
-                    <span>({interview.durationMinutes}분)</span>
+                    <span>({t('common.minutesUnit', { minutes: interview.durationMinutes })})</span>
                   </div>
                   {interview.location && (
                     <div className="flex items-center gap-1">
@@ -258,7 +260,7 @@ export default function MyInterviewsPage() {
                       onClick={(e) => e.stopPropagation()}
                     >
                       <Video className="h-4 w-4" />
-                      화상회의 참여
+                      {t('interview.detail.joinVideoMeeting')}
                       <ExternalLink className="h-3 w-3" />
                     </a>
                   )}
@@ -267,13 +269,13 @@ export default function MyInterviewsPage() {
               <div className="flex items-center gap-2">
                 {interview.overallScore !== undefined && interview.overallScore !== null ? (
                   <div className="text-right">
-                    <p className="text-sm text-muted-foreground">내 평가</p>
-                    <p className="font-medium">{interview.overallScore.toFixed(1)}점</p>
+                    <p className="text-sm text-muted-foreground">{t('interviewScore.myEvaluation')}</p>
+                    <p className="font-medium">{t('common.scoreUnit', { score: interview.overallScore.toFixed(1) })}</p>
                   </div>
                 ) : showEvalButton && interview.status === 'COMPLETED' ? (
                   <Button size="sm" onClick={() => handleOpenScoreDialog(interview)}>
                     <Edit className="mr-2 h-4 w-4" />
-                    평가 입력
+                    {t('interviewScore.evaluateInput')}
                   </Button>
                 ) : null}
                 <Button
@@ -281,7 +283,7 @@ export default function MyInterviewsPage() {
                   size="sm"
                   onClick={() => navigate(`/recruitment/applications/${interview.applicationId}`)}
                 >
-                  상세
+                  {t('common.detail')}
                 </Button>
               </div>
             </div>
@@ -298,8 +300,8 @@ export default function MyInterviewsPage() {
         <div className="space-y-4 pb-20">
           {/* Mobile Header */}
           <div>
-            <h1 className="text-xl font-bold">내 면접</h1>
-            <p className="text-sm text-muted-foreground">배정된 면접 일정 및 평가</p>
+            <h1 className="text-xl font-bold">{t('myInterview.title')}</h1>
+            <p className="text-sm text-muted-foreground">{t('myInterview.mobileDescription')}</p>
           </div>
 
           {/* Today's highlight */}
@@ -308,14 +310,14 @@ export default function MyInterviewsPage() {
               <div className="flex items-center gap-2 mb-3">
                 <CalendarCheck className="h-5 w-5 text-blue-600" />
                 <span className="font-medium text-blue-700 dark:text-blue-400">
-                  오늘의 면접 ({todayInterviews.length}건)
+                  {t('myInterview.todayInterviews', { count: todayInterviews.length })}
                 </span>
               </div>
               <div className="space-y-3">
                 {todayInterviews.slice(0, 2).map((interview) => renderMobileInterviewCard(interview, true))}
                 {todayInterviews.length > 2 && (
                   <p className="text-sm text-center text-muted-foreground">
-                    +{todayInterviews.length - 2}건 더보기
+                    {t('myInterview.moreItems', { count: todayInterviews.length - 2 })}
                   </p>
                 )}
               </div>
@@ -332,7 +334,7 @@ export default function MyInterviewsPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              오늘 {todayInterviews.length > 0 && `(${todayInterviews.length})`}
+              {t('myInterview.today')} {todayInterviews.length > 0 && `(${todayInterviews.length})`}
             </button>
             <button
               onClick={() => handleTabChange('upcoming')}
@@ -342,7 +344,7 @@ export default function MyInterviewsPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              예정
+              {t('myInterview.upcoming')}
             </button>
             <button
               onClick={() => handleTabChange('pending_eval')}
@@ -352,7 +354,7 @@ export default function MyInterviewsPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              평가 대기 {pendingEvalInterviews.length > 0 && `(${pendingEvalInterviews.length})`}
+              {t('myInterview.pendingEval')} {pendingEvalInterviews.length > 0 && `(${pendingEvalInterviews.length})`}
             </button>
             <button
               onClick={() => handleTabChange('completed')}
@@ -362,7 +364,7 @@ export default function MyInterviewsPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              완료
+              {t('myInterview.completed')}
             </button>
           </div>
 
@@ -374,13 +376,13 @@ export default function MyInterviewsPage() {
           ) : isError ? (
             <div className="bg-card rounded-xl border p-8 text-center">
               <CalendarCheck className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-              <p className="font-medium">데이터를 불러올 수 없습니다</p>
+              <p className="font-medium">{t('common.cannotLoadData')}</p>
             </div>
           ) : activeTab === 'today' ? (
             todayInterviews.length === 0 ? (
               <div className="bg-card rounded-xl border p-8 text-center">
                 <CalendarCheck className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                <p className="font-medium">오늘 예정된 면접이 없습니다</p>
+                <p className="font-medium">{t('myInterview.noTodayInterviews')}</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -391,7 +393,7 @@ export default function MyInterviewsPage() {
             pendingEvalInterviews.length === 0 ? (
               <div className="bg-card rounded-xl border p-8 text-center">
                 <CheckCircle className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                <p className="font-medium">평가 대기중인 면접이 없습니다</p>
+                <p className="font-medium">{t('myInterview.noPendingEval')}</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -401,7 +403,7 @@ export default function MyInterviewsPage() {
           ) : interviews.length === 0 ? (
             <div className="bg-card rounded-xl border p-8 text-center">
               <CalendarCheck className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-              <p className="font-medium">면접 일정이 없습니다</p>
+              <p className="font-medium">{t('myInterview.noInterviews')}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -426,8 +428,8 @@ export default function MyInterviewsPage() {
   return (
     <>
       <PageHeader
-        title="내 면접"
-        description="배정된 면접 일정과 평가를 관리합니다."
+        title={t('myInterview.title')}
+        description={t('myInterview.description')}
       />
 
       {/* Today's Interviews Highlight */}
@@ -436,7 +438,7 @@ export default function MyInterviewsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-blue-700">
               <CalendarCheck className="h-5 w-5" />
-              오늘의 면접 ({todayInterviews.length}건)
+              {t('myInterview.todayInterviews', { count: todayInterviews.length })}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -447,21 +449,21 @@ export default function MyInterviewsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>면접 일정</CardTitle>
+          <CardTitle>{t('myInterview.interviewSchedule')}</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <Tabs value={activeTab} onValueChange={handleTabChange} className="px-4 pt-2">
             <TabsList>
               <TabsTrigger value="today">
-                오늘
+                {t('myInterview.today')}
                 {todayInterviews.length > 0 && ` (${todayInterviews.length})`}
               </TabsTrigger>
-              <TabsTrigger value="upcoming">예정</TabsTrigger>
+              <TabsTrigger value="upcoming">{t('myInterview.upcoming')}</TabsTrigger>
               <TabsTrigger value="pending_eval">
-                평가 대기
+                {t('myInterview.pendingEval')}
                 {pendingEvalInterviews.length > 0 && ` (${pendingEvalInterviews.length})`}
               </TabsTrigger>
-              <TabsTrigger value="completed">완료</TabsTrigger>
+              <TabsTrigger value="completed">{t('myInterview.completed')}</TabsTrigger>
             </TabsList>
           </Tabs>
 
@@ -471,15 +473,15 @@ export default function MyInterviewsPage() {
             ) : isError ? (
               <EmptyState
                 icon={CalendarCheck}
-                title="데이터를 불러올 수 없습니다"
-                description="잠시 후 다시 시도해주세요."
+                title={t('common.cannotLoadData')}
+                description={t('common.retryLater')}
               />
             ) : activeTab === 'today' ? (
               todayInterviews.length === 0 ? (
                 <EmptyState
                   icon={CalendarCheck}
-                  title="오늘 예정된 면접이 없습니다"
-                  description="오늘 배정된 면접이 없습니다."
+                  title={t('myInterview.noTodayInterviews')}
+                  description={t('myInterview.noTodayInterviewsDesc')}
                 />
               ) : (
                 renderInterviewList(todayInterviews, true)
@@ -488,8 +490,8 @@ export default function MyInterviewsPage() {
               pendingEvalInterviews.length === 0 ? (
                 <EmptyState
                   icon={CheckCircle}
-                  title="평가 대기중인 면접이 없습니다"
-                  description="완료된 면접의 평가를 모두 제출했습니다."
+                  title={t('myInterview.noPendingEval')}
+                  description={t('myInterview.noPendingEvalDesc')}
                 />
               ) : (
                 renderInterviewList(pendingEvalInterviews, true)
@@ -497,8 +499,8 @@ export default function MyInterviewsPage() {
             ) : interviews.length === 0 ? (
               <EmptyState
                 icon={CalendarCheck}
-                title="면접 일정이 없습니다"
-                description="해당 조건의 면접 일정이 없습니다."
+                title={t('myInterview.noInterviews')}
+                description={t('myInterview.noInterviewsDesc')}
               />
             ) : (
               <>
