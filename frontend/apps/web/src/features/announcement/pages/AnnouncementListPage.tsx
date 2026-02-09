@@ -13,6 +13,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Megaphone, Search, Pin, Paperclip, Eye, Plus, ChevronRight } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -248,17 +255,17 @@ export default function AnnouncementListPage() {
                   aria-label={t('search.label')}
                 />
               </div>
-              <select
-                value={searchState.category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                aria-label={t('search.categoryFilterLabel')}
-              >
-                <option value="">{t('search.allCategories')}</option>
-                {Object.entries(CATEGORY_LABELS).map(([value, { label }]) => (
-                  <option key={value} value={value}>{label}</option>
-                ))}
-              </select>
+              <Select value={searchState.category} onValueChange={setCategory}>
+                <SelectTrigger className="h-10 w-[180px]">
+                  <SelectValue placeholder={t('search.allCategories')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">{t('search.allCategories')}</SelectItem>
+                  {Object.entries(CATEGORY_LABELS).map(([value, { label }]) => (
+                    <SelectItem key={value} value={value}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardHeader>
