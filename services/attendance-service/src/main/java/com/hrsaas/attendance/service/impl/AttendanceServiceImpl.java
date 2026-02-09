@@ -12,8 +12,10 @@ import com.hrsaas.attendance.domain.entity.AttendanceRecord;
 import com.hrsaas.attendance.domain.entity.AttendanceStatus;
 import com.hrsaas.attendance.domain.entity.OvertimeRequest;
 import com.hrsaas.attendance.domain.entity.OvertimeStatus;
+import com.hrsaas.attendance.domain.entity.Holiday;
 import com.hrsaas.attendance.repository.AttendanceModificationLogRepository;
 import com.hrsaas.attendance.repository.AttendanceRecordRepository;
+import com.hrsaas.attendance.repository.HolidayRepository;
 import com.hrsaas.attendance.repository.OvertimeRequestRepository;
 import com.hrsaas.attendance.service.AttendanceService;
 import com.hrsaas.common.core.exception.BusinessException;
@@ -47,6 +49,7 @@ public class AttendanceServiceImpl implements AttendanceService {
     private final AttendanceRecordRepository attendanceRecordRepository;
     private final OvertimeRequestRepository overtimeRequestRepository;
     private final AttendanceModificationLogRepository modificationLogRepository;
+    private final HolidayRepository holidayRepository;
 
     @Override
     @Transactional
@@ -309,6 +312,7 @@ public class AttendanceServiceImpl implements AttendanceService {
     }
 
     private int calculateWorkDays(YearMonth yearMonth) {
+        UUID tenantId = TenantContext.getCurrentTenant();
         int workDays = 0;
         LocalDate date = yearMonth.atDay(1);
         LocalDate endDate = yearMonth.atEndOfMonth();
@@ -320,6 +324,14 @@ public class AttendanceServiceImpl implements AttendanceService {
             }
             date = date.plusDays(1);
         }
+
+        // 평일 공휴일 수 제외
+        List<Holiday> holidays = holidayRepository.findByDateRange(tenantId, yearMonth.atDay(1), endDate);
+        long weekdayHolidays = holidays.stream()
+            .filter(h -> h.getHolidayDate().getDayOfWeek() != java.time.DayOfWeek.SATURDAY
+                      && h.getHolidayDate().getDayOfWeek() != java.time.DayOfWeek.SUNDAY)
+            .count();
+        workDays -= (int) weekdayHolidays;
 
         return workDays;
     }

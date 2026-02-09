@@ -2,11 +2,11 @@ package com.hrsaas.attendance.service;
 
 import com.hrsaas.attendance.domain.dto.request.UpdateAttendanceRecordRequest;
 import com.hrsaas.attendance.domain.dto.response.AttendanceRecordResponse;
-import com.hrsaas.attendance.domain.entity.AttendanceModificationLog;
-import com.hrsaas.attendance.domain.entity.AttendanceRecord;
-import com.hrsaas.attendance.domain.entity.AttendanceStatus;
+import com.hrsaas.attendance.domain.dto.response.AttendanceSummaryResponse;
+import com.hrsaas.attendance.domain.entity.*;
 import com.hrsaas.attendance.repository.AttendanceModificationLogRepository;
 import com.hrsaas.attendance.repository.AttendanceRecordRepository;
+import com.hrsaas.attendance.repository.HolidayRepository;
 import com.hrsaas.attendance.repository.OvertimeRequestRepository;
 import com.hrsaas.attendance.service.impl.AttendanceServiceImpl;
 import com.hrsaas.common.core.exception.NotFoundException;
@@ -24,6 +24,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.YearMonth;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -45,6 +47,9 @@ class AttendanceServiceImplTest {
 
     @Mock
     private AttendanceModificationLogRepository modificationLogRepository;
+
+    @Mock
+    private HolidayRepository holidayRepository;
 
     @InjectMocks
     private AttendanceServiceImpl attendanceService;
@@ -210,5 +215,81 @@ class AttendanceServiceImplTest {
         verify(modificationLogRepository).saveAll(logsCaptor.capture());
         List<AttendanceModificationLog> logs = logsCaptor.getValue();
         assertThat(logs).hasSize(3);
+    }
+
+    // ===== Phase 4 Tests: Holiday exclusion from work days =====
+
+    @Test
+    @DisplayName("getMonthlySummary: with holidays excludes from work days")
+    void getMonthlySummary_withHolidays_excludesFromWorkDays() {
+        // given - February 2026 has 20 weekdays
+        int year = 2026;
+        int month = 2;
+        LocalDate startDate = LocalDate.of(2026, 2, 1);
+        LocalDate endDate = LocalDate.of(2026, 2, 28);
+
+        when(attendanceRecordRepository.findByEmployeeIdAndDateRange(TENANT_ID, EMPLOYEE_ID, startDate, endDate))
+                .thenReturn(Collections.emptyList());
+
+        // 2 weekday holidays
+        Holiday h1 = Holiday.builder().holidayDate(LocalDate.of(2026, 2, 11)) // Wednesday
+                .name("건국기념일").holidayType(HolidayType.NATIONAL).build();
+        Holiday h2 = Holiday.builder().holidayDate(LocalDate.of(2026, 2, 16)) // Monday
+                .name("대통령 선거일").holidayType(HolidayType.NATIONAL).build();
+        when(holidayRepository.findByDateRange(TENANT_ID, startDate, endDate))
+                .thenReturn(List.of(h1, h2));
+
+        // when
+        AttendanceSummaryResponse result = attendanceService.getMonthlySummary(EMPLOYEE_ID, year, month);
+
+        // then - 20 weekdays - 2 holidays = 18
+        assertThat(result.totalWorkDays()).isEqualTo(18);
+    }
+
+    @Test
+    @DisplayName("getMonthlySummary: holiday on weekend not double subtracted")
+    void getMonthlySummary_holidayOnWeekend_notDoubleSubtracted() {
+        // given - February 2026 has 20 weekdays
+        int year = 2026;
+        int month = 2;
+        LocalDate startDate = LocalDate.of(2026, 2, 1);
+        LocalDate endDate = LocalDate.of(2026, 2, 28);
+
+        when(attendanceRecordRepository.findByEmployeeIdAndDateRange(TENANT_ID, EMPLOYEE_ID, startDate, endDate))
+                .thenReturn(Collections.emptyList());
+
+        // Holiday on Saturday - should NOT be subtracted
+        Holiday weekendHoliday = Holiday.builder()
+                .holidayDate(LocalDate.of(2026, 2, 7)) // Saturday
+                .name("주말공휴일").holidayType(HolidayType.NATIONAL).build();
+        when(holidayRepository.findByDateRange(TENANT_ID, startDate, endDate))
+                .thenReturn(List.of(weekendHoliday));
+
+        // when
+        AttendanceSummaryResponse result = attendanceService.getMonthlySummary(EMPLOYEE_ID, year, month);
+
+        // then - 20 weekdays, weekend holiday not subtracted
+        assertThat(result.totalWorkDays()).isEqualTo(20);
+    }
+
+    @Test
+    @DisplayName("getMonthlySummary: no holidays returns weekdays only")
+    void getMonthlySummary_noHolidays_weekdaysOnly() {
+        // given - February 2026 has 20 weekdays
+        int year = 2026;
+        int month = 2;
+        LocalDate startDate = LocalDate.of(2026, 2, 1);
+        LocalDate endDate = LocalDate.of(2026, 2, 28);
+
+        when(attendanceRecordRepository.findByEmployeeIdAndDateRange(TENANT_ID, EMPLOYEE_ID, startDate, endDate))
+                .thenReturn(Collections.emptyList());
+        when(holidayRepository.findByDateRange(TENANT_ID, startDate, endDate))
+                .thenReturn(Collections.emptyList());
+
+        // when
+        AttendanceSummaryResponse result = attendanceService.getMonthlySummary(EMPLOYEE_ID, year, month);
+
+        // then - 20 weekdays
+        assertThat(result.totalWorkDays()).isEqualTo(20);
     }
 }
