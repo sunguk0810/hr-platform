@@ -673,6 +673,15 @@
     "categoryOther": "Other"
   },
 
+  "realTime": {
+    "statusApproved": "Approved",
+    "statusRejected": "Rejected",
+    "statusChanged": "Approval {{status}}",
+    "statusChangedDesc": "\"{{title}}\" has been {{status}} by {{approverName}}.",
+    "newRequest": "New Approval Request",
+    "newRequestDesc": "{{requesterName}} has requested approval for \"{{title}}\"."
+  },
+
   "approvalList": {
     "tableDocNumber": "Doc No.",
     "tableType": "Type",

@@ -8,7 +8,7 @@ import {
   endOfDay,
   isToday,
 } from 'date-fns';
-import { ko } from 'date-fns/locale';
+import { ko, enUS } from 'date-fns/locale';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
@@ -47,7 +47,9 @@ export function DayView({
   onEventClick,
   className,
 }: DayViewProps) {
-  const { t } = useTranslation('attendance');
+  const { t, i18n } = useTranslation('attendance');
+  const { t: tCommon } = useTranslation('common');
+  const dateLocale = i18n.language === 'ko' ? ko : enUS;
   const hours = useMemo(
     () =>
       eachHourOfInterval({
@@ -69,7 +71,7 @@ export function DayView({
       <div className="flex items-center justify-between border-b px-4 py-3">
         <div>
           <h3 className="text-lg font-medium">
-            {format(currentDate, 'yyyy년 M월 d일 (EEEE)', { locale: ko })}
+            {format(currentDate, tCommon('dateFormat.fullDateWithDay'), { locale: dateLocale })}
           </h3>
           {isToday(currentDate) && (
             <span className="text-sm text-muted-foreground">{t('components.leaveCalendar.dayView.today')}</span>

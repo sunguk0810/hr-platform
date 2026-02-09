@@ -108,6 +108,13 @@
   },
   "goToDashboard": "Go to dashboard",
 
+  "dateFormat": {
+    "fullDate": "EEEE, MMMM d, yyyy",
+    "fullDateWithDay": "EEEE, MMMM d, yyyy",
+    "fullDateWithDayShort": "EEE, MMM d, yyyy",
+    "shortDateWithDay": "EEE, MMM d, yyyy"
+  },
+
   "apply": "Apply",
   "export": "Export",
   "goHome": "Go to home",

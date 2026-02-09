@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
-import { ko } from 'date-fns/locale';
+import { ko, enUS } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { LogIn, LogOut, CheckCircle2, Loader2 } from 'lucide-react';
 import { useCheckIn, useCheckOut, useTodayAttendance } from '../hooks/useAttendance';
@@ -20,7 +20,9 @@ export function CheckInOutButton({
   onSuccess,
   onError,
 }: CheckInOutButtonProps) {
-  const { t } = useTranslation('attendance');
+  const { t, i18n } = useTranslation('attendance');
+  const { t: tCommon } = useTranslation('common');
+  const dateLocale = i18n.language === 'ko' ? ko : enUS;
   const [currentTime, setCurrentTime] = React.useState(new Date());
   const { data: todayData, isLoading } = useTodayAttendance();
   const checkInMutation = useCheckIn();
@@ -100,7 +102,7 @@ export function CheckInOutButton({
       {showTime && (
         <div className="text-center">
           <p className="text-sm text-muted-foreground">
-            {format(currentTime, 'yyyy년 M월 d일 EEEE', { locale: ko })}
+            {format(currentTime, tCommon('dateFormat.fullDate'), { locale: dateLocale })}
           </p>
           <p className="mt-2 text-4xl font-bold tabular-nums">
             {format(currentTime, 'HH:mm:ss')}

@@ -842,6 +842,15 @@
     "categoryOther": "기타"
   },
 
+  "realTime": {
+    "statusApproved": "승인",
+    "statusRejected": "반려",
+    "statusChanged": "결재 {{status}}",
+    "statusChangedDesc": "\"{{title}}\" 문서가 {{approverName}}님에 의해 {{status}}되었습니다.",
+    "newRequest": "새로운 결재 요청",
+    "newRequestDesc": "{{requesterName}}님이 \"{{title}}\" 결재를 요청했습니다."
+  },
+
   "approvalList": {
     "tableDocNumber": "문서번호",
     "tableType": "유형",

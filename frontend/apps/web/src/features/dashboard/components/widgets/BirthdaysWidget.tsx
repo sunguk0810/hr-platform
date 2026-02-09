@@ -52,15 +52,15 @@ export function BirthdaysWidget() {
     );
 
     if (isToday(birthdayThisYear)) {
-      return t('widgets.birthdays.today', '오늘');
+      return t('widgets.birthdays.today');
     }
     if (isTomorrow(birthdayThisYear)) {
-      return t('widgets.birthdays.tomorrow', '내일');
+      return t('widgets.birthdays.tomorrow');
     }
 
     const daysUntil = differenceInDays(birthdayThisYear, now);
     if (daysUntil > 0 && daysUntil <= 7) {
-      return t('widgets.birthdays.daysLater', '{{days}}일 후', { days: daysUntil });
+      return t('widgets.birthdays.daysLater', { days: daysUntil });
     }
 
     return format(birthdayThisYear, 'M/d', { locale });
@@ -102,8 +102,8 @@ export function BirthdaysWidget() {
 
   return (
     <WidgetContainer
-      title={t('widgets.birthdays.title', '생일')}
-      description={t('widgets.birthdays.description', '이번 주 생일자')}
+      title={t('widgets.birthdays.title')}
+      description={t('widgets.birthdays.description')}
       isLoading={isLoading}
     >
       <div className="space-y-4">
@@ -111,7 +111,7 @@ export function BirthdaysWidget() {
           <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
             <Cake className="mb-2 h-8 w-8" />
             <p className="text-sm">
-              {t('widgets.birthdays.empty', '이번 주 생일자가 없습니다.')}
+              {t('widgets.birthdays.empty')}
             </p>
           </div>
         ) : (
@@ -122,7 +122,7 @@ export function BirthdaysWidget() {
                 <div className="mb-2 flex items-center gap-2">
                   <Gift className="h-4 w-4 text-pink-500" />
                   <span className="text-sm font-medium text-pink-500">
-                    {t('widgets.birthdays.todayBirthdays', '오늘 생일')}
+                    {t('widgets.birthdays.todayBirthdays')}
                   </span>
                   <Badge variant="secondary" className="text-xs">
                     {data.today.length}
@@ -166,7 +166,7 @@ export function BirthdaysWidget() {
               <div>
                 <div className="mb-2 flex items-center gap-2">
                   <span className="text-sm font-medium text-muted-foreground">
-                    {t('widgets.birthdays.upcoming', '다가오는 생일')}
+                    {t('widgets.birthdays.upcoming')}
                   </span>
                 </div>
                 <div className="space-y-2">

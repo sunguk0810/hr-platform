@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
-import { ko } from 'date-fns/locale';
+import { ko, enUS } from 'date-fns/locale';
 import {
   Building2,
   UserPlus,
@@ -54,7 +54,9 @@ export function OrgHistoryTimeline({
   title,
   className,
 }: OrgHistoryTimelineProps) {
-  const { t } = useTranslation('organization');
+  const { t, i18n } = useTranslation('organization');
+  const { t: tCommon } = useTranslation('common');
+  const dateLocale = i18n.language === 'ko' ? ko : enUS;
   const displayTitle = title ?? t('history.title');
   // Group events by date
   const groupedEvents = events.reduce(
@@ -98,7 +100,7 @@ export function OrgHistoryTimeline({
           {sortedDates.map((dateKey) => (
             <div key={dateKey}>
               <h4 className="mb-3 text-sm font-medium text-muted-foreground sticky top-0 bg-background">
-                {format(new Date(dateKey), 'yyyy년 M월 d일 (EEE)', { locale: ko })}
+                {format(new Date(dateKey), tCommon('dateFormat.fullDateWithDayShort'), { locale: dateLocale })}
               </h4>
               <div className="relative ml-4 space-y-4 border-l border-muted pl-6">
                 {groupedEvents[dateKey].map((event) => {

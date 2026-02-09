@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
-import { ko } from 'date-fns/locale';
+import { ko, enUS } from 'date-fns/locale';
 import { LogIn, LogOut, CheckCircle2, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -91,6 +91,9 @@ export function AttendanceButtonGroup({
   onCheckIn,
   onCheckOut,
 }: AttendanceButtonGroupProps) {
+  const { i18n } = useTranslation();
+  const { t: tCommon } = useTranslation('common');
+  const dateLocale = i18n.language === 'ko' ? ko : enUS;
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -103,7 +106,7 @@ export function AttendanceButtonGroup({
       {/* Current Time Display */}
       <div className="text-center py-4">
         <p className="text-sm text-muted-foreground">
-          {format(currentTime, 'yyyy년 M월 d일 EEEE', { locale: ko })}
+          {format(currentTime, tCommon('dateFormat.fullDate'), { locale: dateLocale })}
         </p>
         <p className="text-4xl font-bold tabular-nums mt-1">
           {format(currentTime, 'HH:mm:ss')}

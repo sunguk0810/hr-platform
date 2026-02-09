@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { format } from 'date-fns';
-import { ko } from 'date-fns/locale';
+import { ko, enUS } from 'date-fns/locale';
 import { AlertTriangle } from 'lucide-react';
 import {
   Dialog,
@@ -58,7 +58,9 @@ export function EditAttendanceDialog({
   record,
   onSuccess,
 }: EditAttendanceDialogProps) {
-  const { t } = useTranslation('attendance');
+  const { t, i18n } = useTranslation('attendance');
+  const { t: tCommon } = useTranslation('common');
+  const dateLocale = i18n.language === 'ko' ? ko : enUS;
   const { toast } = useToast();
   const [showConfirm, setShowConfirm] = useState(false);
   const updateMutation = useUpdateAttendanceRecord();
@@ -157,7 +159,7 @@ export function EditAttendanceDialog({
               <div>
                 <Label className="text-muted-foreground">{t('components.editAttendanceDialog.dateLabel')}</Label>
                 <p className="font-medium">
-                  {format(new Date(record.date), 'yyyy년 M월 d일 (E)', { locale: ko })}
+                  {format(new Date(record.date), tCommon('dateFormat.shortDateWithDay'), { locale: dateLocale })}
                 </p>
               </div>
               <div>

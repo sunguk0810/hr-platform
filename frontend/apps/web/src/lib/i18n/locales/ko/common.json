@@ -108,6 +108,13 @@
   },
   "goToDashboard": "대시보드로 이동",
 
+  "dateFormat": {
+    "fullDate": "yyyy년 M월 d일 EEEE",
+    "fullDateWithDay": "yyyy년 M월 d일 (EEEE)",
+    "fullDateWithDayShort": "yyyy년 M월 d일 (EEE)",
+    "shortDateWithDay": "yyyy년 M월 d일 (E)"
+  },
+
   "apply": "적용",
   "export": "내보내기",
   "goHome": "홈으로 이동",

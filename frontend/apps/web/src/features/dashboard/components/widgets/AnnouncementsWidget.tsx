@@ -52,22 +52,22 @@ export function AnnouncementsWidget() {
 
   const getCategoryLabel = (category: Announcement['category']) => {
     const labels: Record<Announcement['category'], string> = {
-      NOTICE: t('widgets.announcements.category.notice', '공지'),
-      EVENT: t('widgets.announcements.category.event', '이벤트'),
-      UPDATE: t('widgets.announcements.category.update', '업데이트'),
-      URGENT: t('widgets.announcements.category.urgent', '긴급'),
+      NOTICE: t('widgets.announcements.category.notice'),
+      EVENT: t('widgets.announcements.category.event'),
+      UPDATE: t('widgets.announcements.category.update'),
+      URGENT: t('widgets.announcements.category.urgent'),
     };
     return labels[category];
   };
 
   return (
     <WidgetContainer
-      title={t('widgets.announcements.title', '공지사항')}
+      title={t('widgets.announcements.title')}
       isLoading={isLoading}
       action={
         <Button variant="ghost" size="sm" asChild>
           <Link to="/announcements">
-            {t('widgets.announcements.viewAll', '전체보기')}
+            {t('widgets.announcements.viewAll')}
             <ChevronRight className="ml-1 h-4 w-4" />
           </Link>
         </Button>
@@ -78,7 +78,7 @@ export function AnnouncementsWidget() {
           <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
             <Megaphone className="mb-2 h-8 w-8" />
             <p className="text-sm">
-              {t('widgets.announcements.empty', '공지사항이 없습니다.')}
+              {t('widgets.announcements.empty')}
             </p>
           </div>
         ) : (

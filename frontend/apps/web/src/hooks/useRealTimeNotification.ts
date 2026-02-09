@@ -1,4 +1,5 @@
 import { useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { wsClient, type NotificationEvent } from '@/lib/websocket';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -90,6 +91,7 @@ export function useRealTimeNotification(
 }
 
 export function useApprovalRealTime() {
+  const { t } = useTranslation('approval');
   const { toast } = useToast();
   const { isAuthenticated } = useAuthStore();
 
@@ -97,27 +99,34 @@ export function useApprovalRealTime() {
     (event: { title: string; status: string; approverName: string }) => {
       const statusText =
         event.status === 'APPROVED'
-          ? '승인'
+          ? t('realTime.statusApproved')
           : event.status === 'REJECTED'
-            ? '반려'
+            ? t('realTime.statusRejected')
             : event.status;
 
       toast({
-        title: `결재 ${statusText}`,
-        description: `"${event.title}" 문서가 ${event.approverName}님에 의해 ${statusText}되었습니다.`,
+        title: t('realTime.statusChanged', { status: statusText }),
+        description: t('realTime.statusChangedDesc', {
+          title: event.title,
+          approverName: event.approverName,
+          status: statusText,
+        }),
       });
     },
-    [toast]
+    [toast, t]
   );
 
   const handleNewRequest = useCallback(
     (event: { title: string; requesterName: string }) => {
       toast({
-        title: '새로운 결재 요청',
-        description: `${event.requesterName}님이 "${event.title}" 결재를 요청했습니다.`,
+        title: t('realTime.newRequest'),
+        description: t('realTime.newRequestDesc', {
+          requesterName: event.requesterName,
+          title: event.title,
+        }),
       });
     },
-    [toast]
+    [toast, t]
   );
 
   useEffect(() => {
