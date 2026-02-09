@@ -58,5 +58,14 @@
     "title": "An error occurred",
     "description": "Please refresh the page or try again.",
     "retry": "Try again"
+  },
+  "searchPlaceholder": "Search...",
+  "toggleTheme": "Toggle theme",
+  "tenant": {
+    "noTenant": "No tenant",
+    "selectTenant": "Select subsidiary",
+    "searchPlaceholder": "Search subsidiary...",
+    "tenantList": "Subsidiary list",
+    "noResults": "No results found."
   }
 }

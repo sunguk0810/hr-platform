@@ -29,5 +29,11 @@
   "tenants": "테넌트 관리",
   "auditLog": "감사 로그",
   "support": "지원",
-  "help": "도움말"
+  "help": "도움말",
+  "home": "홈",
+  "other": "기타",
+  "mainMenu": "주 메뉴",
+  "menu": "메뉴",
+  "openMenu": "메뉴 열기",
+  "adminConsole": "관리자 콘솔"
 }

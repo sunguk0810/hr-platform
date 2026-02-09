@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Home,
   Users,
@@ -21,20 +22,20 @@ interface TabItem {
   badge?: number;
 }
 
-// Default tabs as fallback
-const defaultTabs: TabItem[] = [
-  { icon: Home, label: '홈', href: '/' },
-  { icon: Users, label: '조직', href: '/organization' },
-  { icon: Calendar, label: '근태', href: '/attendance' },
-  { icon: FileCheck, label: '결재', href: '/approvals' },
-  { icon: Bell, label: '알림', href: '/notifications' },
-];
-
 export function BottomTabBar() {
   const location = useLocation();
   const { unreadCount } = useNotificationStore();
   const { mobileMenus, fetchMenus } = useMenuStore();
   const { isAuthenticated } = useAuthStore();
+  const { t } = useTranslation('navigation');
+
+  const defaultTabs: TabItem[] = useMemo(() => [
+    { icon: Home, label: t('home'), href: '/' },
+    { icon: Users, label: t('organization'), href: '/organization' },
+    { icon: Calendar, label: t('attendance'), href: '/attendance' },
+    { icon: FileCheck, label: t('approvals'), href: '/approvals' },
+    { icon: Bell, label: t('notifications'), href: '/notifications' },
+  ], [t]);
 
   // Fetch menus on mount if authenticated
   useEffect(() => {

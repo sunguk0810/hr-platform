@@ -58,5 +58,14 @@
     "title": "오류가 발생했습니다",
     "description": "페이지를 새로고침하거나 다시 시도해주세요.",
     "retry": "다시 시도"
+  },
+  "searchPlaceholder": "검색...",
+  "toggleTheme": "테마 변경",
+  "tenant": {
+    "noTenant": "테넌트 없음",
+    "selectTenant": "계열사 선택",
+    "searchPlaceholder": "계열사 검색...",
+    "tenantList": "계열사 목록",
+    "noResults": "검색 결과가 없습니다."
   }
 }

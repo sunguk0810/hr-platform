@@ -29,5 +29,11 @@
   "tenants": "Tenants",
   "auditLog": "Audit Log",
   "support": "Support",
-  "help": "Help"
+  "help": "Help",
+  "home": "Home",
+  "other": "Other",
+  "mainMenu": "Main menu",
+  "menu": "Menu",
+  "openMenu": "Open menu",
+  "adminConsole": "Admin Console"
 }

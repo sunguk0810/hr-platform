@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -54,6 +55,8 @@ export default function MyInfoPage() {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
+  const { t } = useTranslation('settings');
+  const { t: tCommon } = useTranslation('common');
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isChangeRequestDialogOpen, setIsChangeRequestDialogOpen] = useState(false);
@@ -77,7 +80,6 @@ export default function MyInfoPage() {
     reason: '',
   });
 
-  // 프로필 정보 로드
   useEffect(() => {
     const loadProfile = async () => {
       try {
@@ -87,7 +89,6 @@ export default function MyInfoPage() {
           setProfile(response.data);
         }
       } catch {
-        // API 미연동 시 authStore의 user 정보 사용
         if (user) {
           setProfile({
             id: user.id,
@@ -110,7 +111,6 @@ export default function MyInfoPage() {
     loadProfile();
   }, [user]);
 
-  // 대기 중인 변경 요청 건수 로드
   useEffect(() => {
     const loadPendingCount = async () => {
       try {
@@ -152,7 +152,6 @@ export default function MyInfoPage() {
       if (response.success && response.data) {
         setProfile(response.data);
 
-        // authStore의 user 정보도 업데이트
         if (user) {
           setUser({
             ...user,
@@ -161,15 +160,15 @@ export default function MyInfoPage() {
         }
 
         toast({
-          title: '저장 완료',
-          description: '연락처 정보가 수정되었습니다.',
+          title: t('myInfo.toast.saveSuccess'),
+          description: t('myInfo.toast.saveSuccessDesc'),
         });
         setIsEditDialogOpen(false);
       }
     } catch {
       toast({
-        title: '저장 실패',
-        description: '정보 수정 중 오류가 발생했습니다.',
+        title: t('myInfo.toast.saveFailed'),
+        description: t('myInfo.toast.saveFailedDesc'),
         variant: 'destructive',
       });
     } finally {
@@ -196,8 +195,8 @@ export default function MyInfoPage() {
       !changeRequestForm.reason
     ) {
       toast({
-        title: '입력 오류',
-        description: '필수 항목을 모두 입력해주세요.',
+        title: t('myInfo.toast.inputError'),
+        description: t('myInfo.toast.inputErrorDesc'),
         variant: 'destructive',
       });
       return;
@@ -216,15 +215,15 @@ export default function MyInfoPage() {
       if (response.success) {
         setPendingRequestCount((prev) => prev + 1);
         toast({
-          title: '변경 요청 완료',
-          description: '변경 요청이 등록되었습니다. HR 담당자의 승인을 기다려주세요.',
+          title: t('myInfo.toast.changeRequestSuccess'),
+          description: t('myInfo.toast.changeRequestSuccessDesc'),
         });
         setIsChangeRequestDialogOpen(false);
       }
     } catch {
       toast({
-        title: '요청 실패',
-        description: '변경 요청 중 오류가 발생했습니다.',
+        title: t('myInfo.toast.changeRequestFailed'),
+        description: t('myInfo.toast.changeRequestFailedDesc'),
         variant: 'destructive',
       });
     } finally {
@@ -240,21 +239,19 @@ export default function MyInfoPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // 파일 크기 제한 (5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast({
-        title: '파일 크기 초과',
-        description: '프로필 사진은 5MB 이하만 업로드 가능합니다.',
+        title: t('myInfo.toast.fileSizeExceeded'),
+        description: t('myInfo.toast.fileSizeExceededDesc'),
         variant: 'destructive',
       });
       return;
     }
 
-    // 이미지 타입 확인
     if (!file.type.startsWith('image/')) {
       toast({
-        title: '파일 형식 오류',
-        description: '이미지 파일만 업로드 가능합니다.',
+        title: t('myInfo.toast.fileTypeError'),
+        description: t('myInfo.toast.fileTypeErrorDesc'),
         variant: 'destructive',
       });
       return;
@@ -267,30 +264,27 @@ export default function MyInfoPage() {
       if (response.success && response.data) {
         const newImageUrl = response.data.url;
 
-        // 프로필 상태 업데이트
         if (profile) {
           setProfile({ ...profile, profileImageUrl: newImageUrl });
         }
 
-        // authStore의 user 정보도 업데이트
         if (user) {
           setUser({ ...user, profileImageUrl: newImageUrl });
         }
 
         toast({
-          title: '업로드 완료',
-          description: '프로필 사진이 변경되었습니다.',
+          title: t('myInfo.toast.uploadSuccess'),
+          description: t('myInfo.toast.uploadSuccessDesc'),
         });
       }
     } catch {
       toast({
-        title: '업로드 실패',
-        description: '프로필 사진 업로드 중 오류가 발생했습니다.',
+        title: t('myInfo.toast.uploadFailed'),
+        description: t('myInfo.toast.uploadFailedDesc'),
         variant: 'destructive',
       });
     } finally {
       setIsUploadingPhoto(false);
-      // 입력 초기화
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -301,24 +295,22 @@ export default function MyInfoPage() {
     try {
       await profileService.deleteProfilePhoto();
 
-      // 프로필 상태 업데이트
       if (profile) {
         setProfile({ ...profile, profileImageUrl: undefined });
       }
 
-      // authStore의 user 정보도 업데이트
       if (user) {
         setUser({ ...user, profileImageUrl: undefined });
       }
 
       toast({
-        title: '삭제 완료',
-        description: '프로필 사진이 삭제되었습니다.',
+        title: t('myInfo.toast.deleteSuccess'),
+        description: t('myInfo.toast.deleteSuccessDesc'),
       });
     } catch {
       toast({
-        title: '삭제 실패',
-        description: '프로필 사진 삭제 중 오류가 발생했습니다.',
+        title: t('myInfo.toast.deleteFailed'),
+        description: t('myInfo.toast.deleteFailedDesc'),
         variant: 'destructive',
       });
     }
@@ -340,8 +332,8 @@ export default function MyInfoPage() {
       <>
         {!isMobile && (
           <PageHeader
-            title="내 정보"
-            description="개인 정보 및 근무 정보를 확인하고 관리합니다."
+            title={t('myInfo.title')}
+            description={t('myInfo.description')}
           />
         )}
         <div className="flex items-center justify-center py-12">
@@ -400,7 +392,7 @@ export default function MyInfoPage() {
                   onClick={handleEditOpen}
                 >
                   <Edit className="mr-1.5 h-3.5 w-3.5" />
-                  연락처 수정
+                  {t('myInfo.editContact')}
                 </Button>
                 <Button
                   variant="outline"
@@ -408,7 +400,7 @@ export default function MyInfoPage() {
                   onClick={handleChangeRequestOpen}
                 >
                   <SendHorizonal className="mr-1.5 h-3.5 w-3.5" />
-                  변경 요청
+                  {t('myInfo.changeRequest')}
                 </Button>
               </div>
             </div>
@@ -416,11 +408,11 @@ export default function MyInfoPage() {
 
           {/* Mobile Info List */}
           <div className="bg-card rounded-2xl border overflow-hidden">
-            <MobileInfoItem icon={Mail} label="이메일" value={displayEmail} />
-            <MobileInfoItem icon={Phone} label="연락처" value={displayMobile} />
-            <MobileInfoItem icon={Building2} label="부서" value={displayDepartment} />
-            <MobileInfoItem icon={Briefcase} label="사번" value={displayEmployeeNumber} />
-            <MobileInfoItem icon={Calendar} label="입사일" value={displayHireDate} isLast />
+            <MobileInfoItem icon={Mail} label={t('myInfo.email')} value={displayEmail} />
+            <MobileInfoItem icon={Phone} label={t('myInfo.phone')} value={displayMobile} />
+            <MobileInfoItem icon={Building2} label={t('myInfo.department')} value={displayDepartment} />
+            <MobileInfoItem icon={Briefcase} label={t('myInfo.employeeNumber')} value={displayEmployeeNumber} />
+            <MobileInfoItem icon={Calendar} label={t('myInfo.hireDate')} value={displayHireDate} isLast />
           </div>
 
           {/* Change Request Status Link */}
@@ -432,9 +424,9 @@ export default function MyInfoPage() {
             <div className="flex items-center gap-3">
               <ClipboardList className="h-5 w-5 text-muted-foreground" />
               <div className="text-left">
-                <p className="text-sm font-medium">변경 요청 현황</p>
+                <p className="text-sm font-medium">{t('myInfo.changeRequestStatus')}</p>
                 <p className="text-xs text-muted-foreground">
-                  내 정보 변경 요청 이력 확인
+                  {t('myInfo.changeRequestHistory')}
                 </p>
               </div>
             </div>
@@ -442,7 +434,7 @@ export default function MyInfoPage() {
               {pendingRequestCount > 0 && (
                 <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
                   <Clock className="mr-1 h-3 w-3" />
-                  {pendingRequestCount}건 대기
+                  {t('myInfo.pendingCount', { count: pendingRequestCount })}
                 </Badge>
               )}
               <ArrowRight className="h-4 w-4 text-muted-foreground" />
@@ -457,7 +449,7 @@ export default function MyInfoPage() {
               onClick={handleDeletePhoto}
             >
               <Trash2 className="mr-2 h-4 w-4" />
-              프로필 사진 삭제
+              {t('myInfo.deletePhoto')}
             </Button>
           )}
         </div>
@@ -466,14 +458,14 @@ export default function MyInfoPage() {
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="max-w-[calc(100%-2rem)] rounded-2xl">
             <DialogHeader>
-              <DialogTitle>연락처 정보 수정</DialogTitle>
+              <DialogTitle>{t('myInfo.editDialog.title')}</DialogTitle>
               <DialogDescription>
-                연락처 정보는 즉시 반영됩니다.
+                {t('myInfo.editDialog.description')}
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="mobile-email">이메일</Label>
+                <Label htmlFor="mobile-email">{t('myInfo.editDialog.email')}</Label>
                 <Input
                   id="mobile-email"
                   type="email"
@@ -485,7 +477,7 @@ export default function MyInfoPage() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="mobile-phone">연락처</Label>
+                <Label htmlFor="mobile-phone">{t('myInfo.editDialog.phone')}</Label>
                 <Input
                   id="mobile-phone"
                   type="tel"
@@ -497,7 +489,7 @@ export default function MyInfoPage() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="mobile-nameEn">영문명</Label>
+                <Label htmlFor="mobile-nameEn">{t('myInfo.editDialog.nameEn')}</Label>
                 <Input
                   id="mobile-nameEn"
                   type="text"
@@ -516,16 +508,16 @@ export default function MyInfoPage() {
                 onClick={() => setIsEditDialogOpen(false)}
                 disabled={isSubmitting}
               >
-                취소
+                {tCommon('cancel')}
               </Button>
               <Button className="flex-1" onClick={handleSubmit} disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    저장 중...
+                    {t('myInfo.editDialog.saving')}
                   </>
                 ) : (
-                  '저장'
+                  tCommon('save')
                 )}
               </Button>
             </DialogFooter>
@@ -550,17 +542,17 @@ export default function MyInfoPage() {
   return (
     <>
       <PageHeader
-        title="내 정보"
-        description="개인 정보 및 근무 정보를 확인하고 관리합니다."
+        title={t('myInfo.title')}
+        description={t('myInfo.description')}
         actions={
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={handleChangeRequestOpen}>
               <SendHorizonal className="mr-2 h-4 w-4" />
-              변경 요청
+              {t('myInfo.changeRequest')}
             </Button>
             <Button onClick={handleEditOpen}>
               <Edit className="mr-2 h-4 w-4" />
-              연락처 수정
+              {t('myInfo.editContact')}
             </Button>
           </div>
         }
@@ -578,7 +570,6 @@ export default function MyInfoPage() {
                 </AvatarFallback>
               </Avatar>
 
-              {/* 프로필 사진 변경 버튼 */}
               <button
                 type="button"
                 onClick={handlePhotoClick}
@@ -610,7 +601,6 @@ export default function MyInfoPage() {
               {displayDepartment}
             </p>
 
-            {/* 프로필 사진 삭제 버튼 */}
             {displayProfileImage && (
               <Button
                 variant="ghost"
@@ -619,7 +609,7 @@ export default function MyInfoPage() {
                 className="mt-3 text-muted-foreground hover:text-destructive"
               >
                 <Trash2 className="mr-1 h-3 w-3" />
-                사진 삭제
+                {t('myInfo.deletePhotoShort')}
               </Button>
             )}
           </CardContent>
@@ -628,42 +618,42 @@ export default function MyInfoPage() {
         {/* Info Card */}
         <Card className="md:col-span-2">
           <CardHeader>
-            <CardTitle>기본 정보</CardTitle>
+            <CardTitle>{t('myInfo.basicInfo')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="flex items-center gap-3">
                 <Mail className="h-5 w-5 text-muted-foreground" />
                 <div>
-                  <p className="text-sm text-muted-foreground">이메일</p>
+                  <p className="text-sm text-muted-foreground">{t('myInfo.email')}</p>
                   <p className="font-medium">{displayEmail}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <Phone className="h-5 w-5 text-muted-foreground" />
                 <div>
-                  <p className="text-sm text-muted-foreground">연락처</p>
+                  <p className="text-sm text-muted-foreground">{t('myInfo.phone')}</p>
                   <p className="font-medium">{displayMobile}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <Building2 className="h-5 w-5 text-muted-foreground" />
                 <div>
-                  <p className="text-sm text-muted-foreground">부서</p>
+                  <p className="text-sm text-muted-foreground">{t('myInfo.department')}</p>
                   <p className="font-medium">{displayDepartment}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <Briefcase className="h-5 w-5 text-muted-foreground" />
                 <div>
-                  <p className="text-sm text-muted-foreground">사번</p>
+                  <p className="text-sm text-muted-foreground">{t('myInfo.employeeNumber')}</p>
                   <p className="font-medium">{displayEmployeeNumber}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <Calendar className="h-5 w-5 text-muted-foreground" />
                 <div>
-                  <p className="text-sm text-muted-foreground">입사일</p>
+                  <p className="text-sm text-muted-foreground">{t('myInfo.hireDate')}</p>
                   <p className="font-medium">{displayHireDate}</p>
                 </div>
               </div>
@@ -677,11 +667,11 @@ export default function MyInfoPage() {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <CardTitle className="text-base">변경 요청 현황</CardTitle>
+              <CardTitle className="text-base">{t('myInfo.changeRequestStatus')}</CardTitle>
               {pendingRequestCount > 0 && (
                 <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
                   <Clock className="mr-1 h-3 w-3" />
-                  {pendingRequestCount}건 대기중
+                  {t('myInfo.pendingCountDesktop', { count: pendingRequestCount })}
                 </Badge>
               )}
             </div>
@@ -690,16 +680,14 @@ export default function MyInfoPage() {
               size="sm"
               onClick={() => navigate('/my-info/change-requests')}
             >
-              전체 보기
+              {t('myInfo.viewAll')}
               <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
           </div>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            주소, 학력, 자격증, 가족사항, 경력사항 등의 변경은 HR 담당자의 승인이
-            필요합니다. 상단의 "변경 요청" 버튼을 통해 변경을 요청할 수 있으며,
-            요청 현황은 "전체 보기"에서 확인할 수 있습니다.
+            {t('myInfo.changeRequestDescription')}
           </p>
         </CardContent>
       </Card>
@@ -708,14 +696,14 @@ export default function MyInfoPage() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>연락처 정보 수정</DialogTitle>
+            <DialogTitle>{t('myInfo.editDialog.title')}</DialogTitle>
             <DialogDescription>
-              연락처 정보는 즉시 반영됩니다.
+              {t('myInfo.editDialog.description')}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="email">이메일</Label>
+              <Label htmlFor="email">{t('myInfo.editDialog.email')}</Label>
               <Input
                 id="email"
                 type="email"
@@ -727,7 +715,7 @@ export default function MyInfoPage() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="mobile">연락처</Label>
+              <Label htmlFor="mobile">{t('myInfo.editDialog.phone')}</Label>
               <Input
                 id="mobile"
                 type="tel"
@@ -739,7 +727,7 @@ export default function MyInfoPage() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="nameEn">영문명</Label>
+              <Label htmlFor="nameEn">{t('myInfo.editDialog.nameEn')}</Label>
               <Input
                 id="nameEn"
                 type="text"
@@ -757,16 +745,16 @@ export default function MyInfoPage() {
               onClick={() => setIsEditDialogOpen(false)}
               disabled={isSubmitting}
             >
-              취소
+              {tCommon('cancel')}
             </Button>
             <Button onClick={handleSubmit} disabled={isSubmitting}>
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  저장 중...
+                  {t('myInfo.editDialog.saving')}
                 </>
               ) : (
-                '저장'
+                tCommon('save')
               )}
             </Button>
           </DialogFooter>
@@ -843,20 +831,22 @@ function ChangeRequestDialog({
   isSubmitting,
   isMobile,
 }: ChangeRequestDialogProps) {
+  const { t } = useTranslation('settings');
+  const { t: tCommon } = useTranslation('common');
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={isMobile ? 'max-w-[calc(100%-2rem)] rounded-2xl' : 'max-w-lg'}>
         <DialogHeader>
-          <DialogTitle>정보 변경 요청</DialogTitle>
+          <DialogTitle>{t('myInfo.changeRequestDialog.title')}</DialogTitle>
           <DialogDescription>
-            주소, 학력, 자격증, 가족사항, 경력사항 변경은 HR 담당자의 승인이
-            필요합니다. 변경 내용과 사유를 입력해주세요.
+            {t('myInfo.changeRequestDialog.description')}
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
             <Label htmlFor="cr-category">
-              변경 구분 <span className="text-destructive">*</span>
+              {t('myInfo.changeRequestDialog.category')} <span className="text-destructive">*</span>
             </Label>
             <Select
               value={form.category}
@@ -868,12 +858,12 @@ function ChangeRequestDialog({
               }
             >
               <SelectTrigger id="cr-category">
-                <SelectValue placeholder="변경 구분을 선택하세요" />
+                <SelectValue placeholder={t('myInfo.changeRequestDialog.categoryPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
                 {CATEGORY_OPTIONS.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
+                    {t(`myInfo.changeRequestDialog.categories.${opt.value}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -881,7 +871,7 @@ function ChangeRequestDialog({
           </div>
           <div className="grid gap-2">
             <Label htmlFor="cr-fieldName">
-              변경 항목 <span className="text-destructive">*</span>
+              {t('myInfo.changeRequestDialog.fieldName')} <span className="text-destructive">*</span>
             </Label>
             <Input
               id="cr-fieldName"
@@ -889,23 +879,23 @@ function ChangeRequestDialog({
               onChange={(e) =>
                 setForm((prev) => ({ ...prev, fieldName: e.target.value }))
               }
-              placeholder="예: 자택주소, 최종학력, 정보처리기사 등"
+              placeholder={t('myInfo.changeRequestDialog.fieldNamePlaceholder')}
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="cr-oldValue">변경 전 값</Label>
+            <Label htmlFor="cr-oldValue">{t('myInfo.changeRequestDialog.oldValue')}</Label>
             <Input
               id="cr-oldValue"
               value={form.oldValue}
               onChange={(e) =>
                 setForm((prev) => ({ ...prev, oldValue: e.target.value }))
               }
-              placeholder="현재 등록된 값 (없으면 비워두세요)"
+              placeholder={t('myInfo.changeRequestDialog.oldValuePlaceholder')}
             />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="cr-newValue">
-              변경 후 값 <span className="text-destructive">*</span>
+              {t('myInfo.changeRequestDialog.newValue')} <span className="text-destructive">*</span>
             </Label>
             <Input
               id="cr-newValue"
@@ -913,12 +903,12 @@ function ChangeRequestDialog({
               onChange={(e) =>
                 setForm((prev) => ({ ...prev, newValue: e.target.value }))
               }
-              placeholder="변경하고자 하는 값을 입력하세요"
+              placeholder={t('myInfo.changeRequestDialog.newValuePlaceholder')}
             />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="cr-reason">
-              변경 사유 <span className="text-destructive">*</span>
+              {t('myInfo.changeRequestDialog.reason')} <span className="text-destructive">*</span>
             </Label>
             <Textarea
               id="cr-reason"
@@ -926,7 +916,7 @@ function ChangeRequestDialog({
               onChange={(e) =>
                 setForm((prev) => ({ ...prev, reason: e.target.value }))
               }
-              placeholder="변경 사유를 상세히 입력해주세요"
+              placeholder={t('myInfo.changeRequestDialog.reasonPlaceholder')}
               rows={3}
             />
           </div>
@@ -938,7 +928,7 @@ function ChangeRequestDialog({
             onClick={() => onOpenChange(false)}
             disabled={isSubmitting}
           >
-            취소
+            {tCommon('cancel')}
           </Button>
           <Button
             className={isMobile ? 'flex-1' : undefined}
@@ -948,12 +938,12 @@ function ChangeRequestDialog({
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                요청 중...
+                {t('myInfo.changeRequestDialog.submitting')}
               </>
             ) : (
               <>
                 <SendHorizonal className="mr-2 h-4 w-4" />
-                변경 요청
+                {t('myInfo.changeRequestDialog.submit')}
               </>
             )}
           </Button>

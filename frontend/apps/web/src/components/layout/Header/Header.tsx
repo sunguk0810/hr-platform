@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Bell, Moon, Sun, Search, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -29,6 +30,9 @@ export function Header() {
   const { unreadCount } = useNotificationStore();
   const { mutate: logout } = useLogout();
   const isMobile = useIsMobile();
+  const { t } = useTranslation('common');
+  const { t: tNav } = useTranslation('navigation');
+  const { t: tAuth } = useTranslation('auth');
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
@@ -79,7 +83,7 @@ export function Header() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="search"
-            placeholder="검색..."
+            placeholder={t('searchPlaceholder')}
             className="h-9 w-64 rounded-md border bg-background pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
@@ -90,7 +94,7 @@ export function Header() {
         <LanguageSwitcher />
 
         {/* Theme toggle */}
-        <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="테마 변경">
+        <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label={t('toggleTheme')}>
           {theme === 'dark' ? (
             <Sun className="h-5 w-5" aria-hidden="true" />
           ) : (
@@ -142,14 +146,14 @@ export function Header() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => navigate('/my-info')}>
-              내 정보
+              {tNav('myInfo')}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate('/settings')}>
-              설정
+              {tNav('settings')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => logout()} className="text-destructive">
-              로그아웃
+              {tAuth('logout')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

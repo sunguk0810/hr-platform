@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -35,6 +36,9 @@ export default function SettingsPage() {
   const { user } = useAuthStore();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const { t } = useTranslation('settings');
+  const { t: tCommon } = useTranslation('common');
+  const { t: tAuth } = useTranslation('auth');
   const [activeTab, setActiveTab] = useState('profile');
   const [mobileSection, setMobileSection] = useState<string | null>(null);
 
@@ -62,9 +66,9 @@ export default function SettingsPage() {
   });
 
   const themeOptions = [
-    { value: 'light', label: '라이트', icon: Sun },
-    { value: 'dark', label: '다크', icon: Moon },
-    { value: 'system', label: '시스템', icon: Monitor },
+    { value: 'light', label: t('themeLight'), icon: Sun },
+    { value: 'dark', label: t('themeDark'), icon: Moon },
+    { value: 'system', label: t('themeSystem'), icon: Monitor },
   ] as const;
 
   // Fetch sessions when security tab is active
@@ -81,8 +85,8 @@ export default function SettingsPage() {
       setSessions(response.data || []);
     } catch {
       toast({
-        title: '세션 목록 조회 실패',
-        description: '세션 목록을 불러올 수 없습니다.',
+        title: t('toast.sessionListFailed'),
+        description: t('toast.sessionListFailedDesc'),
         variant: 'destructive',
       });
     } finally {
@@ -95,8 +99,8 @@ export default function SettingsPage() {
 
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       toast({
-        title: '비밀번호 불일치',
-        description: '새 비밀번호와 확인 비밀번호가 일치하지 않습니다.',
+        title: t('toast.passwordMismatch'),
+        description: t('toast.passwordMismatchDesc'),
         variant: 'destructive',
       });
       return;
@@ -111,14 +115,14 @@ export default function SettingsPage() {
       });
 
       toast({
-        title: '비밀번호 변경 완료',
-        description: '비밀번호가 성공적으로 변경되었습니다.',
+        title: t('toast.passwordChanged'),
+        description: t('toast.passwordChangedDesc'),
       });
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (error) {
       toast({
-        title: '비밀번호 변경 실패',
-        description: error instanceof Error ? error.message : '비밀번호 변경에 실패했습니다.',
+        title: t('toast.passwordChangeFailed'),
+        description: error instanceof Error ? error.message : t('toast.passwordChangeFailedDesc'),
         variant: 'destructive',
       });
     } finally {
@@ -127,21 +131,21 @@ export default function SettingsPage() {
   };
 
   const handleLogoutSession = async (sessionId: string) => {
-    if (!confirm('이 세션을 로그아웃 하시겠습니까?')) return;
+    if (!confirm(t('security.confirmLogoutSession'))) return;
 
     setIsLoggingOut(sessionId);
     try {
       await authService.logoutSession(sessionId);
       toast({
-        title: '세션 로그아웃',
-        description: '해당 세션이 로그아웃되었습니다.',
+        title: t('toast.sessionLogout'),
+        description: t('toast.sessionLogoutDesc'),
       });
       // Refresh session list
       fetchSessions();
     } catch {
       toast({
-        title: '로그아웃 실패',
-        description: '세션 로그아웃에 실패했습니다.',
+        title: t('toast.logoutFailed'),
+        description: t('toast.logoutFailedDesc'),
         variant: 'destructive',
       });
     } finally {
@@ -150,21 +154,21 @@ export default function SettingsPage() {
   };
 
   const handleLogoutAllSessions = async () => {
-    if (!confirm('현재 세션을 제외한 모든 세션을 로그아웃 하시겠습니까?')) return;
+    if (!confirm(t('security.confirmLogoutAll'))) return;
 
     setIsLoggingOut('all');
     try {
       await authService.logoutAllSessions();
       toast({
-        title: '모든 세션 로그아웃',
-        description: '현재 세션을 제외한 모든 세션이 로그아웃되었습니다.',
+        title: t('toast.allSessionsLogout'),
+        description: t('toast.allSessionsLogoutDesc'),
       });
       // Refresh session list
       fetchSessions();
     } catch {
       toast({
-        title: '로그아웃 실패',
-        description: '세션 로그아웃에 실패했습니다.',
+        title: t('toast.logoutFailed'),
+        description: t('toast.logoutFailedDesc'),
         variant: 'destructive',
       });
     } finally {
@@ -173,10 +177,10 @@ export default function SettingsPage() {
   };
 
   const settingsSections = [
-    { id: 'profile', label: '프로필', description: '기본 프로필 정보 관리', icon: User },
-    { id: 'security', label: '보안', description: '비밀번호 및 세션 관리', icon: Shield },
-    { id: 'notifications', label: '알림', description: '알림 설정', icon: Bell },
-    { id: 'appearance', label: '외관', description: '테마 설정', icon: Sun },
+    { id: 'profile', label: t('sections.profile.label'), description: t('sections.profile.description'), icon: User },
+    { id: 'security', label: t('sections.security.label'), description: t('sections.security.description'), icon: Shield },
+    { id: 'notifications', label: t('sections.notifications.label'), description: t('sections.notifications.description'), icon: Bell },
+    { id: 'appearance', label: t('sections.appearance.label'), description: t('sections.appearance.description'), icon: Sun },
   ];
 
   // Mobile Layout
@@ -190,12 +194,12 @@ export default function SettingsPage() {
             className="flex items-center gap-2 text-sm text-muted-foreground"
           >
             <ChevronRight className="h-4 w-4 rotate-180" />
-            설정으로 돌아가기
+            {t('backToSettings')}
           </button>
 
           {mobileSection === 'profile' && (
             <div className="space-y-4">
-              <h1 className="text-xl font-bold">프로필</h1>
+              <h1 className="text-xl font-bold">{t('sections.profile.label')}</h1>
               <div className="bg-card rounded-2xl border p-4">
                 <div className="flex items-center gap-4 mb-4">
                   <Avatar className="h-16 w-16">
@@ -205,30 +209,30 @@ export default function SettingsPage() {
                   <div>
                     <Button variant="outline" size="sm">
                       <Upload className="h-4 w-4 mr-2" />
-                      사진 변경
+                      {t('profile.changePhoto')}
                     </Button>
                   </div>
                 </div>
                 <div className="space-y-3">
                   <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">이름</Label>
+                    <Label className="text-xs text-muted-foreground">{t('profile.name')}</Label>
                     <p className="text-sm font-medium">{user?.name || '-'}</p>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">이메일</Label>
+                    <Label className="text-xs text-muted-foreground">{t('profile.email')}</Label>
                     <p className="text-sm font-medium">{user?.email || '-'}</p>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">부서</Label>
+                    <Label className="text-xs text-muted-foreground">{t('profile.department')}</Label>
                     <p className="text-sm font-medium">{user?.departmentName || '-'}</p>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">직급</Label>
+                    <Label className="text-xs text-muted-foreground">{t('profile.grade')}</Label>
                     <p className="text-sm font-medium">{user?.gradeName || '-'}</p>
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground mt-4">
-                  * 프로필 정보 변경은 인사팀에 문의해주세요.
+                  {t('profile.contactHR')}
                 </p>
               </div>
             </div>
@@ -236,12 +240,12 @@ export default function SettingsPage() {
 
           {mobileSection === 'security' && (
             <div className="space-y-4">
-              <h1 className="text-xl font-bold">보안</h1>
+              <h1 className="text-xl font-bold">{t('sections.security.label')}</h1>
               <div className="bg-card rounded-2xl border p-4 space-y-4">
-                <h3 className="font-medium text-sm">비밀번호 변경</h3>
+                <h3 className="font-medium text-sm">{t('security.changePassword')}</h3>
                 <form onSubmit={handlePasswordChange} className="space-y-3">
                   <div className="space-y-2">
-                    <Label htmlFor="m-currentPassword" className="text-sm">현재 비밀번호</Label>
+                    <Label htmlFor="m-currentPassword" className="text-sm">{t('security.currentPassword')}</Label>
                     <Input
                       id="m-currentPassword"
                       type="password"
@@ -250,7 +254,7 @@ export default function SettingsPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="m-newPassword" className="text-sm">새 비밀번호</Label>
+                    <Label htmlFor="m-newPassword" className="text-sm">{t('security.newPassword')}</Label>
                     <Input
                       id="m-newPassword"
                       type="password"
@@ -259,7 +263,7 @@ export default function SettingsPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="m-confirmPassword" className="text-sm">새 비밀번호 확인</Label>
+                    <Label htmlFor="m-confirmPassword" className="text-sm">{t('security.confirmPassword')}</Label>
                     <Input
                       id="m-confirmPassword"
                       type="password"
@@ -268,19 +272,19 @@ export default function SettingsPage() {
                     />
                   </div>
                   <Button type="submit" className="w-full" disabled={isChangingPassword}>
-                    {isChangingPassword ? '변경 중...' : '비밀번호 변경'}
+                    {isChangingPassword ? t('security.changingPassword') : t('security.changePasswordButton')}
                   </Button>
                 </form>
               </div>
 
               <div className="bg-card rounded-2xl border p-4 space-y-3">
-                <h3 className="font-medium text-sm">활성 세션</h3>
+                <h3 className="font-medium text-sm">{t('security.activeSessions')}</h3>
                 {isLoadingSessions ? (
                   <div className="py-4 flex justify-center">
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
                   </div>
                 ) : sessions.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">활성 세션이 없습니다</p>
+                  <p className="text-sm text-muted-foreground text-center py-4">{t('security.noActiveSessions')}</p>
                 ) : (
                   <div className="space-y-2">
                     {sessions.map((session) => (
@@ -291,7 +295,7 @@ export default function SettingsPage() {
                           </div>
                           <div>
                             <p className="text-sm font-medium">{session.deviceInfo}</p>
-                            {session.currentSession && <span className="text-xs text-green-600">현재 세션</span>}
+                            {session.currentSession && <span className="text-xs text-green-600">{t('security.currentSession')}</span>}
                           </div>
                         </div>
                         {!session.currentSession && (
@@ -309,18 +313,18 @@ export default function SettingsPage() {
 
           {mobileSection === 'notifications' && (
             <div className="space-y-4">
-              <h1 className="text-xl font-bold">알림</h1>
+              <h1 className="text-xl font-bold">{t('sections.notifications.label')}</h1>
               <div className="bg-card rounded-2xl border overflow-hidden">
                 <div className="p-4 border-b">
-                  <h3 className="font-medium text-sm">알림 채널</h3>
+                  <h3 className="font-medium text-sm">{t('notificationSettings.channels')}</h3>
                 </div>
                 <div className="divide-y">
                   <div className="flex items-center justify-between p-4">
                     <div className="flex items-center gap-3">
                       <Mail className="h-5 w-5 text-muted-foreground" />
                       <div>
-                        <p className="text-sm font-medium">이메일 알림</p>
-                        <p className="text-xs text-muted-foreground">중요 알림을 이메일로 받습니다</p>
+                        <p className="text-sm font-medium">{t('notificationSettings.emailNotification')}</p>
+                        <p className="text-xs text-muted-foreground">{t('notificationSettings.emailDescription')}</p>
                       </div>
                     </div>
                     <Switch checked={notifications.email} onCheckedChange={(checked) => setNotifications((prev) => ({ ...prev, email: checked }))} />
@@ -329,8 +333,8 @@ export default function SettingsPage() {
                     <div className="flex items-center gap-3">
                       <Smartphone className="h-5 w-5 text-muted-foreground" />
                       <div>
-                        <p className="text-sm font-medium">푸시 알림</p>
-                        <p className="text-xs text-muted-foreground">브라우저 푸시 알림을 받습니다</p>
+                        <p className="text-sm font-medium">{t('notificationSettings.pushNotification')}</p>
+                        <p className="text-xs text-muted-foreground">{t('notificationSettings.pushDescription')}</p>
                       </div>
                     </div>
                     <Switch checked={notifications.push} onCheckedChange={(checked) => setNotifications((prev) => ({ ...prev, push: checked }))} />
@@ -340,14 +344,14 @@ export default function SettingsPage() {
 
               <div className="bg-card rounded-2xl border overflow-hidden">
                 <div className="p-4 border-b">
-                  <h3 className="font-medium text-sm">알림 유형</h3>
+                  <h3 className="font-medium text-sm">{t('notificationSettings.types')}</h3>
                 </div>
                 <div className="divide-y">
                   {[
-                    { key: 'approvalRequest', label: '결재 요청', desc: '결재 요청이 들어왔을 때' },
-                    { key: 'approvalComplete', label: '결재 완료', desc: '내 결재가 승인/반려되었을 때' },
-                    { key: 'leaveApproval', label: '휴가 승인', desc: '휴가가 승인/반려되었을 때' },
-                    { key: 'announcement', label: '공지사항', desc: '새 공지사항이 등록되었을 때' },
+                    { key: 'approvalRequest', label: t('notificationSettings.approvalRequest'), desc: t('notificationSettings.approvalRequestDesc') },
+                    { key: 'approvalComplete', label: t('notificationSettings.approvalComplete'), desc: t('notificationSettings.approvalCompleteDesc') },
+                    { key: 'leaveApproval', label: t('notificationSettings.leaveApproval'), desc: t('notificationSettings.leaveApprovalDesc') },
+                    { key: 'announcement', label: t('notificationSettings.announcement'), desc: t('notificationSettings.announcementDesc') },
                   ].map((item) => (
                     <div key={item.key} className="flex items-center justify-between p-4">
                       <div>
@@ -367,9 +371,9 @@ export default function SettingsPage() {
 
           {mobileSection === 'appearance' && (
             <div className="space-y-4">
-              <h1 className="text-xl font-bold">외관</h1>
+              <h1 className="text-xl font-bold">{t('sections.appearance.label')}</h1>
               <div className="bg-card rounded-2xl border p-4">
-                <h3 className="font-medium text-sm mb-3">테마</h3>
+                <h3 className="font-medium text-sm mb-3">{t('appearance.title')}</h3>
                 <div className="grid grid-cols-3 gap-2">
                   {themeOptions.map((option) => {
                     const Icon = option.icon;
@@ -400,8 +404,8 @@ export default function SettingsPage() {
     return (
       <div className="space-y-4 pb-20">
         <div>
-          <h1 className="text-xl font-bold">설정</h1>
-          <p className="text-sm text-muted-foreground">앱 설정을 관리합니다</p>
+          <h1 className="text-xl font-bold">{t('title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('description')}</p>
         </div>
 
         <div className="bg-card rounded-2xl border overflow-hidden">
@@ -437,25 +441,25 @@ export default function SettingsPage() {
   // Desktop Layout
   return (
     <>
-      <PageHeader title="설정" description="앱 설정을 관리합니다." />
+      <PageHeader title={t('title')} description={t('description')} />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-4 lg:w-[480px]">
           <TabsTrigger value="profile">
             <User className="h-4 w-4 mr-2" />
-            프로필
+            {t('sections.profile.label')}
           </TabsTrigger>
           <TabsTrigger value="security">
             <Shield className="h-4 w-4 mr-2" />
-            보안
+            {t('sections.security.label')}
           </TabsTrigger>
           <TabsTrigger value="notifications">
             <Bell className="h-4 w-4 mr-2" />
-            알림
+            {t('sections.notifications.label')}
           </TabsTrigger>
           <TabsTrigger value="appearance">
             <Sun className="h-4 w-4 mr-2" />
-            외관
+            {t('sections.appearance.label')}
           </TabsTrigger>
         </TabsList>
 
@@ -463,8 +467,8 @@ export default function SettingsPage() {
         <TabsContent value="profile" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>프로필 정보</CardTitle>
-              <CardDescription>기본 프로필 정보를 관리합니다.</CardDescription>
+              <CardTitle>{t('profile.title')}</CardTitle>
+              <CardDescription>{t('profile.description')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center gap-6">
@@ -477,35 +481,35 @@ export default function SettingsPage() {
                 <div>
                   <Button variant="outline" size="sm">
                     <Upload className="h-4 w-4 mr-2" />
-                    사진 변경
+                    {t('profile.changePhoto')}
                   </Button>
                   <p className="text-xs text-muted-foreground mt-1">
-                    JPG, PNG 형식 (최대 5MB)
+                    {t('profile.photoFormat')}
                   </p>
                 </div>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>이름</Label>
+                  <Label>{t('profile.name')}</Label>
                   <Input value={user?.name || ''} disabled />
                 </div>
                 <div className="space-y-2">
-                  <Label>이메일</Label>
+                  <Label>{t('profile.email')}</Label>
                   <Input value={user?.email || ''} disabled />
                 </div>
                 <div className="space-y-2">
-                  <Label>부서</Label>
+                  <Label>{t('profile.department')}</Label>
                   <Input value={user?.departmentName || ''} disabled />
                 </div>
                 <div className="space-y-2">
-                  <Label>직급</Label>
+                  <Label>{t('profile.grade')}</Label>
                   <Input value={user?.gradeName || ''} disabled />
                 </div>
               </div>
 
               <p className="text-sm text-muted-foreground">
-                * 프로필 정보 변경은 인사팀에 문의해주세요.
+                {t('profile.contactHR')}
               </p>
             </CardContent>
           </Card>
@@ -515,13 +519,13 @@ export default function SettingsPage() {
         <TabsContent value="security" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>비밀번호 변경</CardTitle>
-              <CardDescription>정기적으로 비밀번호를 변경하세요.</CardDescription>
+              <CardTitle>{t('security.changePassword')}</CardTitle>
+              <CardDescription>{t('security.changePasswordDescription')}</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handlePasswordChange} className="space-y-4 max-w-md">
                 <div className="space-y-2">
-                  <Label htmlFor="currentPassword">현재 비밀번호</Label>
+                  <Label htmlFor="currentPassword">{t('security.currentPassword')}</Label>
                   <Input
                     id="currentPassword"
                     type="password"
@@ -532,7 +536,7 @@ export default function SettingsPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="newPassword">새 비밀번호</Label>
+                  <Label htmlFor="newPassword">{t('security.newPassword')}</Label>
                   <Input
                     id="newPassword"
                     type="password"
@@ -542,11 +546,11 @@ export default function SettingsPage() {
                     }
                   />
                   <p className="text-xs text-muted-foreground">
-                    8자 이상, 영문, 숫자, 특수문자 포함
+                    {t('security.passwordRequirements')}
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">새 비밀번호 확인</Label>
+                  <Label htmlFor="confirmPassword">{t('security.confirmPassword')}</Label>
                   <Input
                     id="confirmPassword"
                     type="password"
@@ -565,7 +569,7 @@ export default function SettingsPage() {
                     passwordForm.newPassword !== passwordForm.confirmPassword
                   }
                 >
-                  {isChangingPassword ? '변경 중...' : '비밀번호 변경'}
+                  {isChangingPassword ? t('security.changingPassword') : t('security.changePasswordButton')}
                 </Button>
               </form>
             </CardContent>
@@ -573,8 +577,8 @@ export default function SettingsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>활성 세션</CardTitle>
-              <CardDescription>현재 로그인된 기기를 관리합니다.</CardDescription>
+              <CardTitle>{t('security.activeSessions')}</CardTitle>
+              <CardDescription>{t('security.activeSessionsDescription')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {isLoadingSessions ? (
@@ -583,7 +587,7 @@ export default function SettingsPage() {
                 </div>
               ) : sessions.length === 0 ? (
                 <p className="text-center text-muted-foreground py-4">
-                  활성 세션이 없습니다.
+                  {t('security.noActiveSessions')}
                 </p>
               ) : sessions.map((session) => (
                 <div
@@ -603,7 +607,7 @@ export default function SettingsPage() {
                         <p className="font-medium">{session.deviceInfo}</p>
                         {session.currentSession && (
                           <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">
-                            현재 세션
+                            {t('security.currentSession')}
                           </span>
                         )}
                       </div>
@@ -624,7 +628,7 @@ export default function SettingsPage() {
                       disabled={isLoggingOut === session.sessionId}
                     >
                       <LogOut className="h-4 w-4 mr-1" />
-                      {isLoggingOut === session.sessionId ? '처리 중...' : '로그아웃'}
+                      {isLoggingOut === session.sessionId ? tCommon('processing') : tAuth('logout')}
                     </Button>
                   )}
                 </div>
@@ -636,7 +640,7 @@ export default function SettingsPage() {
                   onClick={handleLogoutAllSessions}
                   disabled={isLoggingOut === 'all'}
                 >
-                  {isLoggingOut === 'all' ? '처리 중...' : '다른 모든 세션 로그아웃'}
+                  {isLoggingOut === 'all' ? tCommon('processing') : t('security.logoutAllSessions')}
                 </Button>
               )}
             </CardContent>
@@ -647,16 +651,16 @@ export default function SettingsPage() {
         <TabsContent value="notifications" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>알림 채널</CardTitle>
-              <CardDescription>알림을 받을 방법을 선택합니다.</CardDescription>
+              <CardTitle>{t('notificationSettings.channels')}</CardTitle>
+              <CardDescription>{t('notificationSettings.channelsDescription')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Mail className="h-5 w-5 text-muted-foreground" />
                   <div>
-                    <p className="font-medium">이메일 알림</p>
-                    <p className="text-sm text-muted-foreground">중요 알림을 이메일로 받습니다</p>
+                    <p className="font-medium">{t('notificationSettings.emailNotification')}</p>
+                    <p className="text-sm text-muted-foreground">{t('notificationSettings.emailDescription')}</p>
                   </div>
                 </div>
                 <Switch
@@ -670,8 +674,8 @@ export default function SettingsPage() {
                 <div className="flex items-center gap-3">
                   <Smartphone className="h-5 w-5 text-muted-foreground" />
                   <div>
-                    <p className="font-medium">푸시 알림</p>
-                    <p className="text-sm text-muted-foreground">브라우저 푸시 알림을 받습니다</p>
+                    <p className="font-medium">{t('notificationSettings.pushNotification')}</p>
+                    <p className="text-sm text-muted-foreground">{t('notificationSettings.pushDescription')}</p>
                   </div>
                 </div>
                 <Switch
@@ -686,14 +690,14 @@ export default function SettingsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>알림 유형</CardTitle>
-              <CardDescription>받을 알림 유형을 선택합니다.</CardDescription>
+              <CardTitle>{t('notificationSettings.types')}</CardTitle>
+              <CardDescription>{t('notificationSettings.typesDescription')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">결재 요청</p>
-                  <p className="text-sm text-muted-foreground">결재 요청이 들어왔을 때</p>
+                  <p className="font-medium">{t('notificationSettings.approvalRequest')}</p>
+                  <p className="text-sm text-muted-foreground">{t('notificationSettings.approvalRequestDesc')}</p>
                 </div>
                 <Switch
                   checked={notifications.approvalRequest}
@@ -704,8 +708,8 @@ export default function SettingsPage() {
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">결재 완료</p>
-                  <p className="text-sm text-muted-foreground">내 결재가 승인/반려되었을 때</p>
+                  <p className="font-medium">{t('notificationSettings.approvalComplete')}</p>
+                  <p className="text-sm text-muted-foreground">{t('notificationSettings.approvalCompleteDesc')}</p>
                 </div>
                 <Switch
                   checked={notifications.approvalComplete}
@@ -716,8 +720,8 @@ export default function SettingsPage() {
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">휴가 승인</p>
-                  <p className="text-sm text-muted-foreground">휴가가 승인/반려되었을 때</p>
+                  <p className="font-medium">{t('notificationSettings.leaveApproval')}</p>
+                  <p className="text-sm text-muted-foreground">{t('notificationSettings.leaveApprovalDesc')}</p>
                 </div>
                 <Switch
                   checked={notifications.leaveApproval}
@@ -728,8 +732,8 @@ export default function SettingsPage() {
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">공지사항</p>
-                  <p className="text-sm text-muted-foreground">새 공지사항이 등록되었을 때</p>
+                  <p className="font-medium">{t('notificationSettings.announcement')}</p>
+                  <p className="text-sm text-muted-foreground">{t('notificationSettings.announcementDesc')}</p>
                 </div>
                 <Switch
                   checked={notifications.announcement}
@@ -746,8 +750,8 @@ export default function SettingsPage() {
         <TabsContent value="appearance" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>테마</CardTitle>
-              <CardDescription>화면 테마를 선택합니다.</CardDescription>
+              <CardTitle>{t('appearance.title')}</CardTitle>
+              <CardDescription>{t('appearance.description')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex gap-2">

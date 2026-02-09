@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { User, Settings, LogOut, HelpCircle, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,6 +25,8 @@ export function UserMenu({ showName = false, className }: UserMenuProps) {
   const navigate = useNavigate();
   const { user, hasRole } = useAuthStore();
   const { mutate: logout, isPending: isLoggingOut } = useLogout();
+  const { t: tNav } = useTranslation('navigation');
+  const { t: tAuth } = useTranslation('auth');
 
   const getInitials = (name: string) => {
     return name
@@ -83,15 +86,15 @@ export function UserMenu({ showName = false, className }: UserMenuProps) {
         <DropdownMenuGroup>
           <DropdownMenuItem onClick={() => navigate('/my-info')}>
             <User className="mr-2 h-4 w-4" />
-            <span>내 정보</span>
+            <span>{tNav('myInfo')}</span>
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => navigate('/settings')}>
             <Settings className="mr-2 h-4 w-4" />
-            <span>설정</span>
+            <span>{tNav('settings')}</span>
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => navigate('/help')}>
             <HelpCircle className="mr-2 h-4 w-4" />
-            <span>도움말</span>
+            <span>{tNav('help')}</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         {isAdmin && (
@@ -100,7 +103,7 @@ export function UserMenu({ showName = false, className }: UserMenuProps) {
             <DropdownMenuGroup>
               <DropdownMenuItem onClick={() => navigate('/admin')}>
                 <Shield className="mr-2 h-4 w-4" />
-                <span>관리자 콘솔</span>
+                <span>{tNav('adminConsole')}</span>
               </DropdownMenuItem>
             </DropdownMenuGroup>
           </>
@@ -112,7 +115,7 @@ export function UserMenu({ showName = false, className }: UserMenuProps) {
           className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
         >
           <LogOut className="mr-2 h-4 w-4" />
-          <span>{isLoggingOut ? '로그아웃 중...' : '로그아웃'}</span>
+          <span>{isLoggingOut ? tAuth('loggingOut') : tAuth('logout')}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

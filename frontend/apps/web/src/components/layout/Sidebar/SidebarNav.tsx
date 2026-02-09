@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { useAuthStore } from '@/stores/authStore';
 import { useMenuStore } from '@/stores/menuStore';
@@ -25,6 +26,7 @@ export function SidebarNav({ collapsed }: SidebarNavProps) {
   const location = useLocation();
   const { hasAnyPermission, hasAnyRole, isAuthenticated } = useAuthStore();
   const { sidebarMenus, fetchMenus } = useMenuStore();
+  const { t } = useTranslation('navigation');
 
   // Fetch menus on mount if authenticated
   useEffect(() => {
@@ -64,7 +66,7 @@ export function SidebarNav({ collapsed }: SidebarNavProps) {
 
     // Group menus by groupName
     const menuGroups = filteredMenus.reduce((acc, menu) => {
-      const groupName = menu.groupName || '기타';
+      const groupName = menu.groupName || t('other');
       if (!acc[groupName]) {
         acc[groupName] = [];
       }
@@ -76,7 +78,7 @@ export function SidebarNav({ collapsed }: SidebarNavProps) {
 
     return (
       <TooltipProvider delayDuration={0}>
-        <nav aria-label="주 메뉴" className={cn('space-y-4', collapsed ? 'px-1' : 'px-2')}>
+        <nav aria-label={t('mainMenu')} className={cn('space-y-4', collapsed ? 'px-1' : 'px-2')}>
           {groupNames.map((groupName, groupIndex) => (
             <div key={groupName} role="group" aria-labelledby={`nav-group-dyn-${groupIndex}`}>
               {/* Group header - hide when collapsed */}
@@ -155,7 +157,7 @@ export function SidebarNav({ collapsed }: SidebarNavProps) {
 
   return (
     <TooltipProvider delayDuration={0}>
-      <nav aria-label="주 메뉴" className={cn('space-y-4', collapsed ? 'px-1' : 'px-2')}>
+      <nav aria-label={t('mainMenu')} className={cn('space-y-4', collapsed ? 'px-1' : 'px-2')}>
         {filteredGroups.map((group, groupIndex) => (
           <div key={group.title} role="group" aria-labelledby={`nav-group-${groupIndex}`}>
             {/* Group header - hide when collapsed */}

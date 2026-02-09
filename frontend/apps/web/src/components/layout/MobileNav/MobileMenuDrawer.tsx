@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Menu, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,6 +21,7 @@ export function MobileMenuDrawer() {
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const location = useLocation();
   const { hasAnyPermission, hasAnyRole } = useAuthStore();
+  const { t } = useTranslation('navigation');
 
   const navGroups = getNavGroups();
 
@@ -63,12 +65,12 @@ export function MobileMenuDrawer() {
       <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="md:hidden">
           <Menu className="h-5 w-5" />
-          <span className="sr-only">메뉴 열기</span>
+          <span className="sr-only">{t('openMenu')}</span>
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="w-[300px] p-0">
         <SheetHeader className="border-b px-4 py-4">
-          <SheetTitle className="text-left">메뉴</SheetTitle>
+          <SheetTitle className="text-left">{t('menu')}</SheetTitle>
         </SheetHeader>
         <ScrollArea className="h-[calc(100vh-65px)]">
           <nav className="space-y-4 p-4">

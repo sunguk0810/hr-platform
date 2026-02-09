@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Check, ChevronsUpDown, Building2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,6 +20,7 @@ interface TenantSwitcherProps {
 export function TenantSwitcher({ compact = false, className }: TenantSwitcherProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const { t } = useTranslation('common');
   const { currentTenant, availableTenants, setCurrentTenant } = useTenantStore();
 
   const handleSelect = (tenant: Tenant) => {
@@ -49,7 +51,7 @@ export function TenantSwitcher({ compact = false, className }: TenantSwitcherPro
       <div className={cn('flex items-center gap-2', className)}>
         <Building2 className="h-4 w-4 text-muted-foreground" />
         <span className="text-sm font-medium">
-          {currentTenant?.name || '테넌트 없음'}
+          {currentTenant?.name || t('tenant.noTenant')}
         </span>
       </div>
     );
@@ -62,7 +64,7 @@ export function TenantSwitcher({ compact = false, className }: TenantSwitcherPro
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          aria-label="계열사 선택"
+          aria-label={t('tenant.selectTenant')}
           className={cn(
             'justify-between gap-2',
             compact ? 'w-auto px-2' : 'w-[220px]',
@@ -81,7 +83,7 @@ export function TenantSwitcher({ compact = false, className }: TenantSwitcherPro
             )}
             {!compact && (
               <span className="truncate text-sm font-medium">
-                {currentTenant?.name || '계열사 선택'}
+                {currentTenant?.name || t('tenant.selectTenant')}
               </span>
             )}
           </div>
@@ -93,7 +95,7 @@ export function TenantSwitcher({ compact = false, className }: TenantSwitcherPro
         <div className="flex items-center border-b px-3 py-2">
           <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
           <Input
-            placeholder="계열사 검색..."
+            placeholder={t('tenant.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="h-8 border-0 p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -104,11 +106,11 @@ export function TenantSwitcher({ compact = false, className }: TenantSwitcherPro
         <ScrollArea className="h-[250px]">
           <div className="p-1">
             <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
-              계열사 목록 ({filteredTenants.length})
+              {t('tenant.tenantList')} ({filteredTenants.length})
             </div>
             {filteredTenants.length === 0 ? (
               <div className="py-6 text-center text-sm text-muted-foreground">
-                검색 결과가 없습니다.
+                {t('tenant.noResults')}
               </div>
             ) : (
               filteredTenants.map((tenant) => (
