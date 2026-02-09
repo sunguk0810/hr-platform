@@ -38,7 +38,7 @@ export function TenantSelector({ className }: TenantSelectorProps) {
   const handleSelect = (tenant: Tenant) => {
     setCurrentTenant(tenant);
     setOpen(false);
-    // Optionally refresh the page or refetch data
+    // 테넌트 전환 시 전체 앱 상태(RLS context, 캐시 등) 리셋 필요 — reload() 의도적 사용
     window.location.reload();
   };
 

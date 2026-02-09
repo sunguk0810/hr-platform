@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -229,9 +230,10 @@ export default function EmployeeListPage() {
     setImportDialogOpen(true);
   };
 
+  const queryClient = useQueryClient();
+
   const handleImportSuccess = () => {
-    // Refetch employee list after successful import
-    window.location.reload();
+    queryClient.invalidateQueries({ queryKey: ['employees'] });
   };
 
   const handleBulkDelete = async () => {
@@ -246,8 +248,7 @@ export default function EmployeeListPage() {
       });
       setSelectedIds(new Set());
       setDeleteDialogOpen(false);
-      // Refetch employee list
-      window.location.reload();
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
     } catch {
       toast({
         title: '삭제 실패',

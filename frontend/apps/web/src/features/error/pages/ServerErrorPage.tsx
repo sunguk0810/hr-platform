@@ -6,6 +6,7 @@ export default function ServerErrorPage() {
   const navigate = useNavigate();
 
   const handleRefresh = () => {
+    // 500 에러 복구를 위한 전체 페이지 리셋 — reload() 의도적 사용
     window.location.reload();
   };
 

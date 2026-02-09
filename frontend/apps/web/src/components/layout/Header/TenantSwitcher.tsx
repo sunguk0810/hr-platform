@@ -31,7 +31,7 @@ export function TenantSwitcher({ compact = false, className }: TenantSwitcherPro
     setCurrentTenant(tenant);
     setOpen(false);
     setSearch('');
-    // 테넌트 전환 시 페이지 새로고침하여 데이터 갱신
+    // 테넌트 전환 시 전체 앱 상태(RLS context, 캐시 등) 리셋 필요 — reload() 의도적 사용
     window.location.reload();
   };
 
