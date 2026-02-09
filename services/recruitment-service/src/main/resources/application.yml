@@ -9,6 +9,13 @@ spring:
     username: ${DB_USERNAME:hr_saas}
     password: ${DB_PASSWORD:hr_saas_password}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 5           # Low-traffic service
+      minimum-idle: 5
+      connection-timeout: 30000       # 30 seconds
+      idle-timeout: 600000            # 10 minutes
+      max-lifetime: 1800000           # 30 minutes
+      leak-detection-threshold: 60000 # Dev only - detect connection leaks
   jpa:
     hibernate:
       ddl-auto: update
