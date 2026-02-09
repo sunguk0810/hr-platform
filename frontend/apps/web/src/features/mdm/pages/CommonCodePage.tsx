@@ -413,28 +413,33 @@ export default function CommonCodePage() {
                 className="pl-9"
               />
             </div>
-            <select
-              value={searchState.groupCode}
-              onChange={(e) => setGroupCode(e.target.value)}
-              className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-            >
-              <option value="">{t('common.allCodeGroups')}</option>
-              {codeGroups.map((group) => (
-                <option key={group.id} value={group.groupCode}>
-                  {group.groupName}
-                </option>
-              ))}
-            </select>
-            <select
+            <Select value={searchState.groupCode} onValueChange={setGroupCode}>
+              <SelectTrigger className="h-10 w-[220px]">
+                <SelectValue placeholder={t('common.allCodeGroups')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">{t('common.allCodeGroups')}</SelectItem>
+                {codeGroups.map((group) => (
+                  <SelectItem key={group.id} value={group.groupCode}>
+                    {group.groupName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
               value={searchState.status === null ? '' : searchState.status}
-              onChange={(e) => setStatus(e.target.value === '' ? null : e.target.value as 'ACTIVE' | 'INACTIVE' | 'DEPRECATED')}
-              className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              onValueChange={(value) => setStatus(value === '' ? null : value as 'ACTIVE' | 'INACTIVE' | 'DEPRECATED')}
             >
-              <option value="">{t('common.allStatus')}</option>
-              <option value="ACTIVE">{t('common.statusActive')}</option>
-              <option value="INACTIVE">{t('common.statusInactive')}</option>
-              <option value="DEPRECATED">{t('common.statusDeprecated')}</option>
-            </select>
+              <SelectTrigger className="h-10 w-[180px]">
+                <SelectValue placeholder={t('common.allStatus')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">{t('common.allStatus')}</SelectItem>
+                <SelectItem value="ACTIVE">{t('common.statusActive')}</SelectItem>
+                <SelectItem value="INACTIVE">{t('common.statusInactive')}</SelectItem>
+                <SelectItem value="DEPRECATED">{t('common.statusDeprecated')}</SelectItem>
+              </SelectContent>
+            </Select>
             <div className="flex items-center gap-1 border rounded-md p-0.5">
               <Button
                 variant={viewMode === 'table' ? 'default' : 'ghost'}
