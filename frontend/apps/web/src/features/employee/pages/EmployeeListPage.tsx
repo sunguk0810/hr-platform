@@ -11,6 +11,7 @@ import { SkeletonTable } from '@/components/common/Skeleton';
 import { Pagination } from '@/components/common/Pagination';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { SplitView, SplitViewPanel } from '@/components/layout/SplitView';
+import { SwipeableCard } from '@/components/common/SwipeableCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -120,11 +121,12 @@ interface EmployeeCardProps {
 
 function EmployeeCard({ employee, isSelected, onSelect, onClick }: EmployeeCardProps) {
   const { t } = useTranslation('employee');
+  const isMobile = useIsMobile();
   const getInitials = (name: string) => name.slice(0, 2);
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString('ko-KR');
 
-  return (
+  const cardContent = (
     <Card
       className="cursor-pointer transition-colors hover:bg-muted/50"
       onClick={onClick}
@@ -157,6 +159,31 @@ function EmployeeCard({ employee, isSelected, onSelect, onClick }: EmployeeCardP
         </div>
       </CardContent>
     </Card>
+  );
+
+  if (!isMobile) {
+    return cardContent;
+  }
+
+  return (
+    <SwipeableCard
+      leftAction={{
+        icon: <Mail className="h-5 w-5" />,
+        color: 'rgb(59, 130, 246)',
+        label: t('listPage.sendEmail'),
+        onClick: () => { window.location.href = `mailto:${employee.email}`; },
+      }}
+      rightAction={{
+        icon: <Trash2 className="h-5 w-5" />,
+        color: 'rgb(239, 68, 68)',
+        label: t('common.delete'),
+        // eslint-disable-next-line no-console -- TODO: 삭제 다이얼로그 연결
+        onClick: () => console.log('Delete employee:', employee.id),
+      }}
+      threshold={80}
+    >
+      {cardContent}
+    </SwipeableCard>
   );
 }
 
