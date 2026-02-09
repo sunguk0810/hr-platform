@@ -364,7 +364,7 @@ public class ApprovalServiceImpl implements ApprovalService {
     }
 
     private ApprovalDocument findById(UUID id) {
-        return documentRepository.findById(id)
+        return documentRepository.findByIdWithLinesAndHistories(id)
             .orElseThrow(() -> new NotFoundException("APV_001", "결재 문서를 찾을 수 없습니다: " + id));
     }
 

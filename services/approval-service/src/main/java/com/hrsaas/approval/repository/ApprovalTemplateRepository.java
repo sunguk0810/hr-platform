@@ -1,6 +1,7 @@
 package com.hrsaas.approval.repository;
 
 import com.hrsaas.approval.domain.entity.ApprovalTemplate;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -27,6 +28,25 @@ public interface ApprovalTemplateRepository extends JpaRepository<ApprovalTempla
            "AND t.documentType = :documentType AND t.isActive = true " +
            "ORDER BY t.sortOrder ASC")
     List<ApprovalTemplate> findByTenantIdAndDocumentType(
+        @Param("tenantId") UUID tenantId,
+        @Param("documentType") String documentType);
+
+    // New methods with @EntityGraph for N+1 query optimization
+    @EntityGraph(value = "ApprovalTemplate.withLines", type = EntityGraph.EntityGraphType.LOAD)
+    @Query("SELECT t FROM ApprovalTemplate t WHERE t.tenantId = :tenantId " +
+           "ORDER BY t.sortOrder ASC, t.name ASC")
+    List<ApprovalTemplate> findAllByTenantIdWithLines(@Param("tenantId") UUID tenantId);
+
+    @EntityGraph(value = "ApprovalTemplate.withLines", type = EntityGraph.EntityGraphType.LOAD)
+    @Query("SELECT t FROM ApprovalTemplate t WHERE t.tenantId = :tenantId AND t.isActive = true " +
+           "ORDER BY t.sortOrder ASC, t.name ASC")
+    List<ApprovalTemplate> findActiveByTenantIdWithLines(@Param("tenantId") UUID tenantId);
+
+    @EntityGraph(value = "ApprovalTemplate.withLines", type = EntityGraph.EntityGraphType.LOAD)
+    @Query("SELECT t FROM ApprovalTemplate t WHERE t.tenantId = :tenantId " +
+           "AND t.documentType = :documentType AND t.isActive = true " +
+           "ORDER BY t.sortOrder ASC")
+    List<ApprovalTemplate> findByTenantIdAndDocumentTypeWithLines(
         @Param("tenantId") UUID tenantId,
         @Param("documentType") String documentType);
 
