@@ -1,6 +1,8 @@
 package com.hrsaas.employee.listener;
 
 import com.hrsaas.common.core.util.JsonUtils;
+import com.hrsaas.employee.service.CondolenceService;
+import com.hrsaas.employee.service.EmployeeChangeRequestService;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.awspring.cloud.sqs.annotation.SqsListener;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,9 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 public class ApprovalCompletedListener {
+
+    private final CondolenceService condolenceService;
+    private final EmployeeChangeRequestService changeRequestService;
 
     @SqsListener("employee-service-queue")
     public void handleMessage(String rawMessage) {
@@ -45,11 +50,17 @@ public class ApprovalCompletedListener {
         switch (documentType) {
             case "CONDOLENCE" -> {
                 log.info("Processing condolence approval: referenceId={}, status={}", referenceId, status);
-                // TODO: Update condolence request status
+                if ("APPROVED".equals(status)) {
+                    condolenceService.approveByApproval(referenceId);
+                } else if ("REJECTED".equals(status)) {
+                    String reason = event.has("reason") ? event.get("reason").asText() : "";
+                    condolenceService.rejectByApproval(referenceId, reason);
+                }
             }
             case "EMPLOYEE_CHANGE" -> {
                 log.info("Processing employee change approval: referenceId={}, status={}", referenceId, status);
-                // TODO: Apply employee field changes when approved
+                changeRequestService.handleApprovalCompleted(
+                    referenceId, "APPROVED".equals(status));
             }
             default -> log.debug("Ignoring document type: {}", documentType);
         }

@@ -1,10 +1,13 @@
 package com.hrsaas.employee.service.impl;
 
+import com.hrsaas.common.core.exception.BusinessException;
 import com.hrsaas.common.core.exception.DuplicateException;
 import com.hrsaas.common.core.exception.NotFoundException;
 import com.hrsaas.common.core.exception.ValidationException;
 import com.hrsaas.common.security.SecurityContextHolder;
 import com.hrsaas.common.tenant.TenantContext;
+import com.hrsaas.employee.client.ApprovalServiceClient;
+import com.hrsaas.employee.client.dto.CreateApprovalClientRequest;
 import com.hrsaas.employee.domain.dto.request.CreateCondolencePolicyRequest;
 import com.hrsaas.employee.domain.dto.request.CreateCondolenceRequest;
 import com.hrsaas.employee.domain.dto.request.UpdateCondolencePolicyRequest;
@@ -21,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +39,7 @@ public class CondolenceServiceImpl implements CondolenceService {
 
     private final CondolenceRequestRepository condolenceRequestRepository;
     private final CondolencePolicyRepository condolencePolicyRepository;
+    private final ApprovalServiceClient approvalServiceClient;
 
     // Request operations
 
@@ -69,6 +74,24 @@ public class CondolenceServiceImpl implements CondolenceService {
             .build();
 
         CondolenceRequest saved = condolenceRequestRepository.save(condolenceRequest);
+
+        // Submit to approval service
+        try {
+            var approvalRequest = CreateApprovalClientRequest.builder()
+                .documentType("CONDOLENCE")
+                .referenceId(saved.getId())
+                .title("경조비 신청 - " + saved.getEventType())
+                .content(saved.getDescription())
+                .build();
+            var response = approvalServiceClient.createApproval(approvalRequest);
+            if (response != null && response.getData() != null) {
+                saved.setApprovalId(response.getData().getApprovalId());
+                condolenceRequestRepository.save(saved);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to create approval for condolence request: id={}", saved.getId(), e);
+            // Don't fail the condolence creation - approval can be retried
+        }
 
         log.info("Condolence request created: id={}, eventType={}", saved.getId(), saved.getEventType());
 
@@ -350,6 +373,32 @@ public class CondolenceServiceImpl implements CondolenceService {
         CondolencePolicy policy = findPolicyByIdAndTenantId(id, tenantId);
         condolencePolicyRepository.delete(policy);
         log.info("Condolence policy deleted: id={}", id);
+    }
+
+    @Override
+    @Transactional
+    public void approveByApproval(UUID referenceId) {
+        CondolenceRequest request = condolenceRequestRepository.findById(referenceId)
+            .orElseThrow(() -> new NotFoundException("EMP_010", "경조비 신청을 찾을 수 없습니다: " + referenceId));
+
+        if (request.isPending()) {
+            request.approve(request.getApprovalId());
+            condolenceRequestRepository.save(request);
+            log.info("Condolence request approved by approval system: id={}", referenceId);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void rejectByApproval(UUID referenceId, String reason) {
+        CondolenceRequest request = condolenceRequestRepository.findById(referenceId)
+            .orElseThrow(() -> new NotFoundException("EMP_010", "경조비 신청을 찾을 수 없습니다: " + referenceId));
+
+        if (request.isPending()) {
+            request.reject(reason);
+            condolenceRequestRepository.save(request);
+            log.info("Condolence request rejected by approval system: id={}, reason={}", referenceId, reason);
+        }
     }
 
     private CondolenceRequest findRequestByIdAndTenantId(UUID id, UUID tenantId) {

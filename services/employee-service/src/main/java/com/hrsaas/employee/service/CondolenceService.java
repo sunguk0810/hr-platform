@@ -57,4 +57,9 @@ public interface CondolenceService {
     CondolencePolicyResponse updatePolicy(UUID id, UpdateCondolencePolicyRequest request);
 
     void deletePolicy(UUID id);
+
+    // Approval callback methods
+    void approveByApproval(UUID referenceId);
+
+    void rejectByApproval(UUID referenceId, String reason);
 }
