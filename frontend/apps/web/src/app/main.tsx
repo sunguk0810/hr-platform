@@ -17,12 +17,12 @@ async function enableMocking() {
         },
       });
 
-      console.log('[MSW] Mocking enabled');
+      import.meta.env.DEV && console.log('[MSW] Mocking enabled');
     } catch (error) {
       console.error('[MSW] Failed to enable mocking:', error);
     }
   } else {
-    console.log('[API] Using real backend APIs at', import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api');
+    import.meta.env.DEV && console.log('[API] Using real backend APIs at', import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api');
   }
 }
 

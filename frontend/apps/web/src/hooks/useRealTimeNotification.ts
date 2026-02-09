@@ -145,12 +145,12 @@ export function useAttendanceRealTime() {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    const unsubscribeCheckIn = wsClient.on('attendance:checked_in', (event) => {
-      console.log('Attendance checked in:', event);
+    const unsubscribeCheckIn = wsClient.on('attendance:checked_in', (_event) => {
+      // TODO: Implement attendance check-in real-time UI update
     });
 
-    const unsubscribeCheckOut = wsClient.on('attendance:checked_out', (event) => {
-      console.log('Attendance checked out:', event);
+    const unsubscribeCheckOut = wsClient.on('attendance:checked_out', (_event) => {
+      // TODO: Implement attendance check-out real-time UI update
     });
 
     return () => {

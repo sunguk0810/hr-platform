@@ -22,9 +22,19 @@ import { AlertTriangle, GitMerge, GitBranch, Pencil, Trash2, Users, Loader2 } fr
 import { useTranslation } from 'react-i18next';
 import { showErrorToast } from '@/components/common/Error/ErrorToast';
 
-/** Position titles that indicate a manager role */
+/**
+ * Position titles that indicate a manager role.
+ * These values match the position names returned by the server API
+ * (GET /api/v1/organizations/departments/:id/impact).
+ * If server-side position naming changes, update these values accordingly.
+ */
 const MANAGER_POSITIONS = ['팀장', '부장'] as const;
-/** Values indicating unassigned department */
+
+/**
+ * Values indicating an unassigned department after reorganization.
+ * '-' is the default placeholder; '미정' means "undetermined" in server responses.
+ * These are matched against AffectedEmployee.newDepartment from the impact API.
+ */
 const UNASSIGNED_DEPT_VALUES = ['-', '미정'] as const;
 
 export type ReorgChangeType = 'merge' | 'split' | 'rename' | 'delete';
@@ -206,7 +216,7 @@ export function ReorgImpactModal({
                         <TableCell className="font-medium">{employee.name}</TableCell>
                         <TableCell>{employee.currentDepartment}</TableCell>
                         <TableCell>
-                          {employee.newDepartment === '-' || employee.newDepartment === '미정' ? (
+                          {(UNASSIGNED_DEPT_VALUES as readonly string[]).includes(employee.newDepartment) ? (
                             <span className="text-destructive font-medium">
                               {employee.newDepartment}
                             </span>

@@ -119,12 +119,12 @@ class WebSocketClient {
     if (!this.socket) return;
 
     this.socket.on('connect', () => {
-      console.log('WebSocket connected');
+      import.meta.env.DEV && console.log('WebSocket connected');
       this.emit('connect');
     });
 
     this.socket.on('disconnect', (reason) => {
-      console.log('WebSocket disconnected:', reason);
+      import.meta.env.DEV && console.log('WebSocket disconnected:', reason);
       this.emit('disconnect', reason);
     });
 
