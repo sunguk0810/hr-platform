@@ -1,5 +1,6 @@
 import Joyride, { TooltipRenderProps, Styles } from 'react-joyride';
 import { X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { useOnboarding } from '../hooks/useOnboarding';
 
@@ -52,6 +53,8 @@ function CustomTooltip({
   isLastStep,
   size,
 }: TooltipRenderProps) {
+  const { t } = useTranslation('help');
+
   return (
     <div
       {...tooltipProps}
@@ -88,18 +91,18 @@ function CustomTooltip({
               size="sm"
               className="text-muted-foreground"
             >
-              건너뛰기
+              {t('onboarding.skip')}
             </Button>
           )}
         </div>
         <div className="flex gap-2">
           {index > 0 && (
             <Button {...backProps} variant="outline" size="sm">
-              이전
+              {t('onboarding.previous')}
             </Button>
           )}
           <Button {...primaryProps} size="sm">
-            {isLastStep ? '완료' : '다음'}
+            {isLastStep ? t('onboarding.done') : t('onboarding.next')}
           </Button>
         </div>
       </div>
@@ -108,6 +111,7 @@ function CustomTooltip({
 }
 
 export function OnboardingTour({ tourId, autoStart = false }: OnboardingTourProps) {
+  const { t } = useTranslation('help');
   const {
     currentTour,
     isRunning,
@@ -143,11 +147,11 @@ export function OnboardingTour({ tourId, autoStart = false }: OnboardingTourProp
       styles={joyrideStyles}
       tooltipComponent={CustomTooltip}
       locale={{
-        back: '이전',
-        close: '닫기',
-        last: '완료',
-        next: '다음',
-        skip: '건너뛰기',
+        back: t('onboarding.back'),
+        close: t('onboarding.close'),
+        last: t('onboarding.last'),
+        next: t('onboarding.next'),
+        skip: t('onboarding.skip'),
       }}
     />
   );

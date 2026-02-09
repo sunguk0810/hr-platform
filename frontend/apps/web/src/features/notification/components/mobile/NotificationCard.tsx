@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { format, formatDistanceToNow, isToday, isYesterday } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { FileCheck, AlertCircle, Info, Clock, Trash2 } from 'lucide-react';
@@ -31,20 +32,6 @@ const TYPE_COLORS: Record<string, string> = {
   GENERAL: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300',
 };
 
-function formatNotificationDate(dateString: string): string {
-  const date = new Date(dateString);
-
-  if (isToday(date)) {
-    return formatDistanceToNow(date, { addSuffix: true, locale: ko });
-  }
-
-  if (isYesterday(date)) {
-    return `어제 ${format(date, 'HH:mm')}`;
-  }
-
-  return format(date, 'M월 d일 HH:mm', { locale: ko });
-}
-
 export function NotificationCard({
   title,
   message,
@@ -54,6 +41,22 @@ export function NotificationCard({
   onClick,
   onDelete,
 }: NotificationCardProps) {
+  const { t } = useTranslation('notification');
+
+  const formatNotificationDate = (dateString: string): string => {
+    const date = new Date(dateString);
+
+    if (isToday(date)) {
+      return formatDistanceToNow(date, { addSuffix: true, locale: ko });
+    }
+
+    if (isYesterday(date)) {
+      return `${t('dateGroup.yesterday')} ${format(date, 'HH:mm')}`;
+    }
+
+    return format(date, 'M월 d일 HH:mm', { locale: ko });
+  };
+
   const cardContent = (
     <MobileCard
       onClick={onClick}
@@ -107,7 +110,7 @@ export function NotificationCard({
         rightActions={[
           {
             icon: <Trash2 className="h-5 w-5" />,
-            label: '삭제',
+            label: t('card.swipeDelete'),
             color: 'destructive',
             onAction: onDelete,
           },

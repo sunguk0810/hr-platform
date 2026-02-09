@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { format, isToday, isYesterday, startOfDay } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { NotificationItem, NotificationData } from './NotificationItem';
@@ -12,26 +13,6 @@ interface NotificationGroupProps {
   className?: string;
 }
 
-const typeLabels: Record<string, string> = {
-  APPROVAL_REQUESTED: '결재 요청',
-  APPROVAL_APPROVED: '결재 승인',
-  APPROVAL_REJECTED: '결재 반려',
-  LEAVE_REQUESTED: '휴가 신청',
-  LEAVE_APPROVED: '휴가 승인',
-  LEAVE_REJECTED: '휴가 반려',
-  EMPLOYEE_JOINED: '입사',
-  EMPLOYEE_RESIGNED: '퇴사',
-  ANNOUNCEMENT: '공지사항',
-  SYSTEM: '시스템',
-  REMINDER: '리마인더',
-};
-
-function getDateLabel(date: Date): string {
-  if (isToday(date)) return '오늘';
-  if (isYesterday(date)) return '어제';
-  return format(date, 'M월 d일 (EEE)', { locale: ko });
-}
-
 export function NotificationGroup({
   notifications,
   groupBy = 'date',
@@ -40,6 +21,14 @@ export function NotificationGroup({
   onDelete,
   className,
 }: NotificationGroupProps) {
+  const { t } = useTranslation('notification');
+
+  const getDateLabel = (date: Date): string => {
+    if (isToday(date)) return t('dateGroup.today');
+    if (isYesterday(date)) return t('dateGroup.yesterday');
+    return format(date, 'M월 d일 (EEE)', { locale: ko });
+  };
+
   const groupedNotifications = useMemo(() => {
     const groups: Record<string, NotificationData[]> = {};
 
@@ -67,17 +56,18 @@ export function NotificationGroup({
 
     return sortedEntries.map(([key, items]) => ({
       key,
-      label: groupBy === 'date' ? getDateLabel(new Date(key)) : typeLabels[key] || key,
+      label: groupBy === 'date' ? getDateLabel(new Date(key)) : t(`types.${key}`, key),
       notifications: items.sort(
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       ),
     }));
-  }, [notifications, groupBy]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [notifications, groupBy, t]);
 
   if (notifications.length === 0) {
     return (
       <div className="py-12 text-center text-muted-foreground">
-        알림이 없습니다.
+        {t('group.noNotifications')}
       </div>
     );
   }

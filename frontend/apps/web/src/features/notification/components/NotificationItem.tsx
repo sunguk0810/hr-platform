@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import {
@@ -81,6 +82,7 @@ export function NotificationItem({
   showActions = true,
   className,
 }: NotificationItemProps) {
+  const { t } = useTranslation('notification');
   const timeAgo = formatDistanceToNow(notification.createdAt, {
     addSuffix: true,
     locale: ko,
@@ -162,7 +164,7 @@ export function NotificationItem({
                 e.stopPropagation();
                 onMarkAsRead?.(notification.id);
               }}
-              title="읽음 표시"
+              title={t('actions.markAsRead')}
             >
               <CheckCircle className="h-4 w-4" />
             </Button>
@@ -175,7 +177,7 @@ export function NotificationItem({
               e.stopPropagation();
               onDelete?.(notification.id);
             }}
-            title="삭제"
+            title={t('actions.delete')}
           >
             <X className="h-4 w-4" />
           </Button>

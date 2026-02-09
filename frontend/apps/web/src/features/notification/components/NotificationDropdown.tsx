@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Bell, Settings, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -31,6 +32,7 @@ export function NotificationDropdown({
   onDelete,
   className,
 }: NotificationDropdownProps) {
+  const { t } = useTranslation('notification');
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -63,7 +65,7 @@ export function NotificationDropdown({
           variant="ghost"
           size="icon"
           className={cn('relative', className)}
-          aria-label="알림"
+          aria-label={t('bell.ariaLabel')}
         >
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
@@ -76,7 +78,7 @@ export function NotificationDropdown({
       <PopoverContent className="w-[380px] p-0" align="end">
         {/* Header */}
         <div className="flex items-center justify-between border-b px-4 py-3">
-          <h3 className="font-semibold">알림</h3>
+          <h3 className="font-semibold">{t('dropdown.title')}</h3>
           <div className="flex items-center gap-1">
             {hasUnread && (
               <Button
@@ -86,7 +88,7 @@ export function NotificationDropdown({
                 className="h-8 text-xs"
               >
                 <Check className="mr-1 h-3 w-3" />
-                모두 읽음
+                {t('dropdown.markAllAsRead')}
               </Button>
             )}
             <Button
@@ -94,7 +96,7 @@ export function NotificationDropdown({
               size="icon"
               className="h-8 w-8"
               onClick={handleSettings}
-              aria-label="알림 설정"
+              aria-label={t('dropdown.settings')}
             >
               <Settings className="h-4 w-4" />
             </Button>
@@ -105,10 +107,10 @@ export function NotificationDropdown({
         <Tabs defaultValue="all" className="w-full">
           <TabsList className="w-full justify-start rounded-none border-b px-4">
             <TabsTrigger value="all" className="text-xs">
-              전체
+              {t('tabs.all')}
             </TabsTrigger>
             <TabsTrigger value="unread" className="text-xs">
-              읽지 않음
+              {t('tabs.unread')}
               {unreadNotifications.length > 0 && (
                 <span className="ml-1 rounded-full bg-primary/10 px-1.5 text-primary">
                   {unreadNotifications.length}
@@ -121,7 +123,7 @@ export function NotificationDropdown({
             <TabsContent value="all" className="m-0">
               {notifications.length === 0 ? (
                 <div className="py-12 text-center text-sm text-muted-foreground">
-                  알림이 없습니다
+                  {t('dropdown.noNotifications')}
                 </div>
               ) : (
                 <div className="divide-y">
@@ -142,7 +144,7 @@ export function NotificationDropdown({
             <TabsContent value="unread" className="m-0">
               {unreadNotifications.length === 0 ? (
                 <div className="py-12 text-center text-sm text-muted-foreground">
-                  읽지 않은 알림이 없습니다
+                  {t('dropdown.noUnreadNotifications')}
                 </div>
               ) : (
                 <div className="divide-y">
@@ -169,7 +171,7 @@ export function NotificationDropdown({
             className="w-full"
             onClick={handleViewAll}
           >
-            모든 알림 보기
+            {t('dropdown.viewAll')}
           </Button>
         </div>
       </PopoverContent>

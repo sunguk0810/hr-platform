@@ -8,6 +8,7 @@ import {
   Search,
   Play,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -28,31 +29,32 @@ interface HelpLink {
   icon: React.ReactNode;
 }
 
-const helpLinks: HelpLink[] = [
-  {
-    title: '사용자 가이드',
-    description: '기본 기능과 사용법을 확인하세요',
-    href: '/help/guide',
-    icon: <BookOpen className="h-5 w-5" />,
-  },
-  {
-    title: '자주 묻는 질문',
-    description: '자주 묻는 질문과 답변',
-    href: '/help/faq',
-    icon: <HelpCircle className="h-5 w-5" />,
-  },
-  {
-    title: '문의하기',
-    description: '관리자에게 문의하세요',
-    href: '/help/contact',
-    icon: <MessageCircle className="h-5 w-5" />,
-  },
-];
-
 export function HelpPanel() {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { startTour, isTourCompleted } = useOnboarding();
+  const { t } = useTranslation('help');
+
+  const helpLinks: HelpLink[] = [
+    {
+      title: t('panel.links.guide.title'),
+      description: t('panel.links.guide.description'),
+      href: '/help/guide',
+      icon: <BookOpen className="h-5 w-5" />,
+    },
+    {
+      title: t('panel.links.faq.title'),
+      description: t('panel.links.faq.description'),
+      href: '/help/faq',
+      icon: <HelpCircle className="h-5 w-5" />,
+    },
+    {
+      title: t('panel.links.contact.title'),
+      description: t('panel.links.contact.description'),
+      href: '/help/contact',
+      icon: <MessageCircle className="h-5 w-5" />,
+    },
+  ];
 
   const filteredTours = allTours.filter(
     (tour) =>
@@ -78,7 +80,7 @@ export function HelpPanel() {
       </SheetTrigger>
       <SheetContent className="w-[400px] sm:w-[540px]">
         <SheetHeader>
-          <SheetTitle>도움말</SheetTitle>
+          <SheetTitle>{t('panel.title')}</SheetTitle>
         </SheetHeader>
 
         <div className="mt-4 space-y-6">
@@ -88,14 +90,14 @@ export function HelpPanel() {
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="검색..."
+              placeholder={t('panel.searchPlaceholder')}
               className="pl-10"
             />
           </div>
 
           {/* Quick Links */}
           <div>
-            <h3 className="mb-3 text-sm font-medium">빠른 링크</h3>
+            <h3 className="mb-3 text-sm font-medium">{t('panel.quickLinks')}</h3>
             <div className="space-y-2">
               {helpLinks.map((link) => (
                 <a
@@ -120,7 +122,7 @@ export function HelpPanel() {
 
           {/* Tours */}
           <div>
-            <h3 className="mb-3 text-sm font-medium">기능 투어</h3>
+            <h3 className="mb-3 text-sm font-medium">{t('panel.featureTours')}</h3>
             <ScrollArea className="h-[250px]">
               <div className="space-y-2">
                 {filteredTours.map((tour) => {
@@ -136,7 +138,7 @@ export function HelpPanel() {
                           <p className="font-medium">{tour.name}</p>
                           {completed && (
                             <span className="rounded bg-green-100 px-1.5 py-0.5 text-xs text-green-700 dark:bg-green-900 dark:text-green-300">
-                              완료
+                              {t('panel.tourCompleted')}
                             </span>
                           )}
                         </div>
@@ -150,7 +152,7 @@ export function HelpPanel() {
                         onClick={() => handleStartTour(tour.id)}
                       >
                         <Play className="mr-1 h-4 w-4" />
-                        {completed ? '다시 보기' : '시작'}
+                        {completed ? t('panel.tourReplay') : t('panel.tourStart')}
                       </Button>
                     </div>
                   );
@@ -161,7 +163,7 @@ export function HelpPanel() {
 
           {/* External Resources */}
           <div>
-            <h3 className="mb-3 text-sm font-medium">외부 리소스</h3>
+            <h3 className="mb-3 text-sm font-medium">{t('panel.externalResources')}</h3>
             <div className="space-y-2">
               <a
                 href="https://support.example.com"
@@ -169,7 +171,7 @@ export function HelpPanel() {
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 text-sm text-primary hover:underline"
               >
-                고객 지원 센터
+                {t('panel.customerSupport')}
                 <ExternalLink className="h-3 w-3" />
               </a>
               <a
@@ -178,7 +180,7 @@ export function HelpPanel() {
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 text-sm text-primary hover:underline"
               >
-                API 문서
+                {t('panel.apiDocs')}
                 <ExternalLink className="h-3 w-3" />
               </a>
             </div>

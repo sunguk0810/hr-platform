@@ -1,0 +1,324 @@
+{
+  "panel": {
+    "title": "Help",
+    "searchPlaceholder": "Search...",
+    "quickLinks": "Quick Links",
+    "featureTours": "Feature Tours",
+    "externalResources": "External Resources",
+    "tourCompleted": "Done",
+    "tourReplay": "Replay",
+    "tourStart": "Start",
+    "customerSupport": "Customer Support Center",
+    "apiDocs": "API Documentation",
+    "links": {
+      "guide": {
+        "title": "User Guide",
+        "description": "Learn the basic features and how to use them"
+      },
+      "faq": {
+        "title": "FAQ",
+        "description": "Frequently asked questions and answers"
+      },
+      "contact": {
+        "title": "Contact Us",
+        "description": "Contact the administrator"
+      }
+    }
+  },
+  "onboarding": {
+    "skip": "Skip",
+    "previous": "Previous",
+    "next": "Next",
+    "done": "Done",
+    "close": "Close",
+    "back": "Back",
+    "last": "Done"
+  },
+  "article": {
+    "goBack": "Go Back",
+    "updated": "Updated:",
+    "readTime": "About {{minutes}} min read",
+    "feedback": {
+      "question": "Was this article helpful?",
+      "helpful": "Helpful",
+      "notHelpful": "Not helpful"
+    },
+    "relatedArticles": "Related Articles"
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "description": "Find answers to your questions quickly.",
+    "mobileDescription": "Find answers to your questions quickly",
+    "searchPlaceholder": "Search questions...",
+    "all": "All",
+    "noResults": "No results found.",
+    "countLabel": "FAQ ({{count}} items)",
+    "categories": {
+      "account": "Account",
+      "attendance": "Attendance",
+      "leave": "Leave",
+      "approval": "Approval",
+      "organization": "Organization",
+      "notification": "Notification",
+      "other": "Other"
+    },
+    "items": [
+      {
+        "id": "1",
+        "category": "account",
+        "question": "I forgot my password. What should I do?",
+        "answer": "Click the \"Forgot Password\" link on the login page. A password reset link will be sent to your registered email. If you don't receive the email, please check your spam folder or contact the HR team."
+      },
+      {
+        "id": "2",
+        "category": "account",
+        "question": "How do I change my password?",
+        "answer": "Go to Settings > Security, enter your current password and new password to change it. The password must be at least 8 characters and include letters, numbers, and special characters."
+      },
+      {
+        "id": "3",
+        "category": "account",
+        "question": "I want to terminate sessions logged in on other devices.",
+        "answer": "Go to Settings > Security > Active Sessions to view the list of currently logged-in devices. You can log out individual sessions or use the \"Log out all other sessions\" button to terminate all at once."
+      },
+      {
+        "id": "4",
+        "category": "attendance",
+        "question": "My clock-in/out record is missing. What should I do?",
+        "answer": "You can request a correction for the attendance record on the relevant date from the Attendance/Leave menu. Enter the reason for the correction request, and it will be reflected after manager approval."
+      },
+      {
+        "id": "5",
+        "category": "attendance",
+        "question": "How do I record attendance when working from home?",
+        "answer": "Just click the Clock In/Clock Out button on the dashboard, same as regular attendance. When working from home, the location will show as \"Remote\". Additional approval may be required depending on company policy."
+      },
+      {
+        "id": "6",
+        "category": "leave",
+        "question": "How many days in advance should I apply for leave?",
+        "answer": "It depends on company policy, but generally it is recommended to apply for annual leave at least 3 days in advance, and half-day leave at least 1 day in advance. For urgent cases, please state the reason clearly in your application."
+      },
+      {
+        "id": "7",
+        "category": "leave",
+        "question": "Where can I check my remaining annual leave?",
+        "answer": "You can check your remaining annual leave, usage history, and expiring leave from the Leave Status widget on the dashboard or from Attendance/Leave > My Leave menu."
+      },
+      {
+        "id": "8",
+        "category": "leave",
+        "question": "I want to cancel my leave application.",
+        "answer": "If approval has not been completed, you can cancel it directly from your approval list. For already approved leave, you need to submit a separate cancellation request."
+      },
+      {
+        "id": "9",
+        "category": "approval",
+        "question": "I want to edit an approval document.",
+        "answer": "You can freely edit it while it's in draft/saved status before submission. For already submitted documents, the approver must reject it first, then you can modify and resubmit."
+      },
+      {
+        "id": "10",
+        "category": "approval",
+        "question": "How do I set up the approval line?",
+        "answer": "Set it up in the approval line settings when creating an approval document. If a default approval line is configured, it will be applied automatically. You can add or change approvers manually if needed."
+      },
+      {
+        "id": "11",
+        "category": "approval",
+        "question": "What if I can't process approvals during a business trip?",
+        "answer": "You can set up delegation in the Electronic Approval > Approval Delegation menu. Specify the delegation period and delegate, and proxy approval will be available during that period."
+      },
+      {
+        "id": "12",
+        "category": "organization",
+        "question": "I was transferred to another department but the information hasn't been updated.",
+        "answer": "It may take 1-2 business days for the system to reflect changes after HR appointment processing. For urgent cases, please contact the HR team."
+      },
+      {
+        "id": "13",
+        "category": "organization",
+        "question": "Can I view employees from other departments?",
+        "answer": "Access scope varies by permission. Regular employees can only view members of their own department, while managers can view all subordinate organizations. If you need access to the entire organization, please request permission from the HR team."
+      },
+      {
+        "id": "14",
+        "category": "notification",
+        "question": "I'm not receiving notifications.",
+        "answer": "Please check your notification settings under Settings > Notifications. For browser push notifications, make sure notification permissions are allowed in your browser settings. Also check if email notifications are being classified as spam."
+      },
+      {
+        "id": "15",
+        "category": "other",
+        "question": "Can I use it on mobile?",
+        "answer": "HR Platform is built as a responsive web application and can be used on mobile browsers. Access the same URL from your smartphone browser and it will be served in a mobile-optimized layout."
+      },
+      {
+        "id": "16",
+        "category": "other",
+        "question": "How do I export data?",
+        "answer": "Most list screens provide an Excel export function. Click the \"Export\" or \"Excel\" button at the top of the list to download data matching your current search criteria as an Excel or CSV file."
+      }
+    ]
+  },
+  "guide": {
+    "title": "User Guide",
+    "description": "Learn how to use HR Platform.",
+    "mobileDescription": "Learn how to use HR Platform",
+    "interactiveTour": {
+      "title": "Interactive Tour",
+      "description": "Click a button to navigate to the page and learn features on the actual screen.",
+      "ariaLabel": "Tour start buttons",
+      "buttons": {
+        "dashboard": "Dashboard Tour",
+        "dashboardShort": "Dashboard",
+        "approval": "Approval Tour",
+        "approvalShort": "Approval",
+        "attendance": "Attendance Tour",
+        "attendanceShort": "Attendance",
+        "organization": "Org Chart Tour",
+        "organizationShort": "Org Chart"
+      },
+      "ariaLabels": {
+        "dashboard": "Start dashboard feature tour",
+        "approval": "Start approval feature tour",
+        "attendance": "Start attendance management feature tour",
+        "organization": "Start org chart feature tour"
+      }
+    },
+    "guideDocsAriaLabel": "User guide documents",
+    "sections": {
+      "gettingStarted": {
+        "title": "Getting Started",
+        "summary": "Basic guide for using HR Platform",
+        "content": "## Getting Started with HR Platform\n\nWelcome to HR Platform! This guide covers the basic usage of the platform.\n\n### Login\n1. Log in with the email and password provided by your company.\n2. You may need to change your password on first login.\n3. Check \"Keep me signed in\" to maintain your login session.\n\n### Dashboard\nAfter logging in, you can view the following information at a glance on the dashboard:\n- Today's attendance status\n- Remaining leave balance\n- Pending approval documents\n- Recent notifications\n\n### Menu Structure\n- **My Info**: Personal profile and information\n- **HR Info**: Employee information lookup and management\n- **Organization**: Department/rank/position management\n- **Attendance/Leave**: Clock-in/out and leave management\n- **Electronic Approval**: Document creation and approval\n- **Settings**: Personal settings and notification management"
+      },
+      "employeeManagement": {
+        "title": "HR Information Management",
+        "summary": "How to view and manage employee information",
+        "content": "## HR Information Management\n\n### Employee List\n- Search: Search employees by name, employee number, or email.\n- Filter: Filter by employment status.\n- View Mode: Choose between table/card view.\n\n### Employee Details\nClick on an employee card or row to view detailed information:\n- Basic Info (name, employee number, contact)\n- Organization Info (department, rank, position)\n- Work History\n- Appointment History\n\n### Data Management\n- **Export**: Export employee list as Excel/CSV.\n- **Import**: Bulk registration using Excel templates.\n\n### Role-based Features\n- Regular users: View only\n- HR administrators: Create/Edit/Delete"
+      },
+      "attendanceLeave": {
+        "title": "Attendance & Leave Management",
+        "summary": "How to record attendance and apply for leave",
+        "content": "## Attendance & Leave Management\n\n### Attendance Recording\n1. Click the Clock In/Clock Out button on the dashboard.\n2. Your current location is recorded automatically (optional).\n3. Clock-in/out times are reflected in real-time.\n\n### Leave Application\n1. Go to Attendance/Leave > Leave Application menu.\n2. Select the leave type (annual, half-day, official, etc.).\n3. Select start and end dates.\n4. Enter the reason and submit.\n\n### Leave Inquiry\n- **My Leave**: Check your leave usage history and remaining balance.\n- **Leave Calendar**: View team members' leave schedules on the calendar.\n\n### Overtime Application\n1. Go to Attendance/Leave > Overtime menu.\n2. Enter the overtime date/time and reason.\n3. Request approval."
+      },
+      "approvalWorkflow": {
+        "title": "Electronic Approval",
+        "summary": "How to create and process approval documents",
+        "content": "## Electronic Approval\n\n### Creating an Approval Document\n1. Go to Electronic Approval > Create Approval menu.\n2. Select a document template.\n3. Set up the approval line (default or custom).\n4. Write the document content and add attachments.\n5. Click the Submit button to submit.\n\n### Processing Approvals\n1. Check pending documents from notifications or approval list.\n2. Review the document content.\n3. Select approve or reject.\n4. Enter your comments and confirm.\n\n### Approval Delegation\nYou can delegate approval authority during business trips or leave:\n1. Go to Electronic Approval > Approval Delegation menu.\n2. Select the delegation period and delegate.\n3. Save the delegation settings.\n\n### Approval Status\n- **My Approvals**: Documents I submitted\n- **Pending Approvals**: Documents I need to process\n- **Completed Approvals**: Processed documents"
+      },
+      "organization": {
+        "title": "Organization Management",
+        "summary": "Org chart and department/rank management",
+        "content": "## Organization Management\n\n### Org Chart\n- **Tree View**: View organization in hierarchical structure.\n- **Chart View**: View visual organization chart.\n- **Table View**: View departments in list format.\n\n### Department Management (Admin)\n- Add/edit/delete departments\n- Set parent department\n- Change department order\n\n### Rank/Position Management (Admin)\n- Set up rank hierarchy\n- Manage positions\n- Set display order\n\n### Organization History\nView organization change history in a timeline."
+      },
+      "notifications": {
+        "title": "Notification Settings",
+        "summary": "How to receive and configure notifications",
+        "content": "## Notification Settings\n\n### Checking Notifications\n- Click the notification icon in the header to check recent notifications.\n- View the full notification list in the Notification Center.\n\n### Notification Channel Settings\nSet notification delivery methods in Settings > Notifications:\n- **Email Notifications**: Receive important notifications via email.\n- **Push Notifications**: Receive browser push notifications.\n\n### Notification Type Settings\nSelect the notification types you want to receive:\n- Approval requests\n- Approval completed\n- Leave approved\n- Announcements"
+      },
+      "settings": {
+        "title": "Personal Settings",
+        "summary": "Profile and security settings",
+        "content": "## Personal Settings\n\n### Profile Settings\n- Change profile photo\n- View basic information (contact HR for changes)\n\n### Security Settings\n- Change password\n- Manage active sessions\n- Log out other devices\n\n### Appearance Settings\n- Theme selection (light/dark/system)\n- Language settings\n\n### Notification Settings\n- Notification channel settings\n- Notification type preferences"
+      }
+    }
+  },
+  "contact": {
+    "title": "Contact Us",
+    "description": "Leave your questions or requests.",
+    "mobileDescription": "Leave your questions here",
+    "form": {
+      "title": "Write Inquiry",
+      "description": "Please write your inquiry and a representative will respond after review.",
+      "name": "Name",
+      "department": "Department",
+      "categoryLabel": "Inquiry Type *",
+      "categoryPlaceholder": "Select inquiry type",
+      "categoryPlaceholderShort": "Select type",
+      "subjectLabel": "Subject *",
+      "subjectPlaceholder": "Enter inquiry subject",
+      "subjectPlaceholderShort": "Inquiry subject",
+      "messageLabel": "Message *",
+      "messagePlaceholder": "Please enter the details of your inquiry",
+      "attachments": "Attachments",
+      "attachButton": "Attach File",
+      "attachLimit": "Max {{max}} files, 10MB/file",
+      "attachDescription": "Image, PDF, Word, Excel files (max 10MB, up to {{max}} files)",
+      "submitButton": "Submit Inquiry",
+      "submitting": "Submitting..."
+    },
+    "categories": {
+      "account": "Account Inquiry",
+      "attendance": "Attendance/Leave Inquiry",
+      "approval": "Approval Inquiry",
+      "organization": "Organization/HR Inquiry",
+      "system": "System Error",
+      "suggestion": "Suggestion",
+      "other": "Other"
+    },
+    "submitted": {
+      "title": "Your inquiry has been submitted",
+      "description": "A representative will respond as soon as possible.",
+      "descriptionShort": "A representative will respond after review.",
+      "descriptionWithEmail": "A representative will respond as soon as possible.\nThe response will be sent to your registered email.",
+      "newInquiry": "Write New Inquiry"
+    },
+    "directContact": {
+      "title": "Direct Contact",
+      "email": "Email",
+      "emailAction": "Contact Us",
+      "phone": "Phone"
+    },
+    "operatingHours": {
+      "title": "Operating Hours",
+      "weekday": "Weekdays 09:00 - 18:00",
+      "lunchExcluded": "Excluding lunch 12:00 - 13:00",
+      "weekendClosed": "Closed on weekends and holidays.",
+      "urgentEmail": "For urgent inquiries, please send an email."
+    },
+    "responseInfo": {
+      "title": "Response Information",
+      "description": "We will respond within 1-2 business days after receiving your inquiry. Responses will be sent to your registered company email and can also be checked in the Notification Center."
+    },
+    "toast": {
+      "fileCountExceeded": {
+        "title": "File limit exceeded",
+        "description": "You can attach up to {{max}} files."
+      },
+      "fileSizeExceeded": {
+        "title": "File size exceeded",
+        "description": "{{filename}} exceeds the 10MB limit."
+      },
+      "unsupportedFormat": {
+        "title": "Unsupported format",
+        "description": "{{filename}} is not a supported file format."
+      },
+      "uploadFailed": {
+        "title": "Upload failed",
+        "description": "Failed to upload {{filename}}."
+      },
+      "deleteFailed": {
+        "title": "Delete failed",
+        "description": "Failed to delete the attachment."
+      },
+      "validationError": {
+        "title": "Input error",
+        "description": "Please fill in all required fields."
+      },
+      "uploadInProgress": {
+        "title": "Upload in progress",
+        "description": "Please submit after file upload is complete."
+      },
+      "submitSuccess": {
+        "title": "Your inquiry has been submitted",
+        "description": "A representative will respond as soon as possible."
+      },
+      "submitFailed": {
+        "title": "Submission failed",
+        "description": "Please try again later."
+      }
+    }
+  }
+}

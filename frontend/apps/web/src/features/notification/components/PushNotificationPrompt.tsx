@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Bell, BellOff, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,6 +30,7 @@ export function PushNotificationPrompt({
   onSubscriptionChange,
   onDismiss,
 }: PushNotificationPromptProps) {
+  const { t } = useTranslation('notification');
   const {
     status,
     isSupported,
@@ -79,7 +81,7 @@ export function PushNotificationPrompt({
       <Alert variant="destructive" className="mb-4">
         <BellOff className="h-4 w-4" aria-hidden="true" />
         <AlertDescription>
-          알림이 차단되었습니다. 브라우저 설정에서 알림을 허용해주세요.
+          {t('push.denied')}
         </AlertDescription>
       </Alert>
     );
@@ -94,9 +96,9 @@ export function PushNotificationPrompt({
             <Bell className="h-5 w-5 text-primary" aria-hidden="true" />
           </div>
           <div>
-            <p className="font-medium">푸시 알림 받기</p>
+            <p className="font-medium">{t('push.banner.title')}</p>
             <p className="text-sm text-muted-foreground">
-              중요한 알림을 놓치지 않도록 푸시 알림을 켜세요
+              {t('push.banner.description')}
             </p>
           </div>
         </div>
@@ -107,14 +109,14 @@ export function PushNotificationPrompt({
             disabled={isLoading}
           >
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
-            알림 켜기
+            {t('push.enableButton')}
           </Button>
           <Button
             variant="ghost"
             size="icon"
             className="h-8 w-8"
             onClick={handleDismiss}
-            aria-label="닫기"
+            aria-label={t('push.close')}
           >
             <X className="h-4 w-4" />
           </Button>
@@ -129,17 +131,17 @@ export function PushNotificationPrompt({
       <CardHeader>
         <div className="flex items-center gap-2">
           <Bell className="h-5 w-5" aria-hidden="true" />
-          <CardTitle className="text-lg">웹 푸시 알림</CardTitle>
+          <CardTitle className="text-lg">{t('push.card.title')}</CardTitle>
         </div>
         <CardDescription>
-          브라우저에서 실시간 알림을 받을 수 있습니다
+          {t('push.card.description')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {error && (
           <Alert variant="destructive">
             <AlertDescription>
-              {error.message || '알림 설정 중 오류가 발생했습니다'}
+              {error.message || t('push.error')}
             </AlertDescription>
           </Alert>
         )}
@@ -147,12 +149,12 @@ export function PushNotificationPrompt({
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
             <p className="font-medium">
-              {isSubscribed ? '알림이 활성화되었습니다' : '알림이 비활성화되었습니다'}
+              {isSubscribed ? t('push.status.enabled') : t('push.status.disabled')}
             </p>
             <p className="text-sm text-muted-foreground">
               {isSubscribed
-                ? '새로운 결재, 휴가, 공지사항 등을 실시간으로 받습니다'
-                : '푸시 알림을 활성화하면 중요한 소식을 놓치지 않습니다'}
+                ? t('push.status.enabledDescription')
+                : t('push.status.disabledDescription')}
             </p>
           </div>
           {isSubscribed ? (
@@ -166,7 +168,7 @@ export function PushNotificationPrompt({
               ) : (
                 <BellOff className="mr-2 h-4 w-4" aria-hidden="true" />
               )}
-              알림 끄기
+              {t('push.disableButton')}
             </Button>
           ) : (
             <Button
@@ -178,7 +180,7 @@ export function PushNotificationPrompt({
               ) : (
                 <Bell className="mr-2 h-4 w-4" aria-hidden="true" />
               )}
-              알림 켜기
+              {t('push.enableButton')}
             </Button>
           )}
         </div>
@@ -187,7 +189,7 @@ export function PushNotificationPrompt({
           <div className="rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground">
             <p className="flex items-center gap-2">
               <span className="inline-block h-2 w-2 rounded-full bg-green-500" aria-hidden="true" />
-              현재 이 브라우저에서 알림을 받고 있습니다
+              {t('push.status.currentBrowser')}
             </p>
           </div>
         )}

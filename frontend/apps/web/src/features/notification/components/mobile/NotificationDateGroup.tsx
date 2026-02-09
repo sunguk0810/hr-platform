@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { format, isToday, isYesterday, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import type { Notification } from '@/stores/notificationStore';
@@ -8,24 +9,25 @@ interface NotificationDateGroupProps {
   renderItem: (notification: Notification) => ReactNode;
 }
 
-function getDateLabel(dateString: string): string {
-  const date = parseISO(dateString);
-
-  if (isToday(date)) {
-    return '오늘';
-  }
-
-  if (isYesterday(date)) {
-    return '어제';
-  }
-
-  return format(date, 'M월 d일 (E)', { locale: ko });
-}
-
 export function NotificationDateGroup({
   notifications,
   renderItem,
 }: NotificationDateGroupProps) {
+  const { t } = useTranslation('notification');
+
+  const getDateLabel = (dateString: string): string => {
+    const date = parseISO(dateString);
+
+    if (isToday(date)) {
+      return t('dateGroup.today');
+    }
+
+    if (isYesterday(date)) {
+      return t('dateGroup.yesterday');
+    }
+
+    return format(date, 'M월 d일 (E)', { locale: ko });
+  };
   if (notifications.length === 0) {
     return null;
   }

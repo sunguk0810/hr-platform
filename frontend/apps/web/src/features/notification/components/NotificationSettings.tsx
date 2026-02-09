@@ -1,4 +1,5 @@
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Mail, Smartphone, Monitor } from 'lucide-react';
@@ -47,6 +48,7 @@ export function NotificationSettings({
   onSave,
   isLoading,
 }: NotificationSettingsProps) {
+  const { t } = useTranslation('notification');
   const form = useForm<NotificationSettingsFormData>({
     resolver: zodResolver(notificationSettingsSchema),
     defaultValues: {
@@ -75,9 +77,9 @@ export function NotificationSettings({
         {/* Notification Channels */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">알림 수신 채널</CardTitle>
+            <CardTitle className="text-lg">{t('settings.channels.title')}</CardTitle>
             <CardDescription>
-              알림을 받을 채널을 선택하세요
+              {t('settings.channels.description')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -89,9 +91,9 @@ export function NotificationSettings({
                   <div className="flex items-center gap-3">
                     <Mail className="h-5 w-5 text-muted-foreground" />
                     <div>
-                      <FormLabel className="text-base">이메일</FormLabel>
+                      <FormLabel className="text-base">{t('settings.channels.email.label')}</FormLabel>
                       <FormDescription>
-                        이메일로 알림을 받습니다
+                        {t('settings.channels.email.description')}
                       </FormDescription>
                     </div>
                   </div>
@@ -113,9 +115,9 @@ export function NotificationSettings({
                   <div className="flex items-center gap-3">
                     <Smartphone className="h-5 w-5 text-muted-foreground" />
                     <div>
-                      <FormLabel className="text-base">모바일 푸시</FormLabel>
+                      <FormLabel className="text-base">{t('settings.channels.mobilePush.label')}</FormLabel>
                       <FormDescription>
-                        모바일 앱으로 푸시 알림을 받습니다
+                        {t('settings.channels.mobilePush.description')}
                       </FormDescription>
                     </div>
                   </div>
@@ -137,9 +139,9 @@ export function NotificationSettings({
                   <div className="flex items-center gap-3">
                     <Monitor className="h-5 w-5 text-muted-foreground" />
                     <div>
-                      <FormLabel className="text-base">브라우저 알림</FormLabel>
+                      <FormLabel className="text-base">{t('settings.channels.browser.label')}</FormLabel>
                       <FormDescription>
-                        브라우저에서 알림을 받습니다
+                        {t('settings.channels.browser.description')}
                       </FormDescription>
                     </div>
                   </div>
@@ -158,9 +160,9 @@ export function NotificationSettings({
         {/* Notification Categories */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">알림 유형</CardTitle>
+            <CardTitle className="text-lg">{t('settings.categories.title')}</CardTitle>
             <CardDescription>
-              받고 싶은 알림 유형을 선택하세요
+              {t('settings.categories.description')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -170,9 +172,9 @@ export function NotificationSettings({
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between">
                   <div>
-                    <FormLabel>결재 알림</FormLabel>
+                    <FormLabel>{t('settings.categories.approval.label')}</FormLabel>
                     <FormDescription>
-                      결재 요청 및 결과 알림
+                      {t('settings.categories.approval.description')}
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -193,9 +195,9 @@ export function NotificationSettings({
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between">
                   <div>
-                    <FormLabel>휴가 알림</FormLabel>
+                    <FormLabel>{t('settings.categories.leave.label')}</FormLabel>
                     <FormDescription>
-                      휴가 신청 및 결과 알림
+                      {t('settings.categories.leave.description')}
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -216,9 +218,9 @@ export function NotificationSettings({
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between">
                   <div>
-                    <FormLabel>공지사항</FormLabel>
+                    <FormLabel>{t('settings.categories.announcement.label')}</FormLabel>
                     <FormDescription>
-                      새로운 공지사항 알림
+                      {t('settings.categories.announcement.description')}
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -239,9 +241,9 @@ export function NotificationSettings({
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between">
                   <div>
-                    <FormLabel>리마인더</FormLabel>
+                    <FormLabel>{t('settings.categories.reminder.label')}</FormLabel>
                     <FormDescription>
-                      일정 및 업무 리마인더
+                      {t('settings.categories.reminder.description')}
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -262,9 +264,9 @@ export function NotificationSettings({
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between">
                   <div>
-                    <FormLabel>시스템 알림</FormLabel>
+                    <FormLabel>{t('settings.categories.system.label')}</FormLabel>
                     <FormDescription>
-                      시스템 점검 및 업데이트 알림
+                      {t('settings.categories.system.description')}
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -282,7 +284,7 @@ export function NotificationSettings({
         {/* Additional Settings */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">추가 설정</CardTitle>
+            <CardTitle className="text-lg">{t('settings.additional.title')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <FormField
@@ -291,9 +293,9 @@ export function NotificationSettings({
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between">
                   <div>
-                    <FormLabel>요약 알림</FormLabel>
+                    <FormLabel>{t('settings.additional.digest.label')}</FormLabel>
                     <FormDescription>
-                      매일 아침 전날 알림 요약을 받습니다
+                      {t('settings.additional.digest.description')}
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -314,9 +316,9 @@ export function NotificationSettings({
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between">
                   <div>
-                    <FormLabel>방해 금지 시간</FormLabel>
+                    <FormLabel>{t('settings.additional.quietHours.label')}</FormLabel>
                     <FormDescription>
-                      밤 10시 ~ 오전 8시에는 알림을 받지 않습니다
+                      {t('settings.additional.quietHours.description')}
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -333,7 +335,7 @@ export function NotificationSettings({
 
         <div className="flex justify-end">
           <Button type="submit" disabled={isLoading}>
-            {isLoading ? '저장 중...' : '설정 저장'}
+            {isLoading ? t('settings.saving') : t('settings.save')}
           </Button>
         </div>
       </form>

@@ -1,0 +1,143 @@
+{
+  "center": {
+    "title": "Notification Center",
+    "description": "Check and manage your notifications.",
+    "notification": "Notifications",
+    "markAllAsRead": "Mark all as read",
+    "deleteAll": "Delete all",
+    "viewAll": "View all notifications"
+  },
+  "tabs": {
+    "all": "All",
+    "unread": "Unread",
+    "approval": "Approval",
+    "system": "System"
+  },
+  "empty": {
+    "all": "No notifications",
+    "allDescription": "New notifications will appear here.",
+    "unread": "No unread notifications",
+    "unreadDescription": "You've checked all notifications.",
+    "approval": "No approval notifications",
+    "approvalDescription": "Approval-related notifications will appear here.",
+    "system": "No system notifications",
+    "systemDescription": "System-related notifications will appear here."
+  },
+  "types": {
+    "APPROVAL_REQUESTED": "Approval Requested",
+    "APPROVAL_APPROVED": "Approval Approved",
+    "APPROVAL_REJECTED": "Approval Rejected",
+    "LEAVE_REQUESTED": "Leave Requested",
+    "LEAVE_APPROVED": "Leave Approved",
+    "LEAVE_REJECTED": "Leave Rejected",
+    "EMPLOYEE_JOINED": "Employee Joined",
+    "EMPLOYEE_RESIGNED": "Employee Resigned",
+    "ANNOUNCEMENT": "Announcement",
+    "SYSTEM": "System",
+    "REMINDER": "Reminder"
+  },
+  "actions": {
+    "markAsRead": "Mark as read",
+    "delete": "Delete"
+  },
+  "bell": {
+    "ariaLabel": "Notifications",
+    "ariaLabelWithCount": "Notifications, {{count}} unread",
+    "settings": "Notification settings"
+  },
+  "dateGroup": {
+    "today": "Today",
+    "yesterday": "Yesterday"
+  },
+  "card": {
+    "swipeDelete": "Delete"
+  },
+  "settings": {
+    "channels": {
+      "title": "Notification Channels",
+      "description": "Choose channels to receive notifications",
+      "email": {
+        "label": "Email",
+        "description": "Receive notifications via email"
+      },
+      "mobilePush": {
+        "label": "Mobile Push",
+        "description": "Receive push notifications on mobile app"
+      },
+      "browser": {
+        "label": "Browser Notifications",
+        "description": "Receive notifications in browser"
+      }
+    },
+    "categories": {
+      "title": "Notification Types",
+      "description": "Choose the notification types you want to receive",
+      "approval": {
+        "label": "Approval Notifications",
+        "description": "Approval request and result notifications"
+      },
+      "leave": {
+        "label": "Leave Notifications",
+        "description": "Leave application and result notifications"
+      },
+      "announcement": {
+        "label": "Announcements",
+        "description": "New announcement notifications"
+      },
+      "reminder": {
+        "label": "Reminders",
+        "description": "Schedule and task reminders"
+      },
+      "system": {
+        "label": "System Notifications",
+        "description": "System maintenance and update notifications"
+      }
+    },
+    "additional": {
+      "title": "Additional Settings",
+      "digest": {
+        "label": "Digest Notifications",
+        "description": "Receive a daily morning summary of previous day's notifications"
+      },
+      "quietHours": {
+        "label": "Do Not Disturb",
+        "description": "No notifications between 10 PM and 8 AM"
+      }
+    },
+    "save": "Save Settings",
+    "saving": "Saving..."
+  },
+  "push": {
+    "card": {
+      "title": "Web Push Notifications",
+      "description": "Receive real-time notifications in your browser"
+    },
+    "banner": {
+      "title": "Enable Push Notifications",
+      "description": "Turn on push notifications so you don't miss important updates"
+    },
+    "denied": "Notifications are blocked. Please allow notifications in your browser settings.",
+    "error": "An error occurred while configuring notifications",
+    "enableButton": "Enable Notifications",
+    "disableButton": "Disable Notifications",
+    "close": "Close",
+    "status": {
+      "enabled": "Notifications are enabled",
+      "disabled": "Notifications are disabled",
+      "enabledDescription": "You're receiving real-time updates for approvals, leave, announcements, and more",
+      "disabledDescription": "Enable push notifications to stay updated on important news",
+      "currentBrowser": "You are receiving notifications on this browser"
+    }
+  },
+  "dropdown": {
+    "title": "Notifications",
+    "noNotifications": "No notifications",
+    "noUnreadNotifications": "No unread notifications",
+    "markAllAsRead": "Mark all as read",
+    "settings": "Notification settings",
+    "viewAll": "View all notifications"
+  },
+  "group": {
+    "noNotifications": "No notifications."
+  }
+}

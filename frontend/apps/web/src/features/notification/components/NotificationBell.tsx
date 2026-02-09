@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -52,6 +53,7 @@ const getNotificationIcon = (type: string) => {
 };
 
 export function NotificationBell({ className }: NotificationBellProps) {
+  const { t } = useTranslation('notification');
   const navigate = useNavigate();
   const {
     notifications,
@@ -89,7 +91,7 @@ export function NotificationBell({ className }: NotificationBellProps) {
           variant="ghost"
           size="icon"
           className={cn('relative', className)}
-          aria-label={`알림 ${unreadCount > 0 ? `${unreadCount}개 읽지 않음` : ''}`}
+          aria-label={unreadCount > 0 ? t('bell.ariaLabelWithCount', { count: unreadCount }) : t('bell.ariaLabel')}
         >
           {unreadCount > 0 ? (
             <BellRing className="h-5 w-5" />
@@ -112,7 +114,7 @@ export function NotificationBell({ className }: NotificationBellProps) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80">
         <DropdownMenuLabel className="flex items-center justify-between">
-          <span>알림</span>
+          <span>{t('dropdown.title')}</span>
           {unreadCount > 0 && (
             <Button
               variant="ghost"
@@ -121,7 +123,7 @@ export function NotificationBell({ className }: NotificationBellProps) {
               onClick={handleMarkAllAsRead}
             >
               <CheckCheck className="h-3 w-3 mr-1" />
-              모두 읽음
+              {t('dropdown.markAllAsRead')}
             </Button>
           )}
         </DropdownMenuLabel>
@@ -130,7 +132,7 @@ export function NotificationBell({ className }: NotificationBellProps) {
         {recentNotifications.length === 0 ? (
           <div className="py-8 text-center text-muted-foreground">
             <Bell className="h-10 w-10 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">알림이 없습니다</p>
+            <p className="text-sm">{t('dropdown.noNotifications')}</p>
           </div>
         ) : (
           <>
@@ -152,7 +154,7 @@ export function NotificationBell({ className }: NotificationBellProps) {
                 className="w-full justify-center text-sm"
                 onClick={handleViewAll}
               >
-                모든 알림 보기
+                {t('dropdown.viewAll')}
                 <ExternalLink className="ml-2 h-3 w-3" />
               </Button>
             </div>

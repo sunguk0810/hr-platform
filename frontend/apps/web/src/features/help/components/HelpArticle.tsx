@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { ArrowLeft, Clock, User, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -33,6 +34,7 @@ export function HelpArticle({
   className,
 }: HelpArticleProps) {
   const navigate = useNavigate();
+  const { t } = useTranslation('help');
 
   return (
     <div className={className}>
@@ -44,7 +46,7 @@ export function HelpArticle({
         className="mb-4"
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
-        뒤로 가기
+        {t('article.goBack')}
       </Button>
 
       <Card>
@@ -76,14 +78,14 @@ export function HelpArticle({
                   {format(article.createdAt, 'yyyy년 M월 d일', { locale: ko })}
                   {article.updatedAt && (
                     <span className="text-xs">
-                      (업데이트:{' '}
+                      ({t('article.updated')}{' '}
                       {format(article.updatedAt, 'yyyy.M.d', { locale: ko })})
                     </span>
                   )}
                 </span>
               )}
               {article.readTime && (
-                <span>약 {article.readTime}분 소요</span>
+                <span>{t('article.readTime', { minutes: article.readTime })}</span>
               )}
             </div>
           </div>
@@ -101,7 +103,7 @@ export function HelpArticle({
           {onFeedback && (
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">
-                이 문서가 도움이 되었나요?
+                {t('article.feedback.question')}
               </p>
               <div className="flex gap-2">
                 <Button
@@ -110,7 +112,7 @@ export function HelpArticle({
                   onClick={() => onFeedback(true)}
                 >
                   <ThumbsUp className="mr-1 h-4 w-4" />
-                  도움이 됐어요
+                  {t('article.feedback.helpful')}
                 </Button>
                 <Button
                   variant="outline"
@@ -118,7 +120,7 @@ export function HelpArticle({
                   onClick={() => onFeedback(false)}
                 >
                   <ThumbsDown className="mr-1 h-4 w-4" />
-                  아쉬워요
+                  {t('article.feedback.notHelpful')}
                 </Button>
               </div>
             </div>
@@ -129,7 +131,7 @@ export function HelpArticle({
       {/* Related Articles */}
       {article.relatedArticles && article.relatedArticles.length > 0 && (
         <div className="mt-6">
-          <h3 className="mb-3 text-lg font-semibold">관련 문서</h3>
+          <h3 className="mb-3 text-lg font-semibold">{t('article.relatedArticles')}</h3>
           <div className="grid gap-2 sm:grid-cols-2">
             {article.relatedArticles.map((related) => (
               <Button

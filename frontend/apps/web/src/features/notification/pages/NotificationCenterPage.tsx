@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,7 @@ import { cn } from '@/lib/utils';
 type TabValue = 'all' | 'unread' | 'approval' | 'system';
 
 export default function NotificationCenterPage() {
+  const { t } = useTranslation('notification');
   const { notifications, unreadCount, clearAll } = useNotificationStore();
   const [activeTab, setActiveTab] = useState<TabValue>('all');
   const isMobile = useIsMobile();
@@ -111,7 +113,7 @@ export default function NotificationCenterPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold">알림센터</h1>
+            <h1 className="text-xl font-bold">{t('center.title')}</h1>
             {unreadCount > 0 && (
               <span className="rounded-full bg-destructive px-2 py-0.5 text-xs font-medium text-destructive-foreground">
                 {unreadCount}
@@ -127,7 +129,7 @@ export default function NotificationCenterPage() {
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={handleMarkAllAsRead} disabled={unreadCount === 0 || markAllAsReadMutation.isPending}>
                 <Check className="mr-2 h-4 w-4" />
-                모두 읽음
+                {t('center.markAllAsRead')}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={clearAll}
@@ -135,7 +137,7 @@ export default function NotificationCenterPage() {
                 className="text-destructive"
               >
                 <Trash2 className="mr-2 h-4 w-4" />
-                전체 삭제
+                {t('center.deleteAll')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -150,20 +152,8 @@ export default function NotificationCenterPage() {
         {filteredNotifications.length === 0 ? (
           <EmptyState
             icon={Bell}
-            title={
-              activeTab === 'unread'
-                ? '읽지 않은 알림이 없습니다'
-                : activeTab === 'approval'
-                  ? '결재 알림이 없습니다'
-                  : activeTab === 'system'
-                    ? '시스템 알림이 없습니다'
-                    : '알림이 없습니다'
-            }
-            description={
-              activeTab === 'unread'
-                ? '모든 알림을 확인했습니다.'
-                : '새로운 알림이 있으면 여기에 표시됩니다.'
-            }
+            title={t(`empty.${activeTab}`)}
+            description={t(`empty.${activeTab}Description`)}
           />
         ) : (
           <NotificationDateGroup
@@ -193,7 +183,7 @@ export default function NotificationCenterPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold">알림센터</h1>
+            <h1 className="text-2xl font-bold">{t('center.title')}</h1>
             {unreadCount > 0 && (
               <span className="rounded-full bg-destructive px-2.5 py-1 text-sm font-medium text-destructive-foreground">
                 {unreadCount}
@@ -208,7 +198,7 @@ export default function NotificationCenterPage() {
               disabled={unreadCount === 0 || markAllAsReadMutation.isPending}
             >
               <Check className="mr-2 h-4 w-4" />
-              모두 읽음
+              {t('center.markAllAsRead')}
             </Button>
             <Button
               variant="outline"
@@ -217,7 +207,7 @@ export default function NotificationCenterPage() {
               disabled={notifications.length === 0}
             >
               <Trash2 className="mr-2 h-4 w-4" />
-              전체 삭제
+              {t('center.deleteAll')}
             </Button>
           </div>
         </div>
@@ -231,20 +221,8 @@ export default function NotificationCenterPage() {
         {filteredNotifications.length === 0 ? (
           <EmptyState
             icon={Bell}
-            title={
-              activeTab === 'unread'
-                ? '읽지 않은 알림이 없습니다'
-                : activeTab === 'approval'
-                  ? '결재 알림이 없습니다'
-                  : activeTab === 'system'
-                    ? '시스템 알림이 없습니다'
-                    : '알림이 없습니다'
-            }
-            description={
-              activeTab === 'unread'
-                ? '모든 알림을 확인했습니다.'
-                : '새로운 알림이 있으면 여기에 표시됩니다.'
-            }
+            title={t(`empty.${activeTab}`)}
+            description={t(`empty.${activeTab}Description`)}
           />
         ) : (
           <div className="grid grid-cols-2 gap-4">
@@ -271,8 +249,8 @@ export default function NotificationCenterPage() {
   return (
     <>
       <PageHeader
-        title="알림센터"
-        description="알림을 확인하고 관리합니다."
+        title={t('center.title')}
+        description={t('center.description')}
         actions={
           <div className="flex gap-2">
             <Button
@@ -281,7 +259,7 @@ export default function NotificationCenterPage() {
               disabled={unreadCount === 0 || markAllAsReadMutation.isPending}
             >
               <Check className="mr-2 h-4 w-4" />
-              모두 읽음
+              {t('center.markAllAsRead')}
             </Button>
             <Button
               variant="outline"
@@ -289,7 +267,7 @@ export default function NotificationCenterPage() {
               disabled={notifications.length === 0}
             >
               <Trash2 className="mr-2 h-4 w-4" />
-              전체 삭제
+              {t('center.deleteAll')}
             </Button>
           </div>
         }
@@ -298,7 +276,7 @@ export default function NotificationCenterPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            알림
+            {t('center.notification')}
             {unreadCount > 0 && (
               <span className="rounded-full bg-destructive px-2 py-0.5 text-xs text-destructive-foreground">
                 {unreadCount}
@@ -309,17 +287,17 @@ export default function NotificationCenterPage() {
         <CardContent>
           <Tabs defaultValue="all">
             <TabsList>
-              <TabsTrigger value="all">전체</TabsTrigger>
-              <TabsTrigger value="unread">읽지 않음</TabsTrigger>
-              <TabsTrigger value="approval">결재</TabsTrigger>
-              <TabsTrigger value="system">시스템</TabsTrigger>
+              <TabsTrigger value="all">{t('tabs.all')}</TabsTrigger>
+              <TabsTrigger value="unread">{t('tabs.unread')}</TabsTrigger>
+              <TabsTrigger value="approval">{t('tabs.approval')}</TabsTrigger>
+              <TabsTrigger value="system">{t('tabs.system')}</TabsTrigger>
             </TabsList>
             <TabsContent value="all" className="mt-4">
               {notifications.length === 0 ? (
                 <EmptyState
                   icon={Bell}
-                  title="알림이 없습니다"
-                  description="새로운 알림이 있으면 여기에 표시됩니다."
+                  title={t('empty.all')}
+                  description={t('empty.allDescription')}
                 />
               ) : (
                 <div className="space-y-2">
@@ -346,8 +324,8 @@ export default function NotificationCenterPage() {
               {notifications.filter(n => !n.isRead).length === 0 ? (
                 <EmptyState
                   icon={Bell}
-                  title="읽지 않은 알림이 없습니다"
-                  description="모든 알림을 확인했습니다."
+                  title={t('empty.unread')}
+                  description={t('empty.unreadDescription')}
                 />
               ) : (
                 <div className="space-y-2">
@@ -372,8 +350,8 @@ export default function NotificationCenterPage() {
               {notifications.filter(n => NOTIFICATION_TYPE_CATEGORY[n.notificationType as NotificationType] === 'APPROVAL').length === 0 ? (
                 <EmptyState
                   icon={Bell}
-                  title="결재 알림이 없습니다"
-                  description="결재 관련 알림이 있으면 여기에 표시됩니다."
+                  title={t('empty.approval')}
+                  description={t('empty.approvalDescription')}
                 />
               ) : (
                 <div className="space-y-2">
@@ -400,8 +378,8 @@ export default function NotificationCenterPage() {
               {notifications.filter(n => n.notificationType === 'SYSTEM').length === 0 ? (
                 <EmptyState
                   icon={Bell}
-                  title="시스템 알림이 없습니다"
-                  description="시스템 관련 알림이 있으면 여기에 표시됩니다."
+                  title={t('empty.system')}
+                  description={t('empty.systemDescription')}
                 />
               ) : (
                 <div className="space-y-2">

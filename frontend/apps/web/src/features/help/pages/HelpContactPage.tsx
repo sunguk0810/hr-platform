@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,15 +48,15 @@ interface AttachmentItem {
   isUploading?: boolean;
 }
 
-const contactCategories = [
-  { value: 'account', label: '계정 문의' },
-  { value: 'attendance', label: '근태/휴가 문의' },
-  { value: 'approval', label: '결재 문의' },
-  { value: 'organization', label: '조직/인사 문의' },
-  { value: 'system', label: '시스템 오류' },
-  { value: 'suggestion', label: '개선 제안' },
-  { value: 'other', label: '기타' },
-];
+const CONTACT_CATEGORY_KEYS = [
+  'account',
+  'attendance',
+  'approval',
+  'organization',
+  'system',
+  'suggestion',
+  'other',
+] as const;
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_FILES = 5;
@@ -71,6 +72,7 @@ const ALLOWED_FILE_TYPES = [
 ];
 
 export default function HelpContactPage() {
+  const { t } = useTranslation('help');
   const { user } = useAuthStore();
   const { toast } = useToast();
   const isMobile = useIsMobile();
@@ -98,8 +100,8 @@ export default function HelpContactPage() {
     // 파일 개수 제한
     if (attachments.length + files.length > MAX_FILES) {
       toast({
-        title: '파일 개수 초과',
-        description: `최대 ${MAX_FILES}개까지 첨부할 수 있습니다.`,
+        title: t('contact.toast.fileCountExceeded.title'),
+        description: t('contact.toast.fileCountExceeded.description', { max: MAX_FILES }),
         variant: 'destructive',
       });
       return;
@@ -109,8 +111,8 @@ export default function HelpContactPage() {
       // 파일 크기 검사
       if (file.size > MAX_FILE_SIZE) {
         toast({
-          title: '파일 크기 초과',
-          description: `${file.name}의 크기가 10MB를 초과합니다.`,
+          title: t('contact.toast.fileSizeExceeded.title'),
+          description: t('contact.toast.fileSizeExceeded.description', { filename: file.name }),
           variant: 'destructive',
         });
         continue;
@@ -119,8 +121,8 @@ export default function HelpContactPage() {
       // 파일 타입 검사
       if (!ALLOWED_FILE_TYPES.includes(file.type)) {
         toast({
-          title: '지원하지 않는 형식',
-          description: `${file.name}은 지원하지 않는 파일 형식입니다.`,
+          title: t('contact.toast.unsupportedFormat.title'),
+          description: t('contact.toast.unsupportedFormat.description', { filename: file.name }),
           variant: 'destructive',
         });
         continue;
@@ -154,8 +156,8 @@ export default function HelpContactPage() {
           // 업로드 실패 시 제거
           setAttachments((prev) => prev.filter((att) => att.id !== tempId));
           toast({
-            title: '업로드 실패',
-            description: `${file.name} 업로드에 실패했습니다.`,
+            title: t('contact.toast.uploadFailed.title'),
+            description: t('contact.toast.uploadFailed.description', { filename: file.name }),
             variant: 'destructive',
           });
         }
@@ -163,8 +165,8 @@ export default function HelpContactPage() {
         // 에러 발생 시 제거
         setAttachments((prev) => prev.filter((att) => att.id !== tempId));
         toast({
-          title: '업로드 실패',
-          description: `${file.name} 업로드에 실패했습니다.`,
+          title: t('contact.toast.uploadFailed.title'),
+          description: t('contact.toast.uploadFailed.description', { filename: file.name }),
           variant: 'destructive',
         });
       }
@@ -191,8 +193,8 @@ export default function HelpContactPage() {
       setAttachments((prev) => prev.filter((att) => att.id !== id));
     } catch {
       toast({
-        title: '삭제 실패',
-        description: '첨부파일 삭제에 실패했습니다.',
+        title: t('contact.toast.deleteFailed.title'),
+        description: t('contact.toast.deleteFailed.description'),
         variant: 'destructive',
       });
     }
@@ -203,8 +205,8 @@ export default function HelpContactPage() {
 
     if (!form.category || !form.subject || !form.message) {
       toast({
-        title: '입력 오류',
-        description: '모든 필드를 입력해 주세요.',
+        title: t('contact.toast.validationError.title'),
+        description: t('contact.toast.validationError.description'),
         variant: 'destructive',
       });
       return;
@@ -213,8 +215,8 @@ export default function HelpContactPage() {
     // 업로드 중인 파일이 있는지 확인
     if (attachments.some((att) => att.isUploading)) {
       toast({
-        title: '업로드 진행 중',
-        description: '파일 업로드가 완료된 후 제출해 주세요.',
+        title: t('contact.toast.uploadInProgress.title'),
+        description: t('contact.toast.uploadInProgress.description'),
         variant: 'destructive',
       });
       return;
@@ -233,16 +235,16 @@ export default function HelpContactPage() {
       if (response.success) {
         setIsSubmitted(true);
         toast({
-          title: '문의가 접수되었습니다',
-          description: '담당자가 확인 후 빠른 시일 내에 답변드리겠습니다.',
+          title: t('contact.toast.submitSuccess.title'),
+          description: t('contact.toast.submitSuccess.description'),
         });
       } else {
         throw new Error('Submit failed');
       }
     } catch {
       toast({
-        title: '문의 접수 실패',
-        description: '잠시 후 다시 시도해 주세요.',
+        title: t('contact.toast.submitFailed.title'),
+        description: t('contact.toast.submitFailed.description'),
         variant: 'destructive',
       });
     } finally {
@@ -262,8 +264,8 @@ export default function HelpContactPage() {
       <div className="space-y-4 pb-20">
         {/* Mobile Header */}
         <div>
-          <h1 className="text-xl font-bold">문의하기</h1>
-          <p className="text-sm text-muted-foreground">궁금한 점을 남겨주세요</p>
+          <h1 className="text-xl font-bold">{t('contact.title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('contact.mobileDescription')}</p>
         </div>
 
         {/* Quick Contact */}
@@ -273,15 +275,15 @@ export default function HelpContactPage() {
             className="flex-1 bg-card rounded-xl border p-4 text-center"
           >
             <Mail className="h-5 w-5 text-primary mx-auto mb-2" />
-            <p className="text-xs text-muted-foreground">이메일</p>
-            <p className="text-sm font-medium">문의하기</p>
+            <p className="text-xs text-muted-foreground">{t('contact.directContact.email')}</p>
+            <p className="text-sm font-medium">{t('contact.directContact.emailAction')}</p>
           </a>
           <a
             href="tel:02-1234-5678"
             className="flex-1 bg-card rounded-xl border p-4 text-center"
           >
             <Phone className="h-5 w-5 text-primary mx-auto mb-2" />
-            <p className="text-xs text-muted-foreground">전화</p>
+            <p className="text-xs text-muted-foreground">{t('contact.directContact.phone')}</p>
             <p className="text-sm font-medium">02-1234-5678</p>
           </a>
         </div>
@@ -290,8 +292,8 @@ export default function HelpContactPage() {
         <div className="bg-muted/50 rounded-xl p-4 flex items-center gap-3">
           <Clock className="h-5 w-5 text-muted-foreground flex-shrink-0" />
           <div className="text-sm">
-            <p className="font-medium">평일 09:00 - 18:00</p>
-            <p className="text-xs text-muted-foreground">점심시간 12:00 - 13:00 제외</p>
+            <p className="font-medium">{t('contact.operatingHours.weekday')}</p>
+            <p className="text-xs text-muted-foreground">{t('contact.operatingHours.lunchExcluded')}</p>
           </div>
         </div>
 
@@ -302,17 +304,17 @@ export default function HelpContactPage() {
               <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
                 <CheckCircle className="h-7 w-7 text-green-600 dark:text-green-400" />
               </div>
-              <h3 className="mb-2 text-lg font-semibold">문의가 접수되었습니다</h3>
+              <h3 className="mb-2 text-lg font-semibold">{t('contact.submitted.title')}</h3>
               <p className="mb-4 text-center text-sm text-muted-foreground">
-                담당자가 확인 후 답변드리겠습니다.
+                {t('contact.submitted.descriptionShort')}
               </p>
-              <Button onClick={handleReset} size="sm">새 문의 작성</Button>
+              <Button onClick={handleReset} size="sm">{t('contact.submitted.newInquiry')}</Button>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <h3 className="font-medium flex items-center gap-2">
                 <MessageCircle className="h-4 w-4" />
-                문의 작성
+                {t('contact.form.title')}
               </h3>
 
               {/* User Info */}
@@ -328,7 +330,7 @@ export default function HelpContactPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="mobile-category">문의 유형 *</Label>
+                <Label htmlFor="mobile-category">{t('contact.form.categoryLabel')}</Label>
                 <Select
                   value={form.category}
                   onValueChange={(value) =>
@@ -336,12 +338,12 @@ export default function HelpContactPage() {
                   }
                 >
                   <SelectTrigger id="mobile-category">
-                    <SelectValue placeholder="유형 선택" />
+                    <SelectValue placeholder={t('contact.form.categoryPlaceholderShort')} />
                   </SelectTrigger>
                   <SelectContent>
-                    {contactCategories.map((category) => (
-                      <SelectItem key={category.value} value={category.value}>
-                        {category.label}
+                    {CONTACT_CATEGORY_KEYS.map((key) => (
+                      <SelectItem key={key} value={key}>
+                        {t(`contact.categories.${key}`)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -349,20 +351,20 @@ export default function HelpContactPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="mobile-subject">제목 *</Label>
+                <Label htmlFor="mobile-subject">{t('contact.form.subjectLabel')}</Label>
                 <Input
                   id="mobile-subject"
-                  placeholder="문의 제목"
+                  placeholder={t('contact.form.subjectPlaceholderShort')}
                   value={form.subject}
                   onChange={(e) => setForm({ ...form, subject: e.target.value })}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="mobile-message">문의 내용 *</Label>
+                <Label htmlFor="mobile-message">{t('contact.form.messageLabel')}</Label>
                 <Textarea
                   id="mobile-message"
-                  placeholder="문의 내용을 상세히 입력해 주세요"
+                  placeholder={t('contact.form.messagePlaceholder')}
                   rows={5}
                   value={form.message}
                   onChange={(e) => setForm({ ...form, message: e.target.value })}
@@ -371,7 +373,7 @@ export default function HelpContactPage() {
 
               {/* Attachments */}
               <div className="space-y-2">
-                <Label>첨부파일</Label>
+                <Label>{t('contact.form.attachments')}</Label>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -415,10 +417,10 @@ export default function HelpContactPage() {
                   disabled={attachments.length >= MAX_FILES}
                 >
                   <Paperclip className="mr-2 h-4 w-4" />
-                  파일 첨부
+                  {t('contact.form.attachButton')}
                 </Button>
                 <p className="text-xs text-muted-foreground">
-                  최대 {MAX_FILES}개, 10MB/파일
+                  {t('contact.form.attachLimit', { max: MAX_FILES })}
                 </p>
               </div>
 
@@ -426,12 +428,12 @@ export default function HelpContactPage() {
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    접수 중...
+                    {t('contact.form.submitting')}
                   </>
                 ) : (
                   <>
                     <Send className="mr-2 h-4 w-4" />
-                    문의 접수
+                    {t('contact.form.submitButton')}
                   </>
                 )}
               </Button>
@@ -446,8 +448,8 @@ export default function HelpContactPage() {
   return (
     <>
       <PageHeader
-        title="문의하기"
-        description="궁금한 점이나 요청사항을 남겨주세요."
+        title={t('contact.title')}
+        description={t('contact.description')}
       />
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -456,10 +458,10 @@ export default function HelpContactPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MessageCircle className="h-5 w-5" />
-                문의 작성
+                {t('contact.form.title')}
               </CardTitle>
               <CardDescription>
-                문의 내용을 작성해 주시면 담당자가 확인 후 답변드립니다.
+                {t('contact.form.description')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -468,26 +470,24 @@ export default function HelpContactPage() {
                   <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
                     <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
                   </div>
-                  <h3 className="mb-2 text-lg font-semibold">문의가 접수되었습니다</h3>
-                  <p className="mb-6 text-center text-muted-foreground">
-                    담당자가 확인 후 빠른 시일 내에 답변드리겠습니다.
-                    <br />
-                    답변은 등록된 이메일로 발송됩니다.
+                  <h3 className="mb-2 text-lg font-semibold">{t('contact.submitted.title')}</h3>
+                  <p className="mb-6 text-center text-muted-foreground whitespace-pre-line">
+                    {t('contact.submitted.descriptionWithEmail')}
                   </p>
-                  <Button onClick={handleReset}>새 문의 작성</Button>
+                  <Button onClick={handleReset}>{t('contact.submitted.newInquiry')}</Button>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
-                      <Label>이름</Label>
+                      <Label>{t('contact.form.name')}</Label>
                       <div className="flex items-center gap-2 rounded-md border bg-muted/50 px-3 py-2">
                         <User className="h-4 w-4 text-muted-foreground" />
                         <span className="text-sm">{user?.name || '-'}</span>
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label>소속</Label>
+                      <Label>{t('contact.form.department')}</Label>
                       <div className="flex items-center gap-2 rounded-md border bg-muted/50 px-3 py-2">
                         <Building className="h-4 w-4 text-muted-foreground" />
                         <span className="text-sm">{user?.departmentName || '-'}</span>
@@ -496,7 +496,7 @@ export default function HelpContactPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="category">문의 유형 *</Label>
+                    <Label htmlFor="category">{t('contact.form.categoryLabel')}</Label>
                     <Select
                       value={form.category}
                       onValueChange={(value) =>
@@ -504,12 +504,12 @@ export default function HelpContactPage() {
                       }
                     >
                       <SelectTrigger id="category">
-                        <SelectValue placeholder="문의 유형을 선택해 주세요" />
+                        <SelectValue placeholder={t('contact.form.categoryPlaceholder')} />
                       </SelectTrigger>
                       <SelectContent>
-                        {contactCategories.map((category) => (
-                          <SelectItem key={category.value} value={category.value}>
-                            {category.label}
+                        {CONTACT_CATEGORY_KEYS.map((key) => (
+                          <SelectItem key={key} value={key}>
+                            {t(`contact.categories.${key}`)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -517,20 +517,20 @@ export default function HelpContactPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="subject">제목 *</Label>
+                    <Label htmlFor="subject">{t('contact.form.subjectLabel')}</Label>
                     <Input
                       id="subject"
-                      placeholder="문의 제목을 입력해 주세요"
+                      placeholder={t('contact.form.subjectPlaceholder')}
                       value={form.subject}
                       onChange={(e) => setForm({ ...form, subject: e.target.value })}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="message">문의 내용 *</Label>
+                    <Label htmlFor="message">{t('contact.form.messageLabel')}</Label>
                     <Textarea
                       id="message"
-                      placeholder="문의 내용을 상세히 입력해 주세요"
+                      placeholder={t('contact.form.messagePlaceholder')}
                       rows={6}
                       value={form.message}
                       onChange={(e) => setForm({ ...form, message: e.target.value })}
@@ -539,7 +539,7 @@ export default function HelpContactPage() {
 
                   {/* 파일 첨부 영역 */}
                   <div className="space-y-2">
-                    <Label>첨부파일</Label>
+                    <Label>{t('contact.form.attachments')}</Label>
                     <div className="rounded-md border border-dashed p-4">
                       <input
                         ref={fileInputRef}
@@ -587,10 +587,10 @@ export default function HelpContactPage() {
                         disabled={attachments.length >= MAX_FILES}
                       >
                         <Paperclip className="mr-2 h-4 w-4" />
-                        파일 첨부
+                        {t('contact.form.attachButton')}
                       </Button>
                       <p className="mt-2 text-xs text-muted-foreground">
-                        이미지, PDF, Word, Excel 파일 (최대 10MB, {MAX_FILES}개까지)
+                        {t('contact.form.attachDescription', { max: MAX_FILES })}
                       </p>
                     </div>
                   </div>
@@ -599,12 +599,12 @@ export default function HelpContactPage() {
                     {isSubmitting ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        접수 중...
+                        {t('contact.form.submitting')}
                       </>
                     ) : (
                       <>
                         <Send className="mr-2 h-4 w-4" />
-                        문의 접수
+                        {t('contact.form.submitButton')}
                       </>
                     )}
                   </Button>
@@ -617,7 +617,7 @@ export default function HelpContactPage() {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">직접 연락하기</CardTitle>
+              <CardTitle className="text-base">{t('contact.directContact.title')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-start gap-3">
@@ -625,7 +625,7 @@ export default function HelpContactPage() {
                   <Mail className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="font-medium">이메일</p>
+                  <p className="font-medium">{t('contact.directContact.email')}</p>
                   <a
                     href="mailto:hr-support@company.com"
                     className="text-sm text-primary hover:underline"
@@ -639,7 +639,7 @@ export default function HelpContactPage() {
                   <Phone className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="font-medium">전화</p>
+                  <p className="font-medium">{t('contact.directContact.phone')}</p>
                   <a
                     href="tel:02-1234-5678"
                     className="text-sm text-primary hover:underline"
@@ -653,20 +653,20 @@ export default function HelpContactPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">운영 시간</CardTitle>
+              <CardTitle className="text-base">{t('contact.operatingHours.title')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-start gap-3">
                 <Clock className="mt-0.5 h-5 w-5 text-muted-foreground" />
                 <div className="text-sm">
-                  <p className="font-medium">평일 09:00 - 18:00</p>
+                  <p className="font-medium">{t('contact.operatingHours.weekday')}</p>
                   <p className="text-muted-foreground">
-                    (점심시간 12:00 - 13:00 제외)
+                    ({t('contact.operatingHours.lunchExcluded')})
                   </p>
                   <p className="mt-2 text-muted-foreground">
-                    주말 및 공휴일은 휴무입니다.
+                    {t('contact.operatingHours.weekendClosed')}
                     <br />
-                    긴급 문의는 이메일로 남겨주세요.
+                    {t('contact.operatingHours.urgentEmail')}
                   </p>
                 </div>
               </div>
@@ -675,12 +675,11 @@ export default function HelpContactPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">답변 안내</CardTitle>
+              <CardTitle className="text-base">{t('contact.responseInfo.title')}</CardTitle>
             </CardHeader>
             <CardContent className="text-sm text-muted-foreground">
               <p>
-                문의 접수 후 영업일 기준 1-2일 이내에 답변드립니다.
-                답변은 등록된 회사 이메일로 발송되며, 알림 센터에서도 확인하실 수 있습니다.
+                {t('contact.responseInfo.description')}
               </p>
             </CardContent>
           </Card>
