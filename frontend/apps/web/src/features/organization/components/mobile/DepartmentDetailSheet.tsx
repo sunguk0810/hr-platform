@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { User, Users, Building2, Hash, Globe } from 'lucide-react';
 import { BottomSheet } from '@/components/mobile';
 import { Button } from '@/components/ui/button';
@@ -19,8 +20,11 @@ export function DepartmentDetailSheet({
 }: DepartmentDetailSheetProps) {
   if (!department) return null;
 
+  const { t } = useTranslation('organization');
+  const { t: tCommon } = useTranslation('common');
+
   return (
-    <BottomSheet open={open} onClose={onClose} title="부서 정보">
+    <BottomSheet open={open} onClose={onClose} title={t('department.info')}>
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center gap-4">
@@ -40,7 +44,7 @@ export function DepartmentDetailSheet({
           <div className="p-3 bg-muted/50 rounded-lg">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <Hash className="h-4 w-4" />
-              <span className="text-xs">부서코드</span>
+              <span className="text-xs">{t('department.code')}</span>
             </div>
             <p className="text-sm font-mono">{department.code}</p>
           </div>
@@ -48,27 +52,27 @@ export function DepartmentDetailSheet({
           <div className="p-3 bg-muted/50 rounded-lg">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <Building2 className="h-4 w-4" />
-              <span className="text-xs">조직레벨</span>
+              <span className="text-xs">{t('department.orgLevel')}</span>
             </div>
-            <p className="text-sm">{department.level}단계</p>
+            <p className="text-sm">{t('department.orgLevelValue', { level: department.level })}</p>
           </div>
 
           <div className="p-3 bg-muted/50 rounded-lg">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <Building2 className="h-4 w-4" />
-              <span className="text-xs">상위부서</span>
+              <span className="text-xs">{t('department.parentDepartment')}</span>
             </div>
-            <p className="text-sm">{department.parentName || '(최상위)'}</p>
+            <p className="text-sm">{department.parentName || t('department.topLevel')}</p>
           </div>
 
           <div className="p-3 bg-muted/50 rounded-lg">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <Globe className="h-4 w-4" />
-              <span className="text-xs">상태</span>
+              <span className="text-xs">{tCommon('status')}</span>
             </div>
             <StatusBadge
               status={department.status === 'ACTIVE' ? 'success' : 'default'}
-              label={department.status === 'ACTIVE' ? '활성' : '비활성'}
+              label={department.status === 'ACTIVE' ? tCommon('active') : tCommon('inactive')}
             />
           </div>
         </div>
@@ -77,7 +81,7 @@ export function DepartmentDetailSheet({
         <div className="p-4 bg-muted/50 rounded-lg">
           <div className="flex items-center gap-2 text-muted-foreground mb-2">
             <User className="h-4 w-4" />
-            <span className="text-sm">부서장</span>
+            <span className="text-sm">{t('department.head')}</span>
           </div>
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-background flex items-center justify-center">
@@ -85,7 +89,7 @@ export function DepartmentDetailSheet({
             </div>
             <div>
               <p className="font-medium">
-                {department.managerName || '미지정'}
+                {department.managerName || t('department.headNotAssigned')}
               </p>
             </div>
           </div>
@@ -95,10 +99,10 @@ export function DepartmentDetailSheet({
         <div className="flex items-center justify-between p-4 bg-primary/5 rounded-lg">
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5 text-primary" />
-            <span className="text-muted-foreground">소속 인원</span>
+            <span className="text-muted-foreground">{t('department.members')}</span>
           </div>
           <span className="text-xl font-bold text-primary">
-            {department.employeeCount}명
+            {department.employeeCount}{tCommon('unit.person')}
           </span>
         </div>
 
@@ -106,7 +110,7 @@ export function DepartmentDetailSheet({
         {onViewEmployees && (
           <Button className="w-full" onClick={onViewEmployees}>
             <Users className="mr-2 h-4 w-4" />
-            소속 직원 보기
+            {t('department.viewEmployees')}
           </Button>
         )}
       </div>

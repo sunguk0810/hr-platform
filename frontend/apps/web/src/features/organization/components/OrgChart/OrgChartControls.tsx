@@ -28,6 +28,7 @@ import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
 import { format, subMonths, addMonths, isAfter, isBefore, startOfDay } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 
 interface OrgChartControlsProps {
   onExport?: () => void;
@@ -50,6 +51,7 @@ export function OrgChartControls({
 }: OrgChartControlsProps) {
   const { zoomIn, zoomOut, fitView, setViewport } = useReactFlow();
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const { t } = useTranslation('organization');
 
   const today = startOfDay(new Date());
   const minDate = subMonths(today, 24); // 2년 전까지
@@ -130,7 +132,7 @@ export function OrgChartControls({
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>이전 달</TooltipContent>
+                <TooltipContent>{t('orgChart.controls.prevMonth')}</TooltipContent>
               </Tooltip>
             </TooltipProvider>
 
@@ -147,7 +149,7 @@ export function OrgChartControls({
                   {format(currentDate, 'yyyy년 M월', { locale: ko })}
                   {!isToday && (
                     <span className="text-xs bg-primary/10 px-1.5 py-0.5 rounded">
-                      과거
+                      {t('orgChart.controls.past')}
                     </span>
                   )}
                 </Button>
@@ -155,14 +157,14 @@ export function OrgChartControls({
               <PopoverContent className="w-80 p-4" align="center">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-medium">조직도 시점 선택</h4>
+                    <h4 className="text-sm font-medium">{t('orgChart.controls.pointInTime')}</h4>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={handleToday}
                       disabled={isToday}
                     >
-                      오늘로 이동
+                      {t('orgChart.controls.goToToday')}
                     </Button>
                   </div>
 
@@ -183,7 +185,7 @@ export function OrgChartControls({
                       className="w-full"
                     />
                     <p className="text-xs text-center text-muted-foreground">
-                      슬라이더를 드래그하여 시점을 선택하세요
+                      {t('orgChart.controls.dragToSelect')}
                     </p>
                   </div>
 
@@ -193,7 +195,7 @@ export function OrgChartControls({
                       <div className="border-t pt-3">
                         <div className="flex items-center gap-2 mb-2">
                           <History className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm font-medium">조직 변경 이력</span>
+                          <span className="text-sm font-medium">{t('orgChart.controls.orgHistory')}</span>
                         </div>
                         <div className="flex flex-wrap gap-1">
                           {historyDates.slice(0, 6).map((date) => (
@@ -233,7 +235,7 @@ export function OrgChartControls({
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>다음 달</TooltipContent>
+                <TooltipContent>{t('orgChart.controls.nextMonth')}</TooltipContent>
               </Tooltip>
             </TooltipProvider>
 
@@ -247,10 +249,10 @@ export function OrgChartControls({
                       className="ml-1 text-xs"
                       onClick={handleToday}
                     >
-                      오늘
+                      {t('orgChart.controls.today')}
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>현재 조직도로 이동</TooltipContent>
+                  <TooltipContent>{t('orgChart.controls.goToToday')}</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             )}
@@ -268,7 +270,7 @@ export function OrgChartControls({
                   <ZoomIn className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="left">확대</TooltipContent>
+              <TooltipContent side="left">{t('orgChart.controls.zoomIn')}</TooltipContent>
             </Tooltip>
 
             <Tooltip>
@@ -277,7 +279,7 @@ export function OrgChartControls({
                   <ZoomOut className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="left">축소</TooltipContent>
+              <TooltipContent side="left">{t('orgChart.controls.zoomOut')}</TooltipContent>
             </Tooltip>
 
             <Tooltip>
@@ -286,7 +288,7 @@ export function OrgChartControls({
                   <Maximize2 className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="left">전체 보기</TooltipContent>
+              <TooltipContent side="left">{t('orgChart.controls.fitView')}</TooltipContent>
             </Tooltip>
 
             <Tooltip>
@@ -295,7 +297,7 @@ export function OrgChartControls({
                   <RotateCcw className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="left">초기화</TooltipContent>
+              <TooltipContent side="left">{t('orgChart.controls.resetView')}</TooltipContent>
             </Tooltip>
 
             {onToggleView && (
@@ -312,7 +314,7 @@ export function OrgChartControls({
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="left">
-                    {viewMode === 'tree' ? '평면 보기' : '트리 보기'}
+                    {viewMode === 'tree' ? t('orgChart.controls.flatView') : t('orgChart.controls.treeView')}
                   </TooltipContent>
                 </Tooltip>
               </>
@@ -327,7 +329,7 @@ export function OrgChartControls({
                       <Download className="h-4 w-4" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="left">이미지 저장</TooltipContent>
+                  <TooltipContent side="left">{t('orgChart.controls.saveImage')}</TooltipContent>
                 </Tooltip>
               </>
             )}

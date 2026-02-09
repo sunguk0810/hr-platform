@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { OrgTree } from '../components/OrgTree';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,6 +24,8 @@ interface DepartmentEmployee {
 }
 
 export default function OrgChartPage() {
+  const { t } = useTranslation('organization');
+  const { t: tCommon } = useTranslation('common');
   const isMobile = useIsMobile();
   const [selectedDeptId, setSelectedDeptId] = useState<string>();
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -115,17 +118,17 @@ export default function OrgChartPage() {
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <Building2 className="h-4 w-4" />
-              부서 정보
+              {t('department.info')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">부서코드</span>
+              <span className="text-muted-foreground">{t('orgChart.departmentCode')}</span>
               <span>{selectedDept.code}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">인원수</span>
-              <Badge variant="secondary">{selectedDept.employeeCount}명</Badge>
+              <span className="text-muted-foreground">{t('orgChart.memberCount')}</span>
+              <Badge variant="secondary">{selectedDept.employeeCount}{tCommon('unit.person')}</Badge>
             </div>
           </CardContent>
         </Card>
@@ -133,7 +136,7 @@ export default function OrgChartPage() {
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <Users className="h-4 w-4" />
-              부서 구성원 ({employeesData?.length ?? 0}명)
+              {t('orgChart.departmentMembersWithCount', { count: employeesData?.length ?? 0 })}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -158,7 +161,7 @@ export default function OrgChartPage() {
               ))}
               {(!employeesData || employeesData.length === 0) && (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  소속 직원이 없습니다.
+                  {t('orgChart.noMembers')}
                 </p>
               )}
             </div>
@@ -172,7 +175,7 @@ export default function OrgChartPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">조직도</h1>
+        <h1 className="text-2xl font-bold">{t('orgChart.title')}</h1>
       </div>
 
       <div className={isMobile ? 'space-y-4' : 'grid grid-cols-12 gap-6'}>
@@ -183,7 +186,7 @@ export default function OrgChartPage() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="부서 검색..."
+                  placeholder={t('orgChart.searchPlaceholder')}
                   value={searchKeyword}
                   onChange={(e) => setSearchKeyword(e.target.value)}
                   className="pl-9"
@@ -200,8 +203,8 @@ export default function OrgChartPage() {
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-4">
                   {searchKeyword
-                    ? '검색 결과가 없습니다.'
-                    : '조직 데이터를 불러오는 중...'}
+                    ? t('orgChart.noSearchResults')
+                    : t('orgChart.loading')}
                 </p>
               )}
             </CardContent>
@@ -223,13 +226,13 @@ export default function OrgChartPage() {
                   <CardContent>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <span className="text-muted-foreground">부서코드</span>
+                        <span className="text-muted-foreground">{t('orgChart.departmentCode')}</span>
                         <p className="font-medium">{selectedDept.code}</p>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">인원수</span>
+                        <span className="text-muted-foreground">{t('orgChart.memberCount')}</span>
                         <p className="font-medium">
-                          {selectedDept.employeeCount}명
+                          {selectedDept.employeeCount}{tCommon('unit.person')}
                         </p>
                       </div>
                     </div>
@@ -239,7 +242,7 @@ export default function OrgChartPage() {
                   <CardHeader className="pb-3">
                     <CardTitle className="flex items-center gap-2 text-base">
                       <Users className="h-4 w-4" />
-                      부서 구성원 ({employeesData?.length ?? 0}명)
+                      {t('orgChart.departmentMembersWithCount', { count: employeesData?.length ?? 0 })}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -265,7 +268,7 @@ export default function OrgChartPage() {
                       ))}
                       {(!employeesData || employeesData.length === 0) && (
                         <p className="text-sm text-muted-foreground text-center py-8">
-                          소속 직원이 없습니다.
+                          {t('orgChart.noMembers')}
                         </p>
                       )}
                     </div>
@@ -276,7 +279,7 @@ export default function OrgChartPage() {
               <Card>
                 <CardContent className="flex flex-col items-center justify-center py-16 text-muted-foreground">
                   <User className="h-12 w-12 mb-4 opacity-30" />
-                  <p>좌측 조직도에서 부서를 선택하세요.</p>
+                  <p>{t('orgChart.selectDepartment')}</p>
                 </CardContent>
               </Card>
             )}

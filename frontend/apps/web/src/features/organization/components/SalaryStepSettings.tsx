@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/useToast';
 import { Plus, Trash2, Save, DollarSign } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface SalaryStep {
   id: string;
@@ -37,6 +38,8 @@ let nextId = 6;
 
 export function SalaryStepSettings({ gradeId: _gradeId, gradeName }: SalaryStepSettingsProps) {
   const { toast } = useToast();
+  const { t } = useTranslation('organization');
+  const { t: tCommon } = useTranslation('common');
   const [steps, setSteps] = useState<SalaryStep[]>(MOCK_SALARY_STEPS);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -74,13 +77,13 @@ export function SalaryStepSettings({ gradeId: _gradeId, gradeName }: SalaryStepS
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 500));
       toast({
-        title: '저장 완료',
-        description: `${gradeName} 직급의 호봉 설정이 저장되었습니다.`,
+        title: t('salaryStep.toast.saveSuccess'),
+        description: t('salaryStep.toast.saveSuccessDesc', { gradeName }),
       });
     } catch {
       toast({
-        title: '저장 실패',
-        description: '호봉 설정 저장 중 오류가 발생했습니다.',
+        title: t('salaryStep.toast.saveFailed'),
+        description: t('salaryStep.toast.saveFailedDesc'),
         variant: 'destructive',
       });
     } finally {
@@ -94,20 +97,20 @@ export function SalaryStepSettings({ gradeId: _gradeId, gradeName }: SalaryStepS
         <div className="space-y-1">
           <CardTitle className="text-lg flex items-center gap-2">
             <DollarSign className="h-5 w-5 text-primary" />
-            호봉 설정 - {gradeName}
+            {t('salaryStep.title', { gradeName })}
           </CardTitle>
           <CardDescription>
-            직급별 호봉 기본급을 설정합니다. 호봉은 근속 연수에 따라 자동 적용됩니다.
+            {t('salaryStep.description')}
           </CardDescription>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={handleAddRow}>
             <Plus className="mr-1 h-4 w-4" />
-            행 추가
+            {t('salaryStep.addRow')}
           </Button>
           <Button size="sm" onClick={handleSave} disabled={isSaving}>
             <Save className="mr-1 h-4 w-4" />
-            {isSaving ? '저장 중...' : '저장'}
+            {isSaving ? tCommon('saving') : tCommon('save')}
           </Button>
         </div>
       </CardHeader>
@@ -115,16 +118,16 @@ export function SalaryStepSettings({ gradeId: _gradeId, gradeName }: SalaryStepS
         {steps.length === 0 ? (
           <div className="py-8 text-center text-muted-foreground">
             <DollarSign className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
-            <p className="font-medium">등록된 호봉이 없습니다</p>
-            <p className="text-sm mt-1">행 추가 버튼을 눌러 호봉을 등록해주세요.</p>
+            <p className="font-medium">{t('salaryStep.noSteps')}</p>
+            <p className="text-sm mt-1">{t('salaryStep.noStepsDescription')}</p>
           </div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[80px] text-center">호봉</TableHead>
-                <TableHead className="w-[200px]">기본급 (원)</TableHead>
-                <TableHead>비고</TableHead>
+                <TableHead className="w-[80px] text-center">{t('salaryStep.step')}</TableHead>
+                <TableHead className="w-[200px]">{t('salaryStep.baseSalary')}</TableHead>
+                <TableHead>{t('salaryStep.note')}</TableHead>
                 <TableHead className="w-[60px]" />
               </TableRow>
             </TableHeader>
@@ -140,7 +143,7 @@ export function SalaryStepSettings({ gradeId: _gradeId, gradeName }: SalaryStepS
                         onChange={(e) => handleSalaryChange(step.id, e.target.value)}
                         className="w-[180px] text-right"
                       />
-                      <span className="text-sm text-muted-foreground whitespace-nowrap">원</span>
+                      <span className="text-sm text-muted-foreground whitespace-nowrap">{t('salaryStep.currencyUnit')}</span>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -148,7 +151,7 @@ export function SalaryStepSettings({ gradeId: _gradeId, gradeName }: SalaryStepS
                       type="text"
                       value={step.note}
                       onChange={(e) => handleNoteChange(step.id, e.target.value)}
-                      placeholder="비고 입력"
+                      placeholder={t('salaryStep.notePlaceholder')}
                     />
                   </TableCell>
                   <TableCell>
@@ -170,11 +173,11 @@ export function SalaryStepSettings({ gradeId: _gradeId, gradeName }: SalaryStepS
         {steps.length > 0 && (
           <div className="mt-4 flex justify-between items-center px-4 py-3 bg-muted/50 rounded-lg">
             <span className="text-sm text-muted-foreground">
-              총 {steps.length}개 호봉
+              {t('salaryStep.totalSteps', { count: steps.length })}
             </span>
             <span className="text-sm font-medium">
-              기본급 범위: {Math.min(...steps.map((s) => s.baseSalary)).toLocaleString()}원 ~{' '}
-              {Math.max(...steps.map((s) => s.baseSalary)).toLocaleString()}원
+              {t('salaryStep.salaryRange')}: {Math.min(...steps.map((s) => s.baseSalary)).toLocaleString()}{t('salaryStep.currencyUnit')} ~{' '}
+              {Math.max(...steps.map((s) => s.baseSalary)).toLocaleString()}{t('salaryStep.currencyUnit')}
             </span>
           </div>
         )}

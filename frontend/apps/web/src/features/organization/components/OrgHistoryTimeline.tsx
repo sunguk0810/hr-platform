@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import {
@@ -50,9 +51,11 @@ function getInitials(name: string) {
 
 export function OrgHistoryTimeline({
   events,
-  title = '조직 변경 이력',
+  title,
   className,
 }: OrgHistoryTimelineProps) {
+  const { t } = useTranslation('organization');
+  const displayTitle = title ?? t('history.title');
   // Group events by date
   const groupedEvents = events.reduce(
     (acc, event) => {
@@ -74,11 +77,11 @@ export function OrgHistoryTimeline({
     return (
       <Card className={className}>
         <CardHeader>
-          <CardTitle className="text-lg">{title}</CardTitle>
+          <CardTitle className="text-lg">{displayTitle}</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-center text-muted-foreground py-8">
-            변경 이력이 없습니다.
+            {t('history.noHistory')}
           </p>
         </CardContent>
       </Card>
@@ -88,7 +91,7 @@ export function OrgHistoryTimeline({
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle className="text-lg">{title}</CardTitle>
+        <CardTitle className="text-lg">{displayTitle}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">

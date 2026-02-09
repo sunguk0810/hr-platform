@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ChevronDown, ChevronRight, Users, Building2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { DepartmentTreeNode } from '@hr-platform/shared-types';
@@ -18,6 +19,7 @@ export function DepartmentAccordion({
   expandedIds = [],
   onToggleExpand,
 }: DepartmentAccordionProps) {
+  const { t: tCommon } = useTranslation('common');
   const [localExpanded, setLocalExpanded] = useState<string[]>([]);
 
   const expanded = onToggleExpand ? expandedIds : localExpanded;
@@ -85,7 +87,7 @@ export function DepartmentAccordion({
             <div className="font-medium">{dept.name}</div>
             <div className="text-xs text-muted-foreground flex items-center gap-1">
               <Users className="h-3 w-3" />
-              {dept.employeeCount ?? 0}명
+              {dept.employeeCount ?? 0}{tCommon('unit.person')}
             </div>
           </div>
         </button>

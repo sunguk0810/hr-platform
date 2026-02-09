@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -33,6 +34,9 @@ export function PositionList({
   onUpdate,
   onDelete,
 }: PositionListProps) {
+  const { t } = useTranslation('organization');
+  const { t: tCommon } = useTranslation('common');
+
   const [isCreateDialogOpen, setIsCreateDialogOpen] = React.useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
@@ -138,7 +142,7 @@ export function PositionList({
         {onCreate && (
           <Button onClick={handleCreateOpen}>
             <Plus className="mr-2 h-4 w-4" />
-            직책 추가
+            {t('position.add')}
           </Button>
         )}
       </div>
@@ -148,12 +152,12 @@ export function PositionList({
           {sortedPositions.length === 0 ? (
             <EmptyState
               icon={Briefcase}
-              title="등록된 직책이 없습니다"
-              description="새로운 직책을 등록해주세요."
+              title={t('position.noPositions')}
+              description={t('position.noPositionsDescription')}
               action={
                 onCreate
                   ? {
-                      label: '직책 추가',
+                      label: t('position.add'),
                       onClick: handleCreateOpen,
                     }
                   : undefined
@@ -166,22 +170,22 @@ export function PositionList({
                   <tr className="border-b bg-muted/50">
                     <th className="w-10 px-4 py-3"></th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                      코드
+                      {tCommon('code')}
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                      명칭
+                      {t('position.name')}
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                      영문명
+                      {tCommon('englishName')}
                     </th>
                     <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                      순서
+                      {tCommon('order')}
                     </th>
                     <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                      상태
+                      {tCommon('status')}
                     </th>
                     <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                      작업
+                      {tCommon('actions')}
                     </th>
                   </tr>
                 </thead>
@@ -200,7 +204,7 @@ export function PositionList({
                       <td className="px-4 py-3 text-center">
                         <StatusBadge
                           status={position.isActive ? 'success' : 'default'}
-                          label={position.isActive ? '활성' : '비활성'}
+                          label={position.isActive ? tCommon('active') : tCommon('inactive')}
                         />
                       </td>
                       <td className="px-4 py-3 text-right">
@@ -238,41 +242,41 @@ export function PositionList({
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>직책 추가</DialogTitle>
-            <DialogDescription>새로운 직책을 추가합니다.</DialogDescription>
+            <DialogTitle>{t('position.add')}</DialogTitle>
+            <DialogDescription>{t('position.addDescription')}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="code">코드 *</Label>
+              <Label htmlFor="code">{`${tCommon('code')} *`}</Label>
               <Input
                 id="code"
                 value={formData.code}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, code: e.target.value.toUpperCase() }))
                 }
-                placeholder="예: P1"
+                placeholder={t('position.placeholders.code')}
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="name">명칭 *</Label>
+              <Label htmlFor="name">{`${t('position.name')} *`}</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-                placeholder="예: 팀장"
+                placeholder={t('position.placeholders.name')}
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="nameEn">영문명</Label>
+              <Label htmlFor="nameEn">{tCommon('englishName')}</Label>
               <Input
                 id="nameEn"
                 value={formData.nameEn}
                 onChange={(e) => setFormData((prev) => ({ ...prev, nameEn: e.target.value }))}
-                placeholder="예: Team Leader"
+                placeholder={t('position.placeholders.englishName')}
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="sortOrder">순서</Label>
+              <Label htmlFor="sortOrder">{tCommon('order')}</Label>
               <Input
                 id="sortOrder"
                 type="number"
@@ -284,26 +288,26 @@ export function PositionList({
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="description">설명</Label>
+              <Label htmlFor="description">{tCommon('description')}</Label>
               <Textarea
                 id="description"
                 value={formData.description}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, description: e.target.value }))
                 }
-                placeholder="직책에 대한 설명"
+                placeholder={t('position.placeholders.description')}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-              취소
+              {tCommon('cancel')}
             </Button>
             <Button
               onClick={handleCreate}
               disabled={!formData.code || !formData.name || isSubmitting}
             >
-              {isSubmitting ? '저장 중...' : '저장'}
+              {isSubmitting ? tCommon('saving') : tCommon('save')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -313,16 +317,16 @@ export function PositionList({
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>직책 수정</DialogTitle>
-            <DialogDescription>직책 정보를 수정합니다.</DialogDescription>
+            <DialogTitle>{t('position.edit')}</DialogTitle>
+            <DialogDescription>{t('position.editDescription')}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="edit-code">코드</Label>
+              <Label htmlFor="edit-code">{tCommon('code')}</Label>
               <Input id="edit-code" value={formData.code} disabled />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-name">명칭 *</Label>
+              <Label htmlFor="edit-name">{`${t('position.name')} *`}</Label>
               <Input
                 id="edit-name"
                 value={formData.name}
@@ -330,7 +334,7 @@ export function PositionList({
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-nameEn">영문명</Label>
+              <Label htmlFor="edit-nameEn">{tCommon('englishName')}</Label>
               <Input
                 id="edit-nameEn"
                 value={formData.nameEn}
@@ -338,7 +342,7 @@ export function PositionList({
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-sortOrder">순서</Label>
+              <Label htmlFor="edit-sortOrder">{tCommon('order')}</Label>
               <Input
                 id="edit-sortOrder"
                 type="number"
@@ -350,7 +354,7 @@ export function PositionList({
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-description">설명</Label>
+              <Label htmlFor="edit-description">{tCommon('description')}</Label>
               <Textarea
                 id="edit-description"
                 value={formData.description}
@@ -362,10 +366,10 @@ export function PositionList({
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              취소
+              {tCommon('cancel')}
             </Button>
             <Button onClick={handleUpdate} disabled={!formData.name || isSubmitting}>
-              {isSubmitting ? '저장 중...' : '저장'}
+              {isSubmitting ? tCommon('saving') : tCommon('save')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -375,23 +379,23 @@ export function PositionList({
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>직책 삭제</DialogTitle>
+            <DialogTitle>{t('position.delete')}</DialogTitle>
             <DialogDescription>
-              정말로 이 직책을 삭제하시겠습니까?
+              {t('position.deleteConfirm')}
               <br />
               <strong className="text-foreground">{selectedPosition?.name}</strong>
               <br />
               <span className="text-destructive">
-                해당 직책이 적용된 직원이 있는 경우 삭제할 수 없습니다.
+                {t('position.deleteWarning')}
               </span>
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-              취소
+              {tCommon('cancel')}
             </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={isSubmitting}>
-              {isSubmitting ? '삭제 중...' : '삭제'}
+              {isSubmitting ? tCommon('deleting') : tCommon('delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

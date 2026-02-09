@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ChevronRight, ChevronDown, Building2, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { DepartmentTreeNode } from '@hr-platform/shared-types';
@@ -94,6 +95,7 @@ interface OrgTreeProps {
 }
 
 export function OrgTree({ data, selectedId, onSelect, className }: OrgTreeProps) {
+  const { t: tCommon } = useTranslation('common');
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => {
     // Initially expand first level
     const ids = new Set<string>();
@@ -135,7 +137,7 @@ export function OrgTree({ data, selectedId, onSelect, className }: OrgTreeProps)
           onClick={expandAll}
           className="text-xs text-muted-foreground hover:text-foreground"
         >
-          전체 펼치기
+          {tCommon('expandAll')}
         </button>
         <span className="text-muted-foreground">|</span>
         <button
@@ -143,7 +145,7 @@ export function OrgTree({ data, selectedId, onSelect, className }: OrgTreeProps)
           onClick={collapseAll}
           className="text-xs text-muted-foreground hover:text-foreground"
         >
-          전체 접기
+          {tCommon('collapseAll')}
         </button>
       </div>
       <div>

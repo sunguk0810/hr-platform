@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { format, subDays } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -35,16 +36,6 @@ import { useOrganizationTree, useOrganizationHistory, useOrgHistorySearchParams 
 import type { OrgHistoryEventType } from '../services/organizationService';
 import { cn } from '@/lib/utils';
 
-const EVENT_TYPE_LABELS: Record<OrgHistoryEventType, string> = {
-  department_created: '부서 생성',
-  department_deleted: '부서 삭제',
-  department_renamed: '부서명 변경',
-  department_moved: '부서 이동',
-  employee_joined: '직원 입사',
-  employee_left: '직원 퇴사',
-  employee_transferred: '직원 이동',
-};
-
 const EVENT_TYPE_ICONS: Record<OrgHistoryEventType, React.ElementType> = {
   department_created: Building2,
   department_deleted: Building2,
@@ -66,11 +57,23 @@ const EVENT_TYPE_COLORS: Record<OrgHistoryEventType, string> = {
 };
 
 export default function OrgHistoryPage() {
+  const { t } = useTranslation('organization');
+  const { t: tCommon } = useTranslation('common');
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const [showFilters, setShowFilters] = useState(false);
   const [startDate, setStartDate] = useState<Date | undefined>(subDays(new Date(), 30));
   const [endDate, setEndDate] = useState<Date | undefined>(new Date());
+
+  const EVENT_TYPE_LABELS: Record<OrgHistoryEventType, string> = {
+    department_created: t('history.eventTypes.department_created'),
+    department_deleted: t('history.eventTypes.department_deleted'),
+    department_renamed: t('history.eventTypes.department_renamed'),
+    department_moved: t('history.eventTypes.department_moved'),
+    employee_joined: t('history.eventTypes.employee_joined'),
+    employee_left: t('history.eventTypes.employee_left'),
+    employee_transferred: t('history.eventTypes.employee_transferred'),
+  };
 
   const { data: treeData } = useOrganizationTree();
   const { params, searchState, setDepartmentId, setEventType, setDateRange, setPage, resetFilters } =
@@ -175,14 +178,14 @@ export default function OrgHistoryPage() {
           {/* Actor */}
           {event.actor && (
             <div className="mt-2 text-xs text-muted-foreground">
-              변경자: {event.actor.name}
+              {t('history.changedBy')} {event.actor.name}
             </div>
           )}
 
           {/* Department */}
           {event.departmentName && (
             <div className="mt-1 text-xs text-muted-foreground">
-              부서: {event.departmentName}
+              {t('history.departmentLabel')} {event.departmentName}
             </div>
           )}
         </div>
@@ -198,8 +201,8 @@ export default function OrgHistoryPage() {
           {/* Mobile Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold">조직 변경 이력</h1>
-              <p className="text-sm text-muted-foreground">조직 구조 변경 이력</p>
+              <h1 className="text-xl font-bold">{t('history.title')}</h1>
+              <p className="text-sm text-muted-foreground">{t('history.mobileDescription')}</p>
             </div>
             <Button
               size="sm"
@@ -214,19 +217,19 @@ export default function OrgHistoryPage() {
           {showFilters && (
             <div className="bg-card rounded-xl border p-4 space-y-4">
               <div className="space-y-2">
-                <Label>부서</Label>
+                <Label>{t('history.department')}</Label>
                 <Select
                   value={searchState.departmentId || 'all'}
                   onValueChange={(value) => setDepartmentId(value === 'all' ? '' : value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="전체 부서" />
+                    <SelectValue placeholder={t('history.allDepartments')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">전체 부서</SelectItem>
+                    <SelectItem value="all">{t('history.allDepartments')}</SelectItem>
                     {flatDepartments.map((dept) => (
                       <SelectItem key={dept.id} value={dept.id}>
-                        {'　'.repeat(dept.level - 1)}
+                        {'\u3000'.repeat(dept.level - 1)}
                         {dept.name}
                       </SelectItem>
                     ))}
@@ -235,7 +238,7 @@ export default function OrgHistoryPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>이벤트 유형</Label>
+                <Label>{t('history.eventType')}</Label>
                 <Select
                   value={searchState.eventType || 'all'}
                   onValueChange={(value) =>
@@ -243,10 +246,10 @@ export default function OrgHistoryPage() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="전체 유형" />
+                    <SelectValue placeholder={t('history.allTypes')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">전체 유형</SelectItem>
+                    <SelectItem value="all">{t('history.allTypes')}</SelectItem>
                     {Object.entries(EVENT_TYPE_LABELS).map(([value, label]) => (
                       <SelectItem key={value} value={value}>
                         {label}
@@ -258,29 +261,29 @@ export default function OrgHistoryPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>시작일</Label>
+                  <Label>{t('history.startDate')}</Label>
                   <DatePicker
                     value={startDate}
                     onChange={setStartDate}
-                    placeholder="시작일"
+                    placeholder={t('history.startDatePlaceholder')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>종료일</Label>
+                  <Label>{t('history.endDate')}</Label>
                   <DatePicker
                     value={endDate}
                     onChange={setEndDate}
-                    placeholder="종료일"
+                    placeholder={t('history.endDatePlaceholder')}
                   />
                 </div>
               </div>
 
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" className="flex-1" onClick={handleReset}>
-                  초기화
+                  {tCommon('reset')}
                 </Button>
                 <Button size="sm" className="flex-1" onClick={handleApplyDateFilter}>
-                  적용
+                  {t('history.apply')}
                 </Button>
               </div>
             </div>
@@ -296,7 +299,7 @@ export default function OrgHistoryPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              전체
+              {tCommon('all')}
             </button>
             {Object.entries(EVENT_TYPE_LABELS).map(([value, label]) => (
               <button
@@ -321,9 +324,9 @@ export default function OrgHistoryPage() {
           ) : history.length === 0 ? (
             <div className="bg-card rounded-xl border p-8 text-center">
               <History className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-              <p className="font-medium">변경 이력이 없습니다</p>
+              <p className="font-medium">{t('history.noHistory')}</p>
               <p className="text-sm text-muted-foreground mt-1">
-                선택한 기간 내 조직 변경 이력이 없습니다.
+                {t('history.noHistoryDescription')}
               </p>
             </div>
           ) : (
@@ -348,20 +351,20 @@ export default function OrgHistoryPage() {
   return (
     <>
       <PageHeader
-        title="조직 변경 이력"
-        description="조직 구조 변경 이력을 조회합니다."
+        title={t('history.title')}
+        description={t('history.description')}
         actions={
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => refetch()}>
               <RefreshCw className="mr-2 h-4 w-4" />
-              새로고침
+              {t('history.refresh')}
             </Button>
             <Button
               variant={showFilters ? 'secondary' : 'outline'}
               onClick={() => setShowFilters(!showFilters)}
             >
               <Filter className="mr-2 h-4 w-4" />
-              필터
+              {tCommon('filter')}
             </Button>
           </div>
         }
@@ -371,24 +374,24 @@ export default function OrgHistoryPage() {
       {showFilters && (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-base">검색 필터</CardTitle>
+            <CardTitle className="text-base">{t('history.searchFilter')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <div className="space-y-2">
-                <Label>부서</Label>
+                <Label>{t('history.department')}</Label>
                 <Select
                   value={searchState.departmentId || 'all'}
                   onValueChange={(value) => setDepartmentId(value === 'all' ? '' : value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="전체 부서" />
+                    <SelectValue placeholder={t('history.allDepartments')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">전체 부서</SelectItem>
+                    <SelectItem value="all">{t('history.allDepartments')}</SelectItem>
                     {flatDepartments.map((dept) => (
                       <SelectItem key={dept.id} value={dept.id}>
-                        {'　'.repeat(dept.level - 1)}
+                        {'\u3000'.repeat(dept.level - 1)}
                         {dept.name}
                       </SelectItem>
                     ))}
@@ -397,7 +400,7 @@ export default function OrgHistoryPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>이벤트 유형</Label>
+                <Label>{t('history.eventType')}</Label>
                 <Select
                   value={searchState.eventType || 'all'}
                   onValueChange={(value) =>
@@ -405,10 +408,10 @@ export default function OrgHistoryPage() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="전체 유형" />
+                    <SelectValue placeholder={t('history.allTypes')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">전체 유형</SelectItem>
+                    <SelectItem value="all">{t('history.allTypes')}</SelectItem>
                     {Object.entries(EVENT_TYPE_LABELS).map(([value, label]) => (
                       <SelectItem key={value} value={value}>
                         {label}
@@ -419,29 +422,29 @@ export default function OrgHistoryPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>시작일</Label>
+                <Label>{t('history.startDate')}</Label>
                 <DatePicker
                   value={startDate}
                   onChange={setStartDate}
-                  placeholder="시작일 선택"
+                  placeholder={t('history.startDateSelectPlaceholder')}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>종료일</Label>
+                <Label>{t('history.endDate')}</Label>
                 <DatePicker
                   value={endDate}
                   onChange={setEndDate}
-                  placeholder="종료일 선택"
+                  placeholder={t('history.endDateSelectPlaceholder')}
                 />
               </div>
             </div>
 
             <div className="flex justify-end gap-2 mt-4">
               <Button variant="outline" onClick={handleReset}>
-                초기화
+                {tCommon('reset')}
               </Button>
-              <Button onClick={handleApplyDateFilter}>적용</Button>
+              <Button onClick={handleApplyDateFilter}>{t('history.apply')}</Button>
             </div>
           </CardContent>
         </Card>
@@ -452,7 +455,7 @@ export default function OrgHistoryPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <History className="h-5 w-5" />
-            변경 이력
+            {t('history.timeline')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -463,8 +466,8 @@ export default function OrgHistoryPage() {
           ) : history.length === 0 ? (
             <EmptyState
               icon={History}
-              title="변경 이력이 없습니다"
-              description="선택한 기간 내 조직 변경 이력이 없습니다."
+              title={t('history.noHistory')}
+              description={t('history.noHistoryDescription')}
             />
           ) : (
             <div className="space-y-4">

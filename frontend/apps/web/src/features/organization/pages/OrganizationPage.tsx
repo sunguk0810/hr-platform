@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -39,6 +40,9 @@ import {
 import type { DepartmentTreeNode, CreateDepartmentRequest, UpdateDepartmentRequest } from '@hr-platform/shared-types';
 
 export default function OrganizationPage() {
+  const { t } = useTranslation('organization');
+  const { t: tCommon } = useTranslation('common');
+
   const [selectedNode, setSelectedNode] = useState<DepartmentTreeNode | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -218,8 +222,8 @@ export default function OrganizationPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-xl font-bold">조직관리</h1>
-            <p className="text-sm text-muted-foreground">조직도 및 부서 정보</p>
+            <h1 className="text-xl font-bold">{t('title')}</h1>
+            <p className="text-sm text-muted-foreground">{t('mobileDescription')}</p>
           </div>
           {canEdit && (
             <Button size="sm" onClick={() => handleCreateOpen()}>
@@ -232,7 +236,7 @@ export default function OrganizationPage() {
         <div data-tour="department-search" className="relative mb-4">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="부서명 또는 코드로 검색..."
+            placeholder={t('department.searchPlaceholderMobile')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
@@ -247,18 +251,18 @@ export default function OrganizationPage() {
         ) : isTreeError ? (
           <EmptyState
             icon={Building2}
-            title="조직도를 불러올 수 없습니다"
-            description="잠시 후 다시 시도해주세요."
+            title={t('department.loadError')}
+            description={t('department.loadErrorDesc')}
           />
         ) : filteredTree.length === 0 ? (
           <EmptyState
             icon={Building2}
-            title={searchQuery ? '검색 결과가 없습니다' : '등록된 부서가 없습니다'}
-            description={searchQuery ? '다른 검색어로 시도해보세요.' : '새 부서를 등록하여 조직을 구성하세요.'}
+            title={searchQuery ? t('department.searchNoResults') : t('department.noDepartments')}
+            description={searchQuery ? t('department.searchNoResultsDesc') : t('department.noDepartmentsAction')}
             action={
               !searchQuery && canEdit
                 ? {
-                    label: '부서 추가',
+                    label: t('department.add'),
                     onClick: () => handleCreateOpen(),
                   }
                 : undefined
@@ -287,23 +291,23 @@ export default function OrganizationPage() {
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>부서 추가</DialogTitle>
+              <DialogTitle>{t('department.add')}</DialogTitle>
               <DialogDescription>
-                새로운 부서를 추가합니다.
+                {t('department.addDescription')}
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="parentId">상위부서</Label>
+                <Label htmlFor="parentId">{t('department.parentDepartment')}</Label>
                 <Select
                   value={formData.parentId || 'none'}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, parentId: value === 'none' ? undefined : value }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="상위부서 선택" />
+                    <SelectValue placeholder={t('department.selectParent')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">(최상위)</SelectItem>
+                    <SelectItem value="none">{t('department.topLevel')}</SelectItem>
                     {flatDepartments.map((dept) => (
                       <SelectItem key={dept.id} value={dept.id}>
                         {'　'.repeat(dept.level - 1)}{dept.name}
@@ -313,42 +317,42 @@ export default function OrganizationPage() {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="code">부서코드 *</Label>
+                <Label htmlFor="code">{`${t('department.code')} *`}</Label>
                 <Input
                   id="code"
                   value={formData.code}
                   onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value.toUpperCase() }))}
-                  placeholder="예: DEV-FE"
+                  placeholder={t('department.placeholders.code')}
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="name">부서명 *</Label>
+                <Label htmlFor="name">{`${t('department.name')} *`}</Label>
                 <Input
                   id="name"
                   value={formData.name}
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="예: 프론트엔드팀"
+                  placeholder={t('department.placeholders.name')}
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="nameEn">영문명</Label>
+                <Label htmlFor="nameEn">{tCommon('englishName')}</Label>
                 <Input
                   id="nameEn"
                   value={formData.nameEn}
                   onChange={(e) => setFormData(prev => ({ ...prev, nameEn: e.target.value }))}
-                  placeholder="예: Frontend Team"
+                  placeholder={t('department.placeholders.englishName')}
                 />
               </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                취소
+                {tCommon('cancel')}
               </Button>
               <Button
                 onClick={handleCreate}
                 disabled={!formData.code || !formData.name || createMutation.isPending}
               >
-                {createMutation.isPending ? '저장 중...' : '저장'}
+                {createMutation.isPending ? tCommon('saving') : tCommon('save')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -361,13 +365,13 @@ export default function OrganizationPage() {
   return (
     <>
       <PageHeader
-        title="조직관리"
-        description="조직도 및 부서 정보를 조회하고 관리합니다."
+        title={t('title')}
+        description={t('description')}
         actions={
           canEdit && (
             <Button onClick={() => handleCreateOpen()}>
               <Plus className="mr-2 h-4 w-4" />
-              부서 추가
+              {t('department.add')}
             </Button>
           )
         }
@@ -376,7 +380,7 @@ export default function OrganizationPage() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card data-tour="org-tree" className="md:col-span-1 lg:col-span-1">
           <CardHeader>
-            <CardTitle>조직도</CardTitle>
+            <CardTitle>{t('orgChart.title')}</CardTitle>
           </CardHeader>
           <CardContent>
             {isTreeLoading ? (
@@ -386,16 +390,16 @@ export default function OrganizationPage() {
             ) : isTreeError ? (
               <EmptyState
                 icon={Building2}
-                title="조직도를 불러올 수 없습니다"
-                description="잠시 후 다시 시도해주세요."
+                title={t('department.loadError')}
+                description={t('department.loadErrorDesc')}
               />
             ) : tree.length === 0 ? (
               <EmptyState
                 icon={Building2}
-                title="등록된 부서가 없습니다"
-                description="새 부서를 등록하여 조직을 구성하세요."
+                title={t('department.noDepartments')}
+                description={t('department.noDepartmentsAction')}
                 action={{
-                  label: '부서 추가',
+                  label: t('department.add'),
                   onClick: () => handleCreateOpen(),
                 }}
               />
@@ -411,24 +415,24 @@ export default function OrganizationPage() {
 
         <Card className="lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>부서 상세</CardTitle>
+            <CardTitle>{t('department.detail')}</CardTitle>
             {selectedDepartment && canEdit && (
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => handleCreateOpen(selectedNode?.id)}>
                   <Plus className="mr-1 h-4 w-4" />
-                  하위부서
+                  {t('department.subDepartment')}
                 </Button>
                 <Button variant="outline" size="sm" onClick={handleEditOpen}>
                   <Pencil className="mr-1 h-4 w-4" />
-                  수정
+                  {tCommon('edit')}
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => handleReorgImpactOpen('delete')}>
                   <GitMerge className="mr-1 h-4 w-4" />
-                  영향도 분석
+                  {t('department.impactAnalysis')}
                 </Button>
                 <Button variant="outline" size="sm" onClick={handleDeleteOpen}>
                   <Trash2 className="mr-1 h-4 w-4" />
-                  삭제
+                  {tCommon('delete')}
                 </Button>
               </div>
             )}
@@ -436,50 +440,50 @@ export default function OrganizationPage() {
           <CardContent>
             {!selectedNode ? (
               <p className="text-muted-foreground text-center py-8">
-                좌측 조직도에서 부서를 선택하면 상세 정보가 표시됩니다.
+                {t('department.selectFromTree')}
               </p>
             ) : selectedDepartment ? (
               <div className="space-y-6">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
-                    <Label className="text-muted-foreground">부서코드</Label>
+                    <Label className="text-muted-foreground">{t('department.code')}</Label>
                     <p className="font-mono text-sm mt-1">{selectedDepartment.code}</p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">부서명</Label>
+                    <Label className="text-muted-foreground">{t('department.name')}</Label>
                     <p className="text-sm mt-1">{selectedDepartment.name}</p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">영문명</Label>
+                    <Label className="text-muted-foreground">{tCommon('englishName')}</Label>
                     <p className="text-sm mt-1">{selectedDepartment.nameEn || '-'}</p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">상태</Label>
+                    <Label className="text-muted-foreground">{tCommon('status')}</Label>
                     <div className="mt-1">
                       <StatusBadge
                         status={selectedDepartment.status === 'ACTIVE' ? 'success' : 'default'}
-                        label={selectedDepartment.status === 'ACTIVE' ? '활성' : '비활성'}
+                        label={selectedDepartment.status === 'ACTIVE' ? tCommon('active') : tCommon('inactive')}
                       />
                     </div>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">상위부서</Label>
-                    <p className="text-sm mt-1">{selectedDepartment.parentName || '(최상위)'}</p>
+                    <Label className="text-muted-foreground">{t('department.parentDepartment')}</Label>
+                    <p className="text-sm mt-1">{selectedDepartment.parentName || t('department.topLevel')}</p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">조직레벨</Label>
-                    <p className="text-sm mt-1">{selectedDepartment.level}단계</p>
+                    <Label className="text-muted-foreground">{t('department.orgLevel')}</Label>
+                    <p className="text-sm mt-1">{t('department.orgLevelValue', { level: selectedDepartment.level })}</p>
                   </div>
                 </div>
 
                 <div className="border-t pt-4">
-                  <Label className="text-muted-foreground">부서장</Label>
+                  <Label className="text-muted-foreground">{t('department.head')}</Label>
                   <div className="flex items-center gap-3 mt-2">
                     <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
                       <User className="h-5 w-5 text-muted-foreground" />
                     </div>
                     <div>
-                      <p className="font-medium">{selectedDepartment.managerName || '미지정'}</p>
+                      <p className="font-medium">{selectedDepartment.managerName || t('department.headNotAssigned')}</p>
                       {selectedDepartment.managerId && (
                         <p className="text-sm text-muted-foreground">
                           {selectedDepartment.managerId}
@@ -492,8 +496,8 @@ export default function OrganizationPage() {
                 <div className="border-t pt-4">
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">소속 인원</span>
-                    <span className="font-semibold">{selectedDepartment.employeeCount}명</span>
+                    <span className="text-muted-foreground">{t('department.members')}</span>
+                    <span className="font-semibold">{selectedDepartment.employeeCount}{tCommon('unit.person')}</span>
                   </div>
                 </div>
               </div>
@@ -510,23 +514,23 @@ export default function OrganizationPage() {
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>부서 추가</DialogTitle>
+            <DialogTitle>{t('department.add')}</DialogTitle>
             <DialogDescription>
-              새로운 부서를 추가합니다.
+              {t('department.addDescription')}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="parentId">상위부서</Label>
+              <Label htmlFor="parentId">{t('department.parentDepartment')}</Label>
               <Select
                 value={formData.parentId || 'none'}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, parentId: value === 'none' ? undefined : value }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="상위부서 선택" />
+                  <SelectValue placeholder={t('department.selectParent')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">(최상위)</SelectItem>
+                  <SelectItem value="none">{t('department.topLevel')}</SelectItem>
                   {flatDepartments.map((dept) => (
                     <SelectItem key={dept.id} value={dept.id}>
                       {'　'.repeat(dept.level - 1)}{dept.name}
@@ -536,42 +540,42 @@ export default function OrganizationPage() {
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="code">부서코드 *</Label>
+              <Label htmlFor="code">{`${t('department.code')} *`}</Label>
               <Input
                 id="code"
                 value={formData.code}
                 onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value.toUpperCase() }))}
-                placeholder="예: DEV-FE"
+                placeholder={t('department.placeholders.code')}
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="name">부서명 *</Label>
+              <Label htmlFor="name">{`${t('department.name')} *`}</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="예: 프론트엔드팀"
+                placeholder={t('department.placeholders.name')}
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="nameEn">영문명</Label>
+              <Label htmlFor="nameEn">{tCommon('englishName')}</Label>
               <Input
                 id="nameEn"
                 value={formData.nameEn}
                 onChange={(e) => setFormData(prev => ({ ...prev, nameEn: e.target.value }))}
-                placeholder="예: Frontend Team"
+                placeholder={t('department.placeholders.englishName')}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-              취소
+              {tCommon('cancel')}
             </Button>
             <Button
               onClick={handleCreate}
               disabled={!formData.code || !formData.name || createMutation.isPending}
             >
-              {createMutation.isPending ? '저장 중...' : '저장'}
+              {createMutation.isPending ? tCommon('saving') : tCommon('save')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -581,18 +585,18 @@ export default function OrganizationPage() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>부서 수정</DialogTitle>
+            <DialogTitle>{t('department.edit')}</DialogTitle>
             <DialogDescription>
-              부서 정보를 수정합니다.
+              {t('department.editDescription')}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="edit-code">부서코드</Label>
+              <Label htmlFor="edit-code">{t('department.code')}</Label>
               <Input id="edit-code" value={formData.code} disabled />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-name">부서명 *</Label>
+              <Label htmlFor="edit-name">{`${t('department.name')} *`}</Label>
               <Input
                 id="edit-name"
                 value={formData.name}
@@ -600,7 +604,7 @@ export default function OrganizationPage() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-nameEn">영문명</Label>
+              <Label htmlFor="edit-nameEn">{tCommon('englishName')}</Label>
               <Input
                 id="edit-nameEn"
                 value={formData.nameEn}
@@ -610,13 +614,13 @@ export default function OrganizationPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              취소
+              {tCommon('cancel')}
             </Button>
             <Button
               onClick={handleUpdate}
               disabled={!formData.name || updateMutation.isPending}
             >
-              {updateMutation.isPending ? '저장 중...' : '저장'}
+              {updateMutation.isPending ? tCommon('saving') : tCommon('save')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -626,27 +630,27 @@ export default function OrganizationPage() {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>부서 삭제</DialogTitle>
+            <DialogTitle>{t('department.delete')}</DialogTitle>
             <DialogDescription>
-              정말로 이 부서를 삭제하시겠습니까?
+              {t('department.deleteConfirm')}
               <br />
               <strong className="text-foreground">{selectedNode?.name}</strong>
               <br />
               <span className="text-destructive">
-                하위 부서가 있는 경우 삭제할 수 없습니다.
+                {t('department.deleteWarning')}
               </span>
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-              취소
+              {tCommon('cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={handleDelete}
               disabled={deleteMutation.isPending}
             >
-              {deleteMutation.isPending ? '삭제 중...' : '삭제'}
+              {deleteMutation.isPending ? tCommon('deleting') : tCommon('delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

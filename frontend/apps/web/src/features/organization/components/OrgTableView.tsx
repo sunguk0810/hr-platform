@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { Button } from '@/components/ui/button';
@@ -35,6 +36,8 @@ export function OrgTableView({
   showStatus = true,
   className,
 }: OrgTableViewProps) {
+  const { t } = useTranslation('organization');
+  const { t: tCommon } = useTranslation('common');
   const [expandedIds, setExpandedIds] = React.useState<Set<string>>(new Set());
 
   // Initialize with top-level items expanded
@@ -97,10 +100,10 @@ export function OrgTableView({
       {/* Toolbar */}
       <div className="flex justify-end gap-2">
         <Button variant="outline" size="sm" onClick={expandAll}>
-          전체 펼치기
+          {tCommon('expandAll')}
         </Button>
         <Button variant="outline" size="sm" onClick={collapseAll}>
-          전체 접기
+          {tCommon('collapseAll')}
         </Button>
       </div>
 
@@ -109,11 +112,11 @@ export function OrgTableView({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[40%]">부서</TableHead>
-              <TableHead>부서코드</TableHead>
-              {showManager && <TableHead>부서장</TableHead>}
-              {showEmployeeCount && <TableHead className="text-center">인원</TableHead>}
-              {showStatus && <TableHead>상태</TableHead>}
+              <TableHead className="w-[40%]">{t('history.department')}</TableHead>
+              <TableHead>{t('department.code')}</TableHead>
+              {showManager && <TableHead>{t('department.head')}</TableHead>}
+              {showEmployeeCount && <TableHead className="text-center">{t('department.memberCount')}</TableHead>}
+              {showStatus && <TableHead>{tCommon('status')}</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -123,7 +126,7 @@ export function OrgTableView({
                   colSpan={3 + (showManager ? 1 : 0) + (showEmployeeCount ? 1 : 0) + (showStatus ? 1 : 0)}
                   className="h-24 text-center text-muted-foreground"
                 >
-                  등록된 부서가 없습니다.
+                  {t('department.noDepartments')}
                 </TableCell>
               </TableRow>
             ) : (
@@ -197,7 +200,7 @@ export function OrgTableView({
                     <TableCell>
                       <StatusBadge
                         status={node.status === 'ACTIVE' ? 'success' : 'default'}
-                        label={node.status === 'ACTIVE' ? '활성' : '비활성'}
+                        label={node.status === 'ACTIVE' ? tCommon('active') : tCommon('inactive')}
                       />
                     </TableCell>
                   )}

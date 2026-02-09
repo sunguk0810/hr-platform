@@ -14,6 +14,7 @@ import koCondolence from './locales/ko/condolence.json';
 import koValidation from './locales/ko/validation.json';
 import koAccessibility from './locales/ko/accessibility.json';
 import koStatus from './locales/ko/status.json';
+import koOrganization from './locales/ko/organization.json';
 
 // English
 import enCommon from './locales/en/common.json';
@@ -28,6 +29,7 @@ import enCondolence from './locales/en/condolence.json';
 import enValidation from './locales/en/validation.json';
 import enAccessibility from './locales/en/accessibility.json';
 import enStatus from './locales/en/status.json';
+import enOrganization from './locales/en/organization.json';
 
 const resources = {
   ko: {
@@ -43,6 +45,7 @@ const resources = {
     validation: koValidation,
     accessibility: koAccessibility,
     status: koStatus,
+    organization: koOrganization,
   },
   en: {
     common: enCommon,
@@ -57,6 +60,7 @@ const resources = {
     validation: enValidation,
     accessibility: enAccessibility,
     status: enStatus,
+    organization: enOrganization,
   },
 } as const;
 
@@ -77,6 +81,7 @@ i18n.use(initReactI18next).init({
     'validation',
     'accessibility',
     'status',
+    'organization',
   ],
   defaultNS: 'common',
   interpolation: {

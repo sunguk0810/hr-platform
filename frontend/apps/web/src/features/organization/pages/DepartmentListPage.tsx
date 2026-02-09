@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -50,6 +51,8 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 export default function DepartmentListPage() {
+  const { t } = useTranslation('organization');
+  const { t: tCommon } = useTranslation('common');
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const [searchInput, setSearchInput] = useState('');
@@ -167,23 +170,23 @@ export default function DepartmentListPage() {
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>부서 추가</DialogTitle>
+            <DialogTitle>{t('department.add')}</DialogTitle>
             <DialogDescription>
-              새로운 부서를 추가합니다.
+              {t('department.addDescription')}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="parentId">상위부서</Label>
+              <Label htmlFor="parentId">{t('department.parentDepartment')}</Label>
               <Select
                 value={formData.parentId || 'none'}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, parentId: value === 'none' ? undefined : value }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="상위부서 선택" />
+                  <SelectValue placeholder={t('department.selectParent')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">(최상위)</SelectItem>
+                  <SelectItem value="none">{t('department.topLevel')}</SelectItem>
                   {flatDepartments.map((dept) => (
                     <SelectItem key={dept.id} value={dept.id}>
                       {'　'.repeat(dept.level - 1)}{dept.name}
@@ -193,7 +196,7 @@ export default function DepartmentListPage() {
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="code">부서코드 *</Label>
+              <Label htmlFor="code">{t('department.code')} *</Label>
               <Input
                 id="code"
                 value={formData.code}
@@ -202,7 +205,7 @@ export default function DepartmentListPage() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="name">부서명 *</Label>
+              <Label htmlFor="name">{t('department.name')} *</Label>
               <Input
                 id="name"
                 value={formData.name}
@@ -211,7 +214,7 @@ export default function DepartmentListPage() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="nameEn">영문명</Label>
+              <Label htmlFor="nameEn">{tCommon('englishName')}</Label>
               <Input
                 id="nameEn"
                 value={formData.nameEn}
@@ -222,13 +225,13 @@ export default function DepartmentListPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-              취소
+              {tCommon('cancel')}
             </Button>
             <Button
               onClick={handleCreate}
               disabled={!formData.code || !formData.name || createMutation.isPending}
             >
-              {createMutation.isPending ? '저장 중...' : '저장'}
+              {createMutation.isPending ? tCommon('saving') : tCommon('save')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -238,18 +241,18 @@ export default function DepartmentListPage() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>부서 수정</DialogTitle>
+            <DialogTitle>{t('department.edit')}</DialogTitle>
             <DialogDescription>
-              부서 정보를 수정합니다.
+              {t('department.editDescription')}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="edit-code">부서코드</Label>
+              <Label htmlFor="edit-code">{t('department.code')}</Label>
               <Input id="edit-code" value={formData.code} disabled />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-name">부서명 *</Label>
+              <Label htmlFor="edit-name">{t('department.name')} *</Label>
               <Input
                 id="edit-name"
                 value={formData.name}
@@ -257,7 +260,7 @@ export default function DepartmentListPage() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-nameEn">영문명</Label>
+              <Label htmlFor="edit-nameEn">{tCommon('englishName')}</Label>
               <Input
                 id="edit-nameEn"
                 value={formData.nameEn}
@@ -267,13 +270,13 @@ export default function DepartmentListPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              취소
+              {tCommon('cancel')}
             </Button>
             <Button
               onClick={handleUpdate}
               disabled={!formData.name || updateMutation.isPending}
             >
-              {updateMutation.isPending ? '저장 중...' : '저장'}
+              {updateMutation.isPending ? tCommon('saving') : tCommon('save')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -283,27 +286,27 @@ export default function DepartmentListPage() {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>부서 삭제</DialogTitle>
+            <DialogTitle>{t('department.delete')}</DialogTitle>
             <DialogDescription>
-              정말로 이 부서를 삭제하시겠습니까?
+              {t('department.deleteConfirm')}
               <br />
               <strong className="text-foreground">{selectedDepartment?.name}</strong> ({selectedDepartment?.code})
               <br />
               <span className="text-destructive">
-                하위 부서가 있는 경우 삭제할 수 없습니다.
+                {t('department.deleteWarning')}
               </span>
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-              취소
+              {tCommon('cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={handleDelete}
               disabled={deleteMutation.isPending}
             >
-              {deleteMutation.isPending ? '삭제 중...' : '삭제'}
+              {deleteMutation.isPending ? tCommon('deleting') : tCommon('delete')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -319,14 +322,14 @@ export default function DepartmentListPage() {
           {/* Mobile Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold">부서 관리</h1>
+              <h1 className="text-xl font-bold">{t('department.title')}</h1>
               <p className="text-sm text-muted-foreground">
-                {totalElements > 0 ? `총 ${totalElements}개 부서` : '부서 목록'}
+                {totalElements > 0 ? t('department.totalCount', { count: totalElements }) : t('department.list')}
               </p>
             </div>
             <Button size="sm" onClick={handleCreateOpen}>
               <Plus className="mr-1 h-4 w-4" />
-              추가
+              {tCommon('add')}
             </Button>
           </div>
 
@@ -334,7 +337,7 @@ export default function DepartmentListPage() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="부서코드, 부서명으로 검색..."
+              placeholder={t('department.searchPlaceholder')}
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               className="pl-9"
@@ -351,7 +354,7 @@ export default function DepartmentListPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              전체
+              {tCommon('all')}
             </button>
             <button
               onClick={() => setStatus('ACTIVE')}
@@ -361,7 +364,7 @@ export default function DepartmentListPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              활성
+              {tCommon('active')}
             </button>
             <button
               onClick={() => setStatus('INACTIVE')}
@@ -371,7 +374,7 @@ export default function DepartmentListPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              비활성
+              {tCommon('inactive')}
             </button>
           </div>
 
@@ -383,23 +386,23 @@ export default function DepartmentListPage() {
           ) : isError ? (
             <div className="bg-card rounded-xl border p-8 text-center">
               <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-              <p className="font-medium">데이터를 불러올 수 없습니다</p>
-              <p className="text-sm text-muted-foreground mt-1">잠시 후 다시 시도해주세요.</p>
+              <p className="font-medium">{t('department.dataLoadError')}</p>
+              <p className="text-sm text-muted-foreground mt-1">{t('department.loadErrorDesc')}</p>
             </div>
           ) : departments.length === 0 ? (
             <div className="bg-card rounded-xl border p-8 text-center">
               <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-              <p className="font-medium">등록된 부서가 없습니다</p>
+              <p className="font-medium">{t('department.noDepartments')}</p>
               <p className="text-sm text-muted-foreground mt-1">
                 {searchState.keyword
-                  ? '검색 조건에 맞는 부서가 없습니다.'
-                  : '새 부서를 등록하여 조직을 구성하세요.'
+                  ? t('department.noSearchResults')
+                  : t('department.noDepartmentsAction')
                 }
               </p>
               {!searchState.keyword && (
                 <Button className="mt-4" onClick={handleCreateOpen}>
                   <Plus className="mr-2 h-4 w-4" />
-                  부서 추가
+                  {t('department.add')}
                 </Button>
               )}
             </div>
@@ -415,7 +418,7 @@ export default function DepartmentListPage() {
                           variant={dept.status === 'ACTIVE' ? 'default' : 'secondary'}
                           className={dept.status === 'ACTIVE' ? 'bg-green-500 text-xs' : 'text-xs'}
                         >
-                          {dept.status === 'ACTIVE' ? '활성' : '비활성'}
+                          {dept.status === 'ACTIVE' ? tCommon('active') : tCommon('inactive')}
                         </Badge>
                       </div>
                       <p className="font-medium">{dept.name}</p>
@@ -425,18 +428,18 @@ export default function DepartmentListPage() {
 
                   <div className="space-y-1 text-sm mb-3">
                     <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground">상위:</span>
-                      <span>{dept.parentName || '(최상위)'}</span>
+                      <span className="text-muted-foreground">{t('department.parent')}</span>
+                      <span>{dept.parentName || t('department.topLevel')}</span>
                     </div>
                     {dept.managerName && (
                       <div className="flex items-center gap-2">
-                        <span className="text-muted-foreground">부서장:</span>
+                        <span className="text-muted-foreground">{t('department.head')}:</span>
                         <span>{dept.managerName}</span>
                       </div>
                     )}
                     <div className="flex items-center gap-2">
                       <Users className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span>{dept.employeeCount}명</span>
+                      <span>{dept.employeeCount}{tCommon('unit.person')}</span>
                     </div>
                   </div>
 
@@ -448,7 +451,7 @@ export default function DepartmentListPage() {
                       onClick={() => handleEditOpen(dept)}
                     >
                       <Pencil className="mr-1 h-4 w-4" />
-                      수정
+                      {tCommon('edit')}
                     </Button>
                     <Button
                       variant="outline"
@@ -482,12 +485,12 @@ export default function DepartmentListPage() {
   return (
     <>
       <PageHeader
-        title="부서 관리"
-        description="부서 목록을 조회하고 관리합니다."
+        title={t('department.title')}
+        description={t('department.description')}
         actions={
           <Button onClick={handleCreateOpen}>
             <Plus className="mr-2 h-4 w-4" />
-            부서 추가
+            {t('department.add')}
           </Button>
         }
       />
@@ -498,7 +501,7 @@ export default function DepartmentListPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="부서코드, 부서명으로 검색..."
+                placeholder={t('department.searchPlaceholder')}
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 className="pl-9"
@@ -509,9 +512,9 @@ export default function DepartmentListPage() {
               onChange={(e) => setStatus(e.target.value as DepartmentStatus | '')}
               className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
             >
-              <option value="">전체 상태</option>
-              <option value="ACTIVE">활성</option>
-              <option value="INACTIVE">비활성</option>
+              <option value="">{t('department.allStatuses')}</option>
+              <option value="ACTIVE">{tCommon('active')}</option>
+              <option value="INACTIVE">{tCommon('inactive')}</option>
             </select>
           </div>
         </CardContent>
@@ -526,22 +529,22 @@ export default function DepartmentListPage() {
           ) : isError ? (
             <EmptyState
               icon={Building2}
-              title="데이터를 불러올 수 없습니다"
-              description="잠시 후 다시 시도해주세요."
+              title={t('department.dataLoadError')}
+              description={t('department.loadErrorDesc')}
             />
           ) : departments.length === 0 ? (
             <EmptyState
               icon={Building2}
-              title="등록된 부서가 없습니다"
+              title={t('department.noDepartments')}
               description={
                 searchState.keyword
-                  ? '검색 조건에 맞는 부서가 없습니다.'
-                  : '새 부서를 등록하여 조직을 구성하세요.'
+                  ? t('department.noSearchResults')
+                  : t('department.noDepartmentsAction')
               }
               action={
                 !searchState.keyword
                   ? {
-                      label: '부서 추가',
+                      label: t('department.add'),
                       onClick: handleCreateOpen,
                     }
                   : undefined
@@ -554,25 +557,25 @@ export default function DepartmentListPage() {
                   <thead>
                     <tr className="border-b bg-muted/50">
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        부서코드
+                        {t('department.code')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        부서명
+                        {t('department.name')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        상위부서
+                        {t('department.parentDepartment')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        부서장
+                        {t('department.head')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        인원
+                        {t('department.memberCount')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        상태
+                        {tCommon('status')}
                       </th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                        작업
+                        {tCommon('actions')}
                       </th>
                     </tr>
                   </thead>
@@ -585,16 +588,16 @@ export default function DepartmentListPage() {
                         <td className="px-4 py-3 font-mono text-sm">{dept.code}</td>
                         <td className="px-4 py-3 text-sm font-medium">{dept.name}</td>
                         <td className="px-4 py-3 text-sm text-muted-foreground">
-                          {dept.parentName || '(최상위)'}
+                          {dept.parentName || t('department.topLevel')}
                         </td>
                         <td className="px-4 py-3 text-sm">
                           {dept.managerName || '-'}
                         </td>
-                        <td className="px-4 py-3 text-sm">{dept.employeeCount}명</td>
+                        <td className="px-4 py-3 text-sm">{dept.employeeCount}{tCommon('unit.person')}</td>
                         <td className="px-4 py-3">
                           <StatusBadge
                             status={dept.status === 'ACTIVE' ? 'success' : 'default'}
-                            label={dept.status === 'ACTIVE' ? '활성' : '비활성'}
+                            label={dept.status === 'ACTIVE' ? tCommon('active') : tCommon('inactive')}
                           />
                         </td>
                         <td className="px-4 py-3">
@@ -626,7 +629,7 @@ export default function DepartmentListPage() {
                 onPageChange={setPage}
               />
               <div className="px-4 pb-3 text-sm text-muted-foreground">
-                총 {totalElements}개
+                {t('department.totalCountSuffix', { count: totalElements })}
               </div>
             </>
           )}
