@@ -413,12 +413,12 @@ export default function CommonCodePage() {
                 className="pl-9"
               />
             </div>
-            <Select value={searchState.groupCode} onValueChange={setGroupCode}>
+            <Select value={searchState.groupCode || "__all__"} onValueChange={(value) => setGroupCode(value === "__all__" ? "" : value)}>
               <SelectTrigger className="h-10 w-[220px]">
                 <SelectValue placeholder={t('common.allCodeGroups')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">{t('common.allCodeGroups')}</SelectItem>
+                <SelectItem value="__all__">{t('common.allCodeGroups')}</SelectItem>
                 {codeGroups.map((group) => (
                   <SelectItem key={group.id} value={group.groupCode}>
                     {group.groupName}
@@ -427,14 +427,14 @@ export default function CommonCodePage() {
               </SelectContent>
             </Select>
             <Select
-              value={searchState.status === null ? '' : searchState.status}
-              onValueChange={(value) => setStatus(value === '' ? null : value as 'ACTIVE' | 'INACTIVE' | 'DEPRECATED')}
+              value={searchState.status === null ? '__all__' : searchState.status}
+              onValueChange={(value) => setStatus(value === '__all__' ? null : value as 'ACTIVE' | 'INACTIVE' | 'DEPRECATED')}
             >
               <SelectTrigger className="h-10 w-[180px]">
                 <SelectValue placeholder={t('common.allStatus')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">{t('common.allStatus')}</SelectItem>
+                <SelectItem value="__all__">{t('common.allStatus')}</SelectItem>
                 <SelectItem value="ACTIVE">{t('common.statusActive')}</SelectItem>
                 <SelectItem value="INACTIVE">{t('common.statusInactive')}</SelectItem>
                 <SelectItem value="DEPRECATED">{t('common.statusDeprecated')}</SelectItem>

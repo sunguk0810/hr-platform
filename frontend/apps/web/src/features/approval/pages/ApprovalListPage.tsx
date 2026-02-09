@@ -569,14 +569,14 @@ export default function ApprovalListPage() {
                 />
               </div>
               <Select
-                value={searchState.type}
-                onValueChange={(value) => setType(value as ApprovalType | '')}
+                value={searchState.type || "__all__"}
+                onValueChange={(value) => setType(value === "__all__" ? "" : value as ApprovalType | '')}
               >
                 <SelectTrigger className="h-10 w-[200px]">
                   <SelectValue placeholder={t('approvalListPage.allTypes')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">{t('approvalListPage.allTypes')}</SelectItem>
+                  <SelectItem value="__all__">{t('approvalListPage.allTypes')}</SelectItem>
                   {Object.entries(APPROVAL_TYPE_KEYS).map(([value, key]) => (
                     <SelectItem key={value} value={value}>{t(key)}</SelectItem>
                   ))}

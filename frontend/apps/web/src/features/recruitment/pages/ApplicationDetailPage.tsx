@@ -323,14 +323,14 @@ export default function ApplicationDetailPage() {
             <div>
               <Label>{t('application.hire.department')}</Label>
               <Select
-                value={hireDepartmentId}
-                onValueChange={setHireDepartmentId}
+                value={hireDepartmentId || "__all__"}
+                onValueChange={(value) => setHireDepartmentId(value === "__all__" ? "" : value)}
               >
                 <SelectTrigger className="w-full h-10 mt-2">
                   <SelectValue placeholder={t('common.select')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">{t('common.select')}</SelectItem>
+                  <SelectItem value="__all__">{t('common.select')}</SelectItem>
                   <SelectItem value="dept-001">개발팀</SelectItem>
                   <SelectItem value="dept-002">인사팀</SelectItem>
                   <SelectItem value="dept-003">재무팀</SelectItem>

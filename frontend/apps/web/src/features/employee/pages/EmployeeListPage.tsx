@@ -587,14 +587,14 @@ export default function EmployeeListPage() {
             </div>
             <div className="flex gap-2">
               <Select
-                value={searchState.status}
-                onValueChange={(value) => setEmploymentStatus(value as EmploymentStatus | '')}
+                value={searchState.status || "__all__"}
+                onValueChange={(value) => setEmploymentStatus(value === "__all__" ? "" : value as EmploymentStatus | '')}
               >
                 <SelectTrigger className="h-10 w-[180px]">
                   <SelectValue placeholder={t('employmentStatus.label')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">{t('employmentStatus.label')}</SelectItem>
+                  <SelectItem value="__all__">{t('employmentStatus.label')}</SelectItem>
                   <SelectItem value="ACTIVE">{t('employmentStatus.ACTIVE')}</SelectItem>
                   <SelectItem value="ON_LEAVE">{t('employmentStatus.ON_LEAVE')}</SelectItem>
                   <SelectItem value="RESIGNED">{t('employmentStatus.RESIGNED')}</SelectItem>

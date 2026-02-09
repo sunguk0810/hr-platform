@@ -141,12 +141,12 @@ export default function CertificateIssueHistoryPage() {
         <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-4">
           <CardTitle>{t('issueHistory.cardTitle')}</CardTitle>
           <div className="flex items-center gap-4">
-            <Select value={searchState.typeCode} onValueChange={setTypeCode}>
+            <Select value={searchState.typeCode || "__all__"} onValueChange={(value) => setTypeCode(value === "__all__" ? "" : value)}>
               <SelectTrigger className="h-9 w-[180px]">
                 <SelectValue placeholder={t('issueHistory.allTypes')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">{t('issueHistory.allTypes')}</SelectItem>
+                <SelectItem value="__all__">{t('issueHistory.allTypes')}</SelectItem>
                 {certificateTypes.map((type) => (
                   <SelectItem key={type.code} value={type.code}>
                     {type.name}

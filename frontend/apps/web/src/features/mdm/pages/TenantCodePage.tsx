@@ -143,12 +143,12 @@ export default function TenantCodePage() {
                 className="pl-9"
               />
             </div>
-            <Select value={groupCode} onValueChange={setGroupCode}>
+            <Select value={groupCode || "__all__"} onValueChange={(value) => setGroupCode(value === "__all__" ? "" : value)}>
               <SelectTrigger className="h-10 w-[220px]">
                 <SelectValue placeholder={t('common.allCodeGroups')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">{t('common.allCodeGroups')}</SelectItem>
+                <SelectItem value="__all__">{t('common.allCodeGroups')}</SelectItem>
                 {codeGroups.map((group) => (
                   <SelectItem key={group.id} value={group.groupCode}>
                     {group.groupName}
@@ -157,14 +157,14 @@ export default function TenantCodePage() {
               </SelectContent>
             </Select>
             <Select
-              value={isEnabledFilter === null ? '' : isEnabledFilter.toString()}
-              onValueChange={(value) => setIsEnabledFilter(value === '' ? null : value === 'true')}
+              value={isEnabledFilter === null ? '__all__' : isEnabledFilter.toString()}
+              onValueChange={(value) => setIsEnabledFilter(value === '__all__' ? null : value === 'true')}
             >
               <SelectTrigger className="h-10 w-[180px]">
                 <SelectValue placeholder={t('common.allStatus')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">{t('common.allStatus')}</SelectItem>
+                <SelectItem value="__all__">{t('common.allStatus')}</SelectItem>
                 <SelectItem value="true">{t('common.statusEnabled')}</SelectItem>
                 <SelectItem value="false">{t('common.statusDisabled')}</SelectItem>
               </SelectContent>

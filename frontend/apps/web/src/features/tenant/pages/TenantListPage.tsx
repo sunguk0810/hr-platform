@@ -167,14 +167,14 @@ export default function TenantListPage() {
               />
             </div>
             <Select
-              value={searchState.status}
-              onValueChange={(value) => setStatus(value as TenantStatus | '')}
+              value={searchState.status || "__all__"}
+              onValueChange={(value) => setStatus(value === "__all__" ? "" : value as TenantStatus | '')}
             >
               <SelectTrigger className="h-10 w-[180px]">
                 <SelectValue placeholder={t('allStatus')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">{t('allStatus')}</SelectItem>
+                <SelectItem value="__all__">{t('allStatus')}</SelectItem>
                 <SelectItem value="ACTIVE">{t('statusActive')}</SelectItem>
                 <SelectItem value="INACTIVE">{t('statusInactive')}</SelectItem>
                 <SelectItem value="SUSPENDED">{t('statusSuspended')}</SelectItem>

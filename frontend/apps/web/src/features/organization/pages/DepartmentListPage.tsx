@@ -508,14 +508,14 @@ export default function DepartmentListPage() {
               />
             </div>
             <Select
-              value={searchState.status}
-              onValueChange={(value) => setStatus(value as DepartmentStatus | '')}
+              value={searchState.status || "__all__"}
+              onValueChange={(value) => setStatus(value === "__all__" ? "" : value as DepartmentStatus | '')}
             >
               <SelectTrigger className="h-10 w-[180px]">
                 <SelectValue placeholder={t('department.allStatuses')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">{t('department.allStatuses')}</SelectItem>
+                <SelectItem value="__all__">{t('department.allStatuses')}</SelectItem>
                 <SelectItem value="ACTIVE">{tCommon('active')}</SelectItem>
                 <SelectItem value="INACTIVE">{tCommon('inactive')}</SelectItem>
               </SelectContent>

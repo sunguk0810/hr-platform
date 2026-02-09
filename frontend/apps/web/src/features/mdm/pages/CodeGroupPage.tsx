@@ -147,14 +147,14 @@ export default function CodeGroupPage() {
               />
             </div>
             <Select
-              value={searchState.active === null ? '' : searchState.active.toString()}
-              onValueChange={(value) => setActive(value === '' ? null : value === 'true')}
+              value={searchState.active === null ? '__all__' : searchState.active.toString()}
+              onValueChange={(value) => setActive(value === '__all__' ? null : value === 'true')}
             >
               <SelectTrigger className="h-10 w-[180px]">
                 <SelectValue placeholder={t('common.allStatus')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">{t('common.allStatus')}</SelectItem>
+                <SelectItem value="__all__">{t('common.allStatus')}</SelectItem>
                 <SelectItem value="true">{t('common.statusActive')}</SelectItem>
                 <SelectItem value="false">{t('common.statusInactive')}</SelectItem>
               </SelectContent>

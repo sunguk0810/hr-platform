@@ -187,14 +187,14 @@ export default function AttendancePage() {
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium text-muted-foreground">{t('attendancePage.recentRecords.mobileTitle')}</h3>
             <Select
-              value={searchState.status}
-              onValueChange={(value) => setStatus(value as AttendanceStatus | '')}
+              value={searchState.status || "__all__"}
+              onValueChange={(value) => setStatus(value === "__all__" ? "" : value as AttendanceStatus | '')}
             >
               <SelectTrigger className="h-8 w-[140px]">
                 <SelectValue placeholder={t('attendancePage.statusFilter.all')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">{t('attendancePage.statusFilter.all')}</SelectItem>
+                <SelectItem value="__all__">{t('attendancePage.statusFilter.all')}</SelectItem>
                 <SelectItem value="NORMAL">{t('attendancePage.statusFilter.normal')}</SelectItem>
                 <SelectItem value="LATE">{t('attendancePage.statusFilter.late')}</SelectItem>
                 <SelectItem value="EARLY_LEAVE">{t('attendancePage.statusFilter.earlyLeave')}</SelectItem>
@@ -327,14 +327,14 @@ export default function AttendancePage() {
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base">{t('attendancePage.recentRecords.title')}</CardTitle>
             <Select
-              value={searchState.status}
-              onValueChange={(value) => setStatus(value as AttendanceStatus | '')}
+              value={searchState.status || "__all__"}
+              onValueChange={(value) => setStatus(value === "__all__" ? "" : value as AttendanceStatus | '')}
             >
               <SelectTrigger className="h-8 w-[140px]">
                 <SelectValue placeholder={t('attendancePage.statusFilter.all')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">{t('attendancePage.statusFilter.all')}</SelectItem>
+                <SelectItem value="__all__">{t('attendancePage.statusFilter.all')}</SelectItem>
                 <SelectItem value="NORMAL">{t('attendancePage.statusFilter.normal')}</SelectItem>
                 <SelectItem value="LATE">{t('attendancePage.statusFilter.late')}</SelectItem>
                 <SelectItem value="EARLY_LEAVE">{t('attendancePage.statusFilter.earlyLeave')}</SelectItem>
@@ -550,14 +550,14 @@ export default function AttendancePage() {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>{t('attendancePage.recentRecords.title')}</CardTitle>
           <Select
-            value={searchState.status}
-            onValueChange={(value) => setStatus(value as AttendanceStatus | '')}
+            value={searchState.status || "__all__"}
+            onValueChange={(value) => setStatus(value === "__all__" ? "" : value as AttendanceStatus | '')}
           >
             <SelectTrigger className="h-9 w-[160px]">
               <SelectValue placeholder={t('attendancePage.statusFilter.all')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">{t('attendancePage.statusFilter.all')}</SelectItem>
+              <SelectItem value="__all__">{t('attendancePage.statusFilter.all')}</SelectItem>
               <SelectItem value="NORMAL">{t('attendancePage.statusFilter.normal')}</SelectItem>
               <SelectItem value="LATE">{t('attendancePage.statusFilter.late')}</SelectItem>
               <SelectItem value="EARLY_LEAVE">{t('attendancePage.statusFilter.earlyLeave')}</SelectItem>

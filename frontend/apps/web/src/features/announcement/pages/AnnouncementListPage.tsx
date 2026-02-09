@@ -255,12 +255,12 @@ export default function AnnouncementListPage() {
                   aria-label={t('search.label')}
                 />
               </div>
-              <Select value={searchState.category} onValueChange={setCategory}>
+              <Select value={searchState.category || "__all__"} onValueChange={(value) => setCategory(value === "__all__" ? "" : value)}>
                 <SelectTrigger className="h-10 w-[180px]">
                   <SelectValue placeholder={t('search.allCategories')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">{t('search.allCategories')}</SelectItem>
+                  <SelectItem value="__all__">{t('search.allCategories')}</SelectItem>
                   {Object.entries(CATEGORY_LABELS).map(([value, { label }]) => (
                     <SelectItem key={value} value={value}>{label}</SelectItem>
                   ))}

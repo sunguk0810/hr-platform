@@ -142,12 +142,12 @@ export default function ApplicationListPage() {
           </div>
 
           {/* Job Filter */}
-          <Select value={searchState.jobPostingId} onValueChange={setJobPostingId}>
+          <Select value={searchState.jobPostingId || "__all__"} onValueChange={(value) => setJobPostingId(value === "__all__" ? "" : value)}>
             <SelectTrigger className="w-full h-10">
               <SelectValue placeholder={t('application.allPostings')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">{t('application.allPostings')}</SelectItem>
+              <SelectItem value="__all__">{t('application.allPostings')}</SelectItem>
               {jobs.map((job) => (
                 <SelectItem key={job.id} value={job.id}>
                   [{job.jobCode}] {job.title}
@@ -358,12 +358,12 @@ export default function ApplicationListPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle>{t('application.listTitle')}</CardTitle>
             <div className="flex flex-wrap gap-2">
-              <Select value={searchState.jobPostingId} onValueChange={setJobPostingId}>
+              <Select value={searchState.jobPostingId || "__all__"} onValueChange={(value) => setJobPostingId(value === "__all__" ? "" : value)}>
                 <SelectTrigger className="h-10 w-[220px]">
                   <SelectValue placeholder={t('application.allPostings')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">{t('application.allPostings')}</SelectItem>
+                  <SelectItem value="__all__">{t('application.allPostings')}</SelectItem>
                   {jobs.map((job) => (
                     <SelectItem key={job.id} value={job.id}>
                       [{job.jobCode}] {job.title}
