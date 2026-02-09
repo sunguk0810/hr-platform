@@ -2,12 +2,14 @@ package com.hrsaas.attendance.controller;
 
 import com.hrsaas.attendance.domain.dto.request.CheckInRequest;
 import com.hrsaas.attendance.domain.dto.request.CheckOutRequest;
+import com.hrsaas.attendance.domain.dto.request.UpdateAttendanceRecordRequest;
 import com.hrsaas.attendance.domain.dto.response.AttendanceRecordResponse;
 import com.hrsaas.attendance.domain.dto.response.AttendanceSummaryResponse;
 import com.hrsaas.attendance.domain.dto.response.WorkHoursStatisticsResponse;
 import com.hrsaas.attendance.service.AttendanceService;
 import com.hrsaas.common.response.ApiResponse;
 import com.hrsaas.common.security.SecurityContextHolder;
+import com.hrsaas.common.security.UserContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -79,6 +81,17 @@ public class AttendanceController {
     @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
     public ApiResponse<AttendanceRecordResponse> getById(@PathVariable UUID id) {
         return ApiResponse.success(attendanceService.getById(id));
+    }
+
+    @Operation(summary = "관리자 근태 수정")
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
+    public ApiResponse<AttendanceRecordResponse> updateRecord(
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateAttendanceRecordRequest request) {
+        UserContext user = SecurityContextHolder.getCurrentUser();
+        return ApiResponse.success(attendanceService.updateRecord(
+                id, request, user.getUserId(), user.getEmployeeName()));
     }
 
     @Operation(summary = "주간 근로시간 통계 조회 (52시간 모니터링)")

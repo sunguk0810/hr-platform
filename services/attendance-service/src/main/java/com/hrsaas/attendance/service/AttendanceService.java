@@ -2,6 +2,7 @@ package com.hrsaas.attendance.service;
 
 import com.hrsaas.attendance.domain.dto.request.CheckInRequest;
 import com.hrsaas.attendance.domain.dto.request.CheckOutRequest;
+import com.hrsaas.attendance.domain.dto.request.UpdateAttendanceRecordRequest;
 import com.hrsaas.attendance.domain.dto.response.AttendanceRecordResponse;
 import com.hrsaas.attendance.domain.dto.response.AttendanceSummaryResponse;
 import com.hrsaas.attendance.domain.dto.response.WorkHoursStatisticsResponse;
@@ -23,6 +24,12 @@ public interface AttendanceService {
     AttendanceSummaryResponse getMonthlySummary(UUID employeeId, int year, int month);
 
     AttendanceRecordResponse getById(UUID id);
+
+    /**
+     * 관리자 근태 기록 수정 (감사 로그 포함)
+     */
+    AttendanceRecordResponse updateRecord(UUID id, UpdateAttendanceRecordRequest request,
+                                           UUID adminId, String adminName);
 
     /**
      * 주간 근로시간 통계 조회 (52시간 모니터링)

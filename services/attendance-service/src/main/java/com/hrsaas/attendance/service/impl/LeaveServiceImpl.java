@@ -1,5 +1,6 @@
 package com.hrsaas.attendance.service.impl;
 
+import com.hrsaas.attendance.domain.AttendanceErrorCode;
 import com.hrsaas.attendance.domain.dto.request.CreateLeaveRequest;
 import com.hrsaas.attendance.domain.dto.response.LeaveBalanceResponse;
 import com.hrsaas.attendance.domain.dto.response.LeaveRequestResponse;
@@ -51,7 +52,7 @@ public class LeaveServiceImpl implements LeaveService {
         List<LeaveRequest> overlapping = leaveRequestRepository.findOverlappingRequests(
             tenantId, employeeId, request.getStartDate(), request.getEndDate());
         if (!overlapping.isEmpty()) {
-            throw new BusinessException("LEV_001", "해당 기간에 이미 신청된 휴가가 있습니다", HttpStatus.CONFLICT);
+            throw new BusinessException(AttendanceErrorCode.LEAVE_OVERLAPPING, "해당 기간에 이미 신청된 휴가가 있습니다", HttpStatus.CONFLICT);
         }
 
         // 일수 계산
@@ -61,10 +62,10 @@ public class LeaveServiceImpl implements LeaveService {
         int year = request.getStartDate().getYear();
         LeaveBalance balance = leaveBalanceRepository.findByEmployeeIdAndYearAndType(
             tenantId, employeeId, year, request.getLeaveType())
-            .orElseThrow(() -> new NotFoundException("LEV_002", "휴가 잔여일 정보가 없습니다"));
+            .orElseThrow(() -> new NotFoundException(AttendanceErrorCode.LEAVE_NO_BALANCE, "휴가 잔여일 정보가 없습니다"));
 
         if (!balance.hasEnoughBalance(daysCount)) {
-            throw new BusinessException("LEV_003", "휴가 잔여일이 부족합니다. 잔여: " + balance.getAvailableDays() + "일", HttpStatus.BAD_REQUEST);
+            throw new BusinessException(AttendanceErrorCode.LEAVE_INSUFFICIENT_BALANCE, "휴가 잔여일이 부족합니다. 잔여: " + balance.getAvailableDays() + "일", HttpStatus.BAD_REQUEST);
         }
 
         LeaveRequest leaveRequest = LeaveRequest.builder()
@@ -122,7 +123,7 @@ public class LeaveServiceImpl implements LeaveService {
         LeaveRequest leaveRequest = findById(leaveId);
 
         if (!leaveRequest.getEmployeeId().equals(employeeId)) {
-            throw new ForbiddenException("LEV_004", "본인의 휴가 신청만 제출할 수 있습니다");
+            throw new ForbiddenException(AttendanceErrorCode.LEAVE_FORBIDDEN, "본인의 휴가 신청만 제출할 수 있습니다");
         }
 
         leaveRequest.submit(null);
@@ -141,7 +142,7 @@ public class LeaveServiceImpl implements LeaveService {
         LeaveRequest leaveRequest = findById(leaveId);
 
         if (!leaveRequest.getEmployeeId().equals(employeeId)) {
-            throw new ForbiddenException("LEV_004", "본인의 휴가 신청만 취소할 수 있습니다");
+            throw new ForbiddenException(AttendanceErrorCode.LEAVE_FORBIDDEN, "본인의 휴가 신청만 취소할 수 있습니다");
         }
 
         LeaveStatus previousStatus = leaveRequest.getStatus();
@@ -213,7 +214,7 @@ public class LeaveServiceImpl implements LeaveService {
 
     private LeaveRequest findById(UUID id) {
         return leaveRequestRepository.findById(id)
-            .orElseThrow(() -> new NotFoundException("LEV_001", "휴가 신청을 찾을 수 없습니다: " + id));
+            .orElseThrow(() -> new NotFoundException(AttendanceErrorCode.LEAVE_NOT_FOUND, "휴가 신청을 찾을 수 없습니다: " + id));
     }
 
     private BigDecimal calculateDaysCount(LeaveType leaveType, LocalDate startDate, LocalDate endDate) {

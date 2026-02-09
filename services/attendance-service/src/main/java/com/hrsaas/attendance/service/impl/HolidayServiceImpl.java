@@ -6,6 +6,7 @@ import com.hrsaas.attendance.domain.entity.Holiday;
 import com.hrsaas.attendance.domain.entity.HolidayType;
 import com.hrsaas.attendance.repository.HolidayRepository;
 import com.hrsaas.attendance.service.HolidayService;
+import com.hrsaas.attendance.domain.AttendanceErrorCode;
 import com.hrsaas.common.core.exception.DuplicateException;
 import com.hrsaas.common.core.exception.NotFoundException;
 import com.hrsaas.common.tenant.TenantContext;
@@ -37,7 +38,7 @@ public class HolidayServiceImpl implements HolidayService {
         UUID tenantId = TenantContext.getCurrentTenant();
 
         if (holidayRepository.existsByTenantIdAndHolidayDate(tenantId, request.getHolidayDate())) {
-            throw new DuplicateException("ATT_003", "이미 등록된 휴일입니다: " + request.getHolidayDate());
+            throw new DuplicateException(AttendanceErrorCode.HOLIDAY_DUPLICATE, "이미 등록된 휴일입니다: " + request.getHolidayDate());
         }
 
         Holiday holiday = Holiday.builder()
@@ -144,6 +145,6 @@ public class HolidayServiceImpl implements HolidayService {
 
     private Holiday findById(UUID id) {
         return holidayRepository.findById(id)
-            .orElseThrow(() -> new NotFoundException("ATT_003", "휴일을 찾을 수 없습니다: " + id));
+            .orElseThrow(() -> new NotFoundException(AttendanceErrorCode.HOLIDAY_NOT_FOUND, "휴일을 찾을 수 없습니다: " + id));
     }
 }

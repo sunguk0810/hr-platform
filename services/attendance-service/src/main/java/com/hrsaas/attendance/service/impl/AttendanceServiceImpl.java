@@ -1,14 +1,18 @@
 package com.hrsaas.attendance.service.impl;
 
+import com.hrsaas.attendance.domain.AttendanceErrorCode;
 import com.hrsaas.attendance.domain.dto.request.CheckInRequest;
 import com.hrsaas.attendance.domain.dto.request.CheckOutRequest;
+import com.hrsaas.attendance.domain.dto.request.UpdateAttendanceRecordRequest;
 import com.hrsaas.attendance.domain.dto.response.AttendanceRecordResponse;
 import com.hrsaas.attendance.domain.dto.response.AttendanceSummaryResponse;
 import com.hrsaas.attendance.domain.dto.response.WorkHoursStatisticsResponse;
+import com.hrsaas.attendance.domain.entity.AttendanceModificationLog;
 import com.hrsaas.attendance.domain.entity.AttendanceRecord;
 import com.hrsaas.attendance.domain.entity.AttendanceStatus;
 import com.hrsaas.attendance.domain.entity.OvertimeRequest;
 import com.hrsaas.attendance.domain.entity.OvertimeStatus;
+import com.hrsaas.attendance.repository.AttendanceModificationLogRepository;
 import com.hrsaas.attendance.repository.AttendanceRecordRepository;
 import com.hrsaas.attendance.repository.OvertimeRequestRepository;
 import com.hrsaas.attendance.service.AttendanceService;
@@ -22,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.YearMonth;
@@ -30,6 +35,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 @Slf4j
@@ -40,6 +46,7 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     private final AttendanceRecordRepository attendanceRecordRepository;
     private final OvertimeRequestRepository overtimeRequestRepository;
+    private final AttendanceModificationLogRepository modificationLogRepository;
 
     @Override
     @Transactional
@@ -52,7 +59,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         attendanceRecordRepository.findByEmployeeIdAndWorkDate(tenantId, employeeId, today)
             .ifPresent(record -> {
                 if (record.getCheckInTime() != null) {
-                    throw new BusinessException("ATT_001", "이미 오늘 출근 처리가 되어 있습니다", HttpStatus.CONFLICT);
+                    throw new BusinessException(AttendanceErrorCode.ALREADY_CHECKED_IN, "이미 오늘 출근 처리가 되어 있습니다", HttpStatus.CONFLICT);
                 }
             });
 
@@ -84,14 +91,14 @@ public class AttendanceServiceImpl implements AttendanceService {
 
         AttendanceRecord record = attendanceRecordRepository
             .findByEmployeeIdAndWorkDate(tenantId, employeeId, today)
-            .orElseThrow(() -> new NotFoundException("ATT_002", "오늘 출근 기록이 없습니다. 먼저 출근 처리를 해주세요."));
+            .orElseThrow(() -> new NotFoundException(AttendanceErrorCode.NO_CHECK_IN_RECORD, "오늘 출근 기록이 없습니다. 먼저 출근 처리를 해주세요."));
 
         if (record.getCheckInTime() == null) {
-            throw new BusinessException("ATT_003", "출근 처리 없이 퇴근할 수 없습니다", HttpStatus.BAD_REQUEST);
+            throw new BusinessException(AttendanceErrorCode.CHECK_IN_REQUIRED, "출근 처리 없이 퇴근할 수 없습니다", HttpStatus.BAD_REQUEST);
         }
 
         if (record.getCheckOutTime() != null) {
-            throw new BusinessException("ATT_004", "이미 퇴근 처리가 되어 있습니다", HttpStatus.CONFLICT);
+            throw new BusinessException(AttendanceErrorCode.ALREADY_CHECKED_OUT, "이미 퇴근 처리가 되어 있습니다", HttpStatus.CONFLICT);
         }
 
         record.checkOut(now, request.location());
@@ -132,7 +139,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         UUID tenantId = TenantContext.getCurrentTenant();
 
         if (startDate.isAfter(endDate)) {
-            throw new BusinessException("ATT_005", "시작일이 종료일보다 늦을 수 없습니다", HttpStatus.BAD_REQUEST);
+            throw new BusinessException(AttendanceErrorCode.INVALID_DATE_RANGE, "시작일이 종료일보다 늦을 수 없습니다", HttpStatus.BAD_REQUEST);
         }
 
         List<AttendanceRecord> records = attendanceRecordRepository
@@ -186,9 +193,119 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Override
     public AttendanceRecordResponse getById(UUID id) {
         AttendanceRecord record = attendanceRecordRepository.findById(id)
-            .orElseThrow(() -> new NotFoundException("ATT_006", "근태 기록을 찾을 수 없습니다: " + id));
+            .orElseThrow(() -> new NotFoundException(AttendanceErrorCode.ATTENDANCE_NOT_FOUND, "근태 기록을 찾을 수 없습니다: " + id));
 
         return AttendanceRecordResponse.from(record);
+    }
+
+    @Override
+    @Transactional
+    public AttendanceRecordResponse updateRecord(UUID id, UpdateAttendanceRecordRequest request,
+                                                  UUID adminId, String adminName) {
+        UUID tenantId = TenantContext.getCurrentTenant();
+
+        AttendanceRecord record = attendanceRecordRepository.findById(id)
+            .orElseThrow(() -> new NotFoundException(AttendanceErrorCode.ATTENDANCE_NOT_FOUND,
+                "근태 기록을 찾을 수 없습니다: " + id));
+
+        List<AttendanceModificationLog> logs = new ArrayList<>();
+
+        // checkInTime 변경 감지
+        if (request.getCheckInTime() != null &&
+            !Objects.equals(record.getCheckInTime(), request.getCheckInTime())) {
+            logs.add(buildLog(tenantId, id, adminId, adminName, "checkInTime",
+                String.valueOf(record.getCheckInTime()),
+                String.valueOf(request.getCheckInTime()),
+                request.getRemarks()));
+            record.setCheckInTime(request.getCheckInTime());
+        }
+
+        // checkOutTime 변경 감지
+        if (request.getCheckOutTime() != null &&
+            !Objects.equals(record.getCheckOutTime(), request.getCheckOutTime())) {
+            logs.add(buildLog(tenantId, id, adminId, adminName, "checkOutTime",
+                String.valueOf(record.getCheckOutTime()),
+                String.valueOf(request.getCheckOutTime()),
+                request.getRemarks()));
+            record.setCheckOutTime(request.getCheckOutTime());
+        }
+
+        // status 변경 감지
+        if (request.getStatus() != null &&
+            !Objects.equals(record.getStatus(), request.getStatus())) {
+            logs.add(buildLog(tenantId, id, adminId, adminName, "status",
+                String.valueOf(record.getStatus()),
+                String.valueOf(request.getStatus()),
+                request.getRemarks()));
+            record.setStatus(request.getStatus());
+        }
+
+        if (logs.isEmpty()) {
+            return AttendanceRecordResponse.from(record);
+        }
+
+        // 시간 관련 필드 재계산
+        recalculateTimeFields(record);
+
+        // 감사 로그 저장
+        modificationLogRepository.saveAll(logs);
+        AttendanceRecord saved = attendanceRecordRepository.save(record);
+
+        log.info("Attendance record updated by admin: recordId={}, adminId={}, changes={}",
+            id, adminId, logs.size());
+
+        return AttendanceRecordResponse.from(saved);
+    }
+
+    private AttendanceModificationLog buildLog(UUID tenantId, UUID recordId, UUID adminId,
+                                                String adminName, String fieldName,
+                                                String oldValue, String newValue, String remarks) {
+        return AttendanceModificationLog.builder()
+            .tenantId(tenantId)
+            .attendanceRecordId(recordId)
+            .modifiedBy(adminId)
+            .modifiedByName(adminName)
+            .fieldName(fieldName)
+            .oldValue(oldValue)
+            .newValue(newValue)
+            .remarks(remarks)
+            .build();
+    }
+
+    private void recalculateTimeFields(AttendanceRecord record) {
+        LocalTime standardStartTime = LocalTime.of(9, 0);
+        LocalTime standardEndTime = LocalTime.of(18, 0);
+
+        // lateMinutes 재계산
+        if (record.getCheckInTime() != null && record.getCheckInTime().isAfter(standardStartTime)) {
+            record.setLateMinutes((int) Duration.between(standardStartTime, record.getCheckInTime()).toMinutes());
+            if (record.getStatus() == AttendanceStatus.NORMAL) {
+                record.setStatus(AttendanceStatus.LATE);
+            }
+        } else {
+            record.setLateMinutes(0);
+        }
+
+        // workHours 재계산
+        if (record.getCheckInTime() != null && record.getCheckOutTime() != null) {
+            long minutes = Duration.between(record.getCheckInTime(), record.getCheckOutTime()).toMinutes();
+            minutes -= 60; // 점심시간 1시간 제외
+            record.setWorkHours((int) (minutes / 60));
+        }
+
+        // earlyLeaveMinutes 재계산
+        if (record.getCheckOutTime() != null && record.getCheckOutTime().isBefore(standardEndTime)) {
+            record.setEarlyLeaveMinutes((int) Duration.between(record.getCheckOutTime(), standardEndTime).toMinutes());
+        } else {
+            record.setEarlyLeaveMinutes(0);
+        }
+
+        // overtimeMinutes 재계산
+        if (record.getCheckOutTime() != null && record.getCheckOutTime().isAfter(standardEndTime)) {
+            record.setOvertimeMinutes((int) Duration.between(standardEndTime, record.getCheckOutTime()).toMinutes());
+        } else {
+            record.setOvertimeMinutes(0);
+        }
     }
 
     private int calculateWorkDays(YearMonth yearMonth) {

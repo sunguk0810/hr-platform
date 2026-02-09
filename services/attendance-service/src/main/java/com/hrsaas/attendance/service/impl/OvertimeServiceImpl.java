@@ -6,6 +6,7 @@ import com.hrsaas.attendance.domain.entity.OvertimeRequest;
 import com.hrsaas.attendance.domain.entity.OvertimeStatus;
 import com.hrsaas.attendance.repository.OvertimeRequestRepository;
 import com.hrsaas.attendance.service.OvertimeService;
+import com.hrsaas.attendance.domain.AttendanceErrorCode;
 import com.hrsaas.common.core.exception.NotFoundException;
 import com.hrsaas.common.tenant.TenantContext;
 import lombok.RequiredArgsConstructor;
@@ -157,6 +158,6 @@ public class OvertimeServiceImpl implements OvertimeService {
 
     private OvertimeRequest findById(UUID id) {
         return overtimeRequestRepository.findById(id)
-            .orElseThrow(() -> new NotFoundException("ATT_004", "초과근무 신청을 찾을 수 없습니다: " + id));
+            .orElseThrow(() -> new NotFoundException(AttendanceErrorCode.OVERTIME_NOT_FOUND, "초과근무 신청을 찾을 수 없습니다: " + id));
     }
 }
