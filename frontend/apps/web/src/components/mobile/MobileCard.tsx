@@ -14,7 +14,7 @@ export function MobileCard({
   onClick,
   variant = 'default',
 }: MobileCardProps) {
-  const baseStyles = 'rounded-xl p-4 transition-all';
+  const baseStyles = 'rounded-xl p-4 transition-shadow';
 
   const variantStyles = {
     default: 'bg-card border border-border',

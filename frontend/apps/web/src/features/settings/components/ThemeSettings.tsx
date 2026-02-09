@@ -54,7 +54,7 @@ export function ThemeSettings() {
                 key={option.value}
                 onClick={() => setTheme(option.value)}
                 className={cn(
-                  'relative flex flex-col items-center gap-3 rounded-lg border p-6 text-center transition-all',
+                  'relative flex flex-col items-center gap-3 rounded-lg border p-6 text-center transition-colors',
                   isSelected
                     ? 'border-primary bg-primary/5 ring-2 ring-primary ring-offset-2'
                     : 'hover:bg-muted/50'

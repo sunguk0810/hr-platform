@@ -131,7 +131,7 @@ function BalanceBar({ label, used, total, remaining }: BalanceBarProps) {
       </div>
       <div className="h-2 rounded-full bg-muted">
         <div
-          className="h-full rounded-full bg-primary transition-all"
+          className="h-full rounded-full bg-primary transition-[width]"
           style={{ width: `${Math.min(percentage, 100)}%` }}
         />
       </div>

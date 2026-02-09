@@ -103,7 +103,7 @@ export function ApprovalStepIndicator({
       {/* Progress line */}
       <div className="absolute left-5 top-0 h-full w-0.5 bg-gray-200">
         <div
-          className="w-full bg-green-500 transition-all"
+          className="w-full bg-green-500 transition-[width]"
           style={{
             height: `${
               ((sortedSteps.filter((s) => s.status === 'APPROVED' || s.status === 'SKIPPED').length) /

@@ -109,7 +109,7 @@ export default function MyLeavePage() {
                     <p className="text-xs font-medium mb-2 truncate">{item.leaveTypeName}</p>
                     <div className="h-1.5 w-full rounded-full bg-muted mb-2">
                       <div
-                        className="h-full rounded-full bg-primary transition-all"
+                        className="h-full rounded-full bg-primary transition-[width]"
                         style={{ width: `${item.totalDays > 0 ? ((item.totalDays - item.remainingDays) / item.totalDays) * 100 : 0}%` }}
                       />
                     </div>
@@ -289,7 +289,7 @@ export default function MyLeavePage() {
                 </div>
                 <div className="mt-3 h-2 w-full rounded-full bg-muted">
                   <div
-                    className="h-full rounded-full bg-primary transition-all"
+                    className="h-full rounded-full bg-primary transition-[width]"
                     style={{ width: `${((item.totalDays - item.remainingDays) / item.totalDays) * 100}%` }}
                   />
                 </div>

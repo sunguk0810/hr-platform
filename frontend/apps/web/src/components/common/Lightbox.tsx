@@ -272,7 +272,7 @@ export function Lightbox({
                 resetTransform();
               }}
               className={cn(
-                'w-16 h-16 rounded-md overflow-hidden border-2 transition-all flex-shrink-0',
+                'w-16 h-16 rounded-md overflow-hidden border-2 transition-[border-color,opacity] flex-shrink-0',
                 index === currentIndex
                   ? 'border-white opacity-100'
                   : 'border-transparent opacity-50 hover:opacity-75'

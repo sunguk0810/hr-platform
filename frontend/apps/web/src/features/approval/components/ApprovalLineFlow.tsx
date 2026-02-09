@@ -114,7 +114,7 @@ function ApprovalLineNode({ data }: { data: ApprovalLineNodeData }) {
     <button
       onClick={data.onClick}
       className={cn(
-        'flex flex-col items-center gap-2 rounded-lg border-2 p-3 transition-all w-[120px]',
+        'flex flex-col items-center gap-2 rounded-lg border-2 p-3 transition-colors w-[120px]',
         colors.bg,
         colors.border,
         data.onClick && 'cursor-pointer hover:shadow-md',

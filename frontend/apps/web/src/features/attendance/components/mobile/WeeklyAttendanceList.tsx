@@ -68,7 +68,7 @@ export function WeeklyAttendanceList({ records, onDayClick }: WeeklyAttendanceLi
             <button
               key={date.toISOString()}
               className={cn(
-                'flex flex-col items-center justify-center p-2 rounded-lg transition-all',
+                'flex flex-col items-center justify-center p-2 rounded-lg transition-colors',
                 isToday && 'ring-2 ring-primary',
                 !isFuture && 'cursor-pointer active:scale-95',
                 isFuture && 'opacity-50 cursor-default'

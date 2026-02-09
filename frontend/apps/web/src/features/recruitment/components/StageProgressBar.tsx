@@ -96,7 +96,7 @@ export function StageCountBar({ stageCounts, className }: StageCountBarProps) {
             <div
               key={stage.key}
               className={cn(
-                'flex items-center justify-center text-xs text-white font-medium transition-all',
+                'flex items-center justify-center text-xs text-white font-medium transition-[width]',
                 colorMap[stage.key]
               )}
               style={{ width: `${percentage}%` }}

@@ -35,7 +35,7 @@ export function PullToRefreshContainer({
       {/* Pull to refresh indicator */}
       {(isPulling || isRefreshing) && !disabled && (
         <div
-          className="flex justify-center items-center overflow-hidden transition-all duration-200 ease-out"
+          className="flex justify-center items-center overflow-hidden transition-[height] duration-200 ease-out"
           style={{ height: pullDistance }}
         >
           <div className="flex flex-col items-center gap-1">

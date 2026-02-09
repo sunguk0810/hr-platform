@@ -46,7 +46,7 @@ export function LanguageSettings() {
                 key={lang.code}
                 onClick={() => handleLanguageChange(lang.code)}
                 className={cn(
-                  'flex items-center gap-4 rounded-lg border p-4 text-left transition-all',
+                  'flex items-center gap-4 rounded-lg border p-4 text-left transition-colors',
                   isSelected
                     ? 'border-primary bg-primary/5 ring-2 ring-primary ring-offset-2'
                     : 'hover:bg-muted/50'

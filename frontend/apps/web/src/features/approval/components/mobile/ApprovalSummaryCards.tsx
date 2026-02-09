@@ -65,7 +65,7 @@ export function ApprovalSummaryCards({
         <button
           key={item.type}
           className={cn(
-            'flex flex-col items-center p-3 rounded-xl transition-all active:scale-95',
+            'flex flex-col items-center p-3 rounded-xl transition-transform active:scale-95',
             item.bgColor
           )}
           onClick={() => onItemClick?.(item.type)}

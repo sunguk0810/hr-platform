@@ -43,8 +43,8 @@ export function ThemeToggle({ variant = 'icon', className }: ThemeToggleProps) {
         className={cn('relative', className)}
         aria-label="테마 변경"
       >
-        <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-        <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+        <Sun className="h-5 w-5 rotate-0 scale-100 transition-transform dark:-rotate-90 dark:scale-0" />
+        <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-transform dark:rotate-0 dark:scale-100" />
         <span className="sr-only">테마 변경</span>
       </Button>
     );

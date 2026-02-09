@@ -28,7 +28,7 @@ export function MainLayout() {
             id="main-content"
             tabIndex={-1}
             className={cn(
-              'flex-1 overflow-auto transition-all duration-300 focus:outline-none',
+              'flex-1 overflow-auto transition-[margin,padding] duration-300 focus:outline-none',
               // 모바일: padding 조정, margin 없음, 하단 탭바 공간 확보
               isMobile ? 'p-4 pt-20 pb-20' : 'p-6 pt-20',
               // 데스크톱: 사이드바에 따라 margin 조정

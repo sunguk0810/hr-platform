@@ -202,7 +202,7 @@ export function GanttView({
                       onMouseEnter={() => setHoveredEvent(event.id)}
                       onMouseLeave={() => setHoveredEvent(null)}
                       className={cn(
-                        'absolute top-2 h-8 rounded text-xs text-white transition-all',
+                        'absolute top-2 h-8 rounded text-xs text-white transition-[left,width]',
                         event.color ||
                           leaveTypeColors[event.leaveType] ||
                           leaveTypeColors.DEFAULT,

@@ -50,7 +50,7 @@ export function Header() {
   return (
     <header
       className={cn(
-        'fixed right-0 top-0 z-50 flex h-16 items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-300',
+        'fixed right-0 top-0 z-50 flex h-16 items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-[left,width] duration-300',
         // 모바일: left-0으로 전체 너비
         isMobile ? 'left-0' : (sidebarCollapsed ? 'left-16' : 'left-64')
       )}

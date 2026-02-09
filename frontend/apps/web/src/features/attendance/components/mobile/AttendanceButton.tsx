@@ -32,7 +32,7 @@ export function AttendanceButton({
   const Icon = isCheckIn ? LogIn : LogOut;
 
   const buttonStyles = cn(
-    'flex-1 flex flex-col items-center justify-center rounded-2xl p-6 transition-all',
+    'flex-1 flex flex-col items-center justify-center rounded-2xl p-6 transition-colors',
     'border-2',
     isCompleted
       ? 'bg-primary/10 border-primary/30 text-primary'

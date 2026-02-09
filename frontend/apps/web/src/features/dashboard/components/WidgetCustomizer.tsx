@@ -134,7 +134,7 @@ function SortableWidgetCard({
       ref={setNodeRef}
       style={style}
       className={cn(
-        'transition-all',
+        'transition-opacity',
         (isDragging || isSortableDragging) && 'opacity-50 scale-[1.02] shadow-lg',
         !widget.enabled && 'bg-muted/50'
       )}
@@ -487,7 +487,7 @@ export function WidgetPreviewCard({
   return (
     <Card
       className={cn(
-        'cursor-pointer transition-all hover:shadow-md',
+        'cursor-pointer transition-shadow hover:shadow-md',
         enabled && 'ring-2 ring-primary',
         className
       )}
