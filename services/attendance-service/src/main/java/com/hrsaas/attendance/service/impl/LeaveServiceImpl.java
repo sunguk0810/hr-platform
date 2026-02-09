@@ -2,8 +2,7 @@ package com.hrsaas.attendance.service.impl;
 
 import com.hrsaas.attendance.domain.AttendanceErrorCode;
 import com.hrsaas.attendance.domain.dto.request.CreateLeaveRequest;
-import com.hrsaas.attendance.domain.dto.response.LeaveBalanceResponse;
-import com.hrsaas.attendance.domain.dto.response.LeaveRequestResponse;
+import com.hrsaas.attendance.domain.dto.response.*;
 import com.hrsaas.attendance.domain.entity.LeaveBalance;
 import com.hrsaas.attendance.domain.entity.LeaveRequest;
 import com.hrsaas.attendance.domain.entity.LeaveStatus;
@@ -27,8 +26,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -210,6 +213,189 @@ public class LeaveServiceImpl implements LeaveService {
 
         leaveRequestRepository.save(leaveRequest);
         log.info("Leave request {} {}: id={}", approved ? "approved" : "rejected", leaveId);
+    }
+
+    // ===== Admin APIs =====
+
+    @Override
+    public PageResponse<PendingLeaveResponse> getPendingLeaves(UUID departmentId, LeaveType leaveType, Pageable pageable) {
+        UUID tenantId = TenantContext.getCurrentTenant();
+
+        Page<LeaveRequest> page;
+        if (departmentId != null && leaveType != null) {
+            page = leaveRequestRepository.findPendingByDepartmentAndLeaveType(tenantId, departmentId, leaveType, pageable);
+        } else if (departmentId != null) {
+            page = leaveRequestRepository.findPendingByDepartment(tenantId, departmentId, pageable);
+        } else if (leaveType != null) {
+            page = leaveRequestRepository.findPendingByLeaveType(tenantId, leaveType, pageable);
+        } else {
+            page = leaveRequestRepository.findPending(tenantId, pageable);
+        }
+
+        List<PendingLeaveResponse> content = page.getContent().stream()
+            .map(request -> {
+                BigDecimal remainingDays = getEmployeeRemainingDays(tenantId, request);
+                boolean isUrgent = request.getStartDate().isBefore(LocalDate.now().plusDays(4));
+                return PendingLeaveResponse.from(request, remainingDays, isUrgent);
+            })
+            .toList();
+
+        return PageResponse.from(page, content);
+    }
+
+    @Override
+    public PendingLeaveSummaryResponse getPendingSummary() {
+        UUID tenantId = TenantContext.getCurrentTenant();
+
+        long totalPending = leaveRequestRepository.countPending(tenantId);
+        long urgentCount = leaveRequestRepository.countUrgentPending(tenantId, LocalDate.now().plusDays(3));
+
+        LocalDate monday = LocalDate.now().with(DayOfWeek.MONDAY);
+        Instant weekStart = monday.atStartOfDay(ZoneId.systemDefault()).toInstant();
+        long thisWeekCount = leaveRequestRepository.countPendingThisWeek(tenantId, weekStart);
+
+        return PendingLeaveSummaryResponse.builder()
+            .totalPending(totalPending)
+            .urgentCount(urgentCount)
+            .thisWeekCount(thisWeekCount)
+            .build();
+    }
+
+    @Override
+    @Transactional
+    public LeaveRequestResponse adminApprove(UUID leaveId, String comment, UUID adminId) {
+        UUID tenantId = TenantContext.getCurrentTenant();
+        LeaveRequest leaveRequest = findById(leaveId);
+
+        if (leaveRequest.getStatus() != LeaveStatus.PENDING) {
+            throw new BusinessException(AttendanceErrorCode.LEAVE_INVALID_STATUS,
+                "승인 대기 상태의 신청만 승인할 수 있습니다", HttpStatus.BAD_REQUEST);
+        }
+
+        leaveRequest.approve();
+
+        // pending -> used 전환
+        int year = leaveRequest.getStartDate().getYear();
+        LeaveBalance balance = leaveBalanceRepository.findByEmployeeIdAndYearAndType(
+            tenantId, leaveRequest.getEmployeeId(), year, leaveRequest.getLeaveType()).orElse(null);
+
+        if (balance != null) {
+            balance.confirmUsedDays(leaveRequest.getDaysCount());
+            leaveBalanceRepository.save(balance);
+        }
+
+        LeaveRequest saved = leaveRequestRepository.save(leaveRequest);
+        log.info("Leave request admin approved: id={}, adminId={}", leaveId, adminId);
+        return LeaveRequestResponse.from(saved);
+    }
+
+    @Override
+    @Transactional
+    public LeaveRequestResponse adminReject(UUID leaveId, String reason, UUID adminId) {
+        UUID tenantId = TenantContext.getCurrentTenant();
+        LeaveRequest leaveRequest = findById(leaveId);
+
+        if (leaveRequest.getStatus() != LeaveStatus.PENDING) {
+            throw new BusinessException(AttendanceErrorCode.LEAVE_INVALID_STATUS,
+                "승인 대기 상태의 신청만 반려할 수 있습니다", HttpStatus.BAD_REQUEST);
+        }
+
+        leaveRequest.reject();
+
+        // pending 일수 복구
+        int year = leaveRequest.getStartDate().getYear();
+        LeaveBalance balance = leaveBalanceRepository.findByEmployeeIdAndYearAndType(
+            tenantId, leaveRequest.getEmployeeId(), year, leaveRequest.getLeaveType()).orElse(null);
+
+        if (balance != null) {
+            balance.releasePendingDays(leaveRequest.getDaysCount());
+            leaveBalanceRepository.save(balance);
+        }
+
+        LeaveRequest saved = leaveRequestRepository.save(leaveRequest);
+        log.info("Leave request admin rejected: id={}, adminId={}, reason={}", leaveId, adminId, reason);
+        return LeaveRequestResponse.from(saved);
+    }
+
+    @Override
+    @Transactional
+    public BulkOperationResponse bulkApprove(List<UUID> ids, String comment, UUID adminId) {
+        int successCount = 0;
+        List<String> errors = new ArrayList<>();
+
+        for (UUID id : ids) {
+            try {
+                adminApprove(id, comment, adminId);
+                successCount++;
+            } catch (Exception e) {
+                errors.add(id + ": " + e.getMessage());
+            }
+        }
+
+        return BulkOperationResponse.builder()
+            .successCount(successCount)
+            .failedCount(errors.size())
+            .errors(errors)
+            .build();
+    }
+
+    @Override
+    @Transactional
+    public BulkOperationResponse bulkReject(List<UUID> ids, String reason, UUID adminId) {
+        int successCount = 0;
+        List<String> errors = new ArrayList<>();
+
+        for (UUID id : ids) {
+            try {
+                adminReject(id, reason, adminId);
+                successCount++;
+            } catch (Exception e) {
+                errors.add(id + ": " + e.getMessage());
+            }
+        }
+
+        return BulkOperationResponse.builder()
+            .successCount(successCount)
+            .failedCount(errors.size())
+            .errors(errors)
+            .build();
+    }
+
+    @Override
+    public List<LeaveBalanceResponse> getBalanceByType(UUID employeeId, Integer year) {
+        UUID tenantId = TenantContext.getCurrentTenant();
+        List<LeaveBalance> balances = leaveBalanceRepository.findByEmployeeIdAndYear(tenantId, employeeId, year);
+        return balances.stream()
+            .map(LeaveBalanceResponse::from)
+            .toList();
+    }
+
+    // ===== Calendar API =====
+
+    @Override
+    public List<LeaveCalendarEventResponse> getCalendarEvents(LocalDate startDate, LocalDate endDate, UUID departmentId) {
+        UUID tenantId = TenantContext.getCurrentTenant();
+
+        List<LeaveRequest> events;
+        if (departmentId != null) {
+            events = leaveRequestRepository.findCalendarEventsByDepartment(tenantId, departmentId, startDate, endDate);
+        } else {
+            events = leaveRequestRepository.findCalendarEvents(tenantId, startDate, endDate);
+        }
+
+        return events.stream()
+            .map(LeaveCalendarEventResponse::from)
+            .toList();
+    }
+
+    // ===== Private helpers =====
+
+    private BigDecimal getEmployeeRemainingDays(UUID tenantId, LeaveRequest request) {
+        int year = request.getStartDate().getYear();
+        return leaveBalanceRepository.findByEmployeeIdAndYearAndType(
+                tenantId, request.getEmployeeId(), year, request.getLeaveType())
+            .map(LeaveBalance::getAvailableDays)
+            .orElse(BigDecimal.ZERO);
     }
 
     private LeaveRequest findById(UUID id) {
