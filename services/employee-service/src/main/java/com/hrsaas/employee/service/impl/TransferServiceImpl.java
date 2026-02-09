@@ -2,6 +2,7 @@ package com.hrsaas.employee.service.impl;
 
 import com.hrsaas.common.core.exception.NotFoundException;
 import com.hrsaas.common.core.exception.ValidationException;
+import com.hrsaas.common.event.EventPublisher;
 import com.hrsaas.common.response.ApiResponse;
 import com.hrsaas.common.response.PageResponse;
 import com.hrsaas.common.tenant.TenantContext;
@@ -18,9 +19,14 @@ import com.hrsaas.employee.domain.dto.response.GradeSimpleResponse;
 import com.hrsaas.employee.domain.dto.response.PositionSimpleResponse;
 import com.hrsaas.employee.domain.dto.response.TenantSimpleResponse;
 import com.hrsaas.employee.domain.dto.response.TransferRequestResponse;
+import com.hrsaas.employee.domain.entity.Employee;
 import com.hrsaas.employee.domain.entity.TransferRequest;
 import com.hrsaas.employee.domain.entity.TransferStatus;
+import com.hrsaas.employee.domain.event.TransferCompletedEvent;
+import com.hrsaas.employee.repository.EmployeeRepository;
 import com.hrsaas.employee.repository.TransferRequestRepository;
+import com.hrsaas.employee.service.EmployeeHistoryRecorder;
+import com.hrsaas.employee.service.EmployeeNumberGenerator;
 import com.hrsaas.employee.service.TransferService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +48,10 @@ public class TransferServiceImpl implements TransferService {
     private final TransferRequestRepository transferRequestRepository;
     private final TenantServiceClient tenantServiceClient;
     private final OrganizationServiceClient organizationServiceClient;
+    private final EmployeeRepository employeeRepository;
+    private final EmployeeNumberGenerator employeeNumberGenerator;
+    private final EmployeeHistoryRecorder historyRecorder;
+    private final EventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -200,9 +210,64 @@ public class TransferServiceImpl implements TransferService {
             throw new ValidationException("EMP_026", "승인 상태의 요청만 완료 처리할 수 있습니다.");
         }
 
+        // 1. Find source employee
+        Employee sourceEmployee = employeeRepository.findById(request.getEmployeeId())
+            .orElseThrow(() -> new NotFoundException("EMP_001", "전출 대상 직원을 찾을 수 없습니다: " + request.getEmployeeId()));
+
+        // 2. Switch to target tenant and create new employee
+        TenantContext.setCurrentTenant(request.getTargetTenantId());
+
+        String newEmployeeNumber = employeeNumberGenerator.generate(request.getTransferDate());
+
+        Employee targetEmployee = Employee.builder()
+            .employeeNumber(newEmployeeNumber)
+            .name(sourceEmployee.getName())
+            .nameEn(sourceEmployee.getNameEn())
+            .email(sourceEmployee.getEmail())
+            .phone(sourceEmployee.getPhone())
+            .mobile(sourceEmployee.getMobile())
+            .departmentId(request.getTargetDepartmentId())
+            .positionCode(request.getTargetPositionId() != null ? request.getTargetPositionId().toString() : sourceEmployee.getPositionCode())
+            .jobTitleCode(request.getTargetGradeId() != null ? request.getTargetGradeId().toString() : sourceEmployee.getJobTitleCode())
+            .hireDate(request.getTransferDate())
+            .employmentType(sourceEmployee.getEmploymentType())
+            .build();
+
+        Employee savedTarget = employeeRepository.save(targetEmployee);
+
+        // Record hire history in target tenant
+        String sourceTenantName = request.getSourceTenantName() != null ? request.getSourceTenantName() : "원 소속";
+        historyRecorder.recordHire(savedTarget, "계열사 전입 - " + sourceTenantName);
+
+        // 3. Switch back to source tenant
+        TenantContext.setCurrentTenant(request.getSourceTenantId());
+
+        // Resign source employee
+        sourceEmployee.resign(request.getTransferDate());
+        employeeRepository.save(sourceEmployee);
+
+        // Record resign history in source tenant
+        String targetTenantName = request.getTargetTenantName() != null ? request.getTargetTenantName() : "대상 소속";
+        historyRecorder.recordResign(sourceEmployee, "계열사 전출 - " + targetTenantName);
+
+        // 4. Complete the transfer request
         request.complete();
         TransferRequest saved = transferRequestRepository.save(request);
-        log.info("Transfer request completed: id={}", id);
+
+        // 5. Publish event
+        eventPublisher.publish(TransferCompletedEvent.builder()
+            .transferRequestId(saved.getId())
+            .sourceEmployeeId(sourceEmployee.getId())
+            .targetEmployeeId(savedTarget.getId())
+            .sourceTenantId(request.getSourceTenantId())
+            .targetTenantId(request.getTargetTenantId())
+            .build());
+
+        // Restore original tenant context
+        TenantContext.setCurrentTenant(tenantId);
+
+        log.info("Transfer completed: id={}, sourceEmpId={}, targetEmpId={}",
+            id, sourceEmployee.getId(), savedTarget.getId());
 
         return TransferRequestResponse.from(saved);
     }

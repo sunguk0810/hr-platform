@@ -20,6 +20,7 @@ public interface EventTopics {
     String EMPLOYEE_UPDATED = "employee-updated";
     String EMPLOYEE_TRANSFERRED = "employee-transferred";
     String EMPLOYEE_RETIRED = "employee-retired";
+    String EMPLOYEE_TRANSFER_COMPLETED = "employee-transfer-completed";
 
     // Organization events
     String ORGANIZATION_EVENTS = "organization-events";
