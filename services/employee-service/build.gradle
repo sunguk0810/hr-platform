@@ -28,6 +28,9 @@ dependencies {
     // PDF Generation
     implementation 'org.apache.pdfbox:pdfbox:3.0.1'
 
+    // Excel Import/Export
+    implementation 'org.apache.poi:poi-ooxml:5.2.5'
+
     // Documentation
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
 

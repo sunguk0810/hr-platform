@@ -12,6 +12,8 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.springframework.http.HttpStatus;
@@ -104,13 +106,19 @@ public class RecordCardServiceImpl implements RecordCardService {
         try (PDDocument document = new PDDocument();
              ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
 
-            // TODO: Korean font embedding - load a Korean TTF font (e.g., NanumGothic)
-            // for proper Korean character rendering. Currently using built-in Helvetica
-            // which cannot render Korean characters. Example:
-            //   InputStream fontStream = getClass().getResourceAsStream("/fonts/NanumGothic.ttf");
-            //   PDType0Font koreanFont = PDType0Font.load(document, fontStream);
-            PDType1Font fontBold = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
-            PDType1Font fontRegular = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+            // Load Korean font if available, fallback to Helvetica
+            PDFont fontBold;
+            PDFont fontRegular;
+            var fontStream = getClass().getResourceAsStream("/fonts/Pretendard-Regular.ttf");
+            if (fontStream != null) {
+                fontRegular = PDType0Font.load(document, fontStream);
+                fontBold = fontRegular; // Use same font for bold (Korean font)
+                log.debug("Korean font loaded successfully");
+            } else {
+                fontBold = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
+                fontRegular = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+                log.warn("Korean font not found, using Helvetica (Korean characters will not render)");
+            }
 
             float margin = 50;
             float yStart = PDRectangle.A4.getHeight() - margin;
@@ -235,7 +243,7 @@ public class RecordCardServiceImpl implements RecordCardService {
     /**
      * Draws centered text on the page and returns the new Y position.
      */
-    private float drawCenteredText(PDPageContentStream cs, PDType1Font font, float fontSize,
+    private float drawCenteredText(PDPageContentStream cs, PDFont font, float fontSize,
                                     String text, float pageWidth, float y) throws IOException {
         float textWidth = font.getStringWidth(text) / 1000 * fontSize;
         float x = (pageWidth - textWidth) / 2;
@@ -250,7 +258,7 @@ public class RecordCardServiceImpl implements RecordCardService {
     /**
      * Draws a section header with underline.
      */
-    private float drawSectionHeader(PDPageContentStream cs, PDType1Font font,
+    private float drawSectionHeader(PDPageContentStream cs, PDFont font,
                                      String text, float x, float y) throws IOException {
         cs.beginText();
         cs.setFont(font, 12);
@@ -268,7 +276,7 @@ public class RecordCardServiceImpl implements RecordCardService {
     /**
      * Draws a label-value pair.
      */
-    private float drawLabelValue(PDPageContentStream cs, PDType1Font boldFont, PDType1Font regularFont,
+    private float drawLabelValue(PDPageContentStream cs, PDFont boldFont, PDFont regularFont,
                                   String label, String value, float x, float y, float contentWidth) throws IOException {
         cs.beginText();
         cs.setFont(boldFont, 10);
@@ -284,7 +292,7 @@ public class RecordCardServiceImpl implements RecordCardService {
     /**
      * Draws a single line of text.
      */
-    private float drawText(PDPageContentStream cs, PDType1Font font, float fontSize,
+    private float drawText(PDPageContentStream cs, PDFont font, float fontSize,
                             String text, float x, float y) throws IOException {
         cs.beginText();
         cs.setFont(font, fontSize);
