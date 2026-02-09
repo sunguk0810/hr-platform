@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -56,13 +57,16 @@ public class GradeServiceImpl implements GradeService {
     }
 
     @Override
-    @Cacheable(value = CacheNames.GRADE, key = "#id")
+    @Cacheable(value = CacheNames.GRADE,
+               key = "T(com.hrsaas.common.tenant.TenantContext).getCurrentTenant() + ':' + #id")
     public GradeResponse getById(UUID id) {
         Grade grade = findById(id);
         return GradeResponse.from(grade);
     }
 
     @Override
+    @Cacheable(value = CacheNames.GRADE,
+               key = "T(com.hrsaas.common.tenant.TenantContext).getCurrentTenant() + ':code:' + #code")
     public GradeResponse getByCode(String code) {
         UUID tenantId = TenantContext.getCurrentTenant();
         Grade grade = gradeRepository.findByCodeAndTenantId(code, tenantId)
@@ -71,23 +75,29 @@ public class GradeServiceImpl implements GradeService {
     }
 
     @Override
+    @Cacheable(value = CacheNames.GRADE,
+               key = "'all:' + T(com.hrsaas.common.tenant.TenantContext).getCurrentTenant()",
+               unless = "#result == null || #result.isEmpty()")
     public List<GradeResponse> getAll() {
         UUID tenantId = TenantContext.getCurrentTenant();
         List<Grade> grades = gradeRepository.findAllByTenantId(tenantId);
 
         return grades.stream()
             .map(GradeResponse::from)
-            .toList();
+            .collect(Collectors.toList());
     }
 
     @Override
+    @Cacheable(value = CacheNames.GRADE,
+               key = "'active:' + T(com.hrsaas.common.tenant.TenantContext).getCurrentTenant()",
+               unless = "#result == null || #result.isEmpty()")
     public List<GradeResponse> getActive() {
         UUID tenantId = TenantContext.getCurrentTenant();
         List<Grade> grades = gradeRepository.findActiveByTenantId(tenantId);
 
         return grades.stream()
             .map(GradeResponse::from)
-            .toList();
+            .collect(Collectors.toList());
     }
 
     @Override

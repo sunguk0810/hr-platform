@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -56,13 +57,16 @@ public class PositionServiceImpl implements PositionService {
     }
 
     @Override
-    @Cacheable(value = CacheNames.POSITION, key = "#id")
+    @Cacheable(value = CacheNames.POSITION,
+               key = "T(com.hrsaas.common.tenant.TenantContext).getCurrentTenant() + ':' + #id")
     public PositionResponse getById(UUID id) {
         Position position = findById(id);
         return PositionResponse.from(position);
     }
 
     @Override
+    @Cacheable(value = CacheNames.POSITION,
+               key = "T(com.hrsaas.common.tenant.TenantContext).getCurrentTenant() + ':code:' + #code")
     public PositionResponse getByCode(String code) {
         UUID tenantId = TenantContext.getCurrentTenant();
         Position position = positionRepository.findByCodeAndTenantId(code, tenantId)
@@ -71,23 +75,29 @@ public class PositionServiceImpl implements PositionService {
     }
 
     @Override
+    @Cacheable(value = CacheNames.POSITION,
+               key = "'all:' + T(com.hrsaas.common.tenant.TenantContext).getCurrentTenant()",
+               unless = "#result == null || #result.isEmpty()")
     public List<PositionResponse> getAll() {
         UUID tenantId = TenantContext.getCurrentTenant();
         List<Position> positions = positionRepository.findAllByTenantId(tenantId);
 
         return positions.stream()
             .map(PositionResponse::from)
-            .toList();
+            .collect(Collectors.toList());
     }
 
     @Override
+    @Cacheable(value = CacheNames.POSITION,
+               key = "'active:' + T(com.hrsaas.common.tenant.TenantContext).getCurrentTenant()",
+               unless = "#result == null || #result.isEmpty()")
     public List<PositionResponse> getActive() {
         UUID tenantId = TenantContext.getCurrentTenant();
         List<Position> positions = positionRepository.findActiveByTenantId(tenantId);
 
         return positions.stream()
             .map(PositionResponse::from)
-            .toList();
+            .collect(Collectors.toList());
     }
 
     @Override

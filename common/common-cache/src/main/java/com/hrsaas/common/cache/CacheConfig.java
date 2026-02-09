@@ -48,6 +48,10 @@ public class CacheConfig {
         cacheConfigurations.put(CacheNames.EMPLOYEE, defaultConfig.entryTtl(Duration.ofMinutes(15)));
         cacheConfigurations.put(CacheNames.DEPARTMENT, defaultConfig.entryTtl(Duration.ofHours(1)));
         cacheConfigurations.put(CacheNames.ORGANIZATION_TREE, defaultConfig.entryTtl(Duration.ofHours(1)));
+        cacheConfigurations.put(CacheNames.POSITION, defaultConfig.entryTtl(Duration.ofHours(1)));
+        cacheConfigurations.put(CacheNames.GRADE, defaultConfig.entryTtl(Duration.ofHours(1)));
+        cacheConfigurations.put(CacheNames.COMMITTEE, defaultConfig.entryTtl(Duration.ofHours(1)));
+        cacheConfigurations.put(CacheNames.APPROVAL_TEMPLATE, defaultConfig.entryTtl(Duration.ofHours(1)));
 
         return RedisCacheManager.builder(redisConnectionFactory)
             .cacheDefaults(defaultConfig)

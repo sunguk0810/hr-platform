@@ -24,6 +24,7 @@ public interface CacheNames {
     String DEPARTMENT = "department";
     String POSITION = "position";
     String GRADE = "grade";
+    String COMMITTEE = "committee";
 
     // Employee related
     String EMPLOYEE = "employee";
