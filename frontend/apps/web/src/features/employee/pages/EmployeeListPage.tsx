@@ -24,6 +24,13 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Users,
   Plus,
   Download,
@@ -552,17 +559,21 @@ export default function EmployeeListPage() {
               />
             </div>
             <div className="flex gap-2">
-              <select
+              <Select
                 value={searchState.status}
-                onChange={(e) => setEmploymentStatus(e.target.value as EmploymentStatus | '')}
-                className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                onValueChange={(value) => setEmploymentStatus(value as EmploymentStatus | '')}
               >
-                <option value="">{t('employmentStatus.label')}</option>
-                <option value="ACTIVE">{t('employmentStatus.ACTIVE')}</option>
-                <option value="ON_LEAVE">{t('employmentStatus.ON_LEAVE')}</option>
-                <option value="RESIGNED">{t('employmentStatus.RESIGNED')}</option>
-                <option value="RETIRED">{t('employmentStatus.RETIRED')}</option>
-              </select>
+                <SelectTrigger className="h-10 w-[180px]">
+                  <SelectValue placeholder={t('employmentStatus.label')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">{t('employmentStatus.label')}</SelectItem>
+                  <SelectItem value="ACTIVE">{t('employmentStatus.ACTIVE')}</SelectItem>
+                  <SelectItem value="ON_LEAVE">{t('employmentStatus.ON_LEAVE')}</SelectItem>
+                  <SelectItem value="RESIGNED">{t('employmentStatus.RESIGNED')}</SelectItem>
+                  <SelectItem value="RETIRED">{t('employmentStatus.RETIRED')}</SelectItem>
+                </SelectContent>
+              </Select>
               {!isMobile && (
                 <div className="flex border rounded-md">
                   <Button
