@@ -1,6 +1,8 @@
 package com.hrsaas.organization.repository;
 
 import com.hrsaas.organization.domain.entity.HeadcountHistory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,4 +24,16 @@ public interface HeadcountHistoryRepository extends JpaRepository<HeadcountHisto
         @Param("tenantId") UUID tenantId,
         @Param("start") Instant start,
         @Param("end") Instant end);
+
+    /**
+     * 테넌트 정원 이력 페이징 조회.
+     * 테넌트 전체 범위 조회 시 대량 데이터 → 페이징 필수.
+     */
+    @Query("SELECT h FROM HeadcountHistory h WHERE h.tenantId = :tenantId " +
+           "AND h.eventDate BETWEEN :start AND :end ORDER BY h.eventDate DESC")
+    Page<HeadcountHistory> findByTenantIdAndEventDateBetween(
+        @Param("tenantId") UUID tenantId,
+        @Param("start") Instant start,
+        @Param("end") Instant end,
+        Pageable pageable);
 }

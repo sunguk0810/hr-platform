@@ -19,7 +19,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -231,15 +233,25 @@ public class InterviewServiceImpl implements InterviewService {
 
     @Override
     public InterviewSummaryResponse getSummary() {
+        // 8개 개별 COUNT 쿼리를 1개 GROUP BY 쿼리로 통합
+        Map<InterviewStatus, Long> statusCounts = new EnumMap<>(InterviewStatus.class);
+        long total = 0;
+        for (Object[] row : interviewRepository.countGroupByStatus()) {
+            InterviewStatus status = (InterviewStatus) row[0];
+            Long count = (Long) row[1];
+            statusCounts.put(status, count);
+            total += count;
+        }
+
         return InterviewSummaryResponse.builder()
-                .total(interviewRepository.count())
-                .scheduling(interviewRepository.countByStatus(InterviewStatus.SCHEDULING))
-                .scheduled(interviewRepository.countByStatus(InterviewStatus.SCHEDULED))
-                .inProgress(interviewRepository.countByStatus(InterviewStatus.IN_PROGRESS))
-                .completed(interviewRepository.countByStatus(InterviewStatus.COMPLETED))
-                .noShow(interviewRepository.countByStatus(InterviewStatus.NO_SHOW))
-                .cancelled(interviewRepository.countByStatus(InterviewStatus.CANCELLED))
-                .postponed(interviewRepository.countByStatus(InterviewStatus.POSTPONED))
+                .total(total)
+                .scheduling(statusCounts.getOrDefault(InterviewStatus.SCHEDULING, 0L))
+                .scheduled(statusCounts.getOrDefault(InterviewStatus.SCHEDULED, 0L))
+                .inProgress(statusCounts.getOrDefault(InterviewStatus.IN_PROGRESS, 0L))
+                .completed(statusCounts.getOrDefault(InterviewStatus.COMPLETED, 0L))
+                .noShow(statusCounts.getOrDefault(InterviewStatus.NO_SHOW, 0L))
+                .cancelled(statusCounts.getOrDefault(InterviewStatus.CANCELLED, 0L))
+                .postponed(statusCounts.getOrDefault(InterviewStatus.POSTPONED, 0L))
                 .build();
     }
 

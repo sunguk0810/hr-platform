@@ -116,12 +116,33 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Cacheable(value = CacheNames.ORGANIZATION_TREE, unless = "#result == null || #result.isEmpty()")
     public List<DepartmentTreeResponse> getTree() {
         UUID tenantId = TenantContext.getCurrentTenant();
-        List<Department> rootDepartments = departmentRepository.findRootDepartments(
+
+        // 전체 부서를 1회 쿼리로 로드 후 in-memory 트리 구성 (N+1 재귀 로드 방지)
+        List<Department> allDepartments = departmentRepository.findAllWithParent(
             tenantId, DepartmentStatus.ACTIVE);
 
-        return rootDepartments.stream()
-            .map(DepartmentTreeResponse::fromWithChildren)
+        // parentId 기준 Map 구성
+        Map<UUID, List<Department>> childrenMap = allDepartments.stream()
+            .filter(d -> d.getParent() != null)
+            .collect(Collectors.groupingBy(d -> d.getParent().getId()));
+
+        // 루트 부서 필터링 후 트리 빌드
+        return allDepartments.stream()
+            .filter(d -> d.getParent() == null)
+            .map(root -> buildTreeNode(root, childrenMap))
             .collect(Collectors.toList());
+    }
+
+    private DepartmentTreeResponse buildTreeNode(Department department,
+                                                   Map<UUID, List<Department>> childrenMap) {
+        List<DepartmentTreeResponse> children = null;
+        List<Department> childDepts = childrenMap.get(department.getId());
+        if (childDepts != null && !childDepts.isEmpty()) {
+            children = childDepts.stream()
+                .map(child -> buildTreeNode(child, childrenMap))
+                .collect(Collectors.toList());
+        }
+        return DepartmentTreeResponse.fromWithChildren(department, children);
     }
 
     @Override
@@ -389,20 +410,43 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Override
     public List<OrgChartNodeResponse> getOrgChart() {
         UUID tenantId = TenantContext.getCurrentTenant();
-        List<Department> rootDepartments = departmentRepository.findRootDepartments(tenantId, DepartmentStatus.ACTIVE);
-        return rootDepartments.stream()
-            .map(this::buildOrgChartNode)
+
+        // 전체 부서를 1회 쿼리로 로드 (N+1 재귀 로드 방지)
+        List<Department> allDepartments = departmentRepository.findAllWithParent(
+            tenantId, DepartmentStatus.ACTIVE);
+
+        // 부서별 직원 수를 배치 API로 1회 조회 (N+1 Feign 호출 방지)
+        List<UUID> departmentIds = allDepartments.stream()
+            .map(Department::getId)
+            .toList();
+
+        Map<UUID, Long> empCountMap;
+        try {
+            empCountMap = employeeClient.countByDepartmentIds(departmentIds).getData();
+            if (empCountMap == null) empCountMap = Map.of();
+        } catch (Exception e) {
+            log.warn("Failed to batch get employee counts: {}", e.getMessage());
+            empCountMap = Map.of();
+        }
+
+        // parentId 기준 Map 구성
+        Map<UUID, List<Department>> childrenMap = allDepartments.stream()
+            .filter(d -> d.getParent() != null)
+            .collect(Collectors.groupingBy(d -> d.getParent().getId()));
+
+        // 루트 부서 필터링 후 트리 빌드
+        Map<UUID, Long> finalEmpCountMap = empCountMap;
+        return allDepartments.stream()
+            .filter(d -> d.getParent() == null)
+            .map(root -> buildOrgChartNode(root, childrenMap, finalEmpCountMap))
             .collect(Collectors.toList());
     }
 
-    private OrgChartNodeResponse buildOrgChartNode(Department department) {
-        Long empCount = 0L;
-        try {
-            empCount = employeeClient.countByDepartmentId(department.getId()).getData();
-            if (empCount < 0) empCount = 0L;
-        } catch (Exception e) {
-            log.debug("Failed to get employee count for department {}: {}", department.getId(), e.getMessage());
-        }
+    private OrgChartNodeResponse buildOrgChartNode(Department department,
+                                                     Map<UUID, List<Department>> childrenMap,
+                                                     Map<UUID, Long> empCountMap) {
+        Long empCount = empCountMap.getOrDefault(department.getId(), 0L);
+        if (empCount < 0) empCount = 0L;
 
         OrgChartNodeResponse.ManagerInfo managerInfo = null;
         if (department.getManagerId() != null) {
@@ -412,10 +456,11 @@ public class DepartmentServiceImpl implements DepartmentService {
         }
 
         List<OrgChartNodeResponse> children = null;
-        if (department.getChildren() != null && !department.getChildren().isEmpty()) {
-            children = department.getChildren().stream()
+        List<Department> childDepts = childrenMap.get(department.getId());
+        if (childDepts != null && !childDepts.isEmpty()) {
+            children = childDepts.stream()
                 .filter(Department::isActive)
-                .map(this::buildOrgChartNode)
+                .map(child -> buildOrgChartNode(child, childrenMap, empCountMap))
                 .collect(Collectors.toList());
         }
 

@@ -68,7 +68,9 @@ public class CommitteeServiceImpl implements CommitteeService {
                key = "T(com.hrsaas.common.tenant.TenantContext).getCurrentTenant() + ':' + #id")
     public CommitteeResponse getById(UUID id) {
         UUID tenantId = TenantContext.getCurrentTenant();
-        Committee committee = findByIdAndTenantId(id, tenantId);
+        // Fetch Join으로 멤버를 함께 로드하여 N+1 방지
+        Committee committee = committeeRepository.findByIdWithMembers(id, tenantId)
+            .orElseThrow(() -> new NotFoundException("ORG_005", "위원회를 찾을 수 없습니다: " + id));
         return CommitteeResponse.fromWithMembers(committee);
     }
 

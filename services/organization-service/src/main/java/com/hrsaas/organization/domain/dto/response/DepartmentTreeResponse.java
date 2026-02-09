@@ -53,4 +53,16 @@ public class DepartmentTreeResponse {
         }
         return response;
     }
+
+    /**
+     * in-memory 트리 구성용: 미리 빌드된 children 리스트를 사용합니다.
+     */
+    public static DepartmentTreeResponse fromWithChildren(Department department,
+                                                            List<DepartmentTreeResponse> children) {
+        DepartmentTreeResponse response = from(department);
+        if (children != null && !children.isEmpty()) {
+            response.setChildren(children);
+        }
+        return response;
+    }
 }

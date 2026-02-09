@@ -5,6 +5,9 @@ import com.hrsaas.organization.client.dto.BulkTransferRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -39,5 +42,11 @@ public class EmployeeClientFallback implements EmployeeClient {
     public ApiResponse<Long> countByPositionId(UUID positionId) {
         log.warn("EmployeeClient fallback: countByPositionId({})", positionId);
         return ApiResponse.success(-1L);
+    }
+
+    @Override
+    public ApiResponse<Map<UUID, Long>> countByDepartmentIds(List<UUID> departmentIds) {
+        log.warn("EmployeeClient fallback: countByDepartmentIds({})", departmentIds.size());
+        return ApiResponse.success(Collections.emptyMap());
     }
 }

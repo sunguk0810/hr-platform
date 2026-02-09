@@ -49,4 +49,11 @@ public interface CommitteeRepository extends JpaRepository<Committee, UUID> {
         @Param("type") CommitteeType type);
 
     boolean existsByCodeAndTenantId(String code, UUID tenantId);
+
+    /**
+     * 위원회와 멤버를 함께 조회합니다 (Fetch Join).
+     * getById에서 fromWithMembers 호출 시 N+1 방지.
+     */
+    @Query("SELECT c FROM Committee c LEFT JOIN FETCH c.members WHERE c.id = :id AND c.tenantId = :tenantId")
+    Optional<Committee> findByIdWithMembers(@Param("id") UUID id, @Param("tenantId") UUID tenantId);
 }

@@ -5,6 +5,8 @@ import com.hrsaas.organization.client.dto.BulkTransferRequest;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @FeignClient(
@@ -28,4 +30,11 @@ public interface EmployeeClient {
 
     @GetMapping("/api/v1/employees/count-by-position")
     ApiResponse<Long> countByPositionId(@RequestParam("positionId") UUID positionId);
+
+    /**
+     * 여러 부서의 직원 수를 배치로 조회합니다.
+     * OrgChart N+1 해결용 배치 API.
+     */
+    @PostMapping("/api/v1/employees/count-by-departments")
+    ApiResponse<Map<UUID, Long>> countByDepartmentIds(@RequestBody List<UUID> departmentIds);
 }

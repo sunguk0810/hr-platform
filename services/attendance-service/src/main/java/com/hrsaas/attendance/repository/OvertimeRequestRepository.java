@@ -61,4 +61,19 @@ public interface OvertimeRequestRepository extends JpaRepository<OvertimeRequest
         @Param("employeeId") UUID employeeId,
         @Param("startDate") LocalDate startDate,
         @Param("endDate") LocalDate endDate);
+
+    /**
+     * 직원별 승인/완료된 초과근무 시간을 GROUP BY로 집계합니다.
+     * queryWorkHoursFromDatabase 메모리 집계 대체용.
+     */
+    @Query("SELECT o.employeeId, o.employeeName, o.departmentId, o.departmentName, " +
+           "COALESCE(SUM(CASE WHEN o.actualHours IS NOT NULL THEN o.actualHours ELSE o.plannedHours END), 0) " +
+           "FROM OvertimeRequest o WHERE o.tenantId = :tenantId " +
+           "AND o.overtimeDate BETWEEN :startDate AND :endDate " +
+           "AND o.status IN ('APPROVED', 'COMPLETED') " +
+           "GROUP BY o.employeeId, o.employeeName, o.departmentId, o.departmentName")
+    List<Object[]> sumOvertimeHoursByEmployeeAndDateRange(
+        @Param("tenantId") UUID tenantId,
+        @Param("startDate") LocalDate startDate,
+        @Param("endDate") LocalDate endDate);
 }

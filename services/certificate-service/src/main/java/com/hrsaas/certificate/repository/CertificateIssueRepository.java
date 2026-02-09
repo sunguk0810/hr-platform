@@ -127,7 +127,7 @@ public interface CertificateIssueRepository extends JpaRepository<CertificateIss
      * 직원별 발급 증명서 목록 (신청을 통해)
      */
     @Query("SELECT ci FROM CertificateIssue ci " +
-           "JOIN ci.request cr WHERE " +
+           "JOIN FETCH ci.request cr WHERE " +
            "cr.employeeId = :employeeId " +
            "ORDER BY ci.issuedAt DESC")
     Page<CertificateIssue> findByEmployeeId(@Param("employeeId") UUID employeeId, Pageable pageable);

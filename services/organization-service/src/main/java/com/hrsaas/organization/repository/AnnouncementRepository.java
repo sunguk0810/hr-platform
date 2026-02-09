@@ -37,20 +37,32 @@ public interface AnnouncementRepository extends JpaRepository<Announcement, UUID
         @Param("category") AnnouncementCategory category,
         Pageable pageable);
 
-    @Query("SELECT a FROM Announcement a WHERE a.tenantId = :tenantId " +
-           "AND (LOWER(a.title) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-           "OR LOWER(a.content) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
-           "ORDER BY a.isPinned DESC, a.publishedAt DESC NULLS LAST, a.createdAt DESC")
+    /**
+     * 키워드 검색 — PostgreSQL FTS (tsvector + GIN) 사용.
+     * LOWER LIKE 대비 인덱스 활용으로 대폭 성능 개선.
+     */
+    @Query(value = "SELECT * FROM hr_core.announcement a WHERE a.tenant_id = :tenantId " +
+           "AND a.search_vector @@ plainto_tsquery('simple', :keyword) " +
+           "ORDER BY a.is_pinned DESC, a.published_at DESC NULLS LAST, a.created_at DESC",
+           countQuery = "SELECT COUNT(*) FROM hr_core.announcement a WHERE a.tenant_id = :tenantId " +
+           "AND a.search_vector @@ plainto_tsquery('simple', :keyword)",
+           nativeQuery = true)
     Page<Announcement> findByTenantIdAndKeyword(
         @Param("tenantId") UUID tenantId,
         @Param("keyword") String keyword,
         Pageable pageable);
 
-    @Query("SELECT a FROM Announcement a WHERE a.tenantId = :tenantId " +
-           "AND a.category = :category " +
-           "AND (LOWER(a.title) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-           "OR LOWER(a.content) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
-           "ORDER BY a.isPinned DESC, a.publishedAt DESC NULLS LAST, a.createdAt DESC")
+    /**
+     * 카테고리 + 키워드 검색 — PostgreSQL FTS (tsvector + GIN) 사용.
+     */
+    @Query(value = "SELECT * FROM hr_core.announcement a WHERE a.tenant_id = :tenantId " +
+           "AND a.category = :#{#category.name()} " +
+           "AND a.search_vector @@ plainto_tsquery('simple', :keyword) " +
+           "ORDER BY a.is_pinned DESC, a.published_at DESC NULLS LAST, a.created_at DESC",
+           countQuery = "SELECT COUNT(*) FROM hr_core.announcement a WHERE a.tenant_id = :tenantId " +
+           "AND a.category = :#{#category.name()} " +
+           "AND a.search_vector @@ plainto_tsquery('simple', :keyword)",
+           nativeQuery = true)
     Page<Announcement> findByTenantIdAndCategoryAndKeyword(
         @Param("tenantId") UUID tenantId,
         @Param("category") AnnouncementCategory category,

@@ -40,6 +40,19 @@ public interface AppointmentHistoryRepository extends JpaRepository<AppointmentH
         @Param("startDate") LocalDate startDate,
         @Param("endDate") LocalDate endDate);
 
+    /**
+     * 테넌트 전체 발령 이력 페이징 조회.
+     * 테넌트 전체 범위 조회 시 대량 데이터 → 페이징 필수.
+     */
+    @Query("SELECT h FROM AppointmentHistory h WHERE h.tenantId = :tenantId " +
+           "AND h.effectiveDate BETWEEN :startDate AND :endDate " +
+           "ORDER BY h.effectiveDate DESC")
+    Page<AppointmentHistory> findByTenantIdAndEffectiveDateBetween(
+        @Param("tenantId") UUID tenantId,
+        @Param("startDate") LocalDate startDate,
+        @Param("endDate") LocalDate endDate,
+        Pageable pageable);
+
     @Query("SELECT h.appointmentType, COUNT(h) FROM AppointmentHistory h " +
            "WHERE h.tenantId = :tenantId " +
            "AND h.effectiveDate BETWEEN :startDate AND :endDate " +

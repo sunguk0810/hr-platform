@@ -34,7 +34,9 @@ import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -266,9 +268,30 @@ public class LeaveServiceImpl implements LeaveService {
             page = leaveRequestRepository.findPending(tenantId, pageable);
         }
 
-        List<PendingLeaveResponse> content = page.getContent().stream()
+        // 배치 조회로 N+1 문제 해결: 페이지 내 모든 직원의 잔여일을 한 번에 조회
+        List<LeaveRequest> requests = page.getContent();
+        int year = LocalDate.now().getYear();
+        List<UUID> employeeIds = requests.stream()
+            .map(LeaveRequest::getEmployeeId)
+            .distinct()
+            .toList();
+
+        Map<String, BigDecimal> balanceMap = Map.of();
+        if (!employeeIds.isEmpty()) {
+            List<LeaveBalance> balances = leaveBalanceRepository.findByEmployeeIdsAndYear(
+                tenantId, employeeIds, year);
+            balanceMap = balances.stream()
+                .collect(Collectors.toMap(
+                    b -> b.getEmployeeId() + ":" + b.getLeaveType(),
+                    LeaveBalance::getAvailableDays,
+                    (a, b) -> a));
+        }
+
+        Map<String, BigDecimal> finalBalanceMap = balanceMap;
+        List<PendingLeaveResponse> content = requests.stream()
             .map(request -> {
-                BigDecimal remainingDays = getEmployeeRemainingDays(tenantId, request);
+                String key = request.getEmployeeId() + ":" + request.getLeaveType();
+                BigDecimal remainingDays = finalBalanceMap.getOrDefault(key, BigDecimal.ZERO);
                 boolean isUrgent = request.getStartDate().isBefore(LocalDate.now().plusDays(4));
                 return PendingLeaveResponse.from(request, remainingDays, isUrgent);
             })
@@ -362,17 +385,66 @@ public class LeaveServiceImpl implements LeaveService {
     @Override
     @Transactional
     public BulkOperationResponse bulkApprove(List<UUID> ids, String comment, UUID adminId) {
+        UUID tenantId = TenantContext.getCurrentTenant();
         int successCount = 0;
         List<String> errors = new ArrayList<>();
 
+        // 배치 로드: 모든 LeaveRequest를 한 번에 조회
+        List<LeaveRequest> requests = leaveRequestRepository.findAllById(ids);
+        Map<UUID, LeaveRequest> requestMap = requests.stream()
+            .collect(Collectors.toMap(LeaveRequest::getId, r -> r));
+
+        // 배치 LeaveBalance 조회: 관련 직원의 잔여일을 한 번에 조드
+        List<UUID> employeeIds = requests.stream()
+            .map(LeaveRequest::getEmployeeId).distinct().toList();
+        int year = LocalDate.now().getYear();
+        Map<String, LeaveBalance> balanceMap = leaveBalanceRepository
+            .findByEmployeeIdsAndYear(tenantId, employeeIds, year).stream()
+            .collect(Collectors.toMap(
+                b -> b.getEmployeeId() + ":" + b.getLeaveType(),
+                b -> b, (a, b) -> a));
+
+        List<LeaveRequest> toSaveRequests = new ArrayList<>();
+        List<LeaveBalance> toSaveBalances = new ArrayList<>();
+
         for (UUID id : ids) {
             try {
-                adminApprove(id, comment, adminId);
+                LeaveRequest request = requestMap.get(id);
+                if (request == null) {
+                    errors.add(id + ": 휴가 신청을 찾을 수 없습니다");
+                    continue;
+                }
+                if (request.getStatus() != LeaveStatus.PENDING) {
+                    errors.add(id + ": 승인 대기 상태의 신청만 승인할 수 있습니다");
+                    continue;
+                }
+
+                request.approve();
+                toSaveRequests.add(request);
+
+                // pending -> used 전환
+                String key = request.getEmployeeId() + ":" + request.getLeaveType();
+                LeaveBalance balance = balanceMap.get(key);
+                if (balance != null) {
+                    if (request.getLeaveUnit() == LeaveUnit.HOUR) {
+                        balance.confirmUsedHours(request.getHoursCount());
+                    } else {
+                        balance.confirmUsedDays(request.getDaysCount());
+                    }
+                    toSaveBalances.add(balance);
+                }
+
                 successCount++;
             } catch (Exception e) {
                 errors.add(id + ": " + e.getMessage());
             }
         }
+
+        // 배치 저장
+        if (!toSaveRequests.isEmpty()) leaveRequestRepository.saveAll(toSaveRequests);
+        if (!toSaveBalances.isEmpty()) leaveBalanceRepository.saveAll(toSaveBalances);
+
+        log.info("Bulk approve completed: success={}, failed={}, adminId={}", successCount, errors.size(), adminId);
 
         return BulkOperationResponse.builder()
             .successCount(successCount)
@@ -384,17 +456,66 @@ public class LeaveServiceImpl implements LeaveService {
     @Override
     @Transactional
     public BulkOperationResponse bulkReject(List<UUID> ids, String reason, UUID adminId) {
+        UUID tenantId = TenantContext.getCurrentTenant();
         int successCount = 0;
         List<String> errors = new ArrayList<>();
 
+        // 배치 로드: 모든 LeaveRequest를 한 번에 조회
+        List<LeaveRequest> requests = leaveRequestRepository.findAllById(ids);
+        Map<UUID, LeaveRequest> requestMap = requests.stream()
+            .collect(Collectors.toMap(LeaveRequest::getId, r -> r));
+
+        // 배치 LeaveBalance 조회
+        List<UUID> employeeIds = requests.stream()
+            .map(LeaveRequest::getEmployeeId).distinct().toList();
+        int year = LocalDate.now().getYear();
+        Map<String, LeaveBalance> balanceMap = leaveBalanceRepository
+            .findByEmployeeIdsAndYear(tenantId, employeeIds, year).stream()
+            .collect(Collectors.toMap(
+                b -> b.getEmployeeId() + ":" + b.getLeaveType(),
+                b -> b, (a, b) -> a));
+
+        List<LeaveRequest> toSaveRequests = new ArrayList<>();
+        List<LeaveBalance> toSaveBalances = new ArrayList<>();
+
         for (UUID id : ids) {
             try {
-                adminReject(id, reason, adminId);
+                LeaveRequest request = requestMap.get(id);
+                if (request == null) {
+                    errors.add(id + ": 휴가 신청을 찾을 수 없습니다");
+                    continue;
+                }
+                if (request.getStatus() != LeaveStatus.PENDING) {
+                    errors.add(id + ": 승인 대기 상태의 신청만 반려할 수 있습니다");
+                    continue;
+                }
+
+                request.reject();
+                toSaveRequests.add(request);
+
+                // pending 일수/시간 복구
+                String key = request.getEmployeeId() + ":" + request.getLeaveType();
+                LeaveBalance balance = balanceMap.get(key);
+                if (balance != null) {
+                    if (request.getLeaveUnit() == LeaveUnit.HOUR) {
+                        balance.releasePendingHours(request.getHoursCount());
+                    } else {
+                        balance.releasePendingDays(request.getDaysCount());
+                    }
+                    toSaveBalances.add(balance);
+                }
+
                 successCount++;
             } catch (Exception e) {
                 errors.add(id + ": " + e.getMessage());
             }
         }
+
+        // 배치 저장
+        if (!toSaveRequests.isEmpty()) leaveRequestRepository.saveAll(toSaveRequests);
+        if (!toSaveBalances.isEmpty()) leaveBalanceRepository.saveAll(toSaveBalances);
+
+        log.info("Bulk reject completed: success={}, failed={}, adminId={}", successCount, errors.size(), adminId);
 
         return BulkOperationResponse.builder()
             .successCount(successCount)

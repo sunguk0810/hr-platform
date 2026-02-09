@@ -111,4 +111,11 @@ public interface ApplicationRepository extends JpaRepository<Application, UUID> 
            "WHERE a.jobPosting.id = :jobPostingId AND a.currentStage IS NOT NULL " +
            "GROUP BY a.currentStage")
     List<Object[]> countByJobPostingIdGroupByCurrentStage(@Param("jobPostingId") UUID jobPostingId);
+
+    /**
+     * 상태별 지원서 수 GROUP BY 집계 (getSummary N+1 해결용).
+     * 10개 개별 COUNT 쿼리를 1개 GROUP BY 쿼리로 통합.
+     */
+    @Query("SELECT a.status, COUNT(a) FROM Application a GROUP BY a.status")
+    List<Object[]> countGroupByStatus();
 }

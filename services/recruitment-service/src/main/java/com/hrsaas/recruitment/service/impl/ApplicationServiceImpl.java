@@ -21,7 +21,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -192,17 +194,27 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Override
     public ApplicationSummaryResponse getSummary() {
+        // 10개 개별 COUNT 쿼리를 1개 GROUP BY 쿼리로 통합
+        Map<ApplicationStatus, Long> statusCounts = new EnumMap<>(ApplicationStatus.class);
+        long total = 0;
+        for (Object[] row : applicationRepository.countGroupByStatus()) {
+            ApplicationStatus status = (ApplicationStatus) row[0];
+            Long count = (Long) row[1];
+            statusCounts.put(status, count);
+            total += count;
+        }
+
         return ApplicationSummaryResponse.builder()
-                .total(applicationRepository.count())
-                .submitted(applicationRepository.countByStatus(ApplicationStatus.SUBMITTED))
-                .screening(applicationRepository.countByStatus(ApplicationStatus.SCREENING))
-                .screened(applicationRepository.countByStatus(ApplicationStatus.SCREENED))
-                .interviewing(applicationRepository.countByStatus(ApplicationStatus.INTERVIEWING))
-                .interviewPassed(applicationRepository.countByStatus(ApplicationStatus.INTERVIEW_PASSED))
-                .offerPending(applicationRepository.countByStatus(ApplicationStatus.OFFER_PENDING))
-                .hired(applicationRepository.countByStatus(ApplicationStatus.HIRED))
-                .rejected(applicationRepository.countByStatus(ApplicationStatus.REJECTED))
-                .withdrawn(applicationRepository.countByStatus(ApplicationStatus.WITHDRAWN))
+                .total(total)
+                .submitted(statusCounts.getOrDefault(ApplicationStatus.SUBMITTED, 0L))
+                .screening(statusCounts.getOrDefault(ApplicationStatus.SCREENING, 0L))
+                .screened(statusCounts.getOrDefault(ApplicationStatus.SCREENED, 0L))
+                .interviewing(statusCounts.getOrDefault(ApplicationStatus.INTERVIEWING, 0L))
+                .interviewPassed(statusCounts.getOrDefault(ApplicationStatus.INTERVIEW_PASSED, 0L))
+                .offerPending(statusCounts.getOrDefault(ApplicationStatus.OFFER_PENDING, 0L))
+                .hired(statusCounts.getOrDefault(ApplicationStatus.HIRED, 0L))
+                .rejected(statusCounts.getOrDefault(ApplicationStatus.REJECTED, 0L))
+                .withdrawn(statusCounts.getOrDefault(ApplicationStatus.WITHDRAWN, 0L))
                 .build();
     }
 

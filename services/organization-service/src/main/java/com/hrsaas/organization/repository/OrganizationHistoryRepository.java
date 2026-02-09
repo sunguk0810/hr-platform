@@ -21,4 +21,12 @@ public interface OrganizationHistoryRepository extends JpaRepository<Organizatio
     @Query("SELECT h FROM OrganizationHistory h WHERE h.departmentId = :departmentId ORDER BY h.eventDate DESC")
     List<OrganizationHistory> findByDepartmentIdOrderByEventDateDesc(
         @Param("departmentId") UUID departmentId);
+
+    /**
+     * 부서별 조직 변경 이력 페이징 조회.
+     * 장기간 이력 → 페이징 필수.
+     */
+    @Query("SELECT h FROM OrganizationHistory h WHERE h.departmentId = :departmentId ORDER BY h.eventDate DESC")
+    Page<OrganizationHistory> findByDepartmentIdOrderByEventDateDesc(
+        @Param("departmentId") UUID departmentId, Pageable pageable);
 }

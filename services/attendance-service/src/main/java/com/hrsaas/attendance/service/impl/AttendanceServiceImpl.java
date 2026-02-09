@@ -314,9 +314,12 @@ public class AttendanceServiceImpl implements AttendanceService {
             .count();
 
         // Supplement on-leave count from approved leave requests not reflected in attendance
+        // Set으로 변환하여 O(n²) → O(n+m)으로 개선
+        java.util.Set<UUID> recordedEmployeeIds = allRecords.stream()
+            .map(AttendanceRecord::getEmployeeId)
+            .collect(java.util.stream.Collectors.toSet());
         int additionalOnLeave = (int) onLeaveEmployeeIds.stream()
-            .filter(empId -> allRecords.stream()
-                .noneMatch(r -> r.getEmployeeId().equals(empId)))
+            .filter(empId -> !recordedEmployeeIds.contains(empId))
             .count();
         onLeaveCount += additionalOnLeave;
 
@@ -498,77 +501,70 @@ public class AttendanceServiceImpl implements AttendanceService {
     }
 
     /**
-     * Query work hours data from database
-     * Aggregates attendance records and approved overtime requests
+     * Query work hours data from database using DB-level aggregation.
+     * 기존: 전체 레코드 메모리 로드 후 Java 집계 (50,000건+)
+     * 개선: sumWorkHoursByEmployeeAndDateRange() + sumOvertimeHoursByEmployeeAndDateRange() DB 집계
      */
     private List<WorkHoursStatisticsResponse.EmployeeWorkHoursResponse> queryWorkHoursFromDatabase(
             UUID tenantId, LocalDate weekStart, LocalDate weekEnd, UUID departmentIdFilter) {
 
-        // 1. Get all attendance records for the week
-        List<AttendanceRecord> attendanceRecords =
-            attendanceRecordRepository.findByTenantIdAndDateRange(tenantId, weekStart, weekEnd);
+        // 1. DB 집계: 직원별 근무시간/초과근무분 (레코드 로드 없이 SUM GROUP BY)
+        Map<UUID, double[]> attendanceAgg = new HashMap<>();
+        for (Object[] row : attendanceRecordRepository.sumWorkHoursByEmployeeAndDateRange(tenantId, weekStart, weekEnd)) {
+            UUID empId = (UUID) row[0];
+            long workHoursSum = row[1] != null ? ((Number) row[1]).longValue() : 0;
+            long overtimeMinutesSum = row[2] != null ? ((Number) row[2]).longValue() : 0;
+            attendanceAgg.put(empId, new double[]{workHoursSum, overtimeMinutesSum});
+        }
 
-        // 2. Get all approved/completed overtime requests for the week
-        List<OvertimeRequest> overtimeRequests =
-            overtimeRequestRepository.findByDateRange(tenantId, weekStart, weekEnd).stream()
-                .filter(o -> o.getStatus() == OvertimeStatus.APPROVED || o.getStatus() == OvertimeStatus.COMPLETED)
-                .toList();
-
-        // 3. Build a map of overtime info by employee (for employee name and department)
-        Map<UUID, OvertimeRequest> employeeOvertimeInfo = new HashMap<>();
+        // 2. DB 집계: 직원별 승인/완료 초과근무 시간 + 직원명/부서명
         Map<UUID, Double> employeeOvertimeHours = new HashMap<>();
+        Map<UUID, String> employeeNames = new HashMap<>();
+        Map<UUID, UUID> employeeDeptIds = new HashMap<>();
+        Map<UUID, String> employeeDeptNames = new HashMap<>();
 
-        for (OvertimeRequest ot : overtimeRequests) {
-            employeeOvertimeInfo.putIfAbsent(ot.getEmployeeId(), ot);
-            double hours = ot.getActualHours() != null
-                ? ot.getActualHours().doubleValue()
-                : ot.getPlannedHours().doubleValue();
-            employeeOvertimeHours.merge(ot.getEmployeeId(), hours, Double::sum);
+        for (Object[] row : overtimeRequestRepository.sumOvertimeHoursByEmployeeAndDateRange(tenantId, weekStart, weekEnd)) {
+            UUID empId = (UUID) row[0];
+            String empName = (String) row[1];
+            UUID deptId = (UUID) row[2];
+            String deptName = (String) row[3];
+            double otHours = row[4] != null ? ((Number) row[4]).doubleValue() : 0;
+
+            employeeOvertimeHours.put(empId, otHours);
+            employeeNames.put(empId, empName);
+            if (deptId != null) employeeDeptIds.put(empId, deptId);
+            if (deptName != null) employeeDeptNames.put(empId, deptName);
         }
 
-        // 4. Aggregate attendance by employee
-        Map<UUID, Double> employeeRegularHours = new HashMap<>();
-        Map<UUID, Integer> employeeOvertimeMinutesFromAttendance = new HashMap<>();
-
-        for (AttendanceRecord record : attendanceRecords) {
-            UUID empId = record.getEmployeeId();
-            double workHours = record.getWorkHours() != null ? record.getWorkHours() : 0;
-            int overtimeMinutes = record.getOvertimeMinutes() != null ? record.getOvertimeMinutes() : 0;
-
-            // Regular hours are capped at 8 per day
-            double regularHours = Math.min(workHours, 8.0);
-            employeeRegularHours.merge(empId, regularHours, Double::sum);
-            employeeOvertimeMinutesFromAttendance.merge(empId, overtimeMinutes, Integer::sum);
-        }
-
-        // 5. Build the response list
-        List<WorkHoursStatisticsResponse.EmployeeWorkHoursResponse> result = new ArrayList<>();
-
-        // Combine all employee IDs
+        // 3. 모든 직원 ID 합산
         java.util.Set<UUID> allEmployeeIds = new java.util.HashSet<>();
-        allEmployeeIds.addAll(employeeRegularHours.keySet());
+        allEmployeeIds.addAll(attendanceAgg.keySet());
         allEmployeeIds.addAll(employeeOvertimeHours.keySet());
 
-        for (UUID employeeId : allEmployeeIds) {
-            double regularHours = employeeRegularHours.getOrDefault(employeeId, 0.0);
+        // 4. 응답 빌드
+        List<WorkHoursStatisticsResponse.EmployeeWorkHoursResponse> result = new ArrayList<>();
 
-            // Overtime: use approved OT request hours, or attendance overtime minutes as fallback
+        for (UUID employeeId : allEmployeeIds) {
+            double[] agg = attendanceAgg.getOrDefault(employeeId, new double[]{0, 0});
+            double regularHours = agg[0]; // 이미 DB에서 SUM한 값
+            double overtimeMinutesFromAttendance = agg[1];
+
+            // 초과근무: 승인된 OT 시간 우선, 없으면 근태 기록의 overtime_minutes 사용
             double overtimeHours = employeeOvertimeHours.getOrDefault(employeeId, 0.0);
-            if (overtimeHours == 0 && employeeOvertimeMinutesFromAttendance.containsKey(employeeId)) {
-                overtimeHours = employeeOvertimeMinutesFromAttendance.get(employeeId) / 60.0;
+            if (overtimeHours == 0 && overtimeMinutesFromAttendance > 0) {
+                overtimeHours = overtimeMinutesFromAttendance / 60.0;
             }
 
             double totalHours = regularHours + overtimeHours;
             double exceededHours = Math.max(0, totalHours - 52);
 
-            // Get employee info from overtime request if available
-            OvertimeRequest otInfo = employeeOvertimeInfo.get(employeeId);
-            String employeeName = otInfo != null ? otInfo.getEmployeeName() : "직원-" + employeeId.toString().substring(0, 8);
-            String departmentName = otInfo != null ? otInfo.getDepartmentName() : "미지정";
-            String departmentIdStr = otInfo != null && otInfo.getDepartmentId() != null
-                ? otInfo.getDepartmentId().toString() : null;
+            String employeeName = employeeNames.getOrDefault(employeeId,
+                "직원-" + employeeId.toString().substring(0, 8));
+            String departmentName = employeeDeptNames.getOrDefault(employeeId, "미지정");
+            UUID deptId = employeeDeptIds.get(employeeId);
+            String departmentIdStr = deptId != null ? deptId.toString() : null;
 
-            // Apply department filter
+            // 부서 필터 적용
             if (departmentIdFilter != null && departmentIdStr != null
                 && !departmentIdStr.equals(departmentIdFilter.toString())) {
                 continue;
@@ -587,7 +583,7 @@ public class AttendanceServiceImpl implements AttendanceService {
                 .build());
         }
 
-        // Sort by total hours descending (show exceeded first)
+        // 총 근무시간 내림차순 정렬 (초과 먼저 표시)
         result.sort((a, b) -> Double.compare(b.getTotalHours(), a.getTotalHours()));
 
         return result;

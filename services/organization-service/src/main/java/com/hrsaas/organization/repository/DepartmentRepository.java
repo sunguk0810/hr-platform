@@ -35,4 +35,13 @@ public interface DepartmentRepository extends JpaRepository<Department, UUID> {
         @Param("status") DepartmentStatus status);
 
     boolean existsByCodeAndTenantId(String code, UUID tenantId);
+
+    /**
+     * 테넌트의 전체 부서를 parent와 함께 1회 조회하여 in-memory 트리 구성에 사용합니다.
+     * N+1 재귀 로드 대신 사용.
+     */
+    @Query("SELECT d FROM Department d LEFT JOIN FETCH d.parent WHERE d.tenantId = :tenantId " +
+           "AND d.status = :status ORDER BY d.level ASC, d.sortOrder ASC")
+    List<Department> findAllWithParent(@Param("tenantId") UUID tenantId,
+                                       @Param("status") DepartmentStatus status);
 }

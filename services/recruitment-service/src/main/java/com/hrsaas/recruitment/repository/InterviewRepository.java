@@ -99,4 +99,11 @@ public interface InterviewRepository extends JpaRepository<Interview, UUID> {
            "ORDER BY scheduled_time ASC",
            nativeQuery = true)
     List<Interview> findTodayScheduledInterviews(@Param("today") LocalDate today);
+
+    /**
+     * 상태별 면접 수 GROUP BY 집계 (getSummary N+1 해결용).
+     * 8개 개별 COUNT 쿼리를 1개 GROUP BY 쿼리로 통합.
+     */
+    @Query("SELECT i.status, COUNT(i) FROM Interview i GROUP BY i.status")
+    List<Object[]> countGroupByStatus();
 }
