@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import {
@@ -47,6 +48,7 @@ export function SessionManager({
   onRevokeAllSessions,
   isLoading,
 }: SessionManagerProps) {
+  const { t } = useTranslation('settings');
   const [revokeId, setRevokeId] = useState<string | null>(null);
   const [showRevokeAllDialog, setShowRevokeAllDialog] = useState(false);
 
@@ -70,9 +72,9 @@ export function SessionManager({
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-lg">로그인된 기기</CardTitle>
+            <CardTitle className="text-lg">{t('sessionManager.title')}</CardTitle>
             <CardDescription>
-              현재 로그인된 기기를 관리합니다
+              {t('sessionManager.description')}
             </CardDescription>
           </div>
           {otherSessions.length > 0 && (
@@ -83,7 +85,7 @@ export function SessionManager({
               disabled={isLoading}
             >
               <LogOut className="mr-2 h-4 w-4" />
-              모든 기기 로그아웃
+              {t('sessionManager.logoutAllDevices')}
             </Button>
           )}
         </div>
@@ -99,7 +101,7 @@ export function SessionManager({
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <h4 className="font-medium">{currentSession.deviceName}</h4>
-                  <Badge variant="default" className="text-xs">현재 기기</Badge>
+                  <Badge variant="default" className="text-xs">{t('sessionManager.currentDevice')}</Badge>
                 </div>
                 <p className="text-sm text-muted-foreground">
                   {currentSession.browser} · {currentSession.os}
@@ -125,7 +127,7 @@ export function SessionManager({
         {otherSessions.length > 0 ? (
           <div className="space-y-3">
             <h4 className="text-sm font-medium text-muted-foreground">
-              다른 기기 ({otherSessions.length})
+              {t('sessionManager.otherDevices', { count: otherSessions.length })}
             </h4>
             {otherSessions.map((session) => {
               const lastActive = formatDistanceToNow(session.lastActiveAt, {
@@ -157,7 +159,7 @@ export function SessionManager({
                           {session.location}
                         </span>
                       )}
-                      <span>마지막 활동: {lastActive}</span>
+                      <span>{t('sessionManager.lastActivity', { time: lastActive })}</span>
                     </div>
                   </div>
                   <Button
@@ -168,7 +170,7 @@ export function SessionManager({
                     className="text-destructive hover:text-destructive"
                   >
                     <LogOut className="mr-1 h-4 w-4" />
-                    로그아웃
+                    {t('sessionManager.logout')}
                   </Button>
                 </div>
               );
@@ -176,7 +178,7 @@ export function SessionManager({
           </div>
         ) : (
           <p className="py-4 text-center text-sm text-muted-foreground">
-            다른 기기에서 로그인된 세션이 없습니다
+            {t('sessionManager.noOtherSessions')}
           </p>
         )}
 
@@ -185,10 +187,9 @@ export function SessionManager({
           <div className="flex gap-2">
             <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
             <div className="text-sm text-amber-800 dark:text-amber-200">
-              <p className="font-medium">보안 안내</p>
+              <p className="font-medium">{t('sessionManager.securityNotice.title')}</p>
               <p className="text-xs text-amber-700 dark:text-amber-300">
-                인식하지 못하는 기기가 있다면 즉시 로그아웃하고 비밀번호를
-                변경하세요.
+                {t('sessionManager.securityNotice.description')}
               </p>
             </div>
           </div>
@@ -198,10 +199,10 @@ export function SessionManager({
         <ConfirmDialog
           open={!!revokeId}
           onOpenChange={(open) => !open && setRevokeId(null)}
-          title="기기 로그아웃"
-          description="선택한 기기에서 로그아웃하시겠습니까? 해당 기기에서 다시 로그인해야 합니다."
-          confirmText="로그아웃"
-          cancelText="취소"
+          title={t('sessionManager.revokeDialog.title')}
+          description={t('sessionManager.revokeDialog.description')}
+          confirmText={t('sessionManager.revokeDialog.confirm')}
+          cancelText={t('sessionManager.revokeDialog.cancel')}
           variant="destructive"
           onConfirm={handleRevokeSession}
         />
@@ -210,10 +211,10 @@ export function SessionManager({
         <ConfirmDialog
           open={showRevokeAllDialog}
           onOpenChange={setShowRevokeAllDialog}
-          title="모든 기기 로그아웃"
-          description="현재 기기를 제외한 모든 기기에서 로그아웃됩니다. 계속하시겠습니까?"
-          confirmText="모두 로그아웃"
-          cancelText="취소"
+          title={t('sessionManager.revokeAllDialog.title')}
+          description={t('sessionManager.revokeAllDialog.description')}
+          confirmText={t('sessionManager.revokeAllDialog.confirm')}
+          cancelText={t('sessionManager.revokeAllDialog.cancel')}
           variant="destructive"
           onConfirm={handleRevokeAll}
         />

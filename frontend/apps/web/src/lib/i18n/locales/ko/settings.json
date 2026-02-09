@@ -179,5 +179,433 @@
       "inputError": "입력 오류",
       "inputErrorDesc": "필수 항목을 모두 입력해주세요."
     }
+  },
+  "profileSettings": {
+    "title": "프로필 설정",
+    "description": "기본 프로필 정보를 수정할 수 있습니다",
+    "changeImageAriaLabel": "프로필 이미지 변경",
+    "photoFileInfo": "JPG, PNG 파일 (최대 5MB)",
+    "recommendedSize": "권장 사이즈: 200x200px",
+    "nameLabel": "이름 *",
+    "nameEnLabel": "영문 이름",
+    "nameEnPlaceholder": "English Name",
+    "emailLabel": "이메일 *",
+    "emailReadonly": "회사 이메일은 변경할 수 없습니다",
+    "mobileLabel": "연락처 *",
+    "mobilePlaceholder": "010-0000-0000",
+    "bioLabel": "자기소개",
+    "bioPlaceholder": "간단한 자기소개를 입력하세요",
+    "bioMaxLength": "최대 200자까지 입력할 수 있습니다",
+    "saving": "저장 중...",
+    "saveChanges": "변경사항 저장",
+    "validation": {
+      "nameRequired": "이름은 필수입니다",
+      "emailInvalid": "올바른 이메일을 입력하세요",
+      "mobileRequired": "연락처는 필수입니다",
+      "bioMaxLength": "200자 이내로 입력하세요"
+    }
+  },
+  "passwordChange": {
+    "title": "비밀번호 변경",
+    "description": "계정 보안을 위해 정기적으로 비밀번호를 변경하세요",
+    "currentPassword": "현재 비밀번호",
+    "newPassword": "새 비밀번호",
+    "confirmPassword": "새 비밀번호 확인",
+    "strengthWeak": "약함",
+    "strengthFair": "보통",
+    "strengthStrong": "강함",
+    "strengthVeryStrong": "매우 강함",
+    "requirements": {
+      "minLength": "8자 이상",
+      "uppercase": "대문자 포함",
+      "lowercase": "소문자 포함",
+      "number": "숫자 포함",
+      "special": "특수문자 포함"
+    },
+    "notice": {
+      "title": "비밀번호 변경 안내",
+      "reloginRequired": "비밀번호 변경 후 다시 로그인해야 합니다",
+      "otherSessionsLogout": "다른 기기의 세션은 자동으로 로그아웃됩니다"
+    },
+    "changing": "변경 중...",
+    "changeButton": "비밀번호 변경",
+    "validation": {
+      "currentRequired": "현재 비밀번호를 입력하세요",
+      "minLength": "8자 이상 입력하세요",
+      "uppercase": "대문자를 포함해야 합니다",
+      "lowercase": "소문자를 포함해야 합니다",
+      "number": "숫자를 포함해야 합니다",
+      "special": "특수문자를 포함해야 합니다",
+      "confirmRequired": "비밀번호 확인을 입력하세요",
+      "mismatch": "비밀번호가 일치하지 않습니다"
+    }
+  },
+  "sessionManager": {
+    "title": "로그인된 기기",
+    "description": "현재 로그인된 기기를 관리합니다",
+    "logoutAllDevices": "모든 기기 로그아웃",
+    "currentDevice": "현재 기기",
+    "otherDevices": "다른 기기 ({{count}})",
+    "lastActivity": "마지막 활동: {{time}}",
+    "logout": "로그아웃",
+    "noOtherSessions": "다른 기기에서 로그인된 세션이 없습니다",
+    "securityNotice": {
+      "title": "보안 안내",
+      "description": "인식하지 못하는 기기가 있다면 즉시 로그아웃하고 비밀번호를 변경하세요."
+    },
+    "revokeDialog": {
+      "title": "기기 로그아웃",
+      "description": "선택한 기기에서 로그아웃하시겠습니까? 해당 기기에서 다시 로그인해야 합니다.",
+      "confirm": "로그아웃",
+      "cancel": "취소"
+    },
+    "revokeAllDialog": {
+      "title": "모든 기기 로그아웃",
+      "description": "현재 기기를 제외한 모든 기기에서 로그아웃됩니다. 계속하시겠습니까?",
+      "confirm": "모두 로그아웃",
+      "cancel": "취소"
+    }
+  },
+  "themeSettings": {
+    "title": "테마 설정",
+    "description": "화면 테마를 선택하세요",
+    "light": {
+      "label": "라이트 모드",
+      "description": "밝은 배경의 기본 테마"
+    },
+    "dark": {
+      "label": "다크 모드",
+      "description": "어두운 배경의 테마"
+    },
+    "system": {
+      "label": "시스템 설정",
+      "description": "운영체제 설정에 따라 자동 변경"
+    },
+    "preview": "미리보기"
+  },
+  "leaveUsageConditions": {
+    "title": "휴가 사용 조건",
+    "description": "휴가 유형별 사용 조건을 설정합니다. (FR-ATT-003-02)",
+    "saveButton": "조건 저장",
+    "documentCount": "증빙 {{count}}건",
+    "blackoutCount": "블랙아웃 {{count}}건",
+    "advanceNoticePeriod": "사전 통보 기간",
+    "daysBefore": "일 전",
+    "maxConsecutiveDays": "최대 연속 사용일",
+    "daysUnit": "일",
+    "maxAnnualUsage": "연간 최대 사용 횟수",
+    "unlimited": "(무제한)",
+    "timesUnit": "회",
+    "minTenureMonths": "최소 근속 기간",
+    "monthsUnit": "개월",
+    "requiredDocuments": "필요 증빙서류",
+    "documents": {
+      "diagnosis": "진단서",
+      "reason": "사유서",
+      "confirmation": "확인서",
+      "other": "기타"
+    },
+    "availableDays": "사용 가능 요일",
+    "dayLabels": {
+      "mon": "월",
+      "tue": "화",
+      "wed": "수",
+      "thu": "목",
+      "fri": "금",
+      "sat": "토",
+      "sun": "일"
+    },
+    "roleRestrictions": "역할별 사용 제한",
+    "roleRestrictionsDescription": "선택된 역할만 이 휴가를 사용할 수 있습니다. 미선택 시 전체 허용.",
+    "blackoutPeriods": "블랙아웃 기간",
+    "blackoutPeriodsDescription": "이 기간 동안에는 해당 휴가를 사용할 수 없습니다.",
+    "addPeriod": "기간 추가",
+    "noBlackoutPeriods": "설정된 블랙아웃 기간이 없습니다.",
+    "startDate": "시작일",
+    "endDate": "종료일",
+    "toast": {
+      "saveSuccess": "저장 완료",
+      "saveSuccessDesc": "휴가 사용 조건이 저장되었습니다."
+    }
+  },
+  "notificationChannelSettings": {
+    "smtp": {
+      "title": "이메일 설정 (SMTP)",
+      "description": "이메일 알림 발송을 위한 SMTP 서버를 설정합니다.",
+      "host": "SMTP 서버 주소",
+      "port": "포트",
+      "security": "보안 연결",
+      "securityPlaceholder": "보안 유형 선택",
+      "username": "사용자 계정",
+      "password": "비밀번호",
+      "passwordPlaceholder": "SMTP 비밀번호",
+      "senderName": "발신자 이름",
+      "connectionTest": "연결 테스트",
+      "testing": "테스트 중...",
+      "testSend": "테스트 발송"
+    },
+    "sms": {
+      "title": "SMS 설정",
+      "description": "SMS 알림 발송을 위한 게이트웨이를 설정합니다.",
+      "gateway": "SMS 게이트웨이",
+      "gatewayPlaceholder": "게이트웨이 선택",
+      "gatewayCustom": "직접 입력",
+      "apiKey": "API Key",
+      "apiKeyPlaceholder": "API Key를 입력하세요",
+      "senderNumber": "발신번호",
+      "connectionTest": "연결 테스트",
+      "testing": "테스트 중...",
+      "testSend": "테스트 발송"
+    },
+    "eventChannels": {
+      "title": "이벤트별 알림 채널 설정",
+      "description": "각 이벤트에 대해 사용할 알림 채널을 설정합니다.",
+      "eventHeader": "이벤트",
+      "emailHeader": "이메일",
+      "smsHeader": "SMS",
+      "inAppHeader": "인앱",
+      "events": {
+        "approvalRequest": "결재 요청",
+        "approvalComplete": "결재 완료",
+        "approvalReject": "결재 반려",
+        "leaveApprove": "휴가 승인",
+        "leaveReject": "휴가 반려",
+        "appointmentNotice": "발령 통보",
+        "systemNotice": "시스템 공지"
+      }
+    },
+    "saving": "저장 중...",
+    "saveButton": "설정 저장",
+    "testEmailDialog": {
+      "title": "테스트 이메일 발송",
+      "recipientLabel": "수신 이메일 주소",
+      "cancel": "취소",
+      "sending": "발송 중...",
+      "send": "발송"
+    },
+    "testSmsDialog": {
+      "title": "테스트 SMS 발송",
+      "recipientLabel": "수신 전화번호",
+      "cancel": "취소",
+      "sending": "발송 중...",
+      "send": "발송"
+    },
+    "toast": {
+      "smtpTestSuccess": "SMTP 연결 테스트 성공",
+      "smtpTestSuccessDesc": "SMTP 서버에 정상적으로 연결되었습니다.",
+      "smtpTestFailed": "SMTP 연결 테스트 실패",
+      "smtpTestFailedDesc": "연결에 실패했습니다.",
+      "smtpTestError": "서버와 통신 중 오류가 발생했습니다.",
+      "testSendSuccess": "테스트 발송 완료",
+      "testEmailSentDesc": "테스트 메일이 발송되었습니다.",
+      "testSendFailed": "테스트 발송 실패",
+      "testEmailFailedDesc": "메일 발송에 실패했습니다.",
+      "testSmsSentDesc": "테스트 SMS가 발송되었습니다.",
+      "testSmsFailedDesc": "SMS 발송에 실패했습니다.",
+      "smsTestSuccess": "SMS 연결 테스트 성공",
+      "smsTestSuccessDesc": "SMS 게이트웨이에 정상적으로 연결되었습니다.",
+      "smsTestFailed": "SMS 연결 테스트 실패",
+      "smsTestFailedDesc": "연결에 실패했습니다.",
+      "saveSuccess": "설정 저장 완료",
+      "saveSuccessDesc": "알림 채널 설정이 저장되었습니다.",
+      "saveFailed": "설정 저장 실패",
+      "saveFailedDesc": "설정 저장에 실패했습니다.",
+      "serverError": "서버와 통신 중 오류가 발생했습니다."
+    }
+  },
+  "leaveApprovalLineRules": {
+    "title": "휴가 유형별 결재선 규칙",
+    "description": "휴가 유형에 따른 결재 단계 및 결재자 역할을 설정합니다. (FR-ATT-003-03)",
+    "saveButton": "저장",
+    "leaveTypeHeader": "휴가 유형",
+    "approvalStepsHeader": "결재 단계 수",
+    "approverRolesHeader": "결재 역할",
+    "autoSubmitHeader": "자동 상신",
+    "noteHeader": "비고",
+    "notePlaceholder": "비고 입력",
+    "selectRoles": "역할 선택",
+    "selectRolesTitle": "결재 역할 선택",
+    "steps": {
+      "one": "1단계",
+      "two": "2단계",
+      "three": "3단계"
+    },
+    "toast": {
+      "saveSuccess": "저장 완료",
+      "saveSuccessDesc": "휴가 유형별 결재선 규칙이 저장되었습니다."
+    }
+  },
+  "employeeNumberRule": {
+    "pageTitle": "사번 규칙 설정",
+    "pageDescription": "직원 등록 시 자동 생성되는 사번의 형식을 설정합니다.",
+    "ruleConfig": {
+      "title": "사번 생성 규칙",
+      "description": "사번은 접두사, 연도, 순번의 조합으로 자동 생성됩니다."
+    },
+    "prefix": {
+      "label": "접두사 (Prefix)",
+      "description": "사번 앞에 붙는 문자열입니다. 예: EMP, ELEC, HR"
+    },
+    "includeYear": {
+      "label": "연도 포함",
+      "description": "사번에 4자리 연도를 포함합니다."
+    },
+    "sequenceDigits": {
+      "label": "순번 자릿수",
+      "placeholder": "자릿수 선택",
+      "option3": "3자리 (001 ~ 999)",
+      "option4": "4자리 (0001 ~ 9999)",
+      "option5": "5자리 (00001 ~ 99999)",
+      "description": "순번의 자릿수를 설정합니다. 큰 조직일수록 높은 자릿수를 권장합니다."
+    },
+    "preview": {
+      "title": "미리보기",
+      "description": "현재 설정으로 생성될 사번의 형식입니다.",
+      "generationRule": "생성 규칙",
+      "prefixPart": "접두사({{prefix}})",
+      "yearPart": "연도(4자리)",
+      "sequencePart": "순번({{digits}}자리)",
+      "exampleLabel": "사번 예시",
+      "additionalExamples": "추가 예시"
+    },
+    "recycling": {
+      "title": "퇴직자 사번 재활용",
+      "description": "퇴직한 직원의 사번을 신규 직원에게 재할당할 수 있도록 허용합니다.",
+      "toggleLabel": "퇴직자 사번 재활용 허용",
+      "toggleDescription": "퇴직자의 사번을 신규 직원에게 재할당합니다.",
+      "conditionNotice": "재활용 가능 조건: 퇴직 후 1년 이상 경과한 사번만 재활용 가능"
+    },
+    "saving": "저장 중...",
+    "save": "저장",
+    "toast": {
+      "loadFailed": "설정 조회 실패",
+      "loadFailedDesc": "사번 규칙을 불러올 수 없습니다.",
+      "inputError": "입력 오류",
+      "inputErrorDesc": "접두사를 입력해주세요.",
+      "saveSuccess": "저장 완료",
+      "saveSuccessDesc": "사번 규칙이 저장되었습니다.",
+      "saveFailed": "저장 실패",
+      "saveFailedDesc": "사번 규칙 저장에 실패했습니다.",
+      "saveError": "사번 규칙 저장 중 오류가 발생했습니다."
+    }
+  },
+  "fileUploadPolicy": {
+    "pageTitle": "파일 업로드 정책",
+    "pageDescription": "테넌트별 파일 업로드 제한 설정을 관리합니다.",
+    "saving": "저장 중...",
+    "save": "저장",
+    "defaultPolicy": {
+      "title": "테넌트 기본 설정",
+      "description": "전체 테넌트에 적용되는 파일 업로드 기본 정책입니다.",
+      "maxFileSize": "최대 파일 크기 (MB)",
+      "maxFileSizeUnit": "MB",
+      "maxFileSizeDescription": "개별 파일의 최대 업로드 크기를 설정합니다.",
+      "maxTotalStorage": "최대 총 용량 (GB)",
+      "maxTotalStorageUnit": "GB",
+      "maxTotalStorageDescription": "테넌트별 전체 파일 저장 용량을 설정합니다.",
+      "allowedExtensions": "허용 확장자",
+      "allowedExtensionsDescription": "업로드를 허용할 파일 확장자를 선택합니다."
+    },
+    "extensionGroups": {
+      "documents": "문서",
+      "images": "이미지",
+      "others": "기타"
+    },
+    "categoryOverrides": {
+      "title": "카테고리별 설정",
+      "description": "특정 파일 카테고리에 대해 기본 정책을 재정의할 수 있습니다. 설정하지 않은 항목은 기본 정책을 따릅니다.",
+      "categoryHeader": "카테고리",
+      "maxFileSizeHeader": "최대 파일 크기(MB)",
+      "allowedExtensionsHeader": "허용 확장자",
+      "actionHeader": "액션",
+      "defaultValue": "기본값 ({{size}} MB)",
+      "usingDefault": "기본값 사용",
+      "editButton": "수정"
+    },
+    "categories": {
+      "hrDocuments": "인사서류",
+      "certificates": "증명서",
+      "approvalAttachments": "결재첨부",
+      "profilePhoto": "프로필사진",
+      "other": "기타"
+    },
+    "editDialog": {
+      "title": "{{category}} - 업로드 정책 수정",
+      "maxFileSize": "최대 파일 크기 (MB)",
+      "maxFileSizeUnit": "MB",
+      "maxFileSizeDescription": "비워두면 기본값({{size}} MB)을 사용합니다.",
+      "allowedExtensions": "허용 확장자",
+      "resetButton": "초기화 (기본값 사용)",
+      "resetDescription": "선택하지 않으면 기본 정책의 허용 확장자를 따릅니다.",
+      "cancel": "취소",
+      "confirm": "확인"
+    },
+    "toast": {
+      "loadFailed": "설정 조회 실패",
+      "loadFailedDesc": "파일 업로드 정책을 불러올 수 없습니다.",
+      "saveSuccess": "저장 완료",
+      "saveSuccessDesc": "파일 업로드 정책이 저장되었습니다.",
+      "saveFailed": "저장 실패",
+      "saveFailedDesc": "파일 업로드 정책 저장에 실패했습니다.",
+      "saveError": "파일 업로드 정책 저장 중 오류가 발생했습니다."
+    }
+  },
+  "leavePolicy": {
+    "pageTitle": "연차 규칙 설정",
+    "pageDescription": "연차 발생 규칙 및 특별휴가 정책을 관리합니다.",
+    "save": "저장",
+    "basicSettings": {
+      "title": "기본 연차 설정",
+      "description": "연차 발생 기본 규칙을 설정합니다.",
+      "monthlyAccrual": "입사 1년 미만 월별 발생일수",
+      "monthlyAccrualUnit": "일 / 월",
+      "monthlyAccrualDescription": "입사 1년 미만 직원에게 매월 발생하는 연차 일수",
+      "baseAnnualDays": "1년차 이후 기본일수",
+      "baseAnnualDaysUnit": "일 / 년",
+      "baseAnnualDaysDescription": "근속 1년 이상 직원에게 매년 발생하는 기본 연차 일수"
+    },
+    "tenureBonus": {
+      "label": "근속 연수별 가산일수",
+      "description": "근속 연수에 따라 기본 연차에 추가로 부여되는 가산일수",
+      "yearFromHeader": "근속 시작 (년)",
+      "yearToHeader": "근속 종료 (년)",
+      "bonusDaysHeader": "가산일수",
+      "andAbove": "이상",
+      "daysUnit": "일"
+    },
+    "specialLeave": {
+      "title": "특별휴가 설정",
+      "description": "경조사 등 특별휴가 일수를 설정합니다.",
+      "typeHeader": "휴가 유형",
+      "descriptionHeader": "설명",
+      "daysHeader": "일수",
+      "daysUnit": "일"
+    },
+    "carryOver": {
+      "title": "이월 정책",
+      "description": "미사용 연차의 이월 정책을 설정합니다.",
+      "enableLabel": "연차 이월 허용",
+      "enableDescription": "미사용 연차를 다음 해로 이월할 수 있도록 허용합니다.",
+      "maxDays": "최대 이월일수",
+      "maxDaysUnit": "일",
+      "maxDaysDescription": "이월 가능한 최대 연차 일수 (0 = 무제한)",
+      "expiry": "이월 연차 만료 기간",
+      "expiryPlaceholder": "만료 기간 선택",
+      "expiryMonths3": "3개월",
+      "expiryMonths6": "6개월",
+      "expiryMonths12": "12개월",
+      "expiryDescription": "이월된 연차가 만료되는 기간"
+    },
+    "toast": {
+      "saveSuccess": "저장 완료",
+      "saveSuccessDesc": "연차 규칙 설정이 저장되었습니다."
+    }
+  },
+  "common": {
+    "save": "저장",
+    "cancel": "취소",
+    "confirm": "확인",
+    "saving": "저장 중...",
+    "loading": "로딩 중..."
   }
 }

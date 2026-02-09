@@ -1,4 +1,6 @@
-import { useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -18,15 +20,17 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-const profileSchema = z.object({
-  name: z.string().min(1, '이름은 필수입니다'),
-  nameEn: z.string().optional(),
-  email: z.string().email('올바른 이메일을 입력하세요'),
-  mobile: z.string().min(1, '연락처는 필수입니다'),
-  bio: z.string().max(200, '200자 이내로 입력하세요').optional(),
-});
+function createProfileSchema(t: TFunction) {
+  return z.object({
+    name: z.string().min(1, t('profileSettings.validation.nameRequired')),
+    nameEn: z.string().optional(),
+    email: z.string().email(t('profileSettings.validation.emailInvalid')),
+    mobile: z.string().min(1, t('profileSettings.validation.mobileRequired')),
+    bio: z.string().max(200, t('profileSettings.validation.bioMaxLength')).optional(),
+  });
+}
 
-type ProfileFormData = z.infer<typeof profileSchema>;
+type ProfileFormData = z.infer<ReturnType<typeof createProfileSchema>>;
 
 interface ProfileSettingsProps {
   initialValues?: Partial<ProfileFormData> & { profileImage?: string };
@@ -50,6 +54,8 @@ export function ProfileSettings({
   onImageChange,
   isLoading,
 }: ProfileSettingsProps) {
+  const { t } = useTranslation('settings');
+  const profileSchema = React.useMemo(() => createProfileSchema(t), [t]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewImage, setPreviewImage] = useState<string | undefined>(
     initialValues?.profileImage
@@ -91,9 +97,9 @@ export function ProfileSettings({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">프로필 설정</CardTitle>
+        <CardTitle className="text-lg">{t('profileSettings.title')}</CardTitle>
         <CardDescription>
-          기본 프로필 정보를 수정할 수 있습니다
+          {t('profileSettings.description')}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -112,7 +118,7 @@ export function ProfileSettings({
                   type="button"
                   onClick={handleImageClick}
                   className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90"
-                  aria-label="프로필 이미지 변경"
+                  aria-label={t('profileSettings.changeImageAriaLabel')}
                 >
                   <Camera className="h-4 w-4" />
                 </button>
@@ -125,8 +131,8 @@ export function ProfileSettings({
                 />
               </div>
               <div className="text-sm text-muted-foreground">
-                <p>JPG, PNG 파일 (최대 5MB)</p>
-                <p>권장 사이즈: 200x200px</p>
+                <p>{t('profileSettings.photoFileInfo')}</p>
+                <p>{t('profileSettings.recommendedSize')}</p>
               </div>
             </div>
 
@@ -136,7 +142,7 @@ export function ProfileSettings({
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>이름 *</FormLabel>
+                    <FormLabel>{t('profileSettings.nameLabel')}</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -150,9 +156,9 @@ export function ProfileSettings({
                 name="nameEn"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>영문 이름</FormLabel>
+                    <FormLabel>{t('profileSettings.nameEnLabel')}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="English Name" />
+                      <Input {...field} placeholder={t('profileSettings.nameEnPlaceholder')} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -164,12 +170,12 @@ export function ProfileSettings({
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>이메일 *</FormLabel>
+                    <FormLabel>{t('profileSettings.emailLabel')}</FormLabel>
                     <FormControl>
                       <Input type="email" {...field} />
                     </FormControl>
                     <FormDescription>
-                      회사 이메일은 변경할 수 없습니다
+                      {t('profileSettings.emailReadonly')}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -181,9 +187,9 @@ export function ProfileSettings({
                 name="mobile"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>연락처 *</FormLabel>
+                    <FormLabel>{t('profileSettings.mobileLabel')}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="010-0000-0000" />
+                      <Input {...field} placeholder={t('profileSettings.mobilePlaceholder')} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -196,16 +202,16 @@ export function ProfileSettings({
               name="bio"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>자기소개</FormLabel>
+                  <FormLabel>{t('profileSettings.bioLabel')}</FormLabel>
                   <FormControl>
                     <Textarea
                       {...field}
                       rows={3}
-                      placeholder="간단한 자기소개를 입력하세요"
+                      placeholder={t('profileSettings.bioPlaceholder')}
                     />
                   </FormControl>
                   <FormDescription>
-                    최대 200자까지 입력할 수 있습니다
+                    {t('profileSettings.bioMaxLength')}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -214,7 +220,7 @@ export function ProfileSettings({
 
             <div className="flex justify-end">
               <Button type="submit" disabled={isLoading}>
-                {isLoading ? '저장 중...' : '변경사항 저장'}
+                {isLoading ? t('profileSettings.saving') : t('profileSettings.saveChanges')}
               </Button>
             </div>
           </form>

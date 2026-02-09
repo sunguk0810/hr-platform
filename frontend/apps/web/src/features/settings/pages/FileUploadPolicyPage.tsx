@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,21 +17,21 @@ import { Save, Upload, HardDrive, FileType, Loader2 } from 'lucide-react';
 // ---------------------------------------------------------------------------
 
 interface ExtensionGroup {
-  label: string;
+  labelKey: string;
   extensions: string[];
 }
 
 const EXTENSION_GROUPS: ExtensionGroup[] = [
   {
-    label: '문서',
+    labelKey: 'fileUploadPolicy.extensionGroups.documents',
     extensions: ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.hwp'],
   },
   {
-    label: '이미지',
+    labelKey: 'fileUploadPolicy.extensionGroups.images',
     extensions: ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg'],
   },
   {
-    label: '기타',
+    labelKey: 'fileUploadPolicy.extensionGroups.others',
     extensions: ['.zip', '.txt', '.csv'],
   },
 ];
@@ -45,18 +46,26 @@ interface DefaultPolicy {
 
 interface CategoryOverride {
   id: string;
+  categoryKey: string;
   category: string;
   maxFileSizeMB: number | null;
   allowedExtensions: string[];
 }
 
-const CATEGORIES = ['인사서류', '증명서', '결재첨부', '프로필사진', '기타'];
+const CATEGORY_KEYS = [
+  'fileUploadPolicy.categories.hrDocuments',
+  'fileUploadPolicy.categories.certificates',
+  'fileUploadPolicy.categories.approvalAttachments',
+  'fileUploadPolicy.categories.profilePhoto',
+  'fileUploadPolicy.categories.other',
+];
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
 export default function FileUploadPolicyPage() {
+  const { t } = useTranslation('settings');
   const { toast } = useToast();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -71,9 +80,10 @@ export default function FileUploadPolicyPage() {
 
   // Category overrides state
   const [categoryOverrides, setCategoryOverrides] = useState<CategoryOverride[]>(
-    CATEGORIES.map((cat, idx) => ({
+    CATEGORY_KEYS.map((key, idx) => ({
       id: `co-${idx + 1}`,
-      category: cat,
+      categoryKey: key,
+      category: key,
       maxFileSizeMB: null,
       allowedExtensions: [],
     })),
@@ -95,8 +105,8 @@ export default function FileUploadPolicyPage() {
         }
       } catch {
         toast({
-          title: '설정 조회 실패',
-          description: '파일 업로드 정책을 불러올 수 없습니다.',
+          title: t('fileUploadPolicy.toast.loadFailed'),
+          description: t('fileUploadPolicy.toast.loadFailedDesc'),
           variant: 'destructive',
         });
       } finally {
@@ -105,7 +115,7 @@ export default function FileUploadPolicyPage() {
     };
 
     fetchPolicy();
-  }, [toast]);
+  }, [toast, t]);
 
   // ---------------------------------------------------------------------------
   // Extension toggle helpers (default policy)
@@ -214,20 +224,20 @@ export default function FileUploadPolicyPage() {
 
       if (data.success) {
         toast({
-          title: '저장 완료',
-          description: '파일 업로드 정책이 저장되었습니다.',
+          title: t('fileUploadPolicy.toast.saveSuccess'),
+          description: t('fileUploadPolicy.toast.saveSuccessDesc'),
         });
       } else {
         toast({
-          title: '저장 실패',
-          description: data.error?.message || '파일 업로드 정책 저장에 실패했습니다.',
+          title: t('fileUploadPolicy.toast.saveFailed'),
+          description: data.error?.message || t('fileUploadPolicy.toast.saveFailedDesc'),
           variant: 'destructive',
         });
       }
     } catch {
       toast({
-        title: '저장 실패',
-        description: '파일 업로드 정책 저장 중 오류가 발생했습니다.',
+        title: t('fileUploadPolicy.toast.saveFailed'),
+        description: t('fileUploadPolicy.toast.saveError'),
         variant: 'destructive',
       });
     } finally {
@@ -250,8 +260,8 @@ export default function FileUploadPolicyPage() {
   return (
     <>
       <PageHeader
-        title="파일 업로드 정책"
-        description="테넌트별 파일 업로드 제한 설정을 관리합니다."
+        title={t('fileUploadPolicy.pageTitle')}
+        description={t('fileUploadPolicy.pageDescription')}
         actions={
           <Button onClick={handleSave} disabled={isSaving}>
             {isSaving ? (
@@ -259,7 +269,7 @@ export default function FileUploadPolicyPage() {
             ) : (
               <Save className="mr-2 h-4 w-4" />
             )}
-            {isSaving ? '저장 중...' : '저장'}
+            {isSaving ? t('fileUploadPolicy.saving') : t('fileUploadPolicy.save')}
           </Button>
         }
       />
@@ -273,9 +283,9 @@ export default function FileUploadPolicyPage() {
             <div className="flex items-center gap-2">
               <Upload className="h-5 w-5 text-primary" />
               <div>
-                <CardTitle>테넌트 기본 설정</CardTitle>
+                <CardTitle>{t('fileUploadPolicy.defaultPolicy.title')}</CardTitle>
                 <CardDescription>
-                  전체 테넌트에 적용되는 파일 업로드 기본 정책입니다.
+                  {t('fileUploadPolicy.defaultPolicy.description')}
                 </CardDescription>
               </div>
             </div>
@@ -287,7 +297,7 @@ export default function FileUploadPolicyPage() {
                 <Label htmlFor="maxFileSizeMB">
                   <div className="flex items-center gap-1.5">
                     <FileType className="h-4 w-4" />
-                    최대 파일 크기 (MB)
+                    {t('fileUploadPolicy.defaultPolicy.maxFileSize')}
                   </div>
                 </Label>
                 <div className="flex items-center gap-2">
@@ -305,10 +315,10 @@ export default function FileUploadPolicyPage() {
                     }
                     className="w-28"
                   />
-                  <span className="text-sm text-muted-foreground">MB</span>
+                  <span className="text-sm text-muted-foreground">{t('fileUploadPolicy.defaultPolicy.maxFileSizeUnit')}</span>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  개별 파일의 최대 업로드 크기를 설정합니다.
+                  {t('fileUploadPolicy.defaultPolicy.maxFileSizeDescription')}
                 </p>
               </div>
 
@@ -316,7 +326,7 @@ export default function FileUploadPolicyPage() {
                 <Label htmlFor="maxTotalStorageGB">
                   <div className="flex items-center gap-1.5">
                     <HardDrive className="h-4 w-4" />
-                    최대 총 용량 (GB)
+                    {t('fileUploadPolicy.defaultPolicy.maxTotalStorage')}
                   </div>
                 </Label>
                 <div className="flex items-center gap-2">
@@ -334,19 +344,19 @@ export default function FileUploadPolicyPage() {
                     }
                     className="w-28"
                   />
-                  <span className="text-sm text-muted-foreground">GB</span>
+                  <span className="text-sm text-muted-foreground">{t('fileUploadPolicy.defaultPolicy.maxTotalStorageUnit')}</span>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  테넌트별 전체 파일 저장 용량을 설정합니다.
+                  {t('fileUploadPolicy.defaultPolicy.maxTotalStorageDescription')}
                 </p>
               </div>
             </div>
 
             {/* Allowed extensions */}
             <div className="space-y-4">
-              <Label>허용 확장자</Label>
+              <Label>{t('fileUploadPolicy.defaultPolicy.allowedExtensions')}</Label>
               <p className="text-xs text-muted-foreground">
-                업로드를 허용할 파일 확장자를 선택합니다.
+                {t('fileUploadPolicy.defaultPolicy.allowedExtensionsDescription')}
               </p>
 
               {EXTENSION_GROUPS.map((group) => {
@@ -360,18 +370,18 @@ export default function FileUploadPolicyPage() {
                   );
 
                 return (
-                  <div key={group.label} className="space-y-2">
+                  <div key={group.labelKey} className="space-y-2">
                     <div className="flex items-center gap-2">
                       <Checkbox
-                        id={`group-${group.label}`}
+                        id={`group-${group.labelKey}`}
                         checked={allSelected ? true : someSelected ? 'indeterminate' : false}
                         onCheckedChange={() => toggleGroupExtensions(group)}
                       />
                       <Label
-                        htmlFor={`group-${group.label}`}
+                        htmlFor={`group-${group.labelKey}`}
                         className="text-sm font-medium cursor-pointer"
                       >
-                        {group.label}
+                        {t(group.labelKey)}
                       </Label>
                     </div>
                     <div className="ml-6 flex flex-wrap gap-3">
@@ -403,10 +413,9 @@ export default function FileUploadPolicyPage() {
         ================================================================ */}
         <Card>
           <CardHeader>
-            <CardTitle>카테고리별 설정</CardTitle>
+            <CardTitle>{t('fileUploadPolicy.categoryOverrides.title')}</CardTitle>
             <CardDescription>
-              특정 파일 카테고리에 대해 기본 정책을 재정의할 수 있습니다. 설정하지 않은 항목은 기본
-              정책을 따릅니다.
+              {t('fileUploadPolicy.categoryOverrides.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -414,22 +423,22 @@ export default function FileUploadPolicyPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[140px]">카테고리</TableHead>
-                    <TableHead className="w-[160px]">최대 파일 크기(MB)</TableHead>
-                    <TableHead>허용 확장자</TableHead>
-                    <TableHead className="w-[100px] text-right">액션</TableHead>
+                    <TableHead className="w-[140px]">{t('fileUploadPolicy.categoryOverrides.categoryHeader')}</TableHead>
+                    <TableHead className="w-[160px]">{t('fileUploadPolicy.categoryOverrides.maxFileSizeHeader')}</TableHead>
+                    <TableHead>{t('fileUploadPolicy.categoryOverrides.allowedExtensionsHeader')}</TableHead>
+                    <TableHead className="w-[100px] text-right">{t('fileUploadPolicy.categoryOverrides.actionHeader')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {categoryOverrides.map((override) => (
                     <TableRow key={override.id}>
-                      <TableCell className="font-medium">{override.category}</TableCell>
+                      <TableCell className="font-medium">{t(override.categoryKey)}</TableCell>
                       <TableCell>
                         {override.maxFileSizeMB !== null ? (
                           <span>{override.maxFileSizeMB} MB</span>
                         ) : (
                           <span className="text-muted-foreground text-sm">
-                            기본값 ({defaultPolicy.maxFileSizeMB} MB)
+                            {t('fileUploadPolicy.categoryOverrides.defaultValue', { size: defaultPolicy.maxFileSizeMB })}
                           </span>
                         )}
                       </TableCell>
@@ -443,7 +452,7 @@ export default function FileUploadPolicyPage() {
                             ))}
                           </div>
                         ) : (
-                          <span className="text-muted-foreground text-sm">기본값 사용</span>
+                          <span className="text-muted-foreground text-sm">{t('fileUploadPolicy.categoryOverrides.usingDefault')}</span>
                         )}
                       </TableCell>
                       <TableCell className="text-right">
@@ -452,7 +461,7 @@ export default function FileUploadPolicyPage() {
                           size="sm"
                           onClick={() => openEditDialog(override)}
                         >
-                          수정
+                          {t('fileUploadPolicy.categoryOverrides.editButton')}
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -471,7 +480,7 @@ export default function FileUploadPolicyPage() {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              {editingOverride?.category} - 업로드 정책 수정
+              {t('fileUploadPolicy.editDialog.title', { category: editingOverride ? t(editingOverride.categoryKey) : '' })}
             </DialogTitle>
           </DialogHeader>
 
@@ -479,7 +488,7 @@ export default function FileUploadPolicyPage() {
             <div className="space-y-6 py-2">
               {/* Max file size override */}
               <div className="space-y-2">
-                <Label htmlFor="overrideMaxFileSizeMB">최대 파일 크기 (MB)</Label>
+                <Label htmlFor="overrideMaxFileSizeMB">{t('fileUploadPolicy.editDialog.maxFileSize')}</Label>
                 <div className="flex items-center gap-2">
                   <Input
                     id="overrideMaxFileSizeMB"
@@ -497,17 +506,17 @@ export default function FileUploadPolicyPage() {
                     }}
                     className="w-28"
                   />
-                  <span className="text-sm text-muted-foreground">MB</span>
+                  <span className="text-sm text-muted-foreground">{t('fileUploadPolicy.editDialog.maxFileSizeUnit')}</span>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  비워두면 기본값({defaultPolicy.maxFileSizeMB} MB)을 사용합니다.
+                  {t('fileUploadPolicy.editDialog.maxFileSizeDescription', { size: defaultPolicy.maxFileSizeMB })}
                 </p>
               </div>
 
               {/* Allowed extensions override */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <Label>허용 확장자</Label>
+                  <Label>{t('fileUploadPolicy.editDialog.allowedExtensions')}</Label>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -518,11 +527,11 @@ export default function FileUploadPolicyPage() {
                       })
                     }
                   >
-                    초기화 (기본값 사용)
+                    {t('fileUploadPolicy.editDialog.resetButton')}
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  선택하지 않으면 기본 정책의 허용 확장자를 따릅니다.
+                  {t('fileUploadPolicy.editDialog.resetDescription')}
                 </p>
 
                 {EXTENSION_GROUPS.map((group) => {
@@ -536,20 +545,20 @@ export default function FileUploadPolicyPage() {
                     );
 
                   return (
-                    <div key={group.label} className="space-y-2">
+                    <div key={group.labelKey} className="space-y-2">
                       <div className="flex items-center gap-2">
                         <Checkbox
-                          id={`override-group-${group.label}`}
+                          id={`override-group-${group.labelKey}`}
                           checked={
                             allSelected ? true : someSelected ? 'indeterminate' : false
                           }
                           onCheckedChange={() => toggleOverrideGroupExtensions(group)}
                         />
                         <Label
-                          htmlFor={`override-group-${group.label}`}
+                          htmlFor={`override-group-${group.labelKey}`}
                           className="text-sm font-medium cursor-pointer"
                         >
-                          {group.label}
+                          {t(group.labelKey)}
                         </Label>
                       </div>
                       <div className="ml-6 flex flex-wrap gap-3">
@@ -578,9 +587,9 @@ export default function FileUploadPolicyPage() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
-              취소
+              {t('fileUploadPolicy.editDialog.cancel')}
             </Button>
-            <Button onClick={saveOverrideEdit}>확인</Button>
+            <Button onClick={saveOverrideEdit}>{t('fileUploadPolicy.editDialog.confirm')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

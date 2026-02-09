@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,7 @@ interface EmployeeNumberRule {
 }
 
 export default function EmployeeNumberRulePage() {
+  const { t } = useTranslation('settings');
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -69,13 +71,13 @@ export default function EmployeeNumberRulePage() {
   // Format description
   const formatDescription = useMemo(() => {
     const parts: string[] = [];
-    parts.push(`접두사(${rule.prefix || '???'})`);
+    parts.push(t('employeeNumberRule.preview.prefixPart', { prefix: rule.prefix || '???' }));
     if (rule.includeYear) {
-      parts.push('연도(4자리)');
+      parts.push(t('employeeNumberRule.preview.yearPart'));
     }
-    parts.push(`순번(${rule.sequenceDigits}자리)`);
+    parts.push(t('employeeNumberRule.preview.sequencePart', { digits: rule.sequenceDigits }));
     return parts.join(' + ');
-  }, [rule]);
+  }, [rule, t]);
 
   // Fetch current rule on mount
   useEffect(() => {
@@ -89,8 +91,8 @@ export default function EmployeeNumberRulePage() {
         }
       } catch {
         toast({
-          title: '설정 조회 실패',
-          description: '사번 규칙을 불러올 수 없습니다.',
+          title: t('employeeNumberRule.toast.loadFailed'),
+          description: t('employeeNumberRule.toast.loadFailedDesc'),
           variant: 'destructive',
         });
       } finally {
@@ -99,13 +101,13 @@ export default function EmployeeNumberRulePage() {
     };
 
     fetchRule();
-  }, [toast]);
+  }, [toast, t]);
 
   const handleSave = async () => {
     if (!rule.prefix.trim()) {
       toast({
-        title: '입력 오류',
-        description: '접두사를 입력해주세요.',
+        title: t('employeeNumberRule.toast.inputError'),
+        description: t('employeeNumberRule.toast.inputErrorDesc'),
         variant: 'destructive',
       });
       return;
@@ -124,20 +126,20 @@ export default function EmployeeNumberRulePage() {
         setSavedRule(data.data);
         setRule(data.data);
         toast({
-          title: '저장 완료',
-          description: '사번 규칙이 저장되었습니다.',
+          title: t('employeeNumberRule.toast.saveSuccess'),
+          description: t('employeeNumberRule.toast.saveSuccessDesc'),
         });
       } else {
         toast({
-          title: '저장 실패',
-          description: data.error?.message || '사번 규칙 저장에 실패했습니다.',
+          title: t('employeeNumberRule.toast.saveFailed'),
+          description: data.error?.message || t('employeeNumberRule.toast.saveFailedDesc'),
           variant: 'destructive',
         });
       }
     } catch {
       toast({
-        title: '저장 실패',
-        description: '사번 규칙 저장 중 오류가 발생했습니다.',
+        title: t('employeeNumberRule.toast.saveFailed'),
+        description: t('employeeNumberRule.toast.saveError'),
         variant: 'destructive',
       });
     } finally {
@@ -156,8 +158,8 @@ export default function EmployeeNumberRulePage() {
   return (
     <>
       <PageHeader
-        title="사번 규칙 설정"
-        description="직원 등록 시 자동 생성되는 사번의 형식을 설정합니다."
+        title={t('employeeNumberRule.pageTitle')}
+        description={t('employeeNumberRule.pageDescription')}
       />
 
       <div className="space-y-6">
@@ -166,16 +168,16 @@ export default function EmployeeNumberRulePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Settings2 className="h-5 w-5" />
-              사번 생성 규칙
+              {t('employeeNumberRule.ruleConfig.title')}
             </CardTitle>
             <CardDescription>
-              사번은 접두사, 연도, 순번의 조합으로 자동 생성됩니다.
+              {t('employeeNumberRule.ruleConfig.description')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Prefix */}
             <div className="space-y-2">
-              <Label htmlFor="prefix">접두사 (Prefix)</Label>
+              <Label htmlFor="prefix">{t('employeeNumberRule.prefix.label')}</Label>
               <Input
                 id="prefix"
                 value={rule.prefix}
@@ -190,16 +192,16 @@ export default function EmployeeNumberRulePage() {
                 className="max-w-xs"
               />
               <p className="text-sm text-muted-foreground">
-                사번 앞에 붙는 문자열입니다. 예: EMP, ELEC, HR
+                {t('employeeNumberRule.prefix.description')}
               </p>
             </div>
 
             {/* Include Year Toggle */}
             <div className="flex items-center justify-between max-w-xs">
               <div className="space-y-0.5">
-                <Label htmlFor="includeYear">연도 포함</Label>
+                <Label htmlFor="includeYear">{t('employeeNumberRule.includeYear.label')}</Label>
                 <p className="text-sm text-muted-foreground">
-                  사번에 4자리 연도를 포함합니다.
+                  {t('employeeNumberRule.includeYear.description')}
                 </p>
               </div>
               <Switch
@@ -213,7 +215,7 @@ export default function EmployeeNumberRulePage() {
 
             {/* Sequence Digits */}
             <div className="space-y-2">
-              <Label htmlFor="sequenceDigits">순번 자릿수</Label>
+              <Label htmlFor="sequenceDigits">{t('employeeNumberRule.sequenceDigits.label')}</Label>
               <Select
                 value={String(rule.sequenceDigits)}
                 onValueChange={(value) =>
@@ -224,16 +226,16 @@ export default function EmployeeNumberRulePage() {
                 }
               >
                 <SelectTrigger id="sequenceDigits" className="max-w-xs">
-                  <SelectValue placeholder="자릿수 선택" />
+                  <SelectValue placeholder={t('employeeNumberRule.sequenceDigits.placeholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="3">3자리 (001 ~ 999)</SelectItem>
-                  <SelectItem value="4">4자리 (0001 ~ 9999)</SelectItem>
-                  <SelectItem value="5">5자리 (00001 ~ 99999)</SelectItem>
+                  <SelectItem value="3">{t('employeeNumberRule.sequenceDigits.option3')}</SelectItem>
+                  <SelectItem value="4">{t('employeeNumberRule.sequenceDigits.option4')}</SelectItem>
+                  <SelectItem value="5">{t('employeeNumberRule.sequenceDigits.option5')}</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-sm text-muted-foreground">
-                순번의 자릿수를 설정합니다. 큰 조직일수록 높은 자릿수를 권장합니다.
+                {t('employeeNumberRule.sequenceDigits.description')}
               </p>
             </div>
           </CardContent>
@@ -244,16 +246,16 @@ export default function EmployeeNumberRulePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Eye className="h-5 w-5" />
-              미리보기
+              {t('employeeNumberRule.preview.title')}
             </CardTitle>
             <CardDescription>
-              현재 설정으로 생성될 사번의 형식입니다.
+              {t('employeeNumberRule.preview.description')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Format Description */}
             <div className="space-y-2">
-              <Label className="text-muted-foreground">생성 규칙</Label>
+              <Label className="text-muted-foreground">{t('employeeNumberRule.preview.generationRule')}</Label>
               <div className="flex items-center gap-2 flex-wrap">
                 <Badge variant="secondary">{rule.prefix || '???'}</Badge>
                 {rule.includeYear && (
@@ -274,7 +276,7 @@ export default function EmployeeNumberRulePage() {
 
             {/* Example Preview */}
             <div className="space-y-2">
-              <Label className="text-muted-foreground">사번 예시</Label>
+              <Label className="text-muted-foreground">{t('employeeNumberRule.preview.exampleLabel')}</Label>
               <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50 border">
                 <Hash className="h-5 w-5 text-primary" />
                 <span className="text-2xl font-mono font-bold tracking-wider text-primary">
@@ -285,7 +287,7 @@ export default function EmployeeNumberRulePage() {
 
             {/* Multiple Examples */}
             <div className="space-y-1">
-              <Label className="text-muted-foreground text-sm">추가 예시</Label>
+              <Label className="text-muted-foreground text-sm">{t('employeeNumberRule.preview.additionalExamples')}</Label>
               <div className="flex flex-wrap gap-2">
                 {[1, 2, 3, 10, 100].map((seq) => {
                   const seqStr = String(seq).padStart(rule.sequenceDigits, '0');
@@ -313,18 +315,18 @@ export default function EmployeeNumberRulePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <RefreshCw className="h-5 w-5" />
-              퇴직자 사번 재활용
+              {t('employeeNumberRule.recycling.title')}
             </CardTitle>
             <CardDescription>
-              퇴직한 직원의 사번을 신규 직원에게 재할당할 수 있도록 허용합니다.
+              {t('employeeNumberRule.recycling.description')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between max-w-xs">
               <div className="space-y-0.5">
-                <Label htmlFor="allowRecycling">퇴직자 사번 재활용 허용</Label>
+                <Label htmlFor="allowRecycling">{t('employeeNumberRule.recycling.toggleLabel')}</Label>
                 <p className="text-sm text-muted-foreground">
-                  퇴직자의 사번을 신규 직원에게 재할당합니다.
+                  {t('employeeNumberRule.recycling.toggleDescription')}
                 </p>
               </div>
               <Switch
@@ -339,7 +341,7 @@ export default function EmployeeNumberRulePage() {
               <div className="flex items-start gap-2 p-3 rounded-md bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800">
                 <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
                 <p className="text-sm text-blue-700 dark:text-blue-300">
-                  재활용 가능 조건: 퇴직 후 1년 이상 경과한 사번만 재활용 가능
+                  {t('employeeNumberRule.recycling.conditionNotice')}
                 </p>
               </div>
             )}
@@ -354,7 +356,7 @@ export default function EmployeeNumberRulePage() {
             ) : (
               <Save className="mr-2 h-4 w-4" />
             )}
-            {isSaving ? '저장 중...' : '저장'}
+            {isSaving ? t('employeeNumberRule.saving') : t('employeeNumberRule.save')}
           </Button>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -48,7 +49,7 @@ interface SmsConfig {
 
 interface EventChannelMapping {
   eventKey: string;
-  eventLabel: string;
+  eventLabelKey: string;
   email: boolean;
   sms: boolean;
   inApp: boolean;
@@ -72,18 +73,19 @@ const DEFAULT_SMS: SmsConfig = {
 };
 
 const DEFAULT_CHANNEL_MAPPINGS: EventChannelMapping[] = [
-  { eventKey: 'approval_request', eventLabel: '결재 요청', email: true, sms: false, inApp: true },
-  { eventKey: 'approval_complete', eventLabel: '결재 완료', email: true, sms: false, inApp: true },
-  { eventKey: 'approval_reject', eventLabel: '결재 반려', email: true, sms: true, inApp: true },
-  { eventKey: 'leave_approve', eventLabel: '휴가 승인', email: true, sms: false, inApp: true },
-  { eventKey: 'leave_reject', eventLabel: '휴가 반려', email: true, sms: true, inApp: true },
-  { eventKey: 'appointment_notice', eventLabel: '발령 통보', email: true, sms: true, inApp: true },
-  { eventKey: 'system_notice', eventLabel: '시스템 공지', email: true, sms: false, inApp: true },
+  { eventKey: 'approval_request', eventLabelKey: 'notificationChannelSettings.eventChannels.events.approvalRequest', email: true, sms: false, inApp: true },
+  { eventKey: 'approval_complete', eventLabelKey: 'notificationChannelSettings.eventChannels.events.approvalComplete', email: true, sms: false, inApp: true },
+  { eventKey: 'approval_reject', eventLabelKey: 'notificationChannelSettings.eventChannels.events.approvalReject', email: true, sms: true, inApp: true },
+  { eventKey: 'leave_approve', eventLabelKey: 'notificationChannelSettings.eventChannels.events.leaveApprove', email: true, sms: false, inApp: true },
+  { eventKey: 'leave_reject', eventLabelKey: 'notificationChannelSettings.eventChannels.events.leaveReject', email: true, sms: true, inApp: true },
+  { eventKey: 'appointment_notice', eventLabelKey: 'notificationChannelSettings.eventChannels.events.appointmentNotice', email: true, sms: true, inApp: true },
+  { eventKey: 'system_notice', eventLabelKey: 'notificationChannelSettings.eventChannels.events.systemNotice', email: true, sms: false, inApp: true },
 ];
 
 // --- Component ---
 
 export function NotificationChannelSettings() {
+  const { t } = useTranslation('settings');
   const { toast } = useToast();
 
   // SMTP settings state
@@ -122,20 +124,20 @@ export function NotificationChannelSettings() {
       const result = await response.json();
       if (result.success) {
         toast({
-          title: 'SMTP 연결 테스트 성공',
-          description: 'SMTP 서버에 정상적으로 연결되었습니다.',
+          title: t('notificationChannelSettings.toast.smtpTestSuccess'),
+          description: t('notificationChannelSettings.toast.smtpTestSuccessDesc'),
         });
       } else {
         toast({
-          title: 'SMTP 연결 테스트 실패',
-          description: result.error?.message || '연결에 실패했습니다.',
+          title: t('notificationChannelSettings.toast.smtpTestFailed'),
+          description: result.error?.message || t('notificationChannelSettings.toast.smtpTestFailedDesc'),
           variant: 'destructive',
         });
       }
     } catch {
       toast({
-        title: 'SMTP 연결 테스트 실패',
-        description: '서버와 통신 중 오류가 발생했습니다.',
+        title: t('notificationChannelSettings.toast.smtpTestFailed'),
+        description: t('notificationChannelSettings.toast.smtpTestError'),
         variant: 'destructive',
       });
     } finally {
@@ -155,22 +157,22 @@ export function NotificationChannelSettings() {
       const result = await response.json();
       if (result.success) {
         toast({
-          title: '테스트 발송 완료',
-          description: '테스트 메일이 발송되었습니다.',
+          title: t('notificationChannelSettings.toast.testSendSuccess'),
+          description: t('notificationChannelSettings.toast.testEmailSentDesc'),
         });
         setTestEmailDialogOpen(false);
         setTestEmailAddress('');
       } else {
         toast({
-          title: '테스트 발송 실패',
-          description: result.error?.message || '메일 발송에 실패했습니다.',
+          title: t('notificationChannelSettings.toast.testSendFailed'),
+          description: result.error?.message || t('notificationChannelSettings.toast.testEmailFailedDesc'),
           variant: 'destructive',
         });
       }
     } catch {
       toast({
-        title: '테스트 발송 실패',
-        description: '서버와 통신 중 오류가 발생했습니다.',
+        title: t('notificationChannelSettings.toast.testSendFailed'),
+        description: t('notificationChannelSettings.toast.serverError'),
         variant: 'destructive',
       });
     } finally {
@@ -189,20 +191,20 @@ export function NotificationChannelSettings() {
       const result = await response.json();
       if (result.success) {
         toast({
-          title: 'SMS 연결 테스트 성공',
-          description: 'SMS 게이트웨이에 정상적으로 연결되었습니다.',
+          title: t('notificationChannelSettings.toast.smsTestSuccess'),
+          description: t('notificationChannelSettings.toast.smsTestSuccessDesc'),
         });
       } else {
         toast({
-          title: 'SMS 연결 테스트 실패',
-          description: result.error?.message || '연결에 실패했습니다.',
+          title: t('notificationChannelSettings.toast.smsTestFailed'),
+          description: result.error?.message || t('notificationChannelSettings.toast.smsTestFailedDesc'),
           variant: 'destructive',
         });
       }
     } catch {
       toast({
-        title: 'SMS 연결 테스트 실패',
-        description: '서버와 통신 중 오류가 발생했습니다.',
+        title: t('notificationChannelSettings.toast.smsTestFailed'),
+        description: t('notificationChannelSettings.toast.serverError'),
         variant: 'destructive',
       });
     } finally {
@@ -222,22 +224,22 @@ export function NotificationChannelSettings() {
       const result = await response.json();
       if (result.success) {
         toast({
-          title: '테스트 발송 완료',
-          description: '테스트 SMS가 발송되었습니다.',
+          title: t('notificationChannelSettings.toast.testSendSuccess'),
+          description: t('notificationChannelSettings.toast.testSmsSentDesc'),
         });
         setTestSmsDialogOpen(false);
         setTestPhoneNumber('');
       } else {
         toast({
-          title: '테스트 발송 실패',
-          description: result.error?.message || 'SMS 발송에 실패했습니다.',
+          title: t('notificationChannelSettings.toast.testSendFailed'),
+          description: result.error?.message || t('notificationChannelSettings.toast.testSmsFailedDesc'),
           variant: 'destructive',
         });
       }
     } catch {
       toast({
-        title: '테스트 발송 실패',
-        description: '서버와 통신 중 오류가 발생했습니다.',
+        title: t('notificationChannelSettings.toast.testSendFailed'),
+        description: t('notificationChannelSettings.toast.serverError'),
         variant: 'destructive',
       });
     } finally {
@@ -266,20 +268,20 @@ export function NotificationChannelSettings() {
       const result = await response.json();
       if (result.success) {
         toast({
-          title: '설정 저장 완료',
-          description: '알림 채널 설정이 저장되었습니다.',
+          title: t('notificationChannelSettings.toast.saveSuccess'),
+          description: t('notificationChannelSettings.toast.saveSuccessDesc'),
         });
       } else {
         toast({
-          title: '설정 저장 실패',
-          description: result.error?.message || '설정 저장에 실패했습니다.',
+          title: t('notificationChannelSettings.toast.saveFailed'),
+          description: result.error?.message || t('notificationChannelSettings.toast.saveFailedDesc'),
           variant: 'destructive',
         });
       }
     } catch {
       toast({
-        title: '설정 저장 실패',
-        description: '서버와 통신 중 오류가 발생했습니다.',
+        title: t('notificationChannelSettings.toast.saveFailed'),
+        description: t('notificationChannelSettings.toast.serverError'),
         variant: 'destructive',
       });
     } finally {
@@ -297,15 +299,15 @@ export function NotificationChannelSettings() {
           <div className="flex items-center gap-2">
             <Mail className="h-5 w-5 text-blue-600" />
             <div>
-              <CardTitle>이메일 설정 (SMTP)</CardTitle>
-              <CardDescription>이메일 알림 발송을 위한 SMTP 서버를 설정합니다.</CardDescription>
+              <CardTitle>{t('notificationChannelSettings.smtp.title')}</CardTitle>
+              <CardDescription>{t('notificationChannelSettings.smtp.description')}</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="smtp-host">SMTP 서버 주소</Label>
+              <Label htmlFor="smtp-host">{t('notificationChannelSettings.smtp.host')}</Label>
               <Input
                 id="smtp-host"
                 value={smtp.host}
@@ -314,7 +316,7 @@ export function NotificationChannelSettings() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="smtp-port">포트</Label>
+              <Label htmlFor="smtp-port">{t('notificationChannelSettings.smtp.port')}</Label>
               <Input
                 id="smtp-port"
                 type="number"
@@ -326,7 +328,7 @@ export function NotificationChannelSettings() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="smtp-security">보안 연결</Label>
+              <Label htmlFor="smtp-security">{t('notificationChannelSettings.smtp.security')}</Label>
               <Select
                 value={smtp.security}
                 onValueChange={(value: 'TLS' | 'SSL' | 'NONE') =>
@@ -334,7 +336,7 @@ export function NotificationChannelSettings() {
                 }
               >
                 <SelectTrigger id="smtp-security">
-                  <SelectValue placeholder="보안 유형 선택" />
+                  <SelectValue placeholder={t('notificationChannelSettings.smtp.securityPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="TLS">TLS</SelectItem>
@@ -344,7 +346,7 @@ export function NotificationChannelSettings() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="smtp-username">사용자 계정</Label>
+              <Label htmlFor="smtp-username">{t('notificationChannelSettings.smtp.username')}</Label>
               <Input
                 id="smtp-username"
                 value={smtp.username}
@@ -353,17 +355,17 @@ export function NotificationChannelSettings() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="smtp-password">비밀번호</Label>
+              <Label htmlFor="smtp-password">{t('notificationChannelSettings.smtp.password')}</Label>
               <Input
                 id="smtp-password"
                 type="password"
                 value={smtp.password}
                 onChange={(e) => setSmtp((prev) => ({ ...prev, password: e.target.value }))}
-                placeholder="SMTP 비밀번호"
+                placeholder={t('notificationChannelSettings.smtp.passwordPlaceholder')}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="smtp-sender-name">발신자 이름</Label>
+              <Label htmlFor="smtp-sender-name">{t('notificationChannelSettings.smtp.senderName')}</Label>
               <Input
                 id="smtp-sender-name"
                 value={smtp.senderName}
@@ -379,14 +381,14 @@ export function NotificationChannelSettings() {
               disabled={isTestingSmtp}
             >
               <FlaskConical className="h-4 w-4 mr-2" />
-              {isTestingSmtp ? '테스트 중...' : '연결 테스트'}
+              {isTestingSmtp ? t('notificationChannelSettings.smtp.testing') : t('notificationChannelSettings.smtp.connectionTest')}
             </Button>
             <Button
               variant="outline"
               onClick={() => setTestEmailDialogOpen(true)}
             >
               <Send className="h-4 w-4 mr-2" />
-              테스트 발송
+              {t('notificationChannelSettings.smtp.testSend')}
             </Button>
           </div>
         </CardContent>
@@ -398,42 +400,42 @@ export function NotificationChannelSettings() {
           <div className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5 text-green-600" />
             <div>
-              <CardTitle>SMS 설정</CardTitle>
-              <CardDescription>SMS 알림 발송을 위한 게이트웨이를 설정합니다.</CardDescription>
+              <CardTitle>{t('notificationChannelSettings.sms.title')}</CardTitle>
+              <CardDescription>{t('notificationChannelSettings.sms.description')}</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="sms-gateway">SMS 게이트웨이</Label>
+              <Label htmlFor="sms-gateway">{t('notificationChannelSettings.sms.gateway')}</Label>
               <Select
                 value={sms.gateway}
                 onValueChange={(value) => setSms((prev) => ({ ...prev, gateway: value }))}
               >
                 <SelectTrigger id="sms-gateway">
-                  <SelectValue placeholder="게이트웨이 선택" />
+                  <SelectValue placeholder={t('notificationChannelSettings.sms.gatewayPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="KT">KT</SelectItem>
                   <SelectItem value="SKT">SKT</SelectItem>
                   <SelectItem value="LGU+">LGU+</SelectItem>
                   <SelectItem value="NHN Cloud">NHN Cloud</SelectItem>
-                  <SelectItem value="custom">직접 입력</SelectItem>
+                  <SelectItem value="custom">{t('notificationChannelSettings.sms.gatewayCustom')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="sms-api-key">API Key</Label>
+              <Label htmlFor="sms-api-key">{t('notificationChannelSettings.sms.apiKey')}</Label>
               <Input
                 id="sms-api-key"
                 value={sms.apiKey}
                 onChange={(e) => setSms((prev) => ({ ...prev, apiKey: e.target.value }))}
-                placeholder="API Key를 입력하세요"
+                placeholder={t('notificationChannelSettings.sms.apiKeyPlaceholder')}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="sms-sender-number">발신번호</Label>
+              <Label htmlFor="sms-sender-number">{t('notificationChannelSettings.sms.senderNumber')}</Label>
               <Input
                 id="sms-sender-number"
                 value={sms.senderNumber}
@@ -449,14 +451,14 @@ export function NotificationChannelSettings() {
               disabled={isTestingSms}
             >
               <FlaskConical className="h-4 w-4 mr-2" />
-              {isTestingSms ? '테스트 중...' : '연결 테스트'}
+              {isTestingSms ? t('notificationChannelSettings.sms.testing') : t('notificationChannelSettings.sms.connectionTest')}
             </Button>
             <Button
               variant="outline"
               onClick={() => setTestSmsDialogOpen(true)}
             >
               <Send className="h-4 w-4 mr-2" />
-              테스트 발송
+              {t('notificationChannelSettings.sms.testSend')}
             </Button>
           </div>
         </CardContent>
@@ -465,53 +467,56 @@ export function NotificationChannelSettings() {
       {/* Section C: Event Channel Mapping */}
       <Card>
         <CardHeader>
-          <CardTitle>이벤트별 알림 채널 설정</CardTitle>
-          <CardDescription>각 이벤트에 대해 사용할 알림 채널을 설정합니다.</CardDescription>
+          <CardTitle>{t('notificationChannelSettings.eventChannels.title')}</CardTitle>
+          <CardDescription>{t('notificationChannelSettings.eventChannels.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[200px]">이벤트</TableHead>
-                  <TableHead className="text-center w-[100px]">이메일</TableHead>
-                  <TableHead className="text-center w-[100px]">SMS</TableHead>
-                  <TableHead className="text-center w-[100px]">인앱</TableHead>
+                  <TableHead className="w-[200px]">{t('notificationChannelSettings.eventChannels.eventHeader')}</TableHead>
+                  <TableHead className="text-center w-[100px]">{t('notificationChannelSettings.eventChannels.emailHeader')}</TableHead>
+                  <TableHead className="text-center w-[100px]">{t('notificationChannelSettings.eventChannels.smsHeader')}</TableHead>
+                  <TableHead className="text-center w-[100px]">{t('notificationChannelSettings.eventChannels.inAppHeader')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {channelMappings.map((mapping) => (
-                  <TableRow key={mapping.eventKey}>
-                    <TableCell className="font-medium">{mapping.eventLabel}</TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex justify-center">
-                        <Checkbox
-                          checked={mapping.email}
-                          onCheckedChange={() => handleChannelToggle(mapping.eventKey, 'email')}
-                          aria-label={`${mapping.eventLabel} 이메일 알림`}
-                        />
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex justify-center">
-                        <Checkbox
-                          checked={mapping.sms}
-                          onCheckedChange={() => handleChannelToggle(mapping.eventKey, 'sms')}
-                          aria-label={`${mapping.eventLabel} SMS 알림`}
-                        />
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex justify-center">
-                        <Checkbox
-                          checked={mapping.inApp}
-                          onCheckedChange={() => handleChannelToggle(mapping.eventKey, 'inApp')}
-                          aria-label={`${mapping.eventLabel} 인앱 알림`}
-                        />
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {channelMappings.map((mapping) => {
+                  const eventLabel = t(mapping.eventLabelKey);
+                  return (
+                    <TableRow key={mapping.eventKey}>
+                      <TableCell className="font-medium">{eventLabel}</TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex justify-center">
+                          <Checkbox
+                            checked={mapping.email}
+                            onCheckedChange={() => handleChannelToggle(mapping.eventKey, 'email')}
+                            aria-label={`${eventLabel} ${t('notificationChannelSettings.eventChannels.emailHeader')}`}
+                          />
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex justify-center">
+                          <Checkbox
+                            checked={mapping.sms}
+                            onCheckedChange={() => handleChannelToggle(mapping.eventKey, 'sms')}
+                            aria-label={`${eventLabel} ${t('notificationChannelSettings.eventChannels.smsHeader')}`}
+                          />
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex justify-center">
+                          <Checkbox
+                            checked={mapping.inApp}
+                            onCheckedChange={() => handleChannelToggle(mapping.eventKey, 'inApp')}
+                            aria-label={`${eventLabel} ${t('notificationChannelSettings.eventChannels.inAppHeader')}`}
+                          />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>
@@ -522,7 +527,7 @@ export function NotificationChannelSettings() {
       <div className="flex justify-end">
         <Button onClick={handleSaveAll} disabled={isSaving}>
           <Save className="h-4 w-4 mr-2" />
-          {isSaving ? '저장 중...' : '설정 저장'}
+          {isSaving ? t('notificationChannelSettings.saving') : t('notificationChannelSettings.saveButton')}
         </Button>
       </div>
 
@@ -530,11 +535,11 @@ export function NotificationChannelSettings() {
       <Dialog open={testEmailDialogOpen} onOpenChange={setTestEmailDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>테스트 이메일 발송</DialogTitle>
+            <DialogTitle>{t('notificationChannelSettings.testEmailDialog.title')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="test-email-address">수신 이메일 주소</Label>
+              <Label htmlFor="test-email-address">{t('notificationChannelSettings.testEmailDialog.recipientLabel')}</Label>
               <Input
                 id="test-email-address"
                 type="email"
@@ -552,14 +557,14 @@ export function NotificationChannelSettings() {
                 setTestEmailAddress('');
               }}
             >
-              취소
+              {t('notificationChannelSettings.testEmailDialog.cancel')}
             </Button>
             <Button
               onClick={handleSendTestEmail}
               disabled={!testEmailAddress.trim() || isSending}
             >
               <Send className="h-4 w-4 mr-2" />
-              {isSending ? '발송 중...' : '발송'}
+              {isSending ? t('notificationChannelSettings.testEmailDialog.sending') : t('notificationChannelSettings.testEmailDialog.send')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -569,11 +574,11 @@ export function NotificationChannelSettings() {
       <Dialog open={testSmsDialogOpen} onOpenChange={setTestSmsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>테스트 SMS 발송</DialogTitle>
+            <DialogTitle>{t('notificationChannelSettings.testSmsDialog.title')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="test-phone-number">수신 전화번호</Label>
+              <Label htmlFor="test-phone-number">{t('notificationChannelSettings.testSmsDialog.recipientLabel')}</Label>
               <Input
                 id="test-phone-number"
                 type="tel"
@@ -591,14 +596,14 @@ export function NotificationChannelSettings() {
                 setTestPhoneNumber('');
               }}
             >
-              취소
+              {t('notificationChannelSettings.testSmsDialog.cancel')}
             </Button>
             <Button
               onClick={handleSendTestSms}
               disabled={!testPhoneNumber.trim() || isSending}
             >
               <Send className="h-4 w-4 mr-2" />
-              {isSending ? '발송 중...' : '발송'}
+              {isSending ? t('notificationChannelSettings.testSmsDialog.sending') : t('notificationChannelSettings.testSmsDialog.send')}
             </Button>
           </DialogFooter>
         </DialogContent>

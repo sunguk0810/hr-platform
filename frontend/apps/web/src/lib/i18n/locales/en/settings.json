@@ -179,5 +179,433 @@
       "inputError": "Input error",
       "inputErrorDesc": "Please fill in all required fields."
     }
+  },
+  "profileSettings": {
+    "title": "Profile Settings",
+    "description": "Edit your basic profile information",
+    "changeImageAriaLabel": "Change profile image",
+    "photoFileInfo": "JPG, PNG files (max 5MB)",
+    "recommendedSize": "Recommended size: 200x200px",
+    "nameLabel": "Name *",
+    "nameEnLabel": "English Name",
+    "nameEnPlaceholder": "English Name",
+    "emailLabel": "Email *",
+    "emailReadonly": "Company email cannot be changed",
+    "mobileLabel": "Phone *",
+    "mobilePlaceholder": "010-0000-0000",
+    "bioLabel": "Bio",
+    "bioPlaceholder": "Write a short bio about yourself",
+    "bioMaxLength": "Up to 200 characters",
+    "saving": "Saving...",
+    "saveChanges": "Save changes",
+    "validation": {
+      "nameRequired": "Name is required",
+      "emailInvalid": "Please enter a valid email",
+      "mobileRequired": "Phone number is required",
+      "bioMaxLength": "Must be 200 characters or less"
+    }
+  },
+  "passwordChange": {
+    "title": "Change Password",
+    "description": "Change your password regularly for account security",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm new password",
+    "strengthWeak": "Weak",
+    "strengthFair": "Fair",
+    "strengthStrong": "Strong",
+    "strengthVeryStrong": "Very strong",
+    "requirements": {
+      "minLength": "8+ characters",
+      "uppercase": "Uppercase letter",
+      "lowercase": "Lowercase letter",
+      "number": "Number",
+      "special": "Special character"
+    },
+    "notice": {
+      "title": "Password change notice",
+      "reloginRequired": "You will need to log in again after changing your password",
+      "otherSessionsLogout": "Other device sessions will be logged out automatically"
+    },
+    "changing": "Changing...",
+    "changeButton": "Change password",
+    "validation": {
+      "currentRequired": "Please enter your current password",
+      "minLength": "Must be at least 8 characters",
+      "uppercase": "Must include an uppercase letter",
+      "lowercase": "Must include a lowercase letter",
+      "number": "Must include a number",
+      "special": "Must include a special character",
+      "confirmRequired": "Please confirm your password",
+      "mismatch": "Passwords do not match"
+    }
+  },
+  "sessionManager": {
+    "title": "Logged-in Devices",
+    "description": "Manage your currently logged-in devices",
+    "logoutAllDevices": "Logout all devices",
+    "currentDevice": "Current device",
+    "otherDevices": "Other devices ({{count}})",
+    "lastActivity": "Last activity: {{time}}",
+    "logout": "Logout",
+    "noOtherSessions": "No sessions from other devices",
+    "securityNotice": {
+      "title": "Security notice",
+      "description": "If you see an unrecognized device, log it out immediately and change your password."
+    },
+    "revokeDialog": {
+      "title": "Logout device",
+      "description": "Are you sure you want to logout from this device? You will need to log in again on that device.",
+      "confirm": "Logout",
+      "cancel": "Cancel"
+    },
+    "revokeAllDialog": {
+      "title": "Logout all devices",
+      "description": "All devices except the current one will be logged out. Continue?",
+      "confirm": "Logout all",
+      "cancel": "Cancel"
+    }
+  },
+  "themeSettings": {
+    "title": "Theme Settings",
+    "description": "Choose your display theme",
+    "light": {
+      "label": "Light Mode",
+      "description": "Default theme with a bright background"
+    },
+    "dark": {
+      "label": "Dark Mode",
+      "description": "Theme with a dark background"
+    },
+    "system": {
+      "label": "System Settings",
+      "description": "Automatically changes based on OS settings"
+    },
+    "preview": "Preview"
+  },
+  "leaveUsageConditions": {
+    "title": "Leave Usage Conditions",
+    "description": "Configure usage conditions per leave type. (FR-ATT-003-02)",
+    "saveButton": "Save conditions",
+    "documentCount": "{{count}} document(s)",
+    "blackoutCount": "{{count}} blackout(s)",
+    "advanceNoticePeriod": "Advance notice period",
+    "daysBefore": "day(s) before",
+    "maxConsecutiveDays": "Max consecutive days",
+    "daysUnit": "day(s)",
+    "maxAnnualUsage": "Max annual usage",
+    "unlimited": "(Unlimited)",
+    "timesUnit": "time(s)",
+    "minTenureMonths": "Minimum tenure",
+    "monthsUnit": "month(s)",
+    "requiredDocuments": "Required documents",
+    "documents": {
+      "diagnosis": "Medical certificate",
+      "reason": "Reason statement",
+      "confirmation": "Confirmation letter",
+      "other": "Other"
+    },
+    "availableDays": "Available days",
+    "dayLabels": {
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat",
+      "sun": "Sun"
+    },
+    "roleRestrictions": "Role restrictions",
+    "roleRestrictionsDescription": "Only selected roles can use this leave type. If none selected, all roles are allowed.",
+    "blackoutPeriods": "Blackout periods",
+    "blackoutPeriodsDescription": "This leave type cannot be used during these periods.",
+    "addPeriod": "Add period",
+    "noBlackoutPeriods": "No blackout periods configured.",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "toast": {
+      "saveSuccess": "Saved",
+      "saveSuccessDesc": "Leave usage conditions have been saved."
+    }
+  },
+  "notificationChannelSettings": {
+    "smtp": {
+      "title": "Email Settings (SMTP)",
+      "description": "Configure the SMTP server for sending email notifications.",
+      "host": "SMTP server address",
+      "port": "Port",
+      "security": "Security",
+      "securityPlaceholder": "Select security type",
+      "username": "Username",
+      "password": "Password",
+      "passwordPlaceholder": "SMTP password",
+      "senderName": "Sender name",
+      "connectionTest": "Connection test",
+      "testing": "Testing...",
+      "testSend": "Test send"
+    },
+    "sms": {
+      "title": "SMS Settings",
+      "description": "Configure the SMS gateway for sending SMS notifications.",
+      "gateway": "SMS gateway",
+      "gatewayPlaceholder": "Select gateway",
+      "gatewayCustom": "Custom",
+      "apiKey": "API Key",
+      "apiKeyPlaceholder": "Enter API Key",
+      "senderNumber": "Sender number",
+      "connectionTest": "Connection test",
+      "testing": "Testing...",
+      "testSend": "Test send"
+    },
+    "eventChannels": {
+      "title": "Event Notification Channel Settings",
+      "description": "Configure notification channels for each event.",
+      "eventHeader": "Event",
+      "emailHeader": "Email",
+      "smsHeader": "SMS",
+      "inAppHeader": "In-app",
+      "events": {
+        "approvalRequest": "Approval request",
+        "approvalComplete": "Approval complete",
+        "approvalReject": "Approval rejected",
+        "leaveApprove": "Leave approved",
+        "leaveReject": "Leave rejected",
+        "appointmentNotice": "Appointment notice",
+        "systemNotice": "System notice"
+      }
+    },
+    "saving": "Saving...",
+    "saveButton": "Save settings",
+    "testEmailDialog": {
+      "title": "Send Test Email",
+      "recipientLabel": "Recipient email address",
+      "cancel": "Cancel",
+      "sending": "Sending...",
+      "send": "Send"
+    },
+    "testSmsDialog": {
+      "title": "Send Test SMS",
+      "recipientLabel": "Recipient phone number",
+      "cancel": "Cancel",
+      "sending": "Sending...",
+      "send": "Send"
+    },
+    "toast": {
+      "smtpTestSuccess": "SMTP connection test successful",
+      "smtpTestSuccessDesc": "Successfully connected to SMTP server.",
+      "smtpTestFailed": "SMTP connection test failed",
+      "smtpTestFailedDesc": "Connection failed.",
+      "smtpTestError": "An error occurred while communicating with the server.",
+      "testSendSuccess": "Test send complete",
+      "testEmailSentDesc": "Test email has been sent.",
+      "testSendFailed": "Test send failed",
+      "testEmailFailedDesc": "Failed to send email.",
+      "testSmsSentDesc": "Test SMS has been sent.",
+      "testSmsFailedDesc": "Failed to send SMS.",
+      "smsTestSuccess": "SMS connection test successful",
+      "smsTestSuccessDesc": "Successfully connected to SMS gateway.",
+      "smsTestFailed": "SMS connection test failed",
+      "smsTestFailedDesc": "Connection failed.",
+      "saveSuccess": "Settings saved",
+      "saveSuccessDesc": "Notification channel settings have been saved.",
+      "saveFailed": "Failed to save settings",
+      "saveFailedDesc": "Failed to save settings.",
+      "serverError": "An error occurred while communicating with the server."
+    }
+  },
+  "leaveApprovalLineRules": {
+    "title": "Leave Approval Line Rules",
+    "description": "Configure approval steps and approver roles per leave type. (FR-ATT-003-03)",
+    "saveButton": "Save",
+    "leaveTypeHeader": "Leave type",
+    "approvalStepsHeader": "Approval steps",
+    "approverRolesHeader": "Approver roles",
+    "autoSubmitHeader": "Auto-submit",
+    "noteHeader": "Note",
+    "notePlaceholder": "Enter note",
+    "selectRoles": "Select roles",
+    "selectRolesTitle": "Select approver roles",
+    "steps": {
+      "one": "1 step",
+      "two": "2 steps",
+      "three": "3 steps"
+    },
+    "toast": {
+      "saveSuccess": "Saved",
+      "saveSuccessDesc": "Leave approval line rules have been saved."
+    }
+  },
+  "employeeNumberRule": {
+    "pageTitle": "Employee Number Rule",
+    "pageDescription": "Configure the format for auto-generated employee numbers.",
+    "ruleConfig": {
+      "title": "Employee Number Generation Rule",
+      "description": "Employee numbers are auto-generated as a combination of prefix, year, and sequence."
+    },
+    "prefix": {
+      "label": "Prefix",
+      "description": "The string prepended to the employee number. e.g., EMP, ELEC, HR"
+    },
+    "includeYear": {
+      "label": "Include year",
+      "description": "Include 4-digit year in the employee number."
+    },
+    "sequenceDigits": {
+      "label": "Sequence digits",
+      "placeholder": "Select digits",
+      "option3": "3 digits (001 - 999)",
+      "option4": "4 digits (0001 - 9999)",
+      "option5": "5 digits (00001 - 99999)",
+      "description": "Set the number of sequence digits. Larger organizations should use more digits."
+    },
+    "preview": {
+      "title": "Preview",
+      "description": "This is the format of employee numbers generated with the current settings.",
+      "generationRule": "Generation rule",
+      "prefixPart": "Prefix({{prefix}})",
+      "yearPart": "Year(4 digits)",
+      "sequencePart": "Sequence({{digits}} digits)",
+      "exampleLabel": "Example",
+      "additionalExamples": "More examples"
+    },
+    "recycling": {
+      "title": "Retired Employee Number Recycling",
+      "description": "Allow reassignment of retired employee numbers to new employees.",
+      "toggleLabel": "Allow retired number recycling",
+      "toggleDescription": "Reassign retired employee numbers to new employees.",
+      "conditionNotice": "Recycling condition: Only numbers retired for 1+ years can be recycled"
+    },
+    "saving": "Saving...",
+    "save": "Save",
+    "toast": {
+      "loadFailed": "Failed to load settings",
+      "loadFailedDesc": "Unable to load employee number rule.",
+      "inputError": "Input error",
+      "inputErrorDesc": "Please enter a prefix.",
+      "saveSuccess": "Saved",
+      "saveSuccessDesc": "Employee number rule has been saved.",
+      "saveFailed": "Save failed",
+      "saveFailedDesc": "Failed to save employee number rule.",
+      "saveError": "An error occurred while saving the employee number rule."
+    }
+  },
+  "fileUploadPolicy": {
+    "pageTitle": "File Upload Policy",
+    "pageDescription": "Manage file upload restriction settings per tenant.",
+    "saving": "Saving...",
+    "save": "Save",
+    "defaultPolicy": {
+      "title": "Tenant Default Settings",
+      "description": "Default file upload policy applied to all tenants.",
+      "maxFileSize": "Max file size (MB)",
+      "maxFileSizeUnit": "MB",
+      "maxFileSizeDescription": "Set the maximum upload size for individual files.",
+      "maxTotalStorage": "Max total storage (GB)",
+      "maxTotalStorageUnit": "GB",
+      "maxTotalStorageDescription": "Set the total file storage capacity per tenant.",
+      "allowedExtensions": "Allowed extensions",
+      "allowedExtensionsDescription": "Select file extensions to allow for upload."
+    },
+    "extensionGroups": {
+      "documents": "Documents",
+      "images": "Images",
+      "others": "Other"
+    },
+    "categoryOverrides": {
+      "title": "Category Settings",
+      "description": "Override the default policy for specific file categories. Unconfigured items follow the default policy.",
+      "categoryHeader": "Category",
+      "maxFileSizeHeader": "Max file size (MB)",
+      "allowedExtensionsHeader": "Allowed extensions",
+      "actionHeader": "Action",
+      "defaultValue": "Default ({{size}} MB)",
+      "usingDefault": "Using default",
+      "editButton": "Edit"
+    },
+    "categories": {
+      "hrDocuments": "HR Documents",
+      "certificates": "Certificates",
+      "approvalAttachments": "Approval Attachments",
+      "profilePhoto": "Profile Photo",
+      "other": "Other"
+    },
+    "editDialog": {
+      "title": "{{category}} - Edit Upload Policy",
+      "maxFileSize": "Max file size (MB)",
+      "maxFileSizeUnit": "MB",
+      "maxFileSizeDescription": "Leave empty to use default ({{size}} MB).",
+      "allowedExtensions": "Allowed extensions",
+      "resetButton": "Reset (use default)",
+      "resetDescription": "If none selected, the default policy extensions are used.",
+      "cancel": "Cancel",
+      "confirm": "Confirm"
+    },
+    "toast": {
+      "loadFailed": "Failed to load settings",
+      "loadFailedDesc": "Unable to load file upload policy.",
+      "saveSuccess": "Saved",
+      "saveSuccessDesc": "File upload policy has been saved.",
+      "saveFailed": "Save failed",
+      "saveFailedDesc": "Failed to save file upload policy.",
+      "saveError": "An error occurred while saving the file upload policy."
+    }
+  },
+  "leavePolicy": {
+    "pageTitle": "Leave Policy Settings",
+    "pageDescription": "Manage annual leave accrual rules and special leave policies.",
+    "save": "Save",
+    "basicSettings": {
+      "title": "Basic Annual Leave Settings",
+      "description": "Configure basic rules for annual leave accrual.",
+      "monthlyAccrual": "Monthly accrual (under 1 year)",
+      "monthlyAccrualUnit": "day(s) / month",
+      "monthlyAccrualDescription": "Number of leave days accrued monthly for employees with less than 1 year of service",
+      "baseAnnualDays": "Base annual days (after 1 year)",
+      "baseAnnualDaysUnit": "day(s) / year",
+      "baseAnnualDaysDescription": "Base number of annual leave days for employees with 1+ years of service"
+    },
+    "tenureBonus": {
+      "label": "Tenure-based bonus days",
+      "description": "Additional leave days granted based on years of service",
+      "yearFromHeader": "From (years)",
+      "yearToHeader": "To (years)",
+      "bonusDaysHeader": "Bonus days",
+      "andAbove": "and above",
+      "daysUnit": "day(s)"
+    },
+    "specialLeave": {
+      "title": "Special Leave Settings",
+      "description": "Configure special leave days for family events, etc.",
+      "typeHeader": "Leave type",
+      "descriptionHeader": "Description",
+      "daysHeader": "Days",
+      "daysUnit": "day(s)"
+    },
+    "carryOver": {
+      "title": "Carry-over Policy",
+      "description": "Configure carry-over policy for unused annual leave.",
+      "enableLabel": "Allow leave carry-over",
+      "enableDescription": "Allow unused annual leave to be carried over to the next year.",
+      "maxDays": "Maximum carry-over days",
+      "maxDaysUnit": "day(s)",
+      "maxDaysDescription": "Maximum number of days that can be carried over (0 = unlimited)",
+      "expiry": "Carry-over expiry period",
+      "expiryPlaceholder": "Select expiry period",
+      "expiryMonths3": "3 months",
+      "expiryMonths6": "6 months",
+      "expiryMonths12": "12 months",
+      "expiryDescription": "Period after which carried-over leave expires"
+    },
+    "toast": {
+      "saveSuccess": "Saved",
+      "saveSuccessDesc": "Leave policy settings have been saved."
+    }
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "saving": "Saving...",
+    "loading": "Loading..."
   }
 }

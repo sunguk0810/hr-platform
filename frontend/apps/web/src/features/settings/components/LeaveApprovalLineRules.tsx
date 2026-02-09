@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,6 +48,7 @@ const DEFAULT_RULES: LeaveApprovalRule[] = [
 const AVAILABLE_ROLES = ['팀장', '부서장', '인사팀장', '임원', 'HR담당자'];
 
 export function LeaveApprovalLineRules() {
+  const { t } = useTranslation('settings');
   const { toast } = useToast();
   const [rules, setRules] = useState<LeaveApprovalRule[]>(DEFAULT_RULES);
 
@@ -70,8 +72,8 @@ export function LeaveApprovalLineRules() {
 
   const handleSave = () => {
     toast({
-      title: '저장 완료',
-      description: '휴가 유형별 결재선 규칙이 저장되었습니다.',
+      title: t('leaveApprovalLineRules.toast.saveSuccess'),
+      description: t('leaveApprovalLineRules.toast.saveSuccessDesc'),
     });
   };
 
@@ -82,15 +84,15 @@ export function LeaveApprovalLineRules() {
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5 text-primary" />
             <div>
-              <CardTitle>휴가 유형별 결재선 규칙</CardTitle>
+              <CardTitle>{t('leaveApprovalLineRules.title')}</CardTitle>
               <CardDescription>
-                휴가 유형에 따른 결재 단계 및 결재자 역할을 설정합니다. (FR-ATT-003-03)
+                {t('leaveApprovalLineRules.description')}
               </CardDescription>
             </div>
           </div>
           <Button onClick={handleSave} size="sm">
             <Save className="mr-2 h-4 w-4" />
-            저장
+            {t('leaveApprovalLineRules.saveButton')}
           </Button>
         </div>
       </CardHeader>
@@ -99,11 +101,11 @@ export function LeaveApprovalLineRules() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[120px]">휴가 유형</TableHead>
-                <TableHead className="w-[130px]">결재 단계 수</TableHead>
-                <TableHead className="w-[260px]">결재 역할</TableHead>
-                <TableHead className="w-[100px] text-center">자동 상신</TableHead>
-                <TableHead>비고</TableHead>
+                <TableHead className="w-[120px]">{t('leaveApprovalLineRules.leaveTypeHeader')}</TableHead>
+                <TableHead className="w-[130px]">{t('leaveApprovalLineRules.approvalStepsHeader')}</TableHead>
+                <TableHead className="w-[260px]">{t('leaveApprovalLineRules.approverRolesHeader')}</TableHead>
+                <TableHead className="w-[100px] text-center">{t('leaveApprovalLineRules.autoSubmitHeader')}</TableHead>
+                <TableHead>{t('leaveApprovalLineRules.noteHeader')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -121,9 +123,9 @@ export function LeaveApprovalLineRules() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="1">1단계</SelectItem>
-                        <SelectItem value="2">2단계</SelectItem>
-                        <SelectItem value="3">3단계</SelectItem>
+                        <SelectItem value="1">{t('leaveApprovalLineRules.steps.one')}</SelectItem>
+                        <SelectItem value="2">{t('leaveApprovalLineRules.steps.two')}</SelectItem>
+                        <SelectItem value="3">{t('leaveApprovalLineRules.steps.three')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </TableCell>
@@ -137,7 +139,7 @@ export function LeaveApprovalLineRules() {
                         >
                           <div className="flex flex-wrap gap-1 overflow-hidden">
                             {rule.approverRoles.length === 0 ? (
-                              <span className="text-muted-foreground">역할 선택</span>
+                              <span className="text-muted-foreground">{t('leaveApprovalLineRules.selectRoles')}</span>
                             ) : (
                               rule.approverRoles.map((role) => (
                                 <Badge key={role} variant="secondary" className="text-xs">
@@ -152,7 +154,7 @@ export function LeaveApprovalLineRules() {
                       <PopoverContent className="w-[200px] p-3" align="start">
                         <div className="space-y-2">
                           <p className="text-sm font-medium text-muted-foreground">
-                            결재 역할 선택
+                            {t('leaveApprovalLineRules.selectRolesTitle')}
                           </p>
                           {AVAILABLE_ROLES.map((role) => (
                             <div key={role} className="flex items-center gap-2">
@@ -185,7 +187,7 @@ export function LeaveApprovalLineRules() {
                     <Input
                       value={rule.note}
                       onChange={(e) => updateRule(rule.id, { note: e.target.value })}
-                      placeholder="비고 입력"
+                      placeholder={t('leaveApprovalLineRules.notePlaceholder')}
                       className="h-8 text-sm"
                     />
                   </TableCell>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Accordion,
   AccordionContent,
@@ -33,13 +34,21 @@ interface LeaveUsageCondition {
 }
 
 const DOCUMENT_OPTIONS = [
-  { value: '진단서', label: '진단서' },
-  { value: '사유서', label: '사유서' },
-  { value: '확인서', label: '확인서' },
-  { value: '기타', label: '기타' },
+  { value: '진단서', labelKey: 'leaveUsageConditions.documents.diagnosis' },
+  { value: '사유서', labelKey: 'leaveUsageConditions.documents.reason' },
+  { value: '확인서', labelKey: 'leaveUsageConditions.documents.confirmation' },
+  { value: '기타', labelKey: 'leaveUsageConditions.documents.other' },
 ];
 
-const DAY_LABELS = ['월', '화', '수', '목', '금', '토', '일'];
+const DAY_LABEL_KEYS = [
+  'leaveUsageConditions.dayLabels.mon',
+  'leaveUsageConditions.dayLabels.tue',
+  'leaveUsageConditions.dayLabels.wed',
+  'leaveUsageConditions.dayLabels.thu',
+  'leaveUsageConditions.dayLabels.fri',
+  'leaveUsageConditions.dayLabels.sat',
+  'leaveUsageConditions.dayLabels.sun',
+];
 
 const ROLE_OPTIONS = [
   { value: 'EMPLOYEE', label: 'EMPLOYEE' },
@@ -136,6 +145,7 @@ const defaultConditions: LeaveUsageCondition[] = [
 ];
 
 export function LeaveUsageConditions() {
+  const { t } = useTranslation('settings');
   const { toast } = useToast();
   const [conditions, setConditions] = useState<LeaveUsageCondition[]>(defaultConditions);
 
@@ -223,8 +233,8 @@ export function LeaveUsageConditions() {
 
   const handleSave = () => {
     toast({
-      title: '저장 완료',
-      description: '휴가 사용 조건이 저장되었습니다.',
+      title: t('leaveUsageConditions.toast.saveSuccess'),
+      description: t('leaveUsageConditions.toast.saveSuccessDesc'),
     });
   };
 
@@ -235,15 +245,15 @@ export function LeaveUsageConditions() {
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-5 w-5 text-primary" />
             <div>
-              <CardTitle>휴가 사용 조건</CardTitle>
+              <CardTitle>{t('leaveUsageConditions.title')}</CardTitle>
               <CardDescription>
-                휴가 유형별 사용 조건을 설정합니다. (FR-ATT-003-02)
+                {t('leaveUsageConditions.description')}
               </CardDescription>
             </div>
           </div>
           <Button onClick={handleSave} size="sm">
             <Save className="mr-2 h-4 w-4" />
-            조건 저장
+            {t('leaveUsageConditions.saveButton')}
           </Button>
         </div>
       </CardHeader>
@@ -260,13 +270,13 @@ export function LeaveUsageConditions() {
                   {condition.requiredDocuments.length > 0 && (
                     <Badge variant="secondary" className="text-xs">
                       <FileText className="mr-1 h-3 w-3" />
-                      증빙 {condition.requiredDocuments.length}건
+                      {t('leaveUsageConditions.documentCount', { count: condition.requiredDocuments.length })}
                     </Badge>
                   )}
                   {condition.blackoutPeriods.length > 0 && (
                     <Badge variant="secondary" className="text-xs">
                       <CalendarOff className="mr-1 h-3 w-3" />
-                      블랙아웃 {condition.blackoutPeriods.length}건
+                      {t('leaveUsageConditions.blackoutCount', { count: condition.blackoutPeriods.length })}
                     </Badge>
                   )}
                 </div>
@@ -278,7 +288,7 @@ export function LeaveUsageConditions() {
                     <div className="space-y-2">
                       <Label>
                         <Clock className="mr-1 inline h-3.5 w-3.5" />
-                        사전 통보 기간
+                        {t('leaveUsageConditions.advanceNoticePeriod')}
                       </Label>
                       <div className="flex items-center gap-2">
                         <Input
@@ -293,12 +303,12 @@ export function LeaveUsageConditions() {
                           }
                           className="w-24"
                         />
-                        <span className="text-sm text-muted-foreground">일 전</span>
+                        <span className="text-sm text-muted-foreground">{t('leaveUsageConditions.daysBefore')}</span>
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label>최대 연속 사용일</Label>
+                      <Label>{t('leaveUsageConditions.maxConsecutiveDays')}</Label>
                       <div className="flex items-center gap-2">
                         <Input
                           type="number"
@@ -312,12 +322,12 @@ export function LeaveUsageConditions() {
                           }
                           className="w-24"
                         />
-                        <span className="text-sm text-muted-foreground">일</span>
+                        <span className="text-sm text-muted-foreground">{t('leaveUsageConditions.daysUnit')}</span>
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label>연간 최대 사용 횟수</Label>
+                      <Label>{t('leaveUsageConditions.maxAnnualUsage')}</Label>
                       <div className="flex items-center gap-2">
                         <Input
                           type="number"
@@ -331,13 +341,13 @@ export function LeaveUsageConditions() {
                           className="w-24"
                         />
                         <span className="text-sm text-muted-foreground">
-                          {condition.maxAnnualUsage === 0 ? '(무제한)' : '회'}
+                          {condition.maxAnnualUsage === 0 ? t('leaveUsageConditions.unlimited') : t('leaveUsageConditions.timesUnit')}
                         </span>
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label>최소 근속 기간</Label>
+                      <Label>{t('leaveUsageConditions.minTenureMonths')}</Label>
                       <div className="flex items-center gap-2">
                         <Input
                           type="number"
@@ -350,14 +360,14 @@ export function LeaveUsageConditions() {
                           }
                           className="w-24"
                         />
-                        <span className="text-sm text-muted-foreground">개월</span>
+                        <span className="text-sm text-muted-foreground">{t('leaveUsageConditions.monthsUnit')}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Row 2: Required Documents */}
                   <div className="space-y-2">
-                    <Label>필요 증빙서류</Label>
+                    <Label>{t('leaveUsageConditions.requiredDocuments')}</Label>
                     <div className="flex flex-wrap gap-4">
                       {DOCUMENT_OPTIONS.map((doc) => (
                         <div key={doc.value} className="flex items-center gap-2">
@@ -370,7 +380,7 @@ export function LeaveUsageConditions() {
                             htmlFor={`doc-${condition.leaveType}-${doc.value}`}
                             className="text-sm font-normal cursor-pointer"
                           >
-                            {doc.label}
+                            {t(doc.labelKey)}
                           </Label>
                         </div>
                       ))}
@@ -379,10 +389,10 @@ export function LeaveUsageConditions() {
 
                   {/* Row 3: Available Days */}
                   <div className="space-y-2">
-                    <Label>사용 가능 요일</Label>
+                    <Label>{t('leaveUsageConditions.availableDays')}</Label>
                     <div className="flex flex-wrap gap-4">
-                      {DAY_LABELS.map((day, dayIndex) => (
-                        <div key={day} className="flex items-center gap-2">
+                      {DAY_LABEL_KEYS.map((dayKey, dayIndex) => (
+                        <div key={dayKey} className="flex items-center gap-2">
                           <Checkbox
                             id={`day-${condition.leaveType}-${dayIndex}`}
                             checked={condition.availableDays[dayIndex]}
@@ -392,7 +402,7 @@ export function LeaveUsageConditions() {
                             htmlFor={`day-${condition.leaveType}-${dayIndex}`}
                             className="text-sm font-normal cursor-pointer"
                           >
-                            {day}
+                            {t(dayKey)}
                           </Label>
                         </div>
                       ))}
@@ -401,9 +411,9 @@ export function LeaveUsageConditions() {
 
                   {/* Row 4: Role Restrictions */}
                   <div className="space-y-2">
-                    <Label>역할별 사용 제한</Label>
+                    <Label>{t('leaveUsageConditions.roleRestrictions')}</Label>
                     <p className="text-xs text-muted-foreground">
-                      선택된 역할만 이 휴가를 사용할 수 있습니다. 미선택 시 전체 허용.
+                      {t('leaveUsageConditions.roleRestrictionsDescription')}
                     </p>
                     <div className="flex flex-wrap gap-4">
                       {ROLE_OPTIONS.map((role) => (
@@ -428,9 +438,9 @@ export function LeaveUsageConditions() {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div>
-                        <Label>블랙아웃 기간</Label>
+                        <Label>{t('leaveUsageConditions.blackoutPeriods')}</Label>
                         <p className="text-xs text-muted-foreground">
-                          이 기간 동안에는 해당 휴가를 사용할 수 없습니다.
+                          {t('leaveUsageConditions.blackoutPeriodsDescription')}
                         </p>
                       </div>
                       <Button
@@ -440,13 +450,13 @@ export function LeaveUsageConditions() {
                         onClick={() => addBlackoutPeriod(index)}
                       >
                         <Plus className="mr-1 h-4 w-4" />
-                        기간 추가
+                        {t('leaveUsageConditions.addPeriod')}
                       </Button>
                     </div>
 
                     {condition.blackoutPeriods.length === 0 && (
                       <p className="text-sm text-muted-foreground italic">
-                        설정된 블랙아웃 기간이 없습니다.
+                        {t('leaveUsageConditions.noBlackoutPeriods')}
                       </p>
                     )}
 
@@ -456,7 +466,7 @@ export function LeaveUsageConditions() {
                         className="flex items-center gap-3 rounded-md border p-3"
                       >
                         <div className="flex items-center gap-2">
-                          <Label className="text-sm whitespace-nowrap">시작일</Label>
+                          <Label className="text-sm whitespace-nowrap">{t('leaveUsageConditions.startDate')}</Label>
                           <Input
                             type="date"
                             value={period.startDate}
@@ -468,7 +478,7 @@ export function LeaveUsageConditions() {
                         </div>
                         <span className="text-muted-foreground">~</span>
                         <div className="flex items-center gap-2">
-                          <Label className="text-sm whitespace-nowrap">종료일</Label>
+                          <Label className="text-sm whitespace-nowrap">{t('leaveUsageConditions.endDate')}</Label>
                           <Input
                             type="date"
                             value={period.endDate}

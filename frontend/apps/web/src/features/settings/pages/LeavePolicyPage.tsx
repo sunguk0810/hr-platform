@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,6 +41,7 @@ interface SpecialLeaveRow {
 }
 
 export default function LeavePolicyPage() {
+  const { t } = useTranslation('settings');
   const { toast } = useToast();
 
   // Basic Annual Leave Settings
@@ -86,20 +88,20 @@ export default function LeavePolicyPage() {
 
   const handleSave = () => {
     toast({
-      title: '저장 완료',
-      description: '연차 규칙 설정이 저장되었습니다.',
+      title: t('leavePolicy.toast.saveSuccess'),
+      description: t('leavePolicy.toast.saveSuccessDesc'),
     });
   };
 
   return (
     <>
       <PageHeader
-        title="연차 규칙 설정"
-        description="연차 발생 규칙 및 특별휴가 정책을 관리합니다."
+        title={t('leavePolicy.pageTitle')}
+        description={t('leavePolicy.pageDescription')}
         actions={
           <Button onClick={handleSave}>
             <Save className="mr-2 h-4 w-4" />
-            저장
+            {t('leavePolicy.save')}
           </Button>
         }
       />
@@ -111,15 +113,15 @@ export default function LeavePolicyPage() {
             <div className="flex items-center gap-2">
               <CalendarDays className="h-5 w-5 text-primary" />
               <div>
-                <CardTitle>기본 연차 설정</CardTitle>
-                <CardDescription>연차 발생 기본 규칙을 설정합니다.</CardDescription>
+                <CardTitle>{t('leavePolicy.basicSettings.title')}</CardTitle>
+                <CardDescription>{t('leavePolicy.basicSettings.description')}</CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="monthlyAccrual">입사 1년 미만 월별 발생일수</Label>
+                <Label htmlFor="monthlyAccrual">{t('leavePolicy.basicSettings.monthlyAccrual')}</Label>
                 <div className="flex items-center gap-2">
                   <Input
                     id="monthlyAccrual"
@@ -131,15 +133,15 @@ export default function LeavePolicyPage() {
                     onChange={(e) => setMonthlyAccrualCount(Number(e.target.value))}
                     className="w-24"
                   />
-                  <span className="text-sm text-muted-foreground">일 / 월</span>
+                  <span className="text-sm text-muted-foreground">{t('leavePolicy.basicSettings.monthlyAccrualUnit')}</span>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  입사 1년 미만 직원에게 매월 발생하는 연차 일수
+                  {t('leavePolicy.basicSettings.monthlyAccrualDescription')}
                 </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="baseAnnualDays">1년차 이후 기본일수</Label>
+                <Label htmlFor="baseAnnualDays">{t('leavePolicy.basicSettings.baseAnnualDays')}</Label>
                 <div className="flex items-center gap-2">
                   <Input
                     id="baseAnnualDays"
@@ -150,27 +152,27 @@ export default function LeavePolicyPage() {
                     onChange={(e) => setBaseAnnualDays(Number(e.target.value))}
                     className="w-24"
                   />
-                  <span className="text-sm text-muted-foreground">일 / 년</span>
+                  <span className="text-sm text-muted-foreground">{t('leavePolicy.basicSettings.baseAnnualDaysUnit')}</span>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  근속 1년 이상 직원에게 매년 발생하는 기본 연차 일수
+                  {t('leavePolicy.basicSettings.baseAnnualDaysDescription')}
                 </p>
               </div>
             </div>
 
             {/* Tenure-based bonus days table */}
             <div className="space-y-3">
-              <Label>근속 연수별 가산일수</Label>
+              <Label>{t('leavePolicy.tenureBonus.label')}</Label>
               <p className="text-xs text-muted-foreground">
-                근속 연수에 따라 기본 연차에 추가로 부여되는 가산일수
+                {t('leavePolicy.tenureBonus.description')}
               </p>
               <div className="rounded-md border">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-[140px]">근속 시작 (년)</TableHead>
-                      <TableHead className="w-[140px]">근속 종료 (년)</TableHead>
-                      <TableHead className="w-[140px]">가산일수</TableHead>
+                      <TableHead className="w-[140px]">{t('leavePolicy.tenureBonus.yearFromHeader')}</TableHead>
+                      <TableHead className="w-[140px]">{t('leavePolicy.tenureBonus.yearToHeader')}</TableHead>
+                      <TableHead className="w-[140px]">{t('leavePolicy.tenureBonus.bonusDaysHeader')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -199,7 +201,7 @@ export default function LeavePolicyPage() {
                               className="w-20"
                             />
                           ) : (
-                            <span className="text-sm text-muted-foreground">이상</span>
+                            <span className="text-sm text-muted-foreground">{t('leavePolicy.tenureBonus.andAbove')}</span>
                           )}
                         </TableCell>
                         <TableCell>
@@ -214,7 +216,7 @@ export default function LeavePolicyPage() {
                               }
                               className="w-20"
                             />
-                            <span className="text-sm text-muted-foreground">일</span>
+                            <span className="text-sm text-muted-foreground">{t('leavePolicy.tenureBonus.daysUnit')}</span>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -229,17 +231,17 @@ export default function LeavePolicyPage() {
         {/* Special Leave Settings */}
         <Card>
           <CardHeader>
-            <CardTitle>특별휴가 설정</CardTitle>
-            <CardDescription>경조사 등 특별휴가 일수를 설정합니다.</CardDescription>
+            <CardTitle>{t('leavePolicy.specialLeave.title')}</CardTitle>
+            <CardDescription>{t('leavePolicy.specialLeave.description')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[160px]">휴가 유형</TableHead>
-                    <TableHead>설명</TableHead>
-                    <TableHead className="w-[140px]">일수</TableHead>
+                    <TableHead className="w-[160px]">{t('leavePolicy.specialLeave.typeHeader')}</TableHead>
+                    <TableHead>{t('leavePolicy.specialLeave.descriptionHeader')}</TableHead>
+                    <TableHead className="w-[140px]">{t('leavePolicy.specialLeave.daysHeader')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -262,7 +264,7 @@ export default function LeavePolicyPage() {
                             }
                             className="w-20"
                           />
-                          <span className="text-sm text-muted-foreground">일</span>
+                          <span className="text-sm text-muted-foreground">{t('leavePolicy.specialLeave.daysUnit')}</span>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -276,15 +278,15 @@ export default function LeavePolicyPage() {
         {/* Carry-over Policy */}
         <Card>
           <CardHeader>
-            <CardTitle>이월 정책</CardTitle>
-            <CardDescription>미사용 연차의 이월 정책을 설정합니다.</CardDescription>
+            <CardTitle>{t('leavePolicy.carryOver.title')}</CardTitle>
+            <CardDescription>{t('leavePolicy.carryOver.description')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <Label>연차 이월 허용</Label>
+                <Label>{t('leavePolicy.carryOver.enableLabel')}</Label>
                 <p className="text-sm text-muted-foreground">
-                  미사용 연차를 다음 해로 이월할 수 있도록 허용합니다.
+                  {t('leavePolicy.carryOver.enableDescription')}
                 </p>
               </div>
               <Switch
@@ -296,7 +298,7 @@ export default function LeavePolicyPage() {
             {carryOverEnabled && (
               <div className="grid gap-6 md:grid-cols-2 border-t pt-6">
                 <div className="space-y-2">
-                  <Label htmlFor="maxCarryOver">최대 이월일수</Label>
+                  <Label htmlFor="maxCarryOver">{t('leavePolicy.carryOver.maxDays')}</Label>
                   <div className="flex items-center gap-2">
                     <Input
                       id="maxCarryOver"
@@ -307,30 +309,30 @@ export default function LeavePolicyPage() {
                       onChange={(e) => setMaxCarryOverDays(Number(e.target.value))}
                       className="w-24"
                     />
-                    <span className="text-sm text-muted-foreground">일</span>
+                    <span className="text-sm text-muted-foreground">{t('leavePolicy.carryOver.maxDaysUnit')}</span>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    이월 가능한 최대 연차 일수 (0 = 무제한)
+                    {t('leavePolicy.carryOver.maxDaysDescription')}
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="carryOverExpiry">이월 연차 만료 기간</Label>
+                  <Label htmlFor="carryOverExpiry">{t('leavePolicy.carryOver.expiry')}</Label>
                   <Select
                     value={carryOverExpiry}
                     onValueChange={setCarryOverExpiry}
                   >
                     <SelectTrigger className="w-48" id="carryOverExpiry">
-                      <SelectValue placeholder="만료 기간 선택" />
+                      <SelectValue placeholder={t('leavePolicy.carryOver.expiryPlaceholder')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="3">3개월</SelectItem>
-                      <SelectItem value="6">6개월</SelectItem>
-                      <SelectItem value="12">12개월</SelectItem>
+                      <SelectItem value="3">{t('leavePolicy.carryOver.expiryMonths3')}</SelectItem>
+                      <SelectItem value="6">{t('leavePolicy.carryOver.expiryMonths6')}</SelectItem>
+                      <SelectItem value="12">{t('leavePolicy.carryOver.expiryMonths12')}</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">
-                    이월된 연차가 만료되는 기간
+                    {t('leavePolicy.carryOver.expiryDescription')}
                   </p>
                 </div>
               </div>
