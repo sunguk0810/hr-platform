@@ -13,6 +13,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { FileCheck, Plus, Search, AlertCircle, RefreshCw } from 'lucide-react';
 import {
   useApprovalList,
@@ -561,16 +568,20 @@ export default function ApprovalListPage() {
                   className="pl-9 w-[200px]"
                 />
               </div>
-              <select
+              <Select
                 value={searchState.type}
-                onChange={(e) => setType(e.target.value as ApprovalType | '')}
-                className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                onValueChange={(value) => setType(value as ApprovalType | '')}
               >
-                <option value="">{t('approvalListPage.allTypes')}</option>
-                {Object.entries(APPROVAL_TYPE_KEYS).map(([value, key]) => (
-                  <option key={value} value={value}>{t(key)}</option>
-                ))}
-              </select>
+                <SelectTrigger className="h-10 w-[200px]">
+                  <SelectValue placeholder={t('approvalListPage.allTypes')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">{t('approvalListPage.allTypes')}</SelectItem>
+                  {Object.entries(APPROVAL_TYPE_KEYS).map(([value, key]) => (
+                    <SelectItem key={value} value={value}>{t(key)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardHeader>

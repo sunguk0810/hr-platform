@@ -84,7 +84,7 @@ public class ApprovalTemplateServiceImpl implements ApprovalTemplateService {
     @Override
     public List<ApprovalTemplateResponse> getAll() {
         UUID tenantId = TenantContext.getCurrentTenant();
-        List<ApprovalTemplate> templates = approvalTemplateRepository.findAllByTenantId(tenantId);
+        List<ApprovalTemplate> templates = approvalTemplateRepository.findAllByTenantIdWithLines(tenantId);
 
         return templates.stream()
             .map(ApprovalTemplateResponse::from)
@@ -94,7 +94,7 @@ public class ApprovalTemplateServiceImpl implements ApprovalTemplateService {
     @Override
     public List<ApprovalTemplateResponse> getActive() {
         UUID tenantId = TenantContext.getCurrentTenant();
-        List<ApprovalTemplate> templates = approvalTemplateRepository.findActiveByTenantId(tenantId);
+        List<ApprovalTemplate> templates = approvalTemplateRepository.findActiveByTenantIdWithLines(tenantId);
 
         return templates.stream()
             .map(ApprovalTemplateResponse::from)
@@ -104,7 +104,7 @@ public class ApprovalTemplateServiceImpl implements ApprovalTemplateService {
     @Override
     public List<ApprovalTemplateResponse> getByDocumentType(String documentType) {
         UUID tenantId = TenantContext.getCurrentTenant();
-        List<ApprovalTemplate> templates = approvalTemplateRepository.findByTenantIdAndDocumentType(
+        List<ApprovalTemplate> templates = approvalTemplateRepository.findByTenantIdAndDocumentTypeWithLines(
             tenantId, documentType);
 
         return templates.stream()

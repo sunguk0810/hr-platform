@@ -17,6 +17,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { FileText, Search, ArrowLeft, ChevronRight } from 'lucide-react';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -135,18 +142,19 @@ export default function ApplicationListPage() {
           </div>
 
           {/* Job Filter */}
-          <select
-            value={searchState.jobPostingId}
-            onChange={(e) => setJobPostingId(e.target.value)}
-            className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-          >
-            <option value="">{t('application.allPostings')}</option>
-            {jobs.map((job) => (
-              <option key={job.id} value={job.id}>
-                [{job.jobCode}] {job.title}
-              </option>
-            ))}
-          </select>
+          <Select value={searchState.jobPostingId} onValueChange={setJobPostingId}>
+            <SelectTrigger className="w-full h-10">
+              <SelectValue placeholder={t('application.allPostings')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">{t('application.allPostings')}</SelectItem>
+              {jobs.map((job) => (
+                <SelectItem key={job.id} value={job.id}>
+                  [{job.jobCode}] {job.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
           {/* Search */}
           <div className="relative">
@@ -350,18 +358,19 @@ export default function ApplicationListPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle>{t('application.listTitle')}</CardTitle>
             <div className="flex flex-wrap gap-2">
-              <select
-                value={searchState.jobPostingId}
-                onChange={(e) => setJobPostingId(e.target.value)}
-                className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-              >
-                <option value="">{t('application.allPostings')}</option>
-                {jobs.map((job) => (
-                  <option key={job.id} value={job.id}>
-                    [{job.jobCode}] {job.title}
-                  </option>
-                ))}
-              </select>
+              <Select value={searchState.jobPostingId} onValueChange={setJobPostingId}>
+                <SelectTrigger className="h-10 w-[220px]">
+                  <SelectValue placeholder={t('application.allPostings')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">{t('application.allPostings')}</SelectItem>
+                  {jobs.map((job) => (
+                    <SelectItem key={job.id} value={job.id}>
+                      [{job.jobCode}] {job.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input

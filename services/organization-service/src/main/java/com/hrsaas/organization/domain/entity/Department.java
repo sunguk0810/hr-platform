@@ -3,6 +3,7 @@ package com.hrsaas.organization.domain.entity;
 import com.hrsaas.common.entity.TenantAwareEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +31,7 @@ public class Department extends TenantAwareEntity {
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
     @OrderBy("sortOrder ASC")
+    @BatchSize(size = 50)  // Fetch up to 50 children collections in one query per level
     private List<Department> children = new ArrayList<>();
 
     @Column(name = "level", nullable = false)
