@@ -103,6 +103,18 @@ export const CustomClassName: Story = {
   },
 };
 
+export const AnimationDemo: Story = {
+  args: {
+    icon: Users,
+    title: '애니메이션 데모',
+    description: '아이콘이 회전하며 나타나고, 텍스트가 순차적으로 페이드됩니다.',
+    action: {
+      label: '다시 보기',
+      onClick: () => window.location.reload(),
+    },
+  },
+};
+
 // All icons example
 export const AllIcons: StoryObj = {
   render: () => (

@@ -96,17 +96,34 @@ describe('EmptyState', () => {
   });
 
   it('should render description with muted styling', () => {
-    const { container } = render(
+    render(
       <EmptyState title="Empty" description="Some description" />
     );
-    const description = container.querySelector('.text-muted-foreground');
-    expect(description).toBeInTheDocument();
-    expect(description).toHaveTextContent('Some description');
+    expect(screen.getByText('Some description')).toHaveClass('text-muted-foreground');
   });
 
   it('should not render description element when not provided', () => {
     const { container } = render(<EmptyState title="Empty" />);
     const paragraphs = container.querySelectorAll('p');
     expect(paragraphs.length).toBe(0);
+  });
+
+  it('should render static fallback when prefers-reduced-motion is set', () => {
+    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+      matches: query === '(prefers-reduced-motion: reduce)',
+      media: query,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      onchange: null,
+      dispatchEvent: vi.fn(),
+    }));
+
+    const { container } = render(<EmptyState title="Reduced Motion" />);
+    expect(screen.getByText('Reduced Motion')).toBeInTheDocument();
+    // Static fallback should not have motion wrappers
+    const iconContainer = container.querySelector('.rounded-full.bg-muted');
+    expect(iconContainer).toBeInTheDocument();
   });
 });

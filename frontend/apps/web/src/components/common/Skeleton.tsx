@@ -7,7 +7,14 @@ interface SkeletonProps {
 export function Skeleton({ className }: SkeletonProps) {
   return (
     <div
-      className={cn('animate-pulse rounded-md bg-muted', className)}
+      className={cn(
+        'relative overflow-hidden rounded-md bg-muted',
+        'before:absolute before:inset-0',
+        'before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent',
+        'dark:before:via-white/10',
+        'before:animate-shimmer',
+        className
+      )}
     />
   );
 }
