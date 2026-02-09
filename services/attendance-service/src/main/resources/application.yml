@@ -44,6 +44,13 @@ jwt:
   access-token-expiry: 1800
   refresh-token-expiry: 604800
 
+feign:
+  client:
+    tenant-service:
+      url: ${TENANT_SERVICE_URL:http://localhost:8082}
+    employee-service:
+      url: ${EMPLOYEE_SERVICE_URL:http://localhost:8084}
+
 logging:
   level:
     com.hrsaas: DEBUG
