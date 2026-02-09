@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Check, X, Clock, ChevronRight, AlertCircle } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -31,12 +32,12 @@ const statusColors: Record<ApprovalLineStatus, string> = {
   SKIPPED: 'bg-gray-100 text-gray-400 border-gray-200',
 };
 
-const statusLabels: Record<ApprovalLineStatus, string> = {
-  WAITING: '대기',
-  CURRENT: '진행 중',
-  APPROVED: '승인',
-  REJECTED: '반려',
-  SKIPPED: '건너뜀',
+const statusLabelKeys: Record<ApprovalLineStatus, string> = {
+  WAITING: 'approvalStepIndicator.waiting',
+  CURRENT: 'approvalStepIndicator.current',
+  APPROVED: 'approvalStepIndicator.approved',
+  REJECTED: 'approvalStepIndicator.rejected',
+  SKIPPED: 'approvalStepIndicator.skipped',
 };
 
 function getInitials(name: string) {
@@ -53,6 +54,7 @@ export function ApprovalStepIndicator({
   compact = false,
   className,
 }: ApprovalStepIndicatorProps) {
+  const { t } = useTranslation('approval');
   const sortedSteps = [...steps].sort((a, b) => a.order - b.order);
 
   if (compact) {
@@ -76,7 +78,7 @@ export function ApprovalStepIndicator({
                   <div className="text-center">
                     <p className="font-medium">{step.approverName}</p>
                     <p className="text-xs text-muted-foreground">
-                      {statusLabels[step.status]}
+                      {t(statusLabelKeys[step.status])}
                     </p>
                   </div>
                 </TooltipContent>
@@ -153,7 +155,7 @@ export function ApprovalStepIndicator({
                     statusColors[step.status]
                   )}
                 >
-                  {statusLabels[step.status]}
+                  {t(statusLabelKeys[step.status])}
                 </span>
               </div>
 

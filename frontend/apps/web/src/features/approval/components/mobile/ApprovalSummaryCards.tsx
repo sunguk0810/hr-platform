@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Clock, CheckCircle2, XCircle, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -24,11 +25,13 @@ export function ApprovalSummaryCards({
   draft,
   onItemClick,
 }: ApprovalSummaryCardsProps) {
+  const { t } = useTranslation('approval');
+
   const items: (SummaryItem & { type: 'pending' | 'approved' | 'rejected' | 'draft' })[] = [
     {
       type: 'pending',
       icon: <Clock className="h-5 w-5" />,
-      label: '결재 대기',
+      label: t('approvalSummaryCards.pending'),
       value: pending,
       color: 'text-orange-500',
       bgColor: 'bg-orange-50 dark:bg-orange-950',
@@ -36,7 +39,7 @@ export function ApprovalSummaryCards({
     {
       type: 'draft',
       icon: <FileText className="h-5 w-5" />,
-      label: '임시저장',
+      label: t('approvalSummaryCards.draft'),
       value: draft,
       color: 'text-blue-500',
       bgColor: 'bg-blue-50 dark:bg-blue-950',
@@ -44,7 +47,7 @@ export function ApprovalSummaryCards({
     {
       type: 'approved',
       icon: <CheckCircle2 className="h-5 w-5" />,
-      label: '승인',
+      label: t('approvalSummaryCards.approved'),
       value: approved,
       color: 'text-green-500',
       bgColor: 'bg-green-50 dark:bg-green-950',
@@ -52,7 +55,7 @@ export function ApprovalSummaryCards({
     {
       type: 'rejected',
       icon: <XCircle className="h-5 w-5" />,
-      label: '반려',
+      label: t('approvalSummaryCards.rejected'),
       value: rejected,
       color: 'text-red-500',
       bgColor: 'bg-red-50 dark:bg-red-950',

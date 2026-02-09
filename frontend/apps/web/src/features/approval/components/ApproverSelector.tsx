@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -36,6 +37,7 @@ export function ApproverSelector({
   onSearch,
   className,
 }: ApproverSelectorProps) {
+  const { t } = useTranslation('approval');
   const [keyword, setKeyword] = React.useState('');
   const [results, setResults] = React.useState<ApproverOption[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -96,20 +98,20 @@ export function ApproverSelector({
             </span>
           </div>
         ) : (
-          <span className="text-muted-foreground">결재자 선택</span>
+          <span className="text-muted-foreground">{t('approverSelector.selectApprover')}</span>
         )}
       </Button>
 
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>결재자 선택</DialogTitle>
+            <DialogTitle>{t('approverSelector.selectApprover')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="이름 또는 부서로 검색..."
+                placeholder={t('approverSelector.searchPlaceholder')}
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 className="pl-9"
@@ -125,8 +127,8 @@ export function ApproverSelector({
               ) : results.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   {keyword
-                    ? '검색 결과가 없습니다'
-                    : '이름 또는 부서를 검색하세요'}
+                    ? t('common.noSearchResults')
+                    : t('common.searchByNameOrDept')}
                 </div>
               ) : (
                 <div className="space-y-1">
@@ -184,6 +186,7 @@ export function MultiApproverSelector({
   maxSelections,
   className,
 }: MultiApproverSelectorProps) {
+  const { t } = useTranslation('approval');
   const [keyword, setKeyword] = React.useState('');
   const [results, setResults] = React.useState<ApproverOption[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -246,22 +249,22 @@ export function MultiApproverSelector({
         onClick={() => onOpenChange(true)}
       >
         {value.length > 0 ? (
-          <span>{value.length}명 선택됨</span>
+          <span>{t('approverSelector.selectedCount', { count: value.length })}</span>
         ) : (
-          <span className="text-muted-foreground">결재자 선택</span>
+          <span className="text-muted-foreground">{t('approverSelector.selectApprover')}</span>
         )}
       </Button>
 
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>결재자 선택</DialogTitle>
+            <DialogTitle>{t('approverSelector.selectApprover')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="이름 또는 부서로 검색..."
+                placeholder={t('approverSelector.searchPlaceholder')}
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 className="pl-9"
@@ -298,8 +301,8 @@ export function MultiApproverSelector({
               ) : results.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   {keyword
-                    ? '검색 결과가 없습니다'
-                    : '이름 또는 부서를 검색하세요'}
+                    ? t('common.noSearchResults')
+                    : t('common.searchByNameOrDept')}
                 </div>
               ) : (
                 <div className="space-y-1">
@@ -349,10 +352,10 @@ export function MultiApproverSelector({
                 variant="outline"
                 onClick={() => onOpenChange(false)}
               >
-                취소
+                {t('common.cancel')}
               </Button>
               <Button type="button" onClick={handleConfirm}>
-                선택 ({selected.length}명)
+                {t('approverSelector.confirmSelection', { count: selected.length })}
               </Button>
             </div>
           </div>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -66,6 +67,7 @@ const STATUS_COLORS: Record<DelegationRuleStatus, string> = {
 };
 
 export default function DelegationRulesPage() {
+  const { t } = useTranslation('approval');
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
@@ -94,13 +96,13 @@ export default function DelegationRulesPage() {
     try {
       await toggleStatusMutation.mutateAsync(rule.id);
       toast({
-        title: '상태 변경 완료',
-        description: `규칙이 ${rule.status === 'ACTIVE' ? '비활성화' : '활성화'}되었습니다.`,
+        title: t('delegationRulesPage.statusChangeSuccess'),
+        description: t('delegationRulesPage.statusChangeSuccessDesc', { status: rule.status === 'ACTIVE' ? t('common.deactivate') : t('common.activate') }),
       });
     } catch {
       toast({
-        title: '상태 변경 실패',
-        description: '규칙 상태 변경 중 오류가 발생했습니다.',
+        title: t('delegationRulesPage.statusChangeFailure'),
+        description: t('delegationRulesPage.statusChangeFailureDesc'),
         variant: 'destructive',
       });
     }
@@ -112,14 +114,14 @@ export default function DelegationRulesPage() {
     try {
       await deleteMutation.mutateAsync(deletingRule.id);
       toast({
-        title: '삭제 완료',
-        description: '위임전결 규칙이 삭제되었습니다.',
+        title: t('delegationRulesPage.deleteSuccess'),
+        description: t('delegationRulesPage.deleteSuccessDesc'),
       });
       setDeletingRule(null);
     } catch {
       toast({
-        title: '삭제 실패',
-        description: '규칙 삭제 중 오류가 발생했습니다.',
+        title: t('delegationRulesPage.deleteFailure'),
+        description: t('delegationRulesPage.deleteFailureDesc'),
         variant: 'destructive',
       });
     }
@@ -153,9 +155,9 @@ export default function DelegationRulesPage() {
       <ConfirmDialog
         open={!!deletingRule}
         onOpenChange={(open) => !open && setDeletingRule(null)}
-        title="위임전결 규칙 삭제"
-        description={`"${deletingRule?.name}" 규칙을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`}
-        confirmLabel="삭제"
+        title={t('delegationRulesPage.deleteTitle')}
+        description={t('delegationRulesPage.deleteConfirm', { name: deletingRule?.name })}
+        confirmLabel={t('common.delete')}
         variant="destructive"
         onConfirm={handleDelete}
         isLoading={deleteMutation.isPending}
@@ -171,12 +173,12 @@ export default function DelegationRulesPage() {
           {/* Mobile Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold">위임전결 규칙</h1>
-              <p className="text-sm text-muted-foreground">결재 위임 및 전결 규칙 설정</p>
+              <h1 className="text-xl font-bold">{t('delegationRulesPage.mobileTitle')}</h1>
+              <p className="text-sm text-muted-foreground">{t('delegationRulesPage.mobileDescription')}</p>
             </div>
             <Button size="sm" onClick={() => setIsDialogOpen(true)}>
               <Plus className="mr-1 h-4 w-4" />
-              추가
+              {t('delegationRulesPage.addShort')}
             </Button>
           </div>
 
@@ -190,7 +192,7 @@ export default function DelegationRulesPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              전체
+              {t('delegationRulesPage.allFilter')}
             </button>
             <button
               onClick={() => setStatus('ACTIVE')}
@@ -200,7 +202,7 @@ export default function DelegationRulesPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              활성
+              {t('delegationRulesPage.activeFilter')}
             </button>
             <button
               onClick={() => setStatus('INACTIVE')}
@@ -210,7 +212,7 @@ export default function DelegationRulesPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              비활성
+              {t('delegationRulesPage.inactiveFilter')}
             </button>
           </div>
 
@@ -222,11 +224,11 @@ export default function DelegationRulesPage() {
           ) : rules.length === 0 ? (
             <div className="bg-card rounded-xl border p-8 text-center">
               <Scale className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-              <p className="font-medium">위임전결 규칙 없음</p>
-              <p className="text-sm text-muted-foreground mt-1">등록된 규칙이 없습니다.</p>
+              <p className="font-medium">{t('delegationRulesPage.emptyTitle')}</p>
+              <p className="text-sm text-muted-foreground mt-1">{t('delegationRulesPage.mobileEmptyDescription')}</p>
               <Button className="mt-4" onClick={() => setIsDialogOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
-                규칙 추가
+                {t('delegationRulesPage.addRule')}
               </Button>
             </div>
           ) : (
@@ -238,7 +240,7 @@ export default function DelegationRulesPage() {
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-xs text-muted-foreground">#{rule.priority}</span>
                         <Badge className={cn(STATUS_COLORS[rule.status], 'text-xs')}>
-                          {rule.status === 'ACTIVE' ? '활성' : '비활성'}
+                          {rule.status === 'ACTIVE' ? t('delegationRulesPage.activeFilter') : t('delegationRulesPage.inactiveFilter')}
                         </Badge>
                       </div>
                       <p className="font-medium">{rule.name}</p>
@@ -252,7 +254,7 @@ export default function DelegationRulesPage() {
 
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground">위임자:</span>
+                      <span className="text-muted-foreground">{t('delegationRulesPage.delegatorLabel')}</span>
                       <span>{rule.delegatorName}</span>
                       {rule.delegatorDepartment && (
                         <span className="text-muted-foreground">({rule.delegatorDepartment})</span>
@@ -268,7 +270,7 @@ export default function DelegationRulesPage() {
                     </div>
                     {(rule.validFrom || rule.validTo) && (
                       <p className="text-xs text-muted-foreground">
-                        기간: {rule.validFrom || '-'} ~ {rule.validTo || '-'}
+                        {t('delegationRulesPage.periodLabel')} {rule.validFrom || '-'} ~ {rule.validTo || '-'}
                       </p>
                     )}
                   </div>
@@ -281,7 +283,7 @@ export default function DelegationRulesPage() {
                       onClick={() => handleEdit(rule)}
                     >
                       <Edit className="mr-1 h-4 w-4" />
-                      수정
+                      {t('common.edit')}
                     </Button>
                     <Button
                       variant="outline"
@@ -315,24 +317,24 @@ export default function DelegationRulesPage() {
   return (
     <>
       <PageHeader
-        title="위임전결 규칙 관리"
-        description="결재 위임 및 전결 규칙을 설정합니다."
+        title={t('delegationRulesPage.title')}
+        description={t('delegationRulesPage.desktopDescription')}
         actions={
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => refetch()}>
               <RefreshCw className="mr-2 h-4 w-4" />
-              새로고침
+              {t('delegationRulesPage.refresh')}
             </Button>
             <Button
               variant={showFilters ? 'secondary' : 'outline'}
               onClick={() => setShowFilters(!showFilters)}
             >
               <Filter className="mr-2 h-4 w-4" />
-              필터
+              {t('delegationRulesPage.filterButton')}
             </Button>
             <Button onClick={() => setIsDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
-              규칙 추가
+              {t('delegationRulesPage.addRule')}
             </Button>
           </div>
         }
@@ -342,12 +344,12 @@ export default function DelegationRulesPage() {
       {showFilters && (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-base">검색 필터</CardTitle>
+            <CardTitle className="text-base">{t('delegationRulesPage.searchFilter')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               <div className="space-y-2">
-                <label className="text-sm font-medium">상태</label>
+                <label className="text-sm font-medium">{t('delegationRulesPage.statusFilter')}</label>
                 <Select
                   value={searchState.status || 'all'}
                   onValueChange={(value) =>
@@ -355,18 +357,18 @@ export default function DelegationRulesPage() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="전체" />
+                    <SelectValue placeholder={t('delegationRulesPage.allFilter')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">전체</SelectItem>
-                    <SelectItem value="ACTIVE">활성</SelectItem>
-                    <SelectItem value="INACTIVE">비활성</SelectItem>
+                    <SelectItem value="all">{t('delegationRulesPage.allFilter')}</SelectItem>
+                    <SelectItem value="ACTIVE">{t('delegationRulesPage.activeFilter')}</SelectItem>
+                    <SelectItem value="INACTIVE">{t('delegationRulesPage.inactiveFilter')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">조건 유형</label>
+                <label className="text-sm font-medium">{t('delegationRulesPage.conditionTypeFilter')}</label>
                 <Select
                   value={searchState.conditionType || 'all'}
                   onValueChange={(value) =>
@@ -374,10 +376,10 @@ export default function DelegationRulesPage() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="전체" />
+                    <SelectValue placeholder={t('delegationRulesPage.allFilter')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">전체</SelectItem>
+                    <SelectItem value="all">{t('delegationRulesPage.allFilter')}</SelectItem>
                     {Object.entries(DELEGATION_RULE_CONDITION_LABELS).map(([value, label]) => (
                       <SelectItem key={value} value={value}>
                         {label}
@@ -390,7 +392,7 @@ export default function DelegationRulesPage() {
 
             <div className="flex justify-end gap-2 mt-4">
               <Button variant="outline" onClick={resetFilters}>
-                초기화
+                {t('delegationRulesPage.resetFilter')}
               </Button>
             </div>
           </CardContent>
@@ -402,7 +404,7 @@ export default function DelegationRulesPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Scale className="h-5 w-5" />
-            위임전결 규칙 목록
+            {t('delegationRulesPage.ruleListTitle')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -413,26 +415,26 @@ export default function DelegationRulesPage() {
           ) : rules.length === 0 ? (
             <EmptyState
               icon={Scale}
-              title="위임전결 규칙 없음"
-              description="등록된 위임전결 규칙이 없습니다."
+              title={t('delegationRulesPage.emptyTitle')}
+              description={t('delegationRulesPage.emptyDescription')}
               action={{
-                label: '규칙 추가',
+                label: t('delegationRulesPage.addRule'),
                 onClick: () => setIsDialogOpen(true)
               }}
             />
           ) : (
             <>
-              <Table aria-label="위임전결 규칙 목록">
+              <Table aria-label={t('delegationRulesPage.ruleListTitle')}>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[60px]" scope="col">우선순위</TableHead>
-                    <TableHead scope="col">규칙명</TableHead>
-                    <TableHead scope="col">위임자</TableHead>
-                    <TableHead scope="col">조건</TableHead>
-                    <TableHead scope="col">대상</TableHead>
-                    <TableHead scope="col">유효기간</TableHead>
-                    <TableHead className="w-[80px]" scope="col">상태</TableHead>
-                    <TableHead className="w-[60px]" scope="col"><span className="sr-only">작업</span></TableHead>
+                    <TableHead className="w-[60px]" scope="col">{t('delegationRulesPage.tablePriority')}</TableHead>
+                    <TableHead scope="col">{t('delegationRulesPage.tableRuleName')}</TableHead>
+                    <TableHead scope="col">{t('delegationRulesPage.tableDelegator')}</TableHead>
+                    <TableHead scope="col">{t('delegationRulesPage.tableCondition')}</TableHead>
+                    <TableHead scope="col">{t('delegationRulesPage.tableTarget')}</TableHead>
+                    <TableHead scope="col">{t('delegationRulesPage.tableValidPeriod')}</TableHead>
+                    <TableHead className="w-[80px]" scope="col">{t('delegationRulesPage.tableStatus')}</TableHead>
+                    <TableHead className="w-[60px]" scope="col"><span className="sr-only">{t('common:actions')}</span></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -476,7 +478,7 @@ export default function DelegationRulesPage() {
                             {rule.validFrom || '-'} ~ {rule.validTo || '-'}
                           </span>
                         ) : (
-                          <span className="text-sm text-muted-foreground">무기한</span>
+                          <span className="text-sm text-muted-foreground">{t('delegationRulesPage.unlimited')}</span>
                         )}
                       </TableCell>
                       <TableCell>
@@ -487,7 +489,7 @@ export default function DelegationRulesPage() {
                             disabled={toggleStatusMutation.isPending}
                           />
                           <Badge className={cn(STATUS_COLORS[rule.status])}>
-                            {rule.status === 'ACTIVE' ? '활성' : '비활성'}
+                            {rule.status === 'ACTIVE' ? t('delegationRulesPage.activeFilter') : t('delegationRulesPage.inactiveFilter')}
                           </Badge>
                         </div>
                       </TableCell>
@@ -501,7 +503,7 @@ export default function DelegationRulesPage() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => handleEdit(rule)}>
                               <Edit className="mr-2 h-4 w-4" />
-                              수정
+                              {t('common.edit')}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
@@ -509,7 +511,7 @@ export default function DelegationRulesPage() {
                               className="text-destructive"
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
-                              삭제
+                              {t('common.delete')}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>

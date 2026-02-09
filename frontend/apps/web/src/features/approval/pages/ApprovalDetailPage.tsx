@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { useQueryClient } from '@tanstack/react-query';
@@ -61,15 +62,23 @@ import {
 } from '../hooks/useApprovals';
 import { useAuthStore } from '@/stores/authStore';
 
-const APPROVAL_TYPE_LABELS: Record<string, string> = {
-  LEAVE_REQUEST: '휴가신청',
-  EXPENSE: '경비청구',
-  OVERTIME: '초과근무',
-  PERSONNEL: '인사관련',
-  GENERAL: '일반기안',
+const APPROVAL_TYPE_KEYS: Record<string, string> = {
+  LEAVE_REQUEST: 'type.leaveRequest',
+  EXPENSE: 'type.expense',
+  OVERTIME: 'type.overtime',
+  PERSONNEL: 'type.personnel',
+  GENERAL: 'type.general',
+};
+
+const STEP_STATUS_KEYS: Record<string, string> = {
+  APPROVED: 'approvalStepIndicator.approved',
+  REJECTED: 'approvalStepIndicator.rejected',
+  WAITING: 'approvalStepIndicator.waiting',
+  SKIPPED: 'approvalStepIndicator.skipped',
 };
 
 export default function ApprovalDetailPage() {
+  const { t } = useTranslation('approval');
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -189,10 +198,10 @@ export default function ApprovalDetailPage() {
   if (isError || !approval) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <p className="text-muted-foreground">결재 문서를 찾을 수 없습니다.</p>
+        <p className="text-muted-foreground">{t('approvalDetailPage.notFound')}</p>
         <Button variant="outline" onClick={() => navigate('/approvals')}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          목록으로
+          {t('common.backToList')}
         </Button>
       </div>
     );
@@ -212,6 +221,10 @@ export default function ApprovalDetailPage() {
   const canDirectApprove = approval.status === 'PENDING' && isCurrentApprover; // 실제로는 권한 체크 필요
   const canModifyLine = ['PENDING', 'IN_REVIEW'].includes(approval.status) && isRequester;
 
+  const getStepStatusLabel = (status: string) => {
+    return t(STEP_STATUS_KEYS[status] || 'approvalStepIndicator.waiting');
+  };
+
   // Dialogs render function (shared between mobile and desktop)
   const renderDialogs = () => (
     <>
@@ -219,26 +232,26 @@ export default function ApprovalDetailPage() {
       <Dialog open={isApproveDialogOpen} onOpenChange={setIsApproveDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>결재 승인</DialogTitle>
-            <DialogDescription>이 문서를 승인하시겠습니까?</DialogDescription>
+            <DialogTitle>{t('approvalActions.approveTitle')}</DialogTitle>
+            <DialogDescription>{t('approvalActions.approveDocConfirm')}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label>의견 (선택)</Label>
+              <Label>{t('approvalActions.commentOptionalShort')}</Label>
               <Textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                placeholder="승인 의견을 입력하세요."
+                placeholder={t('approvalActions.commentPlaceholder')}
                 rows={3}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsApproveDialogOpen(false)}>
-              취소
+              {t('common.cancel')}
             </Button>
             <Button onClick={handleApprove} disabled={approveMutation.isPending}>
-              {approveMutation.isPending ? '처리 중...' : '승인'}
+              {approveMutation.isPending ? t('common.processing') : t('common.approve')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -248,32 +261,32 @@ export default function ApprovalDetailPage() {
       <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>결재 반려</DialogTitle>
+            <DialogTitle>{t('approvalActions.rejectTitle')}</DialogTitle>
             <DialogDescription>
-              이 문서를 반려하시겠습니까? 반려 사유를 입력해주세요.
+              {t('approvalActions.rejectDocConfirm')}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label>반려 사유 *</Label>
+              <Label>{t('approvalActions.rejectReasonLabel')}</Label>
               <Textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                placeholder="반려 사유를 입력하세요."
+                placeholder={t('approvalActions.rejectReasonPlaceholder')}
                 rows={3}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>
-              취소
+              {t('common.cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={handleReject}
               disabled={!comment || rejectMutation.isPending}
             >
-              {rejectMutation.isPending ? '처리 중...' : '반려'}
+              {rejectMutation.isPending ? t('common.processing') : t('common.reject')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -283,23 +296,23 @@ export default function ApprovalDetailPage() {
       <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>결재 취소</DialogTitle>
+            <DialogTitle>{t('approvalDetailPage.cancelApproval')}</DialogTitle>
             <DialogDescription>
-              정말로 이 결재를 취소하시겠습니까?
+              {t('approvalDetailPage.cancelConfirm')}
               <br />
-              <span className="text-destructive">이 작업은 되돌릴 수 없습니다.</span>
+              <span className="text-destructive">{t('approvalDetailPage.cancelIrreversible')}</span>
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCancelDialogOpen(false)}>
-              닫기
+              {t('common.close')}
             </Button>
             <Button
               variant="destructive"
               onClick={handleCancel}
               disabled={cancelMutation.isPending}
             >
-              {cancelMutation.isPending ? '처리 중...' : '취소하기'}
+              {cancelMutation.isPending ? t('common.processing') : t('approvalDetailPage.cancelConfirmButton')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -361,12 +374,12 @@ export default function ApprovalDetailPage() {
             </button>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">{APPROVAL_TYPE_LABELS[approval.documentType]}</span>
+                <span className="text-xs text-muted-foreground">{t(APPROVAL_TYPE_KEYS[approval.documentType])}</span>
                 <ApprovalStatusBadge status={approval.status} />
                 {approval.urgency === 'HIGH' && (
                   <span className="text-xs text-red-500 flex items-center gap-0.5">
                     <AlertCircle className="h-3 w-3" />
-                    긴급
+                    {t('urgency.high')}
                   </span>
                 )}
               </div>
@@ -379,24 +392,24 @@ export default function ApprovalDetailPage() {
           <div className="bg-card rounded-2xl border p-4">
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
-                <p className="text-xs text-muted-foreground">기안자</p>
+                <p className="text-xs text-muted-foreground">{t('approvalDetailPage.drafter')}</p>
                 <p className="font-medium">{approval.drafterName}</p>
                 <p className="text-xs text-muted-foreground">{approval.drafterDepartmentName}</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">기안일</p>
+                <p className="text-xs text-muted-foreground">{t('approvalDetailPage.draftDate')}</p>
                 <p className="font-medium">{format(new Date(approval.createdAt), 'M월 d일', { locale: ko })}</p>
                 <p className="text-xs text-muted-foreground">{format(new Date(approval.createdAt), 'HH:mm')}</p>
               </div>
               {approval.dueDate && (
                 <div>
-                  <p className="text-xs text-muted-foreground">처리기한</p>
+                  <p className="text-xs text-muted-foreground">{t('approvalDetailPage.dueDate')}</p>
                   <p className="font-medium">{format(new Date(approval.dueDate), 'M월 d일', { locale: ko })}</p>
                 </div>
               )}
               {approval.completedAt && (
                 <div>
-                  <p className="text-xs text-muted-foreground">완료일</p>
+                  <p className="text-xs text-muted-foreground">{t('approvalDetailPage.completedDate')}</p>
                   <p className="font-medium text-green-600">{format(new Date(approval.completedAt), 'M월 d일', { locale: ko })}</p>
                 </div>
               )}
@@ -408,7 +421,7 @@ export default function ApprovalDetailPage() {
             <div className="bg-orange-50 dark:bg-orange-950 rounded-xl border border-orange-200 dark:border-orange-800 p-3">
               <div className="flex items-center gap-2 text-orange-700 dark:text-orange-300 mb-1">
                 <Undo2 className="h-4 w-4" />
-                <span className="text-sm font-medium">회수 사유</span>
+                <span className="text-sm font-medium">{t('approvalDetailPage.recallReason')}</span>
               </div>
               <p className="text-sm text-orange-800 dark:text-orange-200">{approval.recallReason}</p>
             </div>
@@ -416,7 +429,7 @@ export default function ApprovalDetailPage() {
 
           {/* Approval Line (Horizontal Scroll) */}
           <div className="bg-card rounded-2xl border p-4">
-            <h3 className="text-sm font-semibold mb-3">결재선</h3>
+            <h3 className="text-sm font-semibold mb-3">{t('approvalDetailPage.approvalLine')}</h3>
             <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
               {/* Requester */}
               <div className="flex-shrink-0 text-center">
@@ -424,7 +437,7 @@ export default function ApprovalDetailPage() {
                   {approval.drafterName.slice(0, 1)}
                 </div>
                 <p className="text-xs font-medium mt-1">{approval.drafterName}</p>
-                <p className="text-[10px] text-muted-foreground">기안자</p>
+                <p className="text-[10px] text-muted-foreground">{t('approvalLine.requester')}</p>
               </div>
               {/* Arrow */}
               <div className="flex-shrink-0 flex items-center text-muted-foreground">→</div>
@@ -444,9 +457,7 @@ export default function ApprovalDetailPage() {
                     </div>
                     <p className="text-xs font-medium mt-1">{step.approverName}</p>
                     <p className="text-[10px] text-muted-foreground">
-                      {step.status === 'APPROVED' ? '승인' :
-                       step.status === 'REJECTED' ? '반려' :
-                       step.status === 'WAITING' ? '대기' : '건너뜀'}
+                      {getStepStatusLabel(step.status)}
                     </p>
                   </div>
                   {idx < approval.approvalLines.length - 1 && (
@@ -465,7 +476,7 @@ export default function ApprovalDetailPage() {
             >
               <div className="flex items-center gap-2">
                 <FileText className="h-4 w-4 text-muted-foreground" />
-                <span className="font-semibold text-sm">문서 내용</span>
+                <span className="font-semibold text-sm">{t('approvalDetailPage.documentContent')}</span>
               </div>
               {isContentExpanded ? (
                 <ChevronUp className="h-4 w-4 text-muted-foreground" />
@@ -483,7 +494,7 @@ export default function ApprovalDetailPage() {
                   <div className="mt-4 pt-3 border-t">
                     <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
                       <Paperclip className="h-3 w-3" />
-                      첨부파일 ({approval.attachments.length})
+                      {t('approvalDetailPage.attachmentCount', { count: approval.attachments.length })}
                     </div>
                     <div className="space-y-2">
                       {approval.attachments.map((file) => (
@@ -509,7 +520,7 @@ export default function ApprovalDetailPage() {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <History className="h-4 w-4 text-muted-foreground" />
-                <span className="font-semibold text-sm">처리 이력</span>
+                <span className="font-semibold text-sm">{t('approvalDetailPage.approvalHistory')}</span>
               </div>
             </div>
             <div className="space-y-3">
@@ -519,7 +530,7 @@ export default function ApprovalDetailPage() {
                 </div>
                 <div className="flex-1">
                   <span className="font-medium">{approval.drafterName}</span>
-                  <span className="text-muted-foreground"> 기안</span>
+                  <span className="text-muted-foreground"> {t('approvalDetailPage.drafted')}</span>
                 </div>
               </div>
               {approval.approvalLines
@@ -538,12 +549,10 @@ export default function ApprovalDetailPage() {
                         'text-muted-foreground'
                       }>
                         {' '}
-                        {step.status === 'APPROVED' ? '승인' :
-                         step.status === 'REJECTED' ? '반려' :
-                         step.status === 'SKIPPED' ? '건너뜀' : '대기'}
+                        {getStepStatusLabel(step.status)}
                       </span>
                       {step.delegateName && (
-                        <span className="text-xs text-indigo-600 ml-1">(대결)</span>
+                        <span className="text-xs text-indigo-600 ml-1">{t('approvalDetailPage.delegateTag')}</span>
                       )}
                       {step.comment && (
                         <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">"{step.comment}"</p>
@@ -570,7 +579,7 @@ export default function ApprovalDetailPage() {
                   className="w-full flex items-center justify-center gap-2 py-2 text-sm text-muted-foreground mb-2"
                 >
                   <MoreHorizontal className="h-4 w-4" />
-                  {showMobileActions ? '추가 작업 닫기' : '추가 작업'}
+                  {showMobileActions ? t('approvalDetailPage.moreActionsClose') : t('approvalDetailPage.moreActions')}
                 </button>
               )}
 
@@ -585,7 +594,7 @@ export default function ApprovalDetailPage() {
                       className="text-orange-600"
                     >
                       <Undo2 className="mr-1 h-4 w-4" />
-                      회수
+                      {t('approvalDetailPage.recall')}
                     </Button>
                   )}
                   {canCancel && !canRecall && (
@@ -594,7 +603,7 @@ export default function ApprovalDetailPage() {
                       size="sm"
                       onClick={() => setIsCancelDialogOpen(true)}
                     >
-                      취소
+                      {t('approvalDetailPage.cancelAction')}
                     </Button>
                   )}
                   {canDelegate && (
@@ -605,7 +614,7 @@ export default function ApprovalDetailPage() {
                       className="text-indigo-600"
                     >
                       <UserCheck className="mr-1 h-4 w-4" />
-                      대결
+                      {t('approvalDetailPage.delegate')}
                     </Button>
                   )}
                   {canDirectApprove && (
@@ -616,7 +625,7 @@ export default function ApprovalDetailPage() {
                       className="text-teal-600"
                     >
                       <FastForward className="mr-1 h-4 w-4" />
-                      전결
+                      {t('approvalDetailPage.directApprove')}
                     </Button>
                   )}
                   {canModifyLine && (
@@ -627,7 +636,7 @@ export default function ApprovalDetailPage() {
                       className="text-blue-600"
                     >
                       <Pencil className="mr-1 h-4 w-4" />
-                      결재선 수정
+                      {t('approvalDetailPage.modifyLine')}
                     </Button>
                   )}
                 </div>
@@ -642,14 +651,14 @@ export default function ApprovalDetailPage() {
                     onClick={() => setIsRejectDialogOpen(true)}
                   >
                     <X className="mr-2 h-5 w-5" />
-                    반려
+                    {t('common.reject')}
                   </Button>
                   <Button
                     className="flex-1 h-12"
                     onClick={() => setIsApproveDialogOpen(true)}
                   >
                     <Check className="mr-2 h-5 w-5" />
-                    승인
+                    {t('common.approve')}
                   </Button>
                 </div>
               )}
@@ -666,13 +675,13 @@ export default function ApprovalDetailPage() {
   return (
     <>
       <PageHeader
-        title="결재 문서 상세"
-        description={`문서 번호: ${approval.documentNumber}`}
+        title={t('approvalDetailPage.title')}
+        description={t('approvalDetailPage.documentNumber', { number: approval.documentNumber })}
         actions={
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={() => navigate('/approvals')}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              목록으로
+              {t('common.backToList')}
             </Button>
             {canRecall && (
               <Button
@@ -681,12 +690,12 @@ export default function ApprovalDetailPage() {
                 className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
               >
                 <Undo2 className="mr-2 h-4 w-4" />
-                회수
+                {t('approvalDetailPage.recall')}
               </Button>
             )}
             {canCancel && !canRecall && (
               <Button variant="outline" onClick={() => setIsCancelDialogOpen(true)}>
-                취소
+                {t('approvalDetailPage.cancelAction')}
               </Button>
             )}
             {canDelegate && (
@@ -696,7 +705,7 @@ export default function ApprovalDetailPage() {
                 className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
               >
                 <UserCheck className="mr-2 h-4 w-4" />
-                대결
+                {t('approvalDetailPage.delegate')}
               </Button>
             )}
             {canDirectApprove && (
@@ -706,7 +715,7 @@ export default function ApprovalDetailPage() {
                 className="text-teal-600 hover:text-teal-700 hover:bg-teal-50"
               >
                 <FastForward className="mr-2 h-4 w-4" />
-                전결
+                {t('approvalDetailPage.directApprove')}
               </Button>
             )}
             {canModifyLine && (
@@ -716,7 +725,7 @@ export default function ApprovalDetailPage() {
                 className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
               >
                 <Pencil className="mr-2 h-4 w-4" />
-                결재선 수정
+                {t('approvalDetailPage.modifyLine')}
               </Button>
             )}
             {canApproveOrReject && (
@@ -727,11 +736,11 @@ export default function ApprovalDetailPage() {
                   onClick={() => setIsRejectDialogOpen(true)}
                 >
                   <X className="mr-2 h-4 w-4" />
-                  반려
+                  {t('common.reject')}
                 </Button>
                 <Button onClick={() => setIsApproveDialogOpen(true)}>
                   <Check className="mr-2 h-4 w-4" />
-                  승인
+                  {t('common.approve')}
                 </Button>
               </>
             )}
@@ -745,11 +754,11 @@ export default function ApprovalDetailPage() {
             <TabsList className="mb-4">
               <TabsTrigger value="document" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
-                문서 내용
+                {t('approvalDetailPage.tabDocument')}
               </TabsTrigger>
               <TabsTrigger value="history" className="flex items-center gap-2">
                 <History className="h-4 w-4" />
-                결재 이력
+                {t('approvalDetailPage.tabHistory')}
               </TabsTrigger>
             </TabsList>
 
@@ -759,11 +768,11 @@ export default function ApprovalDetailPage() {
                   <div className="space-y-1">
                     <CardTitle>{approval.title}</CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      {APPROVAL_TYPE_LABELS[approval.documentType]}
+                      {t(APPROVAL_TYPE_KEYS[approval.documentType])}
                       {approval.urgency === 'HIGH' && (
                         <span className="ml-2 text-red-500">
                           <AlertCircle className="inline h-4 w-4 mr-1" />
-                          긴급
+                          {t('urgency.high')}
                         </span>
                       )}
                     </p>
@@ -775,20 +784,20 @@ export default function ApprovalDetailPage() {
                     {/* Document Info */}
                     <div className="grid gap-4 md:grid-cols-2 pb-4 border-b">
                       <div>
-                        <Label className="text-muted-foreground">기안자</Label>
+                        <Label className="text-muted-foreground">{t('approvalDetailPage.drafter')}</Label>
                         <p className="text-sm mt-1">
                           {approval.drafterName} ({approval.drafterDepartmentName})
                         </p>
                       </div>
                       <div>
-                        <Label className="text-muted-foreground">기안일</Label>
+                        <Label className="text-muted-foreground">{t('approvalDetailPage.draftDate')}</Label>
                         <p className="text-sm mt-1">
                           {format(new Date(approval.createdAt), 'yyyy년 M월 d일 HH:mm', { locale: ko })}
                         </p>
                       </div>
                       {approval.dueDate && (
                         <div>
-                          <Label className="text-muted-foreground">처리기한</Label>
+                          <Label className="text-muted-foreground">{t('approvalDetailPage.dueDate')}</Label>
                           <p className="text-sm mt-1">
                             {format(new Date(approval.dueDate), 'yyyy년 M월 d일', { locale: ko })}
                           </p>
@@ -796,7 +805,7 @@ export default function ApprovalDetailPage() {
                       )}
                       {approval.completedAt && (
                         <div>
-                          <Label className="text-muted-foreground">완료일</Label>
+                          <Label className="text-muted-foreground">{t('approvalDetailPage.completedDate')}</Label>
                           <p className="text-sm mt-1">
                             {format(new Date(approval.completedAt), 'yyyy년 M월 d일 HH:mm', { locale: ko })}
                           </p>
@@ -804,7 +813,7 @@ export default function ApprovalDetailPage() {
                       )}
                       {approval.recalledAt && (
                         <div>
-                          <Label className="text-muted-foreground">회수일</Label>
+                          <Label className="text-muted-foreground">{t('approvalDetailPage.recalledDate')}</Label>
                           <p className="text-sm mt-1 text-orange-600">
                             {format(new Date(approval.recalledAt), 'yyyy년 M월 d일 HH:mm', { locale: ko })}
                           </p>
@@ -815,14 +824,14 @@ export default function ApprovalDetailPage() {
                     {/* Recall Reason */}
                     {approval.recallReason && (
                       <div className="rounded-lg bg-orange-50 border border-orange-200 p-4">
-                        <Label className="text-orange-700 text-sm font-medium">회수 사유</Label>
+                        <Label className="text-orange-700 text-sm font-medium">{t('approvalDetailPage.recallReason')}</Label>
                         <p className="text-sm mt-1 text-orange-800">{approval.recallReason}</p>
                       </div>
                     )}
 
                     {/* Document Content */}
                     <div>
-                      <Label className="text-muted-foreground">문서 내용</Label>
+                      <Label className="text-muted-foreground">{t('approvalDetailPage.documentContent')}</Label>
                       <div className="mt-2 p-4 rounded-lg bg-muted/50 whitespace-pre-wrap text-sm">
                         {approval.content}
                       </div>
@@ -831,7 +840,7 @@ export default function ApprovalDetailPage() {
                     {/* Attachments */}
                     {approval.attachments && approval.attachments.length > 0 && (
                       <div>
-                        <Label className="text-muted-foreground">첨부파일</Label>
+                        <Label className="text-muted-foreground">{t('approvalDetailPage.attachments')}</Label>
                         <div className="mt-2 space-y-2">
                           {approval.attachments.map((file) => (
                             <div
@@ -877,7 +886,7 @@ export default function ApprovalDetailPage() {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>결재선</CardTitle>
+              <CardTitle>{t('approvalDetailPage.approvalLine')}</CardTitle>
             </CardHeader>
             <CardContent>
               <ApprovalLine
@@ -891,14 +900,14 @@ export default function ApprovalDetailPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                <span>최근 이력</span>
+                <span>{t('approvalDetailPage.recentHistory')}</span>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setActiveTab('history')}
                   className="text-xs"
                 >
-                  전체보기
+                  {t('common.viewAll')}
                 </Button>
               </CardTitle>
             </CardHeader>
@@ -910,7 +919,7 @@ export default function ApprovalDetailPage() {
                   </div>
                   <div>
                     <span className="font-medium">{approval.drafterName}</span>
-                    님이 기안
+                    {t('approvalDetailPage.draftedBy')}
                   </div>
                 </div>
                 {approval.approvalLines
@@ -923,7 +932,7 @@ export default function ApprovalDetailPage() {
                       </div>
                       <div>
                         <span className="font-medium">{step.approverName}</span>
-                        님이{' '}
+                        {t('approvalDetailPage.personActionSuffix')}
                         <span
                           className={
                             step.status === 'APPROVED'
@@ -933,21 +942,15 @@ export default function ApprovalDetailPage() {
                               : 'text-muted-foreground'
                           }
                         >
-                          {step.status === 'APPROVED'
-                            ? '승인'
-                            : step.status === 'REJECTED'
-                            ? '반려'
-                            : step.status === 'SKIPPED'
-                            ? '건너뜀'
-                            : '대기'}
+                          {getStepStatusLabel(step.status)}
                         </span>
                         {step.delegateName && (
                           <span className="text-xs text-indigo-600 ml-1">
-                            (대결: {step.delegateName})
+                            {t('approvalDetailPage.delegateWithName', { name: step.delegateName })}
                           </span>
                         )}
                         {step.directApproved && (
-                          <span className="text-xs text-teal-600 ml-1">(전결)</span>
+                          <span className="text-xs text-teal-600 ml-1">{t('approvalDetailPage.directApproveTag')}</span>
                         )}
                         {step.comment && (
                           <p className="text-muted-foreground mt-1">"{step.comment}"</p>
@@ -963,7 +966,7 @@ export default function ApprovalDetailPage() {
           {approval.mode && approval.mode !== 'SEQUENTIAL' && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm">결재 모드</CardTitle>
+                <CardTitle className="text-sm">{t('approvalDetailPage.approvalMode')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <Badge variant="outline" className={
@@ -972,18 +975,18 @@ export default function ApprovalDetailPage() {
                   approval.mode === 'DIRECT' ? 'bg-teal-50 text-teal-700 border-teal-200' :
                   ''
                 }>
-                  {approval.mode === 'PARALLEL' ? '병렬결재' :
-                   approval.mode === 'CONSENSUS' ? '합의결재' :
-                   approval.mode === 'DIRECT' ? '전결' : approval.mode}
+                  {approval.mode === 'PARALLEL' ? t('mode.parallel') :
+                   approval.mode === 'CONSENSUS' ? t('mode.consensus') :
+                   approval.mode === 'DIRECT' ? t('mode.direct') : approval.mode}
                 </Badge>
                 {approval.mode === 'PARALLEL' && (
                   <p className="text-xs text-muted-foreground mt-2">
-                    모든 결재자에게 동시에 결재 요청이 전달됩니다.
+                    {t('approvalDetailPage.parallelModeDesc')}
                   </p>
                 )}
                 {approval.mode === 'CONSENSUS' && (
                   <p className="text-xs text-muted-foreground mt-2">
-                    합의자 의견 수집 후 최종 결재자가 결정합니다.
+                    {t('approvalDetailPage.consensusModeDesc')}
                   </p>
                 )}
               </CardContent>
@@ -996,7 +999,7 @@ export default function ApprovalDetailPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-sm">
                   <Link2 className="h-4 w-4" />
-                  연계 모듈 반영
+                  {t('approvalDetailPage.linkedModules')}
                 </CardTitle>
               </CardHeader>
               <CardContent>

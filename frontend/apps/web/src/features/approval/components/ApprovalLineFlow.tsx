@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import ReactFlow, {
   Node,
   Edge,
@@ -57,31 +58,31 @@ const statusColors: Record<ApprovalLineStatus, { bg: string; border: string; tex
   SKIPPED: { bg: 'bg-gray-50', border: 'border-gray-300', text: 'text-gray-400' },
 };
 
-const statusLabels: Record<ApprovalLineStatus, string> = {
-  WAITING: '대기',
-  CURRENT: '진행 중',
-  APPROVED: '승인',
-  REJECTED: '반려',
-  SKIPPED: '건너뜀',
+const statusLabelKeys: Record<ApprovalLineStatus, string> = {
+  WAITING: 'approvalStepIndicator.waiting',
+  CURRENT: 'approvalStepIndicator.current',
+  APPROVED: 'approvalStepIndicator.approved',
+  REJECTED: 'approvalStepIndicator.rejected',
+  SKIPPED: 'approvalStepIndicator.skipped',
 };
 
-const typeLabels: Record<string, string> = {
-  DRAFT: '기안',
-  APPROVAL: '결재',
-  AGREEMENT: '합의',
-  REFERENCE: '참조',
+const typeLabelKeys: Record<string, string> = {
+  DRAFT: 'stepType.draft',
+  APPROVAL: 'stepType.approval',
+  AGREEMENT: 'stepType.agreement',
+  REFERENCE: 'stepType.reference',
 };
 
-const executionTypeLabels: Record<ApprovalExecutionType, string> = {
-  SEQUENTIAL: '순차',
-  PARALLEL: '병렬',
-  AGREEMENT: '합의',
+const executionTypeLabelKeys: Record<ApprovalExecutionType, string> = {
+  SEQUENTIAL: 'executionType.sequential',
+  PARALLEL: 'executionType.parallel',
+  AGREEMENT: 'executionType.agreement',
 };
 
-const completionConditionLabels: Record<ParallelCompletionCondition, string> = {
-  ALL: '전원 승인',
-  ANY: '1인 승인',
-  MAJORITY: '과반수 승인',
+const completionConditionLabelKeys: Record<ParallelCompletionCondition, string> = {
+  ALL: 'completionCondition.all',
+  ANY: 'completionCondition.any',
+  MAJORITY: 'completionCondition.majorityApproval',
 };
 
 function getInitials(name: string) {
@@ -105,6 +106,7 @@ interface ApprovalLineNodeData extends ApprovalLineItem {
 }
 
 function ApprovalLineNode({ data }: { data: ApprovalLineNodeData }) {
+  const { t } = useTranslation('approval');
   const colors = statusColors[data.status];
   const isParallel = data.executionType === 'PARALLEL' || data.executionType === 'AGREEMENT';
   const isDelegated = data.delegatorName || data.isDelegated;
@@ -141,14 +143,14 @@ function ApprovalLineNode({ data }: { data: ApprovalLineNodeData }) {
         )}
         {/* 대결 표시 */}
         {isDelegated && (
-          <span className="absolute -right-1 -bottom-1 flex h-5 w-5 items-center justify-center rounded-full bg-indigo-500 text-[8px] text-white font-medium" title="대결">
-            대
+          <span className="absolute -right-1 -bottom-1 flex h-5 w-5 items-center justify-center rounded-full bg-indigo-500 text-[8px] text-white font-medium" title={t('approvalLineFlow.legendDelegate')}>
+            {t('approvalLineFlow.delegateShort')}
           </span>
         )}
         {/* 전결 표시 */}
         {isDirectApproved && (
-          <span className="absolute -right-1 -bottom-1 flex h-5 w-5 items-center justify-center rounded-full bg-teal-500 text-[8px] text-white font-medium" title="전결">
-            전
+          <span className="absolute -right-1 -bottom-1 flex h-5 w-5 items-center justify-center rounded-full bg-teal-500 text-[8px] text-white font-medium" title={t('approvalLineFlow.legendDirectApprove')}>
+            {t('approvalLineFlow.directApproveShort')}
           </span>
         )}
       </div>
@@ -162,31 +164,31 @@ function ApprovalLineNode({ data }: { data: ApprovalLineNodeData }) {
         {/* 대결 시 원 결재자 표시 */}
         {data.delegatorName && (
           <p className="text-[10px] text-indigo-600 truncate w-full">
-            (원: {data.delegatorName})
+            ({t('approvalLineFlow.originalApprover', { name: data.delegatorName })})
           </p>
         )}
       </div>
       <div className="flex flex-wrap items-center justify-center gap-1">
         <span className="rounded bg-muted px-1.5 py-0.5 text-[10px]">
-          {typeLabels[data.type]}
+          {t(typeLabelKeys[data.type])}
         </span>
         <span className={cn('rounded px-1.5 py-0.5 text-[10px] font-medium', colors.text, colors.bg)}>
-          {statusLabels[data.status]}
+          {t(statusLabelKeys[data.status])}
         </span>
         {isParallel && data.completionCondition && (
           <span className="rounded bg-purple-100 text-purple-700 px-1.5 py-0.5 text-[10px]">
-            {completionConditionLabels[data.completionCondition]}
+            {t(completionConditionLabelKeys[data.completionCondition])}
           </span>
         )}
         {/* 대결/전결 배지 */}
         {isDelegated && !isParallel && (
           <span className="rounded bg-indigo-100 text-indigo-700 px-1.5 py-0.5 text-[10px]">
-            대결
+            {t('approvalLineFlow.legendDelegate')}
           </span>
         )}
         {isDirectApproved && !isDelegated && (
           <span className="rounded bg-teal-100 text-teal-700 px-1.5 py-0.5 text-[10px]">
-            전결
+            {t('approvalLineFlow.legendDirectApprove')}
           </span>
         )}
       </div>
@@ -228,6 +230,7 @@ function ApprovalLineFlowInner({
   direction = 'horizontal',
   className,
 }: ApprovalLineFlowProps) {
+  const { t } = useTranslation('approval');
   const sortedSteps = useMemo(
     () => [...steps].sort((a, b) => a.order - b.order),
     [steps]
@@ -291,7 +294,7 @@ function ApprovalLineFlowInner({
           position: isHorizontal
             ? { x: currentPosition * nodeSpacing, y: 60 }
             : { x: 60, y: currentPosition * nodeSpacing },
-          data: { type: 'fork', label: executionTypeLabels[parallelGroup.executionType] },
+          data: { type: 'fork', label: t(executionTypeLabelKeys[parallelGroup.executionType]) },
           sourcePosition: isHorizontal ? Position.Right : Position.Bottom,
           targetPosition: isHorizontal ? Position.Left : Position.Top,
         });
@@ -372,7 +375,7 @@ function ApprovalLineFlowInner({
           position: isHorizontal
             ? { x: currentPosition * nodeSpacing, y: 60 }
             : { x: 60, y: currentPosition * nodeSpacing },
-          data: { type: 'join', label: completionConditionLabels[parallelGroup.condition] },
+          data: { type: 'join', label: t(completionConditionLabelKeys[parallelGroup.condition]) },
           sourcePosition: isHorizontal ? Position.Right : Position.Bottom,
           targetPosition: isHorizontal ? Position.Left : Position.Top,
         });
@@ -455,7 +458,7 @@ function ApprovalLineFlowInner({
     }
 
     return { nodes: flowNodes, edges: flowEdges };
-  }, [sortedSteps, parallelGroups, direction, onStepClick]);
+  }, [sortedSteps, parallelGroups, direction, onStepClick, t]);
 
   const [reactFlowNodes] = useNodesState(nodes);
   const [reactFlowEdges] = useEdgesState(edges);
@@ -487,29 +490,29 @@ function ApprovalLineFlowInner({
             <>
               <div className="flex items-center gap-1">
                 <div className="w-3 h-3 rounded-full bg-purple-500" />
-                <span>병렬/합의 결재</span>
+                <span>{t('approvalLineFlow.legendParallelAgreement')}</span>
               </div>
               <div className="flex items-center gap-1">
                 <div className="w-6 h-0.5 bg-purple-400" style={{ borderTop: '2px dashed #a855f7' }} />
-                <span>병렬 흐름</span>
+                <span>{t('approvalLineFlow.legendParallelFlow')}</span>
               </div>
             </>
           )}
           {hasDelegated && (
             <div className="flex items-center gap-1">
               <div className="w-3 h-3 rounded-full bg-indigo-500" />
-              <span>대결</span>
+              <span>{t('approvalLineFlow.legendDelegate')}</span>
             </div>
           )}
           {hasDirectApproved && (
             <div className="flex items-center gap-1">
               <div className="w-3 h-3 rounded-full bg-teal-500" />
-              <span>전결</span>
+              <span>{t('approvalLineFlow.legendDirectApprove')}</span>
             </div>
           )}
           <div className="flex items-center gap-1">
             <div className="w-6 h-0.5 bg-green-500" />
-            <span>완료</span>
+            <span>{t('approvalLineFlow.legendCompleted')}</span>
           </div>
         </div>
       )}

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import {
@@ -83,18 +84,18 @@ const actionColors: Record<ApprovalHistoryAction, string> = {
   DIRECT_APPROVED: 'bg-teal-500',
 };
 
-const actionLabels: Record<ApprovalHistoryAction, string> = {
-  DRAFTED: '기안 작성',
-  SUBMITTED: '결재 상신',
-  APPROVED: '승인',
-  REJECTED: '반려',
-  COMMENTED: '의견 작성',
-  RETURNED: '반송',
-  VIEWED: '열람',
-  MODIFIED: '수정',
-  RECALLED: '회수',
-  DELEGATED: '대결',
-  DIRECT_APPROVED: '전결',
+const actionLabelKeys: Record<ApprovalHistoryAction, string> = {
+  DRAFTED: 'historyAction.drafted',
+  SUBMITTED: 'historyAction.submitted',
+  APPROVED: 'historyAction.approved',
+  REJECTED: 'historyAction.rejected',
+  COMMENTED: 'historyAction.commented',
+  RETURNED: 'historyAction.returned',
+  VIEWED: 'historyAction.viewed',
+  MODIFIED: 'historyAction.modified',
+  RECALLED: 'historyAction.recalled',
+  DELEGATED: 'historyAction.delegated',
+  DIRECT_APPROVED: 'historyAction.directApproved',
 };
 
 // API 응답 액션 타입을 로컬 타입으로 변환
@@ -139,9 +140,11 @@ function getInitials(name: string) {
 export function ApprovalHistory({
   items,
   historyData,
-  title = '결재 이력',
+  title,
   className,
 }: ApprovalHistoryProps) {
+  const { t } = useTranslation('approval');
+  const displayTitle = title ?? t('approvalHistory.title');
   // API 응답이 있으면 변환, 아니면 직접 전달된 items 사용
   const historyItems = historyData
     ? convertApiHistoryToLocal(historyData)
@@ -155,11 +158,11 @@ export function ApprovalHistory({
     return (
       <Card className={className}>
         <CardHeader>
-          <CardTitle className="text-lg">{title}</CardTitle>
+          <CardTitle className="text-lg">{displayTitle}</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="py-8 text-center text-muted-foreground">
-            결재 이력이 없습니다.
+            {t('approvalHistory.empty')}
           </p>
         </CardContent>
       </Card>
@@ -169,7 +172,7 @@ export function ApprovalHistory({
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle className="text-lg">{title}</CardTitle>
+        <CardTitle className="text-lg">{displayTitle}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="relative space-y-0">
@@ -229,13 +232,13 @@ export function ApprovalHistory({
                     )}
                   >
                     {actionIcons[item.action]}
-                    {actionLabels[item.action]}
+                    {t(actionLabelKeys[item.action])}
                   </span>
 
                   {/* 대결 시 원 결재자 표시 */}
                   {item.delegatorName && (
                     <span className="text-xs text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">
-                      원 결재자: {item.delegatorName}
+                      {t('approvalHistory.originalApprover', { name: item.delegatorName })}
                     </span>
                   )}
                 </div>

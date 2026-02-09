@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -40,12 +41,6 @@ export interface ApprovalLineBuilderProps {
   className?: string;
 }
 
-const completionConditionLabels: Record<ParallelCompletionCondition, string> = {
-  ALL: '전원 승인',
-  ANY: '1인 승인',
-  MAJORITY: '과반수',
-};
-
 export function ApprovalLineBuilder({
   steps,
   onChange,
@@ -53,6 +48,7 @@ export function ApprovalLineBuilder({
   onSearchApprovers,
   className,
 }: ApprovalLineBuilderProps) {
+  const { t } = useTranslation('approval');
   const [draggingId, setDraggingId] = React.useState<string | null>(null);
   const [openSelectId, setOpenSelectId] = React.useState<string | null>(null);
 
@@ -199,11 +195,11 @@ export function ApprovalLineBuilder({
   const getTypeLabel = (type: ApproverType) => {
     switch (type) {
       case 'SPECIFIC':
-        return '특정인';
+        return t('approverType.specific');
       case 'ROLE':
-        return '역할';
+        return t('approverType.role');
       case 'DEPARTMENT_HEAD':
-        return '부서장';
+        return t('approverType.departmentHead');
     }
   };
 
@@ -311,17 +307,17 @@ export function ApprovalLineBuilder({
                 }
                 className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
               >
-                <option value="">역할 선택</option>
-                <option value="TEAM_LEADER">팀장</option>
-                <option value="DEPARTMENT_HEAD">부서장</option>
-                <option value="HR_MANAGER">인사담당자</option>
-                <option value="CFO">재무담당임원</option>
-                <option value="CEO">대표이사</option>
+                <option value="">{t('role.select')}</option>
+                <option value="TEAM_LEADER">{t('role.teamLeader')}</option>
+                <option value="DEPARTMENT_HEAD">{t('role.departmentHead')}</option>
+                <option value="HR_MANAGER">{t('role.hrManager')}</option>
+                <option value="CFO">{t('role.cfo')}</option>
+                <option value="CEO">{t('role.ceo')}</option>
               </select>
             )}
             {step.approverType === 'DEPARTMENT_HEAD' && (
               <div className="flex h-9 items-center px-3 text-sm text-muted-foreground">
-                기안자의 부서장이 자동 지정됩니다
+                {t('approvalLineBuilder.departmentHeadAuto')}
               </div>
             )}
           </div>
@@ -344,7 +340,7 @@ export function ApprovalLineBuilder({
   return (
     <div className={cn('space-y-4', className)}>
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium">결재선</h3>
+        <h3 className="text-sm font-medium">{t('approvalLineBuilder.title')}</h3>
         <div className="flex gap-2">
           <Button
             type="button"
@@ -354,7 +350,7 @@ export function ApprovalLineBuilder({
             disabled={steps.length >= maxSteps}
           >
             <Plus className="h-4 w-4 mr-1" />
-            결재자 추가
+            {t('approvalLineBuilder.addApprover')}
           </Button>
           <Button
             type="button"
@@ -365,7 +361,7 @@ export function ApprovalLineBuilder({
             className="text-purple-600 border-purple-200 hover:bg-purple-50"
           >
             <GitBranch className="h-4 w-4 mr-1" />
-            병렬 결재
+            {t('approvalLineBuilder.parallelApproval')}
           </Button>
           <Button
             type="button"
@@ -376,7 +372,7 @@ export function ApprovalLineBuilder({
             className="text-purple-600 border-purple-200 hover:bg-purple-50"
           >
             <GitMerge className="h-4 w-4 mr-1" />
-            합의
+            {t('approvalLineBuilder.agreement')}
           </Button>
         </div>
       </div>
@@ -385,9 +381,9 @@ export function ApprovalLineBuilder({
         <Card>
           <CardContent className="p-6 text-center text-muted-foreground">
             <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">결재자를 추가해주세요</p>
+            <p className="text-sm">{t('approvalLineBuilder.emptyTitle')}</p>
             <p className="text-xs mt-1">
-              순차 결재, 병렬 결재(동시 진행), 합의(협의 후 진행) 중 선택할 수 있습니다
+              {t('approvalLineBuilder.emptyDescription')}
             </p>
           </CardContent>
         </Card>
@@ -411,21 +407,21 @@ export function ApprovalLineBuilder({
                         {firstStep.executionType === 'PARALLEL' ? (
                           <>
                             <GitBranch className="h-3 w-3 mr-1" />
-                            병렬 결재
+                            {t('approvalLineBuilder.parallelApproval')}
                           </>
                         ) : (
                           <>
                             <GitMerge className="h-3 w-3 mr-1" />
-                            합의
+                            {t('approvalLineBuilder.agreement')}
                           </>
                         )}
                       </Badge>
                       <span className="text-xs text-muted-foreground">
-                        {group.steps.length}명이 동시에 결재
+                        {t('approvalLineBuilder.simultaneousApproval', { count: group.steps.length })}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground">완료 조건:</span>
+                      <span className="text-xs text-muted-foreground">{t('approvalLineBuilder.completionCondition')}</span>
                       <Select
                         value={firstStep.parallelCompletionCondition || 'ALL'}
                         onValueChange={(value) =>
@@ -438,10 +434,10 @@ export function ApprovalLineBuilder({
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="ALL">{completionConditionLabels.ALL}</SelectItem>
-                          <SelectItem value="ANY">{completionConditionLabels.ANY}</SelectItem>
+                          <SelectItem value="ALL">{t('completionCondition.all')}</SelectItem>
+                          <SelectItem value="ANY">{t('completionCondition.any')}</SelectItem>
                           <SelectItem value="MAJORITY">
-                            {completionConditionLabels.MAJORITY}
+                            {t('completionCondition.majority')}
                           </SelectItem>
                         </SelectContent>
                       </Select>
@@ -461,7 +457,7 @@ export function ApprovalLineBuilder({
                     disabled={steps.length >= maxSteps}
                   >
                     <Plus className="h-4 w-4 mr-1" />
-                    병렬 결재자 추가
+                    {t('approvalLineBuilder.addParallelApprover')}
                   </Button>
                 </div>
               );
@@ -475,7 +471,7 @@ export function ApprovalLineBuilder({
 
       {steps.length > 0 && steps.length < maxSteps && (
         <p className="text-xs text-muted-foreground text-center">
-          최대 {maxSteps}단계까지 추가할 수 있습니다 ({steps.length}/{maxSteps})
+          {t('approvalLineBuilder.maxSteps', { max: maxSteps, current: steps.length })}
         </p>
       )}
 
@@ -484,11 +480,11 @@ export function ApprovalLineBuilder({
         <div className="flex flex-wrap gap-4 pt-2 border-t text-xs text-muted-foreground">
           <div className="flex items-center gap-1">
             <GitBranch className="h-3 w-3 text-purple-500" />
-            <span>병렬 결재: 동시에 결재 진행</span>
+            <span>{t('approvalLineBuilder.legendParallel')}</span>
           </div>
           <div className="flex items-center gap-1">
             <GitMerge className="h-3 w-3 text-purple-500" />
-            <span>합의: 협의 후 결재 진행</span>
+            <span>{t('approvalLineBuilder.legendAgreement')}</span>
           </div>
         </div>
       )}

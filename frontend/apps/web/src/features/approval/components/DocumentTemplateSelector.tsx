@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -38,6 +39,7 @@ export function DocumentTemplateSelector({
   onSelect,
   className,
 }: DocumentTemplateSelectorProps) {
+  const { t } = useTranslation('approval');
   const [isOpen, setIsOpen] = React.useState(false);
   const [searchKeyword, setSearchKeyword] = React.useState('');
 
@@ -56,14 +58,14 @@ export function DocumentTemplateSelector({
   const groupedTemplates = React.useMemo(() => {
     const groups = new Map<string, DocumentTemplate[]>();
     filteredTemplates.forEach((template) => {
-      const category = template.category || '기타';
+      const category = template.category || t('documentTemplateSelector.categoryOther');
       if (!groups.has(category)) {
         groups.set(category, []);
       }
       groups.get(category)!.push(template);
     });
     return groups;
-  }, [filteredTemplates]);
+  }, [filteredTemplates, t]);
 
   const handleSelect = (template: DocumentTemplate) => {
     onSelect(template);
@@ -81,21 +83,21 @@ export function DocumentTemplateSelector({
           <Button variant="outline" className="w-full justify-between">
             <div className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
-              {selectedTemplate ? selectedTemplate.name : '문서 양식 선택'}
+              {selectedTemplate ? selectedTemplate.name : t('documentTemplateSelector.title')}
             </div>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </DialogTrigger>
         <DialogContent className="max-w-2xl max-h-[80vh]">
           <DialogHeader>
-            <DialogTitle>문서 양식 선택</DialogTitle>
+            <DialogTitle>{t('documentTemplateSelector.title')}</DialogTitle>
           </DialogHeader>
 
           {/* Search */}
           <div className="relative mb-4">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="양식 검색..."
+              placeholder={t('documentTemplateSelector.searchPlaceholder')}
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
               className="pl-9"
@@ -106,7 +108,7 @@ export function DocumentTemplateSelector({
           <ScrollArea className="h-[400px] pr-4">
             {filteredTemplates.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                {searchKeyword ? '검색 결과가 없습니다.' : '등록된 양식이 없습니다.'}
+                {searchKeyword ? t('documentTemplateSelector.noResults') : t('documentTemplateSelector.empty')}
               </div>
             ) : (
               <div className="space-y-6">
@@ -152,7 +154,7 @@ export function DocumentTemplateSelector({
                 onClick={() => onSelect(selectedTemplate)}
                 className="text-xs"
               >
-                양식 적용
+                {t('documentTemplateSelector.applyTemplate')}
               </Button>
             </div>
           </CardContent>

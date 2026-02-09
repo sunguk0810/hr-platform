@@ -1,7 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import type { TFunction } from 'i18next';
 import {
   Dialog,
   DialogContent,
@@ -42,18 +44,18 @@ import {
   DELEGATION_RULE_TARGET_LABELS,
 } from '@hr-platform/shared-types';
 
-const APPROVAL_TYPE_LABELS: Record<ApprovalType, string> = {
-  LEAVE_REQUEST: '휴가신청',
-  EXPENSE: '경비청구',
-  OVERTIME: '초과근무',
-  PERSONNEL: '인사발령',
-  GENERAL: '일반',
-};
+const getApprovalTypeLabels = (t: TFunction): Record<ApprovalType, string> => ({
+  LEAVE_REQUEST: t('delegationRuleDialog.approvalTypeLeave'),
+  EXPENSE: t('delegationRuleDialog.approvalTypeExpense'),
+  OVERTIME: t('delegationRuleDialog.approvalTypeOvertime'),
+  PERSONNEL: t('delegationRuleDialog.approvalTypePersonnel'),
+  GENERAL: t('delegationRuleDialog.approvalTypeGeneral'),
+});
 
-const delegationRuleSchema = z.object({
-  name: z.string().min(1, '규칙명을 입력해주세요').max(100),
+const createDelegationRuleSchema = (t: TFunction) => z.object({
+  name: z.string().min(1, t('delegationRuleDialog.ruleNameValidation')).max(100),
   description: z.string().max(500).optional(),
-  delegatorId: z.string().min(1, '위임자를 선택해주세요'),
+  delegatorId: z.string().min(1, t('delegationRuleDialog.delegatorValidation')),
   conditionType: z.enum(['DOCUMENT_TYPE', 'AMOUNT_RANGE', 'ABSENCE', 'ALWAYS'] as const),
   documentTypes: z.array(z.string()).optional(),
   minAmount: z.number().optional(),
@@ -67,7 +69,7 @@ const delegationRuleSchema = z.object({
   validTo: z.string().optional(),
 });
 
-type DelegationRuleFormData = z.infer<typeof delegationRuleSchema>;
+type DelegationRuleFormData = z.infer<ReturnType<typeof createDelegationRuleSchema>>;
 
 interface DelegationRuleDialogProps {
   open: boolean;
@@ -80,8 +82,11 @@ export function DelegationRuleDialog({
   onOpenChange,
   editingRuleId,
 }: DelegationRuleDialogProps) {
+  const { t } = useTranslation('approval');
   const { toast } = useToast();
   const isEditMode = !!editingRuleId;
+  const delegationRuleSchema = useMemo(() => createDelegationRuleSchema(t), [t]);
+  const APPROVAL_TYPE_LABELS = useMemo(() => getApprovalTypeLabels(t), [t]);
 
   const [delegatorSearch, setDelegatorSearch] = useState('');
   const [targetSearch, setTargetSearch] = useState('');
@@ -240,21 +245,21 @@ export function DelegationRuleDialog({
           data: request as UpdateDelegationRuleRequest,
         });
         toast({
-          title: '수정 완료',
-          description: '위임전결 규칙이 수정되었습니다.',
+          title: t('delegationRuleDialog.editSuccess'),
+          description: t('delegationRuleDialog.editSuccessDesc'),
         });
       } else {
         await createMutation.mutateAsync(request);
         toast({
-          title: '등록 완료',
-          description: '위임전결 규칙이 등록되었습니다.',
+          title: t('delegationRuleDialog.createSuccess'),
+          description: t('delegationRuleDialog.createSuccessDesc'),
         });
       }
       onOpenChange(false);
     } catch {
       toast({
-        title: isEditMode ? '수정 실패' : '등록 실패',
-        description: '규칙 저장 중 오류가 발생했습니다.',
+        title: isEditMode ? t('delegationRuleDialog.editFailure') : t('delegationRuleDialog.createFailure'),
+        description: t('delegationRuleDialog.saveErrorDesc'),
         variant: 'destructive',
       });
     }
@@ -279,25 +284,25 @@ export function DelegationRuleDialog({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {isEditMode ? '위임전결 규칙 수정' : '위임전결 규칙 추가'}
+            {isEditMode ? t('delegationRuleDialog.editTitle') : t('delegationRuleDialog.createTitle')}
           </DialogTitle>
           <DialogDescription>
-            결재 위임 및 전결 규칙을 설정합니다.
+            {t('delegationRuleDialog.description')}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Basic Info */}
           <div className="space-y-4">
-            <h4 className="text-sm font-medium">기본 정보</h4>
+            <h4 className="text-sm font-medium">{t('delegationRuleDialog.basicInfo')}</h4>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="name">규칙명 *</Label>
+                <Label htmlFor="name">{t('delegationRuleDialog.ruleNameLabel')}</Label>
                 <Input
                   id="name"
                   {...register('name')}
-                  placeholder="예: 휴가신청 팀장 전결"
+                  placeholder={t('delegationRuleDialog.ruleNamePlaceholder')}
                 />
                 {errors.name && (
                   <p className="text-sm text-destructive">{errors.name.message}</p>
@@ -305,12 +310,12 @@ export function DelegationRuleDialog({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="priority">우선순위 *</Label>
+                <Label htmlFor="priority">{t('delegationRuleDialog.priorityLabel')}</Label>
                 <Input
                   id="priority"
                   type="number"
                   {...register('priority', { valueAsNumber: true })}
-                  placeholder="1~999 (낮을수록 우선)"
+                  placeholder={t('delegationRuleDialog.priorityPlaceholder')}
                 />
                 {errors.priority && (
                   <p className="text-sm text-destructive">{errors.priority.message}</p>
@@ -319,11 +324,11 @@ export function DelegationRuleDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">설명</Label>
+              <Label htmlFor="description">{t('delegationRuleDialog.descriptionLabel')}</Label>
               <Textarea
                 id="description"
                 {...register('description')}
-                placeholder="규칙에 대한 설명을 입력하세요"
+                placeholder={t('delegationRuleDialog.descriptionPlaceholder')}
                 rows={2}
               />
             </div>
@@ -331,10 +336,10 @@ export function DelegationRuleDialog({
 
           {/* Delegator */}
           <div className="space-y-4">
-            <h4 className="text-sm font-medium">위임자 설정</h4>
+            <h4 className="text-sm font-medium">{t('delegationRuleDialog.delegatorSettings')}</h4>
 
             <div className="space-y-2">
-              <Label>위임자 (결재권자) *</Label>
+              <Label>{t('delegationRuleDialog.delegatorLabel')}</Label>
               {selectedDelegator ? (
                 <div className="flex items-center justify-between p-3 border rounded-md">
                   <div>
@@ -352,13 +357,13 @@ export function DelegationRuleDialog({
                       setValue('delegatorId', '');
                     }}
                   >
-                    변경
+                    {t('common.change')}
                   </Button>
                 </div>
               ) : (
                 <div className="relative">
                   <Input
-                    placeholder="이름으로 검색..."
+                    placeholder={t('delegationRuleDialog.delegatorSearchPlaceholder')}
                     value={delegatorSearch}
                     onChange={(e) => setDelegatorSearch(e.target.value)}
                   />
@@ -391,17 +396,17 @@ export function DelegationRuleDialog({
 
           {/* Condition */}
           <div className="space-y-4">
-            <h4 className="text-sm font-medium">적용 조건</h4>
+            <h4 className="text-sm font-medium">{t('delegationRuleDialog.conditions')}</h4>
 
             <div className="space-y-2">
-              <Label>조건 유형</Label>
+              <Label>{t('delegationRuleDialog.conditionTypeLabel')}</Label>
               <Controller
                 name="conditionType"
                 control={control}
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger>
-                      <SelectValue placeholder="조건 유형 선택" />
+                      <SelectValue placeholder={t('delegationRuleDialog.conditionTypePlaceholder')} />
                     </SelectTrigger>
                     <SelectContent>
                       {(
@@ -423,7 +428,7 @@ export function DelegationRuleDialog({
             {/* Document Type Condition */}
             {conditionType === 'DOCUMENT_TYPE' && (
               <div className="space-y-2">
-                <Label>적용 문서 유형</Label>
+                <Label>{t('delegationRuleDialog.documentTypesLabel')}</Label>
                 <Controller
                   name="documentTypes"
                   control={control}
@@ -458,7 +463,7 @@ export function DelegationRuleDialog({
             {conditionType === 'AMOUNT_RANGE' && (
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="minAmount">최소 금액</Label>
+                  <Label htmlFor="minAmount">{t('delegationRuleDialog.minAmountLabel')}</Label>
                   <Input
                     id="minAmount"
                     type="number"
@@ -467,7 +472,7 @@ export function DelegationRuleDialog({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="maxAmount">최대 금액</Label>
+                  <Label htmlFor="maxAmount">{t('delegationRuleDialog.maxAmountLabel')}</Label>
                   <Input
                     id="maxAmount"
                     type="number"
@@ -481,7 +486,7 @@ export function DelegationRuleDialog({
             {/* Absence Condition */}
             {conditionType === 'ABSENCE' && (
               <div className="space-y-2">
-                <Label htmlFor="absenceDays">부재 일수 (이상)</Label>
+                <Label htmlFor="absenceDays">{t('delegationRuleDialog.absenceDaysLabel')}</Label>
                 <Input
                   id="absenceDays"
                   type="number"
@@ -489,7 +494,7 @@ export function DelegationRuleDialog({
                   placeholder="1"
                 />
                 <p className="text-xs text-muted-foreground">
-                  지정된 일수 이상 부재 시 자동으로 위임됩니다.
+                  {t('delegationRuleDialog.absenceDaysNote')}
                 </p>
               </div>
             )}
@@ -497,17 +502,17 @@ export function DelegationRuleDialog({
 
           {/* Target */}
           <div className="space-y-4">
-            <h4 className="text-sm font-medium">위임 대상</h4>
+            <h4 className="text-sm font-medium">{t('delegationRuleDialog.targetSettings')}</h4>
 
             <div className="space-y-2">
-              <Label>대상 유형</Label>
+              <Label>{t('delegationRuleDialog.targetTypeLabel')}</Label>
               <Controller
                 name="targetType"
                 control={control}
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger>
-                      <SelectValue placeholder="대상 유형 선택" />
+                      <SelectValue placeholder={t('delegationRuleDialog.targetTypePlaceholder')} />
                     </SelectTrigger>
                     <SelectContent>
                       {(
@@ -529,7 +534,7 @@ export function DelegationRuleDialog({
             {/* Specific Employee Target */}
             {targetType === 'SPECIFIC' && (
               <div className="space-y-2">
-                <Label>대상 직원</Label>
+                <Label>{t('delegationRuleDialog.targetEmployeeLabel')}</Label>
                 {selectedTarget ? (
                   <div className="flex items-center justify-between p-3 border rounded-md">
                     <div>
@@ -547,13 +552,13 @@ export function DelegationRuleDialog({
                         setValue('targetEmployeeId', '');
                       }}
                     >
-                      변경
+                      {t('common.change')}
                     </Button>
                   </div>
                 ) : (
                   <div className="relative">
                     <Input
-                      placeholder="이름으로 검색..."
+                      placeholder={t('delegationRuleDialog.targetSearchPlaceholder')}
                       value={targetSearch}
                       onChange={(e) => setTargetSearch(e.target.value)}
                     />
@@ -584,19 +589,19 @@ export function DelegationRuleDialog({
             {/* Role Target */}
             {targetType === 'ROLE' && (
               <div className="space-y-2">
-                <Label>역할</Label>
+                <Label>{t('delegationRuleDialog.roleLabel')}</Label>
                 <Controller
                   name="targetRole"
                   control={control}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger>
-                        <SelectValue placeholder="역할 선택" />
+                        <SelectValue placeholder={t('delegationRuleDialog.rolePlaceholder')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="TEAM_LEADER">팀장</SelectItem>
-                        <SelectItem value="DEPT_MANAGER">부서장</SelectItem>
-                        <SelectItem value="HR_MANAGER">HR 담당자</SelectItem>
+                        <SelectItem value="TEAM_LEADER">{t('delegationRuleDialog.roleTeamLeader')}</SelectItem>
+                        <SelectItem value="DEPT_MANAGER">{t('delegationRuleDialog.roleDeptManager')}</SelectItem>
+                        <SelectItem value="HR_MANAGER">{t('delegationRuleDialog.roleHrManager')}</SelectItem>
                       </SelectContent>
                     </Select>
                   )}
@@ -607,20 +612,20 @@ export function DelegationRuleDialog({
 
           {/* Validity Period */}
           <div className="space-y-4">
-            <h4 className="text-sm font-medium">유효기간 (선택)</h4>
+            <h4 className="text-sm font-medium">{t('delegationRuleDialog.validPeriodOptional')}</h4>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="validFrom">시작일</Label>
+                <Label htmlFor="validFrom">{t('delegationRuleDialog.startDateLabel')}</Label>
                 <Input id="validFrom" type="date" {...register('validFrom')} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="validTo">종료일</Label>
+                <Label htmlFor="validTo">{t('delegationRuleDialog.endDateLabel')}</Label>
                 <Input id="validTo" type="date" {...register('validTo')} />
               </div>
             </div>
             <p className="text-xs text-muted-foreground">
-              유효기간을 설정하지 않으면 무기한으로 적용됩니다.
+              {t('delegationRuleDialog.validPeriodNote')}
             </p>
           </div>
 
@@ -631,18 +636,18 @@ export function DelegationRuleDialog({
               onClick={() => onOpenChange(false)}
               disabled={isPending}
             >
-              취소
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={isPending}>
               {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  저장 중...
+                  {t('common.saving')}
                 </>
               ) : isEditMode ? (
-                '수정'
+                t('common.edit')
               ) : (
-                '등록'
+                t('common.register')
               )}
             </Button>
           </DialogFooter>

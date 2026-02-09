@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 
 type TabValue = 'pending' | 'requested' | 'completed' | 'draft' | '';
@@ -13,14 +14,16 @@ interface ApprovalFilterTabsProps {
   };
 }
 
-const tabs: { value: TabValue; label: string; countKey?: keyof NonNullable<ApprovalFilterTabsProps['counts']> }[] = [
-  { value: 'pending', label: '결재 대기', countKey: 'pending' },
-  { value: 'requested', label: '내가 요청한' },
-  { value: 'completed', label: '완료' },
-  { value: 'draft', label: '임시저장', countKey: 'draft' },
-];
-
 export function ApprovalFilterTabs({ value, onChange, counts }: ApprovalFilterTabsProps) {
+  const { t } = useTranslation('approval');
+
+  const tabs: { value: TabValue; label: string; countKey?: keyof NonNullable<ApprovalFilterTabsProps['counts']> }[] = [
+    { value: 'pending', label: t('approvalFilterTabs.pending'), countKey: 'pending' },
+    { value: 'requested', label: t('approvalFilterTabs.requested') },
+    { value: 'completed', label: t('approvalFilterTabs.completed') },
+    { value: 'draft', label: t('approvalFilterTabs.draft'), countKey: 'draft' },
+  ];
+
   return (
     <div className="flex overflow-x-auto gap-2 pb-2 -mx-4 px-4 scrollbar-hide">
       {tabs.map((tab) => {

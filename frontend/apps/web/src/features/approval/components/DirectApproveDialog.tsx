@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FastForward, AlertTriangle } from 'lucide-react';
 import {
   Dialog,
@@ -32,6 +33,7 @@ export function DirectApproveDialog({
   steps,
   currentStepOrder,
 }: DirectApproveDialogProps) {
+  const { t } = useTranslation('approval');
   const [reason, setReason] = useState('');
   const [skipOption, setSkipOption] = useState<'current' | 'final'>('current');
 
@@ -66,10 +68,10 @@ export function DirectApproveDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FastForward className="h-5 w-5 text-teal-500" />
-            전결 처리
+            {t('directApproveDialog.title')}
           </DialogTitle>
           <DialogDescription>
-            권한에 따라 결재를 전결 처리합니다.
+            {t('directApproveDialog.description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -77,16 +79,16 @@ export function DirectApproveDialog({
           <Alert className="bg-teal-50 border-teal-200 text-teal-800">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              전결 처리 시 지정된 단계까지의 결재가 자동으로 승인됩니다.
+              {t('directApproveDialog.alertText')}
               <br />
-              전결 사유는 결재 이력에 기록됩니다.
+              {t('directApproveDialog.alertSubtext')}
             </AlertDescription>
           </Alert>
 
           {/* 전결 범위 선택 (단계가 여러 개일 때만 표시) */}
           {hasMultipleSteps && (
             <div className="grid gap-2">
-              <Label>전결 범위</Label>
+              <Label>{t('directApproveDialog.scopeLabel')}</Label>
               <RadioGroup
                 value={skipOption}
                 onValueChange={(value) => setSkipOption(value as 'current' | 'final')}
@@ -98,9 +100,9 @@ export function DirectApproveDialog({
                     htmlFor="current-step"
                     className="flex-1 cursor-pointer font-normal"
                   >
-                    <div className="font-medium">현재 단계만 전결</div>
+                    <div className="font-medium">{t('directApproveDialog.scopeCurrentOnly')}</div>
                     <div className="text-xs text-muted-foreground">
-                      {currentStepOrder}단계만 승인 처리
+                      {t('directApproveDialog.scopeCurrentDesc', { step: currentStepOrder })}
                     </div>
                   </Label>
                 </div>
@@ -110,9 +112,9 @@ export function DirectApproveDialog({
                     htmlFor="final-step"
                     className="flex-1 cursor-pointer font-normal"
                   >
-                    <div className="font-medium">최종 단계까지 전결</div>
+                    <div className="font-medium">{t('directApproveDialog.scopeToFinal')}</div>
                     <div className="text-xs text-muted-foreground">
-                      {currentStepOrder}단계부터 {finalStepOrder}단계까지 모두 승인 처리
+                      {t('directApproveDialog.scopeToFinalDesc', { from: currentStepOrder, to: finalStepOrder })}
                     </div>
                   </Label>
                 </div>
@@ -122,7 +124,7 @@ export function DirectApproveDialog({
 
           {/* 전결될 단계 표시 */}
           <div className="rounded-lg bg-muted/50 p-3">
-            <Label className="text-xs text-muted-foreground">전결 대상 단계</Label>
+            <Label className="text-xs text-muted-foreground">{t('directApproveDialog.targetStepsLabel')}</Label>
             <div className="mt-2 space-y-1">
               {pendingSteps
                 .filter((step) =>
@@ -138,7 +140,7 @@ export function DirectApproveDialog({
                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-teal-500 text-[10px] font-medium text-white">
                       {step.sequence}
                     </span>
-                    <span>{step.approverName || '결재자'}</span>
+                    <span>{step.approverName || t('approvalLine.approver')}</span>
                     {step.approverPosition && (
                       <span className="text-muted-foreground">
                         · {step.approverPosition}
@@ -152,18 +154,18 @@ export function DirectApproveDialog({
           {/* 전결 사유 */}
           <div className="grid gap-2">
             <Label htmlFor="direct-approve-reason">
-              전결 사유 <span className="text-destructive">*</span>
+              {t('directApproveDialog.reasonLabel')} <span className="text-destructive">{t('directApproveDialog.reasonRequired')}</span>
             </Label>
             <Textarea
               id="direct-approve-reason"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="전결 사유를 입력하세요. (예: 긴급 처리 필요, 결재자 장기 부재 등)"
+              placeholder={t('directApproveDialog.reasonPlaceholder')}
               rows={3}
               className="resize-none"
             />
             <p className="text-xs text-muted-foreground">
-              전결 처리 시 반드시 사유를 기재해야 합니다.
+              {t('directApproveDialog.reasonNote')}
             </p>
           </div>
         </div>
@@ -174,14 +176,14 @@ export function DirectApproveDialog({
             onClick={() => handleOpenChange(false)}
             disabled={isLoading}
           >
-            취소
+            {t('common.cancel')}
           </Button>
           <Button
             onClick={handleConfirm}
             disabled={!reason.trim() || isLoading}
             className="bg-teal-600 hover:bg-teal-700"
           >
-            {isLoading ? '처리 중...' : '전결 처리'}
+            {isLoading ? t('common.processing') : t('directApproveDialog.confirmButton')}
           </Button>
         </DialogFooter>
       </DialogContent>

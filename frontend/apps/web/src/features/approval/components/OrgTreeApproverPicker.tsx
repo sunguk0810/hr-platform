@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import {
   Dialog,
@@ -51,6 +52,7 @@ export function OrgTreeApproverPicker({
   excludeIds = [],
   maxSelection,
 }: OrgTreeApproverPickerProps) {
+  const { t } = useTranslation('approval');
   const [selectedDeptId, setSelectedDeptId] = useState<string>();
   const [searchKeyword, setSearchKeyword] = useState('');
   const [pendingApprovers, setPendingApprovers] = useState<SelectedApprover[]>([]);
@@ -132,7 +134,7 @@ export function OrgTreeApproverPicker({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl h-[600px] flex flex-col">
         <DialogHeader>
-          <DialogTitle>결재자 선택</DialogTitle>
+          <DialogTitle>{t('orgTreeApproverPicker.title')}</DialogTitle>
         </DialogHeader>
 
         {/* Selected approvers chips */}
@@ -170,7 +172,7 @@ export function OrgTreeApproverPicker({
                 />
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-8">
-                  조직도를 불러오는 중...
+                  {t('orgTreeApproverPicker.loadingOrgTree')}
                 </p>
               )}
             </ScrollArea>
@@ -181,7 +183,7 @@ export function OrgTreeApproverPicker({
             <div className="relative mb-3">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="직원 검색..."
+                placeholder={t('orgTreeApproverPicker.searchPlaceholder')}
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
                 className="pl-9 h-8 text-sm"
@@ -191,7 +193,7 @@ export function OrgTreeApproverPicker({
               {selectedDeptId ? (
                 isLoadingEmployees ? (
                   <p className="text-sm text-muted-foreground text-center py-8">
-                    직원 목록을 불러오는 중...
+                    {t('orgTreeApproverPicker.loadingEmployees')}
                   </p>
                 ) : filteredEmployees && filteredEmployees.length > 0 ? (
                   <div className="space-y-1">
@@ -224,7 +226,7 @@ export function OrgTreeApproverPicker({
                           {selected && <Check className="h-4 w-4 text-primary" />}
                           {excluded && (
                             <Badge variant="outline" className="text-xs">
-                              이미 추가됨
+                              {t('orgTreeApproverPicker.alreadyAdded')}
                             </Badge>
                           )}
                         </button>
@@ -233,12 +235,12 @@ export function OrgTreeApproverPicker({
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground text-center py-8">
-                    {searchKeyword ? '검색 결과가 없습니다.' : '소속 직원이 없습니다.'}
+                    {searchKeyword ? t('common.noSearchResultsDot') : t('orgTreeApproverPicker.noEmployees')}
                   </p>
                 )
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-8">
-                  부서를 선택하세요.
+                  {t('orgTreeApproverPicker.selectDepartment')}
                 </p>
               )}
             </ScrollArea>
@@ -247,11 +249,11 @@ export function OrgTreeApproverPicker({
 
         <DialogFooter>
           <Button variant="outline" onClick={handleCancel}>
-            취소
+            {t('common.cancel')}
           </Button>
           <Button onClick={handleConfirm} disabled={pendingApprovers.length === 0}>
             <UserPlus className="mr-2 h-4 w-4" />
-            {pendingApprovers.length}명 추가
+            {t('orgTreeApproverPicker.addCount', { count: pendingApprovers.length })}
           </Button>
         </DialogFooter>
       </DialogContent>

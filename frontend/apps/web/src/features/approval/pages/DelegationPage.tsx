@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,13 +29,14 @@ import { format, addDays } from 'date-fns';
 import { useDelegations, useCreateDelegation, useCancelDelegation, useEmployeeSearch } from '../hooks/useApprovals';
 import type { DelegationStatus, CreateDelegationRequest } from '@hr-platform/shared-types';
 
-const STATUS_CONFIG: Record<DelegationStatus, { label: string; variant: 'default' | 'warning' | 'success' | 'error' }> = {
-  ACTIVE: { label: '활성', variant: 'success' },
-  EXPIRED: { label: '만료', variant: 'default' },
-  CANCELLED: { label: '취소', variant: 'error' },
+const STATUS_CONFIG_KEYS: Record<DelegationStatus, { key: string; variant: 'default' | 'warning' | 'success' | 'error' }> = {
+  ACTIVE: { key: 'delegationPage.statusActive', variant: 'success' },
+  EXPIRED: { key: 'delegationPage.statusExpired', variant: 'default' },
+  CANCELLED: { key: 'delegationPage.statusCancelled', variant: 'error' },
 };
 
 export default function DelegationPage() {
+  const { t } = useTranslation('approval');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [cancelTargetId, setCancelTargetId] = useState<string | null>(null);
   const [employeeSearch] = useState('');
@@ -87,13 +89,13 @@ export default function DelegationPage() {
   return (
     <>
       <PageHeader
-        title="결재 위임"
-        description="부재 시 결재 권한을 다른 사람에게 위임합니다."
+        title={t('delegationPage.title')}
+        description={t('delegationPage.description')}
         actions={
           !activeDelegation && (
             <Button onClick={() => setIsCreateDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
-              위임 설정
+              {t('delegationPage.setupButton')}
             </Button>
           )
         }
@@ -104,7 +106,7 @@ export default function DelegationPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <UserCheck className="h-5 w-5" />
-            현재 위임 상태
+            {t('delegationPage.currentStatus')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -116,7 +118,7 @@ export default function DelegationPage() {
                     <UserCheck className="h-6 w-6 text-green-600 dark:text-green-400" />
                   </div>
                   <div>
-                    <p className="font-medium">{activeDelegation.delegateeName}님에게 위임 중</p>
+                    <p className="font-medium">{t('delegationPage.delegatingTo', { name: activeDelegation.delegateeName })}</p>
                     <p className="text-sm text-muted-foreground">
                       {format(new Date(activeDelegation.startDate), 'yyyy.MM.dd')} ~{' '}
                       {format(new Date(activeDelegation.endDate), 'yyyy.MM.dd')}
@@ -130,11 +132,11 @@ export default function DelegationPage() {
                   onClick={() => handleCancel(activeDelegation.id)}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
-                  위임 취소
+                  {t('delegationPage.cancelDelegation')}
                 </Button>
               </div>
               <div className="text-sm">
-                <span className="text-muted-foreground">위임 사유: </span>
+                <span className="text-muted-foreground">{t('delegationPage.delegationReason')}</span>
                 {activeDelegation.reason}
               </div>
             </div>
@@ -142,9 +144,9 @@ export default function DelegationPage() {
             <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg">
               <AlertCircle className="h-6 w-6 text-muted-foreground" />
               <div>
-                <p className="font-medium">활성화된 위임이 없습니다</p>
+                <p className="font-medium">{t('delegationPage.noActiveDelegation')}</p>
                 <p className="text-sm text-muted-foreground">
-                  부재 시 결재를 위임하려면 위임 설정을 해주세요.
+                  {t('delegationPage.noActiveDelegationDesc')}
                 </p>
               </div>
             </div>
@@ -155,8 +157,8 @@ export default function DelegationPage() {
       {/* Delegation History */}
       <Card>
         <CardHeader>
-          <CardTitle>위임 이력</CardTitle>
-          <CardDescription>과거 결재 위임 내역입니다.</CardDescription>
+          <CardTitle>{t('delegationPage.historyTitle')}</CardTitle>
+          <CardDescription>{t('delegationPage.historyDescription')}</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
@@ -166,8 +168,8 @@ export default function DelegationPage() {
           ) : delegations.length === 0 ? (
             <EmptyState
               icon={Users}
-              title="위임 이력이 없습니다"
-              description="결재 위임을 설정하면 이력이 표시됩니다."
+              title={t('delegationPage.emptyHistory')}
+              description={t('delegationPage.emptyHistoryDesc')}
             />
           ) : (
             <div className="overflow-x-auto">
@@ -175,22 +177,22 @@ export default function DelegationPage() {
                 <thead>
                   <tr className="border-b bg-muted/50">
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                      위임 대상
+                      {t('delegationPage.tableDelegatee')}
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                      기간
+                      {t('delegationPage.tablePeriod')}
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                      사유
+                      {t('delegationPage.tableReason')}
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                      상태
+                      {t('delegationPage.tableStatus')}
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {delegations.map((delegation) => {
-                    const statusConfig = STATUS_CONFIG[delegation.status];
+                    const statusConfig = STATUS_CONFIG_KEYS[delegation.status];
                     return (
                       <tr key={delegation.id} className="border-b hover:bg-muted/50">
                         <td className="px-4 py-3 font-medium">{delegation.delegateeName}</td>
@@ -204,7 +206,7 @@ export default function DelegationPage() {
                         <td className="px-4 py-3">
                           <StatusBadge
                             status={statusConfig.variant}
-                            label={statusConfig.label}
+                            label={t(statusConfig.key)}
                           />
                         </td>
                       </tr>
@@ -221,20 +223,20 @@ export default function DelegationPage() {
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>결재 위임 설정</DialogTitle>
+            <DialogTitle>{t('delegationPage.createDialogTitle')}</DialogTitle>
             <DialogDescription>
-              부재 중 결재를 처리할 대리인을 지정합니다.
+              {t('delegationPage.createDialogDesc')}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="delegatee">위임 대상 *</Label>
+              <Label htmlFor="delegatee">{t('delegationPage.delegateeLabel')}</Label>
               <Select
                 value={formData.delegateeId}
                 onValueChange={(value) => setFormData((prev) => ({ ...prev, delegateeId: value }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="직원 선택" />
+                  <SelectValue placeholder={t('delegationPage.delegateePlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {employees.map((emp) => (
@@ -247,7 +249,7 @@ export default function DelegationPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="startDate">시작일 *</Label>
+                <Label htmlFor="startDate">{t('delegationPage.startDateLabel')}</Label>
                 <Input
                   id="startDate"
                   type="date"
@@ -256,7 +258,7 @@ export default function DelegationPage() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="endDate">종료일 *</Label>
+                <Label htmlFor="endDate">{t('delegationPage.endDateLabel')}</Label>
                 <Input
                   id="endDate"
                   type="date"
@@ -266,19 +268,19 @@ export default function DelegationPage() {
               </div>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="reason">위임 사유 *</Label>
+              <Label htmlFor="reason">{t('delegationPage.reasonLabel')}</Label>
               <Textarea
                 id="reason"
                 value={formData.reason}
                 onChange={(e) => setFormData((prev) => ({ ...prev, reason: e.target.value }))}
-                placeholder="예: 연차 휴가, 출장 등"
+                placeholder={t('delegationPage.reasonPlaceholder')}
                 rows={3}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-              취소
+              {t('common.cancel')}
             </Button>
             <Button
               onClick={handleCreate}
@@ -290,7 +292,7 @@ export default function DelegationPage() {
                 createMutation.isPending
               }
             >
-              {createMutation.isPending ? '설정 중...' : '위임 설정'}
+              {createMutation.isPending ? t('delegationPage.submitting') : t('delegationPage.submitButton')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -299,8 +301,8 @@ export default function DelegationPage() {
       <ConfirmDialog
         open={!!cancelTargetId}
         onOpenChange={(open) => !open && setCancelTargetId(null)}
-        title="결재 위임 취소"
-        description="결재 위임을 취소하시겠습니까?"
+        title={t('delegationPage.cancelConfirmTitle')}
+        description={t('delegationPage.cancelConfirmDesc')}
         variant="destructive"
         onConfirm={handleConfirmCancel}
       />

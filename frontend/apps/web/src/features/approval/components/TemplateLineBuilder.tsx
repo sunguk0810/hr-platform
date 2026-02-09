@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,32 +21,33 @@ import {
 } from 'lucide-react';
 import type { ApprovalLineTemplate, ApprovalStepType } from '@hr-platform/shared-types';
 
-const STEP_TYPE_LABELS: Record<ApprovalStepType, string> = {
-  APPROVAL: '결재',
-  AGREEMENT: '합의',
-  REFERENCE: '참조',
-};
-
-const APPROVER_TYPE_OPTIONS = [
-  { value: 'DEPARTMENT_HEAD', label: '부서장' },
-  { value: 'ROLE', label: '역할 지정' },
-  { value: 'SPECIFIC', label: '특정 직원' },
-];
-
-const ROLE_OPTIONS = [
-  { value: 'HR_MANAGER', label: 'HR 관리자' },
-  { value: 'TENANT_ADMIN', label: '테넌트 관리자' },
-  { value: 'DEPT_MANAGER', label: '부서장' },
-  { value: 'TEAM_LEADER', label: '팀장' },
-];
-
 interface TemplateLineBuilderProps {
   value: ApprovalLineTemplate[];
   onChange: (value: ApprovalLineTemplate[]) => void;
 }
 
 export function TemplateLineBuilder({ value, onChange }: TemplateLineBuilderProps) {
+  const { t } = useTranslation('approval');
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+
+  const STEP_TYPE_LABELS: Record<ApprovalStepType, string> = {
+    APPROVAL: t('templateLineBuilder.stepTypeApproval'),
+    AGREEMENT: t('templateLineBuilder.stepTypeAgreement'),
+    REFERENCE: t('templateLineBuilder.stepTypeReference'),
+  };
+
+  const APPROVER_TYPE_OPTIONS = [
+    { value: 'DEPARTMENT_HEAD', label: t('templateLineBuilder.approverTypeDeptHead') },
+    { value: 'ROLE', label: t('templateLineBuilder.approverTypeRole') },
+    { value: 'SPECIFIC', label: t('templateLineBuilder.approverTypeSpecific') },
+  ];
+
+  const ROLE_OPTIONS = [
+    { value: 'HR_MANAGER', label: t('templateLineBuilder.roleHrManager') },
+    { value: 'TENANT_ADMIN', label: t('templateLineBuilder.roleTenantAdmin') },
+    { value: 'DEPT_MANAGER', label: t('templateLineBuilder.roleDeptManager') },
+    { value: 'TEAM_LEADER', label: t('templateLineBuilder.roleTeamLeader') },
+  ];
 
   const handleAdd = () => {
     const newStep: ApprovalLineTemplate = {
@@ -92,10 +94,10 @@ export function TemplateLineBuilder({ value, onChange }: TemplateLineBuilderProp
   if (value.length === 0) {
     return (
       <div className="text-center py-8 border-2 border-dashed rounded-lg">
-        <p className="text-muted-foreground mb-4">결재선이 비어 있습니다.</p>
+        <p className="text-muted-foreground mb-4">{t('templateLineBuilder.emptyLine')}</p>
         <Button onClick={handleAdd} variant="outline">
           <Plus className="mr-2 h-4 w-4" />
-          단계 추가
+          {t('templateLineBuilder.addStep')}
         </Button>
       </div>
     );
@@ -111,7 +113,7 @@ export function TemplateLineBuilder({ value, onChange }: TemplateLineBuilderProp
           >
             <GripVertical className="h-4 w-4 text-muted-foreground" />
             <span className="font-medium">
-              {step.stepOrder}단계
+              {t('templateLineBuilder.stepLabel', { n: step.stepOrder })}
             </span>
             <span className="text-sm text-muted-foreground">
               {STEP_TYPE_LABELS[step.stepType]}
@@ -122,7 +124,7 @@ export function TemplateLineBuilder({ value, onChange }: TemplateLineBuilderProp
               )}
             </span>
             {step.isRequired && (
-              <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">필수</span>
+              <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">{t('templateLineBuilder.requiredBadge')}</span>
             )}
             <div className="flex-1" />
             <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
@@ -159,7 +161,7 @@ export function TemplateLineBuilder({ value, onChange }: TemplateLineBuilderProp
             <CardContent className="border-t pt-4 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>결재 유형</Label>
+                  <Label>{t('templateLineBuilder.approvalType')}</Label>
                   <Select
                     value={step.stepType}
                     onValueChange={(val) =>
@@ -179,7 +181,7 @@ export function TemplateLineBuilder({ value, onChange }: TemplateLineBuilderProp
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>결재자 지정 방식</Label>
+                  <Label>{t('templateLineBuilder.assignMethod')}</Label>
                   <Select
                     value={step.approverType}
                     onValueChange={(val) =>
@@ -206,13 +208,13 @@ export function TemplateLineBuilder({ value, onChange }: TemplateLineBuilderProp
 
               {step.approverType === 'ROLE' && (
                 <div className="space-y-2">
-                  <Label>역할</Label>
+                  <Label>{t('templateLineBuilder.roleLabel')}</Label>
                   <Select
                     value={step.approverRole || ''}
                     onValueChange={(val) => handleUpdate(index, { approverRole: val })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="역할 선택" />
+                      <SelectValue placeholder={t('role.select')} />
                     </SelectTrigger>
                     <SelectContent>
                       {ROLE_OPTIONS.map((option) => (
@@ -227,23 +229,23 @@ export function TemplateLineBuilder({ value, onChange }: TemplateLineBuilderProp
 
               {step.approverType === 'SPECIFIC' && (
                 <div className="space-y-2">
-                  <Label>결재자 ID</Label>
+                  <Label>{t('templateLineBuilder.approverId')}</Label>
                   <Input
-                    placeholder="결재자 ID를 입력하세요"
+                    placeholder={t('templateLineBuilder.approverIdPlaceholder')}
                     value={step.approverId || ''}
                     onChange={(e) => handleUpdate(index, { approverId: e.target.value })}
                   />
                   <p className="text-xs text-muted-foreground">
-                    특정 직원을 지정하려면 직원 ID를 입력하세요. (예: emp-001)
+                    {t('templateLineBuilder.approverIdHint')}
                   </p>
                 </div>
               )}
 
               <div className="flex items-center justify-between rounded-lg border p-4">
                 <div className="space-y-0.5">
-                  <Label>필수 단계</Label>
+                  <Label>{t('templateLineBuilder.requiredStep')}</Label>
                   <p className="text-sm text-muted-foreground">
-                    필수 단계는 건너뛸 수 없습니다.
+                    {t('templateLineBuilder.requiredStepDesc')}
                   </p>
                 </div>
                 <Switch
@@ -258,7 +260,7 @@ export function TemplateLineBuilder({ value, onChange }: TemplateLineBuilderProp
 
       <Button onClick={handleAdd} variant="outline" className="w-full">
         <Plus className="mr-2 h-4 w-4" />
-        단계 추가
+        {t('templateLineBuilder.addStep')}
       </Button>
     </div>
   );

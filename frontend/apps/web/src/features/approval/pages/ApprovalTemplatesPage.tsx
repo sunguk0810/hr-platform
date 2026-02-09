@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PageHeader } from '@/components/common/PageHeader';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -38,15 +39,16 @@ import { approvalService } from '../services/approvalService';
 import { useToast } from '@/hooks/useToast';
 import type { ApprovalTemplate } from '@hr-platform/shared-types';
 
-const CATEGORY_LABELS: Record<string, string> = {
-  LEAVE_REQUEST: '휴가',
-  EXPENSE: '경비',
-  OVERTIME: '초과근무',
-  PERSONNEL: '인사',
-  GENERAL: '일반',
+const CATEGORY_LABEL_KEYS: Record<string, string> = {
+  LEAVE_REQUEST: 'approvalTemplatesPage.categoryLeave',
+  EXPENSE: 'approvalTemplatesPage.categoryExpense',
+  OVERTIME: 'approvalTemplatesPage.categoryOvertime',
+  PERSONNEL: 'approvalTemplatesPage.categoryPersonnel',
+  GENERAL: 'approvalTemplatesPage.categoryGeneral',
 };
 
 export default function ApprovalTemplatesPage() {
+  const { t } = useTranslation('approval');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -68,12 +70,12 @@ export default function ApprovalTemplatesPage() {
   const deleteMutation = useMutation({
     mutationFn: (id: string) => approvalService.deleteTemplate(id),
     onSuccess: () => {
-      toast({ title: '삭제 완료', description: '양식이 삭제되었습니다.' });
+      toast({ title: t('approvalTemplatesPage.deleteSuccess'), description: t('approvalTemplatesPage.deleteSuccessDesc') });
       queryClient.invalidateQueries({ queryKey: ['approval-templates'] });
       setDeleteTarget(null);
     },
     onError: () => {
-      toast({ title: '삭제 실패', description: '양식 삭제 중 오류가 발생했습니다.', variant: 'destructive' });
+      toast({ title: t('approvalTemplatesPage.deleteFailure'), description: t('approvalTemplatesPage.deleteFailureDesc'), variant: 'destructive' });
     },
   });
 
@@ -82,13 +84,13 @@ export default function ApprovalTemplatesPage() {
       approvalService.updateTemplate(id, { isActive }),
     onSuccess: (_, variables) => {
       toast({
-        title: variables.isActive ? '활성화 완료' : '비활성화 완료',
-        description: `양식이 ${variables.isActive ? '활성화' : '비활성화'}되었습니다.`,
+        title: variables.isActive ? t('approvalTemplatesPage.activateSuccess') : t('approvalTemplatesPage.deactivateSuccess'),
+        description: t('approvalTemplatesPage.toggleSuccessDesc', { status: variables.isActive ? t('common.activate') : t('common.deactivate') }),
       });
       queryClient.invalidateQueries({ queryKey: ['approval-templates'] });
     },
     onError: () => {
-      toast({ title: '변경 실패', description: '상태 변경 중 오류가 발생했습니다.', variant: 'destructive' });
+      toast({ title: t('approvalTemplatesPage.toggleFailure'), description: t('approvalTemplatesPage.toggleFailureDesc'), variant: 'destructive' });
     },
   });
 
@@ -126,12 +128,12 @@ export default function ApprovalTemplatesPage() {
           {/* Mobile Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold">결재 양식</h1>
-              <p className="text-sm text-muted-foreground">양식 등록 및 관리</p>
+              <h1 className="text-xl font-bold">{t('approvalTemplatesPage.mobileTitle')}</h1>
+              <p className="text-sm text-muted-foreground">{t('approvalTemplatesPage.mobileDescription')}</p>
             </div>
             <Button size="sm" onClick={() => navigate('/settings/approval-templates/new')}>
               <Plus className="mr-1 h-4 w-4" />
-              등록
+              {t('common.register')}
             </Button>
           </div>
 
@@ -139,7 +141,7 @@ export default function ApprovalTemplatesPage() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="양식명, 코드로 검색..."
+              placeholder={t('approvalTemplatesPage.searchPlaceholder')}
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
               className="pl-9"
@@ -156,9 +158,9 @@ export default function ApprovalTemplatesPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              전체
+              {t('approvalTemplatesPage.categoryAll')}
             </button>
-            {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
+            {Object.entries(CATEGORY_LABEL_KEYS).map(([value, key]) => (
               <button
                 key={value}
                 onClick={() => setCategoryFilter(value)}
@@ -168,7 +170,7 @@ export default function ApprovalTemplatesPage() {
                     : 'bg-muted text-muted-foreground'
                 }`}
               >
-                {label}
+                {t(key)}
               </button>
             ))}
           </div>
@@ -183,7 +185,7 @@ export default function ApprovalTemplatesPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              전체
+              {t('approvalTemplatesPage.statusAll')}
             </button>
             <button
               onClick={() => setStatusFilter('active')}
@@ -193,7 +195,7 @@ export default function ApprovalTemplatesPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              활성
+              {t('approvalTemplatesPage.statusActive')}
             </button>
             <button
               onClick={() => setStatusFilter('inactive')}
@@ -203,7 +205,7 @@ export default function ApprovalTemplatesPage() {
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              비활성
+              {t('approvalTemplatesPage.statusInactive')}
             </button>
           </div>
 
@@ -215,11 +217,11 @@ export default function ApprovalTemplatesPage() {
           ) : filteredTemplates.length === 0 ? (
             <div className="bg-card rounded-xl border p-8 text-center">
               <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-              <p className="font-medium">등록된 양식이 없습니다</p>
-              <p className="text-sm text-muted-foreground mt-1">새로운 결재 양식을 등록해주세요.</p>
+              <p className="font-medium">{t('approvalTemplatesPage.emptyTitle')}</p>
+              <p className="text-sm text-muted-foreground mt-1">{t('approvalTemplatesPage.emptyDescription')}</p>
               <Button className="mt-4" onClick={() => navigate('/settings/approval-templates/new')}>
                 <Plus className="mr-2 h-4 w-4" />
-                양식 등록
+                {t('approvalTemplatesPage.registerButton')}
               </Button>
             </div>
           ) : (
@@ -235,9 +237,9 @@ export default function ApprovalTemplatesPage() {
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-xs font-mono text-muted-foreground">{template.code}</span>
                         {template.isActive ? (
-                          <Badge variant="default" className="bg-green-500 text-xs">활성</Badge>
+                          <Badge variant="default" className="bg-green-500 text-xs">{t('approvalTemplatesPage.statusActive')}</Badge>
                         ) : (
-                          <Badge variant="secondary" className="text-xs">비활성</Badge>
+                          <Badge variant="secondary" className="text-xs">{t('approvalTemplatesPage.statusInactive')}</Badge>
                         )}
                       </div>
                       <p className="font-medium">{template.name}</p>
@@ -261,7 +263,7 @@ export default function ApprovalTemplatesPage() {
                           }}
                         >
                           <Edit className="mr-2 h-4 w-4" />
-                          수정
+                          {t('common.edit')}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={(e) => {
@@ -270,7 +272,7 @@ export default function ApprovalTemplatesPage() {
                           }}
                         >
                           <Copy className="mr-2 h-4 w-4" />
-                          복제
+                          {t('common.duplicate')}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={(e) => {
@@ -284,12 +286,12 @@ export default function ApprovalTemplatesPage() {
                           {template.isActive ? (
                             <>
                               <ToggleLeft className="mr-2 h-4 w-4" />
-                              비활성화
+                              {t('common.deactivate')}
                             </>
                           ) : (
                             <>
                               <ToggleRight className="mr-2 h-4 w-4" />
-                              활성화
+                              {t('common.activate')}
                             </>
                           )}
                         </DropdownMenuItem>
@@ -301,7 +303,7 @@ export default function ApprovalTemplatesPage() {
                           }}
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
-                          삭제
+                          {t('common.delete')}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -309,10 +311,10 @@ export default function ApprovalTemplatesPage() {
 
                   <div className="flex items-center justify-between mt-3 pt-3 border-t">
                     <Badge variant="outline" className="text-xs">
-                      {CATEGORY_LABELS[template.category] || template.category}
+                      {t(CATEGORY_LABEL_KEYS[template.category] || template.category)}
                     </Badge>
                     <span className="text-xs text-muted-foreground">
-                      수정: {formatDate(template.updatedAt)}
+                      {t('approvalTemplatesPage.updatedAt', { date: formatDate(template.updatedAt) })}
                     </span>
                   </div>
                 </div>
@@ -323,9 +325,9 @@ export default function ApprovalTemplatesPage() {
           <ConfirmDialog
             open={!!deleteTarget}
             onOpenChange={(open) => !open && setDeleteTarget(null)}
-            title="양식 삭제"
-            description={`"${deleteTarget?.name}" 양식을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`}
-            confirmLabel="삭제"
+            title={t('approvalTemplatesPage.deleteTitle')}
+            description={t('approvalTemplatesPage.deleteConfirm', { name: deleteTarget?.name })}
+            confirmLabel={t('common.delete')}
             variant="destructive"
             onConfirm={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
             isLoading={deleteMutation.isPending}
@@ -339,12 +341,12 @@ export default function ApprovalTemplatesPage() {
   return (
     <>
       <PageHeader
-        title="결재 양식 관리"
-        description="결재 문서 양식을 등록하고 관리합니다."
+        title={t('approvalTemplatesPage.title')}
+        description={t('approvalTemplatesPage.description')}
         actions={
           <Button onClick={() => navigate('/settings/approval-templates/new')}>
             <Plus className="mr-2 h-4 w-4" />
-            양식 등록
+            {t('approvalTemplatesPage.registerButton')}
           </Button>
         }
       />
@@ -355,7 +357,7 @@ export default function ApprovalTemplatesPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="양식명, 코드로 검색..."
+                placeholder={t('approvalTemplatesPage.searchPlaceholder')}
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
                 className="pl-9"
@@ -364,23 +366,23 @@ export default function ApprovalTemplatesPage() {
             <div className="flex gap-2">
               <Select value={categoryFilter || 'all'} onValueChange={(v) => setCategoryFilter(v === 'all' ? '' : v)}>
                 <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="문서유형" />
+                  <SelectValue placeholder={t('approvalTemplatesPage.documentType')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">전체</SelectItem>
-                  {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
-                    <SelectItem key={value} value={value}>{label}</SelectItem>
+                  <SelectItem value="all">{t('approvalTemplatesPage.categoryAll')}</SelectItem>
+                  {Object.entries(CATEGORY_LABEL_KEYS).map(([value, key]) => (
+                    <SelectItem key={value} value={value}>{t(key)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <Select value={statusFilter || 'all'} onValueChange={(v) => setStatusFilter(v === 'all' ? '' : v)}>
                 <SelectTrigger className="w-[120px]">
-                  <SelectValue placeholder="상태" />
+                  <SelectValue placeholder={t('common:status')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">전체</SelectItem>
-                  <SelectItem value="active">활성</SelectItem>
-                  <SelectItem value="inactive">비활성</SelectItem>
+                  <SelectItem value="all">{t('approvalTemplatesPage.statusAll')}</SelectItem>
+                  <SelectItem value="active">{t('approvalTemplatesPage.statusActive')}</SelectItem>
+                  <SelectItem value="inactive">{t('approvalTemplatesPage.statusInactive')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -391,7 +393,7 @@ export default function ApprovalTemplatesPage() {
       {isLoading ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">로딩 중...</p>
+            <p className="text-muted-foreground">{t('common.loading')}</p>
           </CardContent>
         </Card>
       ) : filteredTemplates.length === 0 ? (
@@ -399,10 +401,10 @@ export default function ApprovalTemplatesPage() {
           <CardContent>
             <EmptyState
               icon={FileText}
-              title="등록된 양식이 없습니다"
-              description="새로운 결재 양식을 등록해주세요."
+              title={t('approvalTemplatesPage.emptyTitle')}
+              description={t('approvalTemplatesPage.emptyDescription')}
               action={{
-                label: '양식 등록',
+                label: t('approvalTemplatesPage.registerButton'),
                 onClick: () => navigate('/settings/approval-templates/new'),
               }}
             />
@@ -416,19 +418,19 @@ export default function ApprovalTemplatesPage() {
                 <thead>
                   <tr className="border-b bg-muted/50">
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                      양식코드
+                      {t('approvalTemplatesPage.tableCode')}
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                      양식명
+                      {t('approvalTemplatesPage.tableName')}
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                      문서유형
+                      {t('approvalTemplatesPage.tableDocType')}
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                      상태
+                      {t('approvalTemplatesPage.tableStatus')}
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                      수정일
+                      {t('approvalTemplatesPage.tableUpdatedAt')}
                     </th>
                     <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
                     </th>
@@ -454,14 +456,14 @@ export default function ApprovalTemplatesPage() {
                       </td>
                       <td className="px-4 py-3 text-sm">
                         <Badge variant="outline">
-                          {CATEGORY_LABELS[template.category] || template.category}
+                          {t(CATEGORY_LABEL_KEYS[template.category] || template.category)}
                         </Badge>
                       </td>
                       <td className="px-4 py-3">
                         {template.isActive ? (
-                          <Badge variant="default" className="bg-green-500">활성</Badge>
+                          <Badge variant="default" className="bg-green-500">{t('approvalTemplatesPage.statusActive')}</Badge>
                         ) : (
-                          <Badge variant="secondary">비활성</Badge>
+                          <Badge variant="secondary">{t('approvalTemplatesPage.statusInactive')}</Badge>
                         )}
                       </td>
                       <td className="px-4 py-3 text-sm text-muted-foreground">
@@ -482,7 +484,7 @@ export default function ApprovalTemplatesPage() {
                               }}
                             >
                               <Edit className="mr-2 h-4 w-4" />
-                              수정
+                              {t('common.edit')}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={(e) => {
@@ -491,7 +493,7 @@ export default function ApprovalTemplatesPage() {
                               }}
                             >
                               <Copy className="mr-2 h-4 w-4" />
-                              복제
+                              {t('common.duplicate')}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={(e) => {
@@ -505,12 +507,12 @@ export default function ApprovalTemplatesPage() {
                               {template.isActive ? (
                                 <>
                                   <ToggleLeft className="mr-2 h-4 w-4" />
-                                  비활성화
+                                  {t('common.deactivate')}
                                 </>
                               ) : (
                                 <>
                                   <ToggleRight className="mr-2 h-4 w-4" />
-                                  활성화
+                                  {t('common.activate')}
                                 </>
                               )}
                             </DropdownMenuItem>
@@ -522,7 +524,7 @@ export default function ApprovalTemplatesPage() {
                               }}
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
-                              삭제
+                              {t('common.delete')}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -539,9 +541,9 @@ export default function ApprovalTemplatesPage() {
       <ConfirmDialog
         open={!!deleteTarget}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
-        title="양식 삭제"
-        description={`"${deleteTarget?.name}" 양식을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`}
-        confirmLabel="삭제"
+        title={t('approvalTemplatesPage.deleteTitle')}
+        description={t('approvalTemplatesPage.deleteConfirm', { name: deleteTarget?.name })}
+        confirmLabel={t('common.delete')}
         variant="destructive"
         onConfirm={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
         isLoading={deleteMutation.isPending}

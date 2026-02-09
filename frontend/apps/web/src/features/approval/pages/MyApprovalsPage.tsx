@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { PageHeader } from '@/components/common/PageHeader';
 import { PullToRefreshContainer } from '@/components/mobile';
@@ -24,25 +25,26 @@ import { queryKeys } from '@/lib/queryClient';
 import { useApprovalList } from '../hooks/useApprovals';
 import type { ApprovalStatus, ApprovalType } from '@hr-platform/shared-types';
 
-const STATUS_CONFIG: Record<ApprovalStatus, { label: string; variant: 'default' | 'warning' | 'success' | 'error' }> = {
-  DRAFT: { label: '임시저장', variant: 'default' },
-  PENDING: { label: '진행중', variant: 'warning' },
-  IN_REVIEW: { label: '검토중', variant: 'warning' },
-  APPROVED: { label: '승인', variant: 'success' },
-  REJECTED: { label: '반려', variant: 'error' },
-  RECALLED: { label: '회수됨', variant: 'warning' },
-  CANCELLED: { label: '취소', variant: 'default' },
+const STATUS_CONFIG_KEYS: Record<ApprovalStatus, { key: string; variant: 'default' | 'warning' | 'success' | 'error' }> = {
+  DRAFT: { key: 'status.draft', variant: 'default' },
+  PENDING: { key: 'status.pending', variant: 'warning' },
+  IN_REVIEW: { key: 'status.inReview', variant: 'warning' },
+  APPROVED: { key: 'status.approved', variant: 'success' },
+  REJECTED: { key: 'status.rejected', variant: 'error' },
+  RECALLED: { key: 'status.recalled', variant: 'warning' },
+  CANCELLED: { key: 'status.cancelled', variant: 'default' },
 };
 
-const TYPE_LABELS: Record<string, string> = {
-  LEAVE_REQUEST: '휴가신청',
-  EXPENSE: '경비청구',
-  OVERTIME: '초과근무',
-  PERSONNEL: '인사발령',
-  GENERAL: '일반',
+const TYPE_LABEL_KEYS: Record<string, string> = {
+  LEAVE_REQUEST: 'type.leaveRequest',
+  EXPENSE: 'type.expense',
+  OVERTIME: 'type.overtime',
+  PERSONNEL: 'type.personnelAppointment',
+  GENERAL: 'type.generalShort',
 };
 
 export default function MyApprovalsPage() {
+  const { t } = useTranslation('approval');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
@@ -79,12 +81,12 @@ export default function MyApprovalsPage() {
           {/* Mobile Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold">내 결재</h1>
-              <p className="text-sm text-muted-foreground">내가 요청한 결재 문서</p>
+              <h1 className="text-xl font-bold">{t('myApprovalsPage.title')}</h1>
+              <p className="text-sm text-muted-foreground">{t('myApprovalsPage.mobileDesc')}</p>
             </div>
             <Button size="sm" onClick={() => navigate('/approvals/new')}>
               <Plus className="mr-1 h-4 w-4" />
-              작성
+              {t('myApprovalsPage.writeButton')}
             </Button>
           </div>
 
@@ -95,7 +97,7 @@ export default function MyApprovalsPage() {
               className={`p-3 rounded-xl border text-left transition-colors ${tab === 'pending' ? 'bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800' : 'bg-card'}`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">진행중</span>
+                <span className="text-xs text-muted-foreground">{t('myApprovalsPage.summaryPending')}</span>
                 <Clock className="h-4 w-4 text-yellow-600" />
               </div>
               <p className="text-xl font-bold text-yellow-600 mt-1">
@@ -107,7 +109,7 @@ export default function MyApprovalsPage() {
               className={`p-3 rounded-xl border text-left transition-colors ${tab === 'completed' ? 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800' : 'bg-card'}`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">완료</span>
+                <span className="text-xs text-muted-foreground">{t('myApprovalsPage.summaryCompleted')}</span>
                 <CheckCircle className="h-4 w-4 text-green-600" />
               </div>
               <p className="text-xl font-bold text-green-600 mt-1">
@@ -120,7 +122,7 @@ export default function MyApprovalsPage() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="제목, 문서번호 검색..."
+              placeholder={t('myApprovalsPage.searchPlaceholder')}
               value={keyword}
               onChange={(e) => { setKeyword(e.target.value); setPage(0); }}
               className="pl-9"
@@ -130,10 +132,10 @@ export default function MyApprovalsPage() {
           {/* Mobile Tabs */}
           <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
             {[
-              { value: 'all', label: '전체' },
-              { value: 'pending', label: '진행중' },
-              { value: 'completed', label: '완료' },
-              { value: 'draft', label: '임시저장' },
+              { value: 'all', key: 'myApprovalsPage.tabAll' },
+              { value: 'pending', key: 'myApprovalsPage.tabPending' },
+              { value: 'completed', key: 'myApprovalsPage.tabCompleted' },
+              { value: 'draft', key: 'myApprovalsPage.tabDraft' },
             ].map((item) => (
               <button
                 key={item.value}
@@ -144,7 +146,7 @@ export default function MyApprovalsPage() {
                     : 'bg-muted text-muted-foreground'
                 }`}
               >
-                {item.label}
+                {t(item.key)}
               </button>
             ))}
           </div>
@@ -159,17 +161,17 @@ export default function MyApprovalsPage() {
           ) : approvals.length === 0 ? (
             <EmptyState
               icon={FileCheck}
-              title="결재 문서가 없습니다"
-              description="새 결재를 작성하세요."
+              title={t('myApprovalsPage.emptyTitle')}
+              description={t('myApprovalsPage.emptyMobileDesc')}
               action={{
-                label: '결재 작성',
+                label: t('myApprovalsPage.createButton'),
                 onClick: () => navigate('/approvals/new'),
               }}
             />
           ) : (
             <div className="space-y-3">
               {approvals.map((approval) => {
-                const statusConfig = STATUS_CONFIG[approval.status];
+                const statusConfig = STATUS_CONFIG_KEYS[approval.status];
                 return (
                   <button
                     key={approval.id}
@@ -179,8 +181,8 @@ export default function MyApprovalsPage() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs text-muted-foreground">{TYPE_LABELS[approval.documentType]}</span>
-                          <StatusBadge status={statusConfig.variant} label={statusConfig.label} />
+                          <span className="text-xs text-muted-foreground">{t(TYPE_LABEL_KEYS[approval.documentType])}</span>
+                          <StatusBadge status={statusConfig.variant} label={t(statusConfig.key)} />
                         </div>
                         <p className="font-medium text-sm truncate">{approval.title}</p>
                         <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
@@ -189,7 +191,7 @@ export default function MyApprovalsPage() {
                           <span>{format(new Date(approval.createdAt), 'M/d')}</span>
                         </div>
                         {approval.currentStepName && (
-                          <p className="text-xs text-primary mt-1">현재: {approval.currentStepName}</p>
+                          <p className="text-xs text-primary mt-1">{t('myApprovalsPage.currentStep', { name: approval.currentStepName })}</p>
                         )}
                       </div>
                       <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-1" />
@@ -211,12 +213,12 @@ export default function MyApprovalsPage() {
   return (
     <>
       <PageHeader
-        title="내 결재"
-        description="내가 요청한 결재 문서를 확인합니다."
+        title={t('myApprovalsPage.title')}
+        description={t('myApprovalsPage.description')}
         actions={
           <Button onClick={() => navigate('/approvals/new')}>
             <Plus className="mr-2 h-4 w-4" />
-            결재 작성
+            {t('myApprovalsPage.createButton')}
           </Button>
         }
       />
@@ -227,7 +229,7 @@ export default function MyApprovalsPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">전체</p>
+                <p className="text-sm text-muted-foreground">{t('myApprovalsPage.summaryAll')}</p>
                 <p className="text-2xl font-bold">{totalElements}</p>
               </div>
               <FileCheck className="h-8 w-8 text-muted-foreground" />
@@ -238,7 +240,7 @@ export default function MyApprovalsPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">진행중</p>
+                <p className="text-sm text-muted-foreground">{t('myApprovalsPage.summaryPending')}</p>
                 <p className="text-2xl font-bold text-yellow-600">
                   {approvals.filter((a) => a.status === 'PENDING').length}
                 </p>
@@ -251,7 +253,7 @@ export default function MyApprovalsPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">완료</p>
+                <p className="text-sm text-muted-foreground">{t('myApprovalsPage.summaryCompleted')}</p>
                 <p className="text-2xl font-bold text-green-600">
                   {approvals.filter((a) => a.status === 'APPROVED').length}
                 </p>
@@ -264,7 +266,7 @@ export default function MyApprovalsPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">임시저장</p>
+                <p className="text-sm text-muted-foreground">{t('myApprovalsPage.summaryDraft')}</p>
                 <p className="text-2xl font-bold text-gray-600">
                   {approvals.filter((a) => a.status === 'DRAFT').length}
                 </p>
@@ -282,7 +284,7 @@ export default function MyApprovalsPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="제목, 문서번호로 검색..."
+                placeholder={t('myApprovalsPage.searchDesktopPlaceholder')}
                 value={keyword}
                 onChange={(e) => {
                   setKeyword(e.target.value);
@@ -299,15 +301,15 @@ export default function MyApprovalsPage() {
               }}
             >
               <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="유형" />
+                <SelectValue placeholder={t('myApprovalsPage.typeFilter')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">전체 유형</SelectItem>
-                <SelectItem value="LEAVE_REQUEST">휴가신청</SelectItem>
-                <SelectItem value="EXPENSE">경비청구</SelectItem>
-                <SelectItem value="OVERTIME">초과근무</SelectItem>
-                <SelectItem value="PERSONNEL">인사발령</SelectItem>
-                <SelectItem value="GENERAL">일반</SelectItem>
+                <SelectItem value="all">{t('myApprovalsPage.allTypes')}</SelectItem>
+                <SelectItem value="LEAVE_REQUEST">{t('type.leaveRequest')}</SelectItem>
+                <SelectItem value="EXPENSE">{t('type.expense')}</SelectItem>
+                <SelectItem value="OVERTIME">{t('type.overtime')}</SelectItem>
+                <SelectItem value="PERSONNEL">{t('type.personnelAppointment')}</SelectItem>
+                <SelectItem value="GENERAL">{t('type.generalShort')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -317,10 +319,10 @@ export default function MyApprovalsPage() {
       {/* Tabs */}
       <Tabs value={tab} onValueChange={(v) => { setTab(v as typeof tab); setPage(0); }}>
         <TabsList className="mb-4">
-          <TabsTrigger value="all">전체</TabsTrigger>
-          <TabsTrigger value="pending">진행중</TabsTrigger>
-          <TabsTrigger value="completed">완료</TabsTrigger>
-          <TabsTrigger value="draft">임시저장</TabsTrigger>
+          <TabsTrigger value="all">{t('myApprovalsPage.tabAll')}</TabsTrigger>
+          <TabsTrigger value="pending">{t('myApprovalsPage.tabPending')}</TabsTrigger>
+          <TabsTrigger value="completed">{t('myApprovalsPage.tabCompleted')}</TabsTrigger>
+          <TabsTrigger value="draft">{t('myApprovalsPage.tabDraft')}</TabsTrigger>
         </TabsList>
 
         <Card>
@@ -332,10 +334,10 @@ export default function MyApprovalsPage() {
             ) : approvals.length === 0 ? (
               <EmptyState
                 icon={FileCheck}
-                title="결재 문서가 없습니다"
-                description="새 결재를 작성하려면 상단의 버튼을 클릭하세요."
+                title={t('myApprovalsPage.emptyTitle')}
+                description={t('myApprovalsPage.emptyDesktopDesc')}
                 action={{
-                  label: '결재 작성',
+                  label: t('myApprovalsPage.createButton'),
                   onClick: () => navigate('/approvals/new'),
                 }}
               />
@@ -346,28 +348,28 @@ export default function MyApprovalsPage() {
                     <thead>
                       <tr className="border-b bg-muted/50">
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          문서번호
+                          {t('myApprovalsPage.tableDocNumber')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          유형
+                          {t('myApprovalsPage.tableType')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          제목
+                          {t('myApprovalsPage.tableTitle')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          상태
+                          {t('myApprovalsPage.tableStatus')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          현재결재자
+                          {t('myApprovalsPage.tableCurrentApprover')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          신청일
+                          {t('myApprovalsPage.tableCreatedDate')}
                         </th>
                       </tr>
                     </thead>
                     <tbody>
                       {approvals.map((approval) => {
-                        const statusConfig = STATUS_CONFIG[approval.status];
+                        const statusConfig = STATUS_CONFIG_KEYS[approval.status];
                         return (
                           <tr
                             key={approval.id}
@@ -378,7 +380,7 @@ export default function MyApprovalsPage() {
                               {approval.documentNumber}
                             </td>
                             <td className="px-4 py-3 text-sm">
-                              {TYPE_LABELS[approval.documentType]}
+                              {t(TYPE_LABEL_KEYS[approval.documentType])}
                             </td>
                             <td className="px-4 py-3">
                               <div className="font-medium">{approval.title}</div>
@@ -386,7 +388,7 @@ export default function MyApprovalsPage() {
                             <td className="px-4 py-3">
                               <StatusBadge
                                 status={statusConfig.variant}
-                                label={statusConfig.label}
+                                label={t(statusConfig.key)}
                               />
                             </td>
                             <td className="px-4 py-3 text-sm text-muted-foreground">

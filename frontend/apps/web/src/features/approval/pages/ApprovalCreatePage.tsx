@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { PageHeader } from '@/components/common/PageHeader';
 import { DatePicker } from '@/components/common/DatePicker';
@@ -28,31 +29,31 @@ import { OrgTreeApproverPicker } from '../components/OrgTreeApproverPicker';
 import type { SelectedApprover } from '../components/OrgTreeApproverPicker';
 import type { ApprovalType, ApprovalUrgency, ApprovalMode, ParallelCompletionCondition, CreateApprovalRequest } from '@hr-platform/shared-types';
 
-const APPROVAL_TYPES: { value: ApprovalType; label: string }[] = [
-  { value: 'LEAVE_REQUEST', label: '휴가신청' },
-  { value: 'EXPENSE', label: '경비청구' },
-  { value: 'OVERTIME', label: '초과근무' },
-  { value: 'PERSONNEL', label: '인사관련' },
-  { value: 'GENERAL', label: '일반기안' },
+const APPROVAL_TYPE_KEYS: { value: ApprovalType; key: string }[] = [
+  { value: 'LEAVE_REQUEST', key: 'type.leaveRequest' },
+  { value: 'EXPENSE', key: 'type.expense' },
+  { value: 'OVERTIME', key: 'type.overtime' },
+  { value: 'PERSONNEL', key: 'type.personnel' },
+  { value: 'GENERAL', key: 'type.general' },
 ];
 
-const URGENCY_OPTIONS: { value: ApprovalUrgency; label: string }[] = [
-  { value: 'LOW', label: '낮음' },
-  { value: 'NORMAL', label: '보통' },
-  { value: 'HIGH', label: '긴급' },
+const URGENCY_OPTION_KEYS: { value: ApprovalUrgency; key: string }[] = [
+  { value: 'LOW', key: 'urgency.low' },
+  { value: 'NORMAL', key: 'urgency.normal' },
+  { value: 'HIGH', key: 'urgency.high' },
 ];
 
-const APPROVAL_MODE_OPTIONS: { value: ApprovalMode; label: string; description: string; disabled: boolean }[] = [
-  { value: 'SEQUENTIAL', label: '순차결재', description: '결재자 순서대로 진행', disabled: false },
-  { value: 'DIRECT', label: '전결', description: '최종결재자가 즉시 결정', disabled: false },
-  { value: 'PARALLEL', label: '병렬결재', description: '모든 결재자가 동시에 결재', disabled: false },
-  { value: 'CONSENSUS', label: '합의결재', description: '의견 수집 후 최종 결재', disabled: false },
+const APPROVAL_MODE_OPTION_KEYS: { value: ApprovalMode; labelKey: string; descKey: string; disabled: boolean }[] = [
+  { value: 'SEQUENTIAL', labelKey: 'mode.sequential', descKey: 'mode.sequentialDesc', disabled: false },
+  { value: 'DIRECT', labelKey: 'mode.direct', descKey: 'mode.directDesc', disabled: false },
+  { value: 'PARALLEL', labelKey: 'mode.parallel', descKey: 'mode.parallelDesc', disabled: false },
+  { value: 'CONSENSUS', labelKey: 'mode.consensus', descKey: 'mode.consensusDesc', disabled: false },
 ];
 
-const PARALLEL_COMPLETION_LABELS: Record<ParallelCompletionCondition, string> = {
-  ALL: '전원 승인',
-  MAJORITY: '과반수 승인',
-  ANY: '1인 승인',
+const PARALLEL_COMPLETION_KEYS: Record<ParallelCompletionCondition, string> = {
+  ALL: 'completionCondition.all',
+  MAJORITY: 'completionCondition.majorityApproval',
+  ANY: 'completionCondition.any',
 };
 
 interface Approver {
@@ -63,6 +64,7 @@ interface Approver {
 }
 
 export default function ApprovalCreatePage() {
+  const { t } = useTranslation('approval');
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const currentUser = useAuthStore((state) => state.user);
@@ -208,10 +210,10 @@ export default function ApprovalCreatePage() {
           </button>
           <div className="flex-1">
             <h1 className="text-lg font-bold">
-              {mobileStep === 'form' ? '결재 작성' : '결재선 설정'}
+              {mobileStep === 'form' ? t('approvalCreatePage.mobileFormTitle') : t('approvalCreatePage.mobileApproversTitle')}
             </h1>
             <p className="text-xs text-muted-foreground">
-              {mobileStep === 'form' ? '문서 내용을 입력하세요' : '결재자를 추가하세요'}
+              {mobileStep === 'form' ? t('approvalCreatePage.mobileFormDesc') : t('approvalCreatePage.mobileApproversDesc')}
             </p>
           </div>
         </div>
@@ -222,14 +224,14 @@ export default function ApprovalCreatePage() {
             mobileStep === 'form' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
           }`}>
             <FileText className="h-4 w-4" />
-            <span>1. 문서</span>
+            <span>{t('approvalCreatePage.stepDocument')}</span>
           </div>
           <ChevronRight className="h-4 w-4 text-muted-foreground" />
           <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm ${
             mobileStep === 'approvers' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
           }`}>
             <Users className="h-4 w-4" />
-            <span>2. 결재선</span>
+            <span>{t('approvalCreatePage.stepApprovalLine')}</span>
           </div>
         </div>
 
@@ -239,18 +241,18 @@ export default function ApprovalCreatePage() {
             {/* Document Type & Urgency */}
             <div className="bg-card rounded-2xl border p-4 space-y-4">
               <div className="grid gap-2">
-                <Label htmlFor="mobile-type" className="text-sm">문서 유형 *</Label>
+                <Label htmlFor="mobile-type" className="text-sm">{t('approvalCreatePage.documentType')}</Label>
                 <Select
                   value={formData.documentType}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, documentType: value as ApprovalType }))}
                 >
                   <SelectTrigger id="mobile-type">
-                    <SelectValue placeholder="유형 선택" />
+                    <SelectValue placeholder={t('approvalCreatePage.selectType')} />
                   </SelectTrigger>
                   <SelectContent>
-                    {APPROVAL_TYPES.map((type) => (
+                    {APPROVAL_TYPE_KEYS.map((type) => (
                       <SelectItem key={type.value} value={type.value}>
-                        {type.label}
+                        {t(type.key)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -258,9 +260,9 @@ export default function ApprovalCreatePage() {
               </div>
 
               <div className="grid gap-2">
-                <Label className="text-sm">긴급도</Label>
+                <Label className="text-sm">{t('approvalCreatePage.urgencyLabel')}</Label>
                 <div className="flex gap-2">
-                  {URGENCY_OPTIONS.map((opt) => (
+                  {URGENCY_OPTION_KEYS.map((opt) => (
                     <button
                       key={opt.value}
                       onClick={() => setFormData(prev => ({ ...prev, urgency: opt.value }))}
@@ -272,32 +274,32 @@ export default function ApprovalCreatePage() {
                           : 'bg-muted text-muted-foreground'
                       }`}
                     >
-                      {opt.label}
+                      {t(opt.key)}
                     </button>
                   ))}
                 </div>
               </div>
 
               <div className="grid gap-2">
-                <Label className="text-sm">처리기한</Label>
+                <Label className="text-sm">{t('approvalCreatePage.dueDateLabel')}</Label>
                 <DatePicker
                   value={formData.dueDate}
                   onChange={(date) => setFormData(prev => ({ ...prev, dueDate: date }))}
                   disabledDates={(date) => date < new Date()}
-                  placeholder="선택 (선택사항)"
+                  placeholder={t('approvalCreatePage.dueDatePlaceholder')}
                 />
               </div>
             </div>
 
             {/* Approval Mode Selector (Mobile) */}
             <div className="bg-card rounded-2xl border p-4 space-y-3">
-              <Label className="text-sm font-medium">결재 모드</Label>
+              <Label className="text-sm font-medium">{t('approvalCreatePage.approvalModeLabel')}</Label>
               <RadioGroup
                 value={approvalMode}
                 onValueChange={(v) => handleModeChange(v as ApprovalMode)}
                 className="grid grid-cols-2 gap-2"
               >
-                {APPROVAL_MODE_OPTIONS.map((opt) => (
+                {APPROVAL_MODE_OPTION_KEYS.map((opt) => (
                   <label
                     key={opt.value}
                     className={`flex items-center gap-2 p-3 rounded-xl border cursor-pointer transition-colors ${
@@ -310,9 +312,9 @@ export default function ApprovalCreatePage() {
                     <div>
                       <p className="text-sm font-medium flex items-center gap-1">
                         {getModeIcon(opt.value)}
-                        {opt.label}
+                        {t(opt.labelKey)}
                       </p>
-                      <p className="text-[10px] text-muted-foreground">{opt.description}</p>
+                      <p className="text-[10px] text-muted-foreground">{t(opt.descKey)}</p>
                     </div>
                   </label>
                 ))}
@@ -321,9 +323,9 @@ export default function ApprovalCreatePage() {
               {/* Parallel completion condition (mobile) - read-only from tenant config */}
               {approvalMode === 'PARALLEL' && (
                 <div className="space-y-2 pt-2">
-                  <Label className="text-xs text-muted-foreground">완료 조건 (테넌트 설정)</Label>
+                  <Label className="text-xs text-muted-foreground">{t('approvalCreatePage.completionConditionTenant')}</Label>
                   <Badge variant="outline">
-                    {PARALLEL_COMPLETION_LABELS[parallelCompletion]}
+                    {t(PARALLEL_COMPLETION_KEYS[parallelCompletion])}
                   </Badge>
                 </div>
               )}
@@ -332,22 +334,22 @@ export default function ApprovalCreatePage() {
             {/* Title & Content */}
             <div className="bg-card rounded-2xl border p-4 space-y-4">
               <div className="grid gap-2">
-                <Label htmlFor="mobile-title" className="text-sm">제목 *</Label>
+                <Label htmlFor="mobile-title" className="text-sm">{t('approvalCreatePage.titleLabel')}</Label>
                 <Input
                   id="mobile-title"
                   value={formData.title}
                   onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="문서 제목을 입력하세요"
+                  placeholder={t('approvalCreatePage.titlePlaceholder')}
                 />
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="mobile-content" className="text-sm">내용 *</Label>
+                <Label htmlFor="mobile-content" className="text-sm">{t('approvalCreatePage.contentLabel')}</Label>
                 <Textarea
                   id="mobile-content"
                   value={formData.content}
                   onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-                  placeholder="문서 내용을 입력하세요"
+                  placeholder={t('approvalCreatePage.contentPlaceholder')}
                   rows={8}
                   className="resize-none"
                 />
@@ -360,16 +362,16 @@ export default function ApprovalCreatePage() {
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">결재선</span>
+                    <span className="text-sm font-medium">{t('approvalCreatePage.approvalLine')}</span>
                     {approvalMode === 'DIRECT' && (
-                      <span className="text-[10px] bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300 px-1.5 py-0.5 rounded">전결</span>
+                      <span className="text-[10px] bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300 px-1.5 py-0.5 rounded">{t('mode.direct')}</span>
                     )}
                   </div>
-                  <span className="text-xs text-primary">{selectedApprovers.length}명 선택됨</span>
+                  <span className="text-xs text-primary">{t('approvalCreatePage.selectedCount', { count: selectedApprovers.length })}</span>
                 </div>
                 <ApprovalLinePreview
                   mode={approvalMode}
-                  requesterName={currentUser?.name || '나'}
+                  requesterName={currentUser?.name || t('common.me')}
                   approvers={selectedApprovers}
                 />
               </div>
@@ -385,7 +387,7 @@ export default function ApprovalCreatePage() {
               <Alert variant="warning" className="rounded-2xl">
                 <ShieldAlert className="h-4 w-4" />
                 <AlertDescription>
-                  본인을 결재자로 지정할 수 없습니다.
+                  {t('approvalCreatePage.selfApprovalWarning')}
                 </AlertDescription>
               </Alert>
             )}
@@ -393,14 +395,14 @@ export default function ApprovalCreatePage() {
             {/* Selected Approvers */}
             <div className="bg-card rounded-2xl border p-4">
               <p className="text-sm font-medium mb-3">
-                {approvalMode === 'DIRECT' ? '최종결재자' : `선택된 결재자 (${selectedApprovers.length}명)`}
+                {approvalMode === 'DIRECT' ? t('approvalCreatePage.finalApprover') : t('approvalCreatePage.selectedApprovers', { count: selectedApprovers.length })}
               </p>
               {selectedApprovers.length === 0 ? (
                 <div className="py-8 text-center text-sm text-muted-foreground">
                   <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
                   {approvalMode === 'DIRECT'
-                    ? '아래에서 최종결재자를 선택해주세요'
-                    : '아래에서 결재자를 선택해주세요'}
+                    ? t('approvalCreatePage.selectFinalApprover')
+                    : t('approvalCreatePage.selectApprover')}
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -440,7 +442,7 @@ export default function ApprovalCreatePage() {
                 onClick={() => setIsApproverPickerOpen(true)}
               >
                 <Plus className="mr-2 h-5 w-5" />
-                {approvalMode === 'DIRECT' ? '조직도에서 최종결재자 선택' : '조직도에서 결재자 추가'}
+                {approvalMode === 'DIRECT' ? t('approvalCreatePage.orgChartFinalApprover') : t('approvalCreatePage.orgChartAddApprover')}
               </Button>
             )}
 
@@ -457,12 +459,12 @@ export default function ApprovalCreatePage() {
               <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
               <p>
                 {approvalMode === 'DIRECT'
-                  ? '전결 모드에서는 최종결재자 한 명이 즉시 결정합니다.'
+                  ? t('approvalCreatePage.directModeInfo')
                   : approvalMode === 'PARALLEL'
-                  ? '병렬결재는 모든 결재자에게 동시에 결재 요청이 전달됩니다.'
+                  ? t('approvalCreatePage.parallelModeInfo')
                   : approvalMode === 'CONSENSUS'
-                  ? '합의결재는 먼저 의견을 수집한 후 최종 결재자가 결정합니다.'
-                  : '결재선은 순서대로 진행됩니다. 첫 번째 결재자가 승인하면 다음 결재자에게 전달됩니다.'}
+                  ? t('approvalCreatePage.consensusModeInfo')
+                  : t('approvalCreatePage.sequentialModeInfo')}
               </p>
             </div>
           </div>
@@ -477,14 +479,14 @@ export default function ApprovalCreatePage() {
                 className="flex-1 h-12"
                 onClick={() => navigate(-1)}
               >
-                취소
+                {t('common.cancel')}
               </Button>
               <Button
                 className="flex-1 h-12"
                 onClick={() => setMobileStep('approvers')}
                 disabled={!formData.documentType || !formData.title || !formData.content}
               >
-                다음
+                {t('common.next')}
                 <ChevronRight className="ml-1 h-4 w-4" />
               </Button>
             </div>
@@ -495,11 +497,11 @@ export default function ApprovalCreatePage() {
               disabled={selectedApprovers.length === 0 || createMutation.isPending}
             >
               {createMutation.isPending ? (
-                '요청 중...'
+                t('common.requesting')
               ) : (
                 <>
                   <Send className="mr-2 h-5 w-5" />
-                  결재 요청
+                  {t('approvalCreatePage.submitRequest')}
                 </>
               )}
             </Button>
@@ -513,13 +515,13 @@ export default function ApprovalCreatePage() {
   return (
     <>
       <PageHeader
-        title="결재 문서 작성"
-        description="새 결재 문서를 작성합니다."
+        title={t('approvalCreatePage.title')}
+        description={t('approvalCreatePage.description')}
         actions={
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => navigate('/approvals')}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              취소
+              {t('common.cancel')}
             </Button>
             <Button
               onClick={handleSubmit}
@@ -532,7 +534,7 @@ export default function ApprovalCreatePage() {
               }
             >
               <Send className="mr-2 h-4 w-4" />
-              {createMutation.isPending ? '요청 중...' : '결재 요청'}
+              {createMutation.isPending ? t('common.requesting') : t('approvalCreatePage.submitRequest')}
             </Button>
           </div>
         }
@@ -541,30 +543,30 @@ export default function ApprovalCreatePage() {
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>문서 내용</CardTitle>
+            <CardTitle>{t('approvalCreatePage.documentContentCard')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="grid gap-2">
-                <Label htmlFor="type">문서 유형 *</Label>
+                <Label htmlFor="type">{t('approvalCreatePage.documentType')}</Label>
                 <Select
                   value={formData.documentType}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, documentType: value as ApprovalType }))}
                 >
                   <SelectTrigger id="type">
-                    <SelectValue placeholder="유형 선택" />
+                    <SelectValue placeholder={t('approvalCreatePage.selectType')} />
                   </SelectTrigger>
                   <SelectContent>
-                    {APPROVAL_TYPES.map((type) => (
+                    {APPROVAL_TYPE_KEYS.map((type) => (
                       <SelectItem key={type.value} value={type.value}>
-                        {type.label}
+                        {t(type.key)}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="urgency">긴급도</Label>
+                <Label htmlFor="urgency">{t('approvalCreatePage.urgencyLabel')}</Label>
                 <Select
                   value={formData.urgency}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, urgency: value as ApprovalUrgency }))}
@@ -573,9 +575,9 @@ export default function ApprovalCreatePage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {URGENCY_OPTIONS.map((opt) => (
+                    {URGENCY_OPTION_KEYS.map((opt) => (
                       <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
+                        {t(opt.key)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -584,24 +586,24 @@ export default function ApprovalCreatePage() {
             </div>
 
             <div className="grid gap-2">
-              <Label>처리기한</Label>
+              <Label>{t('approvalCreatePage.dueDateLabel')}</Label>
               <DatePicker
                 value={formData.dueDate}
                 onChange={(date) => setFormData(prev => ({ ...prev, dueDate: date }))}
                 disabledDates={(date) => date < new Date()}
-                placeholder="처리기한 선택 (선택사항)"
+                placeholder={t('approvalCreatePage.dueDateDesktopPlaceholder')}
               />
             </div>
 
             {/* Approval Mode Selector (Desktop) */}
             <div className="grid gap-3">
-              <Label>결재 모드</Label>
+              <Label>{t('approvalCreatePage.approvalModeLabel')}</Label>
               <RadioGroup
                 value={approvalMode}
                 onValueChange={(v) => handleModeChange(v as ApprovalMode)}
                 className="flex flex-wrap gap-3"
               >
-                {APPROVAL_MODE_OPTIONS.map((opt) => (
+                {APPROVAL_MODE_OPTION_KEYS.map((opt) => (
                   <label
                     key={opt.value}
                     className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border cursor-pointer transition-colors ${
@@ -613,10 +615,10 @@ export default function ApprovalCreatePage() {
                     <RadioGroupItem value={opt.value} />
                     <span className="text-sm font-medium flex items-center gap-1">
                       {getModeIcon(opt.value)}
-                      {opt.label}
+                      {t(opt.labelKey)}
                     </span>
                     <span className="text-xs text-muted-foreground hidden sm:inline">
-                      ({opt.description})
+                      ({t(opt.descKey)})
                     </span>
                   </label>
                 ))}
@@ -625,31 +627,31 @@ export default function ApprovalCreatePage() {
               {/* Parallel completion condition - read-only from tenant config */}
               {approvalMode === 'PARALLEL' && (
                 <div className="ml-1 mt-2 space-y-2">
-                  <Label className="text-sm text-muted-foreground">완료 조건 (테넌트 설정)</Label>
+                  <Label className="text-sm text-muted-foreground">{t('approvalCreatePage.completionConditionTenant')}</Label>
                   <Badge variant="outline">
-                    {PARALLEL_COMPLETION_LABELS[parallelCompletion]}
+                    {t(PARALLEL_COMPLETION_KEYS[parallelCompletion])}
                   </Badge>
                 </div>
               )}
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="title">제목 *</Label>
+              <Label htmlFor="title">{t('approvalCreatePage.titleLabel')}</Label>
               <Input
                 id="title"
                 value={formData.title}
                 onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="문서 제목을 입력하세요."
+                placeholder={t('approvalCreatePage.titlePlaceholder')}
               />
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="content">내용 *</Label>
+              <Label htmlFor="content">{t('approvalCreatePage.contentLabel')}</Label>
               <Textarea
                 id="content"
                 value={formData.content}
                 onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-                placeholder="문서 내용을 입력하세요."
+                placeholder={t('approvalCreatePage.contentPlaceholder')}
                 rows={10}
               />
             </div>
@@ -659,20 +661,20 @@ export default function ApprovalCreatePage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              결재선
+              {t('approvalCreatePage.approvalLine')}
               {approvalMode === 'DIRECT' && (
                 <span className="text-xs bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300 px-2 py-0.5 rounded font-normal">
-                  전결
+                  {t('mode.direct')}
                 </span>
               )}
               {approvalMode === 'PARALLEL' && (
                 <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded font-normal">
-                  병렬
+                  {t('mode.parallelShort')}
                 </span>
               )}
               {approvalMode === 'CONSENSUS' && (
                 <span className="text-xs bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded font-normal">
-                  합의
+                  {t('mode.consensusShort')}
                 </span>
               )}
             </CardTitle>
@@ -683,7 +685,7 @@ export default function ApprovalCreatePage() {
               <Alert variant="warning">
                 <ShieldAlert className="h-4 w-4" />
                 <AlertDescription>
-                  본인을 결재자로 지정할 수 없습니다.
+                  {t('approvalCreatePage.selfApprovalWarning')}
                 </AlertDescription>
               </Alert>
             )}
@@ -693,8 +695,8 @@ export default function ApprovalCreatePage() {
               {selectedApprovers.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-4">
                   {approvalMode === 'DIRECT'
-                    ? '최종결재자를 선택해주세요.'
-                    : '결재자를 추가해주세요.'}
+                    ? t('approvalCreatePage.selectFinalApproverPlease')
+                    : t('approvalCreatePage.addApproverPlease')}
                 </p>
               ) : (
                 selectedApprovers.map((approver, index) => (
@@ -734,7 +736,7 @@ export default function ApprovalCreatePage() {
                 onClick={() => setIsApproverPickerOpen(true)}
               >
                 <Plus className="mr-2 h-4 w-4" />
-                {approvalMode === 'DIRECT' ? '조직도에서 최종결재자 선택' : '조직도에서 결재자 추가'}
+                {approvalMode === 'DIRECT' ? t('approvalCreatePage.orgChartFinalApprover') : t('approvalCreatePage.orgChartAddApprover')}
               </Button>
             )}
 
@@ -749,10 +751,10 @@ export default function ApprovalCreatePage() {
             {/* Approval Line Preview */}
             {selectedApprovers.length > 0 && (
               <div className="border rounded-lg p-3 bg-muted/10">
-                <p className="text-xs font-medium text-muted-foreground mb-2">결재선 미리보기</p>
+                <p className="text-xs font-medium text-muted-foreground mb-2">{t('approvalCreatePage.approvalLinePreview')}</p>
                 <ApprovalLinePreview
                   mode={approvalMode}
-                  requesterName={currentUser?.name || '나'}
+                  requesterName={currentUser?.name || t('common.me')}
                   approvers={selectedApprovers}
                 />
               </div>
@@ -761,14 +763,12 @@ export default function ApprovalCreatePage() {
             {/* Info */}
             <div className="text-xs text-muted-foreground mt-4 p-3 bg-muted/30 rounded">
               {approvalMode === 'DIRECT'
-                ? '전결 모드에서는 최종결재자 한 명이 즉시 결정합니다. 중간 단계 없이 바로 승인/반려됩니다.'
+                ? t('approvalCreatePage.directModeInfoFull')
                 : approvalMode === 'PARALLEL'
-                ? `병렬결재는 모든 결재자에게 동시에 결재 요청이 전달됩니다. 완료 조건: ${
-                    parallelCompletion === 'ALL' ? '전원 승인' : parallelCompletion === 'ANY' ? '1인 승인' : '과반수 승인'
-                  }`
+                ? t('approvalCreatePage.parallelModeInfo')
                 : approvalMode === 'CONSENSUS'
-                ? '합의결재는 합의자들의 의견을 먼저 수집한 후, 최종 결재자가 결정합니다. 마지막 결재자가 최종결재자입니다.'
-                : '결재선은 순서대로 진행됩니다. 첫 번째 결재자가 승인하면 다음 결재자에게 전달됩니다.'}
+                ? t('approvalCreatePage.consensusModeInfoFull')
+                : t('approvalCreatePage.sequentialModeInfo')}
             </div>
           </CardContent>
         </Card>

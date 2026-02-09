@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { AlertCircle, User, Clock, ChevronRight, Check, X } from 'lucide-react';
@@ -5,14 +6,6 @@ import { MobileCard, MobileCardContent, SwipeableCard } from '@/components/mobil
 import { ApprovalStatusBadge } from '@/components/common/StatusBadge';
 import { cn } from '@/lib/utils';
 import type { ApprovalListItem } from '@hr-platform/shared-types';
-
-const APPROVAL_TYPE_LABELS: Record<string, string> = {
-  LEAVE_REQUEST: '휴가신청',
-  EXPENSE: '경비청구',
-  OVERTIME: '초과근무',
-  PERSONNEL: '인사관련',
-  GENERAL: '일반기안',
-};
 
 const TYPE_COLORS: Record<string, string> = {
   LEAVE_REQUEST: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300',
@@ -40,8 +33,17 @@ export function ApprovalCard({
   onSwipeReject,
   enableSwipeActions = false,
 }: ApprovalCardProps) {
+  const { t } = useTranslation('approval');
   const dateDisplay = format(new Date(approval.createdAt), 'M월 d일 (E)', { locale: ko });
   const canSwipe = enableSwipeActions && approval.status === 'PENDING';
+
+  const APPROVAL_TYPE_LABELS: Record<string, string> = {
+    LEAVE_REQUEST: t('type.leaveRequest'),
+    EXPENSE: t('type.expense'),
+    OVERTIME: t('type.overtime'),
+    PERSONNEL: t('type.personnel'),
+    GENERAL: t('type.general'),
+  };
 
   const cardContent = (
     <MobileCard onClick={onClick} className={canSwipe ? '' : 'mb-3'}>
@@ -60,7 +62,7 @@ export function ApprovalCard({
             {approval.urgency === 'HIGH' && (
               <span className="flex items-center gap-0.5 text-xs text-red-500 font-medium">
                 <AlertCircle className="h-3.5 w-3.5" />
-                긴급
+                {t('approvalCard.urgent')}
               </span>
             )}
           </div>
@@ -93,7 +95,7 @@ export function ApprovalCard({
         {/* Current Approver */}
         {approval.currentStepName && (
           <div className="mt-2 pt-2 border-t border-border text-xs text-muted-foreground">
-            현재 결재자: <span className="font-medium">{approval.currentStepName}</span>
+            {t('approvalCard.currentApproverLabel')} <span className="font-medium">{approval.currentStepName}</span>
           </div>
         )}
 
@@ -107,7 +109,7 @@ export function ApprovalCard({
         {/* Swipe hint for pending items */}
         {canSwipe && (
           <div className="mt-2 pt-2 border-t border-border text-xs text-muted-foreground text-center">
-            ← 반려 | 승인 →
+            {t('approvalCard.swipeHint')}
           </div>
         )}
       </MobileCardContent>
@@ -124,7 +126,7 @@ export function ApprovalCard({
             ? [
                 {
                   icon: <Check className="h-5 w-5" />,
-                  label: '승인',
+                  label: t('common.approve'),
                   color: 'success',
                   onAction: onSwipeApprove,
                 },
@@ -136,7 +138,7 @@ export function ApprovalCard({
             ? [
                 {
                   icon: <X className="h-5 w-5" />,
-                  label: '반려',
+                  label: t('common.reject'),
                   color: 'destructive',
                   onAction: onSwipeReject,
                 },

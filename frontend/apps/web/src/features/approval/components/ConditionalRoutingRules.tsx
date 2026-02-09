@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,17 +26,6 @@ import type {
   ApprovalLineTemplate,
 } from '@hr-platform/shared-types';
 
-const CONDITION_FIELD_OPTIONS: Array<{ value: RoutingConditionField; label: string }> = [
-  { value: 'AMOUNT', label: '금액 (Amount)' },
-  { value: 'LEAVE_DAYS', label: '휴가일수 (Leave Days)' },
-];
-
-const CONDITION_OPERATOR_OPTIONS: Array<{ value: RoutingConditionOperator; label: string }> = [
-  { value: '>=', label: '>= (이상)' },
-  { value: '<=', label: '<= (이하)' },
-  { value: '==', label: '== (같음)' },
-];
-
 interface ConditionalRoutingRulesProps {
   value: ConditionalRoutingRule[];
   onChange: (value: ConditionalRoutingRule[]) => void;
@@ -47,7 +37,19 @@ interface ConditionalRoutingRulesProps {
  * based on field values (e.g., amount thresholds, leave days).
  */
 export function ConditionalRoutingRules({ value, onChange }: ConditionalRoutingRulesProps) {
+  const { t } = useTranslation('approval');
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+
+  const CONDITION_FIELD_OPTIONS: Array<{ value: RoutingConditionField; label: string }> = [
+    { value: 'AMOUNT', label: t('conditionalRoutingRules.fieldAmount') },
+    { value: 'LEAVE_DAYS', label: t('conditionalRoutingRules.fieldLeaveDays') },
+  ];
+
+  const CONDITION_OPERATOR_OPTIONS: Array<{ value: RoutingConditionOperator; label: string }> = [
+    { value: '>=', label: t('conditionalRoutingRules.operatorGte') },
+    { value: '<=', label: t('conditionalRoutingRules.operatorLte') },
+    { value: '==', label: t('conditionalRoutingRules.operatorEq') },
+  ];
 
   const handleAdd = () => {
     const newRule: ConditionalRoutingRule = {
@@ -94,13 +96,13 @@ export function ConditionalRoutingRules({ value, onChange }: ConditionalRoutingR
     return (
       <div className="text-center py-8 border-2 border-dashed rounded-lg">
         <Route className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-        <p className="text-muted-foreground mb-4">조건부 라우팅 규칙이 없습니다.</p>
+        <p className="text-muted-foreground mb-4">{t('conditionalRoutingRules.empty')}</p>
         <p className="text-sm text-muted-foreground mb-4">
-          금액이나 휴가일수 등 조건에 따라 다른 결재선을 자동 적용할 수 있습니다.
+          {t('conditionalRoutingRules.emptyDesc')}
         </p>
         <Button onClick={handleAdd} variant="outline">
           <Plus className="mr-2 h-4 w-4" />
-          규칙 추가
+          {t('conditionalRoutingRules.addRule')}
         </Button>
       </div>
     );
@@ -117,14 +119,14 @@ export function ConditionalRoutingRules({ value, onChange }: ConditionalRoutingR
           >
             <Route className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <span className="font-medium text-sm">
-              규칙 {index + 1}
+              {t('conditionalRoutingRules.ruleLabel', { n: index + 1 })}
             </span>
             <span className="text-sm text-muted-foreground truncate">
               {getConditionSummary(rule)}
             </span>
             {rule.approvalLine.length > 0 && (
               <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded flex-shrink-0">
-                {rule.approvalLine.length}단계
+                {t('conditionalRoutingRules.stepCount', { count: rule.approvalLine.length })}
               </span>
             )}
             <div className="flex-1" />
@@ -150,10 +152,10 @@ export function ConditionalRoutingRules({ value, onChange }: ConditionalRoutingR
             <CardContent className="border-t pt-4 space-y-4">
               {/* Condition configuration */}
               <div>
-                <Label className="text-sm font-medium mb-3 block">조건 설정</Label>
+                <Label className="text-sm font-medium mb-3 block">{t('conditionalRoutingRules.conditionSetting')}</Label>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">조건 필드</Label>
+                    <Label className="text-xs text-muted-foreground">{t('conditionalRoutingRules.conditionField')}</Label>
                     <Select
                       value={rule.conditionField}
                       onValueChange={(val) =>
@@ -173,7 +175,7 @@ export function ConditionalRoutingRules({ value, onChange }: ConditionalRoutingR
                     </Select>
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">연산자</Label>
+                    <Label className="text-xs text-muted-foreground">{t('conditionalRoutingRules.operator')}</Label>
                     <Select
                       value={rule.conditionOperator}
                       onValueChange={(val) =>
@@ -194,7 +196,9 @@ export function ConditionalRoutingRules({ value, onChange }: ConditionalRoutingR
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs text-muted-foreground">
-                      {rule.conditionField === 'AMOUNT' ? '금액 (원)' : '일수'}
+                      {rule.conditionField === 'AMOUNT'
+                        ? t('conditionalRoutingRules.valueAmountLabel')
+                        : t('conditionalRoutingRules.valueDaysLabel')}
                     </Label>
                     <Input
                       type="number"
@@ -205,21 +209,23 @@ export function ConditionalRoutingRules({ value, onChange }: ConditionalRoutingR
                           conditionValue: Number(e.target.value) || 0,
                         })
                       }
-                      placeholder={rule.conditionField === 'AMOUNT' ? '예: 1000000' : '예: 3'}
+                      placeholder={rule.conditionField === 'AMOUNT'
+                        ? t('conditionalRoutingRules.valuePlaceholderAmount')
+                        : t('conditionalRoutingRules.valuePlaceholderDays')}
                     />
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
                   {rule.conditionField === 'AMOUNT'
-                    ? `예: "금액 >= 1,000,000" 이면 아래 결재선이 적용됩니다.`
-                    : `예: "휴가일수 >= 3" 이면 아래 결재선이 적용됩니다.`}
+                    ? t('conditionalRoutingRules.amountHint')
+                    : t('conditionalRoutingRules.daysHint')}
                 </p>
               </div>
 
               {/* Approval line for this condition */}
               <div>
                 <Label className="text-sm font-medium mb-3 block">
-                  적용할 결재선
+                  {t('conditionalRoutingRules.targetLine')}
                 </Label>
                 <TemplateLineBuilder
                   value={rule.approvalLine}
@@ -233,7 +239,7 @@ export function ConditionalRoutingRules({ value, onChange }: ConditionalRoutingR
 
       <Button onClick={handleAdd} variant="outline" className="w-full">
         <Plus className="mr-2 h-4 w-4" />
-        규칙 추가
+        {t('conditionalRoutingRules.addRule')}
       </Button>
     </div>
   );

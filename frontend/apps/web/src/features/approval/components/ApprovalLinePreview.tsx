@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { User, ChevronRight, Zap, GitFork, Handshake } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ApprovalMode, RecommendedApprover } from '@hr-platform/shared-types';
@@ -38,6 +39,8 @@ export function ApprovalLinePreview({
   approvers,
   className,
 }: ApprovalLinePreviewProps) {
+  const { t } = useTranslation('approval');
+
   if (approvers.length === 0) {
     return null;
   }
@@ -50,7 +53,7 @@ export function ApprovalLinePreview({
           <User className="h-4 w-4 text-primary-foreground" />
         </div>
         <p className="text-xs mt-1 font-medium truncate max-w-[72px]">{requesterName}</p>
-        <p className="text-[10px] text-muted-foreground">기안자</p>
+        <p className="text-[10px] text-muted-foreground">{t('approvalLinePreview.requester')}</p>
       </div>
 
       {/* Arrow connector */}
@@ -70,7 +73,7 @@ export function ApprovalLinePreview({
             {approvers[0].position}
           </p>
           <span className="text-[10px] text-teal-600 dark:text-teal-400 font-medium">
-            최종결재자
+            {t('approvalLinePreview.finalApprover')}
           </span>
         </div>
       ) : mode === 'PARALLEL' ? (
@@ -78,7 +81,7 @@ export function ApprovalLinePreview({
         <div className="flex flex-col items-center flex-shrink-0">
           <div className="flex items-center gap-0.5 mb-1">
             <GitFork className="h-3.5 w-3.5 text-blue-500" />
-            <span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">동시 진행</span>
+            <span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">{t('approvalLinePreview.simultaneous')}</span>
           </div>
           <div className="flex items-start gap-2 px-3 py-2 rounded-lg border-2 border-dashed border-blue-300 dark:border-blue-700 bg-blue-50/50 dark:bg-blue-950/30">
             {approvers.map((approver) => (
@@ -105,7 +108,7 @@ export function ApprovalLinePreview({
               <div className="flex flex-col items-center flex-shrink-0">
                 <div className="flex items-center gap-0.5 mb-1">
                   <Handshake className="h-3.5 w-3.5 text-purple-500" />
-                  <span className="text-[10px] text-purple-600 dark:text-purple-400 font-medium">합의</span>
+                  <span className="text-[10px] text-purple-600 dark:text-purple-400 font-medium">{t('approvalLinePreview.agreement')}</span>
                 </div>
                 <div className="flex items-start gap-2 px-3 py-2 rounded-lg border-2 border-dashed border-purple-300 dark:border-purple-700 bg-purple-50/50 dark:bg-purple-950/30">
                   {approvers.slice(0, -1).map((approver) => (
@@ -136,7 +139,7 @@ export function ApprovalLinePreview({
                   {approvers[approvers.length - 1].position}
                 </p>
                 <span className="text-[10px] text-purple-600 dark:text-purple-400 font-medium">
-                  최종결재
+                  {t('approvalLinePreview.finalApproval')}
                 </span>
               </div>
             </>
@@ -153,7 +156,7 @@ export function ApprovalLinePreview({
                 {approvers[0].position}
               </p>
               <span className="text-[10px] text-purple-600 dark:text-purple-400 font-medium">
-                최종결재
+                {t('approvalLinePreview.finalApproval')}
               </span>
             </div>
           )}

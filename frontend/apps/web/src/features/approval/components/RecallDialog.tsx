@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AlertTriangle } from 'lucide-react';
 import {
   Dialog,
@@ -28,6 +29,7 @@ export function RecallDialog({
   isLoading = false,
   documentTitle,
 }: RecallDialogProps) {
+  const { t } = useTranslation('approval');
   const [reason, setReason] = useState('');
 
   const handleConfirm = async () => {
@@ -49,13 +51,13 @@ export function RecallDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-orange-500" />
-            결재 회수
+            {t('recallDialog.title')}
           </DialogTitle>
           <DialogDescription>
             {documentTitle ? (
-              <>"{documentTitle}" 문서를 회수하시겠습니까?</>
+              <>{t('recallDialog.confirmWithTitle', { title: documentTitle })}</>
             ) : (
-              '이 결재 문서를 회수하시겠습니까?'
+              t('recallDialog.confirmDefault')
             )}
           </DialogDescription>
         </DialogHeader>
@@ -64,26 +66,26 @@ export function RecallDialog({
           <Alert variant="destructive" className="bg-orange-50 border-orange-200 text-orange-800">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              회수된 문서는 <strong>회수됨</strong> 상태로 변경되며, 결재 진행이 중단됩니다.
+              <span dangerouslySetInnerHTML={{ __html: t('recallDialog.warningText') }} />
               <br />
-              회수 후에는 동일 내용으로 새로 기안해야 합니다.
+              {t('recallDialog.warningSubtext')}
             </AlertDescription>
           </Alert>
 
           <div className="grid gap-2">
             <Label htmlFor="recall-reason">
-              회수 사유 <span className="text-destructive">*</span>
+              {t('recallDialog.reasonLabel')} <span className="text-destructive">{t('recallDialog.reasonRequired')}</span>
             </Label>
             <Textarea
               id="recall-reason"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="회수 사유를 입력하세요. (예: 첨부파일 누락, 내용 수정 필요 등)"
+              placeholder={t('recallDialog.reasonPlaceholder')}
               rows={3}
               className="resize-none"
             />
             <p className="text-xs text-muted-foreground">
-              회수 사유는 결재 이력에 기록됩니다.
+              {t('recallDialog.reasonNote')}
             </p>
           </div>
         </div>
@@ -94,7 +96,7 @@ export function RecallDialog({
             onClick={() => handleOpenChange(false)}
             disabled={isLoading}
           >
-            취소
+            {t('common.cancel')}
           </Button>
           <Button
             variant="destructive"
@@ -102,7 +104,7 @@ export function RecallDialog({
             disabled={!reason.trim() || isLoading}
             className="bg-orange-600 hover:bg-orange-700"
           >
-            {isLoading ? '처리 중...' : '회수하기'}
+            {isLoading ? t('common.processing') : t('recallDialog.confirmButton')}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -2,6 +2,8 @@ import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -15,11 +17,11 @@ import {
 import { Check, X, Loader2, AlertTriangle } from 'lucide-react';
 import { useApprove, useReject, useCancel } from '../hooks/useApprovals';
 
-const rejectSchema = z.object({
-  comment: z.string().min(1, '반려 사유를 입력해주세요'),
+const createRejectSchema = (t: TFunction) => z.object({
+  comment: z.string().min(1, t('approvalActions.rejectReasonValidation')),
 });
 
-type RejectFormData = z.infer<typeof rejectSchema>;
+type RejectFormData = z.infer<ReturnType<typeof createRejectSchema>>;
 
 export interface ApprovalActionsProps {
   approvalId: string;
@@ -38,6 +40,7 @@ export function ApprovalActions({
   onSuccess,
   className,
 }: ApprovalActionsProps) {
+  const { t } = useTranslation('approval');
   const [approveDialogOpen, setApproveDialogOpen] = React.useState(false);
   const [rejectDialogOpen, setRejectDialogOpen] = React.useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = React.useState(false);
@@ -46,6 +49,8 @@ export function ApprovalActions({
   const approveMutation = useApprove();
   const rejectMutation = useReject();
   const cancelMutation = useCancel();
+
+  const rejectSchema = React.useMemo(() => createRejectSchema(t), [t]);
 
   const {
     register,
@@ -104,18 +109,18 @@ export function ApprovalActions({
         {canApprove && (
           <Button onClick={() => setApproveDialogOpen(true)}>
             <Check className="mr-2 h-4 w-4" />
-            승인
+            {t('common.approve')}
           </Button>
         )}
         {canReject && (
           <Button variant="destructive" onClick={() => setRejectDialogOpen(true)}>
             <X className="mr-2 h-4 w-4" />
-            반려
+            {t('common.reject')}
           </Button>
         )}
         {canCancel && (
           <Button variant="outline" onClick={() => setCancelDialogOpen(true)}>
-            취소
+            {t('common.cancel')}
           </Button>
         )}
       </div>
@@ -124,31 +129,31 @@ export function ApprovalActions({
       <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>결재 승인</DialogTitle>
+            <DialogTitle>{t('approvalActions.approveTitle')}</DialogTitle>
             <DialogDescription>
-              이 결재를 승인하시겠습니까? 필요시 의견을 추가할 수 있습니다.
+              {t('approvalActions.approveConfirm')}
             </DialogDescription>
           </DialogHeader>
           <Textarea
-            placeholder="의견 (선택사항)"
+            placeholder={t('approvalActions.commentOptional')}
             value={approveComment}
             onChange={(e) => setApproveComment(e.target.value)}
             rows={3}
           />
           <DialogFooter>
             <Button variant="outline" onClick={() => setApproveDialogOpen(false)}>
-              취소
+              {t('common.cancel')}
             </Button>
             <Button onClick={handleApprove} disabled={approveMutation.isPending}>
               {approveMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  처리 중...
+                  {t('common.processing')}
                 </>
               ) : (
                 <>
                   <Check className="mr-2 h-4 w-4" />
-                  승인
+                  {t('common.approve')}
                 </>
               )}
             </Button>
@@ -160,15 +165,15 @@ export function ApprovalActions({
       <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>결재 반려</DialogTitle>
+            <DialogTitle>{t('approvalActions.rejectTitle')}</DialogTitle>
             <DialogDescription>
-              이 결재를 반려하시겠습니까? 반려 사유를 입력해주세요.
+              {t('approvalActions.rejectConfirm')}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit(handleReject)}>
             <Textarea
               {...register('comment')}
-              placeholder="반려 사유 (필수)"
+              placeholder={t('approvalActions.rejectReasonRequired')}
               rows={3}
             />
             {errors.comment && (
@@ -182,7 +187,7 @@ export function ApprovalActions({
                 variant="outline"
                 onClick={() => setRejectDialogOpen(false)}
               >
-                취소
+                {t('common.cancel')}
               </Button>
               <Button
                 type="submit"
@@ -192,12 +197,12 @@ export function ApprovalActions({
                 {rejectMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    처리 중...
+                    {t('common.processing')}
                   </>
                 ) : (
                   <>
                     <X className="mr-2 h-4 w-4" />
-                    반려
+                    {t('common.reject')}
                   </>
                 )}
               </Button>
@@ -212,15 +217,15 @@ export function ApprovalActions({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-warning" />
-              결재 취소
+              {t('approvalActions.cancelTitle')}
             </DialogTitle>
             <DialogDescription>
-              이 결재를 취소하시겠습니까? 이 작업은 되돌릴 수 없습니다.
+              {t('approvalActions.cancelConfirm')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCancelDialogOpen(false)}>
-              아니오
+              {t('common.no')}
             </Button>
             <Button
               variant="destructive"
@@ -230,10 +235,10 @@ export function ApprovalActions({
               {cancelMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  처리 중...
+                  {t('common.processing')}
                 </>
               ) : (
-                '예, 취소합니다'
+                t('common.yesCancel')
               )}
             </Button>
           </DialogFooter>

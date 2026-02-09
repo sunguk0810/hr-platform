@@ -2,6 +2,8 @@ import * as React from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,14 +22,14 @@ import { DocumentTemplateSelector, type DocumentTemplate } from './DocumentTempl
 import { Loader2, Save, Send } from 'lucide-react';
 import type { ApprovalType, CreateApprovalRequest, ApproverOption } from '@hr-platform/shared-types';
 
-const approvalSchema = z.object({
+const createApprovalSchema = (t: TFunction) => z.object({
   documentType: z.enum(['LEAVE_REQUEST', 'EXPENSE', 'OVERTIME', 'PERSONNEL', 'GENERAL'] as const),
-  title: z.string().min(1, '제목을 입력해주세요.').max(200, '200자 이내로 입력해주세요.'),
-  content: z.string().min(1, '내용을 입력해주세요.'),
+  title: z.string().min(1, t('approvalForm.titleValidation')).max(200, t('approvalForm.titleMaxValidation')),
+  content: z.string().min(1, t('approvalForm.contentValidation')),
   urgency: z.enum(['NORMAL', 'HIGH'] as const),
 });
 
-type ApprovalFormData = z.infer<typeof approvalSchema>;
+type ApprovalFormData = z.infer<ReturnType<typeof createApprovalSchema>>;
 
 export interface ApprovalFormProps {
   templates?: DocumentTemplate[];
@@ -38,12 +40,12 @@ export interface ApprovalFormProps {
   defaultType?: ApprovalType;
 }
 
-const APPROVAL_TYPE_OPTIONS: { value: ApprovalType; label: string }[] = [
-  { value: 'LEAVE_REQUEST', label: '휴가신청' },
-  { value: 'EXPENSE', label: '경비청구' },
-  { value: 'OVERTIME', label: '초과근무' },
-  { value: 'PERSONNEL', label: '인사관련' },
-  { value: 'GENERAL', label: '일반기안' },
+const APPROVAL_TYPE_OPTION_KEYS: { value: ApprovalType; labelKey: string }[] = [
+  { value: 'LEAVE_REQUEST', labelKey: 'type.leaveRequest' },
+  { value: 'EXPENSE', labelKey: 'type.expense' },
+  { value: 'OVERTIME', labelKey: 'type.overtime' },
+  { value: 'PERSONNEL', labelKey: 'type.personnel' },
+  { value: 'GENERAL', labelKey: 'type.general' },
 ];
 
 export function ApprovalForm({
@@ -54,9 +56,12 @@ export function ApprovalForm({
   isLoading = false,
   defaultType = 'GENERAL',
 }: ApprovalFormProps) {
+  const { t } = useTranslation('approval');
   const [approvalSteps, setApprovalSteps] = React.useState<ApprovalLineStep[]>([]);
   const [attachments, setAttachments] = React.useState<File[]>([]);
   const [selectedTemplate, setSelectedTemplate] = React.useState<DocumentTemplate | null>(null);
+
+  const approvalSchema = React.useMemo(() => createApprovalSchema(t), [t]);
 
   const methods = useForm<ApprovalFormData>({
     resolver: zodResolver(approvalSchema),
@@ -111,12 +116,12 @@ export function ApprovalForm({
         {/* Document Type & Template */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">문서 유형</CardTitle>
+            <CardTitle className="text-base">{t('approvalForm.documentType')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>유형 *</Label>
+                <Label>{t('approvalForm.typeRequired')}</Label>
                 <Select
                   value={type}
                   onValueChange={(value) => setValue('documentType', value as ApprovalType)}
@@ -125,9 +130,9 @@ export function ApprovalForm({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {APPROVAL_TYPE_OPTIONS.map((option) => (
+                    {APPROVAL_TYPE_OPTION_KEYS.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
-                        {option.label}
+                        {t(option.labelKey)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -135,7 +140,7 @@ export function ApprovalForm({
               </div>
 
               <div className="space-y-2">
-                <Label>긴급도</Label>
+                <Label>{t('approvalForm.urgency')}</Label>
                 <Select
                   value={watch('urgency')}
                   onValueChange={(value) => setValue('urgency', value as 'NORMAL' | 'HIGH')}
@@ -144,8 +149,8 @@ export function ApprovalForm({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="NORMAL">일반</SelectItem>
-                    <SelectItem value="HIGH">긴급</SelectItem>
+                    <SelectItem value="NORMAL">{t('approvalForm.urgencyNormal')}</SelectItem>
+                    <SelectItem value="HIGH">{t('approvalForm.urgencyHigh')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -165,15 +170,15 @@ export function ApprovalForm({
         {/* Document Content */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">문서 내용</CardTitle>
+            <CardTitle className="text-base">{t('approvalForm.documentContent')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="title">제목 *</Label>
+              <Label htmlFor="title">{t('approvalForm.titleRequired')}</Label>
               <Input
                 id="title"
                 {...register('title')}
-                placeholder="결재 문서 제목을 입력하세요"
+                placeholder={t('approvalForm.titlePlaceholder')}
                 className={errors.title ? 'border-destructive' : ''}
               />
               {errors.title && (
@@ -182,11 +187,11 @@ export function ApprovalForm({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="content">내용 *</Label>
+              <Label htmlFor="content">{t('approvalForm.contentRequired')}</Label>
               <Textarea
                 id="content"
                 {...register('content')}
-                placeholder="결재 문서 내용을 입력하세요"
+                placeholder={t('approvalForm.contentPlaceholder')}
                 rows={10}
                 className={errors.content ? 'border-destructive' : ''}
               />
@@ -200,7 +205,7 @@ export function ApprovalForm({
         {/* Approval Line */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">결재선</CardTitle>
+            <CardTitle className="text-base">{t('approvalForm.approvalLine')}</CardTitle>
           </CardHeader>
           <CardContent>
             <ApprovalLineBuilder
@@ -211,7 +216,7 @@ export function ApprovalForm({
             />
             {approvalSteps.length === 0 && (
               <p className="text-sm text-destructive mt-2">
-                결재자를 최소 1명 이상 추가해주세요.
+                {t('approvalForm.minApproverValidation')}
               </p>
             )}
           </CardContent>
@@ -220,7 +225,7 @@ export function ApprovalForm({
         {/* Attachments */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">첨부파일</CardTitle>
+            <CardTitle className="text-base">{t('approvalForm.attachments')}</CardTitle>
           </CardHeader>
           <CardContent>
             <FileUpload
@@ -230,7 +235,7 @@ export function ApprovalForm({
               maxFiles={5}
               maxSize={10 * 1024 * 1024}
               accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif"
-              placeholder="파일을 드래그하거나 클릭하여 업로드하세요 (최대 5개, 각 10MB)"
+              placeholder={t('approvalForm.fileUploadPlaceholder')}
             />
           </CardContent>
         </Card>
@@ -239,7 +244,7 @@ export function ApprovalForm({
         <div className="flex justify-end gap-4">
           {onCancel && (
             <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
-              취소
+              {t('common.cancel')}
             </Button>
           )}
           <Button
@@ -253,7 +258,7 @@ export function ApprovalForm({
             ) : (
               <Save className="mr-2 h-4 w-4" />
             )}
-            임시저장
+            {t('approvalForm.saveDraft')}
           </Button>
           <Button
             type="button"
@@ -265,7 +270,7 @@ export function ApprovalForm({
             ) : (
               <Send className="mr-2 h-4 w-4" />
             )}
-            결재 요청
+            {t('approvalForm.submitRequest')}
           </Button>
         </div>
       </form>

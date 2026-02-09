@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -17,23 +18,25 @@ export interface ApprovalListProps {
   className?: string;
 }
 
-const APPROVAL_TYPE_LABELS: Record<string, string> = {
-  LEAVE_REQUEST: '휴가신청',
-  EXPENSE: '경비청구',
-  OVERTIME: '초과근무',
-  PERSONNEL: '인사관련',
-  GENERAL: '일반기안',
-};
-
 export function ApprovalList({
   approvals,
   onItemClick,
   enableSelection = false,
   selectedIds = new Set(),
   onSelectionChange,
-  emptyMessage = '결재 문서가 없습니다.',
+  emptyMessage,
   className,
 }: ApprovalListProps) {
+  const { t } = useTranslation('approval');
+
+  const APPROVAL_TYPE_LABELS: Record<string, string> = {
+    LEAVE_REQUEST: t('type.leaveRequest'),
+    EXPENSE: t('type.expense'),
+    OVERTIME: t('type.overtime'),
+    PERSONNEL: t('type.personnel'),
+    GENERAL: t('type.general'),
+  };
+
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       onSelectionChange?.(new Set(approvals.map((a) => a.id)));
@@ -58,8 +61,8 @@ export function ApprovalList({
     return (
       <EmptyState
         icon={FileCheck}
-        title={emptyMessage}
-        description="해당 조건의 문서가 없습니다."
+        title={emptyMessage || t('approvalList.empty')}
+        description={t('approvalList.emptyDesc')}
       />
     );
   }
@@ -78,25 +81,25 @@ export function ApprovalList({
               </th>
             )}
             <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-              문서번호
+              {t('approvalList.tableDocNumber')}
             </th>
             <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-              유형
+              {t('approvalList.tableType')}
             </th>
             <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-              제목
+              {t('approvalList.tableTitle')}
             </th>
             <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-              기안자
+              {t('approvalList.tableDrafter')}
             </th>
             <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-              현재 결재자
+              {t('approvalList.tableCurrentApprover')}
             </th>
             <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-              상태
+              {t('approvalList.tableStatus')}
             </th>
             <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-              기안일
+              {t('approvalList.tableCreatedDate')}
             </th>
           </tr>
         </thead>

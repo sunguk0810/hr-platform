@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -43,33 +44,33 @@ interface ModifyApprovalLineDialogProps {
   onSuccess: () => void;
 }
 
-function getStatusBadge(status: ApprovalLineStatus) {
+function getStatusBadge(status: ApprovalLineStatus, t: (key: string) => string) {
   switch (status) {
     case 'APPROVED':
       return (
         <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
           <CheckCircle2 className="mr-1 h-3 w-3" />
-          승인
+          {t('status.approved')}
         </Badge>
       );
     case 'REJECTED':
       return (
         <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
           <XCircle className="mr-1 h-3 w-3" />
-          반려
+          {t('status.rejected')}
         </Badge>
       );
     case 'WAITING':
       return (
         <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
           <Clock className="mr-1 h-3 w-3" />
-          대기
+          {t('status.waiting')}
         </Badge>
       );
     case 'SKIPPED':
       return (
         <Badge variant="outline" className="bg-gray-50 text-gray-500 border-gray-200">
-          건너뜀
+          {t('status.skipped')}
         </Badge>
       );
     default:
@@ -84,6 +85,7 @@ export function ModifyApprovalLineDialog({
   steps,
   onSuccess,
 }: ModifyApprovalLineDialogProps) {
+  const { t } = useTranslation('approval');
   const { toast } = useToast();
   const [modifiedSteps, setModifiedSteps] = useState<ModifiedStep[]>([]);
   const [reason, setReason] = useState('');
@@ -206,21 +208,21 @@ export function ModifyApprovalLineDialog({
 
       if (data.success) {
         toast({
-          title: '결재선이 수정되었습니다.',
+          title: t('modifyApprovalLineDialog.successToast'),
         });
         onOpenChange(false);
         onSuccess();
       } else {
         toast({
-          title: '결재선 수정 실패',
-          description: data.error?.message || '알 수 없는 오류가 발생했습니다.',
+          title: t('modifyApprovalLineDialog.failureToast'),
+          description: data.error?.message || t('common.unknownError'),
           variant: 'destructive',
         });
       }
     } catch {
       toast({
-        title: '결재선 수정 실패',
-        description: '네트워크 오류가 발생했습니다.',
+        title: t('modifyApprovalLineDialog.failureToast'),
+        description: t('common.networkError'),
         variant: 'destructive',
       });
     } finally {
@@ -232,16 +234,16 @@ export function ModifyApprovalLineDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>결재선 수정</DialogTitle>
+          <DialogTitle>{t('modifyApprovalLineDialog.title')}</DialogTitle>
           <DialogDescription>
-            상신된 결재의 결재선을 수정합니다. 이미 승인/반려된 단계는 변경할 수 없습니다.
+            {t('modifyApprovalLineDialog.description')}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           {/* Steps List */}
           <div className="space-y-3">
-            <Label className="text-sm font-semibold">결재선</Label>
+            <Label className="text-sm font-semibold">{t('modifyApprovalLineDialog.approvalLine')}</Label>
             {modifiedSteps.map((step) => {
               const isLocked = step.status === 'APPROVED' || step.status === 'REJECTED';
               const isPending = step.status === 'WAITING';
@@ -263,7 +265,7 @@ export function ModifyApprovalLineDialog({
                         <User className="h-4 w-4 text-muted-foreground" />
                         <div>
                           <p className="text-sm font-medium">
-                            {step.approverName || '(결재자 선택 필요)'}
+                            {step.approverName || t('modifyApprovalLineDialog.needsApproverSelection')}
                           </p>
                           {step.approverDepartmentName && (
                             <p className="text-xs text-muted-foreground">
@@ -275,7 +277,7 @@ export function ModifyApprovalLineDialog({
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {getStatusBadge(step.status)}
+                      {getStatusBadge(step.status, t)}
                       {isPending && (
                         <>
                           <Button
@@ -286,7 +288,7 @@ export function ModifyApprovalLineDialog({
                               setSearchQuery('');
                             }}
                           >
-                            변경
+                            {t('common.change')}
                           </Button>
                           <Button
                             variant="outline"
@@ -307,7 +309,7 @@ export function ModifyApprovalLineDialog({
                       <div className="relative mb-2">
                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
-                          placeholder="이름, 부서, 직위로 검색..."
+                          placeholder={t('modifyApprovalLineDialog.searchPlaceholder')}
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
                           className="pl-9"
@@ -332,7 +334,7 @@ export function ModifyApprovalLineDialog({
                           ))
                         ) : (
                           <p className="text-sm text-muted-foreground text-center py-2">
-                            검색 결과가 없습니다.
+                            {t('common.noSearchResultsDot')}
                           </p>
                         )}
                       </div>
@@ -349,25 +351,25 @@ export function ModifyApprovalLineDialog({
               onClick={handleAddStep}
             >
               <Plus className="mr-2 h-4 w-4" />
-              결재자 추가
+              {t('modifyApprovalLineDialog.addApprover')}
             </Button>
           </div>
 
           {/* Reason */}
           <div className="space-y-2">
             <Label htmlFor="modify-reason" className="text-sm font-semibold">
-              수정 사유 <span className="text-destructive">*</span>
+              {t('modifyApprovalLineDialog.reasonLabel')} <span className="text-destructive">{t('modifyApprovalLineDialog.reasonRequired')}</span>
             </Label>
             <Textarea
               id="modify-reason"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="결재선 수정 사유를 입력하세요. (최소 10자)"
+              placeholder={t('modifyApprovalLineDialog.reasonPlaceholder')}
               rows={3}
             />
             {reason.length > 0 && reason.trim().length < 10 && (
               <p className="text-xs text-destructive">
-                수정 사유는 최소 10자 이상 입력해주세요. (현재 {reason.trim().length}자)
+                {t('modifyApprovalLineDialog.reasonMinLength', { count: reason.trim().length })}
               </p>
             )}
           </div>
@@ -375,10 +377,10 @@ export function ModifyApprovalLineDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            취소
+            {t('common.cancel')}
           </Button>
           <Button onClick={handleSave} disabled={!canSave || isSaving}>
-            {isSaving ? '저장 중...' : '저장'}
+            {isSaving ? t('common.saving') : t('common.save')}
           </Button>
         </DialogFooter>
       </DialogContent>

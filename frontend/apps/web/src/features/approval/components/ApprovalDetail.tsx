@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { ApprovalStatusBadge } from '@/components/common/StatusBadge';
@@ -38,14 +39,6 @@ export interface ApprovalDetailProps {
   isLoading?: boolean;
 }
 
-const APPROVAL_TYPE_LABELS: Record<string, string> = {
-  LEAVE_REQUEST: '휴가신청',
-  EXPENSE: '경비청구',
-  OVERTIME: '초과근무',
-  PERSONNEL: '인사관련',
-  GENERAL: '일반기안',
-};
-
 export function ApprovalDetail({
   approval,
   canApprove = false,
@@ -55,9 +48,18 @@ export function ApprovalDetail({
   onDownloadAttachment,
   isLoading = false,
 }: ApprovalDetailProps) {
+  const { t } = useTranslation('approval');
   const [isApproveDialogOpen, setIsApproveDialogOpen] = React.useState(false);
   const [isRejectDialogOpen, setIsRejectDialogOpen] = React.useState(false);
   const [comment, setComment] = React.useState('');
+
+  const APPROVAL_TYPE_LABELS: Record<string, string> = {
+    LEAVE_REQUEST: t('type.leaveRequest'),
+    EXPENSE: t('type.expense'),
+    OVERTIME: t('type.overtime'),
+    PERSONNEL: t('type.personnel'),
+    GENERAL: t('type.general'),
+  };
 
   const handleApprove = async () => {
     await onApprove?.(comment);
@@ -71,7 +73,7 @@ export function ApprovalDetail({
     setComment('');
   };
 
-  
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -96,7 +98,7 @@ export function ApprovalDetail({
                     disabled={isLoading}
                   >
                     <X className="mr-2 h-4 w-4" />
-                    반려
+                    {t('common.reject')}
                   </Button>
                 )}
                 {canApprove && (
@@ -105,7 +107,7 @@ export function ApprovalDetail({
                     disabled={isLoading}
                   >
                     <Check className="mr-2 h-4 w-4" />
-                    승인
+                    {t('common.approve')}
                   </Button>
                 )}
               </div>
@@ -119,7 +121,7 @@ export function ApprovalDetail({
                 <FileText className="h-5 w-5 text-muted-foreground" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">문서 유형</p>
+                <p className="text-sm text-muted-foreground">{t('approvalDetail.documentType')}</p>
                 <p className="font-medium">{APPROVAL_TYPE_LABELS[approval.documentType]}</p>
               </div>
             </div>
@@ -128,7 +130,7 @@ export function ApprovalDetail({
                 <User className="h-5 w-5 text-muted-foreground" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">기안자</p>
+                <p className="text-sm text-muted-foreground">{t('approvalDetail.drafter')}</p>
                 <p className="font-medium">{approval.drafterName}</p>
               </div>
             </div>
@@ -137,7 +139,7 @@ export function ApprovalDetail({
                 <Building2 className="h-5 w-5 text-muted-foreground" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">소속</p>
+                <p className="text-sm text-muted-foreground">{t('approvalDetail.department')}</p>
                 <p className="font-medium">{approval.drafterDepartmentName}</p>
               </div>
             </div>
@@ -146,7 +148,7 @@ export function ApprovalDetail({
                 <Calendar className="h-5 w-5 text-muted-foreground" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">기안일</p>
+                <p className="text-sm text-muted-foreground">{t('approvalDetail.draftDate')}</p>
                 <p className="font-medium">
                   {format(new Date(approval.createdAt), 'yyyy.M.d', { locale: ko })}
                 </p>
@@ -159,7 +161,7 @@ export function ApprovalDetail({
       {/* Approval Line */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">결재선</CardTitle>
+          <CardTitle className="text-base">{t('approvalDetail.approvalLine')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-4 overflow-x-auto py-2">
@@ -178,7 +180,7 @@ export function ApprovalDetail({
       {/* Content */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">문서 내용</CardTitle>
+          <CardTitle className="text-base">{t('approvalDetail.documentContent')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div
@@ -194,7 +196,7 @@ export function ApprovalDetail({
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <Paperclip className="h-4 w-4" />
-              첨부파일 ({approval.attachments.length})
+              {t('approvalDetail.attachmentCount', { count: approval.attachments.length })}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -223,37 +225,37 @@ export function ApprovalDetail({
       <Dialog open={isApproveDialogOpen} onOpenChange={setIsApproveDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>결재 승인</DialogTitle>
+            <DialogTitle>{t('approvalActions.approveTitle')}</DialogTitle>
             <DialogDescription>
-              이 문서를 승인하시겠습니까?
+              {t('approvalActions.approveDocConfirm')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="approve-comment">의견 (선택)</Label>
+              <Label htmlFor="approve-comment">{t('approvalActions.commentOptionalShort')}</Label>
               <Textarea
                 id="approve-comment"
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                placeholder="승인 의견을 입력하세요"
+                placeholder={t('approvalActions.commentPlaceholderNoEnd')}
                 rows={3}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsApproveDialogOpen(false)}>
-              취소
+              {t('common.cancel')}
             </Button>
             <Button onClick={handleApprove} disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  처리 중...
+                  {t('common.processing')}
                 </>
               ) : (
                 <>
                   <Check className="mr-2 h-4 w-4" />
-                  승인
+                  {t('common.approve')}
                 </>
               )}
             </Button>
@@ -265,26 +267,26 @@ export function ApprovalDetail({
       <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>결재 반려</DialogTitle>
+            <DialogTitle>{t('approvalActions.rejectTitle')}</DialogTitle>
             <DialogDescription>
-              이 문서를 반려하시겠습니까?
+              {t('approvalActions.rejectDocConfirmShort')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="reject-comment">반려 사유 *</Label>
+              <Label htmlFor="reject-comment">{t('approvalActions.rejectReasonLabel')}</Label>
               <Textarea
                 id="reject-comment"
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                placeholder="반려 사유를 입력하세요"
+                placeholder={t('approvalActions.rejectReasonPlaceholderNoEnd')}
                 rows={3}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>
-              취소
+              {t('common.cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -294,12 +296,12 @@ export function ApprovalDetail({
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  처리 중...
+                  {t('common.processing')}
                 </>
               ) : (
                 <>
                   <X className="mr-2 h-4 w-4" />
-                  반려
+                  {t('common.reject')}
                 </>
               )}
             </Button>
@@ -315,13 +317,15 @@ interface ApprovalLineCardProps {
 }
 
 function ApprovalLineCard({ step }: ApprovalLineCardProps) {
+  const { t } = useTranslation('approval');
+
   const statusConfig = {
-    WAITING: { bg: 'bg-gray-100 dark:bg-gray-800', text: 'text-gray-500', label: '대기' },
-    ACTIVE: { bg: 'bg-blue-50 dark:bg-blue-900/20', text: 'text-blue-600', label: '진행중' },
-    APPROVED: { bg: 'bg-green-50 dark:bg-green-900/20', text: 'text-green-600', label: '승인' },
-    REJECTED: { bg: 'bg-red-50 dark:bg-red-900/20', text: 'text-red-600', label: '반려' },
-    AGREED: { bg: 'bg-emerald-50 dark:bg-emerald-900/20', text: 'text-emerald-600', label: '합의' },
-    SKIPPED: { bg: 'bg-gray-50 dark:bg-gray-800', text: 'text-gray-400', label: '생략' },
+    WAITING: { bg: 'bg-gray-100 dark:bg-gray-800', text: 'text-gray-500', label: t('approvalDetail.statusWaiting') },
+    ACTIVE: { bg: 'bg-blue-50 dark:bg-blue-900/20', text: 'text-blue-600', label: t('approvalDetail.statusActive') },
+    APPROVED: { bg: 'bg-green-50 dark:bg-green-900/20', text: 'text-green-600', label: t('approvalDetail.statusApproved') },
+    REJECTED: { bg: 'bg-red-50 dark:bg-red-900/20', text: 'text-red-600', label: t('approvalDetail.statusRejected') },
+    AGREED: { bg: 'bg-emerald-50 dark:bg-emerald-900/20', text: 'text-emerald-600', label: t('approvalDetail.statusAgreed') },
+    SKIPPED: { bg: 'bg-gray-50 dark:bg-gray-800', text: 'text-gray-400', label: t('approvalDetail.statusSkipped') },
   };
 
   const config = statusConfig[step.status];
@@ -335,9 +339,9 @@ function ApprovalLineCard({ step }: ApprovalLineCardProps) {
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0">
-          <p className="text-sm font-medium truncate">{step.approverName || '지정안됨'}</p>
+          <p className="text-sm font-medium truncate">{step.approverName || t('approvalDetail.unassigned')}</p>
           <p className="text-xs text-muted-foreground">
-            {step.sequence}단계
+            {t('approvalDetail.step', { n: step.sequence })}
           </p>
         </div>
       </div>

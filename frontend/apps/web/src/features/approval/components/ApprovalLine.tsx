@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Check, Clock, X, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ApprovalLine as ApprovalLineType } from '@hr-platform/shared-types';
@@ -9,6 +10,8 @@ interface ApprovalLineProps {
 }
 
 export function ApprovalLine({ steps, requesterName, className }: ApprovalLineProps) {
+  const { t } = useTranslation('approval');
+
   const getStepIcon = (status: ApprovalLineType['status']) => {
     switch (status) {
       case 'APPROVED':
@@ -44,7 +47,7 @@ export function ApprovalLine({ steps, requesterName, className }: ApprovalLinePr
         </div>
         <div className="flex-1">
           <p className="text-sm font-medium">{requesterName}</p>
-          <p className="text-xs text-muted-foreground">기안자</p>
+          <p className="text-xs text-muted-foreground">{t('approvalLine.requester')}</p>
         </div>
         <div className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
           <Check className="h-4 w-4 text-white" />
@@ -69,12 +72,12 @@ export function ApprovalLine({ steps, requesterName, className }: ApprovalLinePr
               {step.sequence}
             </div>
             <div className="flex-1">
-              <p className="text-sm font-medium">{step.approverName || '결재자'}</p>
+              <p className="text-sm font-medium">{step.approverName || t('approvalLine.approver')}</p>
               <p className="text-xs text-muted-foreground">
-                {step.status === 'WAITING' ? '결재 대기' :
-                 step.status === 'APPROVED' ? '승인' :
-                 step.status === 'REJECTED' ? '반려' :
-                 '건너뜀'}
+                {step.status === 'WAITING' ? t('approvalLine.waitingForApproval') :
+                 step.status === 'APPROVED' ? t('approvalStepIndicator.approved') :
+                 step.status === 'REJECTED' ? t('approvalStepIndicator.rejected') :
+                 t('approvalStepIndicator.skipped')}
               </p>
               {step.comment && (
                 <p className="text-xs text-muted-foreground mt-1 italic">
@@ -102,6 +105,8 @@ interface ApprovalLineHorizontalProps {
 }
 
 export function ApprovalLineHorizontal({ steps, requesterName, className }: ApprovalLineHorizontalProps) {
+  const { t } = useTranslation('approval');
+
   const getStepBgColor = (status: ApprovalLineType['status']) => {
     switch (status) {
       case 'APPROVED':
@@ -123,7 +128,7 @@ export function ApprovalLineHorizontal({ steps, requesterName, className }: Appr
           <User className="h-5 w-5 text-primary-foreground" />
         </div>
         <p className="text-xs mt-1 font-medium truncate max-w-[80px]">{requesterName}</p>
-        <p className="text-xs text-muted-foreground">기안</p>
+        <p className="text-xs text-muted-foreground">{t('approvalLine.draft')}</p>
       </div>
 
       {/* Arrow */}
@@ -141,12 +146,12 @@ export function ApprovalLineHorizontal({ steps, requesterName, className }: Appr
                step.sequence}
             </div>
             <p className="text-xs mt-1 font-medium truncate max-w-[80px]">
-              {step.approverName || '결재자'}
+              {step.approverName || t('approvalLine.approver')}
             </p>
             <p className="text-xs text-muted-foreground">
-              {step.status === 'WAITING' ? '대기' :
-               step.status === 'APPROVED' ? '승인' :
-               step.status === 'REJECTED' ? '반려' : '-'}
+              {step.status === 'WAITING' ? t('approvalStepIndicator.waiting') :
+               step.status === 'APPROVED' ? t('approvalStepIndicator.approved') :
+               step.status === 'REJECTED' ? t('approvalStepIndicator.rejected') : '-'}
             </p>
           </div>
 

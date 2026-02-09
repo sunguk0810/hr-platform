@@ -7,5 +7,680 @@
   "pending": "Pending",
   "approved": "Approved",
   "rejected": "Rejected",
-  "delegation": "Delegation"
+  "delegation": "Delegation",
+
+  "common": {
+    "approve": "Approve",
+    "reject": "Reject",
+    "cancel": "Cancel",
+    "save": "Save",
+    "close": "Close",
+    "delete": "Delete",
+    "edit": "Edit",
+    "duplicate": "Duplicate",
+    "search": "Search",
+    "processing": "Processing...",
+    "saving": "Saving...",
+    "requesting": "Requesting...",
+    "loading": "Loading...",
+    "next": "Next",
+    "no": "No",
+    "yesCancel": "Yes, cancel",
+    "backToList": "Back to list",
+    "viewAll": "View all",
+    "fullView": "Full view",
+    "noSearchResults": "No search results",
+    "noSearchResultsDot": "No search results.",
+    "searchByName": "Search by name.",
+    "searchByNameOrDept": "Search by name or department",
+    "dataLoadError": "Failed to load data",
+    "retryLater": "Please try again later.",
+    "networkError": "A network error occurred.",
+    "unknownError": "An unknown error occurred.",
+    "change": "Change",
+    "register": "Register",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "viewDetail": "View detail",
+    "link": "Link",
+    "unlink": "Unlink",
+    "all": "All",
+    "me": "Me"
+  },
+
+  "status": {
+    "draft": "Draft",
+    "pending": "In Progress",
+    "inReview": "In Review",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "recalled": "Recalled",
+    "cancelled": "Cancelled",
+    "waiting": "Waiting",
+    "current": "In Progress",
+    "skipped": "Skipped",
+    "active": "Active",
+    "agreed": "Agreed",
+    "inactive": "Inactive",
+    "expired": "Expired",
+    "omitted": "Omitted"
+  },
+
+  "type": {
+    "leaveRequest": "Leave Request",
+    "expense": "Expense Claim",
+    "overtime": "Overtime",
+    "personnel": "Personnel",
+    "personnelAppointment": "Personnel Appointment",
+    "general": "General",
+    "generalShort": "General"
+  },
+
+  "urgency": {
+    "low": "Low",
+    "normal": "Normal",
+    "high": "Urgent",
+    "normalShort": "Normal"
+  },
+
+  "mode": {
+    "sequential": "Sequential",
+    "sequentialDesc": "Approvers process in order",
+    "direct": "Direct",
+    "directDesc": "Final approver decides immediately",
+    "parallel": "Parallel",
+    "parallelDesc": "All approvers process simultaneously",
+    "consensus": "Consensus",
+    "consensusDesc": "Collect opinions then final approval",
+    "parallelShort": "Parallel",
+    "consensusShort": "Consensus"
+  },
+
+  "completionCondition": {
+    "all": "All approve",
+    "any": "Any one approves",
+    "majority": "Majority",
+    "majorityApproval": "Majority approval"
+  },
+
+  "approverType": {
+    "specific": "Specific person",
+    "role": "Role",
+    "departmentHead": "Dept. head"
+  },
+
+  "role": {
+    "select": "Select role",
+    "teamLeader": "Team Leader",
+    "departmentHead": "Department Head",
+    "hrManager": "HR Manager",
+    "cfo": "CFO",
+    "ceo": "CEO"
+  },
+
+  "stepType": {
+    "draft": "Draft",
+    "approval": "Approval",
+    "agreement": "Agreement",
+    "reference": "Reference"
+  },
+
+  "executionType": {
+    "sequential": "Sequential",
+    "parallel": "Parallel",
+    "agreement": "Agreement"
+  },
+
+  "historyAction": {
+    "drafted": "Drafted",
+    "submitted": "Submitted",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "commented": "Commented",
+    "returned": "Returned",
+    "viewed": "Viewed",
+    "modified": "Modified",
+    "recalled": "Recalled",
+    "delegated": "Delegated",
+    "directApproved": "Direct Approved"
+  },
+
+  "approvalListPage": {
+    "title": "Approvals",
+    "description": "Manage documents",
+    "desktopDescription": "View and manage approval documents.",
+    "newDocument": "New Document",
+    "searchPlaceholder": "Document no., title, drafter...",
+    "searchShort": "Search...",
+    "allTypes": "All types",
+    "approvalDocuments": "Approval Documents",
+    "summaryPending": "Pending",
+    "summaryDraft": "Draft",
+    "summaryApproved": "Approved",
+    "summaryRejected": "Rejected",
+    "tabPending": "Pending",
+    "tabRequested": "Requested",
+    "tabCompleted": "Completed",
+    "tabDraft": "Draft",
+    "tableDocNumber": "Doc No.",
+    "tableType": "Type",
+    "tableTitle": "Title",
+    "tableDrafter": "Drafter",
+    "tableCurrentApprover": "Current Approver",
+    "tableStatus": "Status",
+    "tableCreatedDate": "Created",
+    "emptyPending": "No pending documents",
+    "emptyRequested": "No requested documents",
+    "emptyCompleted": "No completed documents",
+    "emptyDraft": "No draft documents",
+    "emptyDefault": "No approval documents",
+    "emptyRequestedDesc": "Create a new document to submit for approval.",
+    "emptyDefaultDesc": "Documents pending approval will appear here.",
+    "loadingMore": "Loading more...",
+    "allLoaded": "All documents have been loaded.",
+    "selectDocumentFromLeft": "Select a document from the left",
+    "documentDetail": "Document Detail",
+    "tabletType": "Type",
+    "tabletStatus": "Status",
+    "tabletDrafter": "Drafter",
+    "tabletCreatedDate": "Created",
+    "tabletCurrentApprover": "Current Approver"
+  },
+
+  "approvalDetailPage": {
+    "title": "Approval Detail",
+    "documentNumber": "Document No.: {{number}}",
+    "notFound": "Approval document not found.",
+    "drafter": "Drafter",
+    "draftDate": "Draft Date",
+    "dueDate": "Due Date",
+    "completedDate": "Completed Date",
+    "recalledDate": "Recalled Date",
+    "recallReason": "Recall Reason",
+    "approvalLine": "Approval Line",
+    "documentContent": "Document Content",
+    "attachments": "Attachments",
+    "attachmentCount": "Attachments ({{count}})",
+    "tabDocument": "Document",
+    "tabHistory": "History",
+    "approvalHistory": "History",
+    "recentHistory": "Recent History",
+    "drafted": "Drafted",
+    "draftedBy": " drafted",
+    "delegateTag": "(Delegated)",
+    "delegateWithName": "(Delegate: {{name}})",
+    "directApproveTag": "(Direct)",
+    "approvalMode": "Approval Mode",
+    "parallelModeDesc": "Approval requests are sent to all approvers simultaneously.",
+    "consensusModeDesc": "Opinions are collected first, then the final approver decides.",
+    "linkedModules": "Linked Module Results",
+    "moreActions": "More Actions",
+    "moreActionsClose": "Close Actions",
+    "recall": "Recall",
+    "delegate": "Delegate",
+    "directApprove": "Direct Approve",
+    "modifyLine": "Modify Line",
+    "cancelAction": "Cancel",
+    "cancelApproval": "Cancel Approval",
+    "cancelConfirm": "Are you sure you want to cancel this approval?",
+    "cancelIrreversible": "This action cannot be undone.",
+    "cancelConfirmButton": "Confirm Cancel"
+  },
+
+  "approvalCreatePage": {
+    "title": "Create Approval",
+    "description": "Create a new approval document.",
+    "mobileFormTitle": "Create Approval",
+    "mobileApproversTitle": "Set Approval Line",
+    "mobileFormDesc": "Enter document details",
+    "mobileApproversDesc": "Add approvers",
+    "stepDocument": "1. Document",
+    "stepApprovalLine": "2. Approval Line",
+    "documentType": "Document Type *",
+    "selectType": "Select type",
+    "urgencyLabel": "Urgency",
+    "dueDateLabel": "Due Date",
+    "dueDatePlaceholder": "Select (optional)",
+    "dueDateDesktopPlaceholder": "Select due date (optional)",
+    "approvalModeLabel": "Approval Mode",
+    "completionConditionTenant": "Completion Condition (Tenant Setting)",
+    "titleLabel": "Title *",
+    "titlePlaceholder": "Enter document title",
+    "contentLabel": "Content *",
+    "contentPlaceholder": "Enter document content",
+    "approvalLine": "Approval Line",
+    "approvalLinePreview": "Approval Line Preview",
+    "selectedCount": "{{count}} selected",
+    "finalApprover": "Final Approver",
+    "selectedApprovers": "Selected Approvers ({{count}})",
+    "selectFinalApprover": "Select a final approver below",
+    "selectApprover": "Select approvers below",
+    "selectFinalApproverPlease": "Please select a final approver.",
+    "addApproverPlease": "Please add approvers.",
+    "orgChartFinalApprover": "Select final approver from org chart",
+    "orgChartAddApprover": "Add approver from org chart",
+    "selfApprovalWarning": "You cannot designate yourself as an approver.",
+    "submitRequest": "Submit",
+    "directModeInfo": "In direct mode, a single final approver decides immediately.",
+    "directModeInfoFull": "In direct mode, a single final approver decides immediately. No intermediate steps - directly approved/rejected.",
+    "parallelModeInfo": "In parallel mode, approval requests are sent to all approvers simultaneously.",
+    "consensusModeInfo": "In consensus mode, opinions are collected first, then the final approver decides.",
+    "consensusModeInfoFull": "In consensus mode, opinions from consensus members are collected first, then the final approver decides. The last approver is the final approver.",
+    "sequentialModeInfo": "The approval line proceeds in order. After the first approver approves, it is passed to the next approver.",
+    "documentContentCard": "Document Content"
+  },
+
+  "myApprovalsPage": {
+    "title": "My Approvals",
+    "description": "View your submitted approval documents.",
+    "mobileDesc": "My submitted approval documents",
+    "createButton": "Create",
+    "writeButton": "Create",
+    "summaryAll": "All",
+    "summaryPending": "In Progress",
+    "summaryCompleted": "Completed",
+    "summaryDraft": "Draft",
+    "searchPlaceholder": "Search title, doc no...",
+    "searchDesktopPlaceholder": "Search by title or doc no...",
+    "typeFilter": "Type",
+    "allTypes": "All types",
+    "tabAll": "All",
+    "tabPending": "In Progress",
+    "tabCompleted": "Completed",
+    "tabDraft": "Draft",
+    "tableDocNumber": "Doc No.",
+    "tableType": "Type",
+    "tableTitle": "Title",
+    "tableStatus": "Status",
+    "tableCurrentApprover": "Current Approver",
+    "tableCreatedDate": "Submitted",
+    "currentStep": "Current: {{name}}",
+    "emptyTitle": "No approval documents",
+    "emptyMobileDesc": "Create a new approval.",
+    "emptyDesktopDesc": "Click the button above to create a new approval."
+  },
+
+  "approvalActions": {
+    "approveTitle": "Approve",
+    "approveConfirm": "Do you want to approve this? You may add a comment if needed.",
+    "approveDocConfirm": "Do you want to approve this document?",
+    "commentOptional": "Comment (optional)",
+    "commentOptionalShort": "Comment (optional)",
+    "commentPlaceholder": "Enter your approval comment.",
+    "commentPlaceholderNoEnd": "Enter your approval comment",
+    "rejectTitle": "Reject",
+    "rejectConfirm": "Do you want to reject this? Please enter a reason.",
+    "rejectDocConfirm": "Do you want to reject this document? Please enter a reason.",
+    "rejectDocConfirmShort": "Do you want to reject this document?",
+    "rejectReasonRequired": "Reason (required)",
+    "rejectReasonLabel": "Rejection Reason *",
+    "rejectReasonPlaceholder": "Enter rejection reason.",
+    "rejectReasonPlaceholderNoEnd": "Enter rejection reason",
+    "rejectReasonValidation": "Please enter a rejection reason",
+    "cancelTitle": "Cancel Approval",
+    "cancelConfirm": "Do you want to cancel this approval? This action cannot be undone."
+  },
+
+  "approverSelector": {
+    "selectApprover": "Select Approver",
+    "searchPlaceholder": "Search by name or department...",
+    "selectedCount": "{{count}} selected",
+    "confirmSelection": "Select ({{count}})"
+  },
+
+  "approvalLineBuilder": {
+    "title": "Approval Line",
+    "addApprover": "Add Approver",
+    "parallelApproval": "Parallel",
+    "agreement": "Agreement",
+    "addParallelApprover": "Add Parallel Approver",
+    "emptyTitle": "Add approvers",
+    "emptyDescription": "Choose from sequential, parallel (simultaneous), or agreement (discuss first) approval",
+    "simultaneousApproval": "{{count}} approvers process simultaneously",
+    "completionCondition": "Completion condition:",
+    "maxSteps": "Up to {{max}} steps allowed ({{current}}/{{max}})",
+    "departmentHeadAuto": "Drafter's department head is auto-assigned",
+    "legendParallel": "Parallel: Simultaneous approval",
+    "legendAgreement": "Agreement: Discuss then approve"
+  },
+
+  "approvalLine": {
+    "requester": "Requester",
+    "draft": "Draft",
+    "approver": "Approver",
+    "waitingForApproval": "Pending"
+  },
+
+  "approvalLinePreview": {
+    "requester": "Requester",
+    "finalApprover": "Final Approver",
+    "simultaneous": "Simultaneous",
+    "agreement": "Agreement",
+    "finalApproval": "Final Approval"
+  },
+
+  "approvalLineFlow": {
+    "legendParallelAgreement": "Parallel/Agreement",
+    "legendParallelFlow": "Parallel Flow",
+    "legendDelegate": "Delegate",
+    "legendDirectApprove": "Direct Approve",
+    "legendCompleted": "Completed",
+    "delegateShort": "D",
+    "directApproveShort": "DA",
+    "originalApprover": "Orig: {{name}}"
+  },
+
+  "approvalStepIndicator": {
+    "waiting": "Waiting",
+    "current": "In Progress",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "skipped": "Skipped"
+  },
+
+  "approvalSummaryCards": {
+    "pending": "Pending",
+    "draft": "Draft",
+    "approved": "Approved",
+    "rejected": "Rejected"
+  },
+
+  "approvalFilterTabs": {
+    "pending": "Pending",
+    "requested": "Requested",
+    "completed": "Completed",
+    "draft": "Draft"
+  },
+
+  "approvalHistory": {
+    "title": "Approval History",
+    "empty": "No approval history.",
+    "originalApprover": "Original Approver: {{name}}"
+  },
+
+  "approvalDetail": {
+    "documentType": "Document Type",
+    "drafter": "Drafter",
+    "department": "Department",
+    "draftDate": "Draft Date",
+    "approvalLine": "Approval Line",
+    "documentContent": "Document Content",
+    "attachments": "Attachments",
+    "attachmentCount": "Attachments ({{count}})",
+    "unassigned": "Unassigned",
+    "step": "Step {{n}}"
+  },
+
+  "approvalForm": {
+    "documentType": "Document Type",
+    "typeRequired": "Type *",
+    "urgency": "Urgency",
+    "urgencyNormal": "Normal",
+    "urgencyHigh": "Urgent",
+    "documentContent": "Document Content",
+    "titleRequired": "Title *",
+    "titlePlaceholder": "Enter approval document title",
+    "titleValidation": "Please enter a title.",
+    "titleMaxValidation": "Maximum 200 characters.",
+    "contentRequired": "Content *",
+    "contentPlaceholder": "Enter approval document content",
+    "contentValidation": "Please enter content.",
+    "approvalLine": "Approval Line",
+    "minApproverValidation": "Please add at least one approver.",
+    "attachments": "Attachments",
+    "fileUploadPlaceholder": "Drag or click to upload files (max 5, 10MB each)",
+    "saveDraft": "Save Draft",
+    "submitRequest": "Submit"
+  },
+
+  "approvalCard": {
+    "urgent": "Urgent",
+    "currentApprover": "Current Approver",
+    "swipeHint": "← Reject | Approve →"
+  },
+
+  "approvalDetailSheet": {
+    "title": "Approval Document",
+    "type": "Type",
+    "drafter": "Drafter",
+    "draftDate": "Draft Date",
+    "currentApprover": "Current Approver",
+    "drafterDepartment": "Department"
+  },
+
+  "recallDialog": {
+    "title": "Recall",
+    "confirmWithTitle": "Do you want to recall \"{{title}}\"?",
+    "confirmDefault": "Do you want to recall this approval document?",
+    "warningText": "Recalled documents will be changed to <strong>Recalled</strong> status and the approval process will be stopped.",
+    "warningSubtext": "After recall, you must re-draft with the same content.",
+    "reasonLabel": "Recall Reason",
+    "reasonRequired": "*",
+    "reasonPlaceholder": "Enter recall reason. (e.g., missing attachment, content revision needed)",
+    "reasonNote": "The recall reason will be recorded in the approval history.",
+    "confirmButton": "Recall"
+  },
+
+  "delegateDialog": {
+    "title": "Assign Delegate",
+    "descriptionWithName": "Assign a delegate to process <strong>{{name}}</strong>'s approval.",
+    "descriptionDefault": "Assign a delegate to process the approval.",
+    "searchLabel": "Search Delegate",
+    "searchPlaceholder": "Search by name or department",
+    "searchResults": "Search Results",
+    "selectedDelegate": "Selected Delegate",
+    "reasonLabel": "Reason (optional)",
+    "reasonPlaceholder": "Enter delegation reason. (e.g., business trip, vacation)",
+    "confirmButton": "Assign Delegate"
+  },
+
+  "directApproveDialog": {
+    "title": "Direct Approve",
+    "description": "Directly approve this based on your authority.",
+    "alertText": "Direct approval will automatically approve all steps up to the designated step.",
+    "alertSubtext": "The reason will be recorded in the approval history.",
+    "scopeLabel": "Scope",
+    "scopeCurrentOnly": "Current step only",
+    "scopeCurrentDesc": "Approve step {{step}} only",
+    "scopeToFinal": "Up to final step",
+    "scopeToFinalDesc": "Approve steps {{from}} through {{to}}",
+    "targetStepsLabel": "Target Steps",
+    "reasonLabel": "Reason",
+    "reasonRequired": "*",
+    "reasonPlaceholder": "Enter direct approval reason. (e.g., urgent processing needed, approver on extended leave)",
+    "reasonNote": "A reason is required for direct approval.",
+    "confirmButton": "Direct Approve"
+  },
+
+  "modifyApprovalLineDialog": {
+    "title": "Modify Approval Line",
+    "description": "Modify the approval line of the submitted document. Already approved/rejected steps cannot be changed.",
+    "approvalLine": "Approval Line",
+    "needsApproverSelection": "(Approver selection required)",
+    "addApprover": "Add Approver",
+    "searchPlaceholder": "Search by name, dept, position...",
+    "reasonLabel": "Reason for Modification",
+    "reasonRequired": "*",
+    "reasonPlaceholder": "Enter reason for modification. (min. 10 characters)",
+    "reasonMinLength": "Reason must be at least 10 characters. (Currently {{count}})",
+    "successToast": "Approval line has been modified.",
+    "failureToast": "Failed to modify approval line"
+  },
+
+  "relatedDocuments": {
+    "title": "Related Documents",
+    "addButton": "Add Related Document",
+    "empty": "No linked related documents.",
+    "searchTitle": "Search Related Documents",
+    "searchPlaceholder": "Search by document number or title",
+    "linkToast": "Document Linked",
+    "linkDescription": "Document {{number}} has been linked.",
+    "unlinkTitle": "Unlink Document",
+    "unlinkConfirm": "Do you want to unlink this document?",
+    "unlinkToast": "Document Unlinked",
+    "unlinkDescription": "Document {{number}} has been unlinked."
+  },
+
+  "delegationPage": {
+    "title": "Delegation",
+    "description": "Delegate approval authority to someone else during your absence.",
+    "setupButton": "Set Up Delegation",
+    "currentStatus": "Current Delegation Status",
+    "delegatingTo": "Delegating to {{name}}",
+    "cancelDelegation": "Cancel Delegation",
+    "delegationReason": "Reason: ",
+    "noActiveDelegation": "No active delegation",
+    "noActiveDelegationDesc": "Set up delegation to delegate approvals during your absence.",
+    "historyTitle": "Delegation History",
+    "historyDescription": "Past delegation records.",
+    "tableDelegatee": "Delegatee",
+    "tablePeriod": "Period",
+    "tableReason": "Reason",
+    "tableStatus": "Status",
+    "emptyHistory": "No delegation history",
+    "emptyHistoryDesc": "Delegation records will appear here once set up.",
+    "createDialogTitle": "Set Up Delegation",
+    "createDialogDesc": "Designate a substitute to handle approvals during your absence.",
+    "delegateeLabel": "Delegatee *",
+    "delegateePlaceholder": "Select employee",
+    "startDateLabel": "Start Date *",
+    "endDateLabel": "End Date *",
+    "reasonLabel": "Reason *",
+    "reasonPlaceholder": "e.g., Annual leave, business trip",
+    "submitting": "Setting up...",
+    "submitButton": "Set Up Delegation",
+    "cancelConfirmTitle": "Cancel Delegation",
+    "cancelConfirmDesc": "Do you want to cancel the delegation?",
+    "statusActive": "Active",
+    "statusExpired": "Expired",
+    "statusCancelled": "Cancelled"
+  },
+
+  "approvalTemplatesPage": {
+    "title": "Approval Templates",
+    "mobileTitle": "Templates",
+    "description": "Register and manage approval document templates.",
+    "mobileDescription": "Register and manage templates",
+    "registerButton": "Register Template",
+    "searchPlaceholder": "Search template name, code...",
+    "categoryAll": "All",
+    "categoryLeave": "Leave",
+    "categoryExpense": "Expense",
+    "categoryOvertime": "Overtime",
+    "categoryPersonnel": "Personnel",
+    "categoryGeneral": "General",
+    "statusAll": "All",
+    "statusActive": "Active",
+    "statusInactive": "Inactive",
+    "tableCode": "Code",
+    "tableName": "Name",
+    "tableDocType": "Doc Type",
+    "tableStatus": "Status",
+    "tableUpdatedAt": "Updated",
+    "updatedAt": "Updated: {{date}}",
+    "emptyTitle": "No templates registered",
+    "emptyDescription": "Register a new approval template.",
+    "deleteTitle": "Delete Template",
+    "deleteConfirm": "Delete \"{{name}}\" template? This action cannot be undone.",
+    "deleteSuccess": "Deleted",
+    "deleteSuccessDesc": "Template has been deleted.",
+    "deleteFailure": "Delete Failed",
+    "deleteFailureDesc": "An error occurred while deleting the template.",
+    "activateSuccess": "Activated",
+    "deactivateSuccess": "Deactivated",
+    "toggleSuccessDesc": "Template has been {{status}}.",
+    "toggleFailure": "Change Failed",
+    "toggleFailureDesc": "An error occurred while changing the status.",
+    "documentType": "Doc Type"
+  },
+
+  "templateLineBuilder": {
+    "stepTypeApproval": "Approval",
+    "stepTypeAgreement": "Agreement",
+    "stepTypeReference": "Reference",
+    "approverTypeDeptHead": "Dept. Head",
+    "approverTypeRole": "By Role",
+    "approverTypeSpecific": "Specific Employee",
+    "approvalType": "Approval Type",
+    "assignMethod": "Assignment Method",
+    "approverId": "Approver ID",
+    "requiredStep": "Required Step",
+    "addStep": "Add Step",
+    "stepLabel": "Step {{n}}"
+  },
+
+  "conditionalRoutingRules": {
+    "empty": "No conditional routing rules",
+    "conditionField": "Condition Field",
+    "operator": "Operator",
+    "targetLine": "Target Approval Line",
+    "addRule": "Add Rule",
+    "ruleLabel": "Rule {{n}}",
+    "conditionSetting": "Condition Settings"
+  },
+
+  "orgTreeApproverPicker": {
+    "title": "Select Approver",
+    "searchPlaceholder": "Search employees...",
+    "selectDepartment": "Select a department",
+    "alreadyAdded": "Already added",
+    "addCount": "Add {{count}}"
+  },
+
+  "delegationRulesPage": {
+    "title": "Delegation Rules",
+    "description": "Register and manage delegation rules."
+  },
+
+  "delegationRuleDialog": {
+    "createTitle": "Add Delegation Rule",
+    "editTitle": "Edit Delegation Rule",
+    "basicInfo": "Basic Information",
+    "delegatorSettings": "Delegator Settings",
+    "conditions": "Conditions",
+    "targetSettings": "Target Settings",
+    "validPeriod": "Valid Period",
+    "approvalTypeLeave": "Leave Request",
+    "approvalTypeExpense": "Expense Claim",
+    "approvalTypeOvertime": "Overtime",
+    "approvalTypePersonnel": "Personnel Appointment",
+    "approvalTypeGeneral": "General"
+  },
+
+  "delegationSettings": {
+    "title": "Delegation Settings",
+    "description": "Delegate approval authority to another employee during absence.",
+    "registerDelegate": "Register Delegate",
+    "emptyDelegates": "No delegates registered.",
+    "tableDelegate": "Delegate",
+    "tablePeriod": "Period",
+    "tableStatus": "Status",
+    "tableEnabled": "Enabled",
+    "statusExpired": "Expired",
+    "statusActive": "Active",
+    "statusInactive": "Inactive",
+    "deleteDelegate": "Delete Delegate",
+    "delegationPeriod": "Delegation Period",
+    "selectPeriod": "Select period"
+  },
+
+  "documentTemplateSelector": {
+    "title": "Select Template",
+    "searchPlaceholder": "Search templates...",
+    "noResults": "No search results",
+    "empty": "No templates available",
+    "applyTemplate": "Apply Template",
+    "categoryOther": "Other"
+  },
+
+  "approvalList": {
+    "tableDocNumber": "Doc No.",
+    "tableType": "Type",
+    "tableTitle": "Title",
+    "tableDrafter": "Drafter",
+    "tableCurrentApprover": "Current Approver",
+    "tableStatus": "Status",
+    "tableCreatedDate": "Created",
+    "empty": "No approval documents."
+  }
 }

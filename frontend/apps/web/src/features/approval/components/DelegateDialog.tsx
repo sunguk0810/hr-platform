@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { UserCheck, Search, Loader2 } from 'lucide-react';
 import {
   Dialog,
@@ -32,6 +33,7 @@ export function DelegateDialog({
   isLoading = false,
   currentApproverName,
 }: DelegateDialogProps) {
+  const { t } = useTranslation('approval');
   const [searchKeyword, setSearchKeyword] = useState('');
   const [selectedEmployee, setSelectedEmployee] = useState<{
     id: string;
@@ -87,15 +89,13 @@ export function DelegateDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserCheck className="h-5 w-5 text-indigo-500" />
-            대결 지정
+            {t('delegateDialog.title')}
           </DialogTitle>
           <DialogDescription>
             {currentApproverName ? (
-              <>
-                <strong>{currentApproverName}</strong>님의 결재를 대신 처리할 대결자를 지정합니다.
-              </>
+              <span dangerouslySetInnerHTML={{ __html: t('delegateDialog.descriptionWithName', { name: currentApproverName }) }} />
             ) : (
-              '결재를 대신 처리할 대결자를 지정합니다.'
+              t('delegateDialog.descriptionDefault')
             )}
           </DialogDescription>
         </DialogHeader>
@@ -104,7 +104,7 @@ export function DelegateDialog({
           {/* 대결자 검색 */}
           <div className="grid gap-2">
             <Label htmlFor="delegate-search">
-              대결자 검색 <span className="text-destructive">*</span>
+              {t('delegateDialog.searchLabel')} <span className="text-destructive">*</span>
             </Label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -112,7 +112,7 @@ export function DelegateDialog({
                 id="delegate-search"
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
-                placeholder="이름 또는 부서명으로 검색"
+                placeholder={t('delegateDialog.searchPlaceholder')}
                 className="pl-9"
               />
             </div>
@@ -120,7 +120,7 @@ export function DelegateDialog({
 
           {/* 검색 결과 목록 */}
           <div className="grid gap-2">
-            <Label>검색 결과</Label>
+            <Label>{t('delegateDialog.searchResults')}</Label>
             <ScrollArea className="h-[200px] rounded-md border">
               {isSearching ? (
                 <div className="flex h-full items-center justify-center p-4">
@@ -128,7 +128,7 @@ export function DelegateDialog({
                 </div>
               ) : filteredEmployees.length === 0 ? (
                 <div className="flex h-full items-center justify-center p-4 text-sm text-muted-foreground">
-                  {searchKeyword ? '검색 결과가 없습니다.' : '이름으로 검색하세요.'}
+                  {searchKeyword ? t('common.noSearchResultsDot') : t('common.searchByName')}
                 </div>
               ) : (
                 <div className="p-2 space-y-1">
@@ -172,7 +172,7 @@ export function DelegateDialog({
           {/* 선택된 대결자 */}
           {selectedEmployee && (
             <div className="rounded-lg bg-indigo-50 border border-indigo-200 p-3">
-              <Label className="text-xs text-indigo-600">선택된 대결자</Label>
+              <Label className="text-xs text-indigo-600">{t('delegateDialog.selectedDelegate')}</Label>
               <div className="flex items-center gap-2 mt-1">
                 <Avatar className="h-6 w-6">
                   <AvatarFallback className="text-xs">
@@ -189,12 +189,12 @@ export function DelegateDialog({
 
           {/* 대결 사유 */}
           <div className="grid gap-2">
-            <Label htmlFor="delegate-reason">대결 사유 (선택)</Label>
+            <Label htmlFor="delegate-reason">{t('delegateDialog.reasonLabel')}</Label>
             <Textarea
               id="delegate-reason"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="대결 사유를 입력하세요. (예: 출장, 휴가 등)"
+              placeholder={t('delegateDialog.reasonPlaceholder')}
               rows={2}
               className="resize-none"
             />
@@ -207,14 +207,14 @@ export function DelegateDialog({
             onClick={() => handleOpenChange(false)}
             disabled={isLoading}
           >
-            취소
+            {t('common.cancel')}
           </Button>
           <Button
             onClick={handleConfirm}
             disabled={!selectedEmployee || isLoading}
             className="bg-indigo-600 hover:bg-indigo-700"
           >
-            {isLoading ? '처리 중...' : '대결 지정'}
+            {isLoading ? t('common.processing') : t('delegateDialog.confirmButton')}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -86,6 +87,7 @@ const mockSearchResults: RelatedDocument[] = [
 ];
 
 export function RelatedDocuments({ approvalId: _approvalId, isEditable }: RelatedDocumentsProps) {
+  const { t } = useTranslation('approval');
   const { toast } = useToast();
   const [linkedDocs, setLinkedDocs] = useState<RelatedDocument[]>(mockRelatedDocs);
   const [isSearchDialogOpen, setIsSearchDialogOpen] = useState(false);
@@ -112,8 +114,8 @@ export function RelatedDocuments({ approvalId: _approvalId, isEditable }: Relate
   const handleLink = (doc: RelatedDocument) => {
     setLinkedDocs((prev) => [...prev, doc]);
     toast({
-      title: '관련 문서 연결',
-      description: `${doc.documentNumber} 문서가 연결되었습니다.`,
+      title: t('relatedDocuments.linkToast'),
+      description: t('relatedDocuments.linkDescription', { number: doc.documentNumber }),
     });
   };
 
@@ -121,8 +123,8 @@ export function RelatedDocuments({ approvalId: _approvalId, isEditable }: Relate
     if (!unlinkTarget) return;
     setLinkedDocs((prev) => prev.filter((d) => d.id !== unlinkTarget.id));
     toast({
-      title: '관련 문서 연결 해제',
-      description: `${unlinkTarget.documentNumber} 문서의 연결이 해제되었습니다.`,
+      title: t('relatedDocuments.unlinkToast'),
+      description: t('relatedDocuments.unlinkDescription', { number: unlinkTarget.documentNumber }),
     });
     setUnlinkTarget(null);
     setIsUnlinkDialogOpen(false);
@@ -145,12 +147,12 @@ export function RelatedDocuments({ approvalId: _approvalId, isEditable }: Relate
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center gap-2">
               <Link2 className="h-4 w-4" />
-              관련 문서
+              {t('relatedDocuments.title')}
             </span>
             {isEditable && (
               <Button variant="outline" size="sm" onClick={handleOpenSearchDialog}>
                 <Plus className="mr-1 h-4 w-4" />
-                관련 문서 추가
+                {t('relatedDocuments.addButton')}
               </Button>
             )}
           </CardTitle>
@@ -158,7 +160,7 @@ export function RelatedDocuments({ approvalId: _approvalId, isEditable }: Relate
         <CardContent>
           {linkedDocs.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
-              연결된 관련 문서가 없습니다.
+              {t('relatedDocuments.empty')}
             </p>
           ) : (
             <div className="space-y-3">
@@ -208,13 +210,13 @@ export function RelatedDocuments({ approvalId: _approvalId, isEditable }: Relate
       <Dialog open={isSearchDialogOpen} onOpenChange={setIsSearchDialogOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>관련 문서 검색</DialogTitle>
+            <DialogTitle>{t('relatedDocuments.searchTitle')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="문서번호 또는 제목으로 검색"
+                placeholder={t('relatedDocuments.searchPlaceholder')}
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
                 className="pl-10"
@@ -223,7 +225,7 @@ export function RelatedDocuments({ approvalId: _approvalId, isEditable }: Relate
             <div className="max-h-64 overflow-y-auto space-y-2">
               {filteredSearchResults.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  검색 결과가 없습니다.
+                  {t('common.noSearchResultsDot')}
                 </p>
               ) : (
                 filteredSearchResults.map((doc) => (
@@ -255,7 +257,7 @@ export function RelatedDocuments({ approvalId: _approvalId, isEditable }: Relate
                       onClick={() => handleLink(doc)}
                     >
                       <Link2 className="mr-1 h-4 w-4" />
-                      링크
+                      {t('common.link')}
                     </Button>
                   </div>
                 ))
@@ -264,7 +266,7 @@ export function RelatedDocuments({ approvalId: _approvalId, isEditable }: Relate
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsSearchDialogOpen(false)}>
-              닫기
+              {t('common.close')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -274,20 +276,17 @@ export function RelatedDocuments({ approvalId: _approvalId, isEditable }: Relate
       <Dialog open={isUnlinkDialogOpen} onOpenChange={setIsUnlinkDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>관련 문서 연결 해제</DialogTitle>
+            <DialogTitle>{t('relatedDocuments.unlinkTitle')}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">
-              {unlinkTarget?.documentNumber}
-            </span>{' '}
-            문서의 연결을 해제하시겠습니까?
+            {t('relatedDocuments.unlinkConfirm')}
           </p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsUnlinkDialogOpen(false)}>
-              취소
+              {t('common.cancel')}
             </Button>
             <Button variant="destructive" onClick={handleUnlinkConfirm}>
-              연결 해제
+              {t('common.unlink')}
             </Button>
           </DialogFooter>
         </DialogContent>

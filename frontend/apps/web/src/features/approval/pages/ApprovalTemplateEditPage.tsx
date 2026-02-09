@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,26 +27,20 @@ import { ConditionalRoutingRules } from '../components/ConditionalRoutingRules';
 import { useToast } from '@/hooks/useToast';
 import type { ApprovalLineTemplate, ConditionalRoutingRule } from '@hr-platform/shared-types';
 
-const CATEGORIES = [
-  { value: 'LEAVE_REQUEST', label: '휴가' },
-  { value: 'EXPENSE', label: '경비' },
-  { value: 'OVERTIME', label: '초과근무' },
-  { value: 'PERSONNEL', label: '인사' },
-  { value: 'GENERAL', label: '일반' },
-];
+const createFormSchema = (t: TFunction) =>
+  z.object({
+    code: z.string().min(1, t('templateEditPage.codeRequired')).max(50, t('templateEditPage.codeMax')),
+    name: z.string().min(1, t('templateEditPage.nameRequired')).max(100, t('templateEditPage.nameMax')),
+    description: z.string().max(500, t('templateEditPage.descriptionMax')).optional(),
+    category: z.string().min(1, t('templateEditPage.categoryRequired')),
+    retentionPeriod: z.number().min(1).max(3650).optional(),
+    isActive: z.boolean(),
+  });
 
-const formSchema = z.object({
-  code: z.string().min(1, '양식코드는 필수입니다').max(50, '최대 50자까지 입력 가능합니다'),
-  name: z.string().min(1, '양식명은 필수입니다').max(100, '최대 100자까지 입력 가능합니다'),
-  description: z.string().max(500, '최대 500자까지 입력 가능합니다').optional(),
-  category: z.string().min(1, '문서유형을 선택해주세요'),
-  retentionPeriod: z.number().min(1).max(3650).optional(),
-  isActive: z.boolean(),
-});
-
-type FormData = z.infer<typeof formSchema>;
+type FormData = z.infer<ReturnType<typeof createFormSchema>>;
 
 export default function ApprovalTemplateEditPage() {
+  const { t } = useTranslation('approval');
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const duplicateId = searchParams.get('duplicate');
@@ -52,6 +48,16 @@ export default function ApprovalTemplateEditPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const isNew = !id;
+
+  const formSchema = useMemo(() => createFormSchema(t), [t]);
+
+  const CATEGORIES = [
+    { value: 'LEAVE_REQUEST', label: t('templateEditPage.categoryLeave') },
+    { value: 'EXPENSE', label: t('templateEditPage.categoryExpense') },
+    { value: 'OVERTIME', label: t('templateEditPage.categoryOvertime') },
+    { value: 'PERSONNEL', label: t('templateEditPage.categoryPersonnel') },
+    { value: 'GENERAL', label: t('templateEditPage.categoryGeneral') },
+  ];
 
   const [approvalLine, setApprovalLine] = useState<ApprovalLineTemplate[]>([]);
   const [routingRules, setRoutingRules] = useState<ConditionalRoutingRule[]>([]);
@@ -86,7 +92,7 @@ export default function ApprovalTemplateEditPage() {
       const template = templateData.data;
       reset({
         code: duplicateId ? `${template.code}_COPY` : template.code,
-        name: duplicateId ? `${template.name} (복사본)` : template.name,
+        name: duplicateId ? `${template.name} ${t('templateEditPage.copyNameSuffix')}` : template.name,
         description: template.description || '',
         category: template.category,
         retentionPeriod: template.retentionPeriod || 365,
@@ -95,18 +101,18 @@ export default function ApprovalTemplateEditPage() {
       setApprovalLine(template.defaultApprovalLine || []);
       setRoutingRules(template.conditionalRoutingRules || []);
     }
-  }, [templateData, duplicateId, reset]);
+  }, [templateData, duplicateId, reset, t]);
 
   const createMutation = useMutation({
     mutationFn: (data: FormData & { defaultApprovalLine: ApprovalLineTemplate[] }) =>
       approvalService.createTemplate(data),
     onSuccess: () => {
-      toast({ title: '등록 완료', description: '양식이 등록되었습니다.' });
+      toast({ title: t('templateEditPage.registerSuccess'), description: t('templateEditPage.registerSuccessDesc') });
       queryClient.invalidateQueries({ queryKey: ['approval-templates'] });
       navigate('/settings/approval-templates');
     },
     onError: () => {
-      toast({ title: '등록 실패', description: '양식 등록 중 오류가 발생했습니다.', variant: 'destructive' });
+      toast({ title: t('templateEditPage.registerFailure'), description: t('templateEditPage.registerFailureDesc'), variant: 'destructive' });
     },
   });
 
@@ -114,13 +120,13 @@ export default function ApprovalTemplateEditPage() {
     mutationFn: (data: FormData & { defaultApprovalLine: ApprovalLineTemplate[] }) =>
       approvalService.updateTemplate(id!, data),
     onSuccess: () => {
-      toast({ title: '수정 완료', description: '양식이 수정되었습니다.' });
+      toast({ title: t('templateEditPage.editSuccess'), description: t('templateEditPage.editSuccessDesc') });
       queryClient.invalidateQueries({ queryKey: ['approval-templates'] });
       queryClient.invalidateQueries({ queryKey: ['approval-template', id] });
       navigate('/settings/approval-templates');
     },
     onError: () => {
-      toast({ title: '수정 실패', description: '양식 수정 중 오류가 발생했습니다.', variant: 'destructive' });
+      toast({ title: t('templateEditPage.editFailure'), description: t('templateEditPage.editFailureDesc'), variant: 'destructive' });
     },
   });
 
@@ -145,8 +151,8 @@ export default function ApprovalTemplateEditPage() {
     return (
       <>
         <PageHeader
-          title={isNew ? '양식 등록' : '양식 수정'}
-          description="로딩 중..."
+          title={isNew ? t('templateEditPage.registerTitle') : t('templateEditPage.editTitle')}
+          description={t('templateEditPage.loadingDesc')}
         />
         <Card>
           <CardContent className="py-12 text-center">
@@ -160,12 +166,12 @@ export default function ApprovalTemplateEditPage() {
   return (
     <>
       <PageHeader
-        title={isNew || duplicateId ? '양식 등록' : '양식 수정'}
-        description={isNew || duplicateId ? '새로운 결재 양식을 등록합니다.' : '결재 양식을 수정합니다.'}
+        title={isNew || duplicateId ? t('templateEditPage.registerTitle') : t('templateEditPage.editTitle')}
+        description={isNew || duplicateId ? t('templateEditPage.registerDescription') : t('templateEditPage.editDescription')}
         actions={
           <Button variant="outline" onClick={() => navigate('/settings/approval-templates')}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            목록으로
+            {t('templateEditPage.backToList')}
           </Button>
         }
       />
@@ -173,17 +179,17 @@ export default function ApprovalTemplateEditPage() {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>기본 정보</CardTitle>
+            <CardTitle>{t('templateEditPage.basicInfo')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="code">
-                  양식코드 <span className="text-destructive">*</span>
+                  {t('templateEditPage.codeLabel')} <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="code"
-                  placeholder="예: LEAVE_ANNUAL"
+                  placeholder={t('templateEditPage.codePlaceholder')}
                   {...register('code')}
                   disabled={!!id}
                 />
@@ -193,14 +199,14 @@ export default function ApprovalTemplateEditPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="category">
-                  문서유형 <span className="text-destructive">*</span>
+                  {t('templateEditPage.categoryLabel')} <span className="text-destructive">*</span>
                 </Label>
                 <Select
                   value={watch('category')}
                   onValueChange={(value) => setValue('category', value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="문서유형 선택" />
+                    <SelectValue placeholder={t('templateEditPage.categoryPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {CATEGORIES.map((cat) => (
@@ -218,11 +224,11 @@ export default function ApprovalTemplateEditPage() {
 
             <div className="space-y-2">
               <Label htmlFor="name">
-                양식명 <span className="text-destructive">*</span>
+                {t('templateEditPage.nameLabel')} <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="name"
-                placeholder="예: 연차 휴가 신청서"
+                placeholder={t('templateEditPage.namePlaceholder')}
                 {...register('name')}
               />
               {errors.name && (
@@ -231,10 +237,10 @@ export default function ApprovalTemplateEditPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">설명</Label>
+              <Label htmlFor="description">{t('templateEditPage.descriptionLabel')}</Label>
               <Textarea
                 id="description"
-                placeholder="양식에 대한 설명을 입력하세요..."
+                placeholder={t('templateEditPage.descriptionPlaceholder')}
                 rows={3}
                 {...register('description')}
               />
@@ -245,7 +251,7 @@ export default function ApprovalTemplateEditPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="retentionPeriod">보존 기간 (일)</Label>
+                <Label htmlFor="retentionPeriod">{t('templateEditPage.retentionLabel')}</Label>
                 <Input
                   id="retentionPeriod"
                   type="number"
@@ -256,9 +262,9 @@ export default function ApprovalTemplateEditPage() {
               </div>
               <div className="flex items-center justify-between rounded-lg border p-4">
                 <div className="space-y-0.5">
-                  <Label>활성 상태</Label>
+                  <Label>{t('templateEditPage.activeStatusLabel')}</Label>
                   <p className="text-sm text-muted-foreground">
-                    비활성화된 양식은 결재 작성 시 선택할 수 없습니다.
+                    {t('templateEditPage.activeStatusDescription')}
                   </p>
                 </div>
                 <Switch
@@ -272,12 +278,11 @@ export default function ApprovalTemplateEditPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>기본 결재선</CardTitle>
+            <CardTitle>{t('templateEditPage.defaultApprovalLine')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
-              이 양식을 사용하여 결재를 작성할 때 자동으로 설정되는 기본 결재선입니다.
-              사용자가 결재 작성 시 수정할 수 있습니다.
+              {t('templateEditPage.defaultApprovalLineDesc')}
             </p>
             <TemplateLineBuilder
               value={approvalLine}
@@ -288,12 +293,11 @@ export default function ApprovalTemplateEditPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>조건부 라우팅 규칙</CardTitle>
+            <CardTitle>{t('templateEditPage.conditionalRouting')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
-              금액, 휴가일수 등의 조건에 따라 기본 결재선 대신 다른 결재선을 자동 적용합니다.
-              조건에 해당하지 않으면 위의 기본 결재선이 사용됩니다.
+              {t('templateEditPage.conditionalRoutingDesc')}
             </p>
             <ConditionalRoutingRules
               value={routingRules}
@@ -308,12 +312,12 @@ export default function ApprovalTemplateEditPage() {
             variant="outline"
             onClick={() => navigate('/settings/approval-templates')}
           >
-            취소
+            {t('common.cancel')}
           </Button>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             <Save className="mr-2 h-4 w-4" />
-            {isNew || duplicateId ? '등록' : '저장'}
+            {isNew || duplicateId ? t('templateEditPage.registerButton') : t('templateEditPage.saveButton')}
           </Button>
         </div>
       </form>

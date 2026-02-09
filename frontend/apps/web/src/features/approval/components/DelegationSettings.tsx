@@ -1,7 +1,9 @@
 import * as React from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import type { TFunction } from 'i18next';
 import { format, parseISO, isBefore } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
@@ -55,21 +57,21 @@ export interface CreateDelegationData {
   endDate: string;
 }
 
-const delegationSchema = z.object({
-  delegateId: z.string().min(1, '대결자를 선택해주세요'),
-  startDate: z.string().min(1, '시작일을 선택해주세요'),
-  endDate: z.string().min(1, '종료일을 선택해주세요'),
+const createDelegationSchema = (t: TFunction) => z.object({
+  delegateId: z.string().min(1, t('delegationSettings.delegateValidation')),
+  startDate: z.string().min(1, t('delegationSettings.startDateValidation')),
+  endDate: z.string().min(1, t('delegationSettings.endDateValidation')),
 }).refine((data) => {
   if (data.startDate && data.endDate) {
     return !isBefore(parseISO(data.endDate), parseISO(data.startDate));
   }
   return true;
 }, {
-  message: '종료일은 시작일 이후여야 합니다',
+  message: t('delegationSettings.endDateAfterStart'),
   path: ['endDate'],
 });
 
-type DelegationFormData = z.infer<typeof delegationSchema>;
+type DelegationFormData = z.infer<ReturnType<typeof createDelegationSchema>>;
 
 export function DelegationSettings({
   delegations,
@@ -79,6 +81,8 @@ export function DelegationSettings({
   onSearchEmployees,
   isLoading = false,
 }: DelegationSettingsProps) {
+  const { t } = useTranslation('approval');
+  const delegationSchema = React.useMemo(() => createDelegationSchema(t), [t]);
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
   const [selectedDelegation, setSelectedDelegation] = React.useState<DelegationRule | null>(null);
@@ -175,14 +179,14 @@ export function DelegationSettings({
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>대결/위임 설정</CardTitle>
+              <CardTitle>{t('delegationSettings.title')}</CardTitle>
               <CardDescription>
-                부재 시 다른 직원에게 결재 권한을 위임합니다.
+                {t('delegationSettings.description')}
               </CardDescription>
             </div>
             <Button onClick={() => setIsDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
-              대결자 등록
+              {t('delegationSettings.registerDelegate')}
             </Button>
           </div>
         </CardHeader>
@@ -190,19 +194,19 @@ export function DelegationSettings({
           {delegations.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <Users className="h-12 w-12 text-muted-foreground/50 mb-4" />
-              <p className="text-muted-foreground">등록된 대결자가 없습니다.</p>
+              <p className="text-muted-foreground">{t('delegationSettings.emptyDelegates')}</p>
               <p className="text-sm text-muted-foreground mt-1">
-                대결자를 등록하면 부재 시 결재 업무를 위임할 수 있습니다.
+                {t('delegationSettings.emptyDelegatesSubtext')}
               </p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>대결자</TableHead>
-                  <TableHead>기간</TableHead>
-                  <TableHead>상태</TableHead>
-                  <TableHead>활성화</TableHead>
+                  <TableHead>{t('delegationSettings.tableDelegate')}</TableHead>
+                  <TableHead>{t('delegationSettings.tablePeriod')}</TableHead>
+                  <TableHead>{t('delegationSettings.tableStatus')}</TableHead>
+                  <TableHead>{t('delegationSettings.tableEnabled')}</TableHead>
                   <TableHead className="w-[80px]"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -228,11 +232,11 @@ export function DelegationSettings({
                       </TableCell>
                       <TableCell>
                         {isExpired ? (
-                          <StatusBadge status="default" label="만료됨" />
+                          <StatusBadge status="default" label={t('delegationSettings.statusExpired')} />
                         ) : delegation.isActive ? (
-                          <StatusBadge status="success" label="활성" />
+                          <StatusBadge status="success" label={t('delegationSettings.statusActive')} />
                         ) : (
-                          <StatusBadge status="warning" label="비활성" />
+                          <StatusBadge status="warning" label={t('delegationSettings.statusInactive')} />
                         )}
                       </TableCell>
                       <TableCell>
@@ -267,16 +271,16 @@ export function DelegationSettings({
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>대결자 등록</DialogTitle>
+            <DialogTitle>{t('delegationSettings.addDialogTitle')}</DialogTitle>
             <DialogDescription>
-              부재 시 결재 권한을 위임할 직원을 등록합니다.
+              {t('delegationSettings.addDialogDescription')}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit(handleFormSubmit)}>
             <div className="space-y-4 py-4">
               {/* Employee Search */}
               <div className="space-y-2">
-                <Label>대결자 *</Label>
+                <Label>{t('delegationSettings.delegateLabel')}</Label>
                 {selectedEmployee ? (
                   <div className="flex items-center justify-between p-3 border rounded-md">
                     <div>
@@ -292,13 +296,13 @@ export function DelegationSettings({
                         setValue('delegateId', '');
                       }}
                     >
-                      변경
+                      {t('common.change')}
                     </Button>
                   </div>
                 ) : (
                   <div className="relative">
                     <Input
-                      placeholder="이름으로 검색..."
+                      placeholder={t('delegationSettings.delegateSearchPlaceholder')}
                       value={searchKeyword}
                       onChange={(e) => handleSearch(e.target.value)}
                     />
@@ -326,7 +330,7 @@ export function DelegationSettings({
 
               {/* Date Range */}
               <div className="space-y-2">
-                <Label>위임 기간 *</Label>
+                <Label>{t('delegationSettings.delegationPeriodRequired')}</Label>
                 <DateRangePicker
                   value={
                     startDate && endDate
@@ -334,7 +338,7 @@ export function DelegationSettings({
                       : undefined
                   }
                   onChange={handleDateRangeChange}
-                  placeholder="기간 선택"
+                  placeholder={t('delegationSettings.selectPeriod')}
                 />
                 {(errors.startDate || errors.endDate) && (
                   <p className="text-sm text-destructive">
@@ -349,16 +353,16 @@ export function DelegationSettings({
                 variant="outline"
                 onClick={() => setIsDialogOpen(false)}
               >
-                취소
+                {t('common.cancel')}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    저장 중...
+                    {t('common.saving')}
                   </>
                 ) : (
-                  '저장'
+                  t('common.save')
                 )}
               </Button>
             </DialogFooter>
@@ -370,19 +374,19 @@ export function DelegationSettings({
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>대결자 삭제</DialogTitle>
+            <DialogTitle>{t('delegationSettings.deleteDelegate')}</DialogTitle>
             <DialogDescription>
-              정말로 이 대결 설정을 삭제하시겠습니까?
+              {t('delegationSettings.deleteConfirm')}
               <br />
               <strong className="text-foreground">{selectedDelegation?.delegateName}</strong>
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-              취소
+              {t('common.cancel')}
             </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={isSubmitting}>
-              {isSubmitting ? '삭제 중...' : '삭제'}
+              {isSubmitting ? t('delegationSettings.deleting') : t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

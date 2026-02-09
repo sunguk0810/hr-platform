@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -33,12 +34,12 @@ import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { cn } from '@/lib/utils';
 import type { ApprovalType, ApprovalListItem } from '@hr-platform/shared-types';
 
-const APPROVAL_TYPE_LABELS: Record<string, string> = {
-  LEAVE_REQUEST: '휴가신청',
-  EXPENSE: '경비청구',
-  OVERTIME: '초과근무',
-  PERSONNEL: '인사관련',
-  GENERAL: '일반기안',
+const APPROVAL_TYPE_KEYS: Record<string, string> = {
+  LEAVE_REQUEST: 'type.leaveRequest',
+  EXPENSE: 'type.expense',
+  OVERTIME: 'type.overtime',
+  PERSONNEL: 'type.personnel',
+  GENERAL: 'type.general',
 };
 
 function useDebounce<T>(value: T, delay: number): T {
@@ -53,6 +54,7 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 export default function ApprovalListPage() {
+  const { t } = useTranslation('approval');
   const navigate = useNavigate();
   const [searchInput, setSearchInput] = useState('');
   const debouncedKeyword = useDebounce(searchInput, 300);
@@ -146,6 +148,22 @@ export default function ApprovalListPage() {
     setTab(value as 'pending' | 'requested' | 'completed' | 'draft' | '');
   };
 
+  const getEmptyTitle = () => {
+    switch (searchState.tab) {
+      case 'pending': return t('approvalListPage.emptyPending');
+      case 'requested': return t('approvalListPage.emptyRequested');
+      case 'completed': return t('approvalListPage.emptyCompleted');
+      case 'draft': return t('approvalListPage.emptyDraft');
+      default: return t('approvalListPage.emptyDefault');
+    }
+  };
+
+  const getEmptyDescription = () => {
+    return searchState.tab === 'requested'
+      ? t('approvalListPage.emptyRequestedDesc')
+      : t('approvalListPage.emptyDefaultDesc');
+  };
+
   // Mobile Layout
   if (isMobile) {
     return (
@@ -172,8 +190,8 @@ export default function ApprovalListPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-xl font-bold">전자결재</h1>
-            <p className="text-sm text-muted-foreground">결재 문서 관리</p>
+            <h1 className="text-xl font-bold">{t('approvalListPage.title')}</h1>
+            <p className="text-sm text-muted-foreground">{t('approvalListPage.description')}</p>
           </div>
           <Button size="sm" onClick={() => navigate('/approvals/new')}>
             <Plus className="h-4 w-4" />
@@ -208,7 +226,7 @@ export default function ApprovalListPage() {
         <div className="relative mb-4">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="문서번호, 제목, 기안자..."
+            placeholder={t('approvalListPage.searchPlaceholder')}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             className="pl-9"
@@ -225,28 +243,18 @@ export default function ApprovalListPage() {
         ) : isInfiniteError ? (
           <EmptyState
             icon={FileCheck}
-            title="데이터를 불러올 수 없습니다"
-            description="잠시 후 다시 시도해주세요."
+            title={t('common.dataLoadError')}
+            description={t('common.retryLater')}
           />
         ) : mobileApprovals.length === 0 ? (
           <EmptyState
             icon={FileCheck}
-            title={
-              searchState.tab === 'pending' ? '결재 대기 문서가 없습니다' :
-              searchState.tab === 'requested' ? '요청한 문서가 없습니다' :
-              searchState.tab === 'completed' ? '완료된 문서가 없습니다' :
-              searchState.tab === 'draft' ? '임시저장 문서가 없습니다' :
-              '결재 문서가 없습니다'
-            }
-            description={
-              searchState.tab === 'requested'
-                ? '새 문서를 작성하여 결재를 요청하세요.'
-                : '결재할 문서가 있으면 여기에 표시됩니다.'
-            }
+            title={getEmptyTitle()}
+            description={getEmptyDescription()}
             action={
               searchState.tab === 'requested'
                 ? {
-                    label: '새 문서 작성',
+                    label: t('approvalListPage.newDocument'),
                     onClick: () => navigate('/approvals/new'),
                   }
                 : undefined
@@ -268,8 +276,8 @@ export default function ApprovalListPage() {
             hasMore={hasNextPage}
             isLoading={isFetchingNextPage}
             onLoadMore={fetchNextPage}
-            loadingText="더 불러오는 중..."
-            endText="모든 결재 문서를 불러왔습니다."
+            loadingText={t('approvalListPage.loadingMore')}
+            endText={t('approvalListPage.allLoaded')}
           />
         )}
 
@@ -300,12 +308,12 @@ export default function ApprovalListPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-bold">전자결재</h1>
-            <p className="text-sm text-muted-foreground">결재 문서 관리</p>
+            <h1 className="text-2xl font-bold">{t('approvalListPage.title')}</h1>
+            <p className="text-sm text-muted-foreground">{t('approvalListPage.description')}</p>
           </div>
           <Button onClick={() => navigate('/approvals/new')}>
             <Plus className="mr-2 h-4 w-4" />
-            새 문서 작성
+            {t('approvalListPage.newDocument')}
           </Button>
         </div>
 
@@ -314,7 +322,7 @@ export default function ApprovalListPage() {
           <Card className="cursor-pointer hover:bg-muted/50" onClick={() => setTab('pending')}>
             <CardContent className="pt-4 pb-4">
               <div className="text-center">
-                <p className="text-xs text-muted-foreground">결재 대기</p>
+                <p className="text-xs text-muted-foreground">{t('approvalListPage.summaryPending')}</p>
                 <p className="text-2xl font-bold text-orange-500">{summary.pending}</p>
               </div>
             </CardContent>
@@ -322,7 +330,7 @@ export default function ApprovalListPage() {
           <Card className="cursor-pointer hover:bg-muted/50" onClick={() => setTab('draft')}>
             <CardContent className="pt-4 pb-4">
               <div className="text-center">
-                <p className="text-xs text-muted-foreground">임시저장</p>
+                <p className="text-xs text-muted-foreground">{t('approvalListPage.summaryDraft')}</p>
                 <p className="text-2xl font-bold text-blue-500">{summary.draft}</p>
               </div>
             </CardContent>
@@ -330,7 +338,7 @@ export default function ApprovalListPage() {
           <Card className="cursor-pointer hover:bg-muted/50" onClick={() => setTab('completed')}>
             <CardContent className="pt-4 pb-4">
               <div className="text-center">
-                <p className="text-xs text-muted-foreground">승인</p>
+                <p className="text-xs text-muted-foreground">{t('approvalListPage.summaryApproved')}</p>
                 <p className="text-2xl font-bold text-green-500">{summary.approved}</p>
               </div>
             </CardContent>
@@ -338,7 +346,7 @@ export default function ApprovalListPage() {
           <Card className="cursor-pointer hover:bg-muted/50" onClick={() => setTab('completed')}>
             <CardContent className="pt-4 pb-4">
               <div className="text-center">
-                <p className="text-xs text-muted-foreground">반려</p>
+                <p className="text-xs text-muted-foreground">{t('approvalListPage.summaryRejected')}</p>
                 <p className="text-2xl font-bold text-red-500">{summary.rejected}</p>
               </div>
             </CardContent>
@@ -360,7 +368,7 @@ export default function ApprovalListPage() {
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
-                      placeholder="검색..."
+                      placeholder={t('approvalListPage.searchShort')}
                       value={searchInput}
                       onChange={(e) => setSearchInput(e.target.value)}
                       className="pl-9"
@@ -378,8 +386,8 @@ export default function ApprovalListPage() {
               ) : approvals.length === 0 ? (
                 <EmptyState
                   icon={FileCheck}
-                  title="결재 문서가 없습니다"
-                  description="결재할 문서가 있으면 여기에 표시됩니다."
+                  title={t('approvalListPage.emptyDefault')}
+                  description={t('approvalListPage.emptyDefaultDesc')}
                 />
               ) : (
                 <div className="space-y-2">
@@ -421,9 +429,9 @@ export default function ApprovalListPage() {
               <SplitViewPanel
                 header={
                   <div className="flex items-center justify-between">
-                    <h3 className="font-semibold">문서 상세</h3>
+                    <h3 className="font-semibold">{t('approvalListPage.documentDetail')}</h3>
                     <Button size="sm" onClick={() => navigate(`/approvals/${selectedApproval.id}`)}>
-                      전체 보기
+                      {t('common.fullView')}
                     </Button>
                   </div>
                 }
@@ -438,20 +446,20 @@ export default function ApprovalListPage() {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="p-3 bg-muted/50 rounded-lg">
-                      <p className="text-xs text-muted-foreground">유형</p>
-                      <p className="text-sm font-medium">{APPROVAL_TYPE_LABELS[selectedApproval.documentType]}</p>
+                      <p className="text-xs text-muted-foreground">{t('approvalListPage.tabletType')}</p>
+                      <p className="text-sm font-medium">{t(APPROVAL_TYPE_KEYS[selectedApproval.documentType])}</p>
                     </div>
                     <div className="p-3 bg-muted/50 rounded-lg">
-                      <p className="text-xs text-muted-foreground">상태</p>
+                      <p className="text-xs text-muted-foreground">{t('approvalListPage.tabletStatus')}</p>
                       <ApprovalStatusBadge status={selectedApproval.status} />
                     </div>
                     <div className="p-3 bg-muted/50 rounded-lg">
-                      <p className="text-xs text-muted-foreground">기안자</p>
+                      <p className="text-xs text-muted-foreground">{t('approvalListPage.tabletDrafter')}</p>
                       <p className="text-sm font-medium">{selectedApproval.drafterName}</p>
                       <p className="text-xs text-muted-foreground">{selectedApproval.drafterDepartmentName}</p>
                     </div>
                     <div className="p-3 bg-muted/50 rounded-lg">
-                      <p className="text-xs text-muted-foreground">기안일</p>
+                      <p className="text-xs text-muted-foreground">{t('approvalListPage.tabletCreatedDate')}</p>
                       <p className="text-sm font-medium">
                         {format(new Date(selectedApproval.createdAt), 'yyyy-MM-dd', { locale: ko })}
                       </p>
@@ -460,7 +468,7 @@ export default function ApprovalListPage() {
 
                   {selectedApproval.currentStepName && (
                     <div className="p-3 bg-orange-50 dark:bg-orange-950 rounded-lg">
-                      <p className="text-xs text-muted-foreground">현재 결재자</p>
+                      <p className="text-xs text-muted-foreground">{t('approvalListPage.tabletCurrentApprover')}</p>
                       <p className="text-sm font-medium text-orange-600 dark:text-orange-400">
                         {selectedApproval.currentStepName}
                       </p>
@@ -470,10 +478,10 @@ export default function ApprovalListPage() {
                   {searchState.tab === 'pending' && selectedApproval.status === 'PENDING' && (
                     <div className="flex gap-2 pt-4 border-t">
                       <Button variant="outline" className="flex-1 border-red-200 text-red-600">
-                        반려
+                        {t('common.reject')}
                       </Button>
                       <Button className="flex-1 bg-green-600 hover:bg-green-700">
-                        승인
+                        {t('common.approve')}
                       </Button>
                     </div>
                   )}
@@ -481,7 +489,7 @@ export default function ApprovalListPage() {
               </SplitViewPanel>
             ) : (
               <div className="flex items-center justify-center h-full text-muted-foreground">
-                좌측에서 문서를 선택하세요
+                {t('approvalListPage.selectDocumentFromLeft')}
               </div>
             )
           }
@@ -494,12 +502,12 @@ export default function ApprovalListPage() {
   return (
     <>
       <PageHeader
-        title="전자결재"
-        description="결재 문서를 조회하고 관리합니다."
+        title={t('approvalListPage.title')}
+        description={t('approvalListPage.desktopDescription')}
         actions={
           <Button data-tour="approval-create" onClick={() => navigate('/approvals/new')}>
             <Plus className="mr-2 h-4 w-4" />
-            새 문서 작성
+            {t('approvalListPage.newDocument')}
           </Button>
         }
       />
@@ -508,7 +516,7 @@ export default function ApprovalListPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">결재 대기</p>
+              <p className="text-sm text-muted-foreground">{t('approvalListPage.summaryPending')}</p>
               <p className="mt-1 text-3xl font-bold text-orange-500">{summary.pending}</p>
             </div>
           </CardContent>
@@ -516,7 +524,7 @@ export default function ApprovalListPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">임시저장</p>
+              <p className="text-sm text-muted-foreground">{t('approvalListPage.summaryDraft')}</p>
               <p className="mt-1 text-3xl font-bold text-blue-500">{summary.draft}</p>
             </div>
           </CardContent>
@@ -524,7 +532,7 @@ export default function ApprovalListPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">승인</p>
+              <p className="text-sm text-muted-foreground">{t('approvalListPage.summaryApproved')}</p>
               <p className="mt-1 text-3xl font-bold text-green-500">{summary.approved}</p>
             </div>
           </CardContent>
@@ -532,7 +540,7 @@ export default function ApprovalListPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">반려</p>
+              <p className="text-sm text-muted-foreground">{t('approvalListPage.summaryRejected')}</p>
               <p className="mt-1 text-3xl font-bold text-red-500">{summary.rejected}</p>
             </div>
           </CardContent>
@@ -542,12 +550,12 @@ export default function ApprovalListPage() {
       <Card className="mt-6">
         <CardHeader>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <CardTitle>결재 문서</CardTitle>
+            <CardTitle>{t('approvalListPage.approvalDocuments')}</CardTitle>
             <div className="flex gap-2">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="문서번호, 제목, 기안자..."
+                  placeholder={t('approvalListPage.searchPlaceholder')}
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   className="pl-9 w-[200px]"
@@ -558,9 +566,9 @@ export default function ApprovalListPage() {
                 onChange={(e) => setType(e.target.value as ApprovalType | '')}
                 className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
               >
-                <option value="">전체 유형</option>
-                {Object.entries(APPROVAL_TYPE_LABELS).map(([value, label]) => (
-                  <option key={value} value={value}>{label}</option>
+                <option value="">{t('approvalListPage.allTypes')}</option>
+                {Object.entries(APPROVAL_TYPE_KEYS).map(([value, key]) => (
+                  <option key={value} value={value}>{t(key)}</option>
                 ))}
               </select>
             </div>
@@ -575,12 +583,12 @@ export default function ApprovalListPage() {
           >
             <TabsList>
               <TabsTrigger value="pending">
-                결재 대기 {summary.pending > 0 && `(${summary.pending})`}
+                {t('approvalListPage.tabPending')} {summary.pending > 0 && `(${summary.pending})`}
               </TabsTrigger>
-              <TabsTrigger value="requested">내가 요청한</TabsTrigger>
-              <TabsTrigger value="completed">완료</TabsTrigger>
+              <TabsTrigger value="requested">{t('approvalListPage.tabRequested')}</TabsTrigger>
+              <TabsTrigger value="completed">{t('approvalListPage.tabCompleted')}</TabsTrigger>
               <TabsTrigger value="draft">
-                임시저장 {summary.draft > 0 && `(${summary.draft})`}
+                {t('approvalListPage.tabDraft')} {summary.draft > 0 && `(${summary.draft})`}
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -593,28 +601,18 @@ export default function ApprovalListPage() {
             ) : isError ? (
               <EmptyState
                 icon={FileCheck}
-                title="데이터를 불러올 수 없습니다"
-                description="잠시 후 다시 시도해주세요."
+                title={t('common.dataLoadError')}
+                description={t('common.retryLater')}
               />
             ) : approvals.length === 0 ? (
               <EmptyState
                 icon={FileCheck}
-                title={
-                  searchState.tab === 'pending' ? '결재 대기 문서가 없습니다' :
-                  searchState.tab === 'requested' ? '요청한 문서가 없습니다' :
-                  searchState.tab === 'completed' ? '완료된 문서가 없습니다' :
-                  searchState.tab === 'draft' ? '임시저장 문서가 없습니다' :
-                  '결재 문서가 없습니다'
-                }
-                description={
-                  searchState.tab === 'requested'
-                    ? '새 문서를 작성하여 결재를 요청하세요.'
-                    : '결재할 문서가 있으면 여기에 표시됩니다.'
-                }
+                title={getEmptyTitle()}
+                description={getEmptyDescription()}
                 action={
                   searchState.tab === 'requested'
                     ? {
-                        label: '새 문서 작성',
+                        label: t('approvalListPage.newDocument'),
                         onClick: () => navigate('/approvals/new'),
                       }
                     : undefined
@@ -627,25 +625,25 @@ export default function ApprovalListPage() {
                     <thead>
                       <tr className="border-b bg-muted/50">
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          문서번호
+                          {t('approvalListPage.tableDocNumber')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          유형
+                          {t('approvalListPage.tableType')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          제목
+                          {t('approvalListPage.tableTitle')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          기안자
+                          {t('approvalListPage.tableDrafter')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          현재 결재자
+                          {t('approvalListPage.tableCurrentApprover')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          상태
+                          {t('approvalListPage.tableStatus')}
                         </th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                          기안일
+                          {t('approvalListPage.tableCreatedDate')}
                         </th>
                       </tr>
                     </thead>
@@ -661,7 +659,7 @@ export default function ApprovalListPage() {
                           </td>
                           <td className="px-4 py-3 text-sm">
                             <div className="flex items-center gap-2">
-                              {APPROVAL_TYPE_LABELS[approval.documentType]}
+                              {t(APPROVAL_TYPE_KEYS[approval.documentType])}
                               {approval.urgency === 'HIGH' && (
                                 <AlertCircle className="h-4 w-4 text-red-500" />
                               )}
