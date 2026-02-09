@@ -14,7 +14,7 @@ export function DataTableSkeleton({
   showPagination = true,
 }: DataTableSkeletonProps) {
   return (
-    <div className="w-full animate-pulse">
+    <div className="w-full">
       {showToolbar && (
         <div className="flex items-center justify-between py-4">
           <div className="h-9 w-[250px] bg-muted rounded-md" />

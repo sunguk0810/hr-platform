@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 export type StatusType =
@@ -50,12 +51,18 @@ export function StatusBadge({ status, label, className, dot = false, pulse = fal
       {dot && (
         <span className="relative mr-1.5 flex h-2 w-2" aria-hidden="true">
           {pulse && (
-            <span
-              className={cn(
-                'absolute inline-flex h-full w-full animate-ping rounded-full opacity-75',
-                dotColors[status]
-              )}
-            />
+            <AnimatePresence>
+              <motion.span
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 0.75 }}
+                exit={{ scale: 0, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className={cn(
+                  'absolute inline-flex h-full w-full animate-ping rounded-full',
+                  dotColors[status]
+                )}
+              />
+            </AnimatePresence>
           )}
           <span
             className={cn(
