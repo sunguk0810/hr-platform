@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -76,7 +77,7 @@ public class OrganizationHistoryServiceImpl implements OrganizationHistoryServic
     }
 
     @TransactionalEventListener
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onDepartmentCreated(DepartmentCreatedEvent event) {
         recordEventFromEvent(
             "DEPARTMENT_CREATED",
@@ -91,7 +92,7 @@ public class OrganizationHistoryServiceImpl implements OrganizationHistoryServic
     }
 
     @TransactionalEventListener
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onDepartmentUpdated(DepartmentUpdatedEvent event) {
         recordEventFromEvent(
             "DEPARTMENT_UPDATED",
@@ -106,7 +107,7 @@ public class OrganizationHistoryServiceImpl implements OrganizationHistoryServic
     }
 
     @TransactionalEventListener
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onDepartmentMerged(DepartmentMergedEvent event) {
         recordEventFromEvent(
             "DEPARTMENT_MERGED",
@@ -121,7 +122,7 @@ public class OrganizationHistoryServiceImpl implements OrganizationHistoryServic
     }
 
     @TransactionalEventListener
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onDepartmentSplit(DepartmentSplitEvent event) {
         recordEventFromEvent(
             "DEPARTMENT_SPLIT",
