@@ -148,4 +148,4 @@ hikaricp_connections_timeout_total # 타임아웃 횟수 (알림 설정)
 |------|------|
 | [DATABASE_PATTERNS.md](../architecture/DATABASE_PATTERNS.md) | HikariCP 설정 상세, Flyway 패턴 |
 | [MONITORING.md](../operations/MONITORING.md) | HikariCP 메트릭 Grafana 대시보드 |
-| [PHASE_1_ACTION_ITEMS.md](../status/PHASE_1_ACTION_ITEMS.md) | 성능 최적화 Phase 1 결과 |
+| [PHASE_1_ACTION_ITEMS.md](../deprecated/PHASE_1_ACTION_ITEMS.md) | 성능 최적화 Phase 1 결과 (deprecated) |

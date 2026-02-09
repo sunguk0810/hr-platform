@@ -26,37 +26,24 @@ docs/
 │   ├── LOCAL_DEVELOPMENT.md          # 로컬 개발 환경 설정
 │   └── SECURITY_COMPLIANCE.md        # ISMS-P, PIPA 컴플라이언스
 ├── modules/                           # 서비스별 상세 문서 (12개)
-│   ├── 01-AUTH-SERVICE.md
-│   ├── 02-TENANT-SERVICE.md
-│   ├── 03-MDM-SERVICE.md
-│   ├── 04-ORGANIZATION-SERVICE.md
-│   ├── 05-EMPLOYEE-SERVICE.md
-│   ├── 06-ATTENDANCE-SERVICE.md
-│   ├── 07-APPROVAL-SERVICE.md
-│   ├── 08-NOTIFICATION-SERVICE.md
-│   ├── 09-FILE-SERVICE.md
-│   ├── 10-RECRUITMENT-SERVICE.md
-│   ├── 11-CERTIFICATE-SERVICE.md
-│   └── 12-APPOINTMENT-SERVICE.md
+│   ├── 01-AUTH-SERVICE.md ~ 12-APPOINTMENT-SERVICE.md
+│   └── (⚠️ 수정 금지 — 백엔드 개발 진행 중)
 ├── api/                               # API 문서
-│   ├── API_CONVENTIONS.md            # REST API 설계 규칙
-│   └── API_INTEGRATION_GUIDE.md      # FE-BE 통합 패턴
+│   └── API_INTEGRATION_GUIDE.md      # FE-BE 통합 패턴, REST API 규칙
 ├── requirements/                      # 요구사항
-│   ├── PRD.md                        # 제품 요구사항 문서
-│   ├── PRD_GAP_ANALYSIS.md           # PRD 대비 구현 갭 분석
 │   └── TRACEABILITY_MATRIX.md        # 요구사항 → 구현 추적 매트릭스
-├── frontend/                          # 프론트엔드 문서
-│   ├── FRONTEND_SCREEN_INVENTORY.md  # 85개 화면 인벤토리
-│   └── FRONTEND_UI_CONVENTIONS.md    # UI/UX 컨벤션
 ├── decisions/                         # 아키텍처 결정 기록 (ADR)
-│   └── (Phase 4에서 추가 예정)
-├── deprecated/                        # Deprecated 문서 (아카이브)
-│   ├── README.md                     # Deprecated 문서 활용 가이드
-│   └── SDD_*.md (9개)                # 초기 설계 문서 (Kafka/Keycloak 기반)
-└── status/                            # 프로젝트 상태 추적
-    ├── CURRENT_STATUS.md             # 통합 개발 현황
-    ├── PHASE_1_REVIEW.md             # Phase 1 리뷰
-    └── PHASE_1_ACTION_ITEMS.md       # Phase 1 액션 아이템
+│   ├── README.md                     # ADR 가이드 및 목록
+│   ├── 001-use-rls-for-multitenancy.md
+│   ├── 002-migrate-kafka-to-sqs.md
+│   ├── 003-custom-jwt-vs-keycloak.md
+│   └── 004-hikaricp-pool-sizing.md
+├── status/                            # 프로젝트 상태 추적
+│   └── CURRENT_STATUS.md             # 통합 개발 현황
+└── deprecated/                        # Deprecated 문서 (아카이브)
+    ├── README.md                     # Deprecated 문서 활용 가이드
+    ├── SDD_*.md (9개)                # 초기 설계 문서 (Kafka/Keycloak 기반)
+    └── (13개 추가)                    # PRD, 갭분석, Phase 리뷰 등
 ```
 
 ---
@@ -76,9 +63,7 @@ docs/
 ### 신규 프론트엔드 개발자
 
 1. **[LOCAL_DEVELOPMENT.md](operations/LOCAL_DEVELOPMENT.md)** - 환경 설정 (pnpm)
-2. **[API_INTEGRATION_GUIDE.md](api/API_INTEGRATION_GUIDE.md)** - FE-BE 통합 패턴
-3. **[API_CONVENTIONS.md](api/API_CONVENTIONS.md)** - REST API 규칙
-4. **[FRONTEND_SCREEN_INVENTORY.md](frontend/FRONTEND_SCREEN_INVENTORY.md)** - 화면 목록
+2. **[API_INTEGRATION_GUIDE.md](api/API_INTEGRATION_GUIDE.md)** - FE-BE 통합 패턴, REST API 규칙
 
 ### DevOps 엔지니어
 
@@ -91,9 +76,8 @@ docs/
 ### 프로젝트 관리자 / QA
 
 1. **[CURRENT_STATUS.md](status/CURRENT_STATUS.md)** - 전체 개발 현황
-2. **[PRD.md](requirements/PRD.md)** - 제품 요구사항
-3. **[PRD_GAP_ANALYSIS.md](requirements/PRD_GAP_ANALYSIS.md)** - 구현 갭 분석
-4. **[TRACEABILITY_MATRIX.md](requirements/TRACEABILITY_MATRIX.md)** - 요구사항 추적
+2. **[TRACEABILITY_MATRIX.md](requirements/TRACEABILITY_MATRIX.md)** - 요구사항 추적
+3. **[PRD.md](deprecated/PRD.md)** - 제품 요구사항 (deprecated, 참고용)
 
 ### 보안 감사자
 
@@ -159,7 +143,7 @@ graph TD
         MT[MULTI_TENANCY.md]
         SP[SECURITY_PATTERNS.md]
         EA[EVENT_ARCHITECTURE.md]
-        CS[CACHING_STRATEGY.md]
+        CACHE[CACHING_STRATEGY.md]
         DB[DATABASE_PATTERNS.md]
         MG[MIGRATION_GUIDE.md]
     end
@@ -173,34 +157,38 @@ graph TD
         SC[SECURITY_COMPLIANCE.md]
     end
 
-    subgraph "요구사항"
-        PRD[PRD.md]
-        GAP[PRD_GAP_ANALYSIS.md]
+    subgraph "요구사항/상태"
         TM[TRACEABILITY_MATRIX.md]
+        CS[CURRENT_STATUS.md]
     end
 
     subgraph "서비스 모듈 (12개)"
         MOD["01~12 SERVICE.md"]
     end
 
-    README --> TS & DG & PRD & MOD
+    README --> TS & DG & TM & MOD
 
-    TS --> MT & SP & EA & CS & DB
+    TS --> MT & SP & EA & CACHE & DB
     MT --> SP
     SP --> SC
     EA --> MG
     DG --> LD
     AWS --> CI & MON
-    PRD --> GAP --> TM
 
-    MOD --> MT & SP & CS & DB & EA
+    MOD --> MT & SP & CACHE & DB & EA
 ```
 
 ---
 
 ## Deprecated 문서
 
-`docs/deprecated/` 디렉토리에는 프로젝트 초기 Kafka/Keycloak 기반 설계 문서(SDD)가 보존되어 있습니다. 기술 전환으로 인해 일부 내용이 무효하지만, 도메인 모델과 비즈니스 규칙은 여전히 유효합니다.
+`docs/deprecated/` 디렉토리에는 다음이 보존되어 있습니다:
+
+- **SDD 문서 (9개)**: 초기 Kafka/Keycloak 기반 설계 문서 — 도메인 모델과 비즈니스 규칙은 여전히 유효
+- **PRD 및 갭 분석**: 초기 요구사항 문서 → `requirements/TRACEABILITY_MATRIX.md`로 대체
+- **Phase 리뷰/액션**: Phase 1-2 리뷰 결과 → `status/CURRENT_STATUS.md`로 통합
+- **프론트엔드 문서**: 화면 인벤토리, Select 감사 등 → 프론트엔드 리포지토리로 이관 예정
+- **상태 파일**: 프로젝트 루트 CURRENT_STATUS 2개 → `status/CURRENT_STATUS.md`로 통합
 
 상세 안내: **[deprecated/README.md](deprecated/README.md)**
 

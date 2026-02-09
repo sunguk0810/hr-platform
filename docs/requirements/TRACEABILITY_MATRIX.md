@@ -2,7 +2,7 @@
 
 > **최종 업데이트**: 2026-02-09
 > **대상**: 프로젝트 관리자, QA 엔지니어, 개발자
-> **출처**: [PRD.md](../PRD.md), [PRD_GAP_ANALYSIS.md](../PRD_GAP_ANALYSIS.md)
+> **출처**: [PRD.md](../deprecated/PRD.md), [PRD_GAP_ANALYSIS.md](../deprecated/PRD_GAP_ANALYSIS.md)
 
 ---
 
@@ -370,8 +370,8 @@
 
 | 문서 | 설명 |
 |------|------|
-| [PRD.md](../PRD.md) | 원본 제품 요구사항 |
-| [PRD_GAP_ANALYSIS.md](../PRD_GAP_ANALYSIS.md) | 상세 갭 분석 |
+| [PRD.md](../deprecated/PRD.md) | 원본 제품 요구사항 (deprecated) |
+| [PRD_GAP_ANALYSIS.md](../deprecated/PRD_GAP_ANALYSIS.md) | 상세 갭 분석 (deprecated) |
 | [CURRENT_STATUS.md](../status/CURRENT_STATUS.md) | 개발 현황 통합 |
 | [SECURITY_COMPLIANCE.md](../operations/SECURITY_COMPLIANCE.md) | ISMS-P/PIPA 준수 현황 |
 | [SECURITY_PATTERNS.md](../architecture/SECURITY_PATTERNS.md) | 보안 구현 패턴 |

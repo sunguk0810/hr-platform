@@ -146,12 +146,13 @@ private String residentNumber;
 
 | Document | Purpose |
 |----------|---------|
-| `PRD.md` | Product requirements, user roles, features |
-| `PRD_GAP_ANALYSIS.md` | PRD 대비 구현 현황 갭 분석 |
-| `API_CONVENTIONS.md` | REST API 설계 가이드 (상세) |
-| `FRONTEND_SCREEN_INVENTORY.md` | 프론트엔드 85개 화면 추적 |
+| `docs/README.md` | 문서 마스터 인덱스 |
+| `docs/status/CURRENT_STATUS.md` | 통합 개발 현황 |
+| `docs/requirements/TRACEABILITY_MATRIX.md` | 요구사항 → 구현 추적 |
+| `docs/api/API_INTEGRATION_GUIDE.md` | FE-BE 통합 패턴, REST API 규칙 |
+| `docs/deprecated/PRD.md` | Product requirements (deprecated, 참고용) |
 
-> **Note**: 초기 SDD 문서들은 `docs/deprecated/`로 이동되었습니다 (Kafka/Keycloak 기반 설계).
+> **Note**: 초기 SDD 문서 및 Phase 1-2 리뷰 등은 `docs/deprecated/`로 이동되었습니다.
 > 현재 구현 상태는 아래 Module Analysis Documents를 참조하세요.
 
 ### Module Analysis Documents (프로덕션 정책/설정 분석)

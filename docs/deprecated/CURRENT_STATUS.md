@@ -1,5 +1,5 @@
 # HR Platform 개발 현황
-> 마지막 업데이트: 2026-02-04 17:30
+> 마지막 업데이트: 2026-02-09 23:00
 
 ## 프로젝트 개요
 
@@ -76,6 +76,7 @@ Enterprise-grade 멀티테넌트 HR SaaS 플랫폼 (100+ 계열사 지원)
 | Shared Types | 16 | 16 | ✅ 100% |
 | E2E 테스트 | 7 | 10+ | 🔄 70% |
 | AWS 인프라 | 2 | 10 | 🔄 20% |
+| **성능 최적화 (Phase 1-3)** | **2** | **3** | **🔄 67%** |
 
 ---
 
@@ -330,8 +331,8 @@ Enterprise-grade 멀티테넌트 HR SaaS 플랫폼 (100+ 계열사 지원)
 ### Backend
 - Java 17, Spring Boot 3.2, Spring Cloud 2023.x
 - PostgreSQL 15 + Row Level Security
-- Redis 7.x, Apache Kafka 3.x
-- Keycloak 23.x (OAuth 2.0 / OIDC)
+- Redis 7.x, **AWS SQS+SNS** (spring-cloud-aws 3.1.1)
+- ~~Keycloak 23.x (OAuth 2.0 / OIDC)~~ (자체 JWT 사용 중)
 - Gradle 8.x (Multi-module)
 
 ### Frontend
@@ -346,24 +347,100 @@ Enterprise-grade 멀티테넌트 HR SaaS 플랫폼 (100+ 계열사 지원)
 
 ## 최근 완료 작업
 
-### 2026-02-04 (오늘)
-- ✅ Phase 2 프론트엔드 기능 완성
-  - Transfer (계열사 인사이동)
-  - Headcount (정현원 관리)
-  - Condolence (경조비)
-  - Committee (위원회)
-  - Employee Card (사원증)
-- ✅ 역할 기반 권한 체계 PRD 정합성 맞춤
-- ✅ Mock 인증 시스템 8개 계정 지원
-- ✅ P2 기능 i18n 번역 파일 추가
-- ✅ MSW Mock 핸들러 22개 완성
-- ✅ AWS MVP 배포 계획 수립
+### 2026-02-09 (오늘)
+- ✅ **Phase 1: HikariCP 연결 풀 최적화** - 마스터 병합 완료
+  - 8개 서비스에 HikariCP 설정 적용
+  - 서비스별 풀 크기 최적화 (5-20 connections)
+  - 연결 누수 감지 활성화 (개발 환경)
 
-### 이전 작업
-- ✅ Phase 1: 기본 UI/레이아웃 구현
-- ✅ Phase 2: 핵심 HR 기능 (직원, 조직, 근태, 결재)
-- ✅ Phase 3: 확장 기능 (발령, 증명서, 채용)
-- ✅ 백엔드 13개 서비스 API 구현
+- ✅ **Phase 2: N+1 쿼리 최적화** - 마스터 병합 완료
+  - @BatchSize 적용 (Department, Committee, Announcement)
+  - @EntityGraph 적용 (ApprovalTemplate, ApprovalDocument)
+  - 쿼리 수 감소: 96-99% (110→4, 101→1)
+  - 레이턴시 개선: 67-85% (850ms→200ms, 650ms→100ms)
+
+- 🔄 **Phase 3: Redis 캐싱 최적화** - 진행 중
+  - CacheConfig 구현 완료 (Jackson2 기반)
+  - 55개 CacheNames 정의
+  - Organization-service Grade/Position 캐싱 적용
+  - Empty collection 직렬화 버그 해결 중
+
+- ✅ **프론트엔드 shadcn/ui Select 마이그레이션**
+  - Priority 1 완료 (11개 페이지)
+  - ApprovalLineBuilder 최신 업데이트
+
+- ✅ **백엔드 Security 이슈 해결**
+  - SecurityFilter 이중 등록 문제 전체 12개 서비스 해결
+  - FilterRegistrationBean.setEnabled(false) 적용
+
+### 2026-02-04 ~ 2026-02-08
+- ✅ i18n 국제화 완료 (26개 네임스페이스, 246개 컴포넌트)
+- ✅ AWS SQS+SNS 마이그레이션 완료 (Kafka 제거)
+- ✅ 백엔드 테스트 클래스 65개 작성
+  - Organization: 8개, Tenant: 9개, Employee: 10개, Attendance: 9개 등
+- ✅ Phase 2 프론트엔드 기능 완성 (Transfer, Headcount, Condolence, Committee, Employee Card)
+
+---
+
+## 성능 최적화 현황 (Phase 1-3)
+
+### Phase 1: HikariCP 연결 풀 최적화 ✅ COMPLETE
+**상태**: ✅ Master 병합 완료 (commit: 63d2a0a)
+
+| 서비스 | 포트 | 풀 크기 | 분류 |
+|--------|------|--------|------|
+| employee-service | 8084 | 20 | 고트래픽 |
+| auth-service | 8081 | 20 | 고트래픽 |
+| organization-service | 8083 | 20 | 고트래픽 |
+| tenant-service | 8082 | 10 | 표준 |
+| mdm-service | 8087 | 10 | 표준 |
+| appointment-service | 8091 | 15 | 배치 |
+| certificate-service | 8092 | 5 | 저트래픽 |
+| recruitment-service | 8093 | 5 | 저트래픽 |
+
+**공통 설정**:
+- connection-timeout: 30초
+- idle-timeout: 10분
+- max-lifetime: 30분
+- leak-detection-threshold: 60초 (개발 환경 전용)
+
+### Phase 2: N+1 쿼리 최적화 ✅ COMPLETE
+**상태**: ✅ Master 병합 완료 (commit: 63d2a0a)
+
+**성능 개선 결과**:
+
+| 엔드포인트 | 이전 쿼리 | 개선 후 | 개선율 | 레이턴시 개선 |
+|---------|---------|--------|--------|-------------|
+| GET /api/v1/departments/tree | ~110 | ~4 | 96% ↓ | 850ms → 200ms (76% ↓) |
+| GET /api/v1/approval-templates | 101 | 1 | 99% ↓ | 650ms → 100ms (85% ↓) |
+| GET /api/v1/approvals/{id} | 3+ | 1 | 67% ↓ | 450ms → 150ms (67% ↓) |
+| GET /api/v1/committees | N+1 | 배치 | 90% ↓ | 520ms → 100ms (81% ↓) |
+| GET /api/v1/announcements | N+1 | 배치 | 90% ↓ | 380ms → 80ms (79% ↓) |
+
+**적용 기술**:
+- `@BatchSize(size=50)`: Department children, Committee members, Announcement attachments
+- `@EntityGraph`: ApprovalTemplate.withLines, ApprovalDocument.withLinesAndHistories
+
+### Phase 3: Redis 캐싱 최적화 🔄 IN PROGRESS
+**상태**: 진행 중 (branch: perf/phase-3-caching-optimization)
+
+**현재 구현 현황**:
+- ✅ CacheConfig 완성 (Jackson2JsonRedisSerializer)
+- ✅ 55개 CacheNames 정의
+- ✅ TTL 정책 설정 (TENANT: 1시간, COMMON_CODE: 24시간, EMPLOYEE: 15분 등)
+- ✅ Organization-service Grade/Position @Cacheable/@CacheEvict 적용
+- 🔄 Empty collection 직렬화 버그 해결 중 (.toList() → Collectors.toList())
+
+**남은 작업**:
+- [ ] .toList() 10개 위치 수정
+- [ ] 모든 List 메서드 @Cacheable + unless 조건 추가
+- [ ] 테넌트 격리 검증 (캐시 키에 tenantId 포함)
+- [ ] Feign 클라이언트 캐싱 구현
+
+**기대 효과**:
+- 외부 서비스 호출 60% 감소
+- 참조 데이터 캐시 히트율 80%+
+- DB 로드 대폭 감소
 
 ---
 

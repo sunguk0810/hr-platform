@@ -17,7 +17,7 @@
 | **API Gateway** | Spring Cloud Gateway | **Traefik v3.3** |
 | **컨테이너** | Kubernetes (EKS) 직접 관리 | **ECS Fargate** (관리형) |
 
-> 기술 전환 상세 배경은 [MIGRATION_GUIDE.md](../architecture/MIGRATION_GUIDE.md) (Phase 3 생성 예정) 참조
+> 기술 전환 상세 배경은 [MIGRATION_GUIDE.md](../architecture/MIGRATION_GUIDE.md) 참조
 
 ---
 
@@ -34,6 +34,26 @@
 | `SDD_Infrastructure.md` | 인프라 설계 (Kafka/EKS) | [docs/operations/AWS_INFRASTRUCTURE.md](../operations/AWS_INFRASTRUCTURE.md) |
 | `SDD_Common_Modules.md` | 공통 모듈 설계 | [docs/architecture/](../architecture/) 디렉토리 전체 |
 | `SDD_FRONTEND.md` | 프론트엔드 설계 | [docs/frontend/FRONTEND_SCREEN_INVENTORY.md](../frontend/FRONTEND_SCREEN_INVENTORY.md) |
+
+### Phase 5 이동 문서 (2026-02-09)
+
+프로젝트 루트 및 `docs/` 루트에 산재되어 있던 문서들을 정리하여 이동하였습니다.
+
+| Deprecated 문서 | 내용 | 현재 참조해야 할 문서 |
+|----------------|------|-------------------|
+| `PRD.md` | 제품 요구사항 문서 (초기) | [docs/requirements/TRACEABILITY_MATRIX.md](../requirements/TRACEABILITY_MATRIX.md) |
+| `PRD_GAP_ANALYSIS.md` | PRD 대비 구현 갭 분석 | [docs/status/CURRENT_STATUS.md](../status/CURRENT_STATUS.md) |
+| `API_CONVENTIONS.md` | REST API 설계 가이드 | [docs/api/API_INTEGRATION_GUIDE.md](../api/API_INTEGRATION_GUIDE.md) |
+| `FRONTEND_SCREEN_INVENTORY.md` | 프론트엔드 85개 화면 추적 | (프론트엔드 리포지토리로 이관 예정) |
+| `PHASE_1_REVIEW.md` | Phase 1 코드 리뷰 결과 | [docs/status/CURRENT_STATUS.md](../status/CURRENT_STATUS.md) |
+| `PHASE_1_ACTION_ITEMS.md` | Phase 1 액션 아이템 | [docs/status/CURRENT_STATUS.md](../status/CURRENT_STATUS.md) |
+| `GAP_ANALYSIS_APPROVAL.md` | 결재 서비스 갭 분석 | [docs/modules/07-APPROVAL-SERVICE.md](../modules/07-APPROVAL-SERVICE.md) |
+| `MERGE_SUMMARY_PHASE1_PHASE2.md` | Phase 1-2 병합 요약 | (이력 보존 목적, 대체 문서 없음) |
+| `PHASE_2_SUMMARY.md` | Phase 2 작업 요약 | (이력 보존 목적, 대체 문서 없음) |
+| `frontend-select-audit.md` | Select 컴포넌트 감사 | (프론트엔드 리포지토리로 이관 예정) |
+| `frontend-select-migration-guide.md` | Select 마이그레이션 가이드 | (프론트엔드 리포지토리로 이관 예정) |
+| `CURRENT_STATUS.md` | 프로젝트 현재 상태 (루트) | [docs/status/CURRENT_STATUS.md](../status/CURRENT_STATUS.md) |
+| `CURRENT_STATUS_BACKEND.md` | 백엔드 현재 상태 (루트) | [docs/status/CURRENT_STATUS.md](../status/CURRENT_STATUS.md) |
 
 ---
 

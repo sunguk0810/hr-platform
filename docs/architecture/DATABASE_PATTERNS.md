@@ -676,5 +676,5 @@ public void batchProcess() { ... }
 | [CACHING_STRATEGY.md](./CACHING_STRATEGY.md) | 캐시 vs DB 접근 |
 | [DOCKER_GUIDE.md](../operations/DOCKER_GUIDE.md) | PostgreSQL 로컬 설정 |
 | [AWS_INFRASTRUCTURE.md](../operations/AWS_INFRASTRUCTURE.md) | RDS 프로덕션 설정 |
-| [docs/PHASE_1_ACTION_ITEMS.md](../PHASE_1_ACTION_ITEMS.md) | HikariCP 설정 상세 리뷰 |
-| [docs/PHASE_1_REVIEW.md](../PHASE_1_REVIEW.md) | Phase 1 성능 최적화 리뷰 |
+| [PHASE_1_ACTION_ITEMS.md](../deprecated/PHASE_1_ACTION_ITEMS.md) | HikariCP 설정 상세 리뷰 (deprecated) |
+| [PHASE_1_REVIEW.md](../deprecated/PHASE_1_REVIEW.md) | Phase 1 성능 최적화 리뷰 (deprecated) |

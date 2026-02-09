@@ -1,7 +1,7 @@
 # HR Platform 개발 현황 (통합)
 
 > **최종 업데이트**: 2026-02-09
-> **통합 대상**: `CURRENT_STATUS.md` + `CURRENT_STATUS_BACKEND.md`
+> **통합 대상**: `deprecated/CURRENT_STATUS.md` + `deprecated/CURRENT_STATUS_BACKEND.md`
 
 ---
 

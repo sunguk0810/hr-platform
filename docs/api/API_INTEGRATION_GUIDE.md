@@ -68,7 +68,7 @@ sequenceDiagram
 | PATCH | 부분 수정 | `PATCH /api/v1/employees/{id}` |
 | DELETE | 삭제 | `DELETE /api/v1/employees/{id}` |
 
-> 상세 API 설계 규칙은 [API_CONVENTIONS.md](./API_CONVENTIONS.md) 참조
+> 상세 API 설계 규칙은 [API_CONVENTIONS.md](../deprecated/API_CONVENTIONS.md) 참조 (deprecated, 주요 내용은 본 문서에 통합됨)
 
 ---
 
@@ -358,7 +358,6 @@ api.interceptors.request.use(config => {
 
 | 문서 | 설명 |
 |------|------|
-| [API_CONVENTIONS.md](./API_CONVENTIONS.md) | REST API 설계 규칙 상세 |
+| [API_CONVENTIONS.md](../deprecated/API_CONVENTIONS.md) | REST API 설계 규칙 상세 (deprecated) |
 | [SECURITY_PATTERNS.md](../architecture/SECURITY_PATTERNS.md) | JWT 인증, 권한 체계 |
 | [MULTI_TENANCY.md](../architecture/MULTI_TENANCY.md) | 테넌트 ID 처리 |
-| [FRONTEND_SCREEN_INVENTORY.md](../frontend/FRONTEND_SCREEN_INVENTORY.md) | 85개 화면 추적 |
