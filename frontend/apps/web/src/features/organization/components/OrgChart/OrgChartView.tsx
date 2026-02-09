@@ -20,6 +20,7 @@ import { OrgChartEdge, OrgChartEdgeData } from './OrgChartEdge';
 import { OrgChartControls } from './OrgChartControls';
 import { cn } from '@/lib/utils';
 import { format, startOfDay, subMonths } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 
 export interface OrgChartData {
   nodes: Node<OrgNodeData>[];
@@ -255,6 +256,7 @@ function OrgChartViewInner({
   historyDates: externalHistoryDates,
   className,
 }: OrgChartViewProps) {
+  const { t } = useTranslation('organization');
   const today = startOfDay(new Date());
   const [internalSelectedDate, setInternalSelectedDate] = useState<Date>(today);
   const selectedDate = externalSelectedDate ?? internalSelectedDate;
@@ -319,8 +321,7 @@ function OrgChartViewInner({
   }, []);
 
   const handleExport = useCallback(() => {
-    // Export functionality would be implemented here
-    console.log('Export org chart');
+    // TODO: Export functionality would be implemented here
   }, []);
 
   const minimapNodeColor = useCallback((node: Node) => {
@@ -339,13 +340,13 @@ function OrgChartViewInner({
       {showDateSelector && isViewingPast && (
         <div className="absolute top-0 left-0 right-0 z-10 bg-amber-50 border-b border-amber-200 px-4 py-2 text-sm text-amber-800 flex items-center justify-center gap-2">
           <span className="font-medium">
-            {format(selectedDate, 'yyyy년 M월')} 시점의 조직도를 보고 있습니다
+            {t('orgChart.pastBanner', { date: format(selectedDate, 'yyyy년 M월') })}
           </span>
           <button
             onClick={() => handleDateChange(today)}
             className="text-amber-600 hover:text-amber-800 underline"
           >
-            현재 조직도로 이동
+            {t('orgChart.goToCurrentOrg')}
           </button>
         </div>
       )}

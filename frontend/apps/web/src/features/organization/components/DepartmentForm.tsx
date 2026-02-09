@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,15 +25,17 @@ import {
 import { Loader2 } from 'lucide-react';
 import type { Department, CreateDepartmentRequest, UpdateDepartmentRequest, DepartmentTreeNode } from '@hr-platform/shared-types';
 
-const departmentSchema = z.object({
-  code: z.string().min(1, '부서코드를 입력해주세요.').max(20, '20자 이내로 입력해주세요.'),
-  name: z.string().min(1, '부서명을 입력해주세요.').max(100, '100자 이내로 입력해주세요.'),
-  nameEn: z.string().max(100, '100자 이내로 입력해주세요.').optional(),
-  parentId: z.string().optional(),
-  description: z.string().max(500, '500자 이내로 입력해주세요.').optional(),
-});
+function createDepartmentSchema(t: (key: string) => string) {
+  return z.object({
+    code: z.string().min(1, t('department.validation.codeRequired')).max(20, t('department.validation.codeMaxLength')),
+    name: z.string().min(1, t('department.validation.nameRequired')).max(100, t('department.validation.nameMaxLength')),
+    nameEn: z.string().max(100, t('department.validation.nameEnMaxLength')).optional(),
+    parentId: z.string().optional(),
+    description: z.string().max(500, t('department.validation.descriptionMaxLength')).optional(),
+  });
+}
 
-type DepartmentFormData = z.infer<typeof departmentSchema>;
+type DepartmentFormData = z.infer<ReturnType<typeof createDepartmentSchema>>;
 
 export interface DepartmentFormProps {
   open: boolean;
@@ -51,7 +54,10 @@ export function DepartmentForm({
   onSubmit,
   isLoading = false,
 }: DepartmentFormProps) {
+  const { t } = useTranslation('organization');
+  const { t: tCommon } = useTranslation('common');
   const isEditMode = !!department;
+  const departmentSchema = createDepartmentSchema(t);
 
   const {
     register,
@@ -137,9 +143,9 @@ export function DepartmentForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{isEditMode ? '부서 수정' : '부서 추가'}</DialogTitle>
+          <DialogTitle>{isEditMode ? t('department.edit') : t('department.add')}</DialogTitle>
           <DialogDescription>
-            {isEditMode ? '부서 정보를 수정합니다.' : '새로운 부서를 추가합니다.'}
+            {isEditMode ? t('department.editDescription') : t('department.addDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -148,7 +154,7 @@ export function DepartmentForm({
             {/* Parent Department */}
             {!isEditMode && (
               <div className="grid gap-2">
-                <Label htmlFor="parentId">상위부서</Label>
+                <Label htmlFor="parentId">{t('department.parentDepartment')}</Label>
                 <Select
                   value={parentId || 'none'}
                   onValueChange={(value) =>
@@ -156,13 +162,13 @@ export function DepartmentForm({
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="상위부서 선택" />
+                    <SelectValue placeholder={t('department.selectParent')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">(최상위)</SelectItem>
+                    <SelectItem value="none">{t('department.topLevel')}</SelectItem>
                     {flatDepartments.map((dept) => (
                       <SelectItem key={dept.id} value={dept.id}>
-                        {'　'.repeat(dept.level - 1)}
+                        {'\u3000'.repeat(dept.level - 1)}
                         {dept.name}
                       </SelectItem>
                     ))}
@@ -173,11 +179,11 @@ export function DepartmentForm({
 
             {/* Department Code */}
             <div className="grid gap-2">
-              <Label htmlFor="code">부서코드 *</Label>
+              <Label htmlFor="code">{t('department.code')} *</Label>
               <Input
                 id="code"
                 {...register('code')}
-                placeholder="예: DEV-FE"
+                placeholder={t('department.placeholders.code')}
                 disabled={isEditMode}
                 className={errors.code ? 'border-destructive' : ''}
               />
@@ -188,11 +194,11 @@ export function DepartmentForm({
 
             {/* Department Name */}
             <div className="grid gap-2">
-              <Label htmlFor="name">부서명 *</Label>
+              <Label htmlFor="name">{t('department.name')} *</Label>
               <Input
                 id="name"
                 {...register('name')}
-                placeholder="예: 프론트엔드팀"
+                placeholder={t('department.placeholders.name')}
                 className={errors.name ? 'border-destructive' : ''}
               />
               {errors.name && (
@@ -202,11 +208,11 @@ export function DepartmentForm({
 
             {/* English Name */}
             <div className="grid gap-2">
-              <Label htmlFor="nameEn">영문명</Label>
+              <Label htmlFor="nameEn">{tCommon('englishName')}</Label>
               <Input
                 id="nameEn"
                 {...register('nameEn')}
-                placeholder="예: Frontend Team"
+                placeholder={t('department.placeholders.englishName')}
               />
               {errors.nameEn && (
                 <p className="text-sm text-destructive">{errors.nameEn.message}</p>
@@ -216,11 +222,11 @@ export function DepartmentForm({
             {/* Description */}
             {!isEditMode && (
               <div className="grid gap-2">
-                <Label htmlFor="description">설명</Label>
+                <Label htmlFor="description">{tCommon('description')}</Label>
                 <Textarea
                   id="description"
                   {...register('description')}
-                  placeholder="부서에 대한 설명을 입력하세요."
+                  placeholder={t('department.placeholders.description')}
                   rows={3}
                 />
                 {errors.description && (
@@ -237,16 +243,16 @@ export function DepartmentForm({
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              취소
+              {tCommon('cancel')}
             </Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  저장 중...
+                  {tCommon('saving')}
                 </>
               ) : (
-                '저장'
+                tCommon('save')
               )}
             </Button>
           </DialogFooter>

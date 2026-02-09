@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Handle, Position, NodeProps } from 'reactflow';
 import { Building2, Users, User } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -49,6 +50,8 @@ interface DepartmentNodeProps {
 }
 
 function DepartmentNode({ data, selected }: DepartmentNodeProps) {
+  const { t } = useTranslation('organization');
+  const { t: tCommon } = useTranslation('common');
   const levelColors = [
     'bg-primary text-primary-foreground',
     'bg-blue-500 text-white',
@@ -62,7 +65,7 @@ function DepartmentNode({ data, selected }: DepartmentNodeProps) {
   return (
     <div
       className={cn(
-        'relative min-w-[180px] rounded-lg border bg-card shadow-sm transition-all',
+        'relative min-w-[180px] rounded-lg border bg-card shadow-sm transition-shadow',
         selected && 'ring-2 ring-primary ring-offset-2'
       )}
     >
@@ -94,13 +97,13 @@ function DepartmentNode({ data, selected }: DepartmentNodeProps) {
             </Avatar>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-medium truncate">{data.managerName}</p>
-              <p className="text-[10px] text-muted-foreground">부서장</p>
+              <p className="text-[10px] text-muted-foreground">{t('orgChart.head')}</p>
             </div>
           </div>
         )}
         <div className="flex items-center gap-1 text-xs text-muted-foreground">
           <Users className="h-3 w-3" />
-          <span>{data.employeeCount}명</span>
+          <span>{data.employeeCount}{tCommon('unit.person')}</span>
         </div>
       </div>
 
@@ -123,7 +126,7 @@ function EmployeeNode({ data, selected }: EmployeeNodeProps) {
   return (
     <div
       className={cn(
-        'relative min-w-[150px] rounded-lg border bg-card p-3 shadow-sm transition-all',
+        'relative min-w-[150px] rounded-lg border bg-card p-3 shadow-sm transition-shadow',
         selected && 'ring-2 ring-primary ring-offset-2'
       )}
     >

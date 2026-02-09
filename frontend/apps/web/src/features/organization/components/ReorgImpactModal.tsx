@@ -19,6 +19,13 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, GitMerge, GitBranch, Pencil, Trash2, Users, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { showErrorToast } from '@/components/common/Error/ErrorToast';
+
+/** Position titles that indicate a manager role */
+const MANAGER_POSITIONS = ['팀장', '부장'] as const;
+/** Values indicating unassigned department */
+const UNASSIGNED_DEPT_VALUES = ['-', '미정'] as const;
 
 export type ReorgChangeType = 'merge' | 'split' | 'rename' | 'delete';
 
@@ -45,13 +52,6 @@ interface ReorgImpactModalProps {
   onConfirm?: () => void;
 }
 
-const changeTypeLabels: Record<ReorgChangeType, string> = {
-  merge: '부서 통합',
-  split: '부서 분리',
-  rename: '부서 명칭 변경',
-  delete: '부서 삭제',
-};
-
 const changeTypeIcons: Record<ReorgChangeType, typeof GitMerge> = {
   merge: GitMerge,
   split: GitBranch,
@@ -67,6 +67,16 @@ export function ReorgImpactModal({
   targetDepartment,
   onConfirm,
 }: ReorgImpactModalProps) {
+  const { t } = useTranslation('organization');
+  const { t: tCommon } = useTranslation('common');
+
+  const changeTypeLabels: Record<ReorgChangeType, string> = {
+    merge: t('reorg.changeType.merge'),
+    split: t('reorg.changeType.split'),
+    rename: t('reorg.changeType.rename'),
+    delete: t('reorg.changeType.delete'),
+  };
+
   const [impactData, setImpactData] = useState<ReorgImpactData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
@@ -88,7 +98,7 @@ export function ReorgImpactModal({
         setImpactData(json.data);
       }
     } catch (error) {
-      console.error('Failed to fetch impact data:', error);
+      showErrorToast(error, { title: t('reorg.loadFailed') });
     } finally {
       setIsLoading(false);
     }
@@ -109,8 +119,8 @@ export function ReorgImpactModal({
   // Detect warning cases: managers with no new assignment
   const unassignedManagers = impactData?.employees.filter(
     (emp) =>
-      (emp.position === '팀장' || emp.position === '부장') &&
-      (emp.newDepartment === '-' || emp.newDepartment === '미정')
+      (MANAGER_POSITIONS as readonly string[]).includes(emp.position) &&
+      (UNASSIGNED_DEPT_VALUES as readonly string[]).includes(emp.newDepartment)
   ) ?? [];
 
   return (
@@ -119,10 +129,10 @@ export function ReorgImpactModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ChangeIcon className="h-5 w-5 text-primary" />
-            조직 변경 영향도 분석
+            {t('reorg.title')}
           </DialogTitle>
           <DialogDescription>
-            {changeTypeLabels[changeType]} 시 영향을 받는 직원 및 변경 사항을 확인합니다.
+            {t('reorg.description', { changeType: changeTypeLabels[changeType] })}
           </DialogDescription>
         </DialogHeader>
 
@@ -136,10 +146,10 @@ export function ReorgImpactModal({
             <div className="flex items-center gap-4 rounded-lg border p-4 bg-muted/30">
               <div className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-muted-foreground" />
-                <span className="text-sm font-medium">영향 직원 수</span>
+                <span className="text-sm font-medium">{t('reorg.affectedEmployees')}</span>
               </div>
               <Badge variant={impactData.affectedCount > 0 ? 'destructive' : 'secondary'}>
-                {impactData.affectedCount}명
+                {impactData.affectedCount}{tCommon('unit.person')}
               </Badge>
               <div className="ml-auto text-sm text-muted-foreground">
                 {sourceDepartment.name}
@@ -156,9 +166,9 @@ export function ReorgImpactModal({
             {unassignedManagers.length > 0 && (
               <Alert variant="warning">
                 <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>관리자 배치 미지정</AlertTitle>
+                <AlertTitle>{t('reorg.managerNotAssigned')}</AlertTitle>
                 <AlertDescription>
-                  다음 관리자의 변경 후 부서가 지정되지 않았습니다:{' '}
+                  {t('reorg.managerNotAssignedDesc')}{' '}
                   {unassignedManagers.map((m) => m.name).join(', ')}
                 </AlertDescription>
               </Alert>
@@ -167,10 +177,9 @@ export function ReorgImpactModal({
             {changeType === 'delete' && impactData.affectedCount > 0 && (
               <Alert variant="destructive">
                 <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>부서 삭제 경고</AlertTitle>
+                <AlertTitle>{t('reorg.deletionWarning')}</AlertTitle>
                 <AlertDescription>
-                  이 부서에 소속된 {impactData.affectedCount}명의 직원이 있습니다.
-                  삭제 전 모든 직원의 부서를 재배치해야 합니다.
+                  {t('reorg.deletionWarningDesc', { count: impactData.affectedCount })}
                 </AlertDescription>
               </Alert>
             )}
@@ -181,11 +190,11 @@ export function ReorgImpactModal({
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-[100px]">사번</TableHead>
-                      <TableHead className="w-[90px]">이름</TableHead>
-                      <TableHead>현재 부서</TableHead>
-                      <TableHead>변경 후 부서</TableHead>
-                      <TableHead className="w-[80px]">직급</TableHead>
+                      <TableHead className="w-[100px]">{t('reorg.tableHeaders.employeeNumber')}</TableHead>
+                      <TableHead className="w-[90px]">{t('reorg.tableHeaders.name')}</TableHead>
+                      <TableHead>{t('reorg.tableHeaders.currentDept')}</TableHead>
+                      <TableHead>{t('reorg.tableHeaders.afterDept')}</TableHead>
+                      <TableHead className="w-[80px]">{t('reorg.tableHeaders.grade')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -215,26 +224,26 @@ export function ReorgImpactModal({
 
             {impactData.employees.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
-                영향을 받는 직원이 없습니다.
+                {t('reorg.noAffected')}
               </div>
             )}
           </div>
         ) : (
           <div className="text-center py-8 text-muted-foreground">
-            영향도 데이터를 불러올 수 없습니다.
+            {t('reorg.loadFailed')}
           </div>
         )}
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            취소
+            {tCommon('cancel')}
           </Button>
           <Button
             onClick={handleConfirm}
             disabled={isApplying || isLoading}
             variant={changeType === 'delete' ? 'destructive' : 'default'}
           >
-            {isApplying ? '적용 중...' : '변경 적용'}
+            {isApplying ? tCommon('applying') : t('reorg.applyChanges')}
           </Button>
         </DialogFooter>
       </DialogContent>
