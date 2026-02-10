@@ -1,0 +1,274 @@
+# ============================================
+# Docker Compose Resource Limits Overlay
+# ============================================
+# Prevents OOM cascade failures and ensures predictable performance
+#
+# Usage:
+#   docker-compose -f docker-compose.yml -f docker-compose.resources.yml up
+#
+# Combined with dev mode:
+#   docker-compose -f docker-compose.yml -f docker-compose.resources.yml -f docker-compose.dev.yml up
+#
+# Resource Allocation Strategy:
+#   - Infrastructure (postgres, redis): 2GB memory each
+#   - High-traffic services (auth, employee, attendance, approval): 1GB each
+#   - Medium-traffic services (tenant, org, mdm, notification, file): 768MB each
+#   - Low-traffic services (appointment, certificate, recruitment): 512MB each
+#   - Monitoring (prometheus, grafana, jaeger): 512MB each
+#
+# Total Memory: ~12GB for all services (comfortable for 16GB dev machine)
+# ============================================
+
+services:
+  # ===========================================
+  # Infrastructure Services
+  # ===========================================
+  postgres:
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2048M
+        reservations:
+          cpus: '1.0'
+          memory: 1024M
+    restart: unless-stopped
+    # Shared memory for PostgreSQL sorting/hashing
+    shm_size: 256mb
+
+  redis:
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    restart: unless-stopped
+
+  localstack:
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    restart: unless-stopped
+
+  # ===========================================
+  # Monitoring Services
+  # ===========================================
+  jaeger:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    restart: unless-stopped
+
+  prometheus:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    restart: unless-stopped
+
+  grafana:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    restart: unless-stopped
+
+  traefik:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    restart: unless-stopped
+
+  # ===========================================
+  # High-Traffic Application Services (1GB)
+  # ===========================================
+  auth-service:
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    restart: always
+    environment:
+      # Set JVM heap to 75% of container memory = 768MB
+      JAVA_OPTS: "-XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=50.0"
+
+  employee-service:
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    restart: always
+    environment:
+      JAVA_OPTS: "-XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=50.0"
+
+  attendance-service:
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    restart: always
+    environment:
+      JAVA_OPTS: "-XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=50.0"
+
+  approval-service:
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    restart: always
+    environment:
+      JAVA_OPTS: "-XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=50.0"
+
+  # ===========================================
+  # Medium-Traffic Application Services (768MB)
+  # ===========================================
+  tenant-service:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.75'
+          memory: 768M
+        reservations:
+          cpus: '0.25'
+          memory: 384M
+    restart: always
+    environment:
+      # 75% of 768MB = 576MB heap
+      JAVA_OPTS: "-XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=50.0"
+
+  organization-service:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.75'
+          memory: 768M
+        reservations:
+          cpus: '0.25'
+          memory: 384M
+    restart: always
+    environment:
+      JAVA_OPTS: "-XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=50.0"
+
+  mdm-service:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.75'
+          memory: 768M
+        reservations:
+          cpus: '0.25'
+          memory: 384M
+    restart: always
+    environment:
+      JAVA_OPTS: "-XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=50.0"
+
+  notification-service:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.75'
+          memory: 768M
+        reservations:
+          cpus: '0.25'
+          memory: 384M
+    restart: always
+    environment:
+      JAVA_OPTS: "-XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=50.0"
+
+  file-service:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.75'
+          memory: 768M
+        reservations:
+          cpus: '0.25'
+          memory: 384M
+    restart: always
+    environment:
+      JAVA_OPTS: "-XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=50.0"
+
+  # ===========================================
+  # Low-Traffic Application Services (512MB)
+  # ===========================================
+  appointment-service:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    restart: always
+    environment:
+      # 75% of 512MB = 384MB heap
+      JAVA_OPTS: "-XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=50.0"
+
+  certificate-service:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    restart: always
+    environment:
+      JAVA_OPTS: "-XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=50.0"
+
+  recruitment-service:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    restart: always
+    environment:
+      JAVA_OPTS: "-XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=50.0"
