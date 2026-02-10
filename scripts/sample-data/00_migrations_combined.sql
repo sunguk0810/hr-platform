@@ -503,6 +503,7 @@ CREATE POLICY code_history_tenant_isolation ON tenant_common.code_history
 CREATE TABLE IF NOT EXISTS tenant_common.menu_item
 (
     id                UUID PRIMARY KEY      DEFAULT gen_random_uuid(),
+    tenant_id         UUID,
     parent_id         UUID REFERENCES tenant_common.menu_item (id) ON DELETE CASCADE,
     code              VARCHAR(50)  NOT NULL UNIQUE,
     name              VARCHAR(100) NOT NULL,
@@ -514,6 +515,7 @@ CREATE TABLE IF NOT EXISTS tenant_common.menu_item
     level             INTEGER      NOT NULL DEFAULT 1,
     sort_order        INTEGER      NOT NULL DEFAULT 0,
     feature_code      VARCHAR(50),
+    group_name        VARCHAR(50),
     is_system         BOOLEAN      NOT NULL DEFAULT true,
     is_active         BOOLEAN      NOT NULL DEFAULT true,
     show_in_nav       BOOLEAN      NOT NULL DEFAULT true,
