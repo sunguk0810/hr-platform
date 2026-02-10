@@ -7,17 +7,27 @@
     Skip Docker image build step (use existing images)
 .PARAMETER Services
     Specific services to start (default: all)
+.PARAMETER DevMode
+    Enable hot reload and remote debugging (docker-compose.dev.yml)
+.PARAMETER WithResources
+    Apply resource limits (docker-compose.resources.yml)
 .EXAMPLE
     .\start-services.ps1
 .EXAMPLE
     .\start-services.ps1 -NoBuild
 .EXAMPLE
-    .\start-services.ps1 -Services auth-service,employee-service
+    .\start-services.ps1 -DevMode
+.EXAMPLE
+    .\start-services.ps1 -DevMode -WithResources
+.EXAMPLE
+    .\start-services.ps1 -Services auth-service,employee-service -DevMode
 #>
 
 param(
     [switch]$NoBuild,
     [string[]]$Services,
+    [switch]$DevMode,
+    [switch]$WithResources,
     [switch]$Help
 )
 
@@ -44,12 +54,14 @@ if ($Help) {
     Write-Host " HR SaaS Backend Services Starter" -ForegroundColor Cyan
     Write-Host "========================================" -ForegroundColor Cyan
     Write-Host ""
-    Write-Host "Usage: .\start-services.ps1 [-NoBuild] [-Services service1,service2]"
+    Write-Host "Usage: .\start-services.ps1 [-NoBuild] [-DevMode] [-WithResources] [-Services service1,service2]"
     Write-Host ""
     Write-Host "Options:"
-    Write-Host "  -NoBuild    Skip Docker image build"
-    Write-Host "  -Services   Comma-separated list of services to start"
-    Write-Host "  -Help       Show this help"
+    Write-Host "  -NoBuild        Skip Docker image build"
+    Write-Host "  -DevMode        Enable hot reload + debugging (< 5s restart on code change)"
+    Write-Host "  -WithResources  Apply CPU/memory limits (prevents OOM cascade)"
+    Write-Host "  -Services       Comma-separated list of services to start"
+    Write-Host "  -Help           Show this help"
     Write-Host ""
     Write-Host "Available Services:"
     $ServiceConfig.Keys | ForEach-Object {
@@ -58,11 +70,15 @@ if ($Help) {
     }
     Write-Host ""
     Write-Host "Examples:"
-    Write-Host "  .\scripts\start-services.ps1"
-    Write-Host "  .\scripts\start-services.ps1 -NoBuild"
-    Write-Host "  .\scripts\start-services.ps1 -Services auth-service,employee-service"
+    Write-Host "  .\scripts\start-services.ps1                      # Standard mode"
+    Write-Host "  .\scripts\start-services.ps1 -DevMode             # Hot reload enabled"
+    Write-Host "  .\scripts\start-services.ps1 -DevMode -WithResources"
+    Write-Host "  .\scripts\start-services.ps1 -NoBuild -DevMode    # Skip build"
+    Write-Host "  .\scripts\start-services.ps1 -Services auth-service,employee-service -DevMode"
     Write-Host ""
     Write-Host "View logs:  cd docker && docker-compose --profile app logs -f"
+    Write-Host "Health:     .\scripts\health-check.ps1"
+    Write-Host "Debug:      .\scripts\debug-service.ps1 auth-service"
     Write-Host "Stop:       .\scripts\stop-services.ps1"
     exit 0
 }
@@ -106,6 +122,17 @@ else {
 # Determine services to start
 $servicesToStart = if ($Services -and $Services.Count -gt 0) { $Services } else { $null }
 
+# Build docker-compose command
+$composeFiles = @("-f", "docker-compose.yml")
+if ($WithResources) {
+    $composeFiles += @("-f", "docker-compose.resources.yml")
+    Write-Host "[MODE] Resource limits enabled (CPU/Memory)" -ForegroundColor Cyan
+}
+if ($DevMode) {
+    $composeFiles += @("-f", "docker-compose.dev.yml")
+    Write-Host "[MODE] Development mode enabled (hot reload + debugging)" -ForegroundColor Cyan
+}
+
 if ($servicesToStart) {
     Write-Host "[INFO] Services: $($servicesToStart -join ', ')" -ForegroundColor Gray
 } else {
@@ -114,23 +141,23 @@ if ($servicesToStart) {
 Write-Host ""
 
 # Build and start
-if ($servicesToStart) {
-    if ($NoBuild) {
-        Write-Host "[STEP] Starting selected services..." -ForegroundColor Yellow
-        docker-compose up -d @servicesToStart
-    } else {
-        Write-Host "[STEP] Building and starting selected services..." -ForegroundColor Yellow
-        docker-compose up -d --build @servicesToStart
-    }
-} else {
-    if ($NoBuild) {
-        Write-Host "[STEP] Starting all services..." -ForegroundColor Yellow
-        docker-compose --profile app up -d
-    } else {
-        Write-Host "[STEP] Building and starting all services..." -ForegroundColor Yellow
-        docker-compose --profile app up -d --build
-    }
+$composeArgs = $composeFiles + @("up", "-d")
+if (-not $NoBuild) {
+    $composeArgs += @("--build")
 }
+if (-not $servicesToStart) {
+    $composeArgs += @("--profile", "app")
+} else {
+    $composeArgs += $servicesToStart
+}
+
+if ($NoBuild) {
+    Write-Host "[STEP] Starting services..." -ForegroundColor Yellow
+} else {
+    Write-Host "[STEP] Building and starting services..." -ForegroundColor Yellow
+}
+
+& docker-compose @composeArgs
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[ERROR] Failed to start services!" -ForegroundColor Red
