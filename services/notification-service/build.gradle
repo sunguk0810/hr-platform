@@ -33,6 +33,9 @@ dependencies {
     // Documentation
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
 
+    // Development Tools (hot reload, not included in production JAR)
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
     // Testing
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'

@@ -59,6 +59,9 @@ dependencies {
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
+    // Development Tools (hot reload, not included in production JAR)
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
     // Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation testFixtures(project(':common:common-database'))

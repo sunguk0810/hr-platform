@@ -1,0 +1,194 @@
+# ============================================
+# Docker Compose Development Overlay
+# ============================================
+# Enables hot reload and remote debugging for all services
+#
+# Usage:
+#   docker-compose -f docker-compose.yml -f docker-compose.dev.yml up [service-name]
+#
+# Features:
+#   - Spring Boot DevTools for automatic restart on code changes (< 5s)
+#   - Volume mounts for source code (no rebuild needed)
+#   - Remote debugging (JDWP) on unique ports per service
+#   - Gradle cache mount for faster rebuilds when needed
+#
+# Debug Port Mapping:
+#   auth-service:         5005
+#   tenant-service:       5006
+#   organization-service: 5007
+#   employee-service:     5008
+#   attendance-service:   5009
+#   approval-service:     5010
+#   mdm-service:          5011
+#   notification-service: 5012
+#   file-service:         5013
+#   appointment-service:  5014
+#   certificate-service:  5015
+#   recruitment-service:  5016
+#
+# IntelliJ/VS Code: Run > Attach to Process > localhost:[port]
+# ============================================
+
+services:
+  auth-service:
+    volumes:
+      # Mount source code for hot reload (read-only for safety)
+      - ../services/auth-service/src:/app/services/auth-service/src:ro
+      - ../common:/app/common:ro
+      # Gradle cache for faster rebuilds
+      - gradle_cache:/root/.gradle
+    environment:
+      # Enable Spring Boot DevTools
+      SPRING_DEVTOOLS_RESTART_ENABLED: "true"
+      SPRING_DEVTOOLS_RESTART_POLL_INTERVAL: "2s"
+      SPRING_DEVTOOLS_RESTART_QUIET_PERIOD: "1s"
+      # Enable remote debugging
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+    ports:
+      - "5005:5005"  # Debug port
+
+  tenant-service:
+    volumes:
+      - ../services/tenant-service/src:/app/services/tenant-service/src:ro
+      - ../common:/app/common:ro
+      - gradle_cache:/root/.gradle
+    environment:
+      SPRING_DEVTOOLS_RESTART_ENABLED: "true"
+      SPRING_DEVTOOLS_RESTART_POLL_INTERVAL: "2s"
+      SPRING_DEVTOOLS_RESTART_QUIET_PERIOD: "1s"
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+    ports:
+      - "5006:5005"  # Different host port, same container port
+
+  organization-service:
+    volumes:
+      - ../services/organization-service/src:/app/services/organization-service/src:ro
+      - ../common:/app/common:ro
+      - gradle_cache:/root/.gradle
+    environment:
+      SPRING_DEVTOOLS_RESTART_ENABLED: "true"
+      SPRING_DEVTOOLS_RESTART_POLL_INTERVAL: "2s"
+      SPRING_DEVTOOLS_RESTART_QUIET_PERIOD: "1s"
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+    ports:
+      - "5007:5005"
+
+  employee-service:
+    volumes:
+      - ../services/employee-service/src:/app/services/employee-service/src:ro
+      - ../common:/app/common:ro
+      - gradle_cache:/root/.gradle
+    environment:
+      SPRING_DEVTOOLS_RESTART_ENABLED: "true"
+      SPRING_DEVTOOLS_RESTART_POLL_INTERVAL: "2s"
+      SPRING_DEVTOOLS_RESTART_QUIET_PERIOD: "1s"
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+    ports:
+      - "5008:5005"
+
+  attendance-service:
+    volumes:
+      - ../services/attendance-service/src:/app/services/attendance-service/src:ro
+      - ../common:/app/common:ro
+      - gradle_cache:/root/.gradle
+    environment:
+      SPRING_DEVTOOLS_RESTART_ENABLED: "true"
+      SPRING_DEVTOOLS_RESTART_POLL_INTERVAL: "2s"
+      SPRING_DEVTOOLS_RESTART_QUIET_PERIOD: "1s"
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+    ports:
+      - "5009:5005"
+
+  approval-service:
+    volumes:
+      - ../services/approval-service/src:/app/services/approval-service/src:ro
+      - ../common:/app/common:ro
+      - gradle_cache:/root/.gradle
+    environment:
+      SPRING_DEVTOOLS_RESTART_ENABLED: "true"
+      SPRING_DEVTOOLS_RESTART_POLL_INTERVAL: "2s"
+      SPRING_DEVTOOLS_RESTART_QUIET_PERIOD: "1s"
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+    ports:
+      - "5010:5005"
+
+  mdm-service:
+    volumes:
+      - ../services/mdm-service/src:/app/services/mdm-service/src:ro
+      - ../common:/app/common:ro
+      - gradle_cache:/root/.gradle
+    environment:
+      SPRING_DEVTOOLS_RESTART_ENABLED: "true"
+      SPRING_DEVTOOLS_RESTART_POLL_INTERVAL: "2s"
+      SPRING_DEVTOOLS_RESTART_QUIET_PERIOD: "1s"
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+    ports:
+      - "5011:5005"
+
+  notification-service:
+    volumes:
+      - ../services/notification-service/src:/app/services/notification-service/src:ro
+      - ../common:/app/common:ro
+      - gradle_cache:/root/.gradle
+    environment:
+      SPRING_DEVTOOLS_RESTART_ENABLED: "true"
+      SPRING_DEVTOOLS_RESTART_POLL_INTERVAL: "2s"
+      SPRING_DEVTOOLS_RESTART_QUIET_PERIOD: "1s"
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+    ports:
+      - "5012:5005"
+
+  file-service:
+    volumes:
+      - ../services/file-service/src:/app/services/file-service/src:ro
+      - ../common:/app/common:ro
+      - gradle_cache:/root/.gradle
+    environment:
+      SPRING_DEVTOOLS_RESTART_ENABLED: "true"
+      SPRING_DEVTOOLS_RESTART_POLL_INTERVAL: "2s"
+      SPRING_DEVTOOLS_RESTART_QUIET_PERIOD: "1s"
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+    ports:
+      - "5013:5005"
+
+  appointment-service:
+    volumes:
+      - ../services/appointment-service/src:/app/services/appointment-service/src:ro
+      - ../common:/app/common:ro
+      - gradle_cache:/root/.gradle
+    environment:
+      SPRING_DEVTOOLS_RESTART_ENABLED: "true"
+      SPRING_DEVTOOLS_RESTART_POLL_INTERVAL: "2s"
+      SPRING_DEVTOOLS_RESTART_QUIET_PERIOD: "1s"
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+    ports:
+      - "5014:5005"
+
+  certificate-service:
+    volumes:
+      - ../services/certificate-service/src:/app/services/certificate-service/src:ro
+      - ../common:/app/common:ro
+      - gradle_cache:/root/.gradle
+    environment:
+      SPRING_DEVTOOLS_RESTART_ENABLED: "true"
+      SPRING_DEVTOOLS_RESTART_POLL_INTERVAL: "2s"
+      SPRING_DEVTOOLS_RESTART_QUIET_PERIOD: "1s"
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+    ports:
+      - "5015:5005"
+
+  recruitment-service:
+    volumes:
+      - ../services/recruitment-service/src:/app/services/recruitment-service/src:ro
+      - ../common:/app/common:ro
+      - gradle_cache:/root/.gradle
+    environment:
+      SPRING_DEVTOOLS_RESTART_ENABLED: "true"
+      SPRING_DEVTOOLS_RESTART_POLL_INTERVAL: "2s"
+      SPRING_DEVTOOLS_RESTART_QUIET_PERIOD: "1s"
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+    ports:
+      - "5016:5005"
+
+volumes:
+  gradle_cache:
