@@ -2,12 +2,16 @@ package com.hrsaas.recruitment.service.impl;
 
 import com.hrsaas.common.core.exception.BusinessException;
 import com.hrsaas.common.core.exception.ErrorCode;
+import com.hrsaas.common.event.EventPublisher;
+import com.hrsaas.common.tenant.TenantContext;
 import com.hrsaas.recruitment.domain.dto.request.CreateOfferRequest;
 import com.hrsaas.recruitment.domain.dto.response.OfferResponse;
 import com.hrsaas.recruitment.domain.dto.response.OfferSummaryResponse;
 import com.hrsaas.recruitment.domain.entity.Application;
+import com.hrsaas.recruitment.domain.entity.Applicant;
 import com.hrsaas.recruitment.domain.entity.Offer;
 import com.hrsaas.recruitment.domain.entity.OfferStatus;
+import com.hrsaas.recruitment.domain.event.CandidateHiredEvent;
 import com.hrsaas.recruitment.repository.ApplicationRepository;
 import com.hrsaas.recruitment.repository.OfferRepository;
 import com.hrsaas.recruitment.service.OfferService;
@@ -34,6 +38,7 @@ public class OfferServiceImpl implements OfferService {
 
     private final OfferRepository offerRepository;
     private final ApplicationRepository applicationRepository;
+    private final EventPublisher eventPublisher;
 
     private static final AtomicLong offerSequence = new AtomicLong(1);
 
@@ -148,10 +153,6 @@ public class OfferServiceImpl implements OfferService {
         Offer offer = offerRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "제안을 찾을 수 없습니다"));
 
-        if (offer.getStatus() != OfferStatus.APPROVED) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST, "승인된 제안만 발송할 수 있습니다");
-        }
-
         offer.send();
         return OfferResponse.from(offerRepository.save(offer));
     }
@@ -171,7 +172,42 @@ public class OfferServiceImpl implements OfferService {
         application.hire();
         applicationRepository.save(application);
 
-        return OfferResponse.from(offerRepository.save(offer));
+        Offer saved = offerRepository.save(offer);
+
+        // 채용 확정 이벤트 발행 → Employee Service 구독
+        publishCandidateHiredEvent(offer, application);
+
+        return OfferResponse.from(saved);
+    }
+
+    private void publishCandidateHiredEvent(Offer offer, Application application) {
+        try {
+            Applicant applicant = application.getApplicant();
+            CandidateHiredEvent event = CandidateHiredEvent.builder()
+                    .tenantId(TenantContext.getCurrentTenant())
+                    .applicationId(application.getId())
+                    .offerId(offer.getId())
+                    .applicantName(applicant.getName())
+                    .applicantEmail(applicant.getEmail())
+                    .applicantPhone(applicant.getPhone())
+                    .birthDate(applicant.getBirthDate())
+                    .gender(applicant.getGender())
+                    .address(applicant.getAddress())
+                    .departmentId(offer.getDepartmentId())
+                    .departmentName(offer.getDepartmentName())
+                    .positionTitle(offer.getPositionTitle())
+                    .gradeCode(offer.getGradeCode())
+                    .gradeName(offer.getGradeName())
+                    .startDate(offer.getStartDate())
+                    .employmentType(offer.getEmploymentType().name())
+                    .baseSalary(offer.getBaseSalary())
+                    .probationMonths(offer.getProbationMonths())
+                    .build();
+            eventPublisher.publish(event);
+            log.info("CandidateHiredEvent published: applicationId={}, offerId={}", application.getId(), offer.getId());
+        } catch (Exception e) {
+            log.error("Failed to publish CandidateHiredEvent", e);
+        }
     }
 
     @Override

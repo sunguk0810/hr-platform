@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -71,4 +72,12 @@ public interface ApplicantRepository extends JpaRepository<Applicant, UUID> {
            "JOIN a.applications app " +
            "ORDER BY a.createdAt DESC")
     Page<Applicant> findRecentApplicants(Pageable pageable);
+
+    /**
+     * 개인정보 파기 대상 — 1년 경과 불합격/취소 지원자 (이미 삭제 처리된 지원자 제외)
+     */
+    @Query("SELECT a FROM Applicant a WHERE a.createdAt < :cutoff " +
+           "AND a.email <> 'purged@deleted.local' " +
+           "AND NOT EXISTS (SELECT app FROM Application app WHERE app.applicant = a AND app.status = 'HIRED')")
+    List<Applicant> findExpiredForPurge(@Param("cutoff") Instant cutoff);
 }

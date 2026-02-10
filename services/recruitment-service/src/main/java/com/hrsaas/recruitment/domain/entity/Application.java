@@ -1,15 +1,18 @@
 package com.hrsaas.recruitment.domain.entity;
 
 import com.hrsaas.common.entity.TenantAwareEntity;
+import com.hrsaas.common.core.exception.BusinessException;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import org.springframework.http.HttpStatus;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -111,7 +114,12 @@ public class Application extends TenantAwareEntity {
         this.stageOrder = 0;
     }
 
+    private static final Set<ApplicationStatus> TERMINAL_STATES = Set.of(
+            ApplicationStatus.HIRED, ApplicationStatus.WITHDRAWN, ApplicationStatus.REJECTED,
+            ApplicationStatus.SCREENING_REJECTED, ApplicationStatus.INTERVIEW_REJECTED);
+
     public void screen(UUID screenedBy, Integer score, String notes, boolean passed) {
+        validateTransition(Set.of(ApplicationStatus.SUBMITTED), "서류심사");
         this.screenedBy = screenedBy;
         this.screenedAt = Instant.now();
         this.screeningScore = score;
@@ -124,36 +132,59 @@ public class Application extends TenantAwareEntity {
     }
 
     public void startInterview() {
+        validateTransition(Set.of(ApplicationStatus.SCREENED), "면접 시작");
         this.status = ApplicationStatus.INTERVIEWING;
     }
 
     public void passInterview() {
+        validateTransition(Set.of(ApplicationStatus.INTERVIEWING), "면접 통과");
         this.status = ApplicationStatus.INTERVIEW_PASSED;
     }
 
     public void failInterview() {
+        validateTransition(Set.of(ApplicationStatus.INTERVIEWING), "면접 탈락");
         this.status = ApplicationStatus.INTERVIEW_REJECTED;
     }
 
     public void makeOffer() {
+        validateTransition(Set.of(ApplicationStatus.INTERVIEW_PASSED), "제안");
         this.status = ApplicationStatus.OFFER_PENDING;
         this.currentStage = "OFFER";
     }
 
     public void hire() {
+        validateTransition(Set.of(ApplicationStatus.OFFER_PENDING), "채용 확정");
         this.status = ApplicationStatus.HIRED;
         this.hiredAt = Instant.now();
     }
 
     public void reject(String reason) {
+        if (TERMINAL_STATES.contains(this.status)) {
+            throw new BusinessException("REC_002",
+                    "현재 상태(" + this.status + ")에서 불합격 처리할 수 없습니다",
+                    HttpStatus.BAD_REQUEST);
+        }
         this.status = ApplicationStatus.REJECTED;
         this.rejectionReason = reason;
         this.rejectedAt = Instant.now();
     }
 
     public void withdraw() {
+        if (this.status == ApplicationStatus.HIRED) {
+            throw new BusinessException("REC_002",
+                    "채용 확정 후에는 지원 취소할 수 없습니다",
+                    HttpStatus.BAD_REQUEST);
+        }
         this.status = ApplicationStatus.WITHDRAWN;
         this.withdrawnAt = Instant.now();
+    }
+
+    private void validateTransition(Set<ApplicationStatus> allowed, String action) {
+        if (!allowed.contains(this.status)) {
+            throw new BusinessException("REC_002",
+                    "현재 상태(" + this.status + ")에서 " + action + " 처리할 수 없습니다",
+                    HttpStatus.BAD_REQUEST);
+        }
     }
 
     public void moveToNextStage(String stageName, int order) {

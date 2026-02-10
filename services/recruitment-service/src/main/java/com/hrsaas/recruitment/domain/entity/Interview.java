@@ -1,10 +1,12 @@
 package com.hrsaas.recruitment.domain.entity;
 
 import com.hrsaas.common.entity.TenantAwareEntity;
+import com.hrsaas.common.core.exception.BusinessException;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import org.springframework.http.HttpStatus;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -12,6 +14,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -102,17 +105,20 @@ public class Interview extends TenantAwareEntity {
     }
 
     public void schedule(LocalDate date, LocalTime time) {
+        validateTransition(Set.of(InterviewStatus.SCHEDULING, InterviewStatus.POSTPONED), "일정 확정");
         this.scheduledDate = date;
         this.scheduledTime = time;
         this.status = InterviewStatus.SCHEDULED;
     }
 
     public void start() {
+        validateTransition(Set.of(InterviewStatus.SCHEDULED), "시작");
         this.status = InterviewStatus.IN_PROGRESS;
         this.startedAt = Instant.now();
     }
 
     public void complete(String result, Integer overallScore, String resultNotes) {
+        validateTransition(Set.of(InterviewStatus.IN_PROGRESS), "완료");
         this.status = InterviewStatus.COMPLETED;
         this.endedAt = Instant.now();
         this.result = result;
@@ -121,15 +127,26 @@ public class Interview extends TenantAwareEntity {
     }
 
     public void cancel() {
+        validateTransition(Set.of(InterviewStatus.SCHEDULING, InterviewStatus.SCHEDULED, InterviewStatus.POSTPONED), "취소");
         this.status = InterviewStatus.CANCELLED;
     }
 
     public void postpone() {
+        validateTransition(Set.of(InterviewStatus.SCHEDULED), "연기");
         this.status = InterviewStatus.POSTPONED;
     }
 
     public void markNoShow() {
+        validateTransition(Set.of(InterviewStatus.SCHEDULED), "불참");
         this.status = InterviewStatus.NO_SHOW;
+    }
+
+    private void validateTransition(Set<InterviewStatus> allowed, String action) {
+        if (!allowed.contains(this.status)) {
+            throw new BusinessException("REC_004",
+                    "현재 상태(" + this.status + ")에서 " + action + " 처리할 수 없습니다",
+                    HttpStatus.BAD_REQUEST);
+        }
     }
 
     public boolean isPassed() {

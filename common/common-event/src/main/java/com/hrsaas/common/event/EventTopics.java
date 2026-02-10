@@ -56,6 +56,11 @@ public interface EventTopics {
     // Affiliation events
     String EMPLOYEE_AFFILIATION_CHANGED = "employee-affiliation-changed";
 
+    // Recruitment events
+    String RECRUITMENT_HIRED = "hr-saas-recruitment-hired";
+    String RECRUITMENT_INTERVIEW_SCHEDULED = "hr-saas-recruitment-interview-scheduled";
+    String RECRUITMENT_OFFER_APPROVAL_REQUESTED = "hr-saas-recruitment-offer-approval-requested";
+
     // MDM events
     String MDM_EVENTS = "mdm-events";
     String CODE_GROUP_CREATED = "code-group-created";

@@ -1,15 +1,18 @@
 package com.hrsaas.recruitment.domain.entity;
 
 import com.hrsaas.common.entity.TenantAwareEntity;
+import com.hrsaas.common.core.exception.BusinessException;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -132,33 +135,42 @@ public class Offer extends TenantAwareEntity {
         this.expiresAt = expiresAt;
     }
 
+    private static final Set<OfferStatus> TERMINAL_STATES = Set.of(
+            OfferStatus.ACCEPTED, OfferStatus.DECLINED, OfferStatus.EXPIRED, OfferStatus.CANCELLED);
+
     public void submitForApproval() {
+        validateTransition(Set.of(OfferStatus.DRAFT), "승인 요청");
         this.status = OfferStatus.PENDING_APPROVAL;
     }
 
     public void approve(UUID approvedBy) {
+        validateTransition(Set.of(OfferStatus.PENDING_APPROVAL), "승인");
         this.status = OfferStatus.APPROVED;
         this.approvedBy = approvedBy;
         this.approvedAt = Instant.now();
     }
 
     public void send() {
+        validateTransition(Set.of(OfferStatus.APPROVED), "발송");
         this.status = OfferStatus.SENT;
         this.sentAt = Instant.now();
     }
 
     public void accept() {
+        validateTransition(Set.of(OfferStatus.SENT, OfferStatus.NEGOTIATING), "수락");
         this.status = OfferStatus.ACCEPTED;
         this.respondedAt = Instant.now();
     }
 
     public void decline(String reason) {
+        validateTransition(Set.of(OfferStatus.SENT, OfferStatus.NEGOTIATING), "거절");
         this.status = OfferStatus.DECLINED;
         this.declineReason = reason;
         this.respondedAt = Instant.now();
     }
 
     public void negotiate(String notes) {
+        validateTransition(Set.of(OfferStatus.SENT, OfferStatus.NEGOTIATING), "협상");
         this.status = OfferStatus.NEGOTIATING;
         this.negotiationNotes = notes;
     }
@@ -168,7 +180,20 @@ public class Offer extends TenantAwareEntity {
     }
 
     public void cancel() {
+        if (TERMINAL_STATES.contains(this.status)) {
+            throw new BusinessException("REC_003",
+                    "현재 상태(" + this.status + ")에서 취소할 수 없습니다",
+                    HttpStatus.BAD_REQUEST);
+        }
         this.status = OfferStatus.CANCELLED;
+    }
+
+    private void validateTransition(Set<OfferStatus> allowed, String action) {
+        if (!allowed.contains(this.status)) {
+            throw new BusinessException("REC_003",
+                    "현재 상태(" + this.status + ")에서 " + action + " 처리할 수 없습니다",
+                    HttpStatus.BAD_REQUEST);
+        }
     }
 
     public boolean isExpired() {

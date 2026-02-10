@@ -6,11 +6,15 @@ import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import com.hrsaas.common.core.exception.BusinessException;
+import org.springframework.http.HttpStatus;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -168,7 +172,13 @@ public class JobPosting extends TenantAwareEntity {
         this.interviewProcess = interviewProcess;
     }
 
+    private static final Set<JobStatus> PUBLISHABLE = Set.of(JobStatus.DRAFT, JobStatus.PENDING);
+    private static final Set<JobStatus> CLOSABLE = Set.of(JobStatus.PUBLISHED);
+    private static final Set<JobStatus> COMPLETABLE = Set.of(JobStatus.CLOSED);
+    private static final Set<JobStatus> CANCELLABLE = Set.of(JobStatus.DRAFT, JobStatus.PENDING, JobStatus.PUBLISHED, JobStatus.CLOSED);
+
     public void publish() {
+        validateTransition(PUBLISHABLE, "공고");
         this.status = JobStatus.PUBLISHED;
         if (this.openDate == null) {
             this.openDate = LocalDate.now();
@@ -176,15 +186,26 @@ public class JobPosting extends TenantAwareEntity {
     }
 
     public void close() {
+        validateTransition(CLOSABLE, "마감");
         this.status = JobStatus.CLOSED;
     }
 
     public void complete() {
+        validateTransition(COMPLETABLE, "완료");
         this.status = JobStatus.COMPLETED;
     }
 
     public void cancel() {
+        validateTransition(CANCELLABLE, "취소");
         this.status = JobStatus.CANCELLED;
+    }
+
+    private void validateTransition(Set<JobStatus> allowed, String action) {
+        if (!allowed.contains(this.status)) {
+            throw new BusinessException("REC_001",
+                    "현재 상태(" + this.status + ")에서 " + action + " 처리할 수 없습니다",
+                    HttpStatus.BAD_REQUEST);
+        }
     }
 
     public void incrementViewCount() {

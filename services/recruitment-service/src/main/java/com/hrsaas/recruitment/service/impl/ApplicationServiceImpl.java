@@ -133,10 +133,6 @@ public class ApplicationServiceImpl implements ApplicationService {
         Application application = applicationRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "지원서를 찾을 수 없습니다"));
 
-        if (application.getStatus() != ApplicationStatus.SUBMITTED) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST, "서류 심사 가능한 상태가 아닙니다");
-        }
-
         application.screen(request.getScreenedBy(), request.getScore(), request.getNotes(), request.getPassed());
         Application saved = applicationRepository.save(application);
 

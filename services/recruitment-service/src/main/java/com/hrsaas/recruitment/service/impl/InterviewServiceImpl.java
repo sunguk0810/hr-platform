@@ -2,11 +2,14 @@ package com.hrsaas.recruitment.service.impl;
 
 import com.hrsaas.common.core.exception.BusinessException;
 import com.hrsaas.common.core.exception.ErrorCode;
+import com.hrsaas.common.event.EventPublisher;
+import com.hrsaas.common.tenant.TenantContext;
 import com.hrsaas.recruitment.domain.dto.request.*;
 import com.hrsaas.recruitment.domain.dto.response.InterviewResponse;
 import com.hrsaas.recruitment.domain.dto.response.InterviewScoreResponse;
 import com.hrsaas.recruitment.domain.dto.response.InterviewSummaryResponse;
 import com.hrsaas.recruitment.domain.entity.*;
+import com.hrsaas.recruitment.domain.event.InterviewScheduledEvent;
 import com.hrsaas.recruitment.repository.ApplicationRepository;
 import com.hrsaas.recruitment.repository.InterviewRepository;
 import com.hrsaas.recruitment.repository.InterviewScoreRepository;
@@ -34,6 +37,7 @@ public class InterviewServiceImpl implements InterviewService {
     private final InterviewRepository interviewRepository;
     private final InterviewScoreRepository interviewScoreRepository;
     private final ApplicationRepository applicationRepository;
+    private final EventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -113,7 +117,33 @@ public class InterviewServiceImpl implements InterviewService {
         if (request.getLocation() != null) interview.setLocation(request.getLocation());
         if (request.getMeetingUrl() != null) interview.setMeetingUrl(request.getMeetingUrl());
 
-        return InterviewResponse.from(interviewRepository.save(interview));
+        Interview saved = interviewRepository.save(interview);
+
+        // 면접 일정 확정 이벤트 발행
+        try {
+            Application application = interview.getApplication();
+            Applicant applicant = application.getApplicant();
+            InterviewScheduledEvent event = InterviewScheduledEvent.builder()
+                    .tenantId(TenantContext.getCurrentTenant())
+                    .interviewId(saved.getId())
+                    .applicationId(application.getId())
+                    .applicantName(applicant.getName())
+                    .applicantEmail(applicant.getEmail())
+                    .interviewType(interview.getInterviewType().name())
+                    .round(interview.getRound())
+                    .scheduledDate(saved.getScheduledDate())
+                    .scheduledTime(saved.getScheduledTime())
+                    .durationMinutes(saved.getDurationMinutes())
+                    .location(saved.getLocation())
+                    .meetingUrl(saved.getMeetingUrl())
+                    .interviewers(saved.getInterviewers())
+                    .build();
+            eventPublisher.publish(event);
+        } catch (Exception e) {
+            log.error("Failed to publish InterviewScheduledEvent", e);
+        }
+
+        return InterviewResponse.from(saved);
     }
 
     @Override
