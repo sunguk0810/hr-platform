@@ -8,17 +8,32 @@ x-common-env: &common-env
   REDIS_HOST: redis
   REDIS_PORT: "6379"
   REDIS_PASSWORD: redis_password
-  SPRING_DATA_REDIS_SSL_ENABLED: "false"
   AWS_REGION: ap-northeast-2
   AWS_ACCESS_KEY_ID: test
   AWS_SECRET_ACCESS_KEY: test
   AWS_SNS_ENDPOINT: http://localstack:4566
   AWS_SQS_ENDPOINT: http://localstack:4566
   JWT_SECRET: hr-saas-jwt-secret-key-minimum-256-bits-for-hmac-sha256
+  # Jaeger / OpenTelemetry tracing
+  MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "1.0"
+  MANAGEMENT_OTLP_TRACING_ENDPOINT: http://jaeger:4318/v1/traces
+  # Feign client URLs (inter-service communication)
+  AUTH_SERVICE_URL: http://auth-service:8081
+  TENANT_SERVICE_URL: http://tenant-service:8082
+  ORGANIZATION_SERVICE_URL: http://organization-service:8083
+  EMPLOYEE_SERVICE_URL: http://employee-service:8084
+  ATTENDANCE_SERVICE_URL: http://attendance-service:8085
+  APPROVAL_SERVICE_URL: http://approval-service:8086
+  MDM_SERVICE_URL: http://mdm-service:8087
+  NOTIFICATION_SERVICE_URL: http://notification-service:8088
+  FILE_SERVICE_URL: http://file-service:8089
+  APPOINTMENT_SERVICE_URL: http://appointment-service:8091
+  CERTIFICATE_SERVICE_URL: http://certificate-service:8092
+  RECRUITMENT_SERVICE_URL: http://recruitment-service:8093
 
 services:
   # ===========================================
-  # Infrastructure Services
+  # Infrastructure Services (always start)
   # ===========================================
   postgres:
     image: postgres:15-alpine
@@ -62,10 +77,15 @@ services:
     ports:
       - "4566:4566"
     environment:
-      SERVICES: sns,sqs
-      DEFAULT_REGION: ap-northeast-2
+      SERVICES: sns,sqs,s3
+      AWS_DEFAULT_REGION: ap-northeast-2
     volumes:
       - "./localstack/init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:4566/_localstack/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - hr-saas-network
   jaeger:
@@ -123,7 +143,7 @@ services:
     networks:
       - hr-saas-network
   # ===========================================
-  # Application Services
+  # Application Services (profiles: app)
   # ===========================================
   auth-service:
     build:
@@ -131,7 +151,9 @@ services:
       dockerfile: docker/Dockerfile.service
       args:
         SERVICE_NAME: auth-service
+        SERVER_PORT: 8081
     container_name: hr-saas-auth
+    profiles: ["app"]
     ports:
       - "8081:8081"
     environment:
@@ -155,7 +177,9 @@ services:
       dockerfile: docker/Dockerfile.service
       args:
         SERVICE_NAME: tenant-service
+        SERVER_PORT: 8082
     container_name: hr-saas-tenant
+    profiles: ["app"]
     ports:
       - "8082:8082"
     environment:
@@ -179,7 +203,9 @@ services:
       dockerfile: docker/Dockerfile.service
       args:
         SERVICE_NAME: organization-service
+        SERVER_PORT: 8083
     container_name: hr-saas-organization
+    profiles: ["app"]
     ports:
       - "8083:8083"
     environment:
@@ -201,7 +227,9 @@ services:
       dockerfile: docker/Dockerfile.service
       args:
         SERVICE_NAME: employee-service
+        SERVER_PORT: 8084
     container_name: hr-saas-employee
+    profiles: ["app"]
     ports:
       - "8084:8084"
     environment:
@@ -225,7 +253,9 @@ services:
       dockerfile: docker/Dockerfile.service
       args:
         SERVICE_NAME: attendance-service
+        SERVER_PORT: 8085
     container_name: hr-saas-attendance
+    profiles: ["app"]
     ports:
       - "8085:8085"
     environment:
@@ -236,7 +266,7 @@ services:
       redis:
         condition: service_healthy
       localstack:
-        condition: service_started
+        condition: service_healthy
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.attendance.rule=PathPrefix(`/api/v1/attendances`) || PathPrefix(`/api/v1/leaves`) || PathPrefix(`/api/v1/overtimes`)"
@@ -251,7 +281,9 @@ services:
       dockerfile: docker/Dockerfile.service
       args:
         SERVICE_NAME: approval-service
+        SERVER_PORT: 8086
     container_name: hr-saas-approval
+    profiles: ["app"]
     ports:
       - "8086:8086"
     environment:
@@ -262,7 +294,7 @@ services:
       redis:
         condition: service_healthy
       localstack:
-        condition: service_started
+        condition: service_healthy
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.approval.rule=PathPrefix(`/api/v1/approvals`)"
@@ -277,7 +309,9 @@ services:
       dockerfile: docker/Dockerfile.service
       args:
         SERVICE_NAME: mdm-service
+        SERVER_PORT: 8087
     container_name: hr-saas-mdm
+    profiles: ["app"]
     ports:
       - "8087:8087"
     environment:
@@ -301,7 +335,9 @@ services:
       dockerfile: docker/Dockerfile.service
       args:
         SERVICE_NAME: notification-service
+        SERVER_PORT: 8088
     container_name: hr-saas-notification
+    profiles: ["app"]
     ports:
       - "8088:8088"
     environment:
@@ -312,7 +348,7 @@ services:
       redis:
         condition: service_healthy
       localstack:
-        condition: service_started
+        condition: service_healthy
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.notification.rule=PathPrefix(`/api/v1/notifications`) || PathPrefix(`/api/v1/announcements`) || PathPrefix(`/api/v1/help`)"
@@ -327,15 +363,22 @@ services:
       dockerfile: docker/Dockerfile.service
       args:
         SERVICE_NAME: file-service
+        SERVER_PORT: 8089
     container_name: hr-saas-file
+    profiles: ["app"]
     ports:
       - "8089:8089"
     environment:
       <<: *common-env
+      AWS_S3_ENDPOINT: http://localstack:4566
+      AWS_S3_BUCKET: hr-platform-files
+      FILE_STORAGE_DEFAULT: S3
     volumes:
       - file_storage:/app/storage
     depends_on:
       postgres:
+        condition: service_healthy
+      localstack:
         condition: service_healthy
     labels:
       - "traefik.enable=true"
@@ -351,7 +394,9 @@ services:
       dockerfile: docker/Dockerfile.service
       args:
         SERVICE_NAME: appointment-service
+        SERVER_PORT: 8091
     container_name: hr-saas-appointment
+    profiles: ["app"]
     ports:
       - "8091:8091"
     environment:
@@ -362,7 +407,7 @@ services:
       redis:
         condition: service_healthy
       localstack:
-        condition: service_started
+        condition: service_healthy
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.appointment.rule=PathPrefix(`/api/v1/appointments`)"
@@ -377,7 +422,9 @@ services:
       dockerfile: docker/Dockerfile.service
       args:
         SERVICE_NAME: certificate-service
+        SERVER_PORT: 8092
     container_name: hr-saas-certificate
+    profiles: ["app"]
     ports:
       - "8092:8092"
     environment:
@@ -401,7 +448,9 @@ services:
       dockerfile: docker/Dockerfile.service
       args:
         SERVICE_NAME: recruitment-service
+        SERVER_PORT: 8093
     container_name: hr-saas-recruitment
+    profiles: ["app"]
     ports:
       - "8093:8093"
     environment:
@@ -412,7 +461,7 @@ services:
       redis:
         condition: service_healthy
       localstack:
-        condition: service_started
+        condition: service_healthy
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.recruitment.rule=PathPrefix(`/api/v1/jobs`) || PathPrefix(`/api/v1/applications`) || PathPrefix(`/api/v1/interviews`) || PathPrefix(`/api/v1/offers`)"

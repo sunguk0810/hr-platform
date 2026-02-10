@@ -1,5 +1,7 @@
 #!/bin/bash
-echo "Initializing LocalStack SNS/SQS resources..."
+echo "Initializing LocalStack SNS/SQS/S3 resources..."
+
+export AWS_DEFAULT_REGION=ap-northeast-2
 
 # SNS Topics
 awslocal sns create-topic --name approval-completed
@@ -52,4 +54,19 @@ awslocal sns subscribe --topic-arn arn:aws:sns:${REGION}:${ACCOUNT}:leave-reques
 awslocal sns subscribe --topic-arn arn:aws:sns:${REGION}:${ACCOUNT}:employee-created \
   --protocol sqs --notification-endpoint arn:aws:sqs:${REGION}:${ACCOUNT}:notification-service-queue
 
-echo "LocalStack SNS/SQS initialization complete!"
+# S3 Bucket for file-service
+awslocal s3 mb s3://hr-platform-files
+
+# S3 CORS configuration (for frontend direct upload)
+awslocal s3api put-bucket-cors --bucket hr-platform-files --cors-configuration '{
+  "CORSRules": [
+    {
+      "AllowedOrigins": ["*"],
+      "AllowedMethods": ["GET", "PUT", "POST", "DELETE", "HEAD"],
+      "AllowedHeaders": ["*"],
+      "MaxAgeSeconds": 3600
+    }
+  ]
+}'
+
+echo "LocalStack SNS/SQS/S3 initialization complete!"

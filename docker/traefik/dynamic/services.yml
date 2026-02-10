@@ -12,6 +12,13 @@ http:
       entryPoints:
         - web
       service: auth-service
+    tenant:
+      rule: "PathPrefix(`/api/v1/tenants`)"
+      entryPoints:
+        - web
+      service: tenant-service
+      middlewares:
+        - cors-headers
     organization:
       rule: "PathPrefix(`/api/v1/departments`) || PathPrefix(`/api/v1/positions`) || PathPrefix(`/api/v1/grades`) || PathPrefix(`/api/v1/announcements`) || PathPrefix(`/api/v1/committees`) || PathPrefix(`/api/v1/headcounts`) || PathPrefix(`/api/v1/organizations`)"
       entryPoints:
@@ -130,6 +137,10 @@ http:
       loadBalancer:
         servers:
           - url: "http://hr-saas-auth:8081"
+    tenant-service:
+      loadBalancer:
+        servers:
+          - url: "http://hr-saas-tenant:8082"
     organization-service:
       loadBalancer:
         servers:

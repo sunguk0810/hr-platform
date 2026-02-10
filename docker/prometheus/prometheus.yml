@@ -9,7 +9,7 @@ scrape_configs:
 
   - job_name: 'traefik'
     static_configs:
-      - targets: ['host.docker.internal:8090']
+      - targets: ['traefik:8090']
 
   - job_name: 'auth-service'
     metrics_path: '/actuator/prometheus'
@@ -55,3 +55,18 @@ scrape_configs:
     metrics_path: '/actuator/prometheus'
     static_configs:
       - targets: ['host.docker.internal:8089']
+
+  - job_name: 'appointment-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8091']
+
+  - job_name: 'certificate-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8092']
+
+  - job_name: 'recruitment-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8093']
