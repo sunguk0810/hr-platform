@@ -50,6 +50,11 @@ public interface CacheNames {
     String CERTIFICATE_TEMPLATE = "certificate:template";
     String CERTIFICATE_TEMPLATES = "certificate:templates";
 
+    // Menu related
+    String MENU_TREE = "menu:tree";
+    String MENU_TENANT = "menu:tenant";
+    String MENU_USER = "menu:user";
+
     // Recruitment related
     String JOB_POSTING = "recruitment:jobPosting";
     String JOB_POSTINGS = "recruitment:jobPostings";

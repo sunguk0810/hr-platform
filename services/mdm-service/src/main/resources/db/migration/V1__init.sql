@@ -183,6 +183,7 @@ CREATE TABLE IF NOT EXISTS tenant_common.menu_item (
     show_in_nav       BOOLEAN      NOT NULL DEFAULT true,
     show_in_mobile    BOOLEAN      NOT NULL DEFAULT false,
     mobile_sort_order INTEGER,
+    group_name        VARCHAR(50),
     created_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     created_by        VARCHAR(100),
@@ -249,6 +250,16 @@ CREATE TABLE IF NOT EXISTS tenant_common.code_usage_mapping (
 );
 
 CREATE INDEX IF NOT EXISTS idx_code_usage_mapping_group ON tenant_common.code_usage_mapping(group_code);
+
+-- Menu navigation composite indexes
+CREATE INDEX IF NOT EXISTS idx_menu_item_active_nav
+    ON tenant_common.menu_item(is_active, level, sort_order) WHERE show_in_nav = true;
+CREATE INDEX IF NOT EXISTS idx_tenant_menu_config_tenant_enabled
+    ON tenant_common.tenant_menu_config(tenant_id, is_enabled);
+
+-- CommonCode composite index
+CREATE INDEX IF NOT EXISTS idx_common_code_group_tenant_active
+    ON tenant_common.common_code(code_group_id, tenant_id, is_active);
 
 -- =============================================================================
 -- 2. TABLE COMMENTS
@@ -397,6 +408,9 @@ DECLARE
     v_tenants_id UUID;
     v_help_id UUID;
     v_announcements_id UUID;
+    v_org_chart_id UUID;
+    v_file_mgmt_id UUID;
+    v_admin_menus_id UUID;
     v_now TIMESTAMP := CURRENT_TIMESTAMP;
 BEGIN
 
@@ -553,6 +567,31 @@ INSERT INTO tenant_common.menu_item (id, code, name, name_en, path, icon, level,
 VALUES (gen_random_uuid(), 'ANNOUNCEMENTS', '공지사항', 'Announcements', '/announcements', 'Megaphone', 1, 210, true, false, 'INTERNAL', true, true, v_now, v_now)
 RETURNING id INTO v_announcements_id;
 
+-- Org Chart (accessible by all)
+INSERT INTO tenant_common.menu_item (id, code, name, name_en, path, icon, level, sort_order, show_in_nav, show_in_mobile, menu_type, is_active, is_system, created_at, updated_at)
+VALUES (gen_random_uuid(), 'ORG_CHART', '조직도', 'Org Chart', '/org-chart', 'Building2', 1, 220, true, false, 'INTERNAL', true, true, v_now, v_now)
+RETURNING id INTO v_org_chart_id;
+
+-- File Management (admin permission required)
+INSERT INTO tenant_common.menu_item (id, code, name, name_en, path, icon, level, sort_order, show_in_nav, show_in_mobile, menu_type, is_active, is_system, created_at, updated_at)
+VALUES (gen_random_uuid(), 'FILE_MGMT', '파일 관리', 'File Management', '/files', 'FolderOpen', 1, 230, true, false, 'INTERNAL', true, true, v_now, v_now)
+RETURNING id INTO v_file_mgmt_id;
+
+INSERT INTO tenant_common.menu_permission (menu_item_id, permission_type, permission_value)
+VALUES
+    (v_file_mgmt_id, 'PERMISSION', 'file:read'),
+    (v_file_mgmt_id, 'ROLE', 'HR_MANAGER');
+
+-- Menu Management (super admin only)
+INSERT INTO tenant_common.menu_item (id, code, name, name_en, path, icon, level, sort_order, show_in_nav, show_in_mobile, menu_type, is_active, is_system, created_at, updated_at)
+VALUES (gen_random_uuid(), 'ADMIN_MENUS', '메뉴 관리', 'Menu Management', '/admin/menus', 'Menu', 1, 240, true, false, 'INTERNAL', true, true, v_now, v_now)
+RETURNING id INTO v_admin_menus_id;
+
+INSERT INTO tenant_common.menu_permission (menu_item_id, permission_type, permission_value)
+VALUES
+    (v_admin_menus_id, 'PERMISSION', 'tenant:admin'),
+    (v_admin_menus_id, 'ROLE', 'SUPER_ADMIN');
+
 -- ============================================
 -- Level 2: Child Menus
 -- ============================================
@@ -685,6 +724,18 @@ VALUES
     (gen_random_uuid(), v_help_id, 'HELP_GUIDE', '사용자 가이드', 'User Guide', '/help/guide', 2, 10, true, false, 'INTERNAL', true, true, v_now, v_now),
     (gen_random_uuid(), v_help_id, 'HELP_FAQ', '자주 묻는 질문', 'FAQ', '/help/faq', 2, 20, true, false, 'INTERNAL', true, true, v_now, v_now),
     (gen_random_uuid(), v_help_id, 'HELP_CONTACT', '문의하기', 'Contact', '/help/contact', 2, 30, true, false, 'INTERNAL', true, true, v_now, v_now);
+
+-- ============================================
+-- group_name assignments for sidebar grouping
+-- ============================================
+UPDATE tenant_common.menu_item SET group_name = '메인' WHERE code IN ('DASHBOARD', 'MY_INFO', 'ANNOUNCEMENTS', 'NOTIFICATIONS', 'ORG_CHART');
+UPDATE tenant_common.menu_item SET group_name = '인사관리' WHERE code IN ('EMPLOYEES', 'ORGANIZATION', 'APPOINTMENTS', 'TRANSFER', 'HEADCOUNT', 'RECRUITMENT');
+UPDATE tenant_common.menu_item SET group_name = '근무관리' WHERE code IN ('ATTENDANCE');
+UPDATE tenant_common.menu_item SET group_name = '전자결재' WHERE code IN ('APPROVALS');
+UPDATE tenant_common.menu_item SET group_name = '복리후생' WHERE code IN ('CERTIFICATES', 'CONDOLENCE', 'EMPLOYEE_CARD', 'COMMITTEE');
+UPDATE tenant_common.menu_item SET group_name = '시스템 관리' WHERE code IN ('SETTINGS', 'MDM', 'FILE_MGMT');
+UPDATE tenant_common.menu_item SET group_name = '운영관리' WHERE code IN ('ADMIN_MENUS', 'TENANTS', 'AUDIT');
+UPDATE tenant_common.menu_item SET group_name = '지원' WHERE code IN ('HELP');
 
 END $$;
 

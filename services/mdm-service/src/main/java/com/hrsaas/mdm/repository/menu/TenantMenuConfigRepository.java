@@ -17,9 +17,10 @@ import java.util.UUID;
 public interface TenantMenuConfigRepository extends JpaRepository<TenantMenuConfig, UUID> {
 
     /**
-     * Find all menu configs for a tenant.
+     * Find all menu configs for a tenant with menuItem eagerly fetched.
      */
-    List<TenantMenuConfig> findByTenantId(UUID tenantId);
+    @Query("SELECT tmc FROM TenantMenuConfig tmc LEFT JOIN FETCH tmc.menuItem WHERE tmc.tenantId = :tenantId")
+    List<TenantMenuConfig> findByTenantId(@Param("tenantId") UUID tenantId);
 
     /**
      * Find config for a specific menu and tenant.

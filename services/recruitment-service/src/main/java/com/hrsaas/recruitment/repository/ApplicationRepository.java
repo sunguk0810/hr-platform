@@ -4,6 +4,7 @@ import com.hrsaas.recruitment.domain.entity.Application;
 import com.hrsaas.recruitment.domain.entity.ApplicationStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -28,22 +29,26 @@ public interface ApplicationRepository extends JpaRepository<Application, UUID> 
     /**
      * 채용공고별 지원서 목록
      */
+    @EntityGraph("Application.withRelations")
     Page<Application> findByJobPostingIdOrderByCreatedAtDesc(UUID jobPostingId, Pageable pageable);
 
     /**
      * 채용공고별 상태별 지원서 목록
      */
+    @EntityGraph("Application.withRelations")
     Page<Application> findByJobPostingIdAndStatusOrderByCreatedAtDesc(
             UUID jobPostingId, ApplicationStatus status, Pageable pageable);
 
     /**
      * 지원자별 지원서 목록
      */
+    @EntityGraph("Application.withRelations")
     Page<Application> findByApplicantIdOrderByCreatedAtDesc(UUID applicantId, Pageable pageable);
 
     /**
      * 상태별 지원서 목록
      */
+    @EntityGraph("Application.withRelations")
     Page<Application> findByStatusOrderByCreatedAtDesc(ApplicationStatus status, Pageable pageable);
 
     /**

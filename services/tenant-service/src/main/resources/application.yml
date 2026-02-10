@@ -16,6 +16,9 @@ spring:
       idle-timeout: 600000            # 10 minutes
       max-lifetime: 1800000           # 30 minutes
       leak-detection-threshold: 60000 # Dev only - detect connection leaks
+      data-source-properties:
+        socketTimeout: 30
+        connectTimeout: 10
 
   jpa:
     open-in-view: false

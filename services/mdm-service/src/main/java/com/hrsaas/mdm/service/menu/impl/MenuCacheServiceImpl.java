@@ -1,5 +1,6 @@
 package com.hrsaas.mdm.service.menu.impl;
 
+import com.hrsaas.common.cache.CacheNames;
 import com.hrsaas.mdm.domain.entity.menu.MenuItem;
 import com.hrsaas.mdm.repository.menu.MenuItemRepository;
 import com.hrsaas.mdm.service.menu.MenuCacheService;
@@ -27,25 +28,21 @@ import java.util.UUID;
 @Slf4j
 public class MenuCacheServiceImpl implements MenuCacheService {
 
-    private static final String CACHE_MENU_TREE = "menu:tree";
-    private static final String CACHE_TENANT_MENU = "menu:tenant";
-    private static final String CACHE_USER_MENU = "menu:user";
-
     private final MenuItemRepository menuItemRepository;
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = CACHE_MENU_TREE, unless = "#result == null || #result.isEmpty()")
+    @Cacheable(value = CacheNames.MENU_TREE, unless = "#result == null || #result.isEmpty()")
     public List<MenuItem> getAllMenusWithPermissions() {
         log.debug("Loading menus from database (cache miss)");
-        return menuItemRepository.findAllWithPermissions();
+        return menuItemRepository.findAllTreeWithPermissions();
     }
 
     @Override
     @Caching(evict = {
-        @CacheEvict(value = CACHE_MENU_TREE, allEntries = true),
-        @CacheEvict(value = CACHE_TENANT_MENU, allEntries = true),
-        @CacheEvict(value = CACHE_USER_MENU, allEntries = true)
+        @CacheEvict(value = CacheNames.MENU_TREE, allEntries = true),
+        @CacheEvict(value = CacheNames.MENU_TENANT, allEntries = true),
+        @CacheEvict(value = CacheNames.MENU_USER, allEntries = true)
     })
     public void invalidateMenuCache() {
         log.info("Invalidated all menu caches");
@@ -53,15 +50,15 @@ public class MenuCacheServiceImpl implements MenuCacheService {
 
     @Override
     @Caching(evict = {
-        @CacheEvict(value = CACHE_TENANT_MENU, key = "#tenantId"),
-        @CacheEvict(value = CACHE_USER_MENU, allEntries = true) // Evict all user caches for this tenant
+        @CacheEvict(value = CacheNames.MENU_TENANT, key = "#tenantId"),
+        @CacheEvict(value = CacheNames.MENU_USER, allEntries = true)
     })
     public void invalidateTenantMenuCache(UUID tenantId) {
         log.info("Invalidated menu cache for tenant: {}", tenantId);
     }
 
     @Override
-    @CacheEvict(value = CACHE_USER_MENU, key = "#tenantId + ':' + #userId")
+    @CacheEvict(value = CacheNames.MENU_USER, key = "#tenantId + ':' + #userId")
     public void invalidateUserMenuCache(UUID tenantId, UUID userId) {
         log.debug("Invalidated menu cache for user: {}", userId);
     }

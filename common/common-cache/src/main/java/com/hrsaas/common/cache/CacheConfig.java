@@ -53,6 +53,11 @@ public class CacheConfig {
         cacheConfigurations.put(CacheNames.COMMITTEE, defaultConfig.entryTtl(Duration.ofHours(1)));
         cacheConfigurations.put(CacheNames.APPROVAL_TEMPLATE, defaultConfig.entryTtl(Duration.ofHours(1)));
 
+        // Menu caches
+        cacheConfigurations.put(CacheNames.MENU_TREE, defaultConfig.entryTtl(Duration.ofHours(24)));
+        cacheConfigurations.put(CacheNames.MENU_TENANT, defaultConfig.entryTtl(Duration.ofHours(24)));
+        cacheConfigurations.put(CacheNames.MENU_USER, defaultConfig.entryTtl(Duration.ofMinutes(15)));
+
         return RedisCacheManager.builder(redisConnectionFactory)
             .cacheDefaults(defaultConfig)
             .withInitialCacheConfigurations(cacheConfigurations)

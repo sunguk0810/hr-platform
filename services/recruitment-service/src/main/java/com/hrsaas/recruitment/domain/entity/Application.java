@@ -20,6 +20,8 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "application", schema = "hr_recruitment")
+@NamedEntityGraph(name = "Application.withRelations",
+    attributeNodes = {@NamedAttributeNode("jobPosting"), @NamedAttributeNode("applicant")})
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
