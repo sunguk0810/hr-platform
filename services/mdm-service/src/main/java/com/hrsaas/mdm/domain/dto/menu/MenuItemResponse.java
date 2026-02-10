@@ -33,6 +33,7 @@ public class MenuItemResponse {
     private Boolean showInNav;
     private Boolean showInMobile;
     private Integer mobileSortOrder;
+    private String groupName;
     private List<String> roles;
     private List<String> permissions;
     private List<MenuItemResponse> children;
@@ -87,6 +88,7 @@ public class MenuItemResponse {
             .showInNav(entity.getShowInNav())
             .showInMobile(entity.getShowInMobile())
             .mobileSortOrder(entity.getMobileSortOrder())
+            .groupName(entity.getGroupName())
             .roles(roles)
             .permissions(permissions)
             .children(children)

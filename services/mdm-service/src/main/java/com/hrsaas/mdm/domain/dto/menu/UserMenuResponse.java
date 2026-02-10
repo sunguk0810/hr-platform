@@ -37,6 +37,7 @@ public class UserMenuResponse {
         private String externalUrl;
         private Boolean isExternal;
         private Integer sortOrder;
+        private String groupName;
         private List<UserMenuItem> children;
     }
 }

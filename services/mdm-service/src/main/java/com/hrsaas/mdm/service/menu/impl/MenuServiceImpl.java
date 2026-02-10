@@ -201,6 +201,7 @@ public class MenuServiceImpl implements MenuService {
             .isExternal(MenuType.EXTERNAL.equals(menu.getMenuType()))
             .sortOrder(config != null && config.getCustomSortOrder() != null
                 ? config.getCustomSortOrder() : menu.getSortOrder())
+            .groupName(menu.getGroupName())
             .children(childItems)
             .build();
     }

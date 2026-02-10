@@ -97,6 +97,9 @@ public class MenuItem {
     @Column(name = "mobile_sort_order")
     private Integer mobileSortOrder;
 
+    @Column(name = "group_name", length = 50)
+    private String groupName;
+
     @OneToMany(mappedBy = "menuItem", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<MenuPermission> permissions = new ArrayList<>();
