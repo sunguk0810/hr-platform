@@ -1,0 +1,82 @@
+# Shared Resilience4j Configuration
+# Include this in each service's application.yml or reference via spring.config.import
+#
+# Usage: Copy the resilience4j section below into each service's application.yml
+# that uses Feign clients with circuit breaker support.
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        recordExceptions:
+          - java.io.IOException
+          - java.net.SocketTimeoutException
+          - feign.FeignException.ServiceUnavailable
+          - feign.FeignException.GatewayTimeout
+        ignoreExceptions:
+          - feign.FeignException.BadRequest
+          - feign.FeignException.NotFound
+    instances:
+      employee-service:
+        baseConfig: default
+      organization-service:
+        baseConfig: default
+      tenant-service:
+        baseConfig: default
+      auth-service:
+        baseConfig: default
+      attendance-service:
+        baseConfig: default
+      approval-service:
+        baseConfig: default
+      notification-service:
+        baseConfig: default
+      file-service:
+        baseConfig: default
+      mdm-service:
+        baseConfig: default
+      appointment-service:
+        baseConfig: default
+      certificate-service:
+        baseConfig: default
+      recruitment-service:
+        baseConfig: default
+
+  retry:
+    configs:
+      default:
+        maxAttempts: 3
+        waitDuration: 500ms
+        retryExceptions:
+          - java.io.IOException
+          - java.net.SocketTimeoutException
+        ignoreExceptions:
+          - feign.FeignException.BadRequest
+          - feign.FeignException.NotFound
+    instances:
+      employee-service:
+        baseConfig: default
+      organization-service:
+        baseConfig: default
+      tenant-service:
+        baseConfig: default
+
+  timelimiter:
+    configs:
+      default:
+        timeoutDuration: 5s
+        cancelRunningFuture: true
+    instances:
+      employee-service:
+        baseConfig: default
+      organization-service:
+        baseConfig: default
+      tenant-service:
+        baseConfig: default
