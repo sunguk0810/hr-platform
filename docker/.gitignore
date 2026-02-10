@@ -1,0 +1,25 @@
+# ============================================
+# Docker - Git Ignore
+# ============================================
+# Ignore environment files with secrets
+
+# Environment files (contain secrets!)
+.env
+.env.dev
+.env.staging
+.env.prod
+.env.local
+
+# Keep example file
+!.env.example
+
+# Volume data (if mounted locally)
+volumes/
+data/
+
+# Docker build cache
+.docker/
+
+# Temporary files
+*.tmp
+*.log
