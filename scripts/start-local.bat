@@ -25,32 +25,30 @@ if errorlevel 1 (
 )
 echo Redis is ready
 
-echo Waiting for Kafka...
-timeout /t 10 /nobreak >nul
-echo Kafka is ready
-
-:wait_keycloak
-echo Waiting for Keycloak...
-curl -s http://localhost:8180/realms/master >nul 2>&1
+:wait_localstack
+echo Waiting for LocalStack...
+curl -sf http://localhost:4566/_localstack/health >nul 2>&1
 if errorlevel 1 (
-    timeout /t 5 /nobreak >nul
-    goto wait_keycloak
+    timeout /t 3 /nobreak >nul
+    goto wait_localstack
 )
-echo Keycloak is ready
+echo LocalStack is ready
 
 echo.
 echo ============================================
-echo All services are ready!
+echo All infrastructure services are ready!
 echo ============================================
 echo.
 echo Service URLs:
-echo   - PostgreSQL:  localhost:5432 (hr_saas/hr_saas_password)
-echo   - Redis:       localhost:6379
-echo   - Kafka:       localhost:9092
-echo   - Kafka UI:    http://localhost:8090
-echo   - Keycloak:    http://localhost:8180 (admin/admin)
-echo   - Jaeger:      http://localhost:16686
-echo   - Prometheus:  http://localhost:9090
-echo   - Grafana:     http://localhost:3000 (admin/admin)
+echo   - PostgreSQL:    localhost:5433 (hr_saas/hr_saas_password)
+echo   - Redis:         localhost:6381
+echo   - LocalStack:    http://localhost:4566
+echo   - Jaeger:        http://localhost:16686
+echo   - Prometheus:    http://localhost:9009
+echo   - Grafana:       http://localhost:3000 (admin/admin)
+echo   - Traefik:       http://localhost:18080 (API Gateway)
+echo   - Traefik Dash:  http://localhost:18090
 echo.
+echo To start app services: docker-compose --profile app up -d
 echo To stop: scripts\stop-local.bat
+echo.
