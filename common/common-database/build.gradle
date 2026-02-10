@@ -1,5 +1,6 @@
 plugins {
     id 'java-library'
+    id 'java-test-fixtures'
 }
 
 dependencies {
@@ -12,4 +13,11 @@ dependencies {
 
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+
+    // Test fixtures dependencies (for AbstractRepositoryTest base class)
+    testFixturesImplementation 'org.testcontainers:postgresql:1.19.3'
+    testFixturesImplementation 'org.testcontainers:junit-jupiter:1.19.3'
+    testFixturesImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testFixturesImplementation 'org.springframework.boot:spring-boot-test-autoconfigure'
+    testFixturesImplementation 'org.springframework:spring-jdbc'
 }
