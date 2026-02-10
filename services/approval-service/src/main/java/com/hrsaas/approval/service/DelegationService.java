@@ -1,6 +1,7 @@
 package com.hrsaas.approval.service;
 
 import com.hrsaas.approval.domain.dto.request.CreateDelegationRuleRequest;
+import com.hrsaas.approval.domain.dto.request.UpdateDelegationRuleRequest;
 import com.hrsaas.approval.domain.dto.response.DelegationRuleResponse;
 
 import java.util.List;
@@ -12,6 +13,11 @@ public interface DelegationService {
     DelegationRuleResponse create(UUID delegatorId, String delegatorName, CreateDelegationRuleRequest request);
 
     DelegationRuleResponse getById(UUID id);
+
+    /**
+     * 대결 규칙 수정
+     */
+    DelegationRuleResponse update(UUID id, UpdateDelegationRuleRequest request);
 
     List<DelegationRuleResponse> getByDelegatorId(UUID delegatorId);
 

@@ -1,6 +1,7 @@
 package com.hrsaas.approval.service.impl;
 
 import com.hrsaas.approval.domain.dto.request.CreateDelegationRuleRequest;
+import com.hrsaas.approval.domain.dto.request.UpdateDelegationRuleRequest;
 import com.hrsaas.approval.domain.dto.response.DelegationRuleResponse;
 import com.hrsaas.approval.domain.entity.DelegationRule;
 import com.hrsaas.approval.repository.DelegationRuleRepository;
@@ -50,6 +51,36 @@ public class DelegationServiceImpl implements DelegationService {
     public DelegationRuleResponse getById(UUID id) {
         DelegationRule rule = findById(id);
         return DelegationRuleResponse.from(rule);
+    }
+
+    @Override
+    @Transactional
+    public DelegationRuleResponse update(UUID id, UpdateDelegationRuleRequest request) {
+        DelegationRule rule = findById(id);
+
+        if (request.getDelegateId() != null) {
+            rule.setDelegateId(request.getDelegateId());
+        }
+        if (request.getDelegateName() != null) {
+            rule.setDelegateName(request.getDelegateName());
+        }
+        if (request.getStartDate() != null) {
+            rule.setStartDate(request.getStartDate());
+        }
+        if (request.getEndDate() != null) {
+            rule.setEndDate(request.getEndDate());
+        }
+        if (request.getDocumentTypes() != null) {
+            rule.setDocumentTypes(request.getDocumentTypes());
+        }
+        if (request.getReason() != null) {
+            rule.setReason(request.getReason());
+        }
+
+        DelegationRule saved = delegationRuleRepository.save(rule);
+        log.info("Delegation rule updated: id={}", id);
+
+        return DelegationRuleResponse.from(saved);
     }
 
     @Override

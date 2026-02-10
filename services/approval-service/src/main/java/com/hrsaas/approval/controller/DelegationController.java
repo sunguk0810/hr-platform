@@ -1,6 +1,7 @@
 package com.hrsaas.approval.controller;
 
 import com.hrsaas.approval.domain.dto.request.CreateDelegationRuleRequest;
+import com.hrsaas.approval.domain.dto.request.UpdateDelegationRuleRequest;
 import com.hrsaas.approval.domain.dto.response.DelegationRuleResponse;
 import com.hrsaas.approval.service.DelegationService;
 import com.hrsaas.common.response.ApiResponse;
@@ -84,6 +85,16 @@ public class DelegationController {
     @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<List<DelegationRuleResponse>>> getAll() {
         List<DelegationRuleResponse> response = delegationService.getAll();
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "대결 설정 수정")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<DelegationRuleResponse>> update(
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateDelegationRuleRequest request) {
+        DelegationRuleResponse response = delegationService.update(id, request);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
