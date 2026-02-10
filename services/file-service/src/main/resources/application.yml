@@ -60,6 +60,12 @@ file:
     base-url: /api/v1/files
   max-size: 104857600
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+
 jwt:
   secret: ${JWT_SECRET:hr-saas-secret-key-for-jwt-token-signing-minimum-256-bits-required}
   access-token-expiry: 1800

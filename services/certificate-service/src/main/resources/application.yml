@@ -18,7 +18,7 @@ spring:
       leak-detection-threshold: 60000 # Dev only - detect connection leaks
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: false
     properties:
       hibernate:
@@ -48,6 +48,12 @@ spring:
     cache: false
     prefix: classpath:/templates/
     suffix: .html
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
 
 jwt:
   secret: ${JWT_SECRET:hr-saas-secret-key-for-jwt-token-signing-minimum-256-bits-required}
