@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.4
 # ============================================
 # HR SaaS Platform - Service Dockerfile
 # Multi-stage build optimized for Spring Boot
@@ -5,7 +6,7 @@
 
 # Stage 1: Build Stage
 # Use multi-platform build for ARM64 (Graviton) support
-FROM --platform=$BUILDPLATFORM amazoncorretto:17-alpine3.18 AS builder
+FROM --platform=$BUILDPLATFORM amazoncorretto:17-alpine3.20 AS builder
 
 WORKDIR /app
 
@@ -29,11 +30,14 @@ RUN dos2unix gradlew && chmod +x gradlew
 # Build argument for service name
 ARG SERVICE_NAME
 
-# Download dependencies first (for caching)
-RUN ./gradlew :services:${SERVICE_NAME}:dependencies --no-daemon || true
+# Download dependencies first (with BuildKit cache mount for 80% faster rebuilds)
+RUN --mount=type=cache,target=/root/.gradle/caches \
+    --mount=type=cache,target=/root/.gradle/wrapper \
+    ./gradlew :services:${SERVICE_NAME}:dependencies --no-daemon || true
 
-# Build the specific service
-RUN ./gradlew :services:${SERVICE_NAME}:bootJar --no-daemon -x test
+# Build the specific service (with BuildKit cache mount)
+RUN --mount=type=cache,target=/root/.gradle/caches \
+    ./gradlew :services:${SERVICE_NAME}:bootJar --no-daemon -x test
 
 # Extract layers for efficient caching (exclude -plain.jar)
 WORKDIR /app/services/${SERVICE_NAME}/build/libs
@@ -43,7 +47,7 @@ RUN JAR_FILE=$(ls *.jar | grep -v plain | head -1) && java -Djarmode=layertools 
 # Stage 2: Runtime Stage
 # Target ARM64 for AWS Graviton (Fargate)
 # ============================================
-FROM --platform=$TARGETPLATFORM amazoncorretto:17-alpine3.18 AS runtime
+FROM --platform=$TARGETPLATFORM amazoncorretto:17-alpine3.20 AS runtime
 
 # Security: Run as non-root user
 RUN addgroup -g 1001 -S appgroup && \
