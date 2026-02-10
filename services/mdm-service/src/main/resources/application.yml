@@ -18,16 +18,21 @@ spring:
       leak-detection-threshold: 60000 # Dev only - detect connection leaks
 
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: validate
     properties:
       hibernate:
         default_schema: tenant_common
-
+        jdbc.batch_size: 20
+        order_inserts: true
+        order_updates: true
+        default_batch_fetch_size: 20
   flyway:
     enabled: true
     locations: classpath:db/migration
     schemas: tenant_common
+    table: flyway_schema_history_mdm
 
   data:
     redis:

@@ -36,16 +36,21 @@ spring:
       leak-detection-threshold: 60000 # Dev only - detect connection leaks
 
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: validate
     properties:
       hibernate:
         default_schema: hr_core
-
+        jdbc.batch_size: 20
+        order_inserts: true
+        order_updates: true
+        default_batch_fetch_size: 20
   flyway:
     enabled: true
     locations: classpath:db/migration
     schemas: hr_core
+    table: flyway_schema_history_employee
 
   data:
     redis:
@@ -67,6 +72,34 @@ jwt:
   secret: ${JWT_SECRET:hr-saas-secret-key-for-jwt-token-signing-minimum-256-bits-required}
   access-token-expiry: 1800
   refresh-token-expiry: 604800
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+    instances:
+      tenant-service:
+        baseConfig: default
+      organization-service:
+        baseConfig: default
+      approval-service:
+        baseConfig: default
+  retry:
+    configs:
+      default:
+        maxAttempts: 3
+        waitDuration: 500ms
+  timelimiter:
+    configs:
+      default:
+        timeoutDuration: 5s
 
 logging:
   level:

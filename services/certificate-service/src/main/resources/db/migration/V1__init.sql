@@ -20,8 +20,8 @@ $$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
 -- 2. Tables
 -- ---------------------------------------------------------------------------
 
--- certificate_templates
-CREATE TABLE hr_certificate.certificate_templates (
+-- certificate_template
+CREATE TABLE hr_certificate.certificate_template (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id           UUID            NOT NULL,
     name                VARCHAR(100)    NOT NULL,
@@ -49,15 +49,15 @@ CREATE TABLE hr_certificate.certificate_templates (
     updated_by          VARCHAR(100)
 );
 
--- certificate_types
-CREATE TABLE hr_certificate.certificate_types (
+-- certificate_type
+CREATE TABLE hr_certificate.certificate_type (
     id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id               UUID            NOT NULL,
     code                    VARCHAR(30)     NOT NULL,
     name                    VARCHAR(100)    NOT NULL,
     name_en                 VARCHAR(100),
     description             TEXT,
-    template_id             UUID            REFERENCES hr_certificate.certificate_templates (id),
+    template_id             UUID            REFERENCES hr_certificate.certificate_template (id),
     requires_approval       BOOLEAN         DEFAULT FALSE,
     approval_template_id    UUID,
     auto_issue              BOOLEAN         DEFAULT TRUE,
@@ -70,14 +70,14 @@ CREATE TABLE hr_certificate.certificate_types (
     updated_at              TIMESTAMPTZ     DEFAULT CURRENT_TIMESTAMP,
     created_by              VARCHAR(100),
     updated_by              VARCHAR(100),
-    CONSTRAINT uq_certificate_types_tenant_code UNIQUE (tenant_id, code)
+    CONSTRAINT uq_certificate_type_tenant_code UNIQUE (tenant_id, code)
 );
 
--- certificate_requests
-CREATE TABLE hr_certificate.certificate_requests (
+-- certificate_request
+CREATE TABLE hr_certificate.certificate_request (
     id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id             UUID            NOT NULL,
-    certificate_type_id   UUID            NOT NULL REFERENCES hr_certificate.certificate_types (id),
+    certificate_type_id   UUID            NOT NULL REFERENCES hr_certificate.certificate_type (id),
     employee_id           UUID            NOT NULL,
     employee_name         VARCHAR(100),
     employee_number       VARCHAR(50),
@@ -102,14 +102,14 @@ CREATE TABLE hr_certificate.certificate_requests (
     updated_at            TIMESTAMPTZ     DEFAULT CURRENT_TIMESTAMP,
     created_by            VARCHAR(100),
     updated_by            VARCHAR(100),
-    CONSTRAINT uq_certificate_requests_tenant_number UNIQUE (tenant_id, request_number)
+    CONSTRAINT uq_certificate_request_tenant_number UNIQUE (tenant_id, request_number)
 );
 
--- certificate_issues
-CREATE TABLE hr_certificate.certificate_issues (
+-- certificate_issue
+CREATE TABLE hr_certificate.certificate_issue (
     id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id         UUID            NOT NULL,
-    request_id        UUID            NOT NULL REFERENCES hr_certificate.certificate_requests (id),
+    request_id        UUID            NOT NULL REFERENCES hr_certificate.certificate_request (id),
     issue_number      VARCHAR(50)     NOT NULL,
     verification_code VARCHAR(20)     NOT NULL UNIQUE,
     file_id           UUID,
@@ -129,13 +129,13 @@ CREATE TABLE hr_certificate.certificate_issues (
     updated_at        TIMESTAMPTZ     DEFAULT CURRENT_TIMESTAMP,
     created_by        VARCHAR(100),
     updated_by        VARCHAR(100),
-    CONSTRAINT uq_certificate_issues_tenant_number UNIQUE (tenant_id, issue_number)
+    CONSTRAINT uq_certificate_issue_tenant_number UNIQUE (tenant_id, issue_number)
 );
 
--- verification_logs (NO tenant_id - public verification)
-CREATE TABLE hr_certificate.verification_logs (
+-- verification_log (NO tenant_id - public verification)
+CREATE TABLE hr_certificate.verification_log (
     id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    issue_id              UUID            REFERENCES hr_certificate.certificate_issues (id),
+    issue_id              UUID            REFERENCES hr_certificate.certificate_issue (id),
     verification_code     VARCHAR(20)     NOT NULL,
     verified_at           TIMESTAMPTZ     DEFAULT CURRENT_TIMESTAMP,
     verifier_ip           VARCHAR(45),
@@ -154,57 +154,57 @@ CREATE TABLE hr_certificate.verification_logs (
 -- 3. Indexes
 -- ---------------------------------------------------------------------------
 
--- certificate_templates
-CREATE INDEX idx_certificate_templates_tenant_id   ON hr_certificate.certificate_templates (tenant_id);
-CREATE INDEX idx_certificate_templates_is_active   ON hr_certificate.certificate_templates (tenant_id, is_active);
+-- certificate_template
+CREATE INDEX idx_certificate_template_tenant_id   ON hr_certificate.certificate_template (tenant_id);
+CREATE INDEX idx_certificate_template_is_active   ON hr_certificate.certificate_template (tenant_id, is_active);
 
--- certificate_types
-CREATE INDEX idx_certificate_types_tenant_id       ON hr_certificate.certificate_types (tenant_id);
-CREATE INDEX idx_certificate_types_template_id     ON hr_certificate.certificate_types (template_id) WHERE template_id IS NOT NULL;
-CREATE INDEX idx_certificate_types_is_active       ON hr_certificate.certificate_types (tenant_id, is_active);
-CREATE INDEX idx_certificate_types_sort_order      ON hr_certificate.certificate_types (tenant_id, sort_order);
+-- certificate_type
+CREATE INDEX idx_certificate_type_tenant_id       ON hr_certificate.certificate_type (tenant_id);
+CREATE INDEX idx_certificate_type_template_id     ON hr_certificate.certificate_type (template_id) WHERE template_id IS NOT NULL;
+CREATE INDEX idx_certificate_type_is_active       ON hr_certificate.certificate_type (tenant_id, is_active);
+CREATE INDEX idx_certificate_type_sort_order      ON hr_certificate.certificate_type (tenant_id, sort_order);
 
--- certificate_requests
-CREATE INDEX idx_certificate_requests_tenant_id    ON hr_certificate.certificate_requests (tenant_id);
-CREATE INDEX idx_certificate_requests_type_id      ON hr_certificate.certificate_requests (tenant_id, certificate_type_id);
-CREATE INDEX idx_certificate_requests_employee_id  ON hr_certificate.certificate_requests (tenant_id, employee_id);
-CREATE INDEX idx_certificate_requests_status       ON hr_certificate.certificate_requests (tenant_id, status);
-CREATE INDEX idx_certificate_requests_approval_id  ON hr_certificate.certificate_requests (approval_id) WHERE approval_id IS NOT NULL;
-CREATE INDEX idx_certificate_requests_created_at   ON hr_certificate.certificate_requests (tenant_id, created_at DESC);
+-- certificate_request
+CREATE INDEX idx_certificate_request_tenant_id    ON hr_certificate.certificate_request (tenant_id);
+CREATE INDEX idx_certificate_request_type_id      ON hr_certificate.certificate_request (tenant_id, certificate_type_id);
+CREATE INDEX idx_certificate_request_employee_id  ON hr_certificate.certificate_request (tenant_id, employee_id);
+CREATE INDEX idx_certificate_request_status       ON hr_certificate.certificate_request (tenant_id, status);
+CREATE INDEX idx_certificate_request_approval_id  ON hr_certificate.certificate_request (approval_id) WHERE approval_id IS NOT NULL;
+CREATE INDEX idx_certificate_request_created_at   ON hr_certificate.certificate_request (tenant_id, created_at DESC);
 
--- certificate_issues
-CREATE INDEX idx_certificate_issues_tenant_id      ON hr_certificate.certificate_issues (tenant_id);
-CREATE INDEX idx_certificate_issues_request_id     ON hr_certificate.certificate_issues (tenant_id, request_id);
-CREATE INDEX idx_certificate_issues_issued_at      ON hr_certificate.certificate_issues (tenant_id, issued_at DESC);
-CREATE INDEX idx_certificate_issues_expires_at     ON hr_certificate.certificate_issues (expires_at) WHERE is_revoked = FALSE;
-CREATE INDEX idx_certificate_issues_is_revoked     ON hr_certificate.certificate_issues (tenant_id, is_revoked);
+-- certificate_issue
+CREATE INDEX idx_certificate_issue_tenant_id      ON hr_certificate.certificate_issue (tenant_id);
+CREATE INDEX idx_certificate_issue_request_id     ON hr_certificate.certificate_issue (tenant_id, request_id);
+CREATE INDEX idx_certificate_issue_issued_at      ON hr_certificate.certificate_issue (tenant_id, issued_at DESC);
+CREATE INDEX idx_certificate_issue_expires_at     ON hr_certificate.certificate_issue (expires_at) WHERE is_revoked = FALSE;
+CREATE INDEX idx_certificate_issue_is_revoked     ON hr_certificate.certificate_issue (tenant_id, is_revoked);
 
--- verification_logs
-CREATE INDEX idx_verification_logs_issue_id        ON hr_certificate.verification_logs (issue_id);
-CREATE INDEX idx_verification_logs_code            ON hr_certificate.verification_logs (verification_code);
-CREATE INDEX idx_verification_logs_verified_at     ON hr_certificate.verification_logs (verified_at DESC);
-
--- ---------------------------------------------------------------------------
--- 4. Enable RLS (NOT on verification_logs - no tenant_id)
--- ---------------------------------------------------------------------------
-
-ALTER TABLE hr_certificate.certificate_templates ENABLE ROW LEVEL SECURITY;
-ALTER TABLE hr_certificate.certificate_templates FORCE ROW LEVEL SECURITY;
-
-ALTER TABLE hr_certificate.certificate_types     ENABLE ROW LEVEL SECURITY;
-ALTER TABLE hr_certificate.certificate_types     FORCE ROW LEVEL SECURITY;
-
-ALTER TABLE hr_certificate.certificate_requests  ENABLE ROW LEVEL SECURITY;
-ALTER TABLE hr_certificate.certificate_requests  FORCE ROW LEVEL SECURITY;
-
-ALTER TABLE hr_certificate.certificate_issues    ENABLE ROW LEVEL SECURITY;
-ALTER TABLE hr_certificate.certificate_issues    FORCE ROW LEVEL SECURITY;
+-- verification_log
+CREATE INDEX idx_verification_log_issue_id        ON hr_certificate.verification_log (issue_id);
+CREATE INDEX idx_verification_log_code            ON hr_certificate.verification_log (verification_code);
+CREATE INDEX idx_verification_log_verified_at     ON hr_certificate.verification_log (verified_at DESC);
 
 -- ---------------------------------------------------------------------------
--- 5. RLS Policies (NOT on verification_logs - no tenant_id)
+-- 4. Enable RLS (NOT on verification_log - no tenant_id)
 -- ---------------------------------------------------------------------------
 
-CREATE POLICY tenant_isolation_certificate_templates ON hr_certificate.certificate_templates
+ALTER TABLE hr_certificate.certificate_template ENABLE ROW LEVEL SECURITY;
+ALTER TABLE hr_certificate.certificate_template FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE hr_certificate.certificate_type     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE hr_certificate.certificate_type     FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE hr_certificate.certificate_request  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE hr_certificate.certificate_request  FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE hr_certificate.certificate_issue    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE hr_certificate.certificate_issue    FORCE ROW LEVEL SECURITY;
+
+-- ---------------------------------------------------------------------------
+-- 5. RLS Policies (NOT on verification_log - no tenant_id)
+-- ---------------------------------------------------------------------------
+
+CREATE POLICY tenant_isolation_certificate_template ON hr_certificate.certificate_template
     FOR ALL
     USING (
         hr_certificate.get_current_tenant_safe() IS NULL
@@ -215,7 +215,7 @@ CREATE POLICY tenant_isolation_certificate_templates ON hr_certificate.certifica
         OR tenant_id = hr_certificate.get_current_tenant_safe()
     );
 
-CREATE POLICY tenant_isolation_certificate_types ON hr_certificate.certificate_types
+CREATE POLICY tenant_isolation_certificate_type ON hr_certificate.certificate_type
     FOR ALL
     USING (
         hr_certificate.get_current_tenant_safe() IS NULL
@@ -226,7 +226,7 @@ CREATE POLICY tenant_isolation_certificate_types ON hr_certificate.certificate_t
         OR tenant_id = hr_certificate.get_current_tenant_safe()
     );
 
-CREATE POLICY tenant_isolation_certificate_requests ON hr_certificate.certificate_requests
+CREATE POLICY tenant_isolation_certificate_request ON hr_certificate.certificate_request
     FOR ALL
     USING (
         hr_certificate.get_current_tenant_safe() IS NULL
@@ -237,7 +237,7 @@ CREATE POLICY tenant_isolation_certificate_requests ON hr_certificate.certificat
         OR tenant_id = hr_certificate.get_current_tenant_safe()
     );
 
-CREATE POLICY tenant_isolation_certificate_issues ON hr_certificate.certificate_issues
+CREATE POLICY tenant_isolation_certificate_issue ON hr_certificate.certificate_issue
     FOR ALL
     USING (
         hr_certificate.get_current_tenant_safe() IS NULL

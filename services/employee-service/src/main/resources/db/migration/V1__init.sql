@@ -1,10 +1,20 @@
+-- Employee Service: Consolidated Migration (V1)
 -- =============================================================================
--- V1__init_employee.sql
--- Consolidated migration (V1-V9) for Employee Service
+-- Consolidates: V1 (init_employee), V2 (affiliation), V3 (privacy_audit),
+--               V4 (employee_card), V5 (performance_indexes),
+--               V6 (birth_date), V7 (brin_and_tenant_indexes)
 -- Schema: hr_core (created by init.sql)
 -- =============================================================================
 
 SET search_path TO hr_core, public;
+
+-- =============================================================================
+-- 0. EXTENSIONS
+-- =============================================================================
+
+-- pg_trgm for LIKE '%name%' search optimization (from V5)
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
 
 -- =============================================================================
 -- 1. TABLES
@@ -18,6 +28,7 @@ CREATE TABLE IF NOT EXISTS hr_core.employee (
     tenant_id         UUID NOT NULL,
     employee_number   VARCHAR(50) NOT NULL,
     name              VARCHAR(100) NOT NULL,
+    name_en           VARCHAR(100),
     email             VARCHAR(255),
     phone             VARCHAR(30),
     mobile            VARCHAR(30),
@@ -30,7 +41,8 @@ CREATE TABLE IF NOT EXISTS hr_core.employee (
     employment_type   VARCHAR(30),
     manager_id        UUID,
     user_id           UUID,
-    resident_number   VARCHAR(20),
+    resident_number   VARCHAR(500),
+    birth_date        DATE,
     created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
     created_by        VARCHAR(100),
@@ -264,12 +276,144 @@ CREATE TABLE IF NOT EXISTS hr_core.transfer_request (
     updated_by              VARCHAR(100)
 );
 
+-- -----------------------------------------------------------------------------
+-- 1.10 employee_affiliation (from V2)
+-- -----------------------------------------------------------------------------
+CREATE TABLE hr_core.employee_affiliation (
+    id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id         UUID NOT NULL,
+    employee_id       UUID NOT NULL REFERENCES hr_core.employee(id),
+    department_id     UUID NOT NULL,
+    department_name   VARCHAR(200),
+    position_code     VARCHAR(50),
+    position_name     VARCHAR(200),
+    is_primary        BOOLEAN DEFAULT false,
+    affiliation_type  VARCHAR(20) DEFAULT 'PRIMARY',
+    start_date        DATE,
+    end_date          DATE,
+    is_active         BOOLEAN DEFAULT true,
+    created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_by        VARCHAR(100),
+    updated_by        VARCHAR(100)
+);
+
+-- -----------------------------------------------------------------------------
+-- 1.11 employee_number_rule (from V2)
+-- -----------------------------------------------------------------------------
+CREATE TABLE hr_core.employee_number_rule (
+    id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id               UUID NOT NULL UNIQUE,
+    prefix                  VARCHAR(10) DEFAULT '',
+    include_year            BOOLEAN DEFAULT true,
+    year_format             VARCHAR(4) DEFAULT 'YYYY',
+    sequence_digits         INTEGER DEFAULT 4,
+    sequence_reset_policy   VARCHAR(10) DEFAULT 'YEARLY',
+    current_sequence        INTEGER DEFAULT 0,
+    current_year            INTEGER,
+    separator               VARCHAR(5) DEFAULT '-',
+    allow_reuse             BOOLEAN DEFAULT false,
+    is_active               BOOLEAN DEFAULT true,
+    created_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_by              VARCHAR(100),
+    updated_by              VARCHAR(100)
+);
+
+-- -----------------------------------------------------------------------------
+-- 1.12 employee_change_request (from V2)
+-- -----------------------------------------------------------------------------
+CREATE TABLE hr_core.employee_change_request (
+    id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id               UUID NOT NULL,
+    employee_id             UUID NOT NULL REFERENCES hr_core.employee(id),
+    field_name              VARCHAR(50) NOT NULL,
+    old_value               VARCHAR(500),
+    new_value               VARCHAR(500) NOT NULL,
+    status                  VARCHAR(20) DEFAULT 'PENDING',
+    approval_document_id    UUID,
+    reason                  VARCHAR(500),
+    created_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_by              VARCHAR(100),
+    updated_by              VARCHAR(100)
+);
+
+-- -----------------------------------------------------------------------------
+-- 1.13 privacy_access_log (from V3)
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS hr_core.privacy_access_log (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
+    actor_id UUID NOT NULL,
+    actor_name VARCHAR(100),
+    employee_id UUID NOT NULL,
+    field_name VARCHAR(50) NOT NULL,
+    reason VARCHAR(500) NOT NULL,
+    accessed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    ip_address VARCHAR(50),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- -----------------------------------------------------------------------------
+-- 1.14 employee_card (from V4)
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS hr_core.employee_card (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
+    card_number VARCHAR(50) NOT NULL,
+    employee_id UUID NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    issue_type VARCHAR(20) NOT NULL DEFAULT 'NEW',
+    issue_date DATE NOT NULL,
+    expiry_date DATE NOT NULL,
+    access_level VARCHAR(20) DEFAULT 'LEVEL_1',
+    rfid_enabled BOOLEAN DEFAULT false,
+    rfid_tag VARCHAR(100),
+    qr_code VARCHAR(100),
+    photo_file_id UUID,
+    remarks TEXT,
+    revoked_at TIMESTAMPTZ,
+    revoked_by UUID,
+    revoke_reason TEXT,
+    lost_at TIMESTAMPTZ,
+    lost_location VARCHAR(200),
+    lost_description TEXT,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    created_by VARCHAR(100),
+    updated_by VARCHAR(100),
+    UNIQUE(tenant_id, card_number)
+);
+
+-- -----------------------------------------------------------------------------
+-- 1.15 card_issue_request (from V4)
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS hr_core.card_issue_request (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL,
+    request_number VARCHAR(50) NOT NULL,
+    employee_id UUID NOT NULL,
+    issue_type VARCHAR(20) NOT NULL,
+    reason TEXT,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    approved_by UUID,
+    approved_at TIMESTAMPTZ,
+    rejection_reason TEXT,
+    issued_card_id UUID,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    created_by VARCHAR(100),
+    updated_by VARCHAR(100),
+    UNIQUE(tenant_id, request_number)
+);
+
 
 -- =============================================================================
 -- 2. INDEXES
 -- =============================================================================
 
--- employee
+-- employee (from V1)
 CREATE INDEX idx_employee_tenant_id ON hr_core.employee (tenant_id);
 CREATE INDEX idx_employee_status ON hr_core.employee (status);
 CREATE INDEX idx_employee_department_id ON hr_core.employee (department_id);
@@ -278,47 +422,90 @@ CREATE INDEX idx_employee_user_id ON hr_core.employee (user_id);
 CREATE INDEX idx_employee_hire_date ON hr_core.employee (hire_date);
 CREATE INDEX idx_employee_name ON hr_core.employee (name);
 
--- employee_history
+-- employee: name trigram GIN index for LIKE search (from V5)
+CREATE INDEX idx_employee_name_trgm
+    ON hr_core.employee USING GIN (name gin_trgm_ops);
+
+-- employee: birth_date month-day index for birthday lookup (from V6)
+CREATE INDEX idx_employees_birth_date_md
+    ON hr_core.employee (EXTRACT(MONTH FROM birth_date), EXTRACT(DAY FROM birth_date))
+    WHERE birth_date IS NOT NULL;
+
+-- employee_history (from V1)
 CREATE INDEX idx_employee_history_tenant_id ON hr_core.employee_history (tenant_id);
 CREATE INDEX idx_employee_history_employee_id ON hr_core.employee_history (employee_id);
 CREATE INDEX idx_employee_history_change_type ON hr_core.employee_history (change_type);
 CREATE INDEX idx_employee_history_effective_date ON hr_core.employee_history (effective_date);
 
--- employee_family
+-- employee_family (from V1)
 CREATE INDEX idx_employee_family_tenant_id ON hr_core.employee_family (tenant_id);
 CREATE INDEX idx_employee_family_employee_id ON hr_core.employee_family (employee_id);
 
--- employee_education
+-- employee_education (from V1)
 CREATE INDEX idx_employee_education_tenant_id ON hr_core.employee_education (tenant_id);
 CREATE INDEX idx_employee_education_employee_id ON hr_core.employee_education (employee_id);
 
--- employee_career
+-- employee_career (from V1)
 CREATE INDEX idx_employee_career_tenant_id ON hr_core.employee_career (tenant_id);
 CREATE INDEX idx_employee_career_employee_id ON hr_core.employee_career (employee_id);
 
--- employee_certificate
+-- employee_certificate (from V1)
 CREATE INDEX idx_employee_certificate_tenant_id ON hr_core.employee_certificate (tenant_id);
 CREATE INDEX idx_employee_certificate_employee_id ON hr_core.employee_certificate (employee_id);
 
--- condolence_policy
+-- condolence_policy (from V1)
 CREATE INDEX idx_condolence_policy_tenant_id ON hr_core.condolence_policy (tenant_id);
 CREATE INDEX idx_condolence_policy_event_type ON hr_core.condolence_policy (event_type);
 CREATE INDEX idx_condolence_policy_is_active ON hr_core.condolence_policy (is_active);
 
--- condolence_request
+-- condolence_request (from V1)
 CREATE INDEX idx_condolence_request_tenant_id ON hr_core.condolence_request (tenant_id);
 CREATE INDEX idx_condolence_request_employee_id ON hr_core.condolence_request (employee_id);
 CREATE INDEX idx_condolence_request_status ON hr_core.condolence_request (status);
 CREATE INDEX idx_condolence_request_policy_id ON hr_core.condolence_request (policy_id);
 CREATE INDEX idx_condolence_request_event_date ON hr_core.condolence_request (event_date);
 
--- transfer_request
+-- transfer_request (from V1)
 CREATE INDEX idx_transfer_request_tenant_id ON hr_core.transfer_request (tenant_id);
 CREATE INDEX idx_transfer_request_employee_id ON hr_core.transfer_request (employee_id);
 CREATE INDEX idx_transfer_request_status ON hr_core.transfer_request (status);
 CREATE INDEX idx_transfer_request_source_tenant_id ON hr_core.transfer_request (source_tenant_id);
 CREATE INDEX idx_transfer_request_target_tenant_id ON hr_core.transfer_request (target_tenant_id);
 CREATE INDEX idx_transfer_request_transfer_date ON hr_core.transfer_request (transfer_date);
+
+-- transfer_request: source/target tenant+status composite (from V5)
+CREATE INDEX idx_transfer_request_source_tenant_status
+    ON hr_core.transfer_request (source_tenant_id, status);
+CREATE INDEX idx_transfer_request_target_tenant_status
+    ON hr_core.transfer_request (target_tenant_id, status);
+
+-- employee_affiliation (from V2)
+CREATE INDEX idx_affiliation_tenant ON hr_core.employee_affiliation (tenant_id);
+CREATE INDEX idx_affiliation_employee ON hr_core.employee_affiliation (employee_id);
+CREATE INDEX idx_affiliation_department ON hr_core.employee_affiliation (department_id);
+CREATE UNIQUE INDEX idx_affiliation_primary ON hr_core.employee_affiliation (tenant_id, employee_id)
+    WHERE is_primary = true AND is_active = true;
+
+-- employee_change_request (from V2)
+CREATE INDEX idx_change_request_tenant ON hr_core.employee_change_request (tenant_id);
+CREATE INDEX idx_change_request_employee ON hr_core.employee_change_request (employee_id);
+CREATE INDEX idx_change_request_status ON hr_core.employee_change_request (status);
+
+-- privacy_access_log (from V3)
+CREATE INDEX idx_privacy_access_log_employee
+    ON hr_core.privacy_access_log(employee_id, tenant_id);
+CREATE INDEX idx_privacy_access_log_actor
+    ON hr_core.privacy_access_log(actor_id, tenant_id);
+CREATE INDEX idx_privacy_access_log_accessed_at
+    ON hr_core.privacy_access_log(accessed_at);
+
+-- employee_card (from V4)
+CREATE INDEX idx_employee_card_employee ON hr_core.employee_card(employee_id);
+CREATE INDEX idx_employee_card_tenant_status ON hr_core.employee_card(tenant_id, status);
+
+-- card_issue_request (from V4)
+CREATE INDEX idx_card_issue_request_tenant ON hr_core.card_issue_request(tenant_id, status);
+CREATE INDEX idx_card_issue_request_employee ON hr_core.card_issue_request(employee_id);
 
 
 -- =============================================================================
@@ -353,20 +540,41 @@ ALTER TABLE hr_core.condolence_request FORCE ROW LEVEL SECURITY;
 ALTER TABLE hr_core.transfer_request ENABLE ROW LEVEL SECURITY;
 ALTER TABLE hr_core.transfer_request FORCE ROW LEVEL SECURITY;
 
+ALTER TABLE hr_core.employee_affiliation ENABLE ROW LEVEL SECURITY;
+ALTER TABLE hr_core.employee_affiliation FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE hr_core.employee_number_rule ENABLE ROW LEVEL SECURITY;
+ALTER TABLE hr_core.employee_number_rule FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE hr_core.employee_change_request ENABLE ROW LEVEL SECURITY;
+ALTER TABLE hr_core.employee_change_request FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE hr_core.privacy_access_log ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE hr_core.employee_card ENABLE ROW LEVEL SECURITY;
+ALTER TABLE hr_core.card_issue_request ENABLE ROW LEVEL SECURITY;
+
 
 -- =============================================================================
 -- 4. TENANT-SAFE FUNCTION
 -- =============================================================================
 
-CREATE OR REPLACE FUNCTION hr_core.get_current_tenant_safe()
-RETURNS UUID AS $$
+-- Race-safe: hr_core schema is shared with organization-service
+DO $$
 BEGIN
-    RETURN NULLIF(current_setting('app.current_tenant', true), '')::UUID;
+    CREATE OR REPLACE FUNCTION hr_core.get_current_tenant_safe()
+    RETURNS UUID AS $func$
+    BEGIN
+        RETURN NULLIF(current_setting('app.current_tenant', true), '')::UUID;
+    EXCEPTION
+        WHEN OTHERS THEN
+            RETURN NULL;
+    END;
+    $func$ LANGUAGE plpgsql STABLE;
 EXCEPTION
-    WHEN OTHERS THEN
-        RETURN NULL;
+    WHEN unique_violation THEN NULL;
 END;
-$$ LANGUAGE plpgsql STABLE;
+$$;
 
 
 -- =============================================================================
@@ -437,22 +645,103 @@ CREATE POLICY transfer_request_tenant_isolation ON hr_core.transfer_request
         OR target_tenant_id = hr_core.get_current_tenant_safe()
     );
 
+-- employee_affiliation (from V2)
+CREATE POLICY employee_affiliation_tenant_isolation ON hr_core.employee_affiliation
+    FOR ALL
+    USING (hr_core.get_current_tenant_safe() IS NULL OR tenant_id = hr_core.get_current_tenant_safe())
+    WITH CHECK (hr_core.get_current_tenant_safe() IS NULL OR tenant_id = hr_core.get_current_tenant_safe());
+
+-- employee_number_rule (from V2)
+CREATE POLICY employee_number_rule_tenant_isolation ON hr_core.employee_number_rule
+    FOR ALL
+    USING (hr_core.get_current_tenant_safe() IS NULL OR tenant_id = hr_core.get_current_tenant_safe())
+    WITH CHECK (hr_core.get_current_tenant_safe() IS NULL OR tenant_id = hr_core.get_current_tenant_safe());
+
+-- employee_change_request (from V2)
+CREATE POLICY employee_change_request_tenant_isolation ON hr_core.employee_change_request
+    FOR ALL
+    USING (hr_core.get_current_tenant_safe() IS NULL OR tenant_id = hr_core.get_current_tenant_safe())
+    WITH CHECK (hr_core.get_current_tenant_safe() IS NULL OR tenant_id = hr_core.get_current_tenant_safe());
+
+-- privacy_access_log (from V3)
+CREATE POLICY privacy_access_log_tenant_isolation ON hr_core.privacy_access_log
+    USING (tenant_id::text = current_setting('app.current_tenant', true));
+
+-- employee_card (from V4)
+CREATE POLICY employee_card_tenant_isolation ON hr_core.employee_card
+    USING (tenant_id::text = current_setting('app.current_tenant', true));
+
+-- card_issue_request (from V4)
+CREATE POLICY card_issue_request_tenant_isolation ON hr_core.card_issue_request
+    USING (tenant_id::text = current_setting('app.current_tenant', true));
+
 
 -- =============================================================================
 -- 6. TRIGGERS
 -- =============================================================================
 
--- updated_at trigger function
-CREATE OR REPLACE FUNCTION hr_core.set_updated_at()
-RETURNS TRIGGER AS $$
+-- Race-safe: hr_core schema is shared with organization-service
+DO $$
 BEGIN
-    NEW.updated_at = now();
-    RETURN NEW;
+    CREATE OR REPLACE FUNCTION hr_core.set_updated_at()
+    RETURNS TRIGGER AS $func$
+    BEGIN
+        NEW.updated_at = now();
+        RETURN NEW;
+    END;
+    $func$ LANGUAGE plpgsql;
+EXCEPTION
+    WHEN unique_violation THEN NULL;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 -- employee updated_at trigger
 CREATE TRIGGER trg_employee_updated_at
     BEFORE UPDATE ON hr_core.employee
     FOR EACH ROW
     EXECUTE FUNCTION hr_core.set_updated_at();
+
+-- employee_affiliation updated_at trigger (from V2)
+CREATE TRIGGER trg_employee_affiliation_updated_at
+    BEFORE UPDATE ON hr_core.employee_affiliation
+    FOR EACH ROW
+    EXECUTE FUNCTION hr_core.set_updated_at();
+
+-- employee_number_rule updated_at trigger (from V2)
+CREATE TRIGGER trg_employee_number_rule_updated_at
+    BEFORE UPDATE ON hr_core.employee_number_rule
+    FOR EACH ROW
+    EXECUTE FUNCTION hr_core.set_updated_at();
+
+-- employee_change_request updated_at trigger (from V2)
+CREATE TRIGGER trg_employee_change_request_updated_at
+    BEFORE UPDATE ON hr_core.employee_change_request
+    FOR EACH ROW
+    EXECUTE FUNCTION hr_core.set_updated_at();
+
+
+-- =============================================================================
+-- 7. BRIN AND COMPOSITE INDEXES (from V7)
+-- =============================================================================
+
+-- BRIN index: employee_history audit log (append-only, time-ordered)
+CREATE INDEX idx_employee_history_created_at_brin
+    ON hr_core.employee_history USING BRIN (created_at);
+
+-- Composite index corrections: add tenant_id as leading column
+-- Original V1 indexes lacked tenant_id, causing full table scans under RLS
+CREATE INDEX idx_employee_tenant_status
+    ON hr_core.employee (tenant_id, status);
+
+CREATE INDEX idx_employee_tenant_department
+    ON hr_core.employee (tenant_id, department_id);
+
+CREATE INDEX idx_employee_tenant_hire_date
+    ON hr_core.employee (tenant_id, hire_date);
+
+-- Employee affiliation: tenant-scoped lookups
+CREATE INDEX idx_affiliation_tenant_employee
+    ON hr_core.employee_affiliation (tenant_id, employee_id);
+
+CREATE INDEX idx_affiliation_tenant_department
+    ON hr_core.employee_affiliation (tenant_id, department_id);

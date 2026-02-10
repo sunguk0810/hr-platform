@@ -1,8 +1,5 @@
--- =============================================================================
--- V20__init_organization.sql
--- Consolidated migration (V20-V26) for Organization Service
--- Schema: hr_core (created by init.sql)
--- =============================================================================
+-- Organization Service: Consolidated Migration (V1)
+-- Merged from: V20__init_organization.sql, V27__organization_history_and_targets.sql, V28__add_performance_indexes.sql
 
 SET search_path TO hr_core, public;
 
@@ -76,7 +73,7 @@ CREATE TABLE IF NOT EXISTS hr_core.position (
 );
 
 -- -----------------------------------------------------------------------------
--- 1.4 announcement
+-- 1.4 announcement (includes target_scope from V27, search_vector from V28)
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS hr_core.announcement (
     id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -88,9 +85,11 @@ CREATE TABLE IF NOT EXISTS hr_core.announcement (
     author_name       VARCHAR(100),
     author_department VARCHAR(200),
     is_pinned         BOOLEAN NOT NULL DEFAULT false,
-    view_count        INTEGER NOT NULL DEFAULT 0,
+    view_count        BIGINT NOT NULL DEFAULT 0,
     is_published      BOOLEAN NOT NULL DEFAULT false,
     published_at      TIMESTAMPTZ,
+    target_scope      VARCHAR(20) DEFAULT 'ALL',
+    search_vector     tsvector,
     created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
     created_by        VARCHAR(100),
@@ -118,7 +117,30 @@ CREATE TABLE IF NOT EXISTS hr_core.announcement_attachment (
 );
 
 -- -----------------------------------------------------------------------------
--- 1.6 committee
+-- 1.6 announcement_target (from V27)
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS hr_core.announcement_target (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    announcement_id UUID NOT NULL REFERENCES hr_core.announcement(id) ON DELETE CASCADE,
+    target_type     VARCHAR(20) NOT NULL,
+    target_id       UUID NOT NULL,
+    target_name     VARCHAR(200),
+    created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- -----------------------------------------------------------------------------
+-- 1.7 announcement_read (from V27)
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS hr_core.announcement_read (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    announcement_id UUID NOT NULL REFERENCES hr_core.announcement(id) ON DELETE CASCADE,
+    employee_id     UUID NOT NULL,
+    read_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE(announcement_id, employee_id)
+);
+
+-- -----------------------------------------------------------------------------
+-- 1.8 committee
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS hr_core.committee (
     id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -130,7 +152,7 @@ CREATE TABLE IF NOT EXISTS hr_core.committee (
     purpose          TEXT,
     start_date       DATE,
     end_date         DATE,
-    meeting_schedule VARCHAR(200),
+    meeting_schedule VARCHAR(500),
     status           VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
     created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -141,7 +163,7 @@ CREATE TABLE IF NOT EXISTS hr_core.committee (
 );
 
 -- -----------------------------------------------------------------------------
--- 1.7 committee_member
+-- 1.9 committee_member
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS hr_core.committee_member (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -164,7 +186,7 @@ CREATE TABLE IF NOT EXISTS hr_core.committee_member (
 );
 
 -- -----------------------------------------------------------------------------
--- 1.8 headcount_plan
+-- 1.10 headcount_plan
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS hr_core.headcount_plan (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -185,7 +207,7 @@ CREATE TABLE IF NOT EXISTS hr_core.headcount_plan (
 );
 
 -- -----------------------------------------------------------------------------
--- 1.9 headcount_request
+-- 1.11 headcount_request
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS hr_core.headcount_request (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -208,6 +230,42 @@ CREATE TABLE IF NOT EXISTS hr_core.headcount_request (
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
     created_by      VARCHAR(100),
     updated_by      VARCHAR(100)
+);
+
+-- -----------------------------------------------------------------------------
+-- 1.12 organization_history (from V27)
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS hr_core.organization_history (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id       UUID NOT NULL,
+    event_type      VARCHAR(50) NOT NULL,
+    department_id   UUID,
+    department_name VARCHAR(200),
+    title           VARCHAR(500) NOT NULL,
+    description     TEXT,
+    previous_value  JSONB,
+    new_value       JSONB,
+    actor_id        UUID,
+    actor_name      VARCHAR(100),
+    event_date      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    metadata        JSONB,
+    created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- -----------------------------------------------------------------------------
+-- 1.13 headcount_history (from V27)
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS hr_core.headcount_history (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id       UUID NOT NULL,
+    plan_id         UUID NOT NULL REFERENCES hr_core.headcount_plan(id),
+    event_type      VARCHAR(50) NOT NULL,
+    previous_value  JSONB,
+    new_value       JSONB,
+    actor_id        UUID,
+    actor_name      VARCHAR(100),
+    event_date      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at      TIMESTAMPTZ DEFAULT NOW()
 );
 
 
@@ -242,6 +300,14 @@ CREATE INDEX idx_announcement_author_id ON hr_core.announcement (author_id);
 -- announcement_attachment
 CREATE INDEX idx_announcement_attachment_announcement_id ON hr_core.announcement_attachment (announcement_id);
 
+-- announcement_target (from V27)
+CREATE INDEX idx_announcement_target_announcement ON hr_core.announcement_target(announcement_id);
+CREATE INDEX idx_announcement_target_type_id ON hr_core.announcement_target(target_type, target_id);
+
+-- announcement_read (from V27)
+CREATE INDEX idx_announcement_read_announcement ON hr_core.announcement_read(announcement_id);
+CREATE INDEX idx_announcement_read_employee ON hr_core.announcement_read(employee_id);
+
 -- committee
 CREATE INDEX idx_committee_tenant_id ON hr_core.committee (tenant_id);
 CREATE INDEX idx_committee_status ON hr_core.committee (status);
@@ -263,6 +329,29 @@ CREATE INDEX idx_headcount_request_department_id ON hr_core.headcount_request (d
 CREATE INDEX idx_headcount_request_status ON hr_core.headcount_request (status);
 CREATE INDEX idx_headcount_request_effective_date ON hr_core.headcount_request (effective_date);
 CREATE INDEX idx_headcount_request_requester_id ON hr_core.headcount_request (requester_id);
+
+-- organization_history (from V27)
+CREATE INDEX idx_org_history_tenant ON hr_core.organization_history(tenant_id);
+CREATE INDEX idx_org_history_department ON hr_core.organization_history(department_id);
+CREATE INDEX idx_org_history_event_type ON hr_core.organization_history(event_type);
+CREATE INDEX idx_org_history_event_date ON hr_core.organization_history(event_date DESC);
+
+-- headcount_history (from V27)
+CREATE INDEX idx_headcount_history_tenant ON hr_core.headcount_history(tenant_id);
+CREATE INDEX idx_headcount_history_plan ON hr_core.headcount_history(plan_id);
+CREATE INDEX idx_headcount_history_event_date ON hr_core.headcount_history(event_date DESC);
+
+-- Performance indexes (from V28)
+CREATE INDEX IF NOT EXISTS idx_announcement_tenant_pinned_published
+    ON hr_core.announcement (tenant_id, is_pinned DESC, published_at DESC NULLS LAST)
+    WHERE is_published = true;
+
+CREATE INDEX IF NOT EXISTS idx_department_tenant_status_parent_sort
+    ON hr_core.department (tenant_id, status, parent_id, sort_order);
+
+-- Announcement full-text search GIN index (from V28)
+CREATE INDEX IF NOT EXISTS idx_announcement_search_vector
+    ON hr_core.announcement USING GIN (search_vector);
 
 
 -- =============================================================================
@@ -297,20 +386,31 @@ ALTER TABLE hr_core.headcount_plan FORCE ROW LEVEL SECURITY;
 ALTER TABLE hr_core.headcount_request ENABLE ROW LEVEL SECURITY;
 ALTER TABLE hr_core.headcount_request FORCE ROW LEVEL SECURITY;
 
+ALTER TABLE hr_core.organization_history ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE hr_core.headcount_history ENABLE ROW LEVEL SECURITY;
+
 
 -- =============================================================================
 -- 4. TENANT-SAFE FUNCTION
 -- =============================================================================
 
-CREATE OR REPLACE FUNCTION hr_core.get_current_tenant_safe()
-RETURNS UUID AS $$
+-- Race-safe: hr_core schema is shared with employee-service
+DO $$
 BEGIN
-    RETURN NULLIF(current_setting('app.current_tenant', true), '')::UUID;
+    CREATE OR REPLACE FUNCTION hr_core.get_current_tenant_safe()
+    RETURNS UUID AS $func$
+    BEGIN
+        RETURN NULLIF(current_setting('app.current_tenant', true), '')::UUID;
+    EXCEPTION
+        WHEN OTHERS THEN
+            RETURN NULL;
+    END;
+    $func$ LANGUAGE plpgsql STABLE;
 EXCEPTION
-    WHEN OTHERS THEN
-        RETURN NULL;
+    WHEN unique_violation THEN NULL;
 END;
-$$ LANGUAGE plpgsql STABLE;
+$$;
 
 
 -- =============================================================================
@@ -391,19 +491,33 @@ CREATE POLICY headcount_request_tenant_isolation ON hr_core.headcount_request
     USING (hr_core.get_current_tenant_safe() IS NULL OR tenant_id = hr_core.get_current_tenant_safe())
     WITH CHECK (hr_core.get_current_tenant_safe() IS NULL OR tenant_id = hr_core.get_current_tenant_safe());
 
+-- organization_history (from V27)
+CREATE POLICY organization_history_tenant_isolation ON hr_core.organization_history
+    USING (tenant_id::text = current_setting('app.current_tenant', true));
+
+-- headcount_history (from V27)
+CREATE POLICY headcount_history_tenant_isolation ON hr_core.headcount_history
+    USING (tenant_id::text = current_setting('app.current_tenant', true));
+
 
 -- =============================================================================
 -- 6. TRIGGERS
 -- =============================================================================
 
--- updated_at trigger function (CREATE OR REPLACE to be safe if already created)
-CREATE OR REPLACE FUNCTION hr_core.set_updated_at()
-RETURNS TRIGGER AS $$
+-- Race-safe: hr_core schema is shared with employee-service
+DO $$
 BEGIN
-    NEW.updated_at = now();
-    RETURN NEW;
+    CREATE OR REPLACE FUNCTION hr_core.set_updated_at()
+    RETURNS TRIGGER AS $func$
+    BEGIN
+        NEW.updated_at = now();
+        RETURN NEW;
+    END;
+    $func$ LANGUAGE plpgsql;
+EXCEPTION
+    WHEN unique_violation THEN NULL;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 -- department updated_at trigger
 CREATE TRIGGER trg_department_updated_at
@@ -458,3 +572,32 @@ CREATE TRIGGER trg_headcount_request_updated_at
     BEFORE UPDATE ON hr_core.headcount_request
     FOR EACH ROW
     EXECUTE FUNCTION hr_core.set_updated_at();
+
+
+-- =============================================================================
+-- 7. FULL-TEXT SEARCH (from V28)
+-- =============================================================================
+
+-- tsvector update function
+CREATE OR REPLACE FUNCTION hr_core.announcement_search_vector_update()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.search_vector :=
+        setweight(to_tsvector('simple', COALESCE(NEW.title, '')), 'A') ||
+        setweight(to_tsvector('simple', COALESCE(NEW.content, '')), 'B');
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- tsvector trigger
+DROP TRIGGER IF EXISTS trg_announcement_search_vector ON hr_core.announcement;
+CREATE TRIGGER trg_announcement_search_vector
+    BEFORE INSERT OR UPDATE OF title, content ON hr_core.announcement
+    FOR EACH ROW
+    EXECUTE FUNCTION hr_core.announcement_search_vector_update();
+
+-- Update existing data (if any)
+UPDATE hr_core.announcement SET search_vector =
+    setweight(to_tsvector('simple', COALESCE(title, '')), 'A') ||
+    setweight(to_tsvector('simple', COALESCE(content, '')), 'B')
+WHERE search_vector IS NULL;

@@ -1,6 +1,8 @@
+-- Auth Service: Consolidated Migration (V1)
 -- =============================================================================
--- V20__init_auth.sql
--- Consolidated migration for Auth Service (V20-V21)
+-- Consolidates: V20 (init_auth), V22 (remove_account_locks),
+--   V23 (username_tenant_unique), V24 (mfa_tables), V35 (password_history),
+--   V36 (audit_log), V37 (brin_and_tenant_indexes)
 -- Schema: tenant_common (created by init.sql)
 -- =============================================================================
 
@@ -17,7 +19,7 @@ CREATE TABLE IF NOT EXISTS tenant_common.users (
     id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id             UUID         NOT NULL,
     employee_id           UUID,
-    username              VARCHAR(100) NOT NULL UNIQUE,
+    username              VARCHAR(100) NOT NULL,
     email                 VARCHAR(255),
     password_hash         VARCHAR(255) NOT NULL,
     roles                 TEXT[]       NOT NULL DEFAULT '{}',
@@ -32,7 +34,8 @@ CREATE TABLE IF NOT EXISTS tenant_common.users (
     created_by            VARCHAR(100),
     updated_by            VARCHAR(100),
 
-    CONSTRAINT uq_users_tenant_email UNIQUE(tenant_id, email)
+    CONSTRAINT uq_users_tenant_email    UNIQUE(tenant_id, email),
+    CONSTRAINT uq_users_tenant_username UNIQUE(tenant_id, username)
 );
 
 CREATE INDEX IF NOT EXISTS idx_users_tenant_id   ON tenant_common.users(tenant_id);
@@ -107,23 +110,76 @@ CREATE INDEX IF NOT EXISTS idx_login_history_status     ON tenant_common.login_h
 CREATE INDEX IF NOT EXISTS idx_login_history_created_at ON tenant_common.login_history(created_at);
 
 -- -----------------------------------------------------------------------------
--- 1.5 account_locks
+-- 1.5 user_mfa (Multi-Factor Authentication)
 -- -----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS tenant_common.account_locks (
-    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id         VARCHAR(100) NOT NULL UNIQUE,
-    failed_attempts INT          DEFAULT 0,
-    last_failed_at  TIMESTAMPTZ,
-    locked_at       TIMESTAMPTZ,
-    lock_expires_at TIMESTAMPTZ,
-    is_locked       BOOLEAN      DEFAULT FALSE,
-    lock_reason     VARCHAR(200),
-    created_at      TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at      TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE IF NOT EXISTS tenant_common.user_mfa (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id     UUID NOT NULL REFERENCES tenant_common.users(id),
+    mfa_type    VARCHAR(20) NOT NULL DEFAULT 'TOTP',
+    secret_key  VARCHAR(255) NOT NULL,
+    is_enabled  BOOLEAN DEFAULT FALSE,
+    verified_at TIMESTAMPTZ,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, mfa_type)
 );
 
-CREATE INDEX IF NOT EXISTS idx_account_locks_user_id   ON tenant_common.account_locks(user_id);
-CREATE INDEX IF NOT EXISTS idx_account_locks_is_locked ON tenant_common.account_locks(is_locked);
+CREATE INDEX IF NOT EXISTS idx_user_mfa_user_id ON tenant_common.user_mfa(user_id);
+
+-- -----------------------------------------------------------------------------
+-- 1.6 mfa_recovery_codes
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS tenant_common.mfa_recovery_codes (
+    id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id    UUID NOT NULL REFERENCES tenant_common.users(id),
+    code       VARCHAR(20) NOT NULL,
+    used_at    TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_mfa_recovery_codes_user_id ON tenant_common.mfa_recovery_codes(user_id);
+
+-- -----------------------------------------------------------------------------
+-- 1.7 password_history
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS tenant_common.password_history (
+    id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id       UUID NOT NULL REFERENCES tenant_common.users(id),
+    password_hash VARCHAR(255) NOT NULL,
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_password_history_user_id ON tenant_common.password_history(user_id);
+
+-- -----------------------------------------------------------------------------
+-- 1.8 audit_log
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS tenant_common.audit_log (
+    id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id      UUID,
+    actor_id       VARCHAR(100),
+    actor_name     VARCHAR(200),
+    action         VARCHAR(100) NOT NULL,
+    resource_type  VARCHAR(100) NOT NULL,
+    resource_id    VARCHAR(255),
+    description    TEXT,
+    ip_address     VARCHAR(45),
+    user_agent     TEXT,
+    status         VARCHAR(20) DEFAULT 'SUCCESS',
+    error_message  TEXT,
+    created_at     TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Index: tenant + time range for admin queries
+CREATE INDEX IF NOT EXISTS idx_audit_log_tenant_created
+    ON tenant_common.audit_log (tenant_id, created_at DESC);
+
+-- Index: actor lookup
+CREATE INDEX IF NOT EXISTS idx_audit_log_actor
+    ON tenant_common.audit_log (tenant_id, actor_id, created_at DESC);
+
+-- Index: action type filter
+CREATE INDEX IF NOT EXISTS idx_audit_log_action
+    ON tenant_common.audit_log (tenant_id, action, created_at DESC);
 
 -- =============================================================================
 -- 2. NO RLS
@@ -131,7 +187,24 @@ CREATE INDEX IF NOT EXISTS idx_account_locks_is_locked ON tenant_common.account_
 -- =============================================================================
 
 -- =============================================================================
--- 3. SEED DATA
+-- 3. BRIN INDEXES & COMPOSITE INDEXES
+-- audit_log and login_history are append-only, time-ordered tables.
+-- =============================================================================
+
+-- BRIN index: audit_log time-series scans
+CREATE INDEX IF NOT EXISTS idx_audit_log_created_at_brin
+    ON tenant_common.audit_log USING BRIN (created_at);
+
+-- BRIN index: login_history time-series scans
+CREATE INDEX IF NOT EXISTS idx_login_history_created_at_brin
+    ON tenant_common.login_history USING BRIN (created_at);
+
+-- Composite: login_history tenant-scoped queries
+CREATE INDEX IF NOT EXISTS idx_login_history_tenant_user_created
+    ON tenant_common.login_history (tenant_id, user_id, created_at DESC);
+
+-- =============================================================================
+-- 4. SEED DATA
 -- =============================================================================
 
 -- Seed default admin user (password: admin123!)
@@ -146,4 +219,4 @@ VALUES (
     ARRAY['SUPER_ADMIN', 'SYSTEM_ADMIN'],
     ARRAY['*'],
     'ACTIVE'
-) ON CONFLICT (username) DO NOTHING;
+) ON CONFLICT ON CONSTRAINT uq_users_tenant_username DO NOTHING;

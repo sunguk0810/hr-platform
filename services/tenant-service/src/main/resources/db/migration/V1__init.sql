@@ -1,42 +1,45 @@
--- =============================================================================
--- V30__init_tenant.sql
--- Consolidated migration for Tenant Service (V30-V34)
--- Schema: tenant_common (created by init.sql)
--- =============================================================================
+-- Tenant Service: Consolidated Migration (V1)
+-- Merged from: V30__init_tenant.sql, V36__add_tenant_termination_tracking.sql, V37__tenant_hierarchy_branding_settings.sql
 
 SET search_path TO tenant_common, public;
 
--- =============================================================================
--- 0. HELPER FUNCTION
--- =============================================================================
-
-CREATE OR REPLACE FUNCTION tenant_common.get_current_tenant_safe()
-RETURNS UUID AS $$
-DECLARE
-    tenant_value TEXT;
+-- Race-safe: tenant_common schema is shared with mdm-service, auth-service
+DO $$
 BEGIN
-    tenant_value := current_setting('app.current_tenant', true);
-    IF tenant_value IS NULL OR tenant_value = '' THEN
-        RETURN NULL;
-    END IF;
-    RETURN tenant_value::UUID;
+    CREATE OR REPLACE FUNCTION tenant_common.get_current_tenant_safe()
+    RETURNS UUID AS $func$
+    DECLARE
+        tenant_value TEXT;
+    BEGIN
+        tenant_value := current_setting('app.current_tenant', true);
+        IF tenant_value IS NULL OR tenant_value = '' THEN
+            RETURN NULL;
+        END IF;
+        RETURN tenant_value::UUID;
+    EXCEPTION
+        WHEN OTHERS THEN
+            RETURN NULL;
+    END;
+    $func$ LANGUAGE plpgsql STABLE;
 EXCEPTION
-    WHEN OTHERS THEN
-        RETURN NULL;
+    WHEN unique_violation THEN NULL;
 END;
-$$ LANGUAGE plpgsql STABLE;
+$$;
 
 -- =============================================================================
 -- 1. TABLES
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
--- 1.1 tenant
+-- 1.1 tenant (includes V36 terminated_at/data_retention_until, V37 hierarchy/branding/settings columns)
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tenant_common.tenant (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     code                VARCHAR(50)  NOT NULL UNIQUE,
     name                VARCHAR(200) NOT NULL,
+    name_en             VARCHAR(200),
+    description         TEXT,
+    logo_url            VARCHAR(500),
     business_number     VARCHAR(20),
     representative_name VARCHAR(100),
     address             VARCHAR(500),
@@ -47,14 +50,29 @@ CREATE TABLE IF NOT EXISTS tenant_common.tenant (
     contract_start_date DATE,
     contract_end_date   DATE,
     max_employees       INTEGER,
+    terminated_at       TIMESTAMPTZ,
+    data_retention_until TIMESTAMPTZ,
+    parent_id           UUID REFERENCES tenant_common.tenant(id),
+    level               INTEGER NOT NULL DEFAULT 0,
+    admin_email         VARCHAR(100),
+    admin_name          VARCHAR(100),
+    branding_data       TEXT,
+    settings_data       TEXT,
+    hierarchy_data      TEXT,
+    allowed_modules     TEXT,
+    max_departments     INTEGER,
     created_at          TIMESTAMPTZ  DEFAULT CURRENT_TIMESTAMP,
     updated_at          TIMESTAMPTZ  DEFAULT CURRENT_TIMESTAMP,
     created_by          VARCHAR(100),
     updated_by          VARCHAR(100)
 );
 
-CREATE INDEX IF NOT EXISTS idx_tenant_code   ON tenant_common.tenant(code);
-CREATE INDEX IF NOT EXISTS idx_tenant_status ON tenant_common.tenant(status);
+CREATE INDEX IF NOT EXISTS idx_tenant_code              ON tenant_common.tenant(code);
+CREATE INDEX IF NOT EXISTS idx_tenant_status            ON tenant_common.tenant(status);
+CREATE INDEX IF NOT EXISTS idx_tenant_contract_end_date ON tenant_common.tenant(contract_end_date);
+CREATE INDEX IF NOT EXISTS idx_tenant_terminated_at     ON tenant_common.tenant(terminated_at);
+CREATE INDEX IF NOT EXISTS idx_tenant_parent_id         ON tenant_common.tenant(parent_id);
+CREATE INDEX IF NOT EXISTS idx_tenant_level             ON tenant_common.tenant(level);
 
 -- -----------------------------------------------------------------------------
 -- 1.2 tenant_policy
@@ -97,6 +115,27 @@ CREATE TABLE IF NOT EXISTS tenant_common.tenant_feature (
 );
 
 CREATE INDEX IF NOT EXISTS idx_tenant_feature_tenant_id ON tenant_common.tenant_feature(tenant_id);
+
+-- -----------------------------------------------------------------------------
+-- 1.4 policy_change_history (from V37)
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS tenant_common.policy_change_history (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id       UUID NOT NULL REFERENCES tenant_common.tenant(id) ON DELETE CASCADE,
+    policy_type     VARCHAR(30) NOT NULL,
+    action          VARCHAR(20) NOT NULL,
+    before_value    TEXT,
+    after_value     TEXT NOT NULL,
+    changed_by      VARCHAR(100),
+    changed_by_name VARCHAR(200),
+    changed_at      TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    reason          TEXT,
+    source_id       UUID,
+    source_name     VARCHAR(200)
+);
+
+CREATE INDEX IF NOT EXISTS idx_policy_history_tenant ON tenant_common.policy_change_history(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_policy_history_type ON tenant_common.policy_change_history(tenant_id, policy_type);
 
 -- =============================================================================
 -- 2. TRIGGERS (auto-update updated_at)
@@ -224,6 +263,16 @@ CREATE POLICY tenant_feature_isolation_delete ON tenant_common.tenant_feature
 -- 5. SEED DATA
 -- =============================================================================
 
-INSERT INTO tenant_common.tenant (id, code, name, status, plan_type)
-VALUES ('00000000-0000-0000-0000-000000000001', 'DEFAULT', '기본 테넌트', 'ACTIVE', 'ENTERPRISE')
+INSERT INTO tenant_common.tenant (
+    id, code, name, name_en, description, logo_url, status, plan_type,
+    terminated_at, data_retention_until,
+    parent_id, level, admin_email, admin_name,
+    branding_data, settings_data, hierarchy_data, allowed_modules, max_departments
+)
+VALUES (
+    '00000000-0000-0000-0000-000000000001', 'DEFAULT', '기본 테넌트', NULL, NULL, NULL, 'ACTIVE', 'ENTERPRISE',
+    NULL, NULL,
+    NULL, 0, NULL, NULL,
+    NULL, NULL, NULL, NULL, NULL
+)
 ON CONFLICT (code) DO NOTHING;

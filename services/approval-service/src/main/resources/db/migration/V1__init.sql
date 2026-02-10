@@ -1,6 +1,7 @@
--- ============================================================
--- Approval Service - Initial Schema Migration
+-- Approval Service: Consolidated Migration (V1)
 -- Schema: hr_approval (created by init.sql)
+-- Consolidates: V1 (init), V6 (arbitrary approval rules), V7 (performance indexes),
+--               V8 (deadline and return support), V9 (tenant composite indexes)
 -- ============================================================
 
 SET search_path TO hr_approval, public;
@@ -20,7 +21,20 @@ END;
 $$ LANGUAGE plpgsql STABLE;
 
 -- ============================================================
+-- Function: set_updated_at() (from V6)
+-- ============================================================
+CREATE OR REPLACE FUNCTION hr_approval.set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = now();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ============================================================
 -- Table 1: approval_document
+-- (V6 column related_document_ids included directly)
+-- (V8 columns deadline_at, escalated, return_count included directly)
 -- ============================================================
 CREATE TABLE hr_approval.approval_document (
     id                          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -38,6 +52,10 @@ CREATE TABLE hr_approval.approval_document (
     completed_at                TIMESTAMPTZ,
     reference_type              VARCHAR(50),
     reference_id                UUID,
+    related_document_ids        UUID[],
+    deadline_at                 TIMESTAMPTZ,
+    escalated                   BOOLEAN     DEFAULT FALSE,
+    return_count                INTEGER     DEFAULT 0,
     created_at                  TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at                  TIMESTAMPTZ NOT NULL DEFAULT now(),
     created_by                  VARCHAR(100),
@@ -53,6 +71,15 @@ CREATE INDEX idx_approval_document_submitted_at ON hr_approval.approval_document
 CREATE INDEX idx_approval_document_reference ON hr_approval.approval_document (reference_type, reference_id);
 CREATE INDEX idx_approval_document_tenant_status ON hr_approval.approval_document (tenant_id, status);
 CREATE INDEX idx_approval_document_tenant_drafter ON hr_approval.approval_document (tenant_id, drafter_id);
+
+-- V8: 마감일이 있고 진행 중인 문서 조회 (스케줄러용)
+CREATE INDEX idx_approval_document_deadline
+    ON hr_approval.approval_document (deadline_at)
+    WHERE status = 'IN_PROGRESS' AND deadline_at IS NOT NULL;
+
+-- V9: tenant + status + created_at for list queries
+CREATE INDEX idx_approval_document_tenant_status_created
+    ON hr_approval.approval_document (tenant_id, status, created_at DESC);
 
 -- ============================================================
 -- Table 2: approval_line
@@ -86,6 +113,11 @@ CREATE INDEX idx_approval_line_delegate_id ON hr_approval.approval_line (delegat
 CREATE INDEX idx_approval_line_status ON hr_approval.approval_line (status);
 CREATE INDEX idx_approval_line_document_sequence ON hr_approval.approval_line (document_id, sequence);
 
+-- V7: 승인자별 활성 결재선 조회 최적화
+CREATE INDEX idx_approval_line_approver_status
+    ON hr_approval.approval_line (approver_id, status)
+    WHERE status = 'ACTIVE';
+
 -- ============================================================
 -- Table 3: approval_history
 -- ============================================================
@@ -111,6 +143,10 @@ CREATE INDEX idx_approval_history_document_id ON hr_approval.approval_history (d
 CREATE INDEX idx_approval_history_actor_id ON hr_approval.approval_history (actor_id);
 CREATE INDEX idx_approval_history_action_type ON hr_approval.approval_history (action_type);
 CREATE INDEX idx_approval_history_document_step ON hr_approval.approval_history (document_id, step_order);
+
+-- V9: BRIN index for approval audit trail
+CREATE INDEX idx_approval_history_created_at_brin
+    ON hr_approval.approval_history USING BRIN (created_at);
 
 -- ============================================================
 -- Table 4: approval_template
@@ -194,6 +230,57 @@ CREATE INDEX idx_delegation_rule_date_range ON hr_approval.delegation_rule (star
 CREATE INDEX idx_delegation_rule_tenant_delegator ON hr_approval.delegation_rule (tenant_id, delegator_id);
 
 -- ============================================================
+-- Table 7: arbitrary_approval_rule (from V6)
+-- 전결 규칙
+-- ============================================================
+CREATE TABLE hr_approval.arbitrary_approval_rule (
+    id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id           UUID NOT NULL,
+    document_type       VARCHAR(50),
+    condition_type      VARCHAR(20) NOT NULL,
+    condition_operator  VARCHAR(10) NOT NULL,
+    condition_value     VARCHAR(100) NOT NULL,
+    skip_to_sequence    INTEGER,
+    is_active           BOOLEAN DEFAULT true,
+    description         VARCHAR(500),
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_by          VARCHAR(100),
+    updated_by          VARCHAR(100)
+);
+
+-- Indexes for arbitrary_approval_rule
+CREATE INDEX idx_arbitrary_rule_tenant ON hr_approval.arbitrary_approval_rule (tenant_id);
+CREATE INDEX idx_arbitrary_rule_document_type ON hr_approval.arbitrary_approval_rule (document_type);
+CREATE INDEX idx_arbitrary_rule_tenant_type ON hr_approval.arbitrary_approval_rule (tenant_id, document_type);
+
+-- ============================================================
+-- Table 8: conditional_route (from V6)
+-- 조건 분기 결재선
+-- ============================================================
+CREATE TABLE hr_approval.conditional_route (
+    id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id           UUID NOT NULL,
+    template_id         UUID REFERENCES hr_approval.approval_template(id),
+    condition_field     VARCHAR(50) NOT NULL,
+    condition_operator  VARCHAR(10) NOT NULL,
+    condition_value     VARCHAR(100) NOT NULL,
+    target_template_id  UUID REFERENCES hr_approval.approval_template(id),
+    priority            INTEGER DEFAULT 0,
+    is_active           BOOLEAN DEFAULT true,
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_by          VARCHAR(100),
+    updated_by          VARCHAR(100)
+);
+
+-- Indexes for conditional_route
+CREATE INDEX idx_conditional_route_tenant ON hr_approval.conditional_route (tenant_id);
+CREATE INDEX idx_conditional_route_template ON hr_approval.conditional_route (template_id);
+CREATE INDEX idx_conditional_route_target_template ON hr_approval.conditional_route (target_template_id);
+CREATE INDEX idx_conditional_route_tenant_template ON hr_approval.conditional_route (tenant_id, template_id);
+
+-- ============================================================
 -- Row Level Security (RLS)
 -- Enable on tenant-owned tables: approval_document, approval_template, delegation_rule
 -- Child tables (approval_line, approval_history, approval_template_line)
@@ -226,3 +313,37 @@ CREATE POLICY delegation_rule_tenant_isolation ON hr_approval.delegation_rule
     FOR ALL
     USING (tenant_id IS NULL OR tenant_id = hr_approval.get_current_tenant_safe())
     WITH CHECK (tenant_id IS NULL OR tenant_id = hr_approval.get_current_tenant_safe());
+
+-- arbitrary_approval_rule (from V6)
+ALTER TABLE hr_approval.arbitrary_approval_rule ENABLE ROW LEVEL SECURITY;
+ALTER TABLE hr_approval.arbitrary_approval_rule FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY arbitrary_approval_rule_tenant_isolation ON hr_approval.arbitrary_approval_rule
+    FOR ALL
+    USING (tenant_id IS NULL OR tenant_id = hr_approval.get_current_tenant_safe())
+    WITH CHECK (tenant_id IS NULL OR tenant_id = hr_approval.get_current_tenant_safe());
+
+-- conditional_route (from V6)
+ALTER TABLE hr_approval.conditional_route ENABLE ROW LEVEL SECURITY;
+ALTER TABLE hr_approval.conditional_route FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY conditional_route_tenant_isolation ON hr_approval.conditional_route
+    FOR ALL
+    USING (tenant_id IS NULL OR tenant_id = hr_approval.get_current_tenant_safe())
+    WITH CHECK (tenant_id IS NULL OR tenant_id = hr_approval.get_current_tenant_safe());
+
+-- ============================================================
+-- Triggers (from V6)
+-- ============================================================
+
+-- arbitrary_approval_rule updated_at trigger
+CREATE TRIGGER trg_arbitrary_approval_rule_updated_at
+    BEFORE UPDATE ON hr_approval.arbitrary_approval_rule
+    FOR EACH ROW
+    EXECUTE FUNCTION hr_approval.set_updated_at();
+
+-- conditional_route updated_at trigger
+CREATE TRIGGER trg_conditional_route_updated_at
+    BEFORE UPDATE ON hr_approval.conditional_route
+    FOR EACH ROW
+    EXECUTE FUNCTION hr_approval.set_updated_at();

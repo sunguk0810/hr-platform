@@ -53,3 +53,31 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Schema-scoped tenant-safe helper functions (prevents race conditions when
+-- multiple services share a schema and start simultaneously)
+CREATE OR REPLACE FUNCTION tenant_common.get_current_tenant_safe()
+RETURNS UUID AS $$
+DECLARE
+    tenant_value TEXT;
+BEGIN
+    tenant_value := current_setting('app.current_tenant', true);
+    IF tenant_value IS NULL OR tenant_value = '' THEN
+        RETURN NULL;
+    END IF;
+    RETURN tenant_value::UUID;
+EXCEPTION
+    WHEN OTHERS THEN
+        RETURN NULL;
+END;
+$$ LANGUAGE plpgsql STABLE;
+
+CREATE OR REPLACE FUNCTION hr_core.get_current_tenant_safe()
+RETURNS UUID AS $$
+BEGIN
+    RETURN NULLIF(current_setting('app.current_tenant', true), '')::UUID;
+EXCEPTION
+    WHEN OTHERS THEN
+        RETURN NULL;
+END;
+$$ LANGUAGE plpgsql STABLE;

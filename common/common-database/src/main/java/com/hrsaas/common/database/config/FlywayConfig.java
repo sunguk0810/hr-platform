@@ -28,7 +28,9 @@ public class FlywayConfig {
             .dataSource(dataSource)
             .locations(properties.getLocations().toArray(new String[0]))
             .schemas(properties.getSchemas().toArray(new String[0]))
+            .table(properties.getTable())
             .baselineOnMigrate(true)
+            .baselineVersion("0")
             .validateOnMigrate(false)  // Disable validation for multi-service schema
             .outOfOrder(true)
             .ignoreMigrationPatterns("*:missing", "*:ignored")

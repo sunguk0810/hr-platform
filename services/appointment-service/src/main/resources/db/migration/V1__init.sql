@@ -1,5 +1,4 @@
--- =============================================================================
--- Appointment Service - V1 Initial Migration
+-- Appointment Service: Consolidated Migration (V1)
 -- Schema: hr_appointment
 -- =============================================================================
 
@@ -20,8 +19,8 @@ $$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
 -- 2. Tables
 -- ---------------------------------------------------------------------------
 
--- appointment_drafts
-CREATE TABLE hr_appointment.appointment_drafts (
+-- appointment_draft
+CREATE TABLE hr_appointment.appointment_draft (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id       UUID            NOT NULL,
     draft_number    VARCHAR(50)     NOT NULL,
@@ -41,14 +40,14 @@ CREATE TABLE hr_appointment.appointment_drafts (
     updated_at      TIMESTAMPTZ     DEFAULT CURRENT_TIMESTAMP,
     created_by      VARCHAR(100),
     updated_by      VARCHAR(100),
-    CONSTRAINT uq_appointment_drafts_tenant_number UNIQUE (tenant_id, draft_number)
+    CONSTRAINT uq_appointment_draft_tenant_number UNIQUE (tenant_id, draft_number)
 );
 
--- appointment_details
-CREATE TABLE hr_appointment.appointment_details (
+-- appointment_detail
+CREATE TABLE hr_appointment.appointment_detail (
     id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id            UUID            NOT NULL,
-    draft_id             UUID            NOT NULL REFERENCES hr_appointment.appointment_drafts (id),
+    draft_id             UUID            NOT NULL REFERENCES hr_appointment.appointment_draft (id),
     employee_id          UUID            NOT NULL,
     employee_name        VARCHAR(100),
     employee_number      VARCHAR(50),
@@ -79,8 +78,8 @@ CREATE TABLE hr_appointment.appointment_details (
     updated_by           VARCHAR(100)
 );
 
--- appointment_schedules
-CREATE TABLE hr_appointment.appointment_schedules (
+-- appointment_schedule
+CREATE TABLE hr_appointment.appointment_schedule (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id       UUID            NOT NULL,
     draft_id        UUID            NOT NULL,
@@ -96,8 +95,8 @@ CREATE TABLE hr_appointment.appointment_schedules (
     updated_by      VARCHAR(100)
 );
 
--- appointment_histories
-CREATE TABLE hr_appointment.appointment_histories (
+-- appointment_history
+CREATE TABLE hr_appointment.appointment_history (
     id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id        UUID            NOT NULL,
     detail_id        UUID,
@@ -120,55 +119,55 @@ CREATE TABLE hr_appointment.appointment_histories (
 -- 3. Indexes
 -- ---------------------------------------------------------------------------
 
--- appointment_drafts
-CREATE INDEX idx_appointment_drafts_tenant_id       ON hr_appointment.appointment_drafts (tenant_id);
-CREATE INDEX idx_appointment_drafts_status           ON hr_appointment.appointment_drafts (tenant_id, status);
-CREATE INDEX idx_appointment_drafts_effective_date   ON hr_appointment.appointment_drafts (tenant_id, effective_date);
-CREATE INDEX idx_appointment_drafts_approval_id      ON hr_appointment.appointment_drafts (approval_id) WHERE approval_id IS NOT NULL;
-CREATE INDEX idx_appointment_drafts_created_at       ON hr_appointment.appointment_drafts (tenant_id, created_at DESC);
+-- appointment_draft
+CREATE INDEX idx_appointment_draft_tenant_id       ON hr_appointment.appointment_draft (tenant_id);
+CREATE INDEX idx_appointment_draft_status           ON hr_appointment.appointment_draft (tenant_id, status);
+CREATE INDEX idx_appointment_draft_effective_date   ON hr_appointment.appointment_draft (tenant_id, effective_date);
+CREATE INDEX idx_appointment_draft_approval_id      ON hr_appointment.appointment_draft (approval_id) WHERE approval_id IS NOT NULL;
+CREATE INDEX idx_appointment_draft_created_at       ON hr_appointment.appointment_draft (tenant_id, created_at DESC);
 
--- appointment_details
-CREATE INDEX idx_appointment_details_tenant_id       ON hr_appointment.appointment_details (tenant_id);
-CREATE INDEX idx_appointment_details_draft_id        ON hr_appointment.appointment_details (tenant_id, draft_id);
-CREATE INDEX idx_appointment_details_employee_id     ON hr_appointment.appointment_details (tenant_id, employee_id);
-CREATE INDEX idx_appointment_details_type            ON hr_appointment.appointment_details (tenant_id, appointment_type);
-CREATE INDEX idx_appointment_details_status          ON hr_appointment.appointment_details (tenant_id, status);
+-- appointment_detail
+CREATE INDEX idx_appointment_detail_tenant_id       ON hr_appointment.appointment_detail (tenant_id);
+CREATE INDEX idx_appointment_detail_draft_id        ON hr_appointment.appointment_detail (tenant_id, draft_id);
+CREATE INDEX idx_appointment_detail_employee_id     ON hr_appointment.appointment_detail (tenant_id, employee_id);
+CREATE INDEX idx_appointment_detail_type            ON hr_appointment.appointment_detail (tenant_id, appointment_type);
+CREATE INDEX idx_appointment_detail_status          ON hr_appointment.appointment_detail (tenant_id, status);
 
--- appointment_schedules
-CREATE INDEX idx_appointment_schedules_tenant_id     ON hr_appointment.appointment_schedules (tenant_id);
-CREATE INDEX idx_appointment_schedules_draft_id      ON hr_appointment.appointment_schedules (tenant_id, draft_id);
-CREATE INDEX idx_appointment_schedules_status        ON hr_appointment.appointment_schedules (status, scheduled_date);
-CREATE INDEX idx_appointment_schedules_date          ON hr_appointment.appointment_schedules (tenant_id, scheduled_date);
+-- appointment_schedule
+CREATE INDEX idx_appointment_schedule_tenant_id     ON hr_appointment.appointment_schedule (tenant_id);
+CREATE INDEX idx_appointment_schedule_draft_id      ON hr_appointment.appointment_schedule (tenant_id, draft_id);
+CREATE INDEX idx_appointment_schedule_tenant_status_date ON hr_appointment.appointment_schedule (tenant_id, status, scheduled_date);
+CREATE INDEX idx_appointment_schedule_date          ON hr_appointment.appointment_schedule (tenant_id, scheduled_date);
 
--- appointment_histories
-CREATE INDEX idx_appointment_histories_tenant_id     ON hr_appointment.appointment_histories (tenant_id);
-CREATE INDEX idx_appointment_histories_employee_id   ON hr_appointment.appointment_histories (tenant_id, employee_id);
-CREATE INDEX idx_appointment_histories_type          ON hr_appointment.appointment_histories (tenant_id, appointment_type);
-CREATE INDEX idx_appointment_histories_effective_date ON hr_appointment.appointment_histories (tenant_id, effective_date);
-CREATE INDEX idx_appointment_histories_detail_id     ON hr_appointment.appointment_histories (detail_id) WHERE detail_id IS NOT NULL;
-CREATE INDEX idx_appointment_histories_draft_number  ON hr_appointment.appointment_histories (tenant_id, draft_number);
+-- appointment_history
+CREATE INDEX idx_appointment_history_tenant_id     ON hr_appointment.appointment_history (tenant_id);
+CREATE INDEX idx_appointment_history_employee_id   ON hr_appointment.appointment_history (tenant_id, employee_id);
+CREATE INDEX idx_appointment_history_type          ON hr_appointment.appointment_history (tenant_id, appointment_type);
+CREATE INDEX idx_appointment_history_effective_date ON hr_appointment.appointment_history (tenant_id, effective_date);
+CREATE INDEX idx_appointment_history_detail_id     ON hr_appointment.appointment_history (detail_id) WHERE detail_id IS NOT NULL;
+CREATE INDEX idx_appointment_history_draft_number  ON hr_appointment.appointment_history (tenant_id, draft_number);
 
 -- ---------------------------------------------------------------------------
 -- 4. Enable RLS
 -- ---------------------------------------------------------------------------
 
-ALTER TABLE hr_appointment.appointment_drafts    ENABLE ROW LEVEL SECURITY;
-ALTER TABLE hr_appointment.appointment_drafts    FORCE ROW LEVEL SECURITY;
+ALTER TABLE hr_appointment.appointment_draft    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE hr_appointment.appointment_draft    FORCE ROW LEVEL SECURITY;
 
-ALTER TABLE hr_appointment.appointment_details   ENABLE ROW LEVEL SECURITY;
-ALTER TABLE hr_appointment.appointment_details   FORCE ROW LEVEL SECURITY;
+ALTER TABLE hr_appointment.appointment_detail   ENABLE ROW LEVEL SECURITY;
+ALTER TABLE hr_appointment.appointment_detail   FORCE ROW LEVEL SECURITY;
 
-ALTER TABLE hr_appointment.appointment_schedules ENABLE ROW LEVEL SECURITY;
-ALTER TABLE hr_appointment.appointment_schedules FORCE ROW LEVEL SECURITY;
+ALTER TABLE hr_appointment.appointment_schedule ENABLE ROW LEVEL SECURITY;
+ALTER TABLE hr_appointment.appointment_schedule FORCE ROW LEVEL SECURITY;
 
-ALTER TABLE hr_appointment.appointment_histories ENABLE ROW LEVEL SECURITY;
-ALTER TABLE hr_appointment.appointment_histories FORCE ROW LEVEL SECURITY;
+ALTER TABLE hr_appointment.appointment_history ENABLE ROW LEVEL SECURITY;
+ALTER TABLE hr_appointment.appointment_history FORCE ROW LEVEL SECURITY;
 
 -- ---------------------------------------------------------------------------
 -- 5. RLS Policies
 -- ---------------------------------------------------------------------------
 
-CREATE POLICY tenant_isolation_appointment_drafts ON hr_appointment.appointment_drafts
+CREATE POLICY tenant_isolation_appointment_draft ON hr_appointment.appointment_draft
     FOR ALL
     USING (
         hr_appointment.get_current_tenant_safe() IS NULL
@@ -179,7 +178,7 @@ CREATE POLICY tenant_isolation_appointment_drafts ON hr_appointment.appointment_
         OR tenant_id = hr_appointment.get_current_tenant_safe()
     );
 
-CREATE POLICY tenant_isolation_appointment_details ON hr_appointment.appointment_details
+CREATE POLICY tenant_isolation_appointment_detail ON hr_appointment.appointment_detail
     FOR ALL
     USING (
         hr_appointment.get_current_tenant_safe() IS NULL
@@ -190,7 +189,7 @@ CREATE POLICY tenant_isolation_appointment_details ON hr_appointment.appointment
         OR tenant_id = hr_appointment.get_current_tenant_safe()
     );
 
-CREATE POLICY tenant_isolation_appointment_schedules ON hr_appointment.appointment_schedules
+CREATE POLICY tenant_isolation_appointment_schedule ON hr_appointment.appointment_schedule
     FOR ALL
     USING (
         hr_appointment.get_current_tenant_safe() IS NULL
@@ -201,7 +200,7 @@ CREATE POLICY tenant_isolation_appointment_schedules ON hr_appointment.appointme
         OR tenant_id = hr_appointment.get_current_tenant_safe()
     );
 
-CREATE POLICY tenant_isolation_appointment_histories ON hr_appointment.appointment_histories
+CREATE POLICY tenant_isolation_appointment_history ON hr_appointment.appointment_history
     FOR ALL
     USING (
         hr_appointment.get_current_tenant_safe() IS NULL

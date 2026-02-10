@@ -24,6 +24,10 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         default_schema: hr_recruitment
         format_sql: true
+        jdbc.batch_size: 20
+        order_inserts: true
+        order_updates: true
+        default_batch_fetch_size: 20
     show-sql: false
     open-in-view: false
   flyway:
@@ -72,6 +76,32 @@ springdoc:
     path: /swagger-ui.html
     tags-sorter: alpha
     operations-sorter: alpha
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+    instances:
+      employee-service:
+        baseConfig: default
+      approval-service:
+        baseConfig: default
+  retry:
+    configs:
+      default:
+        maxAttempts: 3
+        waitDuration: 500ms
+  timelimiter:
+    configs:
+      default:
+        timeoutDuration: 5s
 
 logging:
   level:

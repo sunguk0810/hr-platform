@@ -1,5 +1,4 @@
--- =============================================================================
--- Recruitment Service - V1 Initial Migration
+-- Recruitment Service: Consolidated Migration (V1)
 -- Schema: hr_recruitment
 -- =============================================================================
 
@@ -20,8 +19,8 @@ $$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
 -- 2. Tables
 -- ---------------------------------------------------------------------------
 
--- job_postings
-CREATE TABLE hr_recruitment.job_postings (
+-- job_posting
+CREATE TABLE hr_recruitment.job_posting (
     id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id             UUID            NOT NULL,
     job_code              VARCHAR(30)     NOT NULL,
@@ -61,8 +60,8 @@ CREATE TABLE hr_recruitment.job_postings (
     updated_by            VARCHAR(100)
 );
 
--- applicants
-CREATE TABLE hr_recruitment.applicants (
+-- applicant
+CREATE TABLE hr_recruitment.applicant (
     id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id         UUID            NOT NULL,
     name              VARCHAR(100)    NOT NULL,
@@ -91,12 +90,12 @@ CREATE TABLE hr_recruitment.applicants (
     updated_by        VARCHAR(100)
 );
 
--- applications
-CREATE TABLE hr_recruitment.applications (
+-- application
+CREATE TABLE hr_recruitment.application (
     id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id             UUID            NOT NULL,
-    job_posting_id        UUID            NOT NULL REFERENCES hr_recruitment.job_postings (id),
-    applicant_id          UUID            NOT NULL REFERENCES hr_recruitment.applicants (id),
+    job_posting_id        UUID            NOT NULL REFERENCES hr_recruitment.job_posting (id),
+    applicant_id          UUID            NOT NULL REFERENCES hr_recruitment.applicant (id),
     application_number    VARCHAR(50)     NOT NULL,
     status                VARCHAR(30)     DEFAULT 'SUBMITTED',
     cover_letter          TEXT,
@@ -121,11 +120,11 @@ CREATE TABLE hr_recruitment.applications (
     updated_by            VARCHAR(100)
 );
 
--- interviews
-CREATE TABLE hr_recruitment.interviews (
+-- interview
+CREATE TABLE hr_recruitment.interview (
     id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id         UUID            NOT NULL,
-    application_id    UUID            NOT NULL REFERENCES hr_recruitment.applications (id),
+    application_id    UUID            NOT NULL REFERENCES hr_recruitment.application (id),
     interview_type    VARCHAR(30)     NOT NULL,
     round             INTEGER         DEFAULT 1,
     status            VARCHAR(20)     DEFAULT 'SCHEDULING',
@@ -148,11 +147,11 @@ CREATE TABLE hr_recruitment.interviews (
     updated_by        VARCHAR(100)
 );
 
--- interview_scores
-CREATE TABLE hr_recruitment.interview_scores (
+-- interview_score
+CREATE TABLE hr_recruitment.interview_score (
     id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id         UUID            NOT NULL,
-    interview_id      UUID            NOT NULL REFERENCES hr_recruitment.interviews (id),
+    interview_id      UUID            NOT NULL REFERENCES hr_recruitment.interview (id),
     interviewer_id    UUID            NOT NULL,
     interviewer_name  VARCHAR(100),
     criterion         VARCHAR(100)    NOT NULL,
@@ -167,11 +166,11 @@ CREATE TABLE hr_recruitment.interview_scores (
     updated_by        VARCHAR(100)
 );
 
--- offers
-CREATE TABLE hr_recruitment.offers (
+-- offer
+CREATE TABLE hr_recruitment.offer (
     id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id             UUID            NOT NULL,
-    application_id        UUID            NOT NULL UNIQUE REFERENCES hr_recruitment.applications (id),
+    application_id        UUID            NOT NULL UNIQUE REFERENCES hr_recruitment.application (id),
     offer_number          VARCHAR(50)     NOT NULL,
     status                VARCHAR(20)     DEFAULT 'DRAFT',
     position_title        VARCHAR(100)    NOT NULL,
@@ -207,81 +206,81 @@ CREATE TABLE hr_recruitment.offers (
 -- 3. Indexes
 -- ---------------------------------------------------------------------------
 
--- job_postings
-CREATE INDEX idx_job_postings_tenant_id         ON hr_recruitment.job_postings (tenant_id);
-CREATE INDEX idx_job_postings_status             ON hr_recruitment.job_postings (tenant_id, status);
-CREATE INDEX idx_job_postings_department_id      ON hr_recruitment.job_postings (tenant_id, department_id);
-CREATE INDEX idx_job_postings_recruiter_id       ON hr_recruitment.job_postings (tenant_id, recruiter_id);
-CREATE INDEX idx_job_postings_hiring_manager_id  ON hr_recruitment.job_postings (tenant_id, hiring_manager_id);
-CREATE INDEX idx_job_postings_open_close_date    ON hr_recruitment.job_postings (tenant_id, open_date, close_date);
-CREATE INDEX idx_job_postings_employment_type    ON hr_recruitment.job_postings (tenant_id, employment_type);
-CREATE INDEX idx_job_postings_is_featured        ON hr_recruitment.job_postings (tenant_id, is_featured) WHERE is_featured = TRUE;
-CREATE INDEX idx_job_postings_is_urgent          ON hr_recruitment.job_postings (tenant_id, is_urgent) WHERE is_urgent = TRUE;
-CREATE INDEX idx_job_postings_created_at         ON hr_recruitment.job_postings (tenant_id, created_at DESC);
+-- job_posting
+CREATE INDEX idx_job_posting_tenant_id         ON hr_recruitment.job_posting (tenant_id);
+CREATE INDEX idx_job_posting_status             ON hr_recruitment.job_posting (tenant_id, status);
+CREATE INDEX idx_job_posting_department_id      ON hr_recruitment.job_posting (tenant_id, department_id);
+CREATE INDEX idx_job_posting_recruiter_id       ON hr_recruitment.job_posting (tenant_id, recruiter_id);
+CREATE INDEX idx_job_posting_hiring_manager_id  ON hr_recruitment.job_posting (tenant_id, hiring_manager_id);
+CREATE INDEX idx_job_posting_open_close_date    ON hr_recruitment.job_posting (tenant_id, open_date, close_date);
+CREATE INDEX idx_job_posting_employment_type    ON hr_recruitment.job_posting (tenant_id, employment_type);
+CREATE INDEX idx_job_posting_is_featured        ON hr_recruitment.job_posting (tenant_id, is_featured) WHERE is_featured = TRUE;
+CREATE INDEX idx_job_posting_is_urgent          ON hr_recruitment.job_posting (tenant_id, is_urgent) WHERE is_urgent = TRUE;
+CREATE INDEX idx_job_posting_created_at         ON hr_recruitment.job_posting (tenant_id, created_at DESC);
 
--- applicants
-CREATE INDEX idx_applicants_tenant_id            ON hr_recruitment.applicants (tenant_id);
-CREATE INDEX idx_applicants_email                ON hr_recruitment.applicants (tenant_id, email);
-CREATE INDEX idx_applicants_name                 ON hr_recruitment.applicants (tenant_id, name);
-CREATE INDEX idx_applicants_source               ON hr_recruitment.applicants (tenant_id, source);
-CREATE INDEX idx_applicants_is_blacklisted       ON hr_recruitment.applicants (tenant_id, is_blacklisted) WHERE is_blacklisted = TRUE;
+-- applicant
+CREATE INDEX idx_applicant_tenant_id            ON hr_recruitment.applicant (tenant_id);
+CREATE INDEX idx_applicant_email                ON hr_recruitment.applicant (tenant_id, email);
+CREATE INDEX idx_applicant_name                 ON hr_recruitment.applicant (tenant_id, name);
+CREATE INDEX idx_applicant_source               ON hr_recruitment.applicant (tenant_id, source);
+CREATE INDEX idx_applicant_is_blacklisted       ON hr_recruitment.applicant (tenant_id, is_blacklisted) WHERE is_blacklisted = TRUE;
 
--- applications
-CREATE INDEX idx_applications_tenant_id          ON hr_recruitment.applications (tenant_id);
-CREATE INDEX idx_applications_job_posting_id     ON hr_recruitment.applications (tenant_id, job_posting_id);
-CREATE INDEX idx_applications_applicant_id       ON hr_recruitment.applications (tenant_id, applicant_id);
-CREATE INDEX idx_applications_status             ON hr_recruitment.applications (tenant_id, status);
-CREATE INDEX idx_applications_current_stage      ON hr_recruitment.applications (tenant_id, current_stage);
-CREATE INDEX idx_applications_created_at         ON hr_recruitment.applications (tenant_id, created_at DESC);
+-- application
+CREATE INDEX idx_application_tenant_id          ON hr_recruitment.application (tenant_id);
+CREATE INDEX idx_application_job_posting_id     ON hr_recruitment.application (tenant_id, job_posting_id);
+CREATE INDEX idx_application_applicant_id       ON hr_recruitment.application (tenant_id, applicant_id);
+CREATE INDEX idx_application_status             ON hr_recruitment.application (tenant_id, status);
+CREATE INDEX idx_application_current_stage      ON hr_recruitment.application (tenant_id, current_stage);
+CREATE INDEX idx_application_created_at         ON hr_recruitment.application (tenant_id, created_at DESC);
 
--- interviews
-CREATE INDEX idx_interviews_tenant_id            ON hr_recruitment.interviews (tenant_id);
-CREATE INDEX idx_interviews_application_id       ON hr_recruitment.interviews (tenant_id, application_id);
-CREATE INDEX idx_interviews_status               ON hr_recruitment.interviews (tenant_id, status);
-CREATE INDEX idx_interviews_scheduled_date       ON hr_recruitment.interviews (tenant_id, scheduled_date);
-CREATE INDEX idx_interviews_type                 ON hr_recruitment.interviews (tenant_id, interview_type);
-CREATE INDEX idx_interviews_result               ON hr_recruitment.interviews (tenant_id, result);
+-- interview
+CREATE INDEX idx_interview_tenant_id            ON hr_recruitment.interview (tenant_id);
+CREATE INDEX idx_interview_application_id       ON hr_recruitment.interview (tenant_id, application_id);
+CREATE INDEX idx_interview_status               ON hr_recruitment.interview (tenant_id, status);
+CREATE INDEX idx_interview_scheduled_date       ON hr_recruitment.interview (tenant_id, scheduled_date);
+CREATE INDEX idx_interview_type                 ON hr_recruitment.interview (tenant_id, interview_type);
+CREATE INDEX idx_interview_result               ON hr_recruitment.interview (tenant_id, result);
 
--- interview_scores
-CREATE INDEX idx_interview_scores_tenant_id      ON hr_recruitment.interview_scores (tenant_id);
-CREATE INDEX idx_interview_scores_interview_id   ON hr_recruitment.interview_scores (tenant_id, interview_id);
-CREATE INDEX idx_interview_scores_interviewer_id ON hr_recruitment.interview_scores (tenant_id, interviewer_id);
+-- interview_score
+CREATE INDEX idx_interview_score_tenant_id      ON hr_recruitment.interview_score (tenant_id);
+CREATE INDEX idx_interview_score_interview_id   ON hr_recruitment.interview_score (tenant_id, interview_id);
+CREATE INDEX idx_interview_score_interviewer_id ON hr_recruitment.interview_score (tenant_id, interviewer_id);
 
--- offers
-CREATE INDEX idx_offers_tenant_id                ON hr_recruitment.offers (tenant_id);
-CREATE INDEX idx_offers_application_id           ON hr_recruitment.offers (tenant_id, application_id);
-CREATE INDEX idx_offers_status                   ON hr_recruitment.offers (tenant_id, status);
-CREATE INDEX idx_offers_start_date               ON hr_recruitment.offers (tenant_id, start_date);
-CREATE INDEX idx_offers_expires_at               ON hr_recruitment.offers (expires_at) WHERE status = 'SENT';
-CREATE INDEX idx_offers_created_at               ON hr_recruitment.offers (tenant_id, created_at DESC);
+-- offer
+CREATE INDEX idx_offer_tenant_id                ON hr_recruitment.offer (tenant_id);
+CREATE INDEX idx_offer_application_id           ON hr_recruitment.offer (tenant_id, application_id);
+CREATE INDEX idx_offer_status                   ON hr_recruitment.offer (tenant_id, status);
+CREATE INDEX idx_offer_start_date               ON hr_recruitment.offer (tenant_id, start_date);
+CREATE INDEX idx_offer_expires_at               ON hr_recruitment.offer (expires_at) WHERE status = 'SENT';
+CREATE INDEX idx_offer_created_at               ON hr_recruitment.offer (tenant_id, created_at DESC);
 
 -- ---------------------------------------------------------------------------
 -- 4. Enable RLS
 -- ---------------------------------------------------------------------------
 
-ALTER TABLE hr_recruitment.job_postings     ENABLE ROW LEVEL SECURITY;
-ALTER TABLE hr_recruitment.job_postings     FORCE ROW LEVEL SECURITY;
+ALTER TABLE hr_recruitment.job_posting     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE hr_recruitment.job_posting     FORCE ROW LEVEL SECURITY;
 
-ALTER TABLE hr_recruitment.applicants       ENABLE ROW LEVEL SECURITY;
-ALTER TABLE hr_recruitment.applicants       FORCE ROW LEVEL SECURITY;
+ALTER TABLE hr_recruitment.applicant       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE hr_recruitment.applicant       FORCE ROW LEVEL SECURITY;
 
-ALTER TABLE hr_recruitment.applications     ENABLE ROW LEVEL SECURITY;
-ALTER TABLE hr_recruitment.applications     FORCE ROW LEVEL SECURITY;
+ALTER TABLE hr_recruitment.application     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE hr_recruitment.application     FORCE ROW LEVEL SECURITY;
 
-ALTER TABLE hr_recruitment.interviews       ENABLE ROW LEVEL SECURITY;
-ALTER TABLE hr_recruitment.interviews       FORCE ROW LEVEL SECURITY;
+ALTER TABLE hr_recruitment.interview       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE hr_recruitment.interview       FORCE ROW LEVEL SECURITY;
 
-ALTER TABLE hr_recruitment.interview_scores ENABLE ROW LEVEL SECURITY;
-ALTER TABLE hr_recruitment.interview_scores FORCE ROW LEVEL SECURITY;
+ALTER TABLE hr_recruitment.interview_score ENABLE ROW LEVEL SECURITY;
+ALTER TABLE hr_recruitment.interview_score FORCE ROW LEVEL SECURITY;
 
-ALTER TABLE hr_recruitment.offers           ENABLE ROW LEVEL SECURITY;
-ALTER TABLE hr_recruitment.offers           FORCE ROW LEVEL SECURITY;
+ALTER TABLE hr_recruitment.offer           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE hr_recruitment.offer           FORCE ROW LEVEL SECURITY;
 
 -- ---------------------------------------------------------------------------
 -- 5. RLS Policies
 -- ---------------------------------------------------------------------------
 
-CREATE POLICY tenant_isolation_job_postings ON hr_recruitment.job_postings
+CREATE POLICY tenant_isolation_job_posting ON hr_recruitment.job_posting
     FOR ALL
     USING (
         hr_recruitment.get_current_tenant_safe() IS NULL
@@ -292,7 +291,7 @@ CREATE POLICY tenant_isolation_job_postings ON hr_recruitment.job_postings
         OR tenant_id = hr_recruitment.get_current_tenant_safe()
     );
 
-CREATE POLICY tenant_isolation_applicants ON hr_recruitment.applicants
+CREATE POLICY tenant_isolation_applicant ON hr_recruitment.applicant
     FOR ALL
     USING (
         hr_recruitment.get_current_tenant_safe() IS NULL
@@ -303,7 +302,7 @@ CREATE POLICY tenant_isolation_applicants ON hr_recruitment.applicants
         OR tenant_id = hr_recruitment.get_current_tenant_safe()
     );
 
-CREATE POLICY tenant_isolation_applications ON hr_recruitment.applications
+CREATE POLICY tenant_isolation_application ON hr_recruitment.application
     FOR ALL
     USING (
         hr_recruitment.get_current_tenant_safe() IS NULL
@@ -314,7 +313,7 @@ CREATE POLICY tenant_isolation_applications ON hr_recruitment.applications
         OR tenant_id = hr_recruitment.get_current_tenant_safe()
     );
 
-CREATE POLICY tenant_isolation_interviews ON hr_recruitment.interviews
+CREATE POLICY tenant_isolation_interview ON hr_recruitment.interview
     FOR ALL
     USING (
         hr_recruitment.get_current_tenant_safe() IS NULL
@@ -325,7 +324,7 @@ CREATE POLICY tenant_isolation_interviews ON hr_recruitment.interviews
         OR tenant_id = hr_recruitment.get_current_tenant_safe()
     );
 
-CREATE POLICY tenant_isolation_interview_scores ON hr_recruitment.interview_scores
+CREATE POLICY tenant_isolation_interview_score ON hr_recruitment.interview_score
     FOR ALL
     USING (
         hr_recruitment.get_current_tenant_safe() IS NULL
@@ -336,7 +335,7 @@ CREATE POLICY tenant_isolation_interview_scores ON hr_recruitment.interview_scor
         OR tenant_id = hr_recruitment.get_current_tenant_safe()
     );
 
-CREATE POLICY tenant_isolation_offers ON hr_recruitment.offers
+CREATE POLICY tenant_isolation_offer ON hr_recruitment.offer
     FOR ALL
     USING (
         hr_recruitment.get_current_tenant_safe() IS NULL
@@ -346,3 +345,19 @@ CREATE POLICY tenant_isolation_offers ON hr_recruitment.offers
         hr_recruitment.get_current_tenant_safe() IS NULL
         OR tenant_id = hr_recruitment.get_current_tenant_safe()
     );
+
+-- ---------------------------------------------------------------------------
+-- 6. Performance Indexes (JSONB GIN, status lookups)
+-- ---------------------------------------------------------------------------
+
+-- applicant: skills JSONB GIN index (skills @> operator optimization)
+CREATE INDEX idx_applicant_skills_gin
+    ON hr_recruitment.applicant USING GIN (skills);
+
+-- application: status lookup index (getSummary GROUP BY optimization)
+CREATE INDEX idx_application_status_only
+    ON hr_recruitment.application (status);
+
+-- interview: status lookup index (getSummary GROUP BY optimization)
+CREATE INDEX idx_interview_status_only
+    ON hr_recruitment.interview (status);

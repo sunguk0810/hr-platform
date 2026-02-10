@@ -1,5 +1,4 @@
--- =============================================================================
--- Notification Service - V1 Initial Migration
+-- Notification Service: Consolidated Migration (V1)
 -- Schema: hr_notification
 -- =============================================================================
 
@@ -20,8 +19,8 @@ $$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
 -- 2. Tables
 -- ---------------------------------------------------------------------------
 
--- notifications
-CREATE TABLE hr_notification.notifications (
+-- notification
+CREATE TABLE hr_notification.notification (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id       UUID            NOT NULL,
     recipient_id    UUID            NOT NULL,
@@ -44,8 +43,8 @@ CREATE TABLE hr_notification.notifications (
     updated_by      VARCHAR(100)
 );
 
--- notification_templates
-CREATE TABLE hr_notification.notification_templates (
+-- notification_template
+CREATE TABLE hr_notification.notification_template (
     id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id         UUID            NOT NULL,
     code              VARCHAR(100)    NOT NULL,
@@ -61,11 +60,11 @@ CREATE TABLE hr_notification.notification_templates (
     updated_at        TIMESTAMPTZ     DEFAULT CURRENT_TIMESTAMP,
     created_by        VARCHAR(100),
     updated_by        VARCHAR(100),
-    CONSTRAINT uq_notification_templates_tenant_code UNIQUE (tenant_id, code)
+    CONSTRAINT uq_notification_template_tenant_code UNIQUE (tenant_id, code)
 );
 
--- notification_preferences
-CREATE TABLE hr_notification.notification_preferences (
+-- notification_preference
+CREATE TABLE hr_notification.notification_preference (
     id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id         UUID            NOT NULL,
     user_id           UUID            NOT NULL,
@@ -76,7 +75,7 @@ CREATE TABLE hr_notification.notification_preferences (
     updated_at        TIMESTAMPTZ     DEFAULT CURRENT_TIMESTAMP,
     created_by        VARCHAR(100),
     updated_by        VARCHAR(100),
-    CONSTRAINT uq_notification_preferences_user_type_channel
+    CONSTRAINT uq_notification_preference_user_type_channel
         UNIQUE (tenant_id, user_id, notification_type, channel)
 );
 
@@ -84,43 +83,43 @@ CREATE TABLE hr_notification.notification_preferences (
 -- 3. Indexes
 -- ---------------------------------------------------------------------------
 
--- notifications
-CREATE INDEX idx_notifications_tenant_id       ON hr_notification.notifications (tenant_id);
-CREATE INDEX idx_notifications_recipient_id    ON hr_notification.notifications (tenant_id, recipient_id);
-CREATE INDEX idx_notifications_type            ON hr_notification.notifications (tenant_id, notification_type);
-CREATE INDEX idx_notifications_channel         ON hr_notification.notifications (tenant_id, channel);
-CREATE INDEX idx_notifications_is_read         ON hr_notification.notifications (tenant_id, recipient_id, is_read);
-CREATE INDEX idx_notifications_is_sent         ON hr_notification.notifications (is_sent) WHERE is_sent = FALSE;
-CREATE INDEX idx_notifications_reference       ON hr_notification.notifications (tenant_id, reference_type, reference_id);
-CREATE INDEX idx_notifications_created_at      ON hr_notification.notifications (tenant_id, created_at DESC);
+-- notification
+CREATE INDEX idx_notification_tenant_id       ON hr_notification.notification (tenant_id);
+CREATE INDEX idx_notification_recipient_id    ON hr_notification.notification (tenant_id, recipient_id);
+CREATE INDEX idx_notification_type            ON hr_notification.notification (tenant_id, notification_type);
+CREATE INDEX idx_notification_channel         ON hr_notification.notification (tenant_id, channel);
+CREATE INDEX idx_notification_is_read         ON hr_notification.notification (tenant_id, recipient_id, is_read);
+CREATE INDEX idx_notification_is_sent         ON hr_notification.notification (is_sent) WHERE is_sent = FALSE;
+CREATE INDEX idx_notification_reference       ON hr_notification.notification (tenant_id, reference_type, reference_id);
+CREATE INDEX idx_notification_created_at      ON hr_notification.notification (tenant_id, created_at DESC);
 
--- notification_templates
-CREATE INDEX idx_notification_templates_tenant_id ON hr_notification.notification_templates (tenant_id);
-CREATE INDEX idx_notification_templates_type      ON hr_notification.notification_templates (tenant_id, notification_type);
-CREATE INDEX idx_notification_templates_channel   ON hr_notification.notification_templates (tenant_id, channel);
+-- notification_template
+CREATE INDEX idx_notification_template_tenant_id ON hr_notification.notification_template (tenant_id);
+CREATE INDEX idx_notification_template_type      ON hr_notification.notification_template (tenant_id, notification_type);
+CREATE INDEX idx_notification_template_channel   ON hr_notification.notification_template (tenant_id, channel);
 
--- notification_preferences
-CREATE INDEX idx_notification_preferences_tenant_id ON hr_notification.notification_preferences (tenant_id);
-CREATE INDEX idx_notification_preferences_user_id   ON hr_notification.notification_preferences (tenant_id, user_id);
+-- notification_preference
+CREATE INDEX idx_notification_preference_tenant_id ON hr_notification.notification_preference (tenant_id);
+CREATE INDEX idx_notification_preference_user_id   ON hr_notification.notification_preference (tenant_id, user_id);
 
 -- ---------------------------------------------------------------------------
 -- 4. Enable RLS
 -- ---------------------------------------------------------------------------
 
-ALTER TABLE hr_notification.notifications           ENABLE ROW LEVEL SECURITY;
-ALTER TABLE hr_notification.notifications           FORCE ROW LEVEL SECURITY;
+ALTER TABLE hr_notification.notification           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE hr_notification.notification           FORCE ROW LEVEL SECURITY;
 
-ALTER TABLE hr_notification.notification_templates   ENABLE ROW LEVEL SECURITY;
-ALTER TABLE hr_notification.notification_templates   FORCE ROW LEVEL SECURITY;
+ALTER TABLE hr_notification.notification_template   ENABLE ROW LEVEL SECURITY;
+ALTER TABLE hr_notification.notification_template   FORCE ROW LEVEL SECURITY;
 
-ALTER TABLE hr_notification.notification_preferences ENABLE ROW LEVEL SECURITY;
-ALTER TABLE hr_notification.notification_preferences FORCE ROW LEVEL SECURITY;
+ALTER TABLE hr_notification.notification_preference ENABLE ROW LEVEL SECURITY;
+ALTER TABLE hr_notification.notification_preference FORCE ROW LEVEL SECURITY;
 
 -- ---------------------------------------------------------------------------
 -- 5. RLS Policies
 -- ---------------------------------------------------------------------------
 
-CREATE POLICY tenant_isolation_notifications ON hr_notification.notifications
+CREATE POLICY tenant_isolation_notification ON hr_notification.notification
     FOR ALL
     USING (
         hr_notification.get_current_tenant_safe() IS NULL
@@ -131,7 +130,7 @@ CREATE POLICY tenant_isolation_notifications ON hr_notification.notifications
         OR tenant_id = hr_notification.get_current_tenant_safe()
     );
 
-CREATE POLICY tenant_isolation_notification_templates ON hr_notification.notification_templates
+CREATE POLICY tenant_isolation_notification_template ON hr_notification.notification_template
     FOR ALL
     USING (
         hr_notification.get_current_tenant_safe() IS NULL
@@ -142,7 +141,7 @@ CREATE POLICY tenant_isolation_notification_templates ON hr_notification.notific
         OR tenant_id = hr_notification.get_current_tenant_safe()
     );
 
-CREATE POLICY tenant_isolation_notification_preferences ON hr_notification.notification_preferences
+CREATE POLICY tenant_isolation_notification_preference ON hr_notification.notification_preference
     FOR ALL
     USING (
         hr_notification.get_current_tenant_safe() IS NULL
@@ -152,3 +151,12 @@ CREATE POLICY tenant_isolation_notification_preferences ON hr_notification.notif
         hr_notification.get_current_tenant_safe() IS NULL
         OR tenant_id = hr_notification.get_current_tenant_safe()
     );
+
+-- ---------------------------------------------------------------------------
+-- 6. BRIN Index (time-series optimization)
+-- ---------------------------------------------------------------------------
+
+-- BRIN index: notification created_at for date range scans
+-- (inbox pagination, unread count queries, retention policy cleanup)
+CREATE INDEX idx_notification_created_at_brin
+    ON hr_notification.notification USING BRIN (created_at);
