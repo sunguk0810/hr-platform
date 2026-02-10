@@ -1,5 +1,7 @@
 package com.hrsaas.common.tenant;
 
+import com.hrsaas.common.entity.TenantContextHolder;
+
 import java.util.UUID;
 
 /**
@@ -16,6 +18,8 @@ public final class TenantContext {
     public static void setCurrentTenant(UUID tenantId) {
         TenantInfo info = getOrCreateInfo();
         info.setTenantId(tenantId);
+        // Bridge to TenantContextHolder (used by TenantAwareEntity.prePersist and RLS interceptors)
+        TenantContextHolder.setCurrentTenant(tenantId);
     }
 
     public static UUID getCurrentTenant() {
@@ -53,6 +57,7 @@ public final class TenantContext {
 
     public static void clear() {
         CONTEXT.remove();
+        TenantContextHolder.clear();
     }
 
     private static TenantInfo getOrCreateInfo() {

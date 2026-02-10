@@ -306,8 +306,8 @@ class MenuServiceImplTest {
             .isActive(isActive)
             .showInNav(true)
             .showInMobile(false)
-            .permissions(new ArrayList<>())
-            .children(new ArrayList<>())
+            .permissions(new LinkedHashSet<>())
+            .children(new LinkedHashSet<>())
             .build();
         setMenuItemId(menuItem, id);
         return menuItem;

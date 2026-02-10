@@ -22,6 +22,7 @@ import { Loader2, FileCheck, Settings, Clock, Users, GitFork } from 'lucide-reac
 import { useToast } from '@/hooks/useToast';
 import type { ApprovalPolicy, ApprovalScope, ApprovalLineBase } from '@hr-platform/shared-types';
 import { DEFAULT_APPROVAL_POLICY } from '@hr-platform/shared-types';
+import { apiClient } from '@/lib/apiClient';
 
 const approvalPolicySchema = z.object({
   features: z.object({
@@ -412,9 +413,8 @@ function ParallelCompletionCard() {
   const { data: parallelFeature, isLoading: isLoadingFeature } = useQuery({
     queryKey: ['tenant', 'features', 'PARALLEL_APPROVAL'],
     queryFn: async () => {
-      const res = await fetch('/api/v1/tenants/current/features/PARALLEL_APPROVAL');
-      const json = await res.json();
-      return json.data;
+      const res = await apiClient.get('/tenants/current/features/PARALLEL_APPROVAL');
+      return res.data?.data;
     },
   });
 
@@ -428,16 +428,11 @@ function ParallelCompletionCard() {
 
   const saveMutation = useMutation({
     mutationFn: async (minApprovers: string) => {
-      const res = await fetch('/api/v1/tenants/tenant-001/features/PARALLEL_APPROVAL', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          enabled: true,
-          config: { minApprovers, approvalMode: minApprovers === 'one' ? 'or' : 'and' },
-        }),
+      const res = await apiClient.put('/tenants/current/features/PARALLEL_APPROVAL', {
+        enabled: true,
+        config: { minApprovers, approvalMode: minApprovers === 'one' ? 'or' : 'and' },
       });
-      if (!res.ok) throw new Error('Failed to save');
-      return res.json();
+      return res.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tenant', 'features', 'PARALLEL_APPROVAL'] });

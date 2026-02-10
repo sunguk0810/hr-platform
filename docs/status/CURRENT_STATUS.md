@@ -102,28 +102,35 @@ auth, dashboard, employee, organization, attendance, approval, recruitment, appo
 
 ## 6. 인증 및 권한
 
-### 테스트 계정 (8개)
+### 테스트 계정 (31개, `tenant_common.users`)
+
+**한성전자 (주력 테스트 계열사)**:
 
 | 역할 | 계정 | 비밀번호 |
 |------|------|----------|
-| 시스템 관리자 | admin | admin1234 |
-| 그룹 HR 총괄 | group | group1234 |
-| 테넌트 관리자 | tenant | tenant1234 |
-| HR 관리자 | hradmin | hradmin1234 |
-| HR 담당자 | hr | hr1234 |
-| 부서장 | deptmgr | deptmgr1234 |
-| 팀장 | teamlead | teamlead1234 |
-| 일반 직원 | employee | employee1234 |
+| 시스템 관리자 | superadmin | Admin@2025! |
+| 테넌트 관리자 (CEO) | ceo.elec | Ceo@2025! |
+| HR 관리자 | hr.admin.elec | HrAdmin@2025! |
+| HR 담당자 | hr.manager.elec | HrMgr@2025! |
+| 부서장 | dev.manager.elec | DevMgr@2025! |
+| 선임 | dev.senior.elec | DevSr@2025! |
+| 일반 직원 | dev.staff.elec | DevStaff@2025! |
 
-### 테넌트 (5개)
+**기타 계열사**: 각 CEO(`ceo.{code}`/`Ceo@2025!`), HR관리자(`hr.admin.{code}`/`HrAdmin@2025!`)
+전체 목록: `scripts/sample-data/README.md`
 
-| 테넌트 | 코드 | 접근 계정 |
-|--------|------|----------|
-| HR그룹 지주회사 | HOLDINGS | admin, group |
-| HR테크 | TECH | 전체 |
-| HR컨설팅 | CONSULTING | admin, group |
-| HR아카데미 | ACADEMY | admin, group |
-| HR파트너스 | PARTNERS | admin, group |
+### 테넌트 (8개 계열사)
+
+| 테넌트 | 코드 | CEO | HR관리자 |
+|--------|------|-----|---------|
+| 한성홀딩스 | HANSUNG_HD | ceo.hansung | hr.admin.hd |
+| 한성전자 | HANSUNG_ELEC | ceo.elec | hr.admin.elec |
+| 한성SDI | HANSUNG_SDI | ceo.sdi | hr.admin.sdi |
+| 한성엔지니어링 | HANSUNG_ENG | ceo.eng | hr.admin.eng |
+| 한성바이오 | HANSUNG_BIO | ceo.bio | hr.admin.bio |
+| 한성화학 | HANSUNG_CHEM | ceo.chem | hr.admin.chem |
+| 한성IT서비스 | HANSUNG_IT | ceo.it | hr.admin.it |
+| 한성생명 | HANSUNG_LIFE | ceo.life | hr.admin.life |
 
 ---
 

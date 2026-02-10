@@ -1,5 +1,7 @@
 package com.hrsaas.mdm.domain.entity.menu;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
@@ -8,7 +10,9 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -30,12 +34,18 @@ public class MenuItem {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
+    @JsonIgnore
     private MenuItem parent;
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("sortOrder ASC")
     @Builder.Default
-    private List<MenuItem> children = new ArrayList<>();
+    @JsonIgnore
+    private Set<MenuItem> children = new LinkedHashSet<>();
+
+    @Transient
+    @Setter
+    private UUID parentId;
 
     @Column(nullable = false, unique = true, length = 50)
     private String code;
@@ -102,7 +112,7 @@ public class MenuItem {
 
     @OneToMany(mappedBy = "menuItem", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<MenuPermission> permissions = new ArrayList<>();
+    private Set<MenuPermission> permissions = new LinkedHashSet<>();
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -124,6 +134,16 @@ public class MenuItem {
     private UUID tenantId;
 
     // Helper methods
+
+    /**
+     * Returns the parent menu item's ID.
+     * Works both when loaded from DB (via parent entity) and from Redis cache (via transient parentId).
+     */
+    @JsonProperty("parentId")
+    public UUID getParentId() {
+        if (parentId != null) return parentId;
+        return parent != null ? parent.getId() : null;
+    }
 
     public void addChild(MenuItem child) {
         children.add(child);

@@ -45,6 +45,7 @@ public class TenantController {
     private final PolicyInheritanceService policyInheritanceService;
     private final PolicyChangeHistoryRepository policyChangeHistoryRepository;
     private final TenantRepository tenantRepository;
+    private final TenantFeatureService tenantFeatureService;
     private final ObjectMapper objectMapper;
 
     // ===== CRUD Endpoints (response type updated to TenantDetailResponse) =====
@@ -265,6 +266,57 @@ public class TenantController {
         }
         tenantRepository.save(tenant);
         TenantDetailResponse response = tenantService.getDetailById(id);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    // ===== Current Tenant Convenience APIs =====
+
+    @GetMapping("/current/features/{featureCode}")
+    @Operation(summary = "현재 테넌트 기능 조회 (인증된 사용자의 테넌트)")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<TenantFeatureResponse>> getCurrentTenantFeature(
+            @PathVariable String featureCode) {
+        UUID tenantId = com.hrsaas.common.security.SecurityContextHolder.getCurrentTenantId();
+        if (tenantId == null) {
+            throw new com.hrsaas.common.core.exception.BusinessException("TNT_010", "테넌트 정보를 확인할 수 없습니다.");
+        }
+        try {
+            TenantFeatureResponse response = tenantFeatureService.getByTenantIdAndFeatureCode(tenantId, featureCode);
+            return ResponseEntity.ok(ApiResponse.success(response));
+        } catch (com.hrsaas.common.core.exception.NotFoundException e) {
+            // Feature not configured - return disabled default
+            TenantFeatureResponse defaultResponse = TenantFeatureResponse.builder()
+                .tenantId(tenantId)
+                .featureCode(featureCode)
+                .isEnabled(false)
+                .build();
+            return ResponseEntity.ok(ApiResponse.success(defaultResponse));
+        }
+    }
+
+    @PutMapping("/current/features/{featureCode}")
+    @Operation(summary = "현재 테넌트 기능 수정 (인증된 사용자의 테넌트)")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN')")
+    public ResponseEntity<ApiResponse<TenantFeatureResponse>> updateCurrentTenantFeature(
+            @PathVariable String featureCode,
+            @Valid @RequestBody ToggleFeatureRequest request) {
+        UUID tenantId = com.hrsaas.common.security.SecurityContextHolder.getCurrentTenantId();
+        if (tenantId == null) {
+            throw new com.hrsaas.common.core.exception.BusinessException("TNT_010", "테넌트 정보를 확인할 수 없습니다.");
+        }
+        String configJson = null;
+        if (request.getConfig() != null && !request.getConfig().isEmpty()) {
+            try {
+                configJson = objectMapper.writeValueAsString(request.getConfig());
+            } catch (Exception e) {
+                log.warn("Failed to serialize feature config", e);
+            }
+        }
+        UpdateTenantFeatureRequest updateRequest = UpdateTenantFeatureRequest.builder()
+            .isEnabled(request.getEnabled())
+            .config(configJson)
+            .build();
+        TenantFeatureResponse response = tenantFeatureService.update(tenantId, featureCode, updateRequest);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

@@ -7,7 +7,6 @@ import com.hrsaas.mdm.service.menu.MenuCacheService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,9 +18,11 @@ import java.util.UUID;
  * Implementation of MenuCacheService with Redis caching.
  *
  * Cache key strategy:
- * - menu:tree - Global menu tree (24h TTL)
  * - menu:tenant:{tenantId} - Tenant-specific config (1h TTL)
  * - menu:user:{tenantId}:{userId} - User's computed menus (15m TTL)
+ *
+ * Note: menu:tree (global menu tree) is NOT cached because MenuItem JPA entities
+ * have bidirectional relationships that cause infinite recursion during Redis serialization.
  */
 @Service
 @RequiredArgsConstructor
@@ -30,17 +31,26 @@ public class MenuCacheServiceImpl implements MenuCacheService {
 
     private final MenuItemRepository menuItemRepository;
 
+    /**
+     * Load all menus with permissions directly from the database.
+     * <p>
+     * NOTE: @Cacheable was intentionally removed because this method returns JPA entities
+     * (MenuItem) with bidirectional relationships (parent/children self-reference,
+     * permissions/menuItem). These cause infinite recursion during Redis serialization
+     * with GenericJackson2JsonRedisSerializer, resulting in a 500 error on /api/v1/menus/me.
+     * <p>
+     * Menu data is only loaded at page initialization, so the performance impact is minimal.
+     * If caching is needed in the future, convert to DTOs before caching.
+     */
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = CacheNames.MENU_TREE, unless = "#result == null || #result.isEmpty()")
     public List<MenuItem> getAllMenusWithPermissions() {
-        log.debug("Loading menus from database (cache miss)");
-        return menuItemRepository.findAllTreeWithPermissions();
+        log.debug("Loading menus from database");
+        return menuItemRepository.findAllWithPermissions();
     }
 
     @Override
     @Caching(evict = {
-        @CacheEvict(value = CacheNames.MENU_TREE, allEntries = true),
         @CacheEvict(value = CacheNames.MENU_TENANT, allEntries = true),
         @CacheEvict(value = CacheNames.MENU_USER, allEntries = true)
     })

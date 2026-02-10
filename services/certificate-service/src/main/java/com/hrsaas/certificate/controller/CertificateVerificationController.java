@@ -42,6 +42,21 @@ public class CertificateVerificationController {
         return ApiResponse.success(certificateVerificationService.verify(request, clientIp, userAgent));
     }
 
+    @Operation(summary = "증명서 진위확인 - GET (공개 API)")
+    @GetMapping("/verify/{verificationCode}")
+    public ApiResponse<VerificationResultResponse> verifyByCode(
+            @PathVariable String verificationCode,
+            HttpServletRequest httpRequest) {
+        String clientIp = getClientIp(httpRequest);
+        String userAgent = httpRequest.getHeader("User-Agent");
+
+        VerifyCertificateRequest request = VerifyCertificateRequest.builder()
+                .verificationCode(verificationCode)
+                .build();
+
+        return ApiResponse.success(certificateVerificationService.verify(request, clientIp, userAgent));
+    }
+
     @Operation(summary = "발급 증명서별 진위확인 로그 조회")
     @GetMapping("/issues/{issueId}/verification-logs")
     @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")

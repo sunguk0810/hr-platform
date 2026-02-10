@@ -58,8 +58,15 @@ public class AttendanceController {
     @GetMapping("/my")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<List<AttendanceRecordResponse>> getMyAttendances(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        // Default to current month if dates not provided
+        if (startDate == null) {
+            startDate = LocalDate.now().withDayOfMonth(1);
+        }
+        if (endDate == null) {
+            endDate = LocalDate.now();
+        }
         UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
         return ApiResponse.success(attendanceService.getMyAttendances(userId, startDate, endDate));
     }

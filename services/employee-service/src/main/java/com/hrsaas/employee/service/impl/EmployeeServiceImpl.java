@@ -126,6 +126,21 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
+    public PageResponse<EmployeeResponse> searchByKeyword(String keyword, Pageable pageable) {
+        UUID tenantId = TenantContext.getCurrentTenant();
+
+        Page<Employee> page = employeeRepository.searchByKeyword(
+            tenantId,
+            (keyword != null && !keyword.isBlank()) ? keyword.trim() : null,
+            pageable
+        );
+
+        return PageResponse.from(page, page.getContent().stream()
+            .map(EmployeeResponse::from)
+            .toList());
+    }
+
+    @Override
     @Transactional
     @CacheEvict(value = CacheNames.EMPLOYEE, allEntries = true)
     public EmployeeResponse update(UUID id, UpdateEmployeeRequest request) {

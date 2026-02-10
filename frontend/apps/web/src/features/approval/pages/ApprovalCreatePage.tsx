@@ -24,6 +24,7 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import { format } from 'date-fns';
 import { useCreateApproval } from '../hooks/useApprovals';
 import { useAuthStore } from '@/stores/authStore';
+import { apiClient } from '@/lib/apiClient';
 import { ApprovalLinePreview } from '../components/ApprovalLinePreview';
 import { OrgTreeApproverPicker } from '../components/OrgTreeApproverPicker';
 import type { SelectedApprover } from '../components/OrgTreeApproverPicker';
@@ -77,9 +78,8 @@ export default function ApprovalCreatePage() {
   const { data: parallelFeature } = useQuery({
     queryKey: ['tenant', 'features', 'PARALLEL_APPROVAL'],
     queryFn: async () => {
-      const res = await fetch('/api/v1/tenants/current/features/PARALLEL_APPROVAL');
-      const json = await res.json();
-      return json.data;
+      const res = await apiClient.get('/tenants/current/features/PARALLEL_APPROVAL');
+      return res.data?.data;
     },
   });
 

@@ -57,6 +57,16 @@ public class EmployeeController {
             .body(ApiResponse.created(response));
     }
 
+    @GetMapping("/search")
+    @Operation(summary = "직원 키워드 검색 (이름/사번)")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<PageResponse<EmployeeResponse>>> searchByKeyword(
+            @RequestParam(required = false) String keyword,
+            @PageableDefault(size = 20) Pageable pageable) {
+        PageResponse<EmployeeResponse> response = employeeService.searchByKeyword(keyword, pageable);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "직원 상세 조회")
     @PreAuthorize("hasAnyRole('EMPLOYEE', 'HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN') and @permissionChecker.canAccessEmployee(#id)")

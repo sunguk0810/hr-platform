@@ -5,6 +5,7 @@ import com.hrsaas.certificate.domain.dto.request.RevokeCertificateRequest;
 import com.hrsaas.certificate.domain.dto.response.CertificateIssueResponse;
 import com.hrsaas.certificate.service.CertificateIssueService;
 import com.hrsaas.common.response.ApiResponse;
+import com.hrsaas.common.security.SecurityContextHolder;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -44,6 +45,15 @@ public class CertificateIssueController {
             @PathVariable UUID requestId,
             @Valid @RequestBody IssueCertificateRequest request) {
         return ApiResponse.success(certificateIssueService.issue(requestId, request));
+    }
+
+    @Operation(summary = "내 발급 증명서 목록 조회")
+    @GetMapping("/my")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<Page<CertificateIssueResponse>> getMyIssues(
+            @PageableDefault(size = 20) Pageable pageable) {
+        UUID employeeId = SecurityContextHolder.getCurrentUser().getEmployeeId();
+        return ApiResponse.success(certificateIssueService.getByEmployeeId(employeeId, pageable));
     }
 
     @Operation(summary = "발급 증명서 상세 조회")

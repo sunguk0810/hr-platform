@@ -1,19 +1,17 @@
 -- ============================================================================
--- HR SaaS Platform - 통합 샘플 데이터 (한방 SQL)
+-- 99_combined_all.sql
+-- HR SaaS Platform - 전체 샘플 데이터 한방 SQL
 -- ============================================================================
--- 사용법: Flyway 마이그레이션 완료 후 실행
---
---   psql -h localhost -p 5433 -U hr_saas -d hr_saas -f 99_combined_all.sql
---   또는 DataGrip/DBeaver에서 직접 실행
---
--- 예상 실행 시간: 약 40-60분 (75,000명 규모)
 -- 생성일: 2026-02-10
+-- 사용법: psql -h localhost -p 5433 -U hr_saas -d hr_saas -f 99_combined_all.sql
+--         또는 DataGrip/DBeaver에서 직접 실행
+-- 주의: Flyway 마이그레이션 완료 후 실행할 것\!
 -- ============================================================================
 
 
--- ======================================================================
--- [0/21] 기존 샘플 데이터 초기화
--- ======================================================================
+-- ============================================================================
+-- [00] 00_reset_sample_data.sql
+-- ============================================================================
 
 -- ============================================================================
 -- 00_reset_sample_data.sql
@@ -60,9 +58,9 @@ BEGIN
 END $$;
 
 
--- ======================================================================
--- [01/21] 테넌트 생성 (8개 계열사)
--- ======================================================================
+-- ============================================================================
+-- [01] 01_tenant_seed.sql
+-- ============================================================================
 
 -- ============================================================================
 -- 01_tenant_seed.sql
@@ -271,9 +269,9 @@ BEGIN
 END $$;
 
 
--- ======================================================================
--- [02/21] 테넌트 정책/기능 설정
--- ======================================================================
+-- ============================================================================
+-- [02] 02_tenant_policy_feature.sql
+-- ============================================================================
 
 -- ============================================================================
 -- 02_tenant_policy_feature.sql
@@ -458,9 +456,9 @@ BEGIN
 END $$;
 
 
--- ======================================================================
--- [03/21] 공통코드 그룹 생성
--- ======================================================================
+-- ============================================================================
+-- [03] 03_mdm_code_groups.sql
+-- ============================================================================
 
 -- ============================================================================
 -- 03_mdm_code_groups.sql
@@ -805,9 +803,9 @@ BEGIN
 END $$;
 
 
--- ======================================================================
--- [04/21] 공통코드 상세 생성
--- ======================================================================
+-- ============================================================================
+-- [04] 04_mdm_common_codes.sql
+-- ============================================================================
 
 -- ============================================================================
 -- 04_mdm_common_codes.sql
@@ -1060,9 +1058,9 @@ BEGIN
 END $$;
 
 
--- ======================================================================
--- [05/21] 직급/직책 마스터 생성
--- ======================================================================
+-- ============================================================================
+-- [05] 05_organization_grades_positions.sql
+-- ============================================================================
 
 -- ============================================================================
 -- 05_organization_grades_positions.sql
@@ -1191,9 +1189,9 @@ BEGIN
 END $$;
 
 
--- ======================================================================
--- [06/21] 부서 구조 생성 (~500개)
--- ======================================================================
+-- ============================================================================
+-- [06] 06_organization_departments.sql
+-- ============================================================================
 
 -- ============================================================================
 -- 06_organization_departments.sql
@@ -1719,9 +1717,9 @@ BEGIN
 END $$;
 
 
--- ======================================================================
--- [07/21] 직원 생성 함수 준비
--- ======================================================================
+-- ============================================================================
+-- [07] 07_employee_generator.sql
+-- ============================================================================
 
 -- ============================================================================
 -- 07_employee_generator.sql
@@ -1866,7 +1864,7 @@ DECLARE
     v_position_code VARCHAR(5);
     v_department_id UUID;
     v_dept_record RECORD;
-    v_name_counter INT := 1;
+    v_name_counter INT := 100;  -- 100부터 시작 (테스트 계정 번호 충돌 방지)
     v_employment_type VARCHAR(20);
     v_batch_size INT := 1000;
     v_batch_count INT := 0;
@@ -2060,9 +2058,9 @@ BEGIN
 END $$;
 
 
--- ======================================================================
--- [08/21] 직원 대량 생성 (~75,000명)
--- ======================================================================
+-- ============================================================================
+-- [08] 08_employee_execute.sql
+-- ============================================================================
 
 -- ============================================================================
 -- 08_employee_execute.sql
@@ -2377,9 +2375,9 @@ BEGIN
 END $$;
 
 
--- ======================================================================
--- [09/21] 직원 상세 정보 (가족/학력/경력/자격증)
--- ======================================================================
+-- ============================================================================
+-- [09] 09_employee_details_generator.sql
+-- ============================================================================
 
 -- ============================================================================
 -- 09_employee_details_generator.sql
@@ -2506,8 +2504,8 @@ BEGIN
             END;
 
             INSERT INTO hr_core.employee_education (
-                tenant_id, employee_id, school_name, degree_type, major,
-                admission_date, graduation_date, graduation_status
+                tenant_id, employee_id, school_name, degree, major,
+                start_date, end_date, graduation_status
             ) VALUES (
                 v_emp.tenant_id,
                 v_emp.id,
@@ -2694,9 +2692,9 @@ BEGIN
 END $$;
 
 
--- ======================================================================
--- [10/21] 공휴일 데이터 생성
--- ======================================================================
+-- ============================================================================
+-- [10] 10_attendance_holidays.sql
+-- ============================================================================
 
 -- ============================================================================
 -- 10_attendance_holidays.sql
@@ -2777,9 +2775,9 @@ BEGIN
 END $$;
 
 
--- ======================================================================
--- [11/21] 휴가 잔액 생성
--- ======================================================================
+-- ============================================================================
+-- [11] 11_leave_balance_generator.sql
+-- ============================================================================
 
 -- ============================================================================
 -- 11_leave_balance_generator.sql
@@ -2917,9 +2915,9 @@ BEGIN
 END $$;
 
 
--- ======================================================================
--- [12/21] 근태 기록 대량 생성 (~4,500,000건)
--- ======================================================================
+-- ============================================================================
+-- [12] 12_attendance_generator.sql
+-- ============================================================================
 
 -- ============================================================================
 -- 12_attendance_generator.sql
@@ -3158,9 +3156,9 @@ BEGIN
 END $$;
 
 
--- ======================================================================
--- [13/21] 휴가/초과근무 신청 생성
--- ======================================================================
+-- ============================================================================
+-- [13] 13_leave_overtime_generator.sql
+-- ============================================================================
 
 -- ============================================================================
 -- 13_leave_overtime_generator.sql
@@ -3378,9 +3376,9 @@ BEGIN
 END $$;
 
 
--- ======================================================================
--- [14/21] 결재 양식 생성
--- ======================================================================
+-- ============================================================================
+-- [14] 14_approval_templates.sql
+-- ============================================================================
 
 -- ============================================================================
 -- 14_approval_templates.sql
@@ -3586,9 +3584,9 @@ BEGIN
 END $$;
 
 
--- ======================================================================
--- [15/21] 결재 문서 대량 생성 (~30,000건)
--- ======================================================================
+-- ============================================================================
+-- [15] 15_approval_generator.sql
+-- ============================================================================
 
 -- ============================================================================
 -- 15_approval_generator.sql
@@ -3893,9 +3891,9 @@ BEGIN
 END $$;
 
 
--- ======================================================================
--- [16/21] 알림 데이터 생성
--- ======================================================================
+-- ============================================================================
+-- [16] 16_notification_generator.sql
+-- ============================================================================
 
 -- ============================================================================
 -- 16_notification_generator.sql
@@ -4191,9 +4189,9 @@ BEGIN
 END $$;
 
 
--- ======================================================================
--- [17/21] 파일 메타데이터 생성
--- ======================================================================
+-- ============================================================================
+-- [17] 17_file_generator.sql
+-- ============================================================================
 
 -- ============================================================================
 -- 17_file_generator.sql
@@ -4402,9 +4400,9 @@ BEGIN
 END $$;
 
 
--- ======================================================================
--- [18/21] 채용 데이터 생성
--- ======================================================================
+-- ============================================================================
+-- [18] 18_recruitment_generator.sql
+-- ============================================================================
 
 -- ============================================================================
 -- 18_recruitment_generator.sql
@@ -4923,9 +4921,9 @@ BEGIN
 END $$;
 
 
--- ======================================================================
--- [19/21] 발령 데이터 생성
--- ======================================================================
+-- ============================================================================
+-- [19] 19_appointment_generator.sql
+-- ============================================================================
 
 -- ============================================================================
 -- 19_appointment_generator.sql
@@ -5241,9 +5239,9 @@ BEGIN
 END $$;
 
 
--- ======================================================================
--- [20/21] 증명서 데이터 생성
--- ======================================================================
+-- ============================================================================
+-- [20] 20_certificate_generator.sql
+-- ============================================================================
 
 -- ============================================================================
 -- 20_certificate_generator.sql
@@ -5650,9 +5648,155 @@ BEGIN
 END $$;
 
 
--- ======================================================================
--- [21/21] Auth 로그인 이력 생성
--- ======================================================================
+-- ============================================================================
+-- [22] 22_auth_users_generator.sql
+-- ============================================================================
+
+-- ============================================================================
+-- 22_auth_users_generator.sql
+-- Auth 서비스 사용자 계정 생성 (tenant_common.users)
+-- ============================================================================
+-- 생성 규모:
+--   - 시스템 관리자: 1명 (superadmin)
+--   - 테스트 계정: 30명 (각 계열사별 CEO, HR관리자, 부서장, 직원)
+-- 의존성:
+--   - pgcrypto 확장 (BCrypt 해시 생성)
+--   - 08_employee_execute.sql (직원 레코드 선행 생성 필요)
+-- ============================================================================
+
+-- pgcrypto 확장 활성화 (BCrypt 해시 생성용)
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- RLS 비활성화
+SET app.current_tenant = '00000000-0000-0000-0000-000000000000';
+
+DO $$
+BEGIN
+    RAISE NOTICE '========================================';
+    RAISE NOTICE 'Auth 사용자 계정 생성 시작...';
+    RAISE NOTICE '========================================';
+END $$;
+
+-- superadmin (시스템 전체 관리자)
+INSERT INTO tenant_common.users (
+    id, tenant_id, employee_id, username, email,
+    password_hash, roles, permissions, status,
+    password_changed_at, created_at, updated_at, created_by, updated_by
+) VALUES (
+    gen_random_uuid(),
+    '00000000-0000-0000-0000-000000000001',
+    NULL,
+    'superadmin',
+    'superadmin@hrsaas.com',
+    crypt('Admin@2025!', gen_salt('bf', 12)),
+    ARRAY['SUPER_ADMIN'],
+    ARRAY['*'],
+    'ACTIVE',
+    NOW(), NOW(), NOW(), 'SYSTEM', 'SYSTEM'
+) ON CONFLICT ON CONSTRAINT uq_users_tenant_username DO NOTHING;
+
+CREATE OR REPLACE FUNCTION create_auth_user(
+    p_tenant_id UUID,
+    p_username VARCHAR,
+    p_email VARCHAR,
+    p_password VARCHAR,
+    p_roles TEXT[],
+    p_employee_number VARCHAR DEFAULT NULL
+) RETURNS UUID AS $$
+DECLARE
+    v_user_id UUID;
+    v_employee_id UUID;
+BEGIN
+    IF p_employee_number IS NOT NULL THEN
+        SELECT id INTO v_employee_id
+        FROM hr_core.employee
+        WHERE tenant_id = p_tenant_id
+          AND employee_number = p_employee_number;
+    END IF;
+
+    INSERT INTO tenant_common.users (
+        id, tenant_id, employee_id, username, email,
+        password_hash, roles, permissions, status,
+        password_changed_at, created_at, updated_at, created_by, updated_by
+    ) VALUES (
+        gen_random_uuid(),
+        p_tenant_id,
+        v_employee_id,
+        p_username,
+        p_email,
+        crypt(p_password, gen_salt('bf', 12)),
+        p_roles,
+        ARRAY[]::TEXT[],
+        'ACTIVE',
+        NOW(), NOW(), NOW(), 'SYSTEM', 'SYSTEM'
+    )
+    ON CONFLICT ON CONSTRAINT uq_users_tenant_username DO NOTHING
+    RETURNING id INTO v_user_id;
+
+    RETURN v_user_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 한성홀딩스
+SELECT create_auth_user('a0000001-0000-0000-0000-000000000001', 'ceo.hansung', 'ceo.hansung@hansung-hd.co.kr', 'Ceo@2025!', ARRAY['TENANT_ADMIN'], 'HHD2000001');
+SELECT create_auth_user('a0000001-0000-0000-0000-000000000001', 'hr.admin.hd', 'hr.admin.hd@hansung-hd.co.kr', 'HrAdmin@2025!', ARRAY['HR_MANAGER'], 'HHD2000002');
+SELECT create_auth_user('a0000001-0000-0000-0000-000000000001', 'hr.manager.hd', 'hr.manager.hd@hansung-hd.co.kr', 'HrMgr@2025!', ARRAY['HR_MANAGER'], 'HHD2000003');
+
+-- 한성전자
+SELECT create_auth_user('a0000001-0000-0000-0000-000000000002', 'ceo.elec', 'ceo.elec@hansung-elec.co.kr', 'Ceo@2025!', ARRAY['TENANT_ADMIN'], 'HEL2000001');
+SELECT create_auth_user('a0000001-0000-0000-0000-000000000002', 'hr.admin.elec', 'hr.admin.elec@hansung-elec.co.kr', 'HrAdmin@2025!', ARRAY['HR_MANAGER'], 'HEL2000002');
+SELECT create_auth_user('a0000001-0000-0000-0000-000000000002', 'hr.manager.elec', 'hr.manager.elec@hansung-elec.co.kr', 'HrMgr@2025!', ARRAY['HR_MANAGER'], 'HEL2000003');
+SELECT create_auth_user('a0000001-0000-0000-0000-000000000002', 'dev.manager.elec', 'dev.manager.elec@hansung-elec.co.kr', 'DevMgr@2025!', ARRAY['DEPT_MANAGER'], 'HEL2000004');
+SELECT create_auth_user('a0000001-0000-0000-0000-000000000002', 'dev.senior.elec', 'dev.senior.elec@hansung-elec.co.kr', 'DevSr@2025!', ARRAY['EMPLOYEE'], 'HEL2000005');
+SELECT create_auth_user('a0000001-0000-0000-0000-000000000002', 'dev.staff.elec', 'dev.staff.elec@hansung-elec.co.kr', 'DevStaff@2025!', ARRAY['EMPLOYEE'], 'HEL2000006');
+
+-- 한성SDI
+SELECT create_auth_user('a0000001-0000-0000-0000-000000000003', 'ceo.sdi', 'ceo.sdi@hansung-sdi.co.kr', 'Ceo@2025!', ARRAY['TENANT_ADMIN'], 'HSI2000001');
+SELECT create_auth_user('a0000001-0000-0000-0000-000000000003', 'hr.admin.sdi', 'hr.admin.sdi@hansung-sdi.co.kr', 'HrAdmin@2025!', ARRAY['HR_MANAGER'], 'HSI2000002');
+SELECT create_auth_user('a0000001-0000-0000-0000-000000000003', 'prod.manager.sdi', 'prod.manager.sdi@hansung-sdi.co.kr', 'ProdMgr@2025!', ARRAY['DEPT_MANAGER'], 'HSI2000003');
+SELECT create_auth_user('a0000001-0000-0000-0000-000000000003', 'prod.staff.sdi', 'prod.staff.sdi@hansung-sdi.co.kr', 'ProdStaff@2025!', ARRAY['EMPLOYEE'], 'HSI2000004');
+
+-- 한성엔지니어링
+SELECT create_auth_user('a0000001-0000-0000-0000-000000000004', 'ceo.eng', 'ceo.eng@hansung-eng.co.kr', 'Ceo@2025!', ARRAY['TENANT_ADMIN'], 'HEN2000001');
+SELECT create_auth_user('a0000001-0000-0000-0000-000000000004', 'hr.admin.eng', 'hr.admin.eng@hansung-eng.co.kr', 'HrAdmin@2025!', ARRAY['HR_MANAGER'], 'HEN2000002');
+SELECT create_auth_user('a0000001-0000-0000-0000-000000000004', 'pm.manager.eng', 'pm.manager.eng@hansung-eng.co.kr', 'PmMgr@2025!', ARRAY['DEPT_MANAGER'], 'HEN2000003');
+
+-- 한성바이오
+SELECT create_auth_user('a0000001-0000-0000-0000-000000000005', 'ceo.bio', 'ceo.bio@hansung-bio.co.kr', 'Ceo@2025!', ARRAY['TENANT_ADMIN'], 'HBI2000001');
+SELECT create_auth_user('a0000001-0000-0000-0000-000000000005', 'hr.admin.bio', 'hr.admin.bio@hansung-bio.co.kr', 'HrAdmin@2025!', ARRAY['HR_MANAGER'], 'HBI2000002');
+SELECT create_auth_user('a0000001-0000-0000-0000-000000000005', 'rnd.manager.bio', 'rnd.manager.bio@hansung-bio.co.kr', 'RndMgr@2025!', ARRAY['DEPT_MANAGER'], 'HBI2000003');
+
+-- 한성화학
+SELECT create_auth_user('a0000001-0000-0000-0000-000000000006', 'ceo.chem', 'ceo.chem@hansung-chem.co.kr', 'Ceo@2025!', ARRAY['TENANT_ADMIN'], 'HCH2000001');
+SELECT create_auth_user('a0000001-0000-0000-0000-000000000006', 'hr.admin.chem', 'hr.admin.chem@hansung-chem.co.kr', 'HrAdmin@2025!', ARRAY['HR_MANAGER'], 'HCH2000002');
+SELECT create_auth_user('a0000001-0000-0000-0000-000000000006', 'qa.manager.chem', 'qa.manager.chem@hansung-chem.co.kr', 'QaMgr@2025!', ARRAY['DEPT_MANAGER'], 'HCH2000003');
+
+-- 한성IT서비스
+SELECT create_auth_user('a0000001-0000-0000-0000-000000000007', 'ceo.it', 'ceo.it@hansung-it.co.kr', 'Ceo@2025!', ARRAY['TENANT_ADMIN'], 'HIT2000001');
+SELECT create_auth_user('a0000001-0000-0000-0000-000000000007', 'hr.admin.it', 'hr.admin.it@hansung-it.co.kr', 'HrAdmin@2025!', ARRAY['HR_MANAGER'], 'HIT2000002');
+SELECT create_auth_user('a0000001-0000-0000-0000-000000000007', 'dev.manager.it', 'dev.manager.it@hansung-it.co.kr', 'DevMgr@2025!', ARRAY['DEPT_MANAGER'], 'HIT2000003');
+SELECT create_auth_user('a0000001-0000-0000-0000-000000000007', 'dev.staff.it', 'dev.staff.it@hansung-it.co.kr', 'DevStaff@2025!', ARRAY['EMPLOYEE'], 'HIT2000004');
+
+-- 한성생명
+SELECT create_auth_user('a0000001-0000-0000-0000-000000000008', 'ceo.life', 'ceo.life@hansung-life.co.kr', 'Ceo@2025!', ARRAY['TENANT_ADMIN'], 'HLF2000001');
+SELECT create_auth_user('a0000001-0000-0000-0000-000000000008', 'hr.admin.life', 'hr.admin.life@hansung-life.co.kr', 'HrAdmin@2025!', ARRAY['HR_MANAGER'], 'HLF2000002');
+SELECT create_auth_user('a0000001-0000-0000-0000-000000000008', 'sales.manager.life', 'sales.manager.life@hansung-life.co.kr', 'SalesMgr@2025!', ARRAY['DEPT_MANAGER'], 'HLF2000003');
+SELECT create_auth_user('a0000001-0000-0000-0000-000000000008', 'sales.staff.life', 'sales.staff.life@hansung-life.co.kr', 'SalesStaff@2025!', ARRAY['EMPLOYEE'], 'HLF2000004');
+
+DROP FUNCTION IF EXISTS create_auth_user;
+
+DO $$
+DECLARE
+    v_total INT;
+BEGIN
+    SELECT COUNT(*) INTO v_total FROM tenant_common.users;
+    RAISE NOTICE 'Auth 사용자 계정 생성 완료: % 명', v_total;
+END $$;
+
+
+-- ============================================================================
+-- [21] 21_auth_login_history_generator.sql
+-- ============================================================================
 
 -- ============================================================================
 -- 21_auth_login_history_generator.sql
@@ -5833,12 +5977,10 @@ DECLARE
     v_session_count INT;
     v_token_count INT;
     v_history_count INT;
-    v_lock_count INT;
 BEGIN
     SELECT COUNT(*) INTO v_session_count FROM tenant_common.user_sessions;
     SELECT COUNT(*) INTO v_token_count FROM tenant_common.password_reset_tokens;
     SELECT COUNT(*) INTO v_history_count FROM tenant_common.login_history;
-    SELECT COUNT(*) INTO v_lock_count FROM tenant_common.account_locks;
 
     RAISE NOTICE '';
     RAISE NOTICE '========================================';
@@ -5847,74 +5989,46 @@ BEGIN
     RAISE NOTICE '사용자 세션: % 건 (런타임 생성)', v_session_count;
     RAISE NOTICE '비밀번호 재설정 토큰: % 건 (런타임 생성)', v_token_count;
     RAISE NOTICE '로그인 이력: % 건', v_history_count;
-    RAISE NOTICE '계정 잠금: % 건', v_lock_count;
     RAISE NOTICE '========================================';
 END $$;
 
 
--- ======================================================================
--- 최종 데이터 검증
--- ======================================================================
-
-SELECT '테넌트' as "테이블", COUNT(*)::TEXT as "건수" FROM tenant_common.tenant
-UNION ALL SELECT '테넌트정책', COUNT(*)::TEXT FROM tenant_common.tenant_policy
-UNION ALL SELECT '테넌트기능', COUNT(*)::TEXT FROM tenant_common.tenant_feature
-UNION ALL SELECT '코드그룹', COUNT(*)::TEXT FROM tenant_common.code_group
-UNION ALL SELECT '공통코드', COUNT(*)::TEXT FROM tenant_common.common_code
-UNION ALL SELECT '직급', COUNT(*)::TEXT FROM hr_core.grade
-UNION ALL SELECT '직책', COUNT(*)::TEXT FROM hr_core.position
-UNION ALL SELECT '부서', COUNT(*)::TEXT FROM hr_core.department
-UNION ALL SELECT '직원', COUNT(*)::TEXT FROM hr_core.employee
-UNION ALL SELECT '직원가족', COUNT(*)::TEXT FROM hr_core.employee_family
-UNION ALL SELECT '직원학력', COUNT(*)::TEXT FROM hr_core.employee_education
-UNION ALL SELECT '직원경력', COUNT(*)::TEXT FROM hr_core.employee_career
-UNION ALL SELECT '직원자격증', COUNT(*)::TEXT FROM hr_core.employee_certificate
-UNION ALL SELECT '공휴일', COUNT(*)::TEXT FROM hr_attendance.holiday
-UNION ALL SELECT '휴가잔액', COUNT(*)::TEXT FROM hr_attendance.leave_balance
-UNION ALL SELECT '근태기록', COUNT(*)::TEXT FROM hr_attendance.attendance_record
-UNION ALL SELECT '휴가신청', COUNT(*)::TEXT FROM hr_attendance.leave_request
-UNION ALL SELECT '초과근무신청', COUNT(*)::TEXT FROM hr_attendance.overtime_request
-UNION ALL SELECT '결재양식', COUNT(*)::TEXT FROM hr_approval.approval_template
-UNION ALL SELECT '결재문서', COUNT(*)::TEXT FROM hr_approval.approval_document
-UNION ALL SELECT '결재선', COUNT(*)::TEXT FROM hr_approval.approval_line
-UNION ALL SELECT '결재이력', COUNT(*)::TEXT FROM hr_approval.approval_history
-UNION ALL SELECT '알림템플릿', COUNT(*)::TEXT FROM hr_notification.notification_template
-UNION ALL SELECT '알림설정', COUNT(*)::TEXT FROM hr_notification.notification_preference
-UNION ALL SELECT '알림', COUNT(*)::TEXT FROM hr_notification.notification
-UNION ALL SELECT '파일', COUNT(*)::TEXT FROM hr_file.file_metadata
-UNION ALL SELECT '채용공고', COUNT(*)::TEXT FROM hr_recruitment.job_posting
-UNION ALL SELECT '지원자', COUNT(*)::TEXT FROM hr_recruitment.applicant
-UNION ALL SELECT '지원서', COUNT(*)::TEXT FROM hr_recruitment.application
-UNION ALL SELECT '면접', COUNT(*)::TEXT FROM hr_recruitment.interview
-UNION ALL SELECT '면접평가', COUNT(*)::TEXT FROM hr_recruitment.interview_score
-UNION ALL SELECT '채용오퍼', COUNT(*)::TEXT FROM hr_recruitment.offer
-UNION ALL SELECT '발령안', COUNT(*)::TEXT FROM hr_appointment.appointment_draft
-UNION ALL SELECT '발령상세', COUNT(*)::TEXT FROM hr_appointment.appointment_detail
-UNION ALL SELECT '예약발령', COUNT(*)::TEXT FROM hr_appointment.appointment_schedule
-UNION ALL SELECT '발령이력', COUNT(*)::TEXT FROM hr_appointment.appointment_history
-UNION ALL SELECT '증명서템플릿', COUNT(*)::TEXT FROM hr_certificate.certificate_template
-UNION ALL SELECT '증명서유형', COUNT(*)::TEXT FROM hr_certificate.certificate_type
-UNION ALL SELECT '증명서신청', COUNT(*)::TEXT FROM hr_certificate.certificate_request
-UNION ALL SELECT '발급증명서', COUNT(*)::TEXT FROM hr_certificate.certificate_issue
-UNION ALL SELECT '진위확인로그', COUNT(*)::TEXT FROM hr_certificate.verification_log
-UNION ALL SELECT '로그인이력', COUNT(*)::TEXT FROM tenant_common.login_history;
-
-SELECT
-    t.name as "계열사",
-    COUNT(e.id) as "직원수",
-    (SELECT COUNT(*) FROM hr_core.department WHERE tenant_id = t.id) as "부서수"
-FROM tenant_common.tenant t
-LEFT JOIN hr_core.employee e ON t.id = e.tenant_id
-GROUP BY t.id, t.name
-ORDER BY COUNT(e.id) DESC;
-
 -- ============================================================================
--- 완료! 테스트 계정:
---   시스템관리자: superadmin / Admin@2025!
---   CEO(한성전자): ceo.elec / Ceo@2025!
---   HR관리자: hr.admin.elec / HrAdmin@2025!
---   HR담당자: hr.manager.elec / HrMgr@2025!
---   부서장: dev.manager.elec / DevMgr@2025!
---   선임: dev.senior.elec / DevSr@2025!
---   일반직원: dev.staff.elec / DevStaff@2025!
+-- 최종 검증: 전체 데이터 카운트
 -- ============================================================================
+DO $$
+DECLARE
+    v_count INT;
+BEGIN
+    RAISE NOTICE '';
+    RAISE NOTICE '========================================';
+    RAISE NOTICE '전체 샘플 데이터 생성 완료\!';
+    RAISE NOTICE '========================================';
+
+    SELECT COUNT(*) INTO v_count FROM tenant_common.tenant;
+    RAISE NOTICE '테넌트: % 건', v_count;
+    SELECT COUNT(*) INTO v_count FROM hr_core.employee;
+    RAISE NOTICE '직원: % 건', v_count;
+    SELECT COUNT(*) INTO v_count FROM hr_core.department;
+    RAISE NOTICE '부서: % 건', v_count;
+    SELECT COUNT(*) INTO v_count FROM hr_attendance.attendance_record;
+    RAISE NOTICE '근태기록: % 건', v_count;
+    SELECT COUNT(*) INTO v_count FROM hr_attendance.leave_request;
+    RAISE NOTICE '휴가신청: % 건', v_count;
+    SELECT COUNT(*) INTO v_count FROM hr_approval.approval_document;
+    RAISE NOTICE '결재문서: % 건', v_count;
+    SELECT COUNT(*) INTO v_count FROM hr_notification.notification;
+    RAISE NOTICE '알림: % 건', v_count;
+    SELECT COUNT(*) INTO v_count FROM hr_file.file_metadata;
+    RAISE NOTICE '파일: % 건', v_count;
+    SELECT COUNT(*) INTO v_count FROM hr_recruitment.job_posting;
+    RAISE NOTICE '채용공고: % 건', v_count;
+    SELECT COUNT(*) INTO v_count FROM hr_appointment.appointment_draft;
+    RAISE NOTICE '발령초안: % 건', v_count;
+    SELECT COUNT(*) INTO v_count FROM hr_certificate.certificate_template;
+    RAISE NOTICE '증명서템플릿: % 건', v_count;
+    SELECT COUNT(*) INTO v_count FROM tenant_common.login_history;
+    RAISE NOTICE '로그인이력: % 건', v_count;
+
+    RAISE NOTICE '========================================';
+END $$;

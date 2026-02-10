@@ -124,13 +124,6 @@ http:
       service: tenant-service
       middlewares:
         - cors-headers
-    tenant:
-      rule: "PathPrefix(`/api/v1/tenants`)"
-      entryPoints:
-        - web
-      service: tenant-service
-      middlewares:
-        - cors-headers
 
   services:
     auth-service:
@@ -181,7 +174,3 @@ http:
       loadBalancer:
         servers:
           - url: "http://hr-saas-certificate:8092"
-    tenant-service:
-      loadBalancer:
-        servers:
-          - url: "http://hr-saas-tenant:8082"

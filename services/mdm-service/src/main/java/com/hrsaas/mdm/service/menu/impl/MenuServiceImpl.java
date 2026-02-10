@@ -75,15 +75,22 @@ public class MenuServiceImpl implements MenuService {
             return false;
         }
 
-        List<MenuPermission> requiredPermissions = menu.getPermissions();
+        // Global wildcard: users with "*" permission can access all menus
+        if (userPermissions.contains("*") || userPermissions.contains("*:*")) {
+            return true;
+        }
+
+        Collection<MenuPermission> requiredPermissions = menu.getPermissions();
         if (requiredPermissions == null || requiredPermissions.isEmpty()) {
             return true; // No permissions required
         }
 
         // Check if user has any required role
+        // Support both "ROLE_XXX" and "XXX" format in userRoles
         boolean hasRequiredRole = requiredPermissions.stream()
             .filter(MenuPermission::isRole)
-            .anyMatch(p -> userRoles.contains("ROLE_" + p.getPermissionValue()));
+            .anyMatch(p -> userRoles.contains("ROLE_" + p.getPermissionValue())
+                        || userRoles.contains(p.getPermissionValue()));
 
         // Check if user has any required permission
         boolean hasRequiredPermission = requiredPermissions.stream()
@@ -91,9 +98,6 @@ public class MenuServiceImpl implements MenuService {
             .anyMatch(p -> hasPermission(userPermissions, p.getPermissionValue()));
 
         // User needs either a matching role OR a matching permission
-        // If only roles are defined, check roles
-        // If only permissions are defined, check permissions
-        // If both are defined, user needs at least one of each type
         boolean hasRoleRequirements = requiredPermissions.stream().anyMatch(MenuPermission::isRole);
         boolean hasPermRequirements = requiredPermissions.stream().anyMatch(MenuPermission::isPermission);
 
@@ -109,7 +113,7 @@ public class MenuServiceImpl implements MenuService {
     }
 
     private boolean hasPermission(Set<String> userPermissions, String required) {
-        if (userPermissions.contains("*:*")) return true;
+        if (userPermissions.contains("*") || userPermissions.contains("*:*")) return true;
         if (userPermissions.contains(required)) return true;
 
         // Check wildcard patterns

@@ -89,6 +89,9 @@ psql -h localhost -p 5433 -U hr_saas -d hr_saas -f 20_certificate_generator.sql
 
 # 21. Auth 로그인 이력 생성
 psql -h localhost -p 5433 -U hr_saas -d hr_saas -f 21_auth_login_history_generator.sql
+
+# 22. Auth 사용자 계정 생성
+psql -h localhost -p 5433 -U hr_saas -d hr_saas -f 22_auth_users_generator.sql
 ```
 
 ## 예상 실행 시간
@@ -214,6 +217,7 @@ psql -h localhost -p 5433 -U hr_saas -d hr_saas -f 21_auth_login_history_generat
 - `verification_log`: ~500건 (진위확인 로그)
 
 ### auth-service
+- `users`: 31명 (superadmin 1 + 테스트 계정 30)
 - `user_sessions`: 런타임 생성 (로그인 시)
 - `password_reset_tokens`: 런타임 생성 (비밀번호 재설정 요청 시)
 - `login_history`: ~10,000건 (최근 30일 로그인 이력)
@@ -291,6 +295,7 @@ scripts/sample-data/
 ├── 19_appointment_generator.sql    # 발령 (발령안/상세/예약/이력)
 ├── 20_certificate_generator.sql    # 증명서 (템플릿/유형/신청/발급/진위확인)
 ├── 21_auth_login_history_generator.sql  # Auth (로그인이력)
+├── 22_auth_users_generator.sql     # Auth (사용자 계정 - BCrypt)
 ├── 99_run_all.sql                  # 전체 실행 스크립트
 └── README.md                       # 이 문서
 ```

@@ -22,6 +22,8 @@ public interface EmployeeService {
 
     PageResponse<EmployeeResponse> search(EmployeeSearchCondition condition, Pageable pageable);
 
+    PageResponse<EmployeeResponse> searchByKeyword(String keyword, Pageable pageable);
+
     EmployeeResponse update(UUID id, UpdateEmployeeRequest request);
 
     EmployeeResponse resign(UUID id, String resignDate);

@@ -58,6 +58,14 @@ public interface EmployeeRepository extends JpaRepository<Employee, UUID> {
                                          @Param("startMonthDay") int startMonthDay,
                                          @Param("endMonthDay") int endMonthDay);
 
+    @Query("SELECT e FROM Employee e WHERE e.tenantId = :tenantId " +
+           "AND e.status = 'ACTIVE' " +
+           "AND (:keyword IS NULL OR e.name LIKE %:keyword% OR e.employeeNumber LIKE %:keyword%)")
+    Page<Employee> searchByKeyword(
+        @Param("tenantId") UUID tenantId,
+        @Param("keyword") String keyword,
+        Pageable pageable);
+
     long countByTenantId(UUID tenantId);
 
     long countByTenantIdAndStatus(UUID tenantId, EmployeeStatus status);

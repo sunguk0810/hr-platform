@@ -127,8 +127,8 @@ export const useAuthStore = create<AuthState>()(
         const { user } = get();
         const userPermissions = user?.permissions ?? [];
 
-        // Wildcard check
-        if (userPermissions.includes('*:*')) return true;
+        // Wildcard check - backend sends "*" for superadmin
+        if (userPermissions.includes('*') || userPermissions.includes('*:*')) return true;
 
         // Direct match
         if (userPermissions.includes(permission)) return true;

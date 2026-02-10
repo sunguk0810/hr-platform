@@ -67,23 +67,23 @@ export function LeaveBalanceWidget() {
         <div className="space-y-3">
           <BalanceBar
             label={t('leave.annual')}
-            used={data?.annual.used || 0}
-            total={data?.annual.total || 0}
-            remaining={data?.annual.remaining || 0}
+            used={data?.annual?.used ?? 0}
+            total={data?.annual?.total ?? 0}
+            remaining={data?.annual?.remaining ?? 0}
             t={t}
           />
           <BalanceBar
             label={t('leave.sick')}
-            used={data?.sick.used || 0}
-            total={data?.sick.total || 0}
-            remaining={data?.sick.remaining || 0}
+            used={data?.sick?.used ?? 0}
+            total={data?.sick?.total ?? 0}
+            remaining={data?.sick?.remaining ?? 0}
             t={t}
           />
           <BalanceBar
             label={t('leave.special')}
-            used={data?.special.used || 0}
-            total={data?.special.total || 0}
-            remaining={data?.special.remaining || 0}
+            used={data?.special?.used ?? 0}
+            total={data?.special?.total ?? 0}
+            remaining={data?.special?.remaining ?? 0}
             t={t}
           />
         </div>

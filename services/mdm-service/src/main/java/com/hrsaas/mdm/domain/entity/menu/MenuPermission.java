@@ -1,5 +1,6 @@
 package com.hrsaas.mdm.domain.entity.menu;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
@@ -37,6 +38,7 @@ public class MenuPermission {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "menu_item_id", nullable = false)
+    @JsonIgnore
     private MenuItem menuItem;
 
     @Enumerated(EnumType.STRING)
