@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { lazy } from 'react';
+import { lazy, Suspense } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
+import { PageLoader } from '@/components/common/PageLoader';
 import { AuthGuard, ProtectedRoute } from './guards';
 import { mainRoutes } from './config';
 import type { RouteConfig } from './types';
@@ -41,6 +42,16 @@ function flattenRoutes(routes: RouteConfig[], parentPath = ''): Array<{ path: st
   return result;
 }
 
+/** Feature paths that get individual Suspense boundaries */
+const SUSPENSE_FEATURE_PREFIXES = [
+  'employees',
+  'approvals',
+  'attendance',
+  'organization',
+  'recruitment',
+  'appointments',
+];
+
 /**
  * Render flattened routes
  */
@@ -49,6 +60,17 @@ function renderRoutes(routes: RouteConfig[]) {
 
   return flatRoutes.map((route) => {
     const RouteElement = route.element;
+    const needsSuspense = SUSPENSE_FEATURE_PREFIXES.some(
+      (prefix) => route.path === prefix || route.path.startsWith(`${prefix}/`)
+    );
+
+    const element = needsSuspense ? (
+      <Suspense fallback={<PageLoader />}>
+        <RouteElement />
+      </Suspense>
+    ) : (
+      <RouteElement />
+    );
 
     return (
       <Route
@@ -56,7 +78,7 @@ function renderRoutes(routes: RouteConfig[]) {
         path={route.path}
         element={
           <ProtectedRoute permissions={route.permissions} roles={route.roles}>
-            <RouteElement />
+            {element}
           </ProtectedRoute>
         }
       />

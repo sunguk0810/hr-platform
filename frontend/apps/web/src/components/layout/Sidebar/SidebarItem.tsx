@@ -53,6 +53,7 @@ export function SidebarItem({
               : 'gap-3 px-3 py-2'
           )
         }
+        aria-current={isActive ? 'page' : undefined}
       >
         <Icon className="h-5 w-5 shrink-0" />
         {!collapsed && (
@@ -109,6 +110,7 @@ export function SidebarItem({
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <CollapsibleTrigger asChild>
         <button
+          aria-expanded={isOpen}
           className={cn(
             'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
             'hover:bg-accent hover:text-accent-foreground',
@@ -138,16 +140,20 @@ export interface SidebarSubItemProps {
 }
 
 export function SidebarSubItem({ title, href, badge }: SidebarSubItemProps) {
+  const location = useLocation();
+  const isActive = location.pathname === href || location.pathname.startsWith(`${href}/`);
+
   return (
     <NavLink
       to={href}
-      className={({ isActive }) =>
+      className={({ isActive: linkActive }) =>
         cn(
           'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
           'hover:bg-accent hover:text-accent-foreground',
-          isActive ? 'bg-accent text-accent-foreground' : 'text-muted-foreground'
+          linkActive ? 'bg-accent text-accent-foreground' : 'text-muted-foreground'
         )
       }
+      aria-current={isActive ? 'page' : undefined}
     >
       <span className="flex-1">{title}</span>
       {badge}

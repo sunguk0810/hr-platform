@@ -12,7 +12,7 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import { cn } from '@/lib/utils';
 
 export function MainLayout() {
-  const { sidebarCollapsed } = useUIStore();
+  const sidebarCollapsed = useUIStore(state => state.sidebarCollapsed);
   const isMobile = useIsMobile();
 
   return (

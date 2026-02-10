@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -24,8 +24,11 @@ interface SidebarNavProps {
  */
 export function SidebarNav({ collapsed }: SidebarNavProps) {
   const location = useLocation();
-  const { hasAnyPermission, hasAnyRole, isAuthenticated } = useAuthStore();
-  const { sidebarMenus, fetchMenus } = useMenuStore();
+  const hasAnyPermission = useAuthStore(state => state.hasAnyPermission);
+  const hasAnyRole = useAuthStore(state => state.hasAnyRole);
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const sidebarMenus = useMenuStore(state => state.sidebarMenus);
+  const fetchMenus = useMenuStore(state => state.fetchMenus);
   const { t } = useTranslation('navigation');
 
   // Fetch menus on mount if authenticated
@@ -39,41 +42,41 @@ export function SidebarNav({ collapsed }: SidebarNavProps) {
   const useDynamicMenus = sidebarMenus.length > 0;
 
   // Check if any child is active to auto-expand parent
-  const isChildActive = (children?: NavChildItem[] | UserMenuItem[]) => {
+  const isChildActive = useCallback((children?: NavChildItem[] | UserMenuItem[]) => {
     if (!children) return false;
     return children.some((child) => {
       const href = 'href' in child ? child.href : child.path;
       return href && location.pathname.startsWith(href);
     });
-  };
+  }, [location.pathname]);
 
   // Filter items based on permissions and roles (shared for both dynamic and static menus)
-  const filterMenuItem = (item: { roles?: string[]; permissions?: string[] }): boolean => {
+  const filterMenuItem = useCallback((item: { roles?: string[]; permissions?: string[] }): boolean => {
     if (item.roles && item.roles.length > 0 && !hasAnyRole(item.roles)) return false;
     if (item.permissions && item.permissions.length > 0 && !hasAnyPermission(item.permissions)) return false;
     return true;
-  };
+  }, [hasAnyRole, hasAnyPermission]);
+
+  // Filter dynamic menus by user's roles and permissions (always computed, used only when dynamic)
+  const filteredMenus = useMemo(() => sidebarMenus
+    .filter(filterMenuItem)
+    .map((menu) => ({
+      ...menu,
+      children: menu.children?.filter(filterMenuItem),
+    })), [sidebarMenus, filterMenuItem]);
+
+  // Group menus by groupName (always computed, used only when dynamic)
+  const menuGroups = useMemo(() => filteredMenus.reduce((acc, menu) => {
+    const groupName = menu.groupName || t('other');
+    if (!acc[groupName]) {
+      acc[groupName] = [];
+    }
+    acc[groupName].push(menu);
+    return acc;
+  }, {} as Record<string, UserMenuItem[]>), [filteredMenus, t]);
 
   // Render dynamic menus from API
   if (useDynamicMenus) {
-    // Filter dynamic menus by user's roles and permissions
-    const filteredMenus = sidebarMenus
-      .filter(filterMenuItem)
-      .map((menu) => ({
-        ...menu,
-        children: menu.children?.filter(filterMenuItem),
-      }));
-
-    // Group menus by groupName
-    const menuGroups = filteredMenus.reduce((acc, menu) => {
-      const groupName = menu.groupName || t('other');
-      if (!acc[groupName]) {
-        acc[groupName] = [];
-      }
-      acc[groupName].push(menu);
-      return acc;
-    }, {} as Record<string, UserMenuItem[]>);
-
     const groupNames = Object.keys(menuGroups);
 
     return (

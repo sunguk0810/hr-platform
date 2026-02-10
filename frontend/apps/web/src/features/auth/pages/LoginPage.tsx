@@ -7,7 +7,7 @@ import { LoginForm } from '../components/LoginForm';
 export default function LoginPage() {
   const { t } = useTranslation('auth');
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuthStore();
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
 
   useEffect(() => {
     if (isAuthenticated) {

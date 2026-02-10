@@ -83,7 +83,7 @@ export function LoginForm() {
             className={errors.username ? 'border-destructive' : ''}
           />
           {errors.username && (
-            <p className="text-sm text-destructive">{errors.username.message}</p>
+            <p className="text-sm text-destructive" role="alert">{errors.username.message}</p>
           )}
         </div>
 
@@ -102,22 +102,23 @@ export function LoginForm() {
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 표시'}
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
           {errors.password && (
-            <p className="text-sm text-destructive">{errors.password.message}</p>
+            <p className="text-sm text-destructive" role="alert">{errors.password.message}</p>
           )}
         </div>
 
         {error && (
-          <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+          <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive" role="alert">
             {(error as Error).message || t('loginFailed')}
           </div>
         )}
 
-        <Button type="submit" className="w-full" disabled={isPending}>
+        <Button type="submit" className="w-full min-h-[48px]" disabled={isPending}>
           {isPending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

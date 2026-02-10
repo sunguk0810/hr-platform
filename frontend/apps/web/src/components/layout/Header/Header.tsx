@@ -24,10 +24,14 @@ import { cn } from '@/lib/utils';
 
 export function Header() {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
-  const { currentTenant: _currentTenant } = useTenantStore();
-  const { theme, setTheme, sidebarCollapsed, toggleSidebar } = useUIStore();
-  const { unreadCount } = useNotificationStore();
+  const user = useAuthStore(state => state.user);
+  // Subscribe to tenant changes to trigger re-render on tenant switch
+  void useTenantStore(state => state.currentTenant);
+  const theme = useUIStore(state => state.theme);
+  const setTheme = useUIStore(state => state.setTheme);
+  const sidebarCollapsed = useUIStore(state => state.sidebarCollapsed);
+  const toggleSidebar = useUIStore(state => state.toggleSidebar);
+  const unreadCount = useNotificationStore(state => state.unreadCount);
   const { mutate: logout } = useLogout();
   const isMobile = useIsMobile();
   const { t } = useTranslation('common');
@@ -84,6 +88,7 @@ export function Header() {
           <input
             type="search"
             placeholder={t('searchPlaceholder')}
+            aria-label="전체 검색"
             className="h-9 w-64 rounded-md border bg-background pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
@@ -110,6 +115,7 @@ export function Header() {
             size="icon"
             className="relative"
             onClick={() => navigate('/notifications')}
+            aria-label="알림"
           >
             <Bell className="h-5 w-5" />
             {unreadCount > 0 && (
@@ -123,7 +129,7 @@ export function Header() {
         {/* User menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button data-tour="header-user-menu" variant="ghost" className="relative h-9 w-9 rounded-full">
+            <Button data-tour="header-user-menu" variant="ghost" className="relative h-9 w-9 rounded-full" aria-label="사용자 메뉴">
               <Avatar className="h-9 w-9">
                 <AvatarImage src={user?.profileImageUrl} alt={user?.name} />
                 <AvatarFallback>
