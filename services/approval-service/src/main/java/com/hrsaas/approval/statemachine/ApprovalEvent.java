@@ -5,6 +5,7 @@ public enum ApprovalEvent {
     APPROVE_LINE,
     REJECT_LINE,
     AGREE_LINE,
+    RETURN_LINE,
     RECALL,
     CANCEL,
     COMPLETE,

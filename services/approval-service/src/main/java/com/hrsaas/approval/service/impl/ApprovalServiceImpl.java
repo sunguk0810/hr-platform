@@ -1,18 +1,21 @@
 package com.hrsaas.approval.service.impl;
 
 import com.hrsaas.approval.config.ApprovalStateMachineFactory;
+import com.hrsaas.approval.domain.dto.request.BatchApprovalRequest;
 import com.hrsaas.approval.domain.dto.request.CreateApprovalRequest;
 import com.hrsaas.approval.domain.dto.request.ProcessApprovalRequest;
 import com.hrsaas.approval.domain.dto.response.ApprovalDocumentResponse;
 import com.hrsaas.approval.domain.dto.response.ApprovalHistoryResponse;
 import com.hrsaas.approval.domain.dto.response.ApprovalStatisticsResponse;
 import com.hrsaas.approval.domain.dto.response.ApprovalSummaryResponse;
+import com.hrsaas.approval.domain.dto.response.BatchApprovalResponse;
 import com.hrsaas.approval.domain.entity.*;
 import com.hrsaas.approval.domain.event.ApprovalCompletedEvent;
 import com.hrsaas.approval.domain.event.ApprovalSubmittedEvent;
 import com.hrsaas.approval.repository.ApprovalDocumentRepository;
 import com.hrsaas.approval.service.ApprovalService;
 import com.hrsaas.approval.statemachine.ApprovalEvent;
+import com.hrsaas.common.core.exception.BusinessException;
 import com.hrsaas.common.core.exception.ForbiddenException;
 import com.hrsaas.common.core.exception.NotFoundException;
 import com.hrsaas.common.event.EventPublisher;
@@ -34,6 +37,7 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -53,6 +57,9 @@ public class ApprovalServiceImpl implements ApprovalService {
                                            UUID drafterDepartmentId, String drafterDepartmentName) {
         UUID tenantId = TenantContext.getCurrentTenant();
 
+        // APR-G06: 자기결재 방지 — 기안자가 결재선에 포함될 수 없음
+        validateNoSelfApproval(drafterId, request.getApprovalLines());
+
         ApprovalDocument document = ApprovalDocument.builder()
             .documentNumber(generateDocumentNumber(tenantId, request.getDocumentType()))
             .title(request.getTitle())
@@ -64,6 +71,7 @@ public class ApprovalServiceImpl implements ApprovalService {
             .drafterDepartmentName(drafterDepartmentName)
             .referenceType(request.getReferenceType())
             .referenceId(request.getReferenceId())
+            .deadlineAt(request.getDeadlineAt())
             .build();
 
         request.getApprovalLines().forEach(lineRequest -> {
@@ -239,7 +247,7 @@ public class ApprovalServiceImpl implements ApprovalService {
 
         ApprovalStatus fromStatus = document.getStatus();
 
-        // Process the line action (approve, reject, agree, delegate, direct_approve)
+        // Process the line action (approve, reject, agree, delegate, return, direct_approve)
         switch (request.getActionType()) {
             case APPROVE -> {
                 if (currentLine.getLineType() == ApprovalLineType.ARBITRARY) {
@@ -251,6 +259,29 @@ public class ApprovalServiceImpl implements ApprovalService {
             case REJECT -> currentLine.reject(request.getComment());
             case AGREE -> currentLine.agree(request.getComment());
             case DELEGATE -> currentLine.delegate(request.getDelegateId(), request.getDelegateName());
+            case RETURN -> {
+                // APR-G03: 반송 — DRAFT로 복원, 결재선 초기화
+                StateMachine<ApprovalStatus, ApprovalEvent> returnSm = approvalStateMachineFactory.create(document);
+                boolean returnAccepted = approvalStateMachineFactory.sendEvent(returnSm, ApprovalEvent.RETURN_LINE);
+                if (!returnAccepted) {
+                    throw new IllegalStateException("Cannot return document in current state: " + document.getStatus());
+                }
+                document.setStatus(returnSm.getState().getId());
+
+                ApprovalHistory returnHistory = ApprovalHistory.builder()
+                    .actorId(approverId)
+                    .actorName(currentLine.getApproverName())
+                    .actionType(ApprovalActionType.RETURN)
+                    .fromStatus(fromStatus)
+                    .toStatus(document.getStatus())
+                    .comment(request.getComment())
+                    .build();
+                document.addHistory(returnHistory);
+
+                ApprovalDocument returnSaved = documentRepository.save(document);
+                log.info("Approval returned to draft: documentId={}, returnCount={}", documentId, returnSaved.getReturnCount());
+                return ApprovalDocumentResponse.from(returnSaved);
+            }
             case DIRECT_APPROVE -> {
                 // 전결: 현재 라인 승인 + 이후 라인 모두 스킵
                 currentLine.approveAsArbitrary(request.getComment());
@@ -317,6 +348,7 @@ public class ApprovalServiceImpl implements ApprovalService {
             }
             case REJECT -> ApprovalEvent.REJECT_LINE;
             case AGREE -> ApprovalEvent.AGREE_LINE;
+            case RETURN -> ApprovalEvent.RETURN_LINE;
             case DIRECT_APPROVE -> ApprovalEvent.ARBITRARY_APPROVE;
             default -> throw new IllegalArgumentException("Cannot map action to SM event: " + actionType);
         };
@@ -415,6 +447,93 @@ public class ApprovalServiceImpl implements ApprovalService {
 
         return BigDecimal.valueOf(totalHours)
             .divide(BigDecimal.valueOf(count), 1, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * APR-G01: 결재선 미리보기 — 실제 저장 없이 결재선 구성 확인
+     */
+    @Override
+    public ApprovalDocumentResponse preview(CreateApprovalRequest request, UUID drafterId, String drafterName,
+                                            UUID drafterDepartmentId, String drafterDepartmentName) {
+        validateNoSelfApproval(drafterId, request.getApprovalLines());
+
+        ApprovalDocument previewDoc = ApprovalDocument.builder()
+            .documentNumber("PREVIEW")
+            .title(request.getTitle())
+            .content(request.getContent())
+            .documentType(request.getDocumentType())
+            .drafterId(drafterId)
+            .drafterName(drafterName)
+            .drafterDepartmentId(drafterDepartmentId)
+            .drafterDepartmentName(drafterDepartmentName)
+            .referenceType(request.getReferenceType())
+            .referenceId(request.getReferenceId())
+            .deadlineAt(request.getDeadlineAt())
+            .build();
+
+        request.getApprovalLines().forEach(lineRequest -> {
+            ApprovalLine line = ApprovalLine.builder()
+                .approverId(lineRequest.getApproverId())
+                .approverName(lineRequest.getApproverName())
+                .approverPosition(lineRequest.getApproverPosition())
+                .approverDepartmentName(lineRequest.getApproverDepartmentName())
+                .lineType(lineRequest.getLineType())
+                .build();
+            previewDoc.addApprovalLine(line);
+        });
+
+        return ApprovalDocumentResponse.from(previewDoc);
+    }
+
+    /**
+     * APR-G14: 일괄 결재 처리
+     */
+    @Override
+    @Transactional
+    public BatchApprovalResponse batchProcess(UUID approverId, BatchApprovalRequest request) {
+        List<BatchApprovalResponse.BatchItemResult> results = new ArrayList<>();
+        int successCount = 0;
+        int failureCount = 0;
+
+        for (UUID documentId : request.getDocumentIds()) {
+            try {
+                ProcessApprovalRequest processRequest = new ProcessApprovalRequest();
+                processRequest.setActionType(request.getActionType());
+                processRequest.setComment(request.getComment());
+                process(documentId, approverId, processRequest);
+                results.add(BatchApprovalResponse.BatchItemResult.builder()
+                    .documentId(documentId)
+                    .success(true)
+                    .build());
+                successCount++;
+            } catch (Exception e) {
+                log.warn("Batch approval failed for document: {}", documentId, e);
+                results.add(BatchApprovalResponse.BatchItemResult.builder()
+                    .documentId(documentId)
+                    .success(false)
+                    .errorMessage(e.getMessage())
+                    .build());
+                failureCount++;
+            }
+        }
+
+        return BatchApprovalResponse.builder()
+            .totalRequested(request.getDocumentIds().size())
+            .successCount(successCount)
+            .failureCount(failureCount)
+            .results(results)
+            .build();
+    }
+
+    /**
+     * APR-G06: 자기결재 방지 검증
+     */
+    private void validateNoSelfApproval(UUID drafterId, List<com.hrsaas.approval.domain.dto.request.ApprovalLineRequest> approvalLines) {
+        boolean selfApproval = approvalLines.stream()
+            .anyMatch(line -> drafterId.equals(line.getApproverId()));
+        if (selfApproval) {
+            throw new BusinessException("APV_004", "자기결재는 허용되지 않습니다. 기안자가 결재선에 포함될 수 없습니다.");
+        }
     }
 
     private String generateDocumentNumber(UUID tenantId, String documentType) {

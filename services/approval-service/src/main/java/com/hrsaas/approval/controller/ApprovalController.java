@@ -1,5 +1,6 @@
 package com.hrsaas.approval.controller;
 
+import com.hrsaas.approval.domain.dto.request.BatchApprovalRequest;
 import com.hrsaas.approval.domain.dto.request.CreateApprovalRequest;
 import com.hrsaas.approval.domain.dto.request.DelegateStepRequest;
 import com.hrsaas.approval.domain.dto.request.DirectApproveStepRequest;
@@ -9,6 +10,7 @@ import com.hrsaas.approval.domain.dto.response.ApprovalDocumentResponse;
 import com.hrsaas.approval.domain.dto.response.ApprovalHistoryResponse;
 import com.hrsaas.approval.domain.dto.response.ApprovalStatisticsResponse;
 import com.hrsaas.approval.domain.dto.response.ApprovalSummaryResponse;
+import com.hrsaas.approval.domain.dto.response.BatchApprovalResponse;
 import com.hrsaas.approval.service.ApprovalService;
 import com.hrsaas.common.response.ApiResponse;
 import com.hrsaas.common.response.PageResponse;
@@ -211,6 +213,44 @@ public class ApprovalController {
             @PathVariable UUID id) {
         UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
         return ApiResponse.success(approvalService.cancel(id, userId));
+    }
+
+    @PostMapping("/preview")
+    @Operation(summary = "결재선 미리보기")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<ApprovalDocumentResponse> preview(
+            @Valid @RequestBody CreateApprovalRequest request) {
+        var currentUser = SecurityContextHolder.getCurrentUser();
+        return ApiResponse.success(approvalService.preview(
+                request,
+                currentUser.getUserId(),
+                currentUser.getUsername(),
+                currentUser.getDepartmentId(),
+                currentUser.getDepartmentName()));
+    }
+
+    @PostMapping("/batch")
+    @Operation(summary = "일괄 결재 처리")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<BatchApprovalResponse> batchProcess(
+            @Valid @RequestBody BatchApprovalRequest request) {
+        UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
+        return ApiResponse.success(approvalService.batchProcess(userId, request));
+    }
+
+    @PostMapping("/{id}/return")
+    @Operation(summary = "결재 반송 (수정요청)")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<ApprovalDocumentResponse> returnDocument(
+            @PathVariable UUID id,
+            @RequestBody(required = false) Map<String, String> body) {
+        UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
+        String comment = body != null ? body.get("comment") : null;
+        ProcessApprovalRequest processRequest = ProcessApprovalRequest.builder()
+                .actionType(ApprovalActionType.RETURN)
+                .comment(comment)
+                .build();
+        return ApiResponse.success(approvalService.process(id, userId, processRequest));
     }
 
     @GetMapping("/statistics")

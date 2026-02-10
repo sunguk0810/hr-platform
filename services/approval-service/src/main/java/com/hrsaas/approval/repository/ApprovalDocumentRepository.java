@@ -75,4 +75,8 @@ public interface ApprovalDocumentRepository extends JpaRepository<ApprovalDocume
     List<ApprovalDocument> findCompletedBetween(@Param("tenantId") UUID tenantId,
                                                  @Param("startInstant") java.time.Instant startInstant,
                                                  @Param("endInstant") java.time.Instant endInstant);
+
+    @Query("SELECT d FROM ApprovalDocument d WHERE d.status = 'IN_PROGRESS' " +
+           "AND d.deadlineAt IS NOT NULL AND d.deadlineAt < :now AND d.escalated = false")
+    List<ApprovalDocument> findOverdueDocuments(@Param("now") java.time.Instant now);
 }

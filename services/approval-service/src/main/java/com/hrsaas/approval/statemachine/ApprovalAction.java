@@ -88,6 +88,20 @@ public class ApprovalAction {
         };
     }
 
+    /**
+     * Action: 반송 처리 - DRAFT로 복원 + 결재선 초기화
+     */
+    public Action<ApprovalStatus, ApprovalEvent> returnToDraft() {
+        return context -> {
+            ApprovalDocument document = getDocument(context);
+            if (document == null) return;
+
+            document.returnToDraft();
+            log.info("Approval document returned to draft: id={}, returnCount={}",
+                document.getId(), document.getReturnCount());
+        };
+    }
+
     private void activateNextLines(ApprovalDocument document, int fromSequence) {
         int nextSequence = fromSequence + 1;
         List<ApprovalLine> nextLines = document.getApprovalLines().stream()

@@ -98,6 +98,14 @@ public class ApprovalStateMachineConfig
                 .event(ApprovalEvent.AGREE_LINE)
                 .and()
 
+            // IN_PROGRESS -> DRAFT (return - 반송)
+            .withExternal()
+                .source(ApprovalStatus.IN_PROGRESS)
+                .target(ApprovalStatus.DRAFT)
+                .event(ApprovalEvent.RETURN_LINE)
+                .action(approvalAction.returnToDraft())
+                .and()
+
             // IN_PROGRESS -> RECALLED
             .withExternal()
                 .source(ApprovalStatus.IN_PROGRESS)

@@ -31,6 +31,9 @@ public class ApprovalDocumentResponse {
     private UUID referenceId;
     private Instant submittedAt;
     private Instant completedAt;
+    private Instant deadlineAt;
+    private Boolean escalated;
+    private Integer returnCount;
     private Instant createdAt;
     private Instant updatedAt;
     private List<ApprovalLineResponse> approvalLines;
@@ -51,6 +54,9 @@ public class ApprovalDocumentResponse {
             .referenceId(document.getReferenceId())
             .submittedAt(document.getSubmittedAt())
             .completedAt(document.getCompletedAt())
+            .deadlineAt(document.getDeadlineAt())
+            .escalated(document.getEscalated())
+            .returnCount(document.getReturnCount())
             .createdAt(document.getCreatedAt())
             .updatedAt(document.getUpdatedAt())
             .approvalLines(document.getApprovalLines().stream()

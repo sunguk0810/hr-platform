@@ -73,6 +73,17 @@ public class ApprovalDocument extends TenantAwareEntity {
     @Column(name = "reference_id")
     private UUID referenceId;
 
+    @Column(name = "deadline_at")
+    private Instant deadlineAt;
+
+    @Column(name = "escalated")
+    @Builder.Default
+    private Boolean escalated = false;
+
+    @Column(name = "return_count")
+    @Builder.Default
+    private Integer returnCount = 0;
+
     @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("sequence ASC")
     @Builder.Default
@@ -104,6 +115,29 @@ public class ApprovalDocument extends TenantAwareEntity {
             throw new IllegalStateException("Only draft or pending documents can be canceled");
         }
         this.status = ApprovalStatus.CANCELED;
+    }
+
+    /**
+     * 반송 처리 - DRAFT로 복원하고 결재선 초기화
+     */
+    public void returnToDraft() {
+        if (this.status != ApprovalStatus.IN_PROGRESS) {
+            throw new IllegalStateException("Only in-progress documents can be returned");
+        }
+        this.status = ApprovalStatus.DRAFT;
+        this.submittedAt = null;
+        this.returnCount = (this.returnCount != null ? this.returnCount : 0) + 1;
+
+        // Reset all approval lines to WAITING
+        approvalLines.forEach(line -> {
+            line.setStatus(ApprovalLineStatus.WAITING);
+            line.setActionType(null);
+            line.setComment(null);
+            line.setActivatedAt(null);
+            line.setCompletedAt(null);
+            line.setDelegateId(null);
+            line.setDelegateName(null);
+        });
     }
 
     private void activateFirstLine() {
