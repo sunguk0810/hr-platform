@@ -72,7 +72,7 @@ BEGIN
                 ELSE 'INTERN'
             END;
 
-            INSERT INTO hr_recruitment.job_posting (
+            INSERT INTO hr_recruitment.job_postings (
                 tenant_id, job_code, title, department_id, department_name,
                 job_description, requirements, preferred_qualifications,
                 employment_type, experience_min, experience_max,
@@ -173,7 +173,7 @@ BEGIN
                            ELSE 'hanmail.net'
                        END;
 
-            INSERT INTO hr_recruitment.applicant (
+            INSERT INTO hr_recruitment.applicants (
                 tenant_id, name, email, phone, birth_date, gender, address,
                 education, experience, skills, certificates, languages,
                 source, source_detail, notes,
@@ -223,13 +223,13 @@ BEGIN
 
     FOR v_applicant IN
         SELECT id, tenant_id, name
-        FROM hr_recruitment.applicant
+        FROM hr_recruitment.applicants
         WHERE NOT is_blacklisted
     LOOP
         -- 각 지원자당 1-3개의 지원서
         FOR v_job IN
             SELECT id, title
-            FROM hr_recruitment.job_posting
+            FROM hr_recruitment.job_postings
             WHERE tenant_id = v_applicant.tenant_id
             AND status IN ('OPEN', 'CLOSED', 'IN_PROGRESS')
             ORDER BY RANDOM()
@@ -258,7 +258,7 @@ BEGIN
                 ELSE 'WITHDRAWN'
             END;
 
-            INSERT INTO hr_recruitment.application (
+            INSERT INTO hr_recruitment.applications (
                 tenant_id, job_posting_id, applicant_id, application_number,
                 status, cover_letter, expected_salary, available_date,
                 current_stage, stage_order,
@@ -312,7 +312,7 @@ BEGIN
 
     FOR v_app IN
         SELECT a.id, a.tenant_id, a.status, a.current_stage
-        FROM hr_recruitment.application a
+        FROM hr_recruitment.applications a
         WHERE a.status IN ('INTERVIEW', 'OFFER', 'HIRED')
     LOOP
         -- 1-3라운드 면접
@@ -331,7 +331,7 @@ BEGIN
             ORDER BY RANDOM()
             LIMIT 1;
 
-            INSERT INTO hr_recruitment.interview (
+            INSERT INTO hr_recruitment.interviews (
                 tenant_id, application_id, interview_type, round,
                 status, scheduled_date, scheduled_time, duration_minutes,
                 location, meeting_url, interviewers, notes,
@@ -391,12 +391,12 @@ BEGIN
 
     FOR v_interview IN
         SELECT i.id, i.tenant_id, i.interviewers, i.status
-        FROM hr_recruitment.interview i
+        FROM hr_recruitment.interviews i
         WHERE i.status = 'COMPLETED'
     LOOP
         -- 각 평가 항목별 점수
         FOREACH v_criterion IN ARRAY v_criteria LOOP
-            INSERT INTO hr_recruitment.interview_score (
+            INSERT INTO hr_recruitment.interview_scores (
                 tenant_id, interview_id,
                 interviewer_id, interviewer_name,
                 criterion, score, max_score, weight, comment,
@@ -438,15 +438,15 @@ BEGIN
         SELECT a.id, a.tenant_id, a.job_posting_id,
                ap.name as applicant_name,
                jp.title as position_title, jp.department_id, jp.department_name
-        FROM hr_recruitment.application a
-        JOIN hr_recruitment.applicant ap ON a.applicant_id = ap.id
-        JOIN hr_recruitment.job_posting jp ON a.job_posting_id = jp.id
+        FROM hr_recruitment.applications a
+        JOIN hr_recruitment.applicants ap ON a.applicant_id = ap.id
+        JOIN hr_recruitment.job_postings jp ON a.job_posting_id = jp.id
         WHERE a.status IN ('OFFER', 'HIRED')
     LOOP
         v_count := v_count + 1;
         v_offer_number := 'OFFER-' || EXTRACT(YEAR FROM CURRENT_DATE) || '-' || LPAD(v_count::TEXT, 5, '0');
 
-        INSERT INTO hr_recruitment.offer (
+        INSERT INTO hr_recruitment.offers (
             tenant_id, application_id, offer_number,
             status, position_title, department_id, department_name,
             grade_code, grade_name,
@@ -494,12 +494,12 @@ DECLARE
     v_score_count INT;
     v_offer_count INT;
 BEGIN
-    SELECT COUNT(*) INTO v_job_count FROM hr_recruitment.job_posting;
-    SELECT COUNT(*) INTO v_applicant_count FROM hr_recruitment.applicant;
-    SELECT COUNT(*) INTO v_application_count FROM hr_recruitment.application;
-    SELECT COUNT(*) INTO v_interview_count FROM hr_recruitment.interview;
-    SELECT COUNT(*) INTO v_score_count FROM hr_recruitment.interview_score;
-    SELECT COUNT(*) INTO v_offer_count FROM hr_recruitment.offer;
+    SELECT COUNT(*) INTO v_job_count FROM hr_recruitment.job_postings;
+    SELECT COUNT(*) INTO v_applicant_count FROM hr_recruitment.applicants;
+    SELECT COUNT(*) INTO v_application_count FROM hr_recruitment.applications;
+    SELECT COUNT(*) INTO v_interview_count FROM hr_recruitment.interviews;
+    SELECT COUNT(*) INTO v_score_count FROM hr_recruitment.interview_scores;
+    SELECT COUNT(*) INTO v_offer_count FROM hr_recruitment.offers;
 
     RAISE NOTICE '';
     RAISE NOTICE '========================================';
