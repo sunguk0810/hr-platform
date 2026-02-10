@@ -171,7 +171,6 @@ export const approvalService = {
   },
 
   async updateDelegationRule(id: string, data: UpdateDelegationRuleRequest): Promise<ApiResponse<DelegationRule>> {
-    // TODO: Backend needs to implement PUT endpoint for delegation update
     const response = await apiClient.put<ApiResponse<DelegationRule>>(`/approvals/delegations/${id}`, data);
     return response.data;
   },
@@ -182,7 +181,6 @@ export const approvalService = {
   },
 
   async toggleDelegationRuleStatus(id: string): Promise<ApiResponse<DelegationRule>> {
-    // TODO: Backend needs to implement toggle-status endpoint
     const response = await apiClient.post<ApiResponse<DelegationRule>>(`/approvals/delegations/${id}/toggle-status`);
     return response.data;
   },

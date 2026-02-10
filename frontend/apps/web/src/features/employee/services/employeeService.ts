@@ -105,7 +105,6 @@ export const employeeService = {
   },
 
   async resignationCancel(id: string, data: ResignationCancelRequest): Promise<ApiResponse<Employee>> {
-    // TODO: Backend needs to implement resignation cancel endpoint
     const response = await apiClient.post<ApiResponse<Employee>>(`/employees/${id}/resign/cancel`, data);
     return response.data;
   },

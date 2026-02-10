@@ -67,7 +67,7 @@ export const notificationService = {
   },
 
   /**
-   * 단일 알림 조회 - TODO: Backend needs to implement this endpoint
+   * 단일 알림 조회
    */
   async getNotification(id: string): Promise<ApiResponse<Notification>> {
     const response = await apiClient.get<ApiResponse<Notification>>(`/notifications/${id}`);
@@ -93,7 +93,7 @@ export const notificationService = {
   },
 
   /**
-   * 알림 삭제 - TODO: Backend needs to implement this endpoint
+   * 알림 삭제
    */
   async deleteNotification(id: string): Promise<ApiResponse<null>> {
     const response = await apiClient.delete<ApiResponse<null>>(`/notifications/${id}`);
@@ -101,7 +101,7 @@ export const notificationService = {
   },
 
   /**
-   * 여러 알림 삭제 - TODO: Backend needs to implement this endpoint
+   * 여러 알림 삭제
    */
   async deleteNotifications(ids: string[]): Promise<ApiResponse<{ deleted: number }>> {
     const response = await apiClient.post<ApiResponse<{ deleted: number }>>(
@@ -112,7 +112,7 @@ export const notificationService = {
   },
 
   /**
-   * 알림 설정 조회 - TODO: Backend needs to implement this endpoint
+   * 알림 설정 조회
    */
   async getSettings(): Promise<ApiResponse<NotificationSettings>> {
     const response = await apiClient.get<ApiResponse<NotificationSettings>>(
@@ -122,7 +122,7 @@ export const notificationService = {
   },
 
   /**
-   * 알림 설정 수정 - TODO: Backend needs to implement this endpoint
+   * 알림 설정 수정
    */
   async updateSettings(
     settings: Partial<NotificationSettings>

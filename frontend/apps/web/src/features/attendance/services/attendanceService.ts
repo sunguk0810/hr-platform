@@ -99,7 +99,7 @@ export const attendanceService = {
     return response.data;
   },
 
-  // Leave Calendar - TODO: Backend needs to implement this endpoint
+  // Leave Calendar
   async getLeaveCalendar(params: LeaveCalendarSearchParams): Promise<ApiResponse<LeaveCalendarEvent[]>> {
     const response = await apiClient.get<ApiResponse<LeaveCalendarEvent[]>>('/leaves/calendar', {
       params,
@@ -117,29 +117,14 @@ export const attendanceService = {
   },
 
   async getOvertimeSummary(yearMonth: string): Promise<ApiResponse<OvertimeSummary>> {
-    // Backend returns BigDecimal (number), mock returns OvertimeSummary object
     const [year, month] = yearMonth.split('-');
     const startDate = `${year}-${month}-01`;
     const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
     const endDate = `${year}-${month}-${lastDay.toString().padStart(2, '0')}`;
-    const response = await apiClient.get<ApiResponse<OvertimeSummary | number>>('/overtimes/my/total-hours', {
+    const response = await apiClient.get<ApiResponse<OvertimeSummary>>('/overtimes/my/total-hours', {
       params: { startDate, endDate }
     });
-    // Handle BE returning just a number (BigDecimal)
-    if (typeof response.data.data === 'number') {
-      return {
-        ...response.data,
-        data: {
-          yearMonth,
-          totalRequests: 0,
-          approvedRequests: 0,
-          pendingRequests: 0,
-          totalHours: response.data.data,
-          approvedHours: response.data.data,
-        },
-      };
-    }
-    return response.data as ApiResponse<OvertimeSummary>;
+    return response.data;
   },
 
   async createOvertime(data: CreateOvertimeRequest): Promise<ApiResponse<OvertimeRequest>> {
@@ -157,7 +142,6 @@ export const attendanceService = {
   // ============================================
 
   async getWorkHoursStatistics(params?: WorkHoursSearchParams): Promise<ApiResponse<WorkHoursStatisticsResponse>> {
-    // TODO: Backend needs to implement this endpoint
     const response = await apiClient.get<ApiResponse<WorkHoursStatisticsResponse>>('/attendances/statistics/work-hours', {
       params,
     });
@@ -216,7 +200,6 @@ export const attendanceService = {
   },
 
   async updateAttendanceRecord(id: string, data: UpdateAttendanceRecordRequest): Promise<ApiResponse<AttendanceRecord>> {
-    // TODO: Backend needs to implement PUT endpoint for attendance update
     const response = await apiClient.put<ApiResponse<AttendanceRecord>>(`/attendances/${id}`, data);
     return response.data;
   },
