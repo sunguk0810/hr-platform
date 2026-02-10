@@ -1,6 +1,6 @@
 # 요구사항 추적 매트릭스
 
-> **최종 업데이트**: 2026-02-09
+> **최종 업데이트**: 2026-02-10
 > **대상**: 프로젝트 관리자, QA 엔지니어, 개발자
 > **출처**: [PRD.md](../deprecated/PRD.md), [PRD_GAP_ANALYSIS.md](../deprecated/PRD_GAP_ANALYSIS.md)
 
@@ -66,58 +66,96 @@
 
 ### 3.1 FR-TM: 테넌트 관리
 
+> 상세 분석: [02-TENANT-SERVICE.md](../modules/02-TENANT-SERVICE.md)
+
 | ID | 요구사항 | 우선순위 | 상태 | 서비스 | Controller | Service | Entity/기타 |
 |----|---------|---------|------|--------|------------|---------|-------------|
-| FR-TM-001-01 | 테넌트 등록 | Must | ✅ | tenant-service | `TenantController` | `TenantService` | `Tenant` |
-| FR-TM-001-02 | 기본정보 관리 | Must | ✅ | tenant-service | `TenantController` | `TenantService` | `Tenant` (code, name, businessNumber, logo) |
-| FR-TM-001-03 | 상태 관리 | Must | ✅ | tenant-service | `TenantController` | `TenantService` | `TenantStatus` enum (ACTIVE/SUSPENDED/TERMINATED) |
-| FR-TM-001-04 | 모듈/기능 On/Off | Must | ✅ | tenant-service | `TenantController` | `TenantFeatureService` | `TenantFeature` |
-| FR-TM-002-01 | 조직 계층 정의 | Must | ✅ | tenant-service | `TenantPolicyController` | `TenantPolicyService` | `HierarchySettings` JSON |
-| FR-TM-002-02 | 직급/직책 체계 | Must | ✅ | tenant-service | `TenantPolicyController` | `TenantPolicyService` | `OrganizationPolicy` JSON |
-| FR-TM-002-03 | 휴가 정책 설정 | Must | ✅ | tenant-service | `TenantPolicyController` | `TenantPolicyService` | `LeavePolicy` JSON |
-| FR-TM-002-04 | 결재 기능 On/Off | Must | ✅ | tenant-service | `TenantPolicyController` | `TenantPolicyService` | `ApprovalPolicy` (7개 토글) |
-| FR-TM-002-05 | 자동 결재선 규칙 | Should | ✅ | tenant-service | `TenantPolicyController` | `TenantPolicyService` | `autoApprovalLine` 설정 |
-| FR-TM-003-01 | 그룹 통합 대시보드 | Must | 🟡 | tenant-service | `GroupDashboardController` | — | 서비스 간 Feign 연동 미완 (TODO) |
-| FR-TM-003-02 | 그룹 공통 정책 일괄 적용 | Should | ✅ | tenant-service | `TenantPolicyController` | `TenantPolicyService` | `inheritPolicies()` |
+| FR-TM-001-01 | 테넌트 등록 | Must | ✅ | tenant-service | `TenantController.create()` | `TenantServiceImpl.createWithDetail()` + `TenantProvisioningService` | `Tenant` |
+| FR-TM-001-02 | 기본정보 관리 | Must | ✅ | tenant-service | `TenantController.update/updateBranding/updateHierarchy/updateModules()` | `TenantServiceImpl`, `TenantBrandingService`, `TenantHierarchyService` | `Tenant` |
+| FR-TM-001-03 | 상태 관리 | Must | ✅ | tenant-service | `TenantController.activate/suspend/delete/changeStatus()` | `TenantServiceImpl` + `ContractExpiryScheduler` | `Tenant` |
+| FR-TM-001-04 | 모듈/기능 On/Off | Must | ✅ | tenant-service | `TenantPolicyController` (features) | `TenantFeatureServiceImpl` + `PlanFeatureMapping` | `TenantFeature` |
+| FR-TM-002-01 | 조직 계층 정의 | Must | ✅ | tenant-service | `TenantController.getHierarchy/updateHierarchy()` | `TenantHierarchyService` | `Tenant.hierarchyData` |
+| FR-TM-002-02 | 직급/직책 체계 | Must | ✅ | tenant-service | `TenantPolicyController` (ORGANIZATION) | `TenantPolicyServiceImpl` | `TenantPolicy` |
+| FR-TM-002-03 | 휴가 정책 설정 | Must | ✅ | tenant-service | `TenantPolicyController` (LEAVE) | `TenantPolicyServiceImpl` | `TenantPolicy` |
+| FR-TM-002-04 | 결재 기능 On/Off | Must | ✅ | tenant-service | `TenantPolicyController` (APPROVAL) | `TenantPolicyServiceImpl` | `TenantPolicy` |
+| FR-TM-002-05 | 자동 결재선 규칙 | Should | ✅ | tenant-service | `TenantPolicyController` (APPROVAL) | `TenantPolicyServiceImpl` | `TenantPolicy` |
+| FR-TM-003-01 | 그룹 통합 대시보드 | Must | ✅ | tenant-service | `GroupDashboardController` | `GroupDashboardService` | Feign 5개 서비스 집계 |
+| FR-TM-003-02 | 그룹 공통 정책 일괄 적용 | Should | ✅ | tenant-service | `TenantController.inheritPolicies()` | `PolicyInheritanceService` | `TenantPolicy`, `PolicyChangeHistory` |
 | FR-TM-003-03 | 계열사 간 인사이동 | Must | ❌ | — | — | — | 전출/전입 워크플로우 전체 미구현 |
+| FR-TM-014 | 계약 만료 스케줄러 | Should | ✅ | tenant-service | — (스케줄러) | `ContractExpiryScheduler` | `Tenant` |
+| FR-TM-015 | 테넌트 프로비저닝 | Must | ✅ | tenant-service | `TenantController.create()` | `TenantProvisioningService` | `TenantPolicy`, `TenantFeature` |
+| FR-TM-016 | 플랜 기반 기능 게이팅 | Must | ✅ | tenant-service | `TenantPolicyController` | `TenantFeatureServiceImpl` | `PlanFeatureMapping` |
+| FR-TM-017 | 정책 변경 이력 감사 | Should | ✅ | tenant-service | `TenantController.getPolicyHistory()` | `TenantPolicyServiceImpl.recordPolicyHistory()` | `PolicyChangeHistory` |
+| FR-TM-018 | 테넌트 계층 (부모/자회사) | Must | ✅ | tenant-service | `TenantController.getTenantTree/getSubsidiaries()` | `TenantServiceImpl` | `Tenant.parentId/level` |
+| FR-TM-019 | 브랜딩 커스터마이제이션 | Should | ✅ | tenant-service | `TenantController.updateBranding/uploadBrandingImage()` | `TenantBrandingService` | `Tenant.brandingData` |
+| FR-TM-020 | 사용자 대시보드 | Must | ✅ | tenant-service | `UserDashboardController` | `UserDashboardService` | Feign 집계 |
+| FR-TM-021 | 플랜 업/다운그레이드 기능 동기화 | Should | ✅ | tenant-service | `TenantController.update()` | `PlanUpgradeService.syncFeatures()` | `TenantFeature` |
+| FR-TM-022 | 종료 데이터 보존 (90일) | Must | ✅ | tenant-service | — (스케줄러) | `TenantCleanupScheduler` | `Tenant.terminatedAt/dataRetentionUntil` |
+| FR-TM-023 | TenantResolver 캐시 구현체 | Should | ✅ | tenant-service | — (내부) | `TenantResolverImpl` | Redis 캐시 |
+| FR-TM-024 | 비밀번호 정책 전용 API | Must | ✅ | tenant-service | `TenantController.getPasswordPolicy()` | `TenantServiceImpl.getPasswordPolicy()` | `TenantPolicy` |
+| FR-TM-025 | 모듈 설정 | Should | ✅ | tenant-service | `TenantController.updateModules()` | — (직접 저장) | `Tenant.allowedModules` |
 
-**완전율**: 83% (10/12 완전)
+**완전율**: 96% (24/25 완전) — 미구현: FR-TM-003-03 (계열사 간 인사이동)
 
 ---
 
 ### 3.2 FR-AUTH: 인증/인가
 
 > PRD 섹션 4 (사용자 정의) 및 NFR-SEC-001에서 도출
+> 상세 분석: [01-AUTH-SERVICE.md](../modules/01-AUTH-SERVICE.md)
 
-| 요구사항 | 우선순위 | 상태 | 서비스 | Controller | Service | Entity/기타 |
-|---------|---------|------|--------|------------|---------|-------------|
-| 로그인/로그아웃 | Must | ✅ | auth-service | `AuthController` | `AuthService` | `Session`, JWT 토큰 |
-| 토큰 갱신 | Must | ✅ | auth-service | `AuthController` | `JwtTokenProvider` | Refresh token rotation, Redis 블랙리스트 |
-| 세션 관리 | Must | ✅ | auth-service | `SessionController` | `SessionService` | 동시 5세션 제한, DB+Redis 하이브리드 |
-| 비밀번호 관리 | Must | ✅ | auth-service | `AuthController` | `PasswordService` | bcrypt 해시, 이메일 리셋 |
-| 계정 잠금 | Must | ✅ | auth-service | `AuthController` | `LoginAttemptService` | 5회 실패 → 30분 잠금 |
-| 7단계 RBAC | Must | ✅ | common-security | — | `RoleHierarchyConfig` | 100+ 퍼미션, `@PreAuthorize` |
-| 데이터 접근 제어 (scope) | Must | ✅ | common-security | — | `PermissionChecker` | self/team/dept/org 범위 |
-| Keycloak SSO | Must | ❌ | — | — | — | 자체 JWT 사용, Keycloak 미연동 |
-| API Gateway JWT 검증 | Must | 🟡 | gateway-service | — | — | Traefik 라우팅 존재, JWT 미들웨어 미완 |
+| ID | 요구사항 | 우선순위 | 상태 | 서비스 | Controller | Service | Entity/기타 |
+|----|---------|---------|------|--------|------------|---------|-------------|
+| FR-AUTH-001 | 로그인/로그아웃 | Must | ✅ | auth-service | `AuthController` | `AuthServiceImpl` | `UserEntity`, `UserSession`, JWT 토큰 |
+| FR-AUTH-002 | JWT 토큰 발급/갱신 (Rotation) | Must | ✅ | auth-service | `AuthController` | `AuthServiceImpl`, `JwtTokenProvider` | Refresh token rotation, Redis 블랙리스트 |
+| FR-AUTH-003 | 세션 관리 | Must | ✅ | auth-service | `SessionController` | `SessionServiceImpl` | 동시 5세션 제한, DB+Redis, 24h 타임아웃, 스케줄러 정리 |
+| FR-AUTH-004 | 비밀번호 변경/초기화 | Must | ✅ | auth-service | `PasswordController` | `PasswordServiceImpl` | BCrypt, 이메일 리셋, 이력 관리 |
+| FR-AUTH-005 | 계정 잠금 | Must | ✅ | auth-service | `AuthController` | `AuthServiceImpl` | 5회 실패 → 30분 잠금, 관리자 해제 |
+| FR-AUTH-006 | 7단계 계층적 RBAC | Must | ✅ | common-security | — | `RoleHierarchyConfig`, `PermissionMappingService` | 100+ 퍼미션, `@PreAuthorize` |
+| FR-AUTH-007 | 데이터 접근 제어 (scope) | Must | 🟡 | common-security | — | `PermissionChecker` | self/team/dept/org 범위, 부서/팀 실제 조회 TODO |
+| FR-AUTH-008 | Keycloak SSO | Must | ❌ | — | — | — | **자체 JWT 유지 결정** (의도적 미구현) |
+| FR-AUTH-009 | API Gateway JWT 검증 | Must | 🟡 | gateway-service | — | — | Traefik 라우팅 존재, JWT 미들웨어 미완 |
+| FR-AUTH-010 | MFA (TOTP 다중 인증) | Should | ✅ | auth-service | `MfaController` | `MfaServiceImpl` | TOTP + 복구코드 10개, QR코드, GoogleAuthenticator |
+| FR-AUTH-011 | 사용자 계정 관리 (관리자) | Must | ✅ | auth-service | `UserController` | `UserManagementServiceImpl` | CRUD, 상태 변경, 역할 관리, 잠금 해제 |
+| FR-AUTH-012 | 테넌트별 비밀번호 정책 | Should | ✅ | auth-service | — | `PasswordPolicyServiceImpl` | Feign → Tenant Service, 시스템 최소 기준 강제 |
+| FR-AUTH-013 | 비밀번호 이력 (재사용 방지) | Should | ✅ | auth-service | — | `PasswordHistoryServiceImpl` | 최근 N개 BCrypt 비교, `PasswordHistory` 엔티티 |
+| FR-AUTH-014 | 비밀번호 만료 체크 | Should | ✅ | auth-service | `AuthController` | `AuthServiceImpl` | passwordExpiryDays 설정, 로그인 시 플래그 반환 |
+| FR-AUTH-015 | 로그인 이력 기록 | Must | ✅ | auth-service | — | `LoginHistoryServiceImpl` | SUCCESS/FAILURE, IP, UA, 실패사유 |
+| FR-AUTH-016 | 비즈니스 감사 로그 | Must | ❌ | auth-service | — | — | 설계 완료, common-audit AOP + SQS 리스너 미구현 |
+| FR-AUTH-017 | 테넌트 상태 검증 | Must | ✅ | auth-service | `AuthController` | `AuthServiceImpl` | Feign → SUSPENDED/TERMINATED 체크 |
 
-**완전율**: 78% (7/9 완전)
+**완전율**: 76% (13/17 완전) — Keycloak 의도적 미구현 제외 시 81% (13/16)
 
 ---
 
 ### 3.3 FR-MDM: 기준정보 관리
 
+> 상세 분석: [03-MDM-SERVICE.md](../modules/03-MDM-SERVICE.md)
+
 | ID | 요구사항 | 우선순위 | 상태 | 서비스 | Controller | Service | Entity/기타 |
 |----|---------|---------|------|--------|------------|---------|-------------|
-| FR-MDM-001-01 | 공통코드 CRUD | Must | ✅ | mdm-service | `CommonCodeController` | `CommonCodeService` | `CommonCode` |
-| FR-MDM-001-02 | 테넌트별 코드 사용 설정 | Must | ✅ | mdm-service | `TenantCodeController` | `TenantCodeService` | `TenantCode` |
-| FR-MDM-001-03 | 코드 변경 시 일괄 갱신 | Should | ✅ | mdm-service | `CommonCodeController` | `CodeImportExportService` | 벌크 상태 변경 |
-| FR-MDM-001-04 | 변경 이력 조회 | Must | ✅ | mdm-service | `CommonCodeController` | `CommonCodeService` | `CodeHistory` |
-| FR-MDM-002-01 | 다단계 분류체계 | Must | ✅ | mdm-service | `CommonCodeController` | `CommonCodeService` | 4단계 (대/중/소/세), `parentCodeId` |
-| FR-MDM-002-02 | 변경 영향도 시뮬레이션 | Should | ✅ | mdm-service | `CommonCodeController` | `CodeImpactAnalyzer` | 영향도 스코어 (0-100) |
-| FR-MDM-002-03 | 유사/중복 코드 검색 | Should | ✅ | mdm-service | `CommonCodeController` | `CodeSearchService` | Levenshtein 유사도 |
+| FR-MDM-001-01 | 공통코드 CRUD | Must | ✅ | mdm-service | `CommonCodeController` | `CommonCodeServiceImpl` | `CommonCode`, `CodeGroup` |
+| FR-MDM-001-02 | 테넌트별 코드 사용 설정 | Must | ✅ | mdm-service | `TenantCodeController` | `TenantCodeServiceImpl` | `CodeTenantMapping` |
+| FR-MDM-001-03 | 코드 변경 시 일괄 갱신 | Should | ✅ | mdm-service | `CommonCodeController.bulkChangeStatus()` | `CommonCodeServiceImpl.bulkChangeStatus()` | `BulkCodeStatusChangeRequest` |
+| FR-MDM-001-04 | 변경 이력 조회 | Must | ✅ | mdm-service | `CommonCodeController.getHistory()` | `CodeHistoryServiceImpl` | `CodeHistory` |
+| FR-MDM-002-01 | 다단계 분류체계 | Must | ✅ | mdm-service | `CommonCodeController.getCodeTree()` | `CommonCodeServiceImpl.getCodeTree()` | `CodeTreeResponse` |
+| FR-MDM-002-02 | 변경 영향도 시뮬레이션 | Should | ✅ | mdm-service | `CommonCodeController.analyzeImpact()` | `CodeImpactAnalyzerImpl` | `CodeImpactResponse`, `CodeUsageMapping` |
+| FR-MDM-002-03 | 유사/중복 코드 검색 | Should | ✅ | mdm-service | `CommonCodeController.searchSimilar()` | `CodeSearchServiceImpl` | `SimilarCodeResponse` |
+| FR-MDM-008 | 메뉴 관리 시스템 | Must | ✅ | mdm-service | `MenuController` | `MenuServiceImpl` | `MenuItem`, `MenuPermission` |
+| FR-MDM-009 | 테넌트 메뉴 커스터마이징 | Must | ✅ | mdm-service | `TenantMenuConfigController` | `MenuServiceImpl` | `TenantMenuConfig` |
+| FR-MDM-010 | 사용자 메뉴 필터링 | Must | ✅ | mdm-service | `UserMenuController` | `MenuServiceImpl.getUserMenus()` | `UserMenuResponse` |
+| FR-MDM-011 | 코드 폐기 + 유예기간 | Should | ✅ | mdm-service | `CommonCodeController.deprecate()` | `CommonCodeServiceImpl.deprecate()` | `DeprecateCodeRequest`, `CommonCode` |
+| FR-MDM-012 | 코드 유효기간 스케줄러 | Should | ✅ | mdm-service | — (스케줄러) | `CodeEffectiveScheduler` | `CommonCode` (effectiveFrom/To) |
+| FR-MDM-013 | Excel 임포트/엑스포트 | Should | ✅ | mdm-service | `CodeImportExportController` | `ExcelCodeImportExportServiceImpl` | MultipartFile, byte[] |
+| FR-MDM-014 | 코드 사용처 매핑 | Should | ✅ | mdm-service | `CodeUsageMappingController` | `CodeUsageMappingRepository` | `CodeUsageMapping` |
+| FR-MDM-015 | 3계층 메뉴 캐싱 | Should | ✅ | mdm-service | — (내부) | `MenuCacheServiceImpl` | Redis keys |
+| FR-MDM-016 | 테넌트 코드 오버레이 | Must | ✅ | mdm-service | `TenantCodeController` | `TenantCodeServiceImpl` | `CodeTenantMapping` |
+| FR-MDM-017 | 코드 임포트 검증 모드 | Should | ✅ | mdm-service | `CodeImportExportController.validateImport()` | `CodeImportExportServiceImpl.validateImport()` | `ImportResultResponse` |
+| FR-MDM-018 | 테넌트 커스텀 메뉴 CRUD | Must | ✅ | mdm-service | `TenantCustomMenuController` | `MenuServiceImpl.createTenantMenu()` | `MenuItem` |
+| FR-MDM-019 | 코드 일괄 상태 변경 | Should | ✅ | mdm-service | `CommonCodeController.bulkChangeStatus()` | `CommonCodeServiceImpl.bulkChangeStatus()` | `BulkCodeStatusChangeRequest` |
+| FR-MDM-020 | 시스템 코드 SUPER_ADMIN 전용 | Must | ✅ | mdm-service | — (서비스 레벨) | `CommonCodeServiceImpl.requireSystemCodePermission()` | `PermissionChecker` |
 
-**완전율**: 100% (7/7 완전)
+**완전율**: 100% (20/20 완전)
 
 ---
 
@@ -125,19 +163,21 @@
 
 | ID | 요구사항 | 우선순위 | 상태 | 서비스 | Controller | Service | Entity/기타 |
 |----|---------|---------|------|--------|------------|---------|-------------|
-| FR-ORG-001-01 | 부서/팀 CRUD | Must | ✅ | organization-service | `DepartmentController` | `DepartmentService` | `Department` |
-| FR-ORG-001-02 | 조직도 트리 시각화 | Must | ✅ | organization-service | `DepartmentController` | `DepartmentService` | `getTree()` API |
-| FR-ORG-001-03 | 시점별 조직 변경 이력 | Must | 🟡 | organization-service | `DepartmentController` | — | TODO: 감사 테이블 미생성 |
-| FR-ORG-001-04 | 조직 개편 영향 미리보기 | Should | 🟡 | organization-service | — | `ReorgImpactAnalyzer` | 스켈레톤만 존재 |
-| FR-ORG-002-01 | 보직(직책) 관리 | Must | ✅ | organization-service | `PositionController` | `PositionService` | `Position` |
+| FR-ORG-001-01 | 부서/팀 CRUD | Must | ✅ | organization-service | `DepartmentController` | `DepartmentServiceImpl` | `Department` + merge/split |
+| FR-ORG-001-02 | 조직도 트리 시각화 | Must | ✅ | organization-service | `DepartmentController.getTree/getOrgChart` | `DepartmentServiceImpl` | `getTree()` + `getOrgChart()` (직원 수 포함) |
+| FR-ORG-001-03 | 시점별 조직 변경 이력 | Must | ✅ | organization-service | `DepartmentController.getHistory` | `OrganizationHistoryServiceImpl` | `OrganizationHistory` + `@TransactionalEventListener` |
+| FR-ORG-001-04 | 조직 개편 영향 미리보기 | Should | ✅ | organization-service | `DepartmentController.analyzeReorgImpact` | `ReorgImpactAnalyzer` | 직원 수, 결재건, 경고 분석 |
+| FR-ORG-002-01 | 보직(직책) 관리 | Must | ✅ | organization-service | `PositionController` | `PositionServiceImpl` | `Position` |
 | FR-ORG-002-02 | 겸직 지원 | Must | 🟡 | employee-service | `EmployeeAffiliationController` | `EmployeeAffiliationService` | `EmployeeAffiliation` (FE UI 미확인) |
 | FR-ORG-002-03 | 주/부 소속 구분 | Must | 🟡 | employee-service | `EmployeeAffiliationController` | `EmployeeAffiliationService` | `affiliationType` (PRIMARY/SECONDARY/CONCURRENT) |
 | FR-ORG-002-04 | 보직→위원회 당연직 갱신 | Should | ❌ | — | — | — | `AffiliationChangedListener` TODO 스텁 |
-| FR-ORG-003-01 | 테넌트별 직급 체계 | Must | ✅ | organization-service | `GradeController` | `GradeService` | `Grade` |
+| FR-ORG-003-01 | 테넌트별 직급 체계 | Must | ✅ | organization-service | `GradeController` | `GradeServiceImpl` | `Grade` (tenant_id + RLS) |
 | FR-ORG-003-02 | 직급/직책 분리 관리 | Must | ✅ | organization-service | 별도 Controller | 별도 Service | `Grade` + `Position` 분리 |
-| FR-ORG-003-03 | 직급별 호봉 체계 | Should | 🟡 | — | — | — | FE 목업만, BE 미구현 |
+| FR-ORG-003-03 | 직급별 호봉 체계 | Should | ❌ | — | — | — | 급여 모듈과 함께 구현 필요 |
 
-**완전율**: 55% (6/11 완전)
+**완전율**: 73% (8/11 완전) — *v1.0 대비 55%→73% 상향 (FR-ORG-001-03, FR-ORG-001-04 구현 완료)*
+
+> 상세 분석: `docs/modules/04-ORGANIZATION-SERVICE.md` 섹션 3 (Phase A) 참조
 
 ---
 
@@ -146,7 +186,7 @@
 | ID | 요구사항 | 우선순위 | 상태 | 서비스 | Controller | Service | Entity/기타 |
 |----|---------|---------|------|--------|------------|---------|-------------|
 | FR-EMP-001-01 | 사원 CRUD | Must | ✅ | employee-service | `EmployeeController` | `EmployeeService` | `Employee` |
-| FR-EMP-001-02 | Excel/CSV 벌크 등록 | Must | 🟡 | employee-service | `EmployeeController` | `EmployeeBulkService` | 검증 로직 구현, Excel 직렬화 TODO |
+| FR-EMP-001-02 | Excel/CSV 벌크 등록 | Must | ✅ | employee-service | `EmployeeBulkController` | `ExcelEmployeeServiceImpl` | Apache POI 기반 import/export 완전 구현 (최대 1000건) |
 | FR-EMP-001-03 | 인사기록카드 PDF | Must | 🟡 | employee-service | `EmployeeController` | `RecordCardService` | PDFBox, 한글 폰트 미탑재 |
 | FR-EMP-001-04 | 본인 정보 변경 요청 | Must | ✅ | employee-service | `ChangeRequestController` | `ChangeRequestService` | `ChangeRequest` |
 | FR-EMP-001-05 | 변경 요청 HR 승인 | Must | 🟡 | employee-service | `ChangeRequestController` | `ChangeRequestService` | 결재 서비스 연동 TODO |
@@ -162,7 +202,10 @@
 | FR-EMP-004-02 | 가족관계 코드 관리 | Must | ✅ | employee-service | — | — | `FamilyRelationType` enum 6종 |
 | FR-EMP-004-03 | 가족→수당 연계 | Should | 🟡 | employee-service | — | — | `isDependent` 플래그, 수당 계산 미구현 |
 
-**완전율**: 56% (9/16 완전)
+**완전율**: 63% (10/16 완전) — *v1.0 대비 56%→63% 상향 (Excel bulk 구현 완료 확인)*
+
+> 상세 분석: `docs/modules/05-EMPLOYEE-SERVICE.md` 섹션 3 (Phase A) 참조
+> 코드 전용 기능 13건 역분석 완료 (전출/전입, 경조금, 사원증, 겸직, 변경요청, 인사기록카드, 대시보드 등)
 
 ---
 
@@ -176,7 +219,7 @@
 | FR-ATT-001-04 | 근속연수별 차등 연차 | Should | ✅ | attendance-service | — | `LeaveAccrualService` | `serviceYearBonuses` JSONB, 25일 상한 |
 | FR-ATT-002-01 | 휴가 신청 | Must | ✅ | attendance-service | `LeaveController` | `LeaveService` | `Leave` |
 | FR-ATT-002-02 | 반차/시간차 신청 | Must | ✅ | attendance-service | `LeaveController` | `LeaveService` | `HALF_DAY_AM/PM`, `leaveUnit`, `hoursCount` |
-| FR-ATT-002-03 | 결재선 자동 지정 | Must | 🟡 | attendance-service | `LeaveController` | `LeaveService` | 추천 결재선 표시, 자동 결재 문서 생성 미완 |
+| FR-ATT-002-03 | 결재선 자동 지정 | Must | ✅ | attendance-service | `LeaveController` | `LeaveService` | `LeaveRequestCreatedEvent` → Approval Service 자동 결재 문서 생성 |
 | FR-ATT-002-04 | 결재자 승인/반려 | Must | ✅ | attendance-service | — | `ApprovalCompletedListener` | `handleApprovalCompleted()` 이벤트 처리 |
 | FR-ATT-002-05 | 승인 시 연차 자동 차감 | Must | ✅ | attendance-service | — | `LeaveService` | `confirmUsedDays()`, `releasePendingDays()` |
 | FR-ATT-002-06 | 캘린더 형태 조회 | Should | 🟡 | attendance-service | `LeaveController` | `LeaveService` | 기본 구현, 완성도 미확인 |
@@ -184,7 +227,7 @@
 | FR-ATT-003-02 | 유형별 사용 조건 | Must | ✅ | attendance-service | `LeaveTypeController` | `LeaveTypeService` | `maxDaysPerYear`, `minNoticeDays`, `genderRestriction` |
 | FR-ATT-003-03 | 유형별 결재선 규칙 | Should | 🟡 | attendance-service | — | — | `approvalTemplateCode` 필드 존재, 설정 UI 미완 |
 
-**완전율**: 69% (9/13 완전)
+**완전율**: 85% (11/13 완전)
 
 ---
 
@@ -212,6 +255,9 @@
 
 **완전율**: 76% (13/17 완전)
 
+> 상세 분석: `docs/modules/07-APPROVAL-SERVICE.md` 섹션 3 (Phase A) 참조
+> 코드 전용 기능 10건 역분석 완료 (문서번호 채번, 조건 분기, 전결 엔진, 직접 승인, 통계 등)
+
 ---
 
 ### 3.8 FR-NTF: 알림 시스템
@@ -226,6 +272,9 @@
 
 **완전율**: 60% (3/5 완전)
 
+> 상세 분석: `docs/modules/08-NOTIFICATION-SERVICE.md` 섹션 3 (Phase A) 참조
+> 코드 전용 기능 10건 역분석 완료 (SSE 스트리밍, WebSocket 폴백, 템플릿 CRUD, 멀티채널 디스패치 등)
+
 ---
 
 ### 3.9 FR-FILE: 파일 관리
@@ -238,6 +287,9 @@
 | FR-FILE-001-04 | 파일 용량/형식 제한 | Must | 🟡 | file-service | `FileController` | `FileStorageService` | 전역 100MB만, 테넌트별 미구현 |
 
 **완전율**: 50% (2/4 완전)
+
+> 상세 분석: `docs/modules/09-FILE-SERVICE.md` 섹션 3 (Phase A) 참조
+> 코드 전용 기능 10건 역분석 완료 (Strategy 패턴, 참조 기반 관리, SHA-256, 다운로드 추적 등)
 
 ---
 
@@ -312,15 +364,15 @@
 
 ## 5. Phase 2 기능 현황
 
-| 기능 영역 | 서비스 | 주요 Controller | 상태 | 잔여 작업 |
-|----------|--------|----------------|------|----------|
-| 채용 관리 | recruitment-service | `JobPostingController`, `ApplicationController`, `InterviewController`, `EvaluationController`, `BlacklistController` | ✅ BE/FE | 테스트, PDF 내보내기 |
-| 발령 관리 | appointment-service | `AppointmentController`, `AppointmentBatchController` | ✅ BE/FE | 테스트, 결재 연동 |
-| 증명서 관리 | certificate-service | `CertificateRequestController`, `CertificateTemplateController`, 등 6개 | ✅ BE/FE | 테스트, PDF 생성, 디지털 서명 |
-| 정현원 관리 | organization-service | `HeadcountController` | ✅ BE/FE | 폼, 시각화, 결재 연동 |
-| 경조비 관리 | organization-service | `CondolenceController` | ✅ BE/FE | 폼, 결재 연동 |
-| 위원회 관리 | organization-service | `CommitteeController` | ✅ BE/FE | 멤버 선택 UI |
-| 사원증 관리 | employee-service | `RecordCardController` | 🟡 FE | 상세/발급 페이지, BE 연동 |
+| 기능 영역 | 서비스 | 주요 Controller | 상태 | 잔여 작업 | 상세 문서 |
+|----------|--------|----------------|------|----------|----------|
+| 채용 관리 | recruitment-service | `JobPostingController`, `ApplicationController`, `InterviewController`, `EvaluationController`, `BlacklistController` | ✅ BE/FE | 테스트, PDF 내보내기 | [10-RECRUITMENT-SERVICE.md](../modules/10-RECRUITMENT-SERVICE.md) |
+| 발령 관리 | appointment-service | `AppointmentController`, `AppointmentBatchController` | ✅ BE/FE | 테스트, 결재 연동 | [12-APPOINTMENT-SERVICE.md](../modules/12-APPOINTMENT-SERVICE.md) |
+| 증명서 관리 | certificate-service | `CertificateRequestController`, `CertificateTemplateController`, 등 6개 | ✅ BE/FE | 테스트, PDF 생성, 디지털 서명 | [11-CERTIFICATE-SERVICE.md](../modules/11-CERTIFICATE-SERVICE.md) |
+| 정현원 관리 | organization-service | `HeadcountController` | ✅ BE/FE | 폼, 시각화, 결재 연동 | [04-ORGANIZATION-SERVICE.md](../modules/04-ORGANIZATION-SERVICE.md) |
+| 경조비 관리 | organization-service | `CondolenceController` | ✅ BE/FE | 폼, 결재 연동 | [04-ORGANIZATION-SERVICE.md](../modules/04-ORGANIZATION-SERVICE.md) |
+| 위원회 관리 | organization-service | `CommitteeController` | ✅ BE/FE | 멤버 선택 UI | [04-ORGANIZATION-SERVICE.md](../modules/04-ORGANIZATION-SERVICE.md) |
+| 사원증 관리 | employee-service | `EmployeeCardController` | ✅ BE/FE | 만료 알림, 자동 발급 | [05-EMPLOYEE-SERVICE.md](../modules/05-EMPLOYEE-SERVICE.md) |
 
 ---
 
@@ -330,16 +382,16 @@
 
 | 기능 영역 | 전체 | 완전 (✅) | 부분 (🟡) | 미구현 (❌) | 완전율 |
 |-----------|------|-----------|-----------|------------|--------|
-| FR-TM (테넌트) | 12 | 10 | 1 | 1 | 83% |
-| FR-AUTH (인증) | 9 | 7 | 1 | 1 | 78% |
-| FR-MDM (기준정보) | 7 | 7 | 0 | 0 | **100%** |
-| FR-ORG (조직) | 11 | 6 | 4 | 1 | 55% |
-| FR-EMP (인사) | 16 | 9 | 6 | 1 | 56% |
-| FR-ATT (근태) | 13 | 9 | 4 | 0 | 69% |
+| FR-TM (테넌트) | 25 | 24 | 0 | 1 | **96%** |
+| FR-AUTH (인증) | 17 | 13 | 2 | 2 | **76%** |
+| FR-MDM (기준정보) | 20 | 20 | 0 | 0 | **100%** |
+| FR-ORG (조직) | 11 | 8 | 2 | 1 | **73%** |
+| FR-EMP (인사) | 16 | 10 | 5 | 1 | **63%** |
+| FR-ATT (근태) | 13 | 11 | 2 | 0 | 85% |
 | FR-APR (결재) | 17 | 13 | 3 | 0 | **76%** |
 | FR-NTF (알림) | 5 | 3 | 1 | 1 | 60% |
 | FR-FILE (파일) | 4 | 2 | 2 | 0 | 50% |
-| **합계** | **94** | **66** | **23** | **5** | **70%** |
+| **합계** | **128** | **102** | **19** | **7** | **80%** |
 
 ### 비기능 요구사항 (NFR) 요약
 
@@ -362,7 +414,7 @@
 | 2 | 계열사 간 인사이동 | FR-TM-003-03 | 기능 | 높음 |
 | 3 | 테스트 커버리지 5% | NFR-TEST-001 | 품질 | 높음 |
 | 4 | 감사 로그 5년 보관 | NFR-SEC-005 | 컴플라이언스 | 중간 |
-| 5 | 조직 변경 이력 | FR-ORG-001-03 | 기능 | 중간 |
+| 5 | 비즈니스 감사 로그 | FR-AUTH-016 | 기능 | 중간 |
 
 ---
 

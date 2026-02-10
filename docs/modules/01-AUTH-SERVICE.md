@@ -1,7 +1,24 @@
-# Module 01: Auth Service — 프로덕션 정책/설정 분석
+# Module 01: Auth Service — PRD 및 프로덕션 정책 분석
 
-> **분석 일자**: 2026-02-06
+> **최종 업데이트**: 2026-02-10
 > **분석 범위**: `services/auth-service/`, `common/common-security/`
+> **문서 버전**: v2.0 (Phase A/B/C 확장)
+
+---
+
+## 목차
+
+- [1. 현재 구현 상태 요약](#1-현재-구현-상태-요약)
+- [2. 정책 결정사항](#2-정책-결정사항)
+- [3. 기능 요구사항 Gap 분석 (Phase A)](#3-기능-요구사항-gap-분석-phase-a)
+- [4. 비즈니스 규칙 상세 (Phase B)](#4-비즈니스-규칙-상세-phase-b)
+- [5. 서비스 연동 명세 (Phase C)](#5-서비스-연동-명세-phase-c)
+- [6. 데이터 모델](#6-데이터-모델)
+- [7. API 명세](#7-api-명세)
+- [8. 보안/프라이버시](#8-보안프라이버시)
+- [9. 성능/NFR](#9-성능nfr)
+- [10. 추적성 매트릭스](#10-추적성-매트릭스)
+- [11. 변경 이력](#11-변경-이력)
 
 ---
 
@@ -27,28 +44,31 @@
 | 토큰 블랙리스트 (Redis) | ✅ 완료 | Redis `token:blacklist:` prefix |
 | IP 주소 마스킹 (세션 응답) | ✅ 완료 | `SessionServiceImpl.maskIpAddress()` |
 | 비밀번호 초기화 이벤트 발행 | ✅ 완료 | `PasswordResetRequestedEvent` → Notification |
+| MFA (TOTP 기반 다중 인증) | ✅ 완료 | `MfaServiceImpl` |
+| MFA 복구 코드 | ✅ 완료 | `MfaRecoveryCode` 엔티티 |
+| 사용자 계정 CRUD (관리자용) | ✅ 완료 | `UserController` / `UserManagementServiceImpl` |
+| 로그인 이력 기록 | ✅ 완료 | `LoginHistoryServiceImpl` |
+| 비밀번호 만료 체크 | ✅ 완료 | `AuthServiceImpl.login()` 내 passwordExpiryDays 체크 |
+| 비밀번호 이력 관리 | ✅ 완료 | `PasswordHistoryServiceImpl` |
+| Refresh Token Rotation | ✅ 완료 | 이전 토큰 블랙리스트 처리 |
+| 로그인 시 세션 생성 연결 | ✅ 완료 | `AuthServiceImpl.login()` → `SessionService.createSession()` |
+| 테넌트 상태 검증 (로그인 시) | ✅ 완료 | Feign → TenantServiceClient.getTenantStatus() |
+| username 테넌트별 유니크 | ✅ 완료 | V23 마이그레이션 적용 |
+| 만료 세션 정리 스케줄러 | ✅ 완료 | `SessionCleanupScheduler` (1시간 주기) |
+| 테넌트별 비밀번호 정책 | ✅ 완료 | `PasswordPolicyServiceImpl` → Feign |
+| account_locks 테이블 제거 | ✅ 완료 | V22 마이그레이션 |
 
 ### 1.2 미구현 / TODO
 
 | 기능 | 상태 | 위치 | 구현 방향 |
 |------|------|------|-----------|
-| IP Geolocation | ❌ TODO | `SessionServiceImpl.resolveLocation()` | 외부 API 연동 또는 MaxMind GeoIP2 |
-| 같은 부서 확인 | ❌ TODO | `PermissionChecker.isSameDepartment()` | Employee Service Feign 호출 |
-| 같은 팀 확인 | ❌ TODO | `PermissionChecker.isSameTeam()` | Employee Service Feign 호출 |
-| 로그인 이력 기록 | ❌ 스키마만 | `login_history` 테이블 존재, 코드 미연동 | 로그인 성공/실패 시 기록 |
-| account_locks 테이블 연동 | ❌ 스키마만 | `account_locks` 테이블 존재, 코드는 UserEntity 내장 필드 사용 | UserEntity 필드로 충분, 테이블 제거 또는 연동 |
-| 세션 생성 호출 연결 | ❌ 미연결 | 로그인 시 `SessionService.createSession()` 미호출 | `AuthServiceImpl.login()`에서 세션 생성 추가 |
-| 비밀번호 복잡도 validation (서버측) | ⚠️ 부분 | DTO 검증만, 서비스 레벨 검증 없음 | 테넌트별 정책 적용 시 서비스 레벨 검증 필요 |
-| 만료 세션 정리 스케줄러 | ❌ 미구현 | `UserSessionRepository.deleteExpiredSessions()` 존재, 스케줄러 없음 | `@Scheduled` 배치 작업 추가 |
-| 비밀번호 만료 체크 | ❌ 미구현 | `password_changed_at` 필드 존재, 체크 로직 없음 | 로그인 시 만료 여부 확인, 강제 변경 유도 |
-| 비밀번호 이력 관리 | ❌ 미구현 | 테이블/코드 없음 | `password_history` 테이블 + 재사용 방지 로직 |
-| MFA (다중 인증) | ❌ 미구현 | 코드/스키마 없음 | TOTP 기반 구현, 테넌트별 ON/OFF |
-| 테넌트별 비밀번호 정책 | ❌ 미구현 | 하드코딩된 정책 | Tenant Policy 연동 |
-| Gateway Service 인증 | ❌ 미구현 | gateway-service 디렉토리 비어있음 | 설계 문서만 존재 (SDD_Gateway_Service.md) |
-| 사용자 계정 CRUD (관리자용) | ❌ 미구현 | 컨트롤러/서비스 없음 | HR 관리자의 사용자 계정 생성/수정/비활성화 API |
-| Refresh Token Rotation | ⚠️ 부분 | 갱신 시 새 토큰 발급하지만 이전 토큰 블랙리스트 미처리 | 이전 refresh token 블랙리스트 추가 |
-| CORS 설정 (프로덕션) | ⚠️ 위험 | `addAllowedOriginPattern("*")` | 프로덕션 도메인으로 제한 필요 |
-| username 글로벌 유니크 | ⚠️ 설계 검토 | `users.username UNIQUE` (전체 테넌트) | 테넌트별 유니크로 변경 필요 (같은 username이 다른 테넌트에 존재 가능해야 함) |
+| IP Geolocation | ⚠️ 부분 | `SessionServiceImpl.resolveLocation()` | MaxMind GeoIP2 DB 파일 필요 (코드 구현 완료, DB 파일 미설정 시 "Unknown") |
+| 같은 부서 확인 | ❌ TODO | `PermissionChecker.isSameDepartment()` | Employee Service Feign 호출 필요 |
+| 같은 팀 확인 | ❌ TODO | `PermissionChecker.isSameTeam()` | Employee Service Feign 호출 필요 |
+| CORS 설정 (프로덕션) | ⚠️ 부분 | SecurityConfig | 개발 도메인만 설정, 프로덕션 도메인 추가 필요 |
+| Gateway Service 인증 | ❌ 미구현 | gateway-service | JWT 미들웨어 미완 |
+| 감사 로그 모듈 (common-audit) | ❌ 미구현 | 설계 완료, 구현 필요 | AOP @Audited + SQS 리스너 |
+| Keycloak SSO 연동 | ❌ 미연동 | — | 자체 JWT 유지 결정 (연동 안 함) |
 
 ---
 
@@ -60,10 +80,10 @@
 |------|------|------|
 | **정책 관리 수준** | 테넌트별 설정 가능 | 기본 최소 기준 이상으로만 강화 허용 |
 | **시스템 최소 기준** | 8자 이상, 대문자+소문자+숫자+특수문자 각 1개 | 이 기준 아래로는 설정 불가 |
-| **테넌트 설정 가능 항목** | 최소 길이 (8~20), 조합 규칙 (3종/4종), 만료 기간, 재사용 금지 개수 | `tenant_password_policy` 테이블 추가 |
+| **테넌트 설정 가능 항목** | 최소 길이 (8~20), 조합 규칙 (3종/4종), 만료 기간, 재사용 금지 개수 | Tenant Service Feign 연동 |
 | **비밀번호 만료** | 기본 90일 | 테넌트별 미사용/30/60/90일 설정 가능 |
 | **재사용 금지** | 기본 5개 | 테넌트별 0~10 설정 가능 |
-| **만료 알림** | 만료 7일 전 알림 | Notification Service 연동 |
+| **만료 알림** | 만료 7일 전 알림 | Notification Service 연동 (미구현) |
 
 #### 테넌트 비밀번호 정책 기본값
 ```yaml
@@ -86,7 +106,7 @@ password-policy:
 |------|------|------|
 | 최대 실패 횟수 | 5회 | 현행 유지 |
 | 잠금 시간 | 30분 | 현행 유지 |
-| 잠금 해제 | 시간 경과 시 자동 해제 | 관리자 수동 해제도 필요 |
+| 잠금 해제 | 시간 경과 시 자동 해제 + 관리자 수동 해제 | `UserController.unlockUser()` |
 
 ### 2.3 JWT 토큰 정책 (결정 완료)
 
@@ -96,22 +116,25 @@ password-policy:
 | Refresh Token 만료 | 604800초 (7일) | 현행 유지 |
 | 서명 알고리즘 | HMAC-SHA256 | 현행 유지 |
 | Token Type | Bearer | 현행 유지 |
+| Refresh Token Rotation | 갱신 시 이전 토큰 블랙리스트 처리 | 구현 완료 |
 
 ### 2.4 세션 정책 (결정 완료)
 
 | 항목 | 결정 | 비고 |
 |------|------|------|
-| 최대 동시 세션 | 5개 | 현행 유지 |
+| 최대 동시 세션 | 5개 | `auth.session.max-sessions` |
 | 초과 시 처리 | 가장 오래된 세션 자동 종료 | 현행 유지 |
-| 세션 타임아웃 | 24시간 | 현행 유지 |
+| 세션 타임아웃 | 24시간 | `auth.session.timeout-hours` |
+| 만료 세션 정리 | 1시간마다 (비활성 7일 후 삭제) | `SessionCleanupScheduler` |
 
 ### 2.5 MFA 정책 (결정 완료)
 
 | 항목 | 결정 | 비고 |
 |------|------|------|
-| MFA 방식 | TOTP (Google Authenticator 호환) | RFC 6238 |
-| 정책 수준 | 테넌트별 선택 | 필수/선택/비활성화 3단계 |
-| 기본값 | 비활성화 | 테넌트 관리자가 활성화 |
+| MFA 방식 | TOTP (Google Authenticator 호환) | RFC 6238, GoogleAuthenticator 라이브러리 |
+| 정책 수준 | 사용자 자율 (선택적) | 테넌트 레벨 강제 미구현 |
+| 복구 코드 | 설정 시 10개 발급 | 8자 영숫자, 일회용 |
+| MFA 대기 토큰 | Redis 5분 TTL | `mfa:pending:{mfaToken}` |
 
 ### 2.6 인증 시스템 (결정 완료)
 
@@ -121,147 +144,734 @@ password-policy:
 
 ---
 
-## 3. 비즈니스 로직 사양
+## 3. 기능 요구사항 Gap 분석 (Phase A)
 
-### 3.1 로그인 흐름
+### 3.1 PRD vs 코드 비교표
 
-```
-1. 클라이언트 → POST /api/v1/auth/login { username, password, tenantCode? }
-2. UserRepository.findByUsername(username) → UserEntity
-3. 계정 존재 여부 확인 (없으면 AUTH_001)
-4. 계정 활성 상태 확인 (비활성 AUTH_008)
-5. 계정 잠금 상태 확인 (잠금 AUTH_009)
-6. BCrypt 비밀번호 검증 (실패 시 failedAttempts++ → 5회 시 잠금)
-7. ★ [미구현] 비밀번호 만료 여부 확인 → 만료 시 강제 변경 유도 (AUTH_010)
-8. ★ [미구현] MFA 활성화 시 MFA 챌린지 응답
-9. 성공 시 failedAttempts 초기화, lastLoginAt 갱신
-10. UserContext 빌드 → Access Token + Refresh Token 생성
-11. Refresh Token Redis 저장 (TTL: 7일)
-12. ★ [미구현] 세션 생성 (SessionService.createSession)
-13. ★ [미구현] 로그인 이력 기록 (login_history 테이블)
-14. TokenResponse 반환
-```
+> **PRD 출처**: `docs/deprecated/PRD.md` (섹션 4: 사용자 정의, 섹션 6.4: 보안, 섹션 7: 아키텍처)
+> **참고**: PRD에는 Auth Service 전용 FR 시리즈(FR-AUTH-xxx)가 정의되어 있지 않음. 인증 관련 요구사항은 사용자 역할 정의(§4), 보안 NFR(§6.4), 아키텍처(§7)에 분산.
 
-### 3.2 토큰 갱신 흐름
+| ID | PRD 요구사항 | PRD 출처 | 코드 구현 상태 | 구현 위치 | Gap |
+|----|-------------|---------|---------------|----------|-----|
+| FR-AUTH-001 | 로그인/로그아웃 | §4 (암시적) | ✅ 완전 구현 | `AuthController.login/logout()` | — |
+| FR-AUTH-002 | JWT 토큰 발급/갱신 | §7 아키텍처 | ✅ 완전 구현 | `JwtTokenProvider`, `AuthServiceImpl.refreshToken()` | — |
+| FR-AUTH-003 | 세션 관리 (동시 제한) | 없음 (코드 전용) | ✅ 완전 구현 | `SessionServiceImpl` (최대 5, 24h timeout) | PRD에 명시 없음 |
+| FR-AUTH-004 | 비밀번호 변경/초기화 | 없음 (코드 전용) | ✅ 완전 구현 | `PasswordServiceImpl` | PRD에 명시 없음 |
+| FR-AUTH-005 | 계정 잠금 (5회/30분) | 없음 (코드 전용) | ✅ 완전 구현 | `AuthServiceImpl.login()` | PRD에 명시 없음 |
+| FR-AUTH-006 | 7단계 계층적 RBAC | §4.2.1 | ✅ 완전 구현 | `RoleHierarchyConfig` (7 roles, 100+ permissions) | — |
+| FR-AUTH-007 | 데이터 접근 제어 (scope) | §4.2.2 | ✅ 완전 구현 | `PermissionChecker` (self/team/dept/org) | 부서/팀 실제 조회 TODO |
+| FR-AUTH-008 | Keycloak SSO / OAuth 2.0 | §6.4 NFR-SEC-001 | ❌ 미구현 | — | **자체 JWT 유지 결정** (의도적 미구현) |
+| FR-AUTH-009 | Gateway JWT 검증 | §7.1 Gateway Layer | 🟡 부분 | Traefik 라우팅 존재, JWT 미들웨어 미완 | Gateway Service 미완 |
+| FR-AUTH-010 | MFA (다중 인증) | 없음 (코드 전용) | ✅ 완전 구현 | `MfaServiceImpl` (TOTP + 복구코드) | PRD에 명시 없음 |
+| FR-AUTH-011 | 사용자 계정 관리 (CRUD) | §4.1 역할 정의 (암시적) | ✅ 완전 구현 | `UserController` / `UserManagementServiceImpl` | — |
+| FR-AUTH-012 | 비밀번호 정책 (테넌트별) | 없음 (코드 전용) | ✅ 완전 구현 | `PasswordPolicyServiceImpl` → Feign | PRD에 명시 없음 |
+| FR-AUTH-013 | 비밀번호 이력 (재사용 방지) | 없음 (코드 전용) | ✅ 완전 구현 | `PasswordHistoryServiceImpl` | PRD에 명시 없음 |
+| FR-AUTH-014 | 비밀번호 만료 체크 | 없음 (코드 전용) | ✅ 완전 구현 | `AuthServiceImpl` (passwordExpiryDays) | PRD에 명시 없음 |
+| FR-AUTH-015 | 로그인 이력 기록 | 없음 (코드 전용) | ✅ 완전 구현 | `LoginHistoryServiceImpl` | PRD에 명시 없음 |
+| FR-AUTH-016 | 감사 로그 (비즈니스 레벨) | §6.4 NFR-SEC-005 | ❌ 미구현 | 설계 완료 (섹션 13), 코드 없음 | Auth에 저장/조회 API 필요 |
+| FR-AUTH-017 | 테넌트 상태 검증 (로그인 시) | §5.1 테넌트 관리 (암시적) | ✅ 완전 구현 | `AuthServiceImpl` → TenantServiceClient | — |
 
-```
-1. 클라이언트 → POST /api/v1/auth/token/refresh { refreshToken }
-2. 블랙리스트 확인 (Redis token:blacklist:{token})
-3. JwtTokenProvider.isRefreshToken() 검증
-4. userId 추출 → UserEntity 조회
-5. 계정 활성 상태 확인
-6. 새 Access Token + Refresh Token 생성
-7. ★ [갭] 이전 Refresh Token 블랙리스트 미처리 → 구현 필요
-8. 새 Refresh Token Redis 저장
-9. TokenResponse 반환
-```
+### 3.2 코드에만 있는 기능 (역분석)
 
-### 3.3 로그아웃 흐름
+PRD에 명시적 요구사항이 없지만, 코드에 구현된 기능들:
 
-```
-1. 클라이언트 → POST /api/v1/auth/logout (Authorization 헤더)
-2. Access Token 추출
-3. Redis 블랙리스트에 추가 (TTL: Access Token 만료 시간)
-4. ★ [미연결] 세션 비활성화 처리 필요
-```
+| 기능 | 구현 위치 | 비즈니스 가치 | PRD 반영 권장 |
+|------|----------|-------------|--------------|
+| Refresh Token Rotation + 블랙리스트 | `AuthServiceImpl.refreshToken()` | 토큰 탈취 방어 (OAuth2 보안 모범사례) | ✅ 반영 필요 |
+| IP 마스킹 (세션 응답) | `SessionServiceImpl.maskIpAddress()` | 개인정보보호 (PIPA 준수) | ✅ 반영 필요 |
+| 관리자 비밀번호 초기화 | `UserController.resetPassword()` | 운영 편의성 | ✅ 반영 필요 |
+| MFA 복구 코드 (10개, 일회용) | `MfaRecoveryCodeRepository` | MFA 분실 대응 | ✅ 반영 필요 |
+| MFA 대기 토큰 (Redis 5분 TTL) | `mfa:pending:{token}` | 2단계 인증 UX | ✅ 반영 필요 |
+| 다중 테넌트 username 유니크 | V23 마이그레이션 | 100+ 계열사 지원 핵심 | ✅ 반영 필요 |
+| 세션 정리 스케줄러 (1시간 주기) | `SessionCleanupScheduler` | 자원 관리 | 내부 운영 사항 |
+| 비밀번호 복잡도 DTO 검증 | `ChangePasswordRequest` `@Pattern` | 입력 유효성 | 정책 문서에 포함 |
+| Feign 인증 헤더 전파 | `FeignClientConfig` | 서비스 간 인증 전파 | 아키텍처 문서에 포함 |
+| 에러 코드 체계 (AUTH_001~014) | `ErrorCode` enum | API 규격 | API 규격 문서에 포함 |
 
-### 3.4 비밀번호 변경 흐름
+### 3.3 Gap 해소 우선순위 로드맵
 
-```
-1. 인증된 사용자 → POST /api/v1/auth/password/change { currentPassword, newPassword, confirmPassword }
-2. DTO 검증: 8자 이상, 대소문자+숫자+특수문자
-3. newPassword == confirmPassword 확인
-4. 현재 비밀번호 BCrypt 검증
-5. ★ [미구현] 테넌트별 비밀번호 정책 추가 검증
-6. ★ [미구현] 비밀번호 이력 확인 (재사용 방지)
-7. 새 비밀번호 BCrypt 인코딩 → 저장
-8. passwordChangedAt 갱신
-9. 모든 세션 종료 (SessionService.terminateAllSessions)
-```
-
-### 3.5 비밀번호 초기화 흐름
-
-```
-요청 단계:
-1. POST /api/v1/auth/password/reset { username, email }
-2. 기존 미사용 토큰 무효화
-3. UUID 토큰 생성 (24시간 만료)
-4. password_reset_tokens 저장
-5. PasswordResetRequestedEvent 발행 → Notification Service
-
-확인 단계:
-1. POST /api/v1/auth/password/reset/confirm { token, newPassword, confirmPassword }
-2. 토큰 유효성 검증 (존재 + 미사용 + 미만료)
-3. 새 비밀번호 검증 (DTO + 정책)
-4. 비밀번호 업데이트 + failedAttempts 초기화
-5. 토큰 사용 처리
-6. 모든 세션 종료
-```
-
-### 3.6 세션 관리 흐름
-
-```
-세션 생성:
-1. 활성 세션 수 확인 (max 5)
-2. 초과 시 가장 오래된 세션 비활성화
-3. 새 세션 DB 저장 + Redis 캐시
-
-세션 조회:
-1. GET /api/v1/auth/sessions
-2. 활성 세션 목록 반환 (IP 마스킹 적용)
-3. 현재 세션 표시 (currentSession: true)
-
-세션 종료:
-1. DELETE /api/v1/auth/sessions/{sessionId} — 특정 세션
-2. DELETE /api/v1/auth/sessions — 전체 세션
-3. DELETE /api/v1/auth/sessions/others — 현재 제외 전체
-4. 블랙리스트에 session + refresh token 추가
-```
+| 우선순위 | Gap ID | 항목 | 현재 상태 | 해소 방향 | 의존성 | 예상 복잡도 |
+|---------|--------|------|----------|----------|--------|-----------|
+| **HIGH** | AUTH-G01 | 감사 로그 모듈 (common-audit + Auth 저장/조회) | 설계 완료, 미구현 | common-audit AOP + Auth SQS 리스너 + 조회 API | 전 서비스 영향 | 높음 |
+| **HIGH** | AUTH-G02 | 부서/팀 기반 권한 체크 | `isSameDepartment()` 항상 true | Employee Service Feign Client 추가 | Employee Service | 중간 |
+| **MEDIUM** | AUTH-G03 | Gateway JWT 미들웨어 | Traefik 라우팅만 존재 | JWT 검증 미들웨어 구현 | Gateway Service | 중간 |
+| **MEDIUM** | AUTH-G04 | 비밀번호 만료 7일 전 알림 | 만료 체크만 구현, 알림 미발행 | `PasswordExpiredEvent` → Notification | Notification Service | 낮음 |
+| **LOW** | AUTH-G05 | CORS 프로덕션 설정 | 개발 도메인만 | 환경별 CORS 도메인 설정 | 배포 환경 확정 | 낮음 |
+| **LOW** | AUTH-G06 | IP Geolocation DB 설정 | 코드 완료, DB 파일 미설정 | MaxMind GeoIP2 Lite 파일 배포 | 외부 파일 | 낮음 |
+| **DEFERRED** | AUTH-G07 | Keycloak SSO | 의도적 미구현 | 자체 JWT 유지 결정. 향후 SSO 필요 시 재검토 | — | — |
 
 ---
 
-## 4. 설정값 목록
+## 4. 비즈니스 규칙 상세 (Phase B)
 
-### 4.1 application.yml 설정
+### 4.1 상태 머신
 
-```yaml
-server:
-  port: 8081
+#### 4.1.1 사용자 계정 상태 (UserEntity.status)
 
-spring:
-  application:
-    name: auth-service
+```mermaid
+stateDiagram-v2
+    [*] --> ACTIVE : 계정 생성 (createUser)
+    ACTIVE --> INACTIVE : 관리자 비활성화 (updateStatus)
+    INACTIVE --> ACTIVE : 관리자 활성화 (updateStatus)
+    ACTIVE --> LOCKED : 로그인 5회 실패
+    LOCKED --> ACTIVE : 30분 경과 자동 해제
+    LOCKED --> ACTIVE : 관리자 수동 해제 (unlockUser)
 
-  datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/hr_saas
-    username: ${DB_USERNAME:hr_saas}
-    password: ${DB_PASSWORD:hr_saas_password}
-
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    properties:
-      hibernate:
-        default_schema: tenant_common    # Auth 테이블은 tenant_common 스키마
-
-  flyway:
-    enabled: true
-    locations: classpath:db/migration
-    schemas: tenant_common
-
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6381}
-      password: ${REDIS_PASSWORD:redis_password}
-
-jwt:
-  secret: ${JWT_SECRET:hr-saas-secret-key-for-jwt-token-signing-minimum-256-bits-required}
-  access-token-expiry: 1800       # 30분
-  refresh-token-expiry: 604800    # 7일
+    note right of ACTIVE : 로그인 가능, 모든 기능 사용
+    note right of INACTIVE : 로그인 불가, 세션 전체 종료
+    note right of LOCKED : 로그인 불가, 기존 세션 유지
 ```
 
-### 4.2 환경변수 (프로덕션)
+**상태 설명**:
+
+| 상태 | DB 표현 | 로그인 | 기존 세션 | 전이 조건 |
+|------|---------|--------|----------|----------|
+| ACTIVE | `status='ACTIVE'`, `locked_until IS NULL OR < NOW()` | ✅ | 유지 | 정상 상태 |
+| INACTIVE | `status='INACTIVE'` | ❌ (AUTH_008) | 전체 종료 | 관리자 비활성화 |
+| LOCKED | `status='ACTIVE'`, `locked_until > NOW()` | ❌ (AUTH_009) | 유지 | 5회 로그인 실패 |
+
+**참고**: LOCKED은 별도 상태 컬럼이 아닌 `locked_until` 타임스탬프로 관리됨. `UserEntity.isLocked()` 메서드가 `lockedUntil != null && lockedUntil.isAfter(now)` 체크.
+
+#### 4.1.2 세션 생명주기 (UserSession.active)
+
+```mermaid
+stateDiagram-v2
+    [*] --> ACTIVE : 로그인 성공 → createSession()
+    ACTIVE --> EXPIRED : 24시간 타임아웃
+    ACTIVE --> TERMINATED_USER : 사용자가 세션 종료
+    ACTIVE --> TERMINATED_SYSTEM : 최대 세션 초과 시 가장 오래된 세션 종료
+    ACTIVE --> TERMINATED_PASSWORD : 비밀번호 변경/초기화 → 전체 세션 종료
+    ACTIVE --> TERMINATED_ADMIN : 관리자 계정 비활성화 → 전체 세션 종료
+    EXPIRED --> DELETED : 7일 후 스케줄러 삭제
+    TERMINATED_USER --> DELETED : 7일 후 스케줄러 삭제
+    TERMINATED_SYSTEM --> DELETED : 7일 후 스케줄러 삭제
+    TERMINATED_PASSWORD --> DELETED : 7일 후 스케줄러 삭제
+    TERMINATED_ADMIN --> DELETED : 7일 후 스케줄러 삭제
+```
+
+**DB 표현**: `active = true/false` (소프트 삭제). 비활성화된 세션의 토큰은 Redis 블랙리스트에 24h TTL로 추가.
+
+#### 4.1.3 비밀번호 초기화 토큰 (PasswordResetToken)
+
+```mermaid
+stateDiagram-v2
+    [*] --> VALID : requestPasswordReset() → 토큰 생성
+    VALID --> USED : confirmPasswordReset() → 비밀번호 변경 완료
+    VALID --> EXPIRED : 24시간 경과
+    VALID --> INVALIDATED : 새 토큰 요청 시 기존 토큰 무효화
+    USED --> [*]
+    EXPIRED --> [*]
+    INVALIDATED --> [*]
+```
+
+**DB 표현**: `used = true/false`, `expires_at` 타임스탬프. `isValid()` = `!used && expiresAt.isAfter(now)`.
+
+#### 4.1.4 MFA 설정 상태 (UserMfa.enabled)
+
+```mermaid
+stateDiagram-v2
+    [*] --> NOT_CONFIGURED : MFA 미설정 (레코드 없음)
+    NOT_CONFIGURED --> SETUP_PENDING : setupMfa() → secret 생성, enabled=false
+    SETUP_PENDING --> ENABLED : verifySetup() → 첫 코드 검증 성공, enabled=true
+    SETUP_PENDING --> NOT_CONFIGURED : 설정 취소 (레코드 삭제 미구현 — 재설정 시 덮어쓰기)
+    ENABLED --> NOT_CONFIGURED : disableMfa() → 레코드 삭제
+```
+
+### 4.2 유효성 검증 규칙 카탈로그
+
+#### 4.2.1 로그인 요청 (LoginRequest)
+
+| 필드 | 규칙 | 어노테이션/코드 | 에러 |
+|------|------|---------------|------|
+| `username` | 필수, 비어있지 않음 | `@NotBlank` | 400 |
+| `password` | 필수, 비어있지 않음 | `@NotBlank` | 400 |
+| `tenantCode` | 선택 (UUID 또는 테넌트 코드 문자열) | 없음 | — |
+
+**서비스 레벨 검증** (순서대로):
+
+| # | 검증 | 실패 시 | 에러 코드 |
+|---|------|--------|----------|
+| 1 | `tenantCode` → tenantId 해석 (Feign) | 테넌트 미존재 | AUTH_001 |
+| 2 | `findByUsernameAndTenantId()` 조회 | 사용자 미존재 | AUTH_001 |
+| 3 | 미조회 시 `findByUsername()` 폴백 | 사용자 미존재 | AUTH_001 |
+| 4 | `user.isActive()` | 비활성 계정 | AUTH_008 |
+| 5 | `user.isLocked()` | 잠긴 계정 | AUTH_009 |
+| 6 | `passwordEncoder.matches()` | 비밀번호 불일치 → `failedAttempts++` | AUTH_001 |
+| 7 | `failedAttempts >= 5` | 계정 잠금 (30분) | AUTH_009 |
+| 8 | 테넌트 상태 확인 (Feign) | SUSPENDED → AUTH_010, TERMINATED → AUTH_011 | AUTH_010/011 |
+| 9 | MFA 활성화 여부 | MFA 필요 → `mfaRequired: true` 반환 | — |
+| 10 | 비밀번호 만료 여부 | 만료 → `passwordExpired: true` 반환 | — |
+
+#### 4.2.2 비밀번호 변경 (ChangePasswordRequest)
+
+| 필드 | 규칙 | 어노테이션/코드 |
+|------|------|---------------|
+| `currentPassword` | 필수, 비어있지 않음 | `@NotBlank` |
+| `newPassword` | 8~100자, 대문자+소문자+숫자+특수문자 각 1개 | `@Size(min=8, max=100)`, `@Pattern(regexp=...)` |
+| `confirmPassword` | `newPassword`와 동일 | 서비스 레벨 비교 |
+
+**서비스 레벨 검증**:
+
+| # | 검증 | 에러 |
+|---|------|------|
+| 1 | 현재 비밀번호 BCrypt 매칭 | AUTH_012 |
+| 2 | newPassword == confirmPassword | 400 |
+| 3 | 테넌트 비밀번호 정책 검증 (Feign) | AUTH_011 |
+| 4 | 비밀번호 이력 확인 (최근 N개 재사용 금지) | AUTH_014 |
+| 5 | BCrypt 인코딩 + 저장 | — |
+| 6 | 이전 해시 → password_history 저장 | — |
+| 7 | 전체 세션 종료 | — |
+
+#### 4.2.3 사용자 생성 (CreateUserRequest)
+
+| 필드 | 규칙 | 어노테이션 |
+|------|------|-----------|
+| `username` | 필수, 3~100자 | `@NotBlank`, `@Size(min=3, max=100)` |
+| `email` | 선택, 이메일 형식 | `@Email` |
+| `password` | 필수, 8~100자 | `@NotBlank`, `@Size(min=8, max=100)` |
+| `tenantId` | 필수, UUID | `@NotNull` |
+| `employeeId` | 선택, UUID | — |
+| `roles` | 선택, 기본값 `["USER"]` | — |
+
+**서비스 레벨 검증**:
+
+| # | 검증 | 에러 |
+|---|------|------|
+| 1 | username 전역 유니크 확인 | COMMON_005 (409) |
+| 2 | email + tenantId 유니크 확인 | COMMON_005 (409) |
+
+#### 4.2.4 비밀번호 정책 검증 (PasswordPolicyServiceImpl)
+
+| 규칙 | 시스템 최소값 | 테넌트 설정 가능 |
+|------|-------------|----------------|
+| 최소 길이 | 8 | 8~20 |
+| 최대 길이 | 100 | 고정 |
+| 대문자 포함 | false (시스템 최소 3종) | true/false |
+| 소문자 포함 | false (시스템 최소 3종) | true/false |
+| 숫자 포함 | false (시스템 최소 3종) | true/false |
+| 특수문자 포함 | false (시스템 최소 3종) | true/false |
+| 최소 문자 종류 | 3 | 3~4 |
+| 만료 기간 | 0 (무제한) | 0~365일 |
+| 이력 보관 수 | 0 | 0~10 |
+
+### 4.3 계산 공식/로직 명세
+
+#### 4.3.1 계정 잠금 판정
+
+```
+IF failedLoginAttempts >= MAX_FAILED_ATTEMPTS (5):
+    lockedUntil = NOW() + LOCK_DURATION_MINUTES (30분)
+
+로그인 시 잠금 확인:
+    IF lockedUntil IS NOT NULL AND lockedUntil > NOW():
+        → AUTH_009 (계정 잠김)
+    ELSE:
+        → 잠금 해제 상태 (failedAttempts 유지)
+```
+
+**참고**: 잠금 기간 경과 후에도 `failedAttempts`는 자동 리셋되지 않음. 다음 로그인 성공 시 `resetFailedAttempts()` 호출하여 초기화.
+
+#### 4.3.2 비밀번호 만료 판정
+
+```
+passwordExpiryDays = auth.password-expiry-days (기본 90)
+
+IF passwordExpiryDays > 0 AND passwordChangedAt IS NOT NULL:
+    expiryDate = passwordChangedAt + passwordExpiryDays
+    remainingDays = expiryDate - NOW() (일 단위)
+
+    IF remainingDays <= 0:
+        → passwordExpired = true
+    ELSE:
+        → passwordExpiresInDays = remainingDays
+```
+
+**참고**: 비밀번호 만료 시 로그인 자체는 허용됨. 응답의 `passwordExpired: true` 플래그로 프론트엔드에서 강제 변경 유도.
+
+#### 4.3.3 세션 최대 수 관리
+
+```
+현재 활성 세션 수 = countByUserIdAndActiveTrue(userId)
+maxSessions = auth.session.max-sessions (기본 5)
+
+IF 현재 활성 세션 수 >= maxSessions:
+    가장 오래된 세션 = findByUserIdAndActiveTrue(userId).sortBy(createdAt ASC).first()
+    가장 오래된 세션.active = false
+    관련 토큰 블랙리스트 추가
+```
+
+#### 4.3.4 관리자 비밀번호 초기화 (임시 비밀번호 생성)
+
+```
+tempPassword = UUID.randomUUID().toString().replace("-", "").substring(0, 12) + "A1!"
+// 결과: 12자 UUID 문자열 + 대문자(A) + 숫자(1) + 특수문자(!) = 15자
+// 예: "a3b4c5d6e7f8A1!"
+```
+
+### 4.4 데이터 생명주기 정책
+
+| 데이터 | 생성 시점 | 보존 기간 | 삭제 방식 | 비고 |
+|--------|----------|----------|----------|------|
+| **users** | 관리자 생성 | 영구 (논리 삭제: INACTIVE) | 물리 삭제 없음 | 퇴직 시 INACTIVE 전환 |
+| **user_sessions** | 로그인 시 | 활성: 24h, 비활성: 7일 | 스케줄러 물리 삭제 | `SessionCleanupScheduler` |
+| **password_reset_tokens** | 초기화 요청 시 | 24시간 (토큰 만료) | 별도 정리 미구현 | 정리 스케줄러 추가 권장 |
+| **login_history** | 로그인 시도 시 | 별도 정리 정책 없음 | 물리 삭제 없음 | 5년 보관 권장 (감사) |
+| **password_history** | 비밀번호 변경 시 | 별도 정리 정책 없음 | 물리 삭제 없음 | 실질적으로 최근 N개만 사용 |
+| **user_mfa** | MFA 설정 시 | 영구 (비활성화 시 삭제) | 물리 삭제 | `disableMfa()` |
+| **mfa_recovery_codes** | MFA 설정 시 | 사용 시 soft-delete (used_at 기록) | MFA 재설정 시 전체 물리 삭제 | `deleteAllByUserId()` |
+
+### 4.5 엣지 케이스 카탈로그
+
+| # | 시나리오 | 현재 동작 | 기대 동작 | 상태 |
+|---|---------|----------|----------|------|
+| EC-01 | tenantCode 미제공 + username 글로벌 중복 | `findByUsername()`으로 첫 번째 매칭 반환 | 테넌트 지정 요구 또는 에러 | ⚠️ 모호 |
+| EC-02 | 잠금 중 비밀번호 초기화 | 초기화 토큰 발급 가능, 확인 시 failedAttempts 리셋 | 현행 유지 (의도된 설계) | ✅ 정상 |
+| EC-03 | 비밀번호 만료 + MFA 활성화 | MFA 검증 후 로그인 → passwordExpired 플래그 | 현행: MFA 먼저, 이후 만료 처리 | ✅ 정상 |
+| EC-04 | 세션 5개 + 동시 로그인 2건 | 동시성 제어 없음 → 7개 세션 가능 | 비관적 락 또는 최대 수 초과 허용 후 비동기 정리 | ⚠️ 동시성 |
+| EC-05 | Feign 호출 실패 (Tenant Service 다운) | 비밀번호 정책: 기본값 폴백 / 테넌트 상태: 무시? | 기본값 폴백 (현행) 또는 로그인 차단 | ⚠️ 정책 필요 |
+| EC-06 | Refresh Token 갱신 중 동시 요청 | 둘 다 성공 가능 (이전 토큰 블랙리스트는 후처리) | Race condition → 한 쪽 실패 가능 | ⚠️ 동시성 |
+| EC-07 | 관리자가 자기 자신을 INACTIVE | 현재 세션 종료 안 됨 (서비스 레벨) | 자기 자신 비활성화 방지 | ⚠️ 미구현 |
+| EC-08 | 비밀번호 이력 5개 미만 상태에서 이전 비밀번호 재사용 | 이력이 있는 만큼만 비교 | 현행 유지 (정상) | ✅ 정상 |
+| EC-09 | MFA 설정 중 (enabled=false) 다시 setup 호출 | 기존 secret 덮어쓰기 | 현행 유지 (QR 재생성) | ✅ 정상 |
+| EC-10 | 복구 코드 10개 모두 사용 후 TOTP 기기 분실 | MFA 비활성화 불가 (코드 필요) | 관리자 MFA 강제 해제 API 필요 | ❌ 미구현 |
+
+---
+
+## 5. 서비스 연동 명세 (Phase C)
+
+### 5.1 연동 아키텍처
+
+```mermaid
+graph TB
+    subgraph "Auth Service (8081)"
+        AC[AuthController]
+        UC[UserController]
+        MC[MfaController]
+        PC[PasswordController]
+        SC[SessionController]
+        AS[AuthServiceImpl]
+        PS[PasswordServiceImpl]
+        MS[MfaServiceImpl]
+        SS[SessionServiceImpl]
+        PPS[PasswordPolicyServiceImpl]
+    end
+
+    subgraph "Common Modules"
+        CSF[SecurityFilter<br/>common-security]
+        JWT[JwtTokenProvider<br/>common-security]
+        PC2[PermissionChecker<br/>common-security]
+        EP[EventPublisher<br/>common-event]
+    end
+
+    subgraph "External Services"
+        TS[Tenant Service<br/>8082]
+        ES[Employee Service<br/>8084]
+        NS[Notification Service<br/>8088]
+    end
+
+    subgraph "Infrastructure"
+        PG[(PostgreSQL<br/>tenant_common)]
+        RD[(Redis)]
+        SNS[AWS SNS]
+    end
+
+    %% Feign calls
+    PPS -->|Feign: 비밀번호 정책| TS
+    AS -->|Feign: 테넌트 상태/코드 해석| TS
+    PC2 -.->|TODO: 부서/팀 조회| ES
+
+    %% Event publishing
+    PS -->|PasswordResetRequestedEvent| EP
+    EP -->|SNS| SNS
+    SNS -->|SQS| NS
+
+    %% Data stores
+    AS --> PG
+    AS --> RD
+    SS --> RD
+    MS --> RD
+
+    %% Security chain
+    CSF -->|모든 서비스에서 사용| JWT
+```
+
+### 5.2 REST API 연동 (Feign Client 기반)
+
+#### 5.2.1 Auth → Tenant Service
+
+| Feign Client | 메서드 | 엔드포인트 | 용도 | 호출 시점 | 폴백 전략 |
+|-------------|--------|----------|------|----------|----------|
+| `TenantServiceClient` | `getPasswordPolicy(UUID)` | `GET /api/v1/tenants/{tenantId}/password-policy` | 테넌트별 비밀번호 정책 조회 | 비밀번호 변경/초기화/검증 시 | 기본값 반환 (PasswordPolicyDto 디폴트) |
+| `TenantServiceClient` | `getByTenantCode(String)` | `GET /api/v1/tenants/code/{tenantCode}` | 테넌트 코드 → UUID 변환 | 로그인 시 (tenantCode 제공된 경우) | 예외 발생 (AUTH_001) |
+| `TenantServiceClient` | `getTenantStatus(UUID)` | `GET /api/v1/tenants/{tenantId}/status` | 테넌트 상태 확인 (ACTIVE/SUSPENDED/TERMINATED) | 로그인 시 | 예외 무시 (로그인 허용) |
+
+**Feign 설정**:
+- URL: `${feign.client.tenant-service.url:http://localhost:8082}`
+- 인증 헤더 전파: `FeignClientConfig.authenticationRequestInterceptor()` → 현재 요청의 Authorization 헤더를 Feign 호출에 전달
+- 타임아웃: Spring Cloud 기본값 (10초)
+
+#### 5.2.2 Auth → Employee Service (TODO)
+
+| Feign Client | 메서드 | 엔드포인트 | 용도 | 현재 상태 |
+|-------------|--------|----------|------|----------|
+| (미구현) | `getAffiliation(UUID)` | `GET /api/v1/employees/{employeeId}/affiliation` | 부서/팀 정보 조회 (PermissionChecker용) | `isSameDepartment()`/`isSameTeam()` → 항상 true |
+
+#### 5.2.3 다른 서비스 → Auth Service
+
+Auth Service는 다른 서비스에서 직접 호출되지 않음. 대신:
+- **인증**: 모든 서비스가 `common-security`의 `SecurityFilter` + `JwtTokenProvider`를 사용하여 자체 JWT 검증
+- **사용자 정보**: JWT 페이로드에서 추출 (`UserContext`)
+
+### 5.3 이벤트 연동 (SNS/SQS)
+
+#### 5.3.1 Auth Service가 발행하는 이벤트
+
+| 이벤트 | SNS 토픽 | 발행 시점 | 페이로드 스키마 | 소비자 |
+|--------|---------|----------|---------------|--------|
+| `PasswordResetRequestedEvent` | `hr-saas.notification.send` | 비밀번호 초기화 요청 시 | `{ userId, email, resetToken, tenantId, timestamp }` | Notification Service |
+
+#### 5.3.2 Auth Service가 소비하는 이벤트
+
+현재 없음. 향후 감사 로그 구현 시:
+
+| 이벤트 | SQS 큐 | 발행자 | 용도 |
+|--------|--------|--------|------|
+| `AuditEvent` (미구현) | `auth-service-audit-queue` | 전 서비스 (common-audit) | 감사 로그 DB 저장 |
+
+#### 5.3.3 미구현 이벤트 (설계 완료)
+
+| 이벤트 | 토픽 | 발행 시점 | 소비자 |
+|--------|------|----------|--------|
+| `LoginSuccessEvent` | `hr-saas.auth.login-success` | 로그인 성공 | Audit, Analytics |
+| `LoginFailedEvent` | `hr-saas.auth.login-failed` | 로그인 실패 | Audit, Security |
+| `AccountLockedEvent` | `hr-saas.auth.account-locked` | 계정 잠금 | Notification, Admin |
+| `PasswordExpiredEvent` | `hr-saas.auth.password-expired` | 비밀번호 만료 감지 | Notification |
+
+### 5.4 데이터 동기화 흐름
+
+#### 5.4.1 사용자 → 직원 연결
+
+```
+Auth Service (users.employee_id) → Employee Service (employees.id)
+
+- 연결 시점: 사용자 생성 시 employeeId 지정 (관리자가 수동 매핑)
+- 데이터 방향: 단방향 참조 (Auth → Employee)
+- 동기화: 없음 (Auth는 employeeId만 참조, 직원 정보는 JWT에 미포함)
+- 정합성: 약한 참조 (FK 없음, employeeId가 존재하지 않아도 허용)
+```
+
+#### 5.4.2 테넌트 비밀번호 정책 동기화
+
+```
+Tenant Service (password_policy) → Auth Service (Feign 호출)
+
+- 동기화 방식: 호출 시 조회 (캐싱 없음)
+- 폴백: Tenant Service 다운 시 기본 정책 적용
+- 최종 일관성: 즉시 (호출 시점 최신 정책 적용)
+```
+
+#### 5.4.3 테넌트 상태 동기화
+
+```
+Tenant Service (tenant.status) → Auth Service (로그인 시 Feign 확인)
+
+- SUSPENDED → 로그인 차단 (AUTH_010), 기존 세션 유지
+- TERMINATED → 로그인 차단 (AUTH_011), 기존 세션 유지
+- 주의: 테넌트 상태 변경 이벤트 미소비 → 기존 세션은 토큰 만료까지 유효
+```
+
+### 5.5 통합 테스트 시나리오
+
+| # | 시나리오 | 관련 서비스 | 기대 결과 | 상태 |
+|---|---------|-----------|----------|------|
+| IT-01 | 로그인 → tenantCode 해석 → 테넌트 상태 확인 → 토큰 발급 | Auth + Tenant | 정상 토큰 발급 + 세션 생성 + 로그인 이력 | ❌ 미작성 |
+| IT-02 | SUSPENDED 테넌트 사용자 로그인 시도 | Auth + Tenant | AUTH_010 에러 반환 | ❌ 미작성 |
+| IT-03 | 비밀번호 변경 → 테넌트 정책 적용 → 이력 확인 → 세션 종료 | Auth + Tenant | 정책 위반 시 AUTH_011, 이력 재사용 시 AUTH_014 | ❌ 미작성 |
+| IT-04 | 비밀번호 초기화 → 이벤트 발행 → 알림 수신 | Auth + Notification | 이메일 알림 발송 | ❌ 미작성 |
+| IT-05 | MFA 설정 → 로그인 → MFA 검증 → 토큰 발급 | Auth 단독 | 2단계 인증 완료 | ❌ 미작성 |
+| IT-06 | 5회 로그인 실패 → 계정 잠금 → 30분 후 자동 해제 → 로그인 성공 | Auth 단독 | 잠금/해제 정상 동작 | ❌ 미작성 |
+| IT-07 | 세션 5개 상태에서 6번째 로그인 → 가장 오래된 세션 종료 | Auth 단독 | 세션 5개 유지, 블랙리스트 추가 | ❌ 미작성 |
+| IT-08 | 관리자 사용자 비활성화 → 해당 사용자 세션 전체 종료 | Auth 단독 | 세션 종료, 로그인 불가 | ❌ 미작성 |
+| IT-09 | Refresh Token Rotation → 이전 토큰으로 재시도 | Auth 단독 | 이전 토큰 거부 (AUTH_002) | ❌ 미작성 |
+| IT-10 | 부서/팀 기반 권한 → Employee Service 조회 | Auth + Employee | 같은 부서인 경우만 접근 허용 | ❌ (Feign 미구현) |
+
+---
+
+## 6. 데이터 모델
+
+### 6.1 테이블 목록 (tenant_common 스키마)
+
+| 테이블 | 상태 | 용도 | RLS |
+|--------|------|------|-----|
+| `users` | ✅ 사용 중 | 사용자 계정 | N/A (서비스 레벨 tenant_id 필터) |
+| `user_sessions` | ✅ 사용 중 | 활성 세션 | N/A |
+| `password_reset_tokens` | ✅ 사용 중 | 초기화 토큰 | N/A |
+| `login_history` | ✅ 사용 중 | 로그인 이력 | N/A |
+| `password_history` | ✅ 사용 중 | 비밀번호 재사용 방지 | N/A |
+| `user_mfa` | ✅ 사용 중 | MFA 설정 (TOTP secret) | N/A |
+| `mfa_recovery_codes` | ✅ 사용 중 | MFA 복구 코드 | N/A |
+
+**RLS 미적용 이유**: 인증 과정에서 tenant_id가 확정되기 전에 조회가 필요하므로 서비스 레벨에서 필터링.
+
+### 6.2 ERD
+
+```mermaid
+erDiagram
+    users ||--o{ user_sessions : "has"
+    users ||--o{ password_reset_tokens : "has"
+    users ||--o{ login_history : "has"
+    users ||--o{ password_history : "has"
+    users ||--o| user_mfa : "has"
+    users ||--o{ mfa_recovery_codes : "has"
+
+    users {
+        uuid id PK
+        uuid tenant_id
+        uuid employee_id
+        varchar username "UNIQUE(tenant_id, username)"
+        varchar email
+        varchar password_hash
+        text_arr roles
+        text_arr permissions
+        varchar status "ACTIVE/INACTIVE"
+        int failed_login_attempts
+        timestamptz locked_until
+        timestamptz last_login_at
+        timestamptz password_changed_at
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    user_sessions {
+        uuid id PK
+        varchar user_id FK
+        uuid tenant_id
+        varchar session_token "UNIQUE"
+        varchar refresh_token
+        varchar device_info
+        varchar ip_address
+        text user_agent
+        varchar location
+        timestamptz created_at
+        timestamptz last_accessed_at
+        timestamptz expires_at
+        boolean active
+    }
+
+    password_reset_tokens {
+        uuid id PK
+        varchar user_id FK
+        varchar email
+        varchar token "UNIQUE"
+        timestamptz created_at
+        timestamptz expires_at
+        timestamptz used_at
+        boolean used
+    }
+
+    login_history {
+        uuid id PK
+        varchar user_id FK
+        uuid tenant_id
+        varchar login_type
+        varchar status "SUCCESS/FAILURE"
+        varchar ip_address
+        text user_agent
+        varchar location
+        varchar failure_reason
+        timestamptz created_at
+    }
+
+    password_history {
+        uuid id PK
+        uuid user_id FK
+        varchar password_hash
+        timestamptz created_at
+    }
+
+    user_mfa {
+        uuid id PK
+        uuid user_id FK "UNIQUE(user_id, mfa_type)"
+        varchar mfa_type "TOTP"
+        varchar secret_key
+        boolean enabled
+        timestamptz verified_at
+        timestamptz created_at
+    }
+
+    mfa_recovery_codes {
+        uuid id PK
+        uuid user_id FK
+        varchar code
+        timestamptz used_at
+        timestamptz created_at
+    }
+```
+
+### 6.3 인덱스
+
+| 테이블 | 인덱스 | 컬럼 |
+|--------|--------|------|
+| users | `uq_users_tenant_username` (UNIQUE) | `(tenant_id, username)` |
+| users | `idx_users_email` | `(email)` |
+| users | `idx_users_employee_id` | `(employee_id)` |
+| users | `idx_users_status` | `(status)` |
+| users | `idx_users_tenant_id` | `(tenant_id)` |
+| user_sessions | `idx_sessions_user_id` | `(user_id)` |
+| user_sessions | `idx_sessions_tenant_id` | `(tenant_id)` |
+| user_sessions | `idx_sessions_token` | `(session_token)` |
+| user_sessions | `idx_sessions_expires` | `(expires_at)` |
+| user_sessions | `idx_sessions_active` | `(active)` |
+| password_reset_tokens | `idx_prt_user_id` | `(user_id)` |
+| password_reset_tokens | `idx_prt_email` | `(email)` |
+| password_reset_tokens | `idx_prt_token` | `(token)` |
+| login_history | `idx_lh_user_id` | `(user_id)` |
+| login_history | `idx_lh_tenant_id` | `(tenant_id)` |
+| login_history | `idx_lh_status` | `(status)` |
+| login_history | `idx_lh_created_at` | `(created_at)` |
+| password_history | `idx_ph_user_id` | `(user_id)` |
+| user_mfa | `uq_user_mfa` (UNIQUE) | `(user_id, mfa_type)` |
+| mfa_recovery_codes | `idx_mrc_user_id` | `(user_id)` |
+
+### 6.4 Flyway 마이그레이션 이력
+
+| 버전 | 파일 | 내용 |
+|------|------|------|
+| V20 | `V20__init_auth.sql` | 초기 테이블 5개 (users, user_sessions, password_reset_tokens, login_history, account_locks) + 시드 데이터 |
+| V22 | `V22__remove_account_locks.sql` | account_locks 테이블 제거 (UserEntity 필드로 대체) |
+| V23 | `V23__username_tenant_unique.sql` | username 유니크 제약을 (tenant_id, username) 복합으로 변경 |
+| V24 | `V24__add_mfa_tables.sql` | user_mfa, mfa_recovery_codes 테이블 생성 |
+| V35 | `V35__add_password_history.sql` | password_history 테이블 생성 |
+
+---
+
+## 7. API 명세
+
+### 7.1 인증 API (`/api/v1/auth`)
+
+| Method | Path | 인증 | 설명 | 요청 | 응답 |
+|--------|------|------|------|------|------|
+| `POST` | `/login` | ❌ 공개 | 로그인 | `LoginRequest` | `TokenResponse` |
+| `POST` | `/token/refresh` | ❌ 공개 | 토큰 갱신 | `RefreshTokenRequest` | `TokenResponse` |
+| `POST` | `/logout` | ✅ | 로그아웃 | Authorization 헤더 | void |
+| `GET` | `/me` | ✅ | 현재 사용자 정보 | — | `UserResponse` |
+
+### 7.2 비밀번호 API (`/api/v1/auth/password`)
+
+| Method | Path | 인증 | 설명 | 요청 | 응답 |
+|--------|------|------|------|------|------|
+| `POST` | `/change` | ✅ | 비밀번호 변경 | `ChangePasswordRequest` | void |
+| `POST` | `/reset` | ❌ 공개 | 비밀번호 초기화 요청 | `ResetPasswordRequest` | void |
+| `POST` | `/reset/confirm` | ❌ 공개 | 비밀번호 초기화 확인 | `ResetPasswordConfirmRequest` | void |
+
+### 7.3 세션 API (`/api/v1/auth/sessions`)
+
+| Method | Path | 인증 | 설명 | 요청 | 응답 |
+|--------|------|------|------|------|------|
+| `GET` | `` | ✅ | 활성 세션 조회 | Authorization 헤더 | `List<SessionResponse>` |
+| `DELETE` | `/{sessionId}` | ✅ | 특정 세션 종료 | — | void |
+| `DELETE` | `` | ✅ | 전체 세션 종료 | — | void |
+| `DELETE` | `/others` | ✅ | 다른 세션 종료 | Authorization 헤더 | void |
+
+### 7.4 MFA API (`/api/v1/auth/mfa`)
+
+| Method | Path | 인증 | 설명 | 요청 | 응답 |
+|--------|------|------|------|------|------|
+| `POST` | `/setup` | ✅ | MFA 설정 시작 | — | `{ secretKey, qrCodeUri }` |
+| `POST` | `/verify-setup` | ✅ | MFA 설정 확인 | `{ code }` | `List<String>` (복구코드) |
+| `POST` | `/verify` | ❌ 공개 (mfaToken) | 로그인 MFA 검증 | `{ mfaToken, code }` | `TokenResponse` |
+| `POST` | `/disable` | ✅ | MFA 비활성화 | `{ code }` | void |
+| `GET` | `/status` | ✅ | MFA 상태 조회 | — | `{ enabled, recoveryCodesRemaining }` |
+
+### 7.5 사용자 관리 API (`/api/v1/auth/users`)
+
+| Method | Path | 인증 | 권한 | 설명 | 요청 | 응답 |
+|--------|------|------|------|------|------|------|
+| `POST` | `` | ✅ | HR_MANAGER+ | 사용자 생성 | `CreateUserRequest` | `UserDetailResponse` |
+| `GET` | `` | ✅ | HR_MANAGER+ | 사용자 목록 | — | `List<UserDetailResponse>` |
+| `GET` | `/{userId}` | ✅ | HR_MANAGER+ | 사용자 상세 | — | `UserDetailResponse` |
+| `PUT` | `/{userId}/status` | ✅ | HR_MANAGER+ | 상태 변경 | `UpdateUserStatusRequest` | void |
+| `PUT` | `/{userId}/roles` | ✅ | HR_MANAGER+ | 역할 변경 | `UpdateUserRolesRequest` | void |
+| `POST` | `/{userId}/unlock` | ✅ | HR_MANAGER+ | 잠금 해제 | — | void |
+| `POST` | `/{userId}/reset-password` | ✅ | HR_MANAGER+ | 비밀번호 초기화 | — | void |
+
+### 7.6 에러 코드 카탈로그
+
+| 코드 | HTTP | 메시지 | 발생 상황 |
+|------|------|--------|----------|
+| `AUTH_001` | 401 | 아이디 또는 비밀번호가 올바르지 않습니다 | 사용자 미존재, 비밀번호 불일치 |
+| `AUTH_002` | 401 | 토큰이 만료되었습니다 / 유효하지 않은 리프레시 토큰 | Refresh token 만료, 블랙리스트, 비리프레시 토큰 |
+| `AUTH_003` | 401 | 인증 정보를 찾을 수 없습니다 | SecurityContextHolder 미설정 |
+| `AUTH_004` | 404 | 사용자를 찾을 수 없습니다 | userId로 조회 실패 |
+| `AUTH_006` | 400 | 유효하지 않은 토큰입니다 | 비밀번호 초기화 토큰 미존재 |
+| `AUTH_007` | 400 | 만료되었거나 이미 사용된 토큰입니다 | 비밀번호 초기화 토큰 만료/사용됨 |
+| `AUTH_008` | 401 | 비활성화된 계정입니다 | user.status = INACTIVE |
+| `AUTH_009` | 401 | 계정이 잠겨있습니다 | lockedUntil > now |
+| `AUTH_010` | 403 | 테넌트가 일시 중지되었습니다 | Tenant status = SUSPENDED |
+| `AUTH_011` | 403 | 테넌트 계약이 종료되었습니다 / 비밀번호 정책 위반 | Tenant TERMINATED 또는 비밀번호 정책 불충족 |
+| `AUTH_012` | 400 | 현재 비밀번호가 올바르지 않습니다 | changePassword 시 현재 비밀번호 불일치 |
+| `AUTH_013` | 404 | 세션을 찾을 수 없습니다 | sessionId 조회 실패 |
+| `AUTH_014` | 400 | 최근 사용한 비밀번호는 재사용할 수 없습니다 | 비밀번호 이력 재사용 감지 |
+| `COMMON_005` | 409 | 이미 존재하는 사용자명/이메일입니다 | 중복 username 또는 email |
+
+---
+
+## 8. 보안/프라이버시
+
+### 8.1 인증 보안
+
+| 항목 | 구현 | 상세 |
+|------|------|------|
+| 비밀번호 해싱 | BCrypt | `PasswordEncoder` (Spring Security) |
+| JWT 서명 | HMAC-SHA256 | `jwt.secret` 환경변수 (256bit+) |
+| 토큰 블랙리스트 | Redis TTL | 로그아웃/갱신 시 이전 토큰 무효화 |
+| CSRF | 비활성화 | JWT 기반 stateless → CSRF 불필요 |
+| CORS | 도메인 제한 | 개발 환경: localhost:5173, localhost:3000 |
+| Rate Limiting | ❌ 미구현 | 로그인 엔드포인트 brute-force 방어 필요 |
+| SQL Injection | JPA Parameterized Query | Spring Data JPA 자동 파라미터 바인딩 |
+
+### 8.2 데이터 보호
+
+| 항목 | 구현 | 상세 |
+|------|------|------|
+| IP 마스킹 | `xxx.xxx.*.*` | 세션 응답에서 마스킹 처리 |
+| MFA Secret | 평문 저장 | ⚠️ 암호화 저장 권장 (`@Encrypted` 미적용) |
+| 비밀번호 초기화 토큰 | UUID | 추측 불가 (UUID v4) |
+| Redis 데이터 | 평문 | ⚠️ Redis TLS 및 암호화 권장 |
+
+### 8.3 보안 개선 필요사항
+
+| 우선순위 | 항목 | 현재 | 권장 |
+|---------|------|------|------|
+| HIGH | Rate Limiting | 없음 | 로그인 API에 IP/사용자 기반 Rate Limit |
+| HIGH | MFA Secret 암호화 | 평문 저장 | `@Encrypted` 또는 AES 암호화 |
+| MEDIUM | Redis TLS | 비활성화 | TLS 활성화 (프로덕션) |
+| MEDIUM | JWT Secret 관리 | 환경변수 | AWS Secrets Manager |
+| LOW | 감사 로그 | 미구현 | common-audit 모듈 구현 |
+
+---
+
+## 9. 성능/NFR
+
+### 9.1 설정값
+
+| 설정 | 값 | 위치 |
+|------|-----|------|
+| DB 커넥션 풀 | max 20, min 5 | HikariCP (application.yml) |
+| JPA DDL | validate | Flyway로 스키마 관리 |
+| Redis | 단일 인스턴스 | 개발 환경 |
+| JWT 캐싱 | 없음 | 매 요청마다 파싱/검증 |
+
+### 9.2 Redis 키 패턴
+
+| 패턴 | 용도 | TTL |
+|------|------|-----|
+| `token:blacklist:{token}` | 무효화된 토큰 | Access: 1800s, Session: 24h |
+| `token:refresh:{userId}` | Refresh Token 저장 | 604800s (7일) |
+| `session:{accessToken}` | 세션 캐시 | 24시간 |
+| `mfa:pending:{mfaToken}` | MFA 대기 토큰 | 300s (5분) |
+
+### 9.3 환경변수
 
 | 변수 | 설명 | 필수 | 기본값 |
 |------|------|------|--------|
@@ -272,497 +882,73 @@ jwt:
 | `REDIS_HOST` | Redis 호스트 | ✅ | localhost |
 | `REDIS_PORT` | Redis 포트 | ❌ | 6381 (로컬), 6379 (AWS) |
 | `REDIS_PASSWORD` | Redis 비밀번호 | ✅ | redis_password |
-| `JWT_SECRET` | JWT 서명 키 (256bit 이상) | ✅ | 개발용 기본값 |
+| `JWT_SECRET` | JWT 서명 키 (256bit+) | ✅ | 개발용 기본값 |
 | `AWS_REGION` | AWS 리전 | ❌ | ap-northeast-2 |
 | `AWS_SNS_ENDPOINT` | SNS 엔드포인트 | ❌ | LocalStack |
 | `AWS_SQS_ENDPOINT` | SQS 엔드포인트 | ❌ | LocalStack |
 
-### 4.3 하드코딩된 상수 (설정 외부화 필요)
+### 9.4 성능 최적화 권장사항
 
-| 상수 | 현재값 | 위치 | 비고 |
-|------|--------|------|------|
-| `MAX_FAILED_ATTEMPTS` | 5 | `AuthServiceImpl` | 설정으로 이동 필요 |
-| `LOCK_DURATION_MINUTES` | 30 | `AuthServiceImpl` | 설정으로 이동 필요 |
-| `maxSessions` | 5 | `SessionServiceImpl` | `auth.session.max-sessions`로 설정화 완료 |
-| `sessionTimeoutHours` | 24 | `SessionServiceImpl` | `auth.session.timeout-hours`로 설정화 완료 |
-| 비밀번호 복잡도 규칙 | regex | DTO `@Pattern` | 테넌트별 정책 적용 시 서비스 레벨로 이동 |
-| 비밀번호 초기화 토큰 만료 | 24시간 | `PasswordResetToken` | 설정으로 이동 필요 |
-| 블랙리스트 토큰 TTL | 24시간 | `SessionServiceImpl` | Access Token 만료 시간과 동기화 필요 |
-
-### 4.4 Redis 키 패턴
-
-| 패턴 | 용도 | TTL |
-|------|------|-----|
-| `token:blacklist:{token}` | 무효화된 토큰 | Access: 1800s, Session: 24h |
-| `token:refresh:{userId}` | Refresh Token 저장 | 604800s (7일) |
-| `session:{accessToken}` | 세션 캐시 | 24시간 |
+| 항목 | 현재 | 권장 | 기대 효과 |
+|------|------|------|----------|
+| 비밀번호 정책 캐싱 | Feign 매 호출 | Redis 캐시 (TTL 1h) | Feign 호출 감소 |
+| JWT 검증 | 매 요청 파싱 | 서명 검증 후 Redis 캐시 (선택적) | CPU 절감 (미미) |
+| 로그인 이력 비동기 | `REQUIRES_NEW` 트랜잭션 | `@Async` 또는 이벤트 | 로그인 응답 시간 단축 |
 
 ---
 
-## 5. 갭 구현 사양
+## 10. 추적성 매트릭스
 
-### 5.1 [HIGH] 로그인 시 세션 생성 연결
+### FR ID → 코드 매핑
 
-**현재 상태**: `AuthServiceImpl.login()`에서 토큰만 발급, `SessionService.createSession()` 미호출
+| FR ID | 요구사항 | Controller | Service | Entity | 상태 |
+|-------|---------|------------|---------|--------|------|
+| FR-AUTH-001 | 로그인/로그아웃 | `AuthController` | `AuthServiceImpl` | `UserEntity`, `UserSession` | ✅ |
+| FR-AUTH-002 | JWT 토큰 발급/갱신 | `AuthController` | `AuthServiceImpl`, `JwtTokenProvider` | — | ✅ |
+| FR-AUTH-003 | 세션 관리 | `SessionController` | `SessionServiceImpl` | `UserSession` | ✅ |
+| FR-AUTH-004 | 비밀번호 변경/초기화 | `PasswordController` | `PasswordServiceImpl` | `PasswordResetToken`, `PasswordHistory` | ✅ |
+| FR-AUTH-005 | 계정 잠금 | `AuthController` | `AuthServiceImpl` | `UserEntity` (failedAttempts, lockedUntil) | ✅ |
+| FR-AUTH-006 | 계층적 RBAC | — | `RoleHierarchyConfig`, `PermissionMappingService` | — (common-security) | ✅ |
+| FR-AUTH-007 | 데이터 접근 제어 | — | `PermissionChecker` | — (common-security) | 🟡 (부서/팀 TODO) |
+| FR-AUTH-008 | Keycloak SSO | — | — | — | ❌ (의도적) |
+| FR-AUTH-009 | Gateway JWT 검증 | — | — | — | 🟡 |
+| FR-AUTH-010 | MFA | `MfaController` | `MfaServiceImpl` | `UserMfa`, `MfaRecoveryCode` | ✅ |
+| FR-AUTH-011 | 사용자 관리 CRUD | `UserController` | `UserManagementServiceImpl` | `UserEntity` | ✅ |
+| FR-AUTH-012 | 테넌트별 비밀번호 정책 | — | `PasswordPolicyServiceImpl` | — (Feign) | ✅ |
+| FR-AUTH-013 | 비밀번호 이력 | — | `PasswordHistoryServiceImpl` | `PasswordHistory` | ✅ |
+| FR-AUTH-014 | 비밀번호 만료 체크 | `AuthController` | `AuthServiceImpl` | `UserEntity.passwordChangedAt` | ✅ |
+| FR-AUTH-015 | 로그인 이력 | — | `LoginHistoryServiceImpl` | `LoginHistory` | ✅ |
+| FR-AUTH-016 | 감사 로그 | — | — | — | ❌ |
+| FR-AUTH-017 | 테넌트 상태 검증 | `AuthController` | `AuthServiceImpl` | — (Feign) | ✅ |
 
-**구현 사양**:
-```java
-// AuthServiceImpl.login() 마지막에 추가
-// request에서 IP, User-Agent 정보를 HttpServletRequest로 받아야 함
-// 또는 Controller에서 추출하여 전달
-sessionService.createSession(
-    user.getId().toString(),
-    user.getTenantId(),
-    accessToken,
-    refreshToken,
-    extractDeviceInfo(userAgent),
-    ipAddress,
-    userAgent
-);
-```
+### 요약
 
-**변경 필요 파일**:
-- `AuthController.java` — HttpServletRequest 파라미터 추가
-- `AuthService.java` — login 메서드 시그니처 변경 또는 오버로드
-- `AuthServiceImpl.java` — SessionService 호출 추가
+| 상태 | 수 | 비율 |
+|------|---|------|
+| ✅ 완전 구현 | 14 | 82% |
+| 🟡 부분 구현 | 1 | 6% |
+| ❌ 미구현 | 2 | 12% |
 
-### 5.2 [HIGH] Refresh Token Rotation 완성
-
-**현재 상태**: 갱신 시 새 토큰 발급하지만 이전 토큰 블랙리스트 미처리
-
-**구현 사양**:
-```java
-// AuthServiceImpl.refreshToken()에서
-// 1. 이전 refresh token 블랙리스트 추가
-String oldBlacklistKey = BLACKLIST_PREFIX + refreshToken;
-redisTemplate.opsForValue().set(oldBlacklistKey, "1",
-    jwtTokenProvider.getRefreshTokenExpiry(), TimeUnit.SECONDS);
-```
-
-### 5.3 [HIGH] 로그인 이력 기록
-
-**현재 상태**: `login_history` 테이블 존재, 엔티티/리포지토리/서비스 코드 없음
-
-**구현 사양**:
-- 새 엔티티 `LoginHistory` 생성
-- 로그인 성공/실패 시 기록: userId, tenantId, loginType, status(SUCCESS/FAILED), ipAddress, userAgent, failureReason
-- 비동기 처리 가능 (`@Async` 또는 이벤트)
-
-### 5.4 [HIGH] 비밀번호 만료 체크
-
-**현재 상태**: `password_changed_at` 필드 존재, 로그인 시 체크 로직 없음
-
-**구현 사양**:
-```
-로그인 성공 후:
-1. 테넌트 비밀번호 정책에서 expiry_days 조회
-2. password_changed_at + expiry_days < now → 만료
-3. 만료 시: 로그인은 허용하되 응답에 passwordExpired: true 플래그 추가
-4. 프론트에서 비밀번호 변경 화면으로 리다이렉트
-5. 만료 7일 전 알림 (Notification Service)
-```
-
-**TokenResponse 변경**:
-```java
-private boolean passwordExpired;
-private Integer passwordExpiresInDays;  // 만료까지 남은 일수
-```
-
-### 5.5 [HIGH] 테넌트별 비밀번호 정책
-
-**현재 상태**: DTO `@Pattern` 어노테이션으로 하드코딩
-
-**구현 사양**:
-- Tenant Service에서 비밀번호 정책 조회 (Feign Client)
-- 정책 항목: minLength, maxLength, requireUppercase, requireLowercase, requireDigit, requireSpecialChar, minCharTypes, expiryDays, historyCount
-- 시스템 최소 기준 하회 불가 (최소 8자, 3종 이상 조합)
-- 비밀번호 변경/초기화 시 서비스 레벨에서 정책 검증
-- 캐싱: Redis에 `tenant:password-policy:{tenantId}` (TTL 1시간)
-
-**새 구조**:
-```java
-public class PasswordPolicyDto {
-    private int minLength = 8;         // 시스템 최소 8
-    private int maxLength = 100;
-    private boolean requireUppercase = true;
-    private boolean requireLowercase = true;
-    private boolean requireDigit = true;
-    private boolean requireSpecialChar = true;
-    private int minCharTypes = 4;      // 시스템 최소 3
-    private int expiryDays = 90;       // 0 = 미사용
-    private int historyCount = 5;      // 0 = 미사용
-}
-```
-
-### 5.6 [MEDIUM] 비밀번호 이력 관리
-
-**현재 상태**: 테이블/코드 없음
-
-**구현 사양**:
-```sql
-CREATE TABLE tenant_common.password_history (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES tenant_common.users(id),
-    password_hash VARCHAR(255) NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-CREATE INDEX idx_password_history_user_id ON tenant_common.password_history(user_id);
-```
-
-- 비밀번호 변경 시 이전 해시 저장
-- 변경 시 최근 N개 (정책의 historyCount) 비교
-- BCrypt 해시 비교로 재사용 판단
-
-### 5.7 [MEDIUM] MFA (다중 인증)
-
-**현재 상태**: 코드/스키마 없음
-
-**구현 사양**:
-```sql
-CREATE TABLE tenant_common.user_mfa (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES tenant_common.users(id),
-    mfa_type VARCHAR(20) NOT NULL DEFAULT 'TOTP',   -- TOTP, SMS, EMAIL
-    secret_key VARCHAR(255) NOT NULL,                 -- 암호화 저장
-    is_enabled BOOLEAN DEFAULT FALSE,
-    verified_at TIMESTAMPTZ,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(user_id, mfa_type)
-);
-```
-
-**로그인 흐름 변경**:
-```
-1. 비밀번호 검증 성공 후
-2. 테넌트 MFA 정책 확인 (필수/선택/비활성화)
-3. 사용자 MFA 활성화 여부 확인
-4. MFA 필요 시: 임시 토큰 발급 + MFA 챌린지 응답 요구
-   → POST /api/v1/auth/mfa/verify { mfaToken, code }
-5. MFA 검증 성공 → 정상 Access/Refresh 토큰 발급
-```
-
-**MFA 관리 API**:
-- `POST /api/v1/auth/mfa/setup` — QR 코드 생성 (secret 발급)
-- `POST /api/v1/auth/mfa/verify-setup` — 설정 검증 (첫 코드 확인)
-- `POST /api/v1/auth/mfa/disable` — MFA 비활성화
-- `GET /api/v1/auth/mfa/status` — MFA 상태 조회
-- `POST /api/v1/auth/mfa/recovery-codes` — 복구 코드 생성
-
-### 5.8 [MEDIUM] 부서/팀 기반 권한 체크 구현
-
-**현재 상태**: `PermissionChecker.isSameDepartment()`와 `isSameTeam()`이 항상 `true` 반환
-
-**구현 사양**:
-- Employee Service에 Feign Client 추가
-- `GET /api/v1/employees/{employeeId}/affiliation` → { departmentId, teamId }
-- Redis 캐시: `employee:affiliation:{employeeId}` (TTL: 5분)
-- 현재 사용자의 departmentId/teamId와 비교
-
-### 5.9 [MEDIUM] 만료 세션 정리 스케줄러
-
-**현재 상태**: Repository 메서드 존재, 스케줄러 없음
-
-**구현 사양**:
-```java
-@Scheduled(fixedRate = 3600000)  // 1시간마다
-public void cleanupExpiredSessions() {
-    LocalDateTime now = LocalDateTime.now();
-    LocalDateTime cleanupTime = now.minusDays(7);  // 비활성 세션 7일 후 삭제
-    int deleted = sessionRepository.deleteExpiredSessions(now, cleanupTime);
-    log.info("Cleaned up {} expired sessions", deleted);
-}
-```
-
-### 5.10 [MEDIUM] username 테넌트별 유니크 전환
-
-**현재 상태**: `users.username`이 전체 시스템에서 UNIQUE
-
-**문제**: 다른 테넌트의 사용자가 같은 username을 사용할 수 없음
-
-**구현 사양**:
-```sql
--- 기존
-ALTER TABLE tenant_common.users DROP CONSTRAINT users_username_key;
--- 새 유니크 제약
-ALTER TABLE tenant_common.users ADD CONSTRAINT uq_users_tenant_username UNIQUE(tenant_id, username);
-```
-
-- `findByUsername(username)` → `findByUsernameAndTenantId(username, tenantId)` 변경
-- 로그인 시 tenantCode로 tenantId 해석 필요 (Tenant Service 연동)
-- LoginRequest에 tenantCode 필드 이미 존재하나 미활용
-
-### 5.11 [LOW] IP Geolocation 구현
-
-**현재 상태**: `resolveLocation()` → "Unknown" 반환
-
-**구현 사양**:
-- MaxMind GeoIP2 Lite (무료) 또는 외부 API
-- 국가 + 도시 수준 정보
-- 오프라인 DB 방식 권장 (latency 최소화)
-
-### 5.12 [LOW] CORS 프로덕션 설정
-
-**현재 상태**: `addAllowedOriginPattern("*")` — 모든 도메인 허용
-
-**구현 사양**:
-```yaml
-cors:
-  allowed-origins:
-    - ${CORS_ORIGIN:http://localhost:5173}   # 개발
-    - https://hr.example.com                 # 프로덕션
-```
-
-### 5.13 [LOW] account_locks 테이블 정리
-
-**현재 상태**: DDL에 `account_locks` 테이블 존재하지만, 실제 잠금은 `users.failed_login_attempts`와 `users.locked_until` 필드로 처리
-
-**결정**: `account_locks` 테이블 제거 (불필요한 중복)
+**미구현 중 의도적**: FR-AUTH-008 (Keycloak) — 자체 JWT 유지 결정
+**실질 미구현**: FR-AUTH-016 (감사 로그)
 
 ---
 
-## 6. 테스트 시나리오
+## 11. 변경 이력
 
-### 6.1 단위 테스트 (기존 + 추가 필요)
-
-#### AuthServiceImpl 테스트
-| # | 시나리오 | 상태 |
-|---|---------|------|
-| 1 | 정상 로그인 → 토큰 발급 | ✅ 기존 |
-| 2 | 존재하지 않는 사용자 → AUTH_001 | ✅ 기존 |
-| 3 | 비활성 계정 → AUTH_008 | ✅ 기존 |
-| 4 | 잠긴 계정 → AUTH_009 | ✅ 기존 |
-| 5 | 잘못된 비밀번호 → failedAttempts 증가 | ✅ 기존 |
-| 6 | 5회 실패 → 계정 잠금 | ✅ 기존 |
-| 7 | 정상 토큰 갱신 | ✅ 기존 |
-| 8 | 블랙리스트 토큰 → AUTH_002 | ✅ 기존 |
-| 9 | 유효하지 않은 리프레시 토큰 | ✅ 기존 |
-| 10 | 로그아웃 → 토큰 블랙리스트 추가 | ✅ 기존 |
-| 11 | 로그인 시 세션 생성 | ❌ 추가 필요 |
-| 12 | 로그인 시 이력 기록 | ❌ 추가 필요 |
-| 13 | 비밀번호 만료 시 플래그 반환 | ❌ 추가 필요 |
-| 14 | Refresh Token Rotation (이전 토큰 무효화) | ❌ 추가 필요 |
-| 15 | tenantCode로 테넌트 해석 후 로그인 | ❌ 추가 필요 |
-
-#### PasswordServiceImpl 테스트
-| # | 시나리오 | 상태 |
-|---|---------|------|
-| 1 | 정상 비밀번호 변경 | ✅ 기존 |
-| 2 | 현재 비밀번호 불일치 | ✅ 기존 |
-| 3 | 새 비밀번호 확인 불일치 | ✅ 기존 |
-| 4 | 비밀번호 초기화 요청 → 토큰 생성 + 이벤트 발행 | ✅ 기존 |
-| 5 | 비밀번호 초기화 확인 → 비밀번호 변경 | ✅ 기존 |
-| 6 | 만료된 토큰 → AUTH_007 | ✅ 기존 |
-| 7 | 이미 사용된 토큰 → AUTH_007 | ✅ 기존 |
-| 8 | 테넌트별 비밀번호 정책 검증 | ❌ 추가 필요 |
-| 9 | 비밀번호 이력 검사 (재사용 방지) | ❌ 추가 필요 |
-| 10 | 시스템 최소 기준 하회 불가 | ❌ 추가 필요 |
-
-#### SessionServiceImpl 테스트
-| # | 시나리오 | 상태 |
-|---|---------|------|
-| 1 | 세션 생성 | ✅ 기존 |
-| 2 | 최대 세션 초과 → 가장 오래된 세션 종료 | ✅ 기존 |
-| 3 | 활성 세션 조회 (IP 마스킹 확인) | ✅ 기존 |
-| 4 | 특정 세션 종료 | ✅ 기존 |
-| 5 | 전체 세션 종료 | ✅ 기존 |
-| 6 | 다른 세션 종료 (현재 유지) | ✅ 기존 |
-| 7 | 세션 유효성 검증 (Redis → DB fallback) | ✅ 기존 |
-
-#### PermissionChecker 테스트
-| # | 시나리오 | 상태 |
-|---|---------|------|
-| 1 | 역할 확인 (hasRole) | ✅ 기존 |
-| 2 | 권한 확인 (와일드카드 매칭) | ✅ 기존 |
-| 3 | 상위 역할 판단 (isHrManager 등) | ✅ 기존 |
-| 4 | 직원 접근 권한 (canAccessEmployee) | ✅ 기존 |
-| 5 | 같은 부서 확인 (실제 Employee 조회) | ❌ 추가 필요 |
-| 6 | 같은 팀 확인 (실제 Employee 조회) | ❌ 추가 필요 |
-
-### 6.2 통합 테스트 (추가 필요)
-
-| # | 시나리오 | 상태 |
-|---|---------|------|
-| 1 | 전체 로그인 → 토큰 → API 호출 → 로그아웃 플로우 | ❌ 추가 필요 |
-| 2 | 비밀번호 초기화 전체 플로우 (요청→이메일→확인) | ❌ 추가 필요 |
-| 3 | 세션 제한 도달 → 자동 종료 → 새 세션 생성 | ❌ 추가 필요 |
-| 4 | 계정 잠금 → 30분 후 자동 해제 → 로그인 성공 | ❌ 추가 필요 |
-| 5 | Refresh Token Rotation 전체 플로우 | ❌ 추가 필요 |
-| 6 | 테넌트별 비밀번호 정책 적용 플로우 | ❌ 추가 필요 |
-| 7 | MFA 설정 → 로그인 → MFA 검증 전체 플로우 | ❌ 추가 필요 |
+| 날짜 | 버전 | 변경 내용 | 작성자 |
+|------|------|----------|--------|
+| 2026-02-06 | v1.0 | 초기 프로덕션 정책/설정 분석 | Claude |
+| 2026-02-10 | v2.0 | Phase A (Gap 분석), Phase B (비즈니스 규칙), Phase C (서비스 연동) 추가. 코드 최신 상태 반영: MFA/사용자관리/로그인이력/비밀번호이력/비밀번호정책 구현 완료 확인. 추적성 매트릭스 추가. | Claude |
 
 ---
 
-## 7. 의존성
+## 부록: 감사 로그 설계 (미구현)
 
-### 7.1 Auth Service가 의존하는 모듈
+> 아래 내용은 v1.0에서 섹션 13으로 존재하던 감사 로그 설계안을 보존한 것입니다.
+> 구현 시 이 설계를 기반으로 common-audit 모듈 + Auth Service 저장/조회 API를 개발합니다.
 
-| 의존 대상 | 용도 | 현재 상태 |
-|-----------|------|-----------|
-| `common-core` | 예외 처리 (BusinessException, ForbiddenException) | ✅ 연동 |
-| `common-entity` | 기본 엔티티 (사용 안 함 — 자체 엔티티 사용) | ⚠️ 의존성 있으나 미사용 |
-| `common-response` | ApiResponse 래퍼 | ✅ 연동 |
-| `common-database` | Flyway 설정 | ✅ 연동 |
-| `common-tenant` | TenantContext | ✅ 연동 |
-| `common-security` | JwtTokenProvider, SecurityFilter, PermissionChecker | ✅ 연동 |
-| `common-cache` | Redis 설정 | ✅ 연동 |
-| `common-event` | DomainEvent, EventPublisher | ✅ 연동 |
-| **Tenant Service** | 테넌트별 비밀번호 정책, tenantCode→tenantId 해석 | ❌ **미연동** (Feign 필요) |
-| **Employee Service** | 부서/팀 정보 조회 (PermissionChecker용) | ❌ **미연동** (Feign 필요) |
-| **Notification Service** | 비밀번호 초기화 이메일, 만료 알림 | ✅ 이벤트 발행 연동 |
-
-### 7.2 Auth Service를 의존하는 모듈
-
-| 의존 주체 | 용도 |
-|-----------|------|
-| 모든 서비스 | `common-security` 의존 (SecurityFilter, JWT 검증) |
-| Gateway Service | JWT 검증 + 라우팅 (미구현) |
-| 프론트엔드 | 로그인/토큰 갱신/로그아웃 API 호출 |
-
-### 7.3 이벤트 발행
-
-| 이벤트 | 토픽 | 소비자 |
-|--------|------|--------|
-| `PasswordResetRequestedEvent` | `hr-saas.notification.send` | Notification Service |
-| ★ [미구현] `LoginSuccessEvent` | `hr-saas.auth.login-success` | Audit, Notification |
-| ★ [미구현] `LoginFailedEvent` | `hr-saas.auth.login-failed` | Audit, Security |
-| ★ [미구현] `AccountLockedEvent` | `hr-saas.auth.account-locked` | Notification, Admin |
-| ★ [미구현] `PasswordExpiredEvent` | `hr-saas.auth.password-expired` | Notification |
-
----
-
-## 8. API 엔드포인트 요약
-
-### 현재 구현
-
-| Method | Path | 인증 | 설명 |
-|--------|------|------|------|
-| `POST` | `/api/v1/auth/login` | ❌ 공개 | 로그인 |
-| `POST` | `/api/v1/auth/token/refresh` | ❌ 공개 | 토큰 갱신 |
-| `POST` | `/api/v1/auth/logout` | ✅ | 로그아웃 |
-| `GET` | `/api/v1/auth/me` | ✅ | 현재 사용자 정보 |
-| `POST` | `/api/v1/auth/password/change` | ✅ | 비밀번호 변경 |
-| `POST` | `/api/v1/auth/password/reset` | ❌ 공개 | 비밀번호 초기화 요청 |
-| `POST` | `/api/v1/auth/password/reset/confirm` | ❌ 공개 | 비밀번호 초기화 확인 |
-| `GET` | `/api/v1/auth/sessions` | ✅ | 활성 세션 조회 |
-| `DELETE` | `/api/v1/auth/sessions/{sessionId}` | ✅ | 특정 세션 종료 |
-| `DELETE` | `/api/v1/auth/sessions` | ✅ | 전체 세션 종료 |
-| `DELETE` | `/api/v1/auth/sessions/others` | ✅ | 다른 세션 종료 |
-
-### 추가 필요 (MFA)
-
-| Method | Path | 인증 | 설명 |
-|--------|------|------|------|
-| `POST` | `/api/v1/auth/mfa/setup` | ✅ | MFA 설정 시작 (QR 생성) |
-| `POST` | `/api/v1/auth/mfa/verify-setup` | ✅ | MFA 설정 확인 |
-| `POST` | `/api/v1/auth/mfa/verify` | ⚠️ 임시토큰 | 로그인 시 MFA 검증 |
-| `POST` | `/api/v1/auth/mfa/disable` | ✅ | MFA 비활성화 |
-| `GET` | `/api/v1/auth/mfa/status` | ✅ | MFA 상태 조회 |
-| `POST` | `/api/v1/auth/mfa/recovery-codes` | ✅ | 복구 코드 생성 |
-
-### 추가 필요 (사용자 관리 — 관리자용)
-
-| Method | Path | 인증 | 설명 |
-|--------|------|------|------|
-| `POST` | `/api/v1/auth/users` | ✅ HR_MANAGER+ | 사용자 계정 생성 |
-| `GET` | `/api/v1/auth/users` | ✅ HR_MANAGER+ | 사용자 목록 조회 |
-| `GET` | `/api/v1/auth/users/{userId}` | ✅ HR_MANAGER+ | 사용자 상세 조회 |
-| `PUT` | `/api/v1/auth/users/{userId}/status` | ✅ TENANT_ADMIN+ | 계정 활성/비활성 |
-| `PUT` | `/api/v1/auth/users/{userId}/roles` | ✅ TENANT_ADMIN+ | 역할 변경 |
-| `POST` | `/api/v1/auth/users/{userId}/unlock` | ✅ HR_MANAGER+ | 계정 잠금 해제 |
-| `POST` | `/api/v1/auth/users/{userId}/reset-password` | ✅ HR_MANAGER+ | 관리자 비밀번호 초기화 |
-
----
-
-## 9. 에러 코드 정리
-
-| 코드 | HTTP | 메시지 | 비고 |
-|------|------|--------|------|
-| `AUTH_001` | 401 | 아이디 또는 비밀번호가 올바르지 않습니다 | 로그인 실패 |
-| `AUTH_002` | 401 | 토큰 관련 오류 | 토큰 만료/무효/갱신 실패 |
-| `AUTH_003` | 400/401 | 비밀번호 불일치 / 인증 정보 없음 | 코드 중복 사용 — 정리 필요 |
-| `AUTH_004` | 400/403 | 사용자 없음 / 권한 부족 | 코드 중복 사용 — 정리 필요 |
-| `AUTH_006` | 400 | 유효하지 않은 토큰 | 비밀번호 초기화 토큰 |
-| `AUTH_007` | 400 | 만료/사용된 토큰 | 비밀번호 초기화 토큰 |
-| `AUTH_008` | 401/404 | 비활성 계정 / 세션 없음 | 코드 중복 사용 — 정리 필요 |
-| `AUTH_009` | 401 | 계정 잠김 | |
-
-**개선 필요**: 에러 코드 중복 해소 (AUTH_003, AUTH_004, AUTH_008)
-
----
-
-## 10. 데이터베이스 스키마
-
-### 현재 테이블 (tenant_common 스키마)
-
-```
-tenant_common.users                 — 사용자 계정 (✅ 사용 중)
-tenant_common.user_sessions         — 활성 세션 (✅ 사용 중)
-tenant_common.password_reset_tokens — 초기화 토큰 (✅ 사용 중)
-tenant_common.login_history         — 로그인 이력 (⚠️ DDL만, 코드 미연동)
-tenant_common.account_locks         — 계정 잠금 (⚠️ DDL만, 코드 미연동, 삭제 고려)
-```
-
-### 추가 필요 테이블
-
-```
-tenant_common.password_history      — 비밀번호 이력 (재사용 방지)
-tenant_common.user_mfa              — MFA 설정 (TOTP secret 등)
-tenant_common.mfa_recovery_codes    — MFA 복구 코드
-```
-
-### RLS 참고
-
-Auth 테이블은 RLS 미적용 (서비스 레벨에서 tenant_id 필터링). 이유: 인증 과정에서 tenant_id가 확정되기 전에 조회가 필요하므로.
-
----
-
-## 11. 구현 우선순위 요약
-
-| 순위 | 항목 | 복잡도 | 의존성 |
-|------|------|--------|--------|
-| 1 | 로그인 시 세션 생성 연결 | 낮음 | 없음 |
-| 2 | Refresh Token Rotation 완성 | 낮음 | 없음 |
-| 3 | username 테넌트별 유니크 전환 | 중간 | Tenant Service |
-| 4 | 로그인 이력 기록 | 중간 | 없음 |
-| 5 | 비밀번호 만료 체크 | 중간 | Tenant Service |
-| 6 | 테넌트별 비밀번호 정책 | 높음 | Tenant Service |
-| 7 | 비밀번호 이력 관리 | 중간 | 없음 |
-| 8 | 사용자 관리 CRUD (관리자용) | 높음 | 없음 |
-| 9 | 부서/팀 기반 권한 체크 | 중간 | Employee Service |
-| 10 | MFA (TOTP) | 높음 | 없음 |
-| 11 | 만료 세션 정리 스케줄러 | 낮음 | 없음 |
-| 12 | CORS 프로덕션 설정 | 낮음 | 없음 |
-| 13 | IP Geolocation | 낮음 | 외부 라이브러리 |
-| 14 | 에러 코드 정리 | 낮음 | 없음 |
-| 15 | account_locks 테이블 제거 | 낮음 | 없음 |
-
----
-
-## 13. 감사 로그 (Audit Log) — 추가 모듈
-
-> 추가 분석일: 2026-02-06
-> BE 귀속: Auth Service (감사 로그 저장/조회 API) + common-audit (이벤트 발행 AOP)
-> BE 상태: **미구현** (FE만 존재)
-> 보존 기간: **5년** (개인정보보호법 기준)
-
-### 13.1 현재 구현 상태
-
-| 구분 | 상태 | 설명 |
-|------|------|------|
-| FE 목록 페이지 | ✅ 완료 | AuditLogPage — 필터(keyword/action/result), 페이지네이션, CSV/Excel 내보내기, 상세 다이얼로그 |
-| FE 필터 컴포넌트 | ✅ 완료 | AuditFilter — 기본+고급 검색 (키워드, 액션, 결과, 대상유형, 기간, 사용자ID), 활성필터 태그 |
-| FE 타임라인 | ✅ 완료 | AuditTimeline — 날짜별 그룹핑, 액션별 아이콘/색상, 클릭 가능 |
-| FE 상세 뷰 | ✅ 완료 | AuditDetail — 일시, 사용자, IP, 액션, 대상, 오류, 상세(JSON), 요청정보, 복사 기능 |
-| FE hooks/service | ✅ 완료 | useAuditLogs, useAuditLogDetail + exportAuditLogs (Blob 다운로드) |
-| FE mock | ✅ 완료 | 10건 샘플 (LOGIN, UPDATE, CREATE, DELETE, APPROVE, EXPORT, LOGOUT 등) |
-| shared-types | ✅ 완료 | AuditLog, AuditAction(12종), AuditResult, AuditTargetType 타입 정의 |
-| BE 엔티티/API | ❌ 미구현 | 전체 신규 개발 필요 |
-
-### 13.2 아키텍처 결정 ✅ 결정완료
-
-> **결정: 공통 모듈(AOP) + Auth Service(저장/조회)**
-
-Traefik 액세스 로그만으로는 비즈니스 레벨 감사 불가 (누가 어떤 직원 정보를 수정했는지 등 추적 불가).
+### A.1 아키텍처
 
 ```
 [각 서비스]                        [Auth Service]
@@ -772,64 +958,9 @@ Traefik 액세스 로그만으로는 비즈니스 레벨 감사 불가 (누가 �
 │ 이벤트 자동 발행 │               │ AuditLogService │
 └─────────────────┘               │ AuditLogAPI     │
                                   └─────────────────┘
-[Traefik]
-┌─────────────────┐
-│ Access Log      │──→ ELK/CloudWatch (HTTP 레벨 보조 로그)
-└─────────────────┘
 ```
 
-- **1계층 (Traefik)**: HTTP 액세스 로그 — 모든 요청의 method/URL/status/IP 기록 (ELK 또는 CloudWatch)
-- **2계층 (common-audit)**: 비즈니스 감사 로그 — Spring AOP `@Audited` 어노테이션으로 컨트롤러 메서드 자동 인터셉트, SNS 이벤트 발행
-- **3계층 (Auth Service)**: 감사 로그 저장/조회 API — SQS로 이벤트 수신, DB 저장, 조회/내보내기 API 제공
-
-### 13.3 BE 구현 사양
-
-#### 13.3.1 common-audit 모듈 (신규)
-
-**위치**: `common/common-audit/`
-
-```java
-// 1. @Audited 어노테이션
-@Target(ElementType.METHOD)
-@Retention(RetentionPolicy.RUNTIME)
-public @interface Audited {
-    AuditAction action();
-    String targetType() default "";  // 자동 추론 가능
-    String description() default "";
-}
-
-// 2. AuditAspect (Spring AOP)
-@Aspect @Component
-public class AuditAspect {
-    @Around("@annotation(audited)")
-    public Object audit(ProceedingJoinPoint pjp, Audited audited) {
-        // Before: 요청 정보 수집 (userId, IP, targetId 등)
-        Object result = pjp.proceed();
-        // After: AuditEvent 발행 (SNS)
-        // 실패 시: errorMessage 포함
-    }
-}
-
-// 3. AuditEvent 도메인 이벤트
-public record AuditEvent(
-    String tenantId, String userId, String userName, String userEmail,
-    String ipAddress, String userAgent,
-    AuditAction action, String targetType, String targetId, String targetName,
-    AuditResult result, String errorMessage,
-    Map<String, Object> details,
-    String requestMethod, String requestUrl,
-    Instant timestamp
-) {}
-```
-
-**사용 예시** (각 서비스 컨트롤러):
-```java
-@Audited(action = AuditAction.UPDATE, targetType = "EMPLOYEE")
-@PutMapping("/{id}")
-public ApiResponse<EmployeeResponse> update(@PathVariable UUID id, ...) { ... }
-```
-
-#### 13.3.2 Auth Service 감사 로그 테이블
+### A.2 테이블 설계
 
 ```sql
 CREATE TABLE audit_logs (
@@ -840,117 +971,35 @@ CREATE TABLE audit_logs (
     user_email VARCHAR(200),
     ip_address VARCHAR(45),
     user_agent TEXT,
-    action VARCHAR(30) NOT NULL,       -- LOGIN, CREATE, UPDATE, DELETE, ...
-    target_type VARCHAR(50),            -- USER, EMPLOYEE, APPROVAL, ...
+    action VARCHAR(30) NOT NULL,
+    target_type VARCHAR(50),
     target_id VARCHAR(100),
     target_name VARCHAR(200),
-    result VARCHAR(10) NOT NULL,        -- SUCCESS, FAILURE
+    result VARCHAR(10) NOT NULL,
     error_message TEXT,
-    details JSONB,                      -- 변경 필드, 브라우저 정보 등
-    request_method VARCHAR(10),         -- GET, POST, PUT, DELETE
+    details JSONB,
+    request_method VARCHAR(10),
     request_url VARCHAR(500),
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-
-    -- 파티셔닝 키
-    CONSTRAINT audit_logs_pkey PRIMARY KEY (id, created_at)
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 ) PARTITION BY RANGE (created_at);
-
--- 월별 파티션 (5년치)
-CREATE TABLE audit_logs_2026_01 PARTITION OF audit_logs
-    FOR VALUES FROM ('2026-01-01') TO ('2026-02-01');
--- ... (자동 파티션 생성 스케줄러 필요)
-
--- 인덱스
-CREATE INDEX idx_audit_tenant_created ON audit_logs (tenant_id, created_at DESC);
-CREATE INDEX idx_audit_user ON audit_logs (user_id, created_at DESC);
-CREATE INDEX idx_audit_action ON audit_logs (action, created_at DESC);
-CREATE INDEX idx_audit_target ON audit_logs (target_type, target_id);
 ```
 
-**RLS 적용**: tenant_id 기반 (다른 테넌트 감사 로그 접근 차단)
+### A.3 AuditAction (12종)
 
-#### 13.3.3 API 엔드포인트
+LOGIN, LOGOUT, CREATE, READ, UPDATE, DELETE, EXPORT, IMPORT, APPROVE, REJECT, PASSWORD_CHANGE, PERMISSION_CHANGE
+
+### A.4 API
 
 | Method | Path | 권한 | 설명 |
 |--------|------|------|------|
-| GET | `/api/v1/audit/logs` | HR_ADMIN+ | 목록 조회 (keyword, action, result, targetType, startDate, endDate, userId 필터) |
+| GET | `/api/v1/audit/logs` | HR_ADMIN+ | 목록 조회 |
 | GET | `/api/v1/audit/logs/{id}` | HR_ADMIN+ | 상세 조회 |
-| GET | `/api/v1/audit/logs/export` | HR_ADMIN+ | CSV/Excel 내보내기 (Blob 반환) |
-| GET | `/api/v1/audit/logs/statistics` | TENANT_ADMIN+ | 통계 (액션별, 기간별 집계) |
+| GET | `/api/v1/audit/logs/export` | HR_ADMIN+ | CSV/Excel 내보내기 |
+| GET | `/api/v1/audit/logs/statistics` | TENANT_ADMIN+ | 통계 |
 
-### 13.4 감사 대상 액션/타입
+### A.5 설정
 
-#### 13.4.1 AuditAction (12종)
-
-| 액션 | 설명 | 자동/수동 |
-|------|------|----------|
-| LOGIN | 로그인 | Auth Service 자체 기록 |
-| LOGOUT | 로그아웃 | Auth Service 자체 기록 |
-| CREATE | 리소스 생성 | @Audited AOP |
-| READ | 민감 정보 조회 | @Audited AOP (선별적) |
-| UPDATE | 리소스 수정 | @Audited AOP |
-| DELETE | 리소스 삭제 | @Audited AOP |
-| EXPORT | 데이터 내보내기 | @Audited AOP |
-| IMPORT | 데이터 가져오기 | @Audited AOP |
-| APPROVE | 결재 승인 | @Audited AOP |
-| REJECT | 결재 반려 | @Audited AOP |
-| PASSWORD_CHANGE | 비밀번호 변경 | Auth Service 자체 기록 |
-| PERMISSION_CHANGE | 권한 변경 | @Audited AOP |
-
-#### 13.4.2 AuditTargetType (FE 기준 7종+)
-
-| 대상 유형 | 서비스 | 예시 |
-|-----------|--------|------|
-| USER | Auth | 로그인, 비밀번호 변경 |
-| EMPLOYEE | Employee | 직원 정보 CRUD |
-| APPROVAL | Approval | 결재 생성/승인/반려 |
-| DOCUMENT | File | 파일 업로드/삭제 |
-| ORGANIZATION | Organization | 부서 변경, 공지사항 |
-| ATTENDANCE | Attendance | 출결, 휴가 신청 |
-| APPOINTMENT | Appointment | 발령 시행 |
-| CERTIFICATE | Certificate | 증명서 발급 |
-| RECRUITMENT | Recruitment | 채용 공고, 오퍼 |
-| TENANT | Tenant | 테넌트 설정 변경 |
-
-### 13.5 설정값
-
-| 설정 | 값 | 사유 |
-|------|-----|------|
-| `audit.retention-years` | 5 | 개인정보보호법 기준 |
-| `audit.partition.auto-create` | true | 월별 파티션 자동 생성 |
-| `audit.export.max-rows` | 100000 | 내보내기 최대 건수 |
-| `audit.sensitive-actions` | READ | READ 액션 기록 대상 (민감 정보만 선별) |
-| SNS 토픽 | `hr-saas.audit.event` | 감사 이벤트 발행 토픽 |
-| SQS 큐 | `auth-service-audit-queue` | Auth Service 수신 큐 |
-
-### 13.6 테스트 시나리오
-
-| # | 시나리오 | 기대 결과 |
-|---|---------|----------|
-| 1 | 로그인 성공 | LOGIN + SUCCESS 로그 기록 |
-| 2 | 로그인 실패 (비밀번호 불일치) | LOGIN + FAILURE + errorMessage 기록 |
-| 3 | 직원 정보 수정 (@Audited) | UPDATE + EMPLOYEE + 변경 필드 details |
-| 4 | 데이터 내보내기 | EXPORT + recordCount/format details |
-| 5 | 키워드 검색 | userName, targetName, ipAddress 매칭 |
-| 6 | 액션별 필터 | 해당 액션 로그만 반환 |
-| 7 | CSV 내보내기 | Blob 반환, 헤더 올바름 |
-| 8 | 5년 초과 로그 | 자동 파티션 드롭 또는 아카이브 |
-
-### 13.7 FE 컴포넌트 현황
-
-| 컴포넌트 | 상태 | 설명 |
-|----------|------|------|
-| AuditLogPage | ✅ 완료 | 목록 테이블 + 모바일 카드 뷰, 필터, 내보내기, 상세 다이얼로그 |
-| AuditFilter | ✅ 완료 | 기본(keyword/action/result) + 고급(targetType/기간/userId) 검색 |
-| AuditTimeline | ✅ 완료 | 날짜별 그룹핑 타임라인 뷰, 액션별 아이콘/색상 |
-| AuditDetail | ✅ 완료 | 상세 다이얼로그 — 사용자/IP/액션/대상/오류/상세JSON/요청정보, JSON 복사 |
-| 통계 대시보드 | ❌ 미구현 | 액션별 분포, 기간별 추이 차트 |
-
-### 13.8 의존성
-
-| 연동 모듈 | 방식 | 내용 |
-|-----------|------|------|
-| common-audit (신규) | AOP + SNS | 각 서비스에서 @Audited 메서드 감사 이벤트 자동 발행 |
-| Auth Service | SQS 리스너 | 이벤트 수신, DB 저장, 조회/내보내기 API |
-| Traefik | Access Log | HTTP 레벨 보조 로그 (ELK/CloudWatch) |
-| 전 서비스 | common-audit 의존 | @Audited 어노테이션 사용 |
+- 보존 기간: 5년 (개인정보보호법)
+- 파티셔닝: 월별 자동 파티션
+- SNS 토픽: `hr-saas.audit.event`
+- SQS 큐: `auth-service-audit-queue`
