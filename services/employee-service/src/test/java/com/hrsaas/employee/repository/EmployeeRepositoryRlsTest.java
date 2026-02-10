@@ -3,12 +3,14 @@ package com.hrsaas.employee.repository;
 import com.hrsaas.employee.domain.entity.Employee;
 import com.hrsaas.employee.domain.entity.EmployeeStatus;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.condition.EnabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -26,8 +28,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataJpaTest
 @Testcontainers
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@EnabledIf(value = "isDockerAvailable", disabledReason = "Docker is not available")
 @DisplayName("Employee Repository RLS Tests")
 class EmployeeRepositoryRlsTest {
+
+    static boolean isDockerAvailable() {
+        try {
+            return DockerClientFactory.instance().isDockerAvailable();
+        } catch (Exception e) {
+            return false;
+        }
+    }
 
     @Container
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
@@ -182,7 +193,7 @@ class EmployeeRepositoryRlsTest {
     private void saveEmployeeDirectly(Employee employee) {
         // RLS를 우회하여 직접 저장 (테스트 데이터 설정용)
         jdbcTemplate.update("""
-            INSERT INTO hr_employee.employees
+            INSERT INTO hr_core.employee
             (id, tenant_id, employee_number, name, email, hire_date, status, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
             """,

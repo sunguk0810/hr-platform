@@ -23,7 +23,7 @@ class PermissionCheckerTest {
     @BeforeEach
     void setUp() {
         permissionMappingService = new PermissionMappingService();
-        permissionChecker = new PermissionChecker(permissionMappingService);
+        permissionChecker = new PermissionChecker(permissionMappingService, null);
     }
 
     @AfterEach

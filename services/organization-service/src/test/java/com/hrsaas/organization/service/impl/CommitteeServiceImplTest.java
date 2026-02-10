@@ -124,7 +124,7 @@ class CommitteeServiceImplTest {
         // given
         Committee committee = TestEntityFactory.createCommittee(committeeId, "SAFETY_COM", "안전위원회");
 
-        when(committeeRepository.findByIdAndTenantId(committeeId, tenantId))
+        when(committeeRepository.findByIdWithMembers(committeeId, tenantId))
                 .thenReturn(Optional.of(committee));
 
         // when
@@ -137,7 +137,7 @@ class CommitteeServiceImplTest {
         assertThat(response.getName()).isEqualTo("안전위원회");
         assertThat(response.getStatus()).isEqualTo(CommitteeStatus.ACTIVE);
 
-        verify(committeeRepository).findByIdAndTenantId(committeeId, tenantId);
+        verify(committeeRepository).findByIdWithMembers(committeeId, tenantId);
     }
 
     // ===== update =====

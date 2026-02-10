@@ -108,9 +108,8 @@ class LeaveServiceImplTest {
         when(leaveRequestRepository.findPending(eq(TENANT_ID), any(Pageable.class))).thenReturn(page);
 
         LeaveBalance balance = createBalance(new BigDecimal("15"), new BigDecimal("3"), new BigDecimal("2"));
-        when(leaveBalanceRepository.findByEmployeeIdAndYearAndType(
-                eq(TENANT_ID), eq(EMPLOYEE_ID), anyInt(), eq(LeaveType.ANNUAL)))
-                .thenReturn(Optional.of(balance));
+        when(leaveBalanceRepository.findByEmployeeIdsAndYear(eq(TENANT_ID), any(java.util.Collection.class), anyInt()))
+                .thenReturn(List.of(balance));
 
         // when
         PageResponse<PendingLeaveResponse> result = leaveService.getPendingLeaves(null, null, PageRequest.of(0, 20));
@@ -203,11 +202,11 @@ class LeaveServiceImplTest {
 
         LeaveBalance balance = createBalance(new BigDecimal("15"), new BigDecimal("3"), new BigDecimal("2"));
 
-        when(leaveRequestRepository.findById(request1.getId())).thenReturn(Optional.of(request1));
-        when(leaveRequestRepository.findById(request2.getId())).thenReturn(Optional.of(request2));
-        when(leaveBalanceRepository.findByEmployeeIdAndYearAndType(
-                eq(TENANT_ID), any(), anyInt(), any())).thenReturn(Optional.of(balance));
-        when(leaveRequestRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(leaveRequestRepository.findAllById(List.of(request1.getId(), request2.getId())))
+                .thenReturn(List.of(request1, request2));
+        when(leaveBalanceRepository.findByEmployeeIdsAndYear(eq(TENANT_ID), any(java.util.Collection.class), anyInt()))
+                .thenReturn(List.of(balance));
+        when(leaveRequestRepository.saveAll(any())).thenAnswer(inv -> inv.getArgument(0));
 
         // when
         BulkOperationResponse result = leaveService.bulkApprove(
@@ -227,11 +226,11 @@ class LeaveServiceImplTest {
         LeaveRequest request2 = createPendingRequest();
         LeaveBalance balance = createBalance(new BigDecimal("15"), new BigDecimal("3"), new BigDecimal("2"));
 
-        when(leaveRequestRepository.findById(request1.getId())).thenReturn(Optional.of(request1));
-        when(leaveRequestRepository.findById(request2.getId())).thenReturn(Optional.of(request2));
-        when(leaveBalanceRepository.findByEmployeeIdAndYearAndType(
-                eq(TENANT_ID), any(), anyInt(), any())).thenReturn(Optional.of(balance));
-        when(leaveRequestRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(leaveRequestRepository.findAllById(List.of(request1.getId(), request2.getId())))
+                .thenReturn(List.of(request1, request2));
+        when(leaveBalanceRepository.findByEmployeeIdsAndYear(eq(TENANT_ID), any(java.util.Collection.class), anyInt()))
+                .thenReturn(List.of(balance));
+        when(leaveRequestRepository.saveAll(any())).thenAnswer(inv -> inv.getArgument(0));
 
         // when
         BulkOperationResponse result = leaveService.bulkReject(

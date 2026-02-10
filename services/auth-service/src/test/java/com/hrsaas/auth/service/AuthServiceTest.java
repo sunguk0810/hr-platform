@@ -6,6 +6,7 @@ import com.hrsaas.auth.domain.dto.response.TokenResponse;
 import com.hrsaas.auth.domain.dto.response.UserResponse;
 import com.hrsaas.auth.domain.entity.UserEntity;
 import com.hrsaas.auth.repository.UserRepository;
+import com.hrsaas.auth.client.TenantServiceClient;
 import com.hrsaas.auth.service.impl.AuthServiceImpl;
 import com.hrsaas.auth.service.impl.MfaServiceImpl;
 import com.hrsaas.common.security.SecurityContextHolder;
@@ -17,7 +18,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -39,7 +39,6 @@ import static org.mockito.Mockito.*;
 @DisplayName("AuthService Tests")
 class AuthServiceTest {
 
-    @InjectMocks
     private AuthServiceImpl authService;
 
     @Mock
@@ -66,6 +65,9 @@ class AuthServiceTest {
     @Mock
     private MfaServiceImpl mfaService;
 
+    @Mock
+    private TenantServiceClient tenantServiceClient;
+
     private static final UUID USER_ID = UUID.fromString("10000000-0000-0000-0000-000000000001");
     private static final UUID TENANT_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
     private static final String IP_ADDRESS = "192.168.1.1";
@@ -88,7 +90,18 @@ class AuthServiceTest {
 
     @BeforeEach
     void setUp() {
+        authService = new AuthServiceImpl(
+                userRepository,
+                jwtTokenProvider,
+                passwordEncoder,
+                redisTemplate,
+                sessionService,
+                loginHistoryService,
+                mfaService,
+                Optional.of(tenantServiceClient)
+        );
         lenient().when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        lenient().when(tenantServiceClient.getTenantStatus(any(UUID.class))).thenReturn(null);
     }
 
     @AfterEach
