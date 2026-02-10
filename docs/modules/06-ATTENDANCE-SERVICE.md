@@ -930,7 +930,7 @@ erDiagram
 | POST | `/{id}/reject` | 반려 | 관리자 |
 | POST | `/{id}/cancel` | 취소 | 일반 |
 | POST | `/{id}/complete` | 완료 (실제 시간 기록) | 관리자 |
-| GET | `/total-hours` | 총 초과근무 시간 조회 | 관리자 |
+| GET | `/my/total-hours` | 내 초과근무 요약 (OvertimeSummaryResponse) | 일반 |
 
 ### 7.5 휴가 유형 설정 (`/api/v1/leave-type-configs`)
 

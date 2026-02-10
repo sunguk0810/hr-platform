@@ -833,6 +833,7 @@ erDiagram
 |--------|------|------|------|
 | POST | `/` | 위임 규칙 생성 | `isAuthenticated()` |
 | GET | `/{id}` | 위임 규칙 조회 | `isAuthenticated()` |
+| PUT | `/{id}` | 위임 규칙 수정 | `isAuthenticated()` |
 | GET | `/my` | 내 위임 목록 | `isAuthenticated()` |
 | GET | `/my/effective` | 현재 유효 위임 | `isAuthenticated()` |
 | GET | `/delegated-to-me` | 나에게 위임된 목록 | `isAuthenticated()` |

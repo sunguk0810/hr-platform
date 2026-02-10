@@ -222,7 +222,7 @@
 | FR-ATT-002-03 | 결재선 자동 지정 | Must | ✅ | attendance-service | `LeaveController` | `LeaveService` | `LeaveRequestCreatedEvent` → Approval Service 자동 결재 문서 생성 |
 | FR-ATT-002-04 | 결재자 승인/반려 | Must | ✅ | attendance-service | — | `ApprovalCompletedListener` | `handleApprovalCompleted()` 이벤트 처리 |
 | FR-ATT-002-05 | 승인 시 연차 자동 차감 | Must | ✅ | attendance-service | — | `LeaveService` | `confirmUsedDays()`, `releasePendingDays()` |
-| FR-ATT-002-06 | 캘린더 형태 조회 | Should | 🟡 | attendance-service | `LeaveController` | `LeaveService` | 기본 구현, 완성도 미확인 |
+| FR-ATT-002-06 | 캘린더 형태 조회 | Should | ✅ | attendance-service | `LeaveController` | `LeaveService` | `getCalendarEvents()` - 날짜 범위/부서 필터 지원 |
 | FR-ATT-003-01 | 휴가 유형 정의 | Must | ✅ | attendance-service | `LeaveTypeController` | `LeaveTypeService` | `LeaveTypeConfig` (10종), `LeaveType` enum |
 | FR-ATT-003-02 | 유형별 사용 조건 | Must | ✅ | attendance-service | `LeaveTypeController` | `LeaveTypeService` | `maxDaysPerYear`, `minNoticeDays`, `genderRestriction` |
 | FR-ATT-003-03 | 유형별 결재선 규칙 | Should | 🟡 | attendance-service | — | — | `approvalTemplateCode` 필드 존재, 설정 UI 미완 |
@@ -387,11 +387,11 @@
 | FR-MDM (기준정보) | 20 | 20 | 0 | 0 | **100%** |
 | FR-ORG (조직) | 11 | 8 | 2 | 1 | **73%** |
 | FR-EMP (인사) | 16 | 10 | 5 | 1 | **63%** |
-| FR-ATT (근태) | 13 | 11 | 2 | 0 | 85% |
+| FR-ATT (근태) | 13 | 12 | 1 | 0 | **92%** |
 | FR-APR (결재) | 17 | 13 | 3 | 0 | **76%** |
 | FR-NTF (알림) | 5 | 3 | 1 | 1 | 60% |
 | FR-FILE (파일) | 4 | 2 | 2 | 0 | 50% |
-| **합계** | **128** | **102** | **19** | **7** | **80%** |
+| **합계** | **128** | **103** | **18** | **7** | **81%** |
 
 ### 비기능 요구사항 (NFR) 요약
 

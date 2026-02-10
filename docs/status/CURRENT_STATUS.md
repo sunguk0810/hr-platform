@@ -127,6 +127,42 @@ auth, dashboard, employee, organization, attendance, approval, recruitment, appo
 
 ---
 
+## 6.1 FE ↔ BE 연동 현황 (Gap 분석 결과)
+
+> **분석일**: 2026-02-10
+> **방법**: FE 서비스 파일 TODO 마커 + BE 컨트롤러 교차 비교
+
+### 연동 상태 요약
+
+| 카테고리 | 건수 | 상태 |
+|---------|------|------|
+| FE TODO → BE 이미 구현 (stale TODO) | 10건 | ✅ TODO 제거 완료 |
+| BE 미구현 엔드포인트 | 1건 | ✅ 구현 완료 |
+| 응답 포맷 불일치 | 1건 | ✅ BE 표준화 완료 |
+| 대시보드 통합 API | 9건 | ✅ 전체 구현 확인 |
+| 페이지네이션 불일치 (소규모 데이터셋) | 4건 | ⏸ FE 래핑 유지 |
+| Mock-Only 기능 | 3건 | ⏸ 후순위 |
+
+### 상세
+
+**Stale TODO 정리 (BE 이미 구현됨):**
+- Notification: GET /{id}, DELETE /{id}, POST /bulk-delete, GET /settings, PUT /settings
+- Attendance: GET /leaves/calendar, GET /statistics/work-hours, PUT /attendances/{id}
+- Approval: POST /delegations/{id}/toggle-status
+- Employee: POST /employees/{id}/resign/cancel
+
+**신규 구현:**
+- `PUT /api/v1/approvals/delegations/{id}` - 대결 규칙 수정 (approval-service)
+
+**응답 포맷 표준화:**
+- `GET /overtimes/my/total-hours` - BigDecimal → OvertimeSummaryResponse DTO 래핑
+
+**페이지네이션 (FE 래핑 유지):**
+- GET /mdm/code-groups, GET /committees, GET /headcounts/plans, GET /departments
+- 소규모 데이터셋이라 List 반환 유지, FE에서 PageResponse 래핑
+
+---
+
 ## 7. 미완료 작업
 
 ### 높은 우선순위
