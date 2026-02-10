@@ -2,6 +2,7 @@ package com.hrsaas.attendance.controller;
 
 import com.hrsaas.attendance.domain.dto.request.CreateOvertimeRequest;
 import com.hrsaas.attendance.domain.dto.response.OvertimeRequestResponse;
+import com.hrsaas.attendance.domain.dto.response.OvertimeSummaryResponse;
 import com.hrsaas.attendance.domain.entity.OvertimeStatus;
 import com.hrsaas.attendance.service.OvertimeService;
 import com.hrsaas.common.response.ApiResponse;
@@ -132,13 +133,13 @@ public class OvertimeController {
     }
 
     @GetMapping("/my/total-hours")
-    @Operation(summary = "내 초과근무 총 시간 조회")
+    @Operation(summary = "내 초과근무 요약 조회")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ApiResponse<BigDecimal>> getTotalHours(
+    public ResponseEntity<ApiResponse<OvertimeSummaryResponse>> getTotalHours(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         UUID employeeId = SecurityContextHolder.getCurrentUser().getUserId();
-        BigDecimal totalHours = overtimeService.getTotalOvertimeHours(employeeId, startDate, endDate);
-        return ResponseEntity.ok(ApiResponse.success(totalHours));
+        OvertimeSummaryResponse summary = overtimeService.getOvertimeSummary(employeeId, startDate, endDate);
+        return ResponseEntity.ok(ApiResponse.success(summary));
     }
 }

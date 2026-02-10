@@ -2,6 +2,7 @@ package com.hrsaas.attendance.service.impl;
 
 import com.hrsaas.attendance.domain.dto.request.CreateOvertimeRequest;
 import com.hrsaas.attendance.domain.dto.response.OvertimeRequestResponse;
+import com.hrsaas.attendance.domain.dto.response.OvertimeSummaryResponse;
 import com.hrsaas.attendance.domain.entity.OvertimeRequest;
 import com.hrsaas.attendance.domain.entity.OvertimeStatus;
 import com.hrsaas.attendance.domain.event.OvertimeRequestCreatedEvent;
@@ -159,6 +160,34 @@ public class OvertimeServiceImpl implements OvertimeService {
             tenantId, employeeId, startDate, endDate);
 
         return total != null ? total : BigDecimal.ZERO;
+    }
+
+    @Override
+    public OvertimeSummaryResponse getOvertimeSummary(UUID employeeId, LocalDate startDate, LocalDate endDate) {
+        UUID tenantId = TenantContext.getCurrentTenant();
+
+        BigDecimal totalHours = overtimeRequestRepository.sumActualHoursByEmployeeIdAndDateRange(
+            tenantId, employeeId, startDate, endDate);
+
+        long totalRequests = overtimeRequestRepository.countByEmployeeIdAndDateRange(
+            tenantId, employeeId, startDate, endDate);
+        long approvedRequests = overtimeRequestRepository.countByEmployeeIdAndStatusAndDateRange(
+            tenantId, employeeId, OvertimeStatus.APPROVED, startDate, endDate)
+            + overtimeRequestRepository.countByEmployeeIdAndStatusAndDateRange(
+            tenantId, employeeId, OvertimeStatus.COMPLETED, startDate, endDate);
+        long pendingRequests = overtimeRequestRepository.countByEmployeeIdAndStatusAndDateRange(
+            tenantId, employeeId, OvertimeStatus.PENDING, startDate, endDate);
+
+        String yearMonth = String.format("%d-%02d", startDate.getYear(), startDate.getMonthValue());
+
+        return OvertimeSummaryResponse.builder()
+            .yearMonth(yearMonth)
+            .totalRequests(totalRequests)
+            .approvedRequests(approvedRequests)
+            .pendingRequests(pendingRequests)
+            .totalHours(totalHours != null ? totalHours : BigDecimal.ZERO)
+            .approvedHours(totalHours != null ? totalHours : BigDecimal.ZERO)
+            .build();
     }
 
     private OvertimeRequest findById(UUID id) {

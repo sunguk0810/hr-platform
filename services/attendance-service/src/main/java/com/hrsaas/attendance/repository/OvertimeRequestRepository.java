@@ -62,6 +62,25 @@ public interface OvertimeRequestRepository extends JpaRepository<OvertimeRequest
         @Param("startDate") LocalDate startDate,
         @Param("endDate") LocalDate endDate);
 
+    @Query("SELECT COUNT(o) FROM OvertimeRequest o WHERE o.tenantId = :tenantId " +
+           "AND o.employeeId = :employeeId AND o.status = :status " +
+           "AND o.overtimeDate BETWEEN :startDate AND :endDate")
+    long countByEmployeeIdAndStatusAndDateRange(
+        @Param("tenantId") UUID tenantId,
+        @Param("employeeId") UUID employeeId,
+        @Param("status") OvertimeStatus status,
+        @Param("startDate") LocalDate startDate,
+        @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT COUNT(o) FROM OvertimeRequest o WHERE o.tenantId = :tenantId " +
+           "AND o.employeeId = :employeeId " +
+           "AND o.overtimeDate BETWEEN :startDate AND :endDate")
+    long countByEmployeeIdAndDateRange(
+        @Param("tenantId") UUID tenantId,
+        @Param("employeeId") UUID employeeId,
+        @Param("startDate") LocalDate startDate,
+        @Param("endDate") LocalDate endDate);
+
     /**
      * 직원별 승인/완료된 초과근무 시간을 GROUP BY로 집계합니다.
      * queryWorkHoursFromDatabase 메모리 집계 대체용.

@@ -2,6 +2,7 @@ package com.hrsaas.attendance.service;
 
 import com.hrsaas.attendance.domain.dto.request.CreateOvertimeRequest;
 import com.hrsaas.attendance.domain.dto.response.OvertimeRequestResponse;
+import com.hrsaas.attendance.domain.dto.response.OvertimeSummaryResponse;
 import com.hrsaas.attendance.domain.entity.OvertimeStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,4 +37,9 @@ public interface OvertimeService {
     OvertimeRequestResponse complete(UUID id, BigDecimal actualHours);
 
     BigDecimal getTotalOvertimeHours(UUID employeeId, LocalDate startDate, LocalDate endDate);
+
+    /**
+     * 내 초과근무 요약 (총 시간 + 건수)
+     */
+    OvertimeSummaryResponse getOvertimeSummary(UUID employeeId, LocalDate startDate, LocalDate endDate);
 }
