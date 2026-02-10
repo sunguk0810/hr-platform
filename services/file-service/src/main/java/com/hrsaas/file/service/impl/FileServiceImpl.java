@@ -32,6 +32,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Slf4j
@@ -45,6 +46,25 @@ public class FileServiceImpl implements FileService {
 
     @Value("${file.max-size:104857600}")
     private long maxFileSize;
+
+    /**
+     * 파일 확장자 화이트리스트 — 허용되지 않은 확장자의 업로드를 차단
+     */
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of(
+        ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx",
+        ".txt", ".csv", ".rtf", ".odt", ".ods",
+        ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".svg", ".webp",
+        ".zip", ".7z", ".tar", ".gz",
+        ".mp3", ".mp4", ".avi", ".mov",
+        ".hwp", ".hwpx"
+    );
+
+    private static final Set<String> BLOCKED_EXTENSIONS = Set.of(
+        ".exe", ".bat", ".cmd", ".com", ".msi", ".scr", ".pif",
+        ".vbs", ".vbe", ".js", ".jse", ".wsf", ".wsh",
+        ".ps1", ".psm1", ".reg", ".inf", ".lnk",
+        ".dll", ".sys", ".drv", ".cpl"
+    );
 
     @Override
     @Transactional
@@ -167,9 +187,15 @@ public class FileServiceImpl implements FileService {
     @Override
     @Transactional
     public void delete(UUID id, UUID requesterId) {
+        delete(id, requesterId, false);
+    }
+
+    @Override
+    @Transactional
+    public void delete(UUID id, UUID requesterId, boolean isAdmin) {
         FileMetadata metadata = findById(id);
 
-        if (!metadata.getUploaderId().equals(requesterId)) {
+        if (!isAdmin && !metadata.getUploaderId().equals(requesterId)) {
             throw new ForbiddenException("FILE_004", "본인이 업로드한 파일만 삭제할 수 있습니다");
         }
 
@@ -183,8 +209,8 @@ public class FileServiceImpl implements FileService {
         }
 
         fileMetadataRepository.delete(metadata);
-        log.info("File deleted: id={}, originalName={}, storageType={}",
-            id, metadata.getOriginalName(), metadata.getStorageType());
+        log.info("File deleted: id={}, originalName={}, storageType={}, byAdmin={}",
+            id, metadata.getOriginalName(), metadata.getStorageType(), isAdmin);
     }
 
     private FileMetadata findById(UUID id) {
@@ -198,22 +224,32 @@ public class FileServiceImpl implements FileService {
         }
 
         if (file.getSize() > maxFileSize) {
-            throw new BusinessException("FILE_007", "파일 크기가 제한을 초과했습니다. 최대: " + (maxFileSize / 1024 / 1024) + "MB", HttpStatus.BAD_REQUEST);
+            throw new BusinessException("FILE_007",
+                "파일 크기가 제한을 초과했습니다. 최대: " + (maxFileSize / 1024 / 1024) + "MB",
+                HttpStatus.BAD_REQUEST);
         }
 
-        // TODO: Query tenant-specific file upload policy via Feign client from tenant-service.
-        // Each tenant can define custom policies including:
-        //   - maxFileSize: per-tenant maximum file size override (may be smaller than the global limit)
-        //   - allowedExtensions: list of permitted file extensions (e.g., [".pdf", ".docx", ".xlsx", ".jpg", ".png"])
-        //   - maxTotalStorageBytes: total storage quota per tenant
-        // Example usage:
-        //   UUID tenantId = TenantContext.getCurrentTenant();
-        //   TenantFilePolicy policy = tenantPolicyClient.getFileUploadPolicy(tenantId);
-        //   if (policy != null) {
-        //       if (file.getSize() > policy.getMaxFileSize()) { throw ... }
-        //       String extension = getFileExtension(file.getOriginalFilename());
-        //       if (!policy.getAllowedExtensions().contains(extension)) { throw ... }
-        //   }
+        // Extension whitelist validation
+        String extension = getFileExtension(file.getOriginalFilename());
+        if (extension != null) {
+            String extLower = extension.toLowerCase();
+            if (BLOCKED_EXTENSIONS.contains(extLower)) {
+                throw new BusinessException("FILE_008",
+                    "보안상 허용되지 않는 파일 형식입니다: " + extension,
+                    HttpStatus.BAD_REQUEST);
+            }
+            if (!ALLOWED_EXTENSIONS.contains(extLower)) {
+                throw new BusinessException("FILE_009",
+                    "허용되지 않는 파일 확장자입니다: " + extension +
+                    ". 허용 확장자: pdf, doc, docx, xls, xlsx, ppt, pptx, jpg, png, gif, hwp 등",
+                    HttpStatus.BAD_REQUEST);
+            }
+        }
+    }
+
+    private String getFileExtension(String filename) {
+        if (filename == null || !filename.contains(".")) return null;
+        return filename.substring(filename.lastIndexOf("."));
     }
 
     private String generateStoredName(String originalName) {

@@ -28,4 +28,6 @@ public interface FileService {
     String getPresignedUrl(UUID id, int expirationMinutes);
 
     void delete(UUID id, UUID requesterId);
+
+    void delete(UUID id, UUID requesterId, boolean isAdmin);
 }

@@ -119,4 +119,13 @@ public class FileController {
         UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
         fileService.delete(id, userId);
     }
+
+    @DeleteMapping("/admin/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "파일 삭제 (관리자)")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
+    public void adminDelete(@PathVariable UUID id) {
+        UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
+        fileService.delete(id, userId, true);
+    }
 }
