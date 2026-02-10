@@ -1,6 +1,7 @@
 package com.hrsaas.notification.repository;
 
 import com.hrsaas.notification.domain.entity.NotificationPreference;
+import com.hrsaas.notification.domain.entity.NotificationType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,6 +21,6 @@ public interface NotificationPreferenceRepository extends JpaRepository<Notifica
     Optional<NotificationPreference> findByTenantIdAndUserIdAndType(
         @Param("tenantId") UUID tenantId,
         @Param("userId") UUID userId,
-        @Param("type") String type
+        @Param("type") NotificationType type
     );
 }

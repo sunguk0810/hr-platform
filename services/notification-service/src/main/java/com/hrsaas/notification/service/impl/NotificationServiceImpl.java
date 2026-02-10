@@ -6,6 +6,9 @@ import com.hrsaas.notification.domain.dto.response.NotificationResponse;
 import com.hrsaas.notification.domain.dto.response.NotificationSettingsResponse;
 import com.hrsaas.notification.domain.entity.Notification;
 import com.hrsaas.notification.domain.entity.NotificationChannel;
+import com.hrsaas.notification.domain.entity.NotificationPreference;
+import com.hrsaas.notification.domain.entity.NotificationType;
+import com.hrsaas.notification.repository.NotificationPreferenceRepository;
 import com.hrsaas.notification.repository.NotificationRepository;
 import com.hrsaas.notification.sender.NotificationDispatcher;
 import com.hrsaas.notification.service.NotificationService;
@@ -22,7 +25,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -31,6 +36,7 @@ import java.util.UUID;
 public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepository;
+    private final NotificationPreferenceRepository preferenceRepository;
     private final NotificationDispatcher notificationDispatcher;
 
     @Override
@@ -166,18 +172,27 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public NotificationSettingsResponse getSettings(UUID userId) {
-        // TODO: Implement settings retrieval from database
-        // For now, return default settings
+        UUID tenantId = TenantContext.getCurrentTenant();
+        List<NotificationPreference> prefs = preferenceRepository.findByTenantIdAndUserId(tenantId, userId);
+
+        // Build a map of (type+channel) -> enabled for quick lookup
+        Map<String, Boolean> prefMap = prefs.stream()
+            .collect(Collectors.toMap(
+                p -> p.getNotificationType().name() + "_" + p.getChannel().name(),
+                NotificationPreference::getEnabled,
+                (a, b) -> b
+            ));
+
         return NotificationSettingsResponse.builder()
-            .emailEnabled(true)
-            .pushEnabled(true)
+            .emailEnabled(prefMap.getOrDefault("SYSTEM_EMAIL", true))
+            .pushEnabled(prefMap.getOrDefault("SYSTEM_WEB_PUSH", true))
             .browserEnabled(true)
-            .smsEnabled(false)
-            .approvalNotifications(true)
-            .leaveNotifications(true)
-            .announcementNotifications(true)
+            .smsEnabled(prefMap.getOrDefault("SYSTEM_SMS", false))
+            .approvalNotifications(prefMap.getOrDefault("APPROVAL_REQUESTED_WEB_PUSH", true))
+            .leaveNotifications(prefMap.getOrDefault("LEAVE_REQUESTED_WEB_PUSH", true))
+            .announcementNotifications(prefMap.getOrDefault("ANNOUNCEMENT_WEB_PUSH", true))
             .reminderNotifications(true)
-            .systemNotifications(true)
+            .systemNotifications(prefMap.getOrDefault("SYSTEM_WEB_PUSH", true))
             .digestEnabled(false)
             .quietHoursEnabled(false)
             .build();
@@ -186,22 +201,49 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional
     public NotificationSettingsResponse updateSettings(UUID userId, UpdateNotificationSettingsRequest request) {
-        // TODO: Implement settings persistence to database
-        // For now, return the updated settings
-        log.info("Notification settings updated: userId={}", userId);
+        UUID tenantId = TenantContext.getCurrentTenant();
 
-        return NotificationSettingsResponse.builder()
-            .emailEnabled(request.getEmailEnabled() != null ? request.getEmailEnabled() : true)
-            .pushEnabled(request.getPushEnabled() != null ? request.getPushEnabled() : true)
-            .browserEnabled(request.getBrowserEnabled() != null ? request.getBrowserEnabled() : true)
-            .smsEnabled(request.getSmsEnabled() != null ? request.getSmsEnabled() : false)
-            .approvalNotifications(request.getApprovalNotifications() != null ? request.getApprovalNotifications() : true)
-            .leaveNotifications(request.getLeaveNotifications() != null ? request.getLeaveNotifications() : true)
-            .announcementNotifications(request.getAnnouncementNotifications() != null ? request.getAnnouncementNotifications() : true)
-            .reminderNotifications(request.getReminderNotifications() != null ? request.getReminderNotifications() : true)
-            .systemNotifications(request.getSystemNotifications() != null ? request.getSystemNotifications() : true)
-            .digestEnabled(request.getDigestEnabled() != null ? request.getDigestEnabled() : false)
-            .quietHoursEnabled(request.getQuietHoursEnabled() != null ? request.getQuietHoursEnabled() : false)
-            .build();
+        // Update channel preferences
+        if (request.getApprovalNotifications() != null) {
+            upsertPreference(tenantId, userId, NotificationType.APPROVAL_REQUESTED, NotificationChannel.WEB_PUSH, request.getApprovalNotifications());
+            upsertPreference(tenantId, userId, NotificationType.APPROVAL_APPROVED, NotificationChannel.WEB_PUSH, request.getApprovalNotifications());
+            upsertPreference(tenantId, userId, NotificationType.APPROVAL_REJECTED, NotificationChannel.WEB_PUSH, request.getApprovalNotifications());
+        }
+        if (request.getLeaveNotifications() != null) {
+            upsertPreference(tenantId, userId, NotificationType.LEAVE_REQUESTED, NotificationChannel.WEB_PUSH, request.getLeaveNotifications());
+        }
+        if (request.getAnnouncementNotifications() != null) {
+            upsertPreference(tenantId, userId, NotificationType.ANNOUNCEMENT, NotificationChannel.WEB_PUSH, request.getAnnouncementNotifications());
+        }
+        if (request.getEmailEnabled() != null) {
+            upsertPreference(tenantId, userId, NotificationType.SYSTEM, NotificationChannel.EMAIL, request.getEmailEnabled());
+        }
+        if (request.getSmsEnabled() != null) {
+            upsertPreference(tenantId, userId, NotificationType.SYSTEM, NotificationChannel.SMS, request.getSmsEnabled());
+        }
+
+        log.info("Notification settings updated: userId={}", userId);
+        return getSettings(userId);
+    }
+
+    private void upsertPreference(UUID tenantId, UUID userId, NotificationType type, NotificationChannel channel, boolean enabled) {
+        List<NotificationPreference> prefs = preferenceRepository.findByTenantIdAndUserId(tenantId, userId);
+        NotificationPreference existing = prefs.stream()
+            .filter(p -> p.getNotificationType() == type && p.getChannel() == channel)
+            .findFirst()
+            .orElse(null);
+
+        if (existing != null) {
+            existing.setEnabled(enabled);
+            preferenceRepository.save(existing);
+        } else {
+            NotificationPreference pref = NotificationPreference.builder()
+                .userId(userId)
+                .notificationType(type)
+                .channel(channel)
+                .enabled(enabled)
+                .build();
+            preferenceRepository.save(pref);
+        }
     }
 }
