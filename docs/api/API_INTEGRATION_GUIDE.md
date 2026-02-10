@@ -79,14 +79,28 @@ sequenceDiagram
 ```typescript
 // POST /api/v1/auth/login
 const response = await axios.post('/api/v1/auth/login', {
-  username: 'admin',
-  password: 'admin1234'
+  username: 'hr.admin.elec',
+  password: 'HrAdmin@2025!'
 });
 
 const { accessToken, refreshToken } = response.data.data;
 // accessToken: 30분 유효
 // refreshToken: 7일 유효
 ```
+
+### 테스트 계정
+
+| 역할 | Username | Password | 설명 |
+|------|----------|----------|------|
+| 시스템관리자 | `superadmin` | `Admin@2025!` | 전체 시스템 관리 |
+| CEO | `ceo.elec` | `Ceo@2025!` | 한성전자 대표이사 |
+| HR 관리자 | `hr.admin.elec` | `HrAdmin@2025!` | 인사팀장 |
+| HR 담당자 | `hr.manager.elec` | `HrMgr@2025!` | 인사팀 과장 |
+| 부서장 | `dev.manager.elec` | `DevMgr@2025!` | DRAM개발팀장 |
+| 선임 | `dev.senior.elec` | `DevSr@2025!` | 개발팀 대리 |
+| 사원 | `dev.staff.elec` | `DevStaff@2025!` | 개발팀 사원 |
+
+> 전체 테스트 계정 목록은 `scripts/sample-data/README.md` 참조
 
 ### 토큰 갱신
 
@@ -133,6 +147,21 @@ const tenants = await axios.get('/api/v1/tenants');
 setCurrentTenant(selectedTenantId);
 axios.defaults.headers.common['X-Tenant-Id'] = selectedTenantId;
 ```
+
+### 테스트용 테넌트 ID
+
+| 계열사 | 테넌트 ID | 코드 |
+|--------|-----------|------|
+| 한성홀딩스 | `tenant-hansung-hd` | HANSUNG_HD |
+| 한성전자 | `tenant-hansung-elec` | HANSUNG_ELEC |
+| 한성SDI | `tenant-hansung-sdi` | HANSUNG_SDI |
+| 한성엔지니어링 | `tenant-hansung-eng` | HANSUNG_ENG |
+| 한성바이오 | `tenant-hansung-bio` | HANSUNG_BIO |
+| 한성화학 | `tenant-hansung-chem` | HANSUNG_CHEM |
+| 한성IT서비스 | `tenant-hansung-it` | HANSUNG_IT |
+| 한성생명 | `tenant-hansung-life` | HANSUNG_LIFE |
+
+> 주력 테스트 계열사: 한성전자 (`tenant-hansung-elec`)
 
 ---
 

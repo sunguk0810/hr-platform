@@ -122,9 +122,9 @@ psql -h localhost -p 5433 -U hr_saas -d hr_saas -f 21_auth_login_history_generat
 | ID | 비밀번호 | 역할 | 직급/직책 | 부서 |
 |----|----------|------|-----------|------|
 | `ceo.elec` | `Ceo@2025!` | TENANT_ADMIN | 사장/대표이사 | 경영진 |
-| `hr.admin.elec` | `HrAdmin@2025!` | HR_ADMIN | 부장/팀장 | 인사팀 |
+| `hr.admin.elec` | `HrAdmin@2025!` | HR_MANAGER | 부장/팀장 | 인사팀 |
 | `hr.manager.elec` | `HrMgr@2025!` | HR_MANAGER | 과장/책임 | 인사팀 |
-| `dev.manager.elec` | `DevMgr@2025!` | MANAGER | 차장/팀장 | DRAM개발팀 |
+| `dev.manager.elec` | `DevMgr@2025!` | DEPT_MANAGER | 차장/팀장 | DRAM개발팀 |
 | `dev.senior.elec` | `DevSr@2025!` | EMPLOYEE | 대리/선임 | DRAM개발팀 |
 | `dev.staff.elec` | `DevStaff@2025!` | EMPLOYEE | 사원/팀원 | DRAM개발팀 |
 

@@ -189,7 +189,23 @@ cd docker && docker-compose up -d
 
 # Generate test coverage report
 ./gradlew jacocoTestReport
+
+# Load sample data (after Flyway migrations)
+cd scripts/sample-data
+psql -h localhost -p 5433 -U hr_saas -d hr_saas -f 99_run_all.sql
 ```
+
+### Test Accounts
+
+> 전체 테스트 계정 목록: `scripts/sample-data/README.md`
+
+| 역할 | Username | Password |
+|------|----------|----------|
+| 시스템관리자 | `superadmin` | `Admin@2025!` |
+| CEO (한성전자) | `ceo.elec` | `Ceo@2025!` |
+| HR 관리자 | `hr.admin.elec` | `HrAdmin@2025!` |
+| 부서장 | `dev.manager.elec` | `DevMgr@2025!` |
+| 일반 사원 | `dev.staff.elec` | `DevStaff@2025!` |
 
 ## Frontend Development
 
