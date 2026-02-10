@@ -177,12 +177,10 @@ DECLARE
     v_session_count INT;
     v_token_count INT;
     v_history_count INT;
-    v_lock_count INT;
 BEGIN
     SELECT COUNT(*) INTO v_session_count FROM tenant_common.user_sessions;
     SELECT COUNT(*) INTO v_token_count FROM tenant_common.password_reset_tokens;
     SELECT COUNT(*) INTO v_history_count FROM tenant_common.login_history;
-    SELECT COUNT(*) INTO v_lock_count FROM tenant_common.account_locks;
 
     RAISE NOTICE '';
     RAISE NOTICE '========================================';
@@ -191,6 +189,5 @@ BEGIN
     RAISE NOTICE '사용자 세션: % 건 (런타임 생성)', v_session_count;
     RAISE NOTICE '비밀번호 재설정 토큰: % 건 (런타임 생성)', v_token_count;
     RAISE NOTICE '로그인 이력: % 건', v_history_count;
-    RAISE NOTICE '계정 잠금: % 건', v_lock_count;
     RAISE NOTICE '========================================';
 END $$;

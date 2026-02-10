@@ -1,12 +1,19 @@
 -- ============================================================================
--- HR SaaS Platform - Combined Sample Data Script for DataGrip
--- Expected time: 40-60 minutes for full dataset (~75,000 employees)
+-- HR SaaS Platform - 통합 샘플 데이터 (한방 SQL)
+-- ============================================================================
+-- 사용법: Flyway 마이그레이션 완료 후 실행
+--
+--   psql -h localhost -p 5433 -U hr_saas -d hr_saas -f 99_combined_all.sql
+--   또는 DataGrip/DBeaver에서 직접 실행
+--
+-- 예상 실행 시간: 약 40-60분 (75,000명 규모)
+-- 생성일: 2026-02-10
 -- ============================================================================
 
 
--- ============================================================================
--- FILE: 00_reset_sample_data.sql
--- ============================================================================
+-- ======================================================================
+-- [0/21] 기존 샘플 데이터 초기화
+-- ======================================================================
 
 -- ============================================================================
 -- 00_reset_sample_data.sql
@@ -19,104 +26,43 @@
 -- RLS 비활성화 (데이터 삭제를 위해)
 SET app.current_tenant = '00000000-0000-0000-0000-000000000000';
 
--- 트랜잭션 시작
-BEGIN;
-
--- ============================================================================
--- 역순으로 데이터 삭제 (외래키 의존성 순서)
--- ============================================================================
-
--- 0-0. Auth 서비스 관련
-TRUNCATE TABLE tenant_common.login_history CASCADE;
-TRUNCATE TABLE tenant_common.account_locks CASCADE;
-TRUNCATE TABLE tenant_common.password_reset_tokens CASCADE;
-TRUNCATE TABLE tenant_common.user_sessions CASCADE;
-
--- 0-1. 증명서 관련
-TRUNCATE TABLE hr_certificate.verification_log CASCADE;
-TRUNCATE TABLE hr_certificate.certificate_issue CASCADE;
-TRUNCATE TABLE hr_certificate.certificate_request CASCADE;
-TRUNCATE TABLE hr_certificate.certificate_type CASCADE;
-TRUNCATE TABLE hr_certificate.certificate_template CASCADE;
-
--- 0-2. 발령 관련
-TRUNCATE TABLE hr_appointment.appointment_history CASCADE;
-TRUNCATE TABLE hr_appointment.appointment_schedule CASCADE;
-TRUNCATE TABLE hr_appointment.appointment_detail CASCADE;
-TRUNCATE TABLE hr_appointment.appointment_draft CASCADE;
-
--- 1. 채용 관련
-TRUNCATE TABLE hr_recruitment.offer CASCADE;
-TRUNCATE TABLE hr_recruitment.interview_score CASCADE;
-TRUNCATE TABLE hr_recruitment.interview CASCADE;
-TRUNCATE TABLE hr_recruitment.application CASCADE;
-TRUNCATE TABLE hr_recruitment.applicant CASCADE;
-TRUNCATE TABLE hr_recruitment.job_posting CASCADE;
-
--- 2. 결재 관련
-TRUNCATE TABLE hr_approval.approval_history CASCADE;
-TRUNCATE TABLE hr_approval.approval_line CASCADE;
-TRUNCATE TABLE hr_approval.approval_document CASCADE;
-TRUNCATE TABLE hr_approval.delegation_rule CASCADE;
-TRUNCATE TABLE hr_approval.approval_template_line CASCADE;
-TRUNCATE TABLE hr_approval.approval_template CASCADE;
-
--- 2. 근태 관련
-TRUNCATE TABLE hr_attendance.overtime_request CASCADE;
-TRUNCATE TABLE hr_attendance.leave_request CASCADE;
-TRUNCATE TABLE hr_attendance.attendance_record CASCADE;
-TRUNCATE TABLE hr_attendance.leave_balance CASCADE;
-TRUNCATE TABLE hr_attendance.holiday CASCADE;
-
--- 3. 알림 관련
-TRUNCATE TABLE hr_notification.notification CASCADE;
-TRUNCATE TABLE hr_notification.notification_preference CASCADE;
-TRUNCATE TABLE hr_notification.notification_template CASCADE;
-
--- 4. 파일 관련
-TRUNCATE TABLE hr_file.file_metadata CASCADE;
-
--- 5. 직원 관련
-TRUNCATE TABLE hr_core.employee_certificate CASCADE;
-TRUNCATE TABLE hr_core.employee_career CASCADE;
-TRUNCATE TABLE hr_core.employee_education CASCADE;
-TRUNCATE TABLE hr_core.employee_family CASCADE;
-TRUNCATE TABLE hr_core.employee_history CASCADE;
-TRUNCATE TABLE hr_core.employee CASCADE;
-
--- 6. 조직 관련
-TRUNCATE TABLE hr_core.department CASCADE;
-TRUNCATE TABLE hr_core.grade CASCADE;
-TRUNCATE TABLE hr_core.position CASCADE;
-
--- 7. MDM 관련
-TRUNCATE TABLE tenant_common.code_history CASCADE;
-TRUNCATE TABLE tenant_common.code_tenant_mapping CASCADE;
-TRUNCATE TABLE tenant_common.common_code CASCADE;
-TRUNCATE TABLE tenant_common.code_group CASCADE;
-TRUNCATE TABLE tenant_common.tenant_menu_config CASCADE;
-TRUNCATE TABLE tenant_common.menu_permission CASCADE;
-TRUNCATE TABLE tenant_common.menu_item CASCADE;
-
--- 8. 테넌트 관련
-TRUNCATE TABLE tenant_common.tenant_feature CASCADE;
-TRUNCATE TABLE tenant_common.tenant_policy CASCADE;
-TRUNCATE TABLE tenant_common.tenant CASCADE;
-
-COMMIT;
-
--- 시퀀스 리셋 (필요시)
--- SELECT setval('some_sequence', 1, false);
-
--- 완료 메시지
+-- 모든 관련 스키마의 테이블을 동적으로 TRUNCATE (flyway 제외)
 DO $$
+DECLARE
+    r RECORD;
+    v_schemas TEXT[] := ARRAY[
+        'hr_certificate', 'hr_appointment', 'hr_recruitment',
+        'hr_approval', 'hr_attendance', 'hr_notification', 'hr_file',
+        'hr_core', 'tenant_common'
+    ];
+    v_schema TEXT;
 BEGIN
+    -- 스키마별 역순으로 TRUNCATE (의존성 순서)
+    FOREACH v_schema IN ARRAY v_schemas LOOP
+        FOR r IN
+            SELECT tablename
+            FROM pg_tables
+            WHERE schemaname = v_schema
+            AND tablename NOT LIKE 'flyway%'
+            ORDER BY tablename
+        LOOP
+            BEGIN
+                EXECUTE format('TRUNCATE TABLE %I.%I CASCADE', v_schema, r.tablename);
+                RAISE NOTICE '  TRUNCATED: %.%', v_schema, r.tablename;
+            EXCEPTION WHEN OTHERS THEN
+                RAISE NOTICE '  SKIP (error): %.% - %', v_schema, r.tablename, SQLERRM;
+            END;
+        END LOOP;
+    END LOOP;
+
+    RAISE NOTICE '';
     RAISE NOTICE '샘플 데이터 초기화 완료!';
 END $$;
 
--- ============================================================================
--- FILE: 01_tenant_seed.sql
--- ============================================================================
+
+-- ======================================================================
+-- [01/21] 테넌트 생성 (8개 계열사)
+-- ======================================================================
 
 -- ============================================================================
 -- 01_tenant_seed.sql
@@ -324,9 +270,10 @@ BEGIN
     RAISE NOTICE '테넌트 생성 완료: % 개', tenant_count;
 END $$;
 
--- ============================================================================
--- FILE: 02_tenant_policy_feature.sql
--- ============================================================================
+
+-- ======================================================================
+-- [02/21] 테넌트 정책/기능 설정
+-- ======================================================================
 
 -- ============================================================================
 -- 02_tenant_policy_feature.sql
@@ -510,9 +457,10 @@ BEGIN
     RAISE NOTICE '테넌트 기능 설정: % 개', feature_count;
 END $$;
 
--- ============================================================================
--- FILE: 03_mdm_code_groups.sql
--- ============================================================================
+
+-- ======================================================================
+-- [03/21] 공통코드 그룹 생성
+-- ======================================================================
 
 -- ============================================================================
 -- 03_mdm_code_groups.sql
@@ -856,9 +804,10 @@ BEGIN
     RAISE NOTICE '코드그룹 생성 완료: % 개', group_count;
 END $$;
 
--- ============================================================================
--- FILE: 04_mdm_common_codes.sql
--- ============================================================================
+
+-- ======================================================================
+-- [04/21] 공통코드 상세 생성
+-- ======================================================================
 
 -- ============================================================================
 -- 04_mdm_common_codes.sql
@@ -1110,9 +1059,10 @@ BEGIN
     RAISE NOTICE '공통코드 생성 완료: % 개', code_count;
 END $$;
 
--- ============================================================================
--- FILE: 05_organization_grades_positions.sql
--- ============================================================================
+
+-- ======================================================================
+-- [05/21] 직급/직책 마스터 생성
+-- ======================================================================
 
 -- ============================================================================
 -- 05_organization_grades_positions.sql
@@ -1240,9 +1190,10 @@ BEGIN
     RAISE NOTICE '직책 생성 완료: % 개 (8개 테넌트 x 9개 직책)', position_count;
 END $$;
 
--- ============================================================================
--- FILE: 06_organization_departments.sql
--- ============================================================================
+
+-- ======================================================================
+-- [06/21] 부서 구조 생성 (~500개)
+-- ======================================================================
 
 -- ============================================================================
 -- 06_organization_departments.sql
@@ -1767,9 +1718,10 @@ BEGIN
     END LOOP;
 END $$;
 
--- ============================================================================
--- FILE: 07_employee_generator.sql
--- ============================================================================
+
+-- ======================================================================
+-- [07/21] 직원 생성 함수 준비
+-- ======================================================================
 
 -- ============================================================================
 -- 07_employee_generator.sql
@@ -2107,9 +2059,10 @@ BEGIN
     RAISE NOTICE '  - create_test_account(): 테스트 계정 생성';
 END $$;
 
--- ============================================================================
--- FILE: 08_employee_execute.sql
--- ============================================================================
+
+-- ======================================================================
+-- [08/21] 직원 대량 생성 (~75,000명)
+-- ======================================================================
 
 -- ============================================================================
 -- 08_employee_execute.sql
@@ -2423,9 +2376,10 @@ BEGIN
     RAISE NOTICE '========================================';
 END $$;
 
--- ============================================================================
--- FILE: 09_employee_details_generator.sql
--- ============================================================================
+
+-- ======================================================================
+-- [09/21] 직원 상세 정보 (가족/학력/경력/자격증)
+-- ======================================================================
 
 -- ============================================================================
 -- 09_employee_details_generator.sql
@@ -2465,7 +2419,7 @@ BEGIN
             END;
 
             INSERT INTO hr_core.employee_family (
-                tenant_id, employee_id, relation_type, name, birth_date, phone, is_dependent
+                tenant_id, employee_id, relation, name, birth_date, phone, is_dependent
             ) VALUES (
                 v_emp.tenant_id,
                 v_emp.id,
@@ -2739,9 +2693,10 @@ BEGIN
     RAISE NOTICE '========================================';
 END $$;
 
--- ============================================================================
--- FILE: 10_attendance_holidays.sql
--- ============================================================================
+
+-- ======================================================================
+-- [10/21] 공휴일 데이터 생성
+-- ======================================================================
 
 -- ============================================================================
 -- 10_attendance_holidays.sql
@@ -2821,9 +2776,10 @@ BEGIN
     RAISE NOTICE '공휴일 데이터 생성 완료: %개 (8개 테넌트 x 약 37개 휴일)', v_count;
 END $$;
 
--- ============================================================================
--- FILE: 11_leave_balance_generator.sql
--- ============================================================================
+
+-- ======================================================================
+-- [11/21] 휴가 잔액 생성
+-- ======================================================================
 
 -- ============================================================================
 -- 11_leave_balance_generator.sql
@@ -2960,9 +2916,10 @@ BEGIN
     RAISE NOTICE '휴가 잔액 데이터 생성 완료: %개 (직원당 4개: 2025/2026 x 연차/병가)', v_count;
 END $$;
 
--- ============================================================================
--- FILE: 12_attendance_generator.sql
--- ============================================================================
+
+-- ======================================================================
+-- [12/21] 근태 기록 대량 생성 (~4,500,000건)
+-- ======================================================================
 
 -- ============================================================================
 -- 12_attendance_generator.sql
@@ -3200,9 +3157,10 @@ BEGIN
     END LOOP;
 END $$;
 
--- ============================================================================
--- FILE: 13_leave_overtime_generator.sql
--- ============================================================================
+
+-- ======================================================================
+-- [13/21] 휴가/초과근무 신청 생성
+-- ======================================================================
 
 -- ============================================================================
 -- 13_leave_overtime_generator.sql
@@ -3360,8 +3318,9 @@ BEGIN
             INSERT INTO hr_attendance.overtime_request (
                 tenant_id, employee_id, employee_name,
                 department_id, department_name,
-                overtime_date, planned_start_time, planned_end_time,
+                overtime_date, start_time, end_time,
                 actual_start_time, actual_end_time,
+                planned_hours, actual_hours,
                 reason, status,
                 created_at, updated_at, created_by, updated_by
             ) VALUES (
@@ -3371,10 +3330,12 @@ BEGIN
                 v_emp.department_id,
                 v_dept.name,
                 v_overtime_date,
-                v_overtime_date + v_start_time,
-                v_overtime_date + v_end_time,
-                CASE WHEN v_status = 'APPROVED' AND v_overtime_date < CURRENT_DATE THEN v_overtime_date + v_start_time ELSE NULL END,
-                CASE WHEN v_status = 'APPROVED' AND v_overtime_date < CURRENT_DATE THEN v_overtime_date + v_end_time ELSE NULL END,
+                v_start_time,
+                v_end_time,
+                CASE WHEN v_status = 'APPROVED' AND v_overtime_date < CURRENT_DATE THEN v_start_time ELSE NULL END,
+                CASE WHEN v_status = 'APPROVED' AND v_overtime_date < CURRENT_DATE THEN v_end_time ELSE NULL END,
+                EXTRACT(EPOCH FROM (v_end_time - v_start_time)) / 3600,
+                CASE WHEN v_status = 'APPROVED' AND v_overtime_date < CURRENT_DATE THEN EXTRACT(EPOCH FROM (v_end_time - v_start_time)) / 3600 ELSE NULL END,
                 CASE
                     WHEN RANDOM() < 0.3 THEN '프로젝트 마감'
                     WHEN RANDOM() < 0.5 THEN '긴급 업무'
@@ -3416,9 +3377,10 @@ BEGIN
     RAISE NOTICE '========================================';
 END $$;
 
--- ============================================================================
--- FILE: 14_approval_templates.sql
--- ============================================================================
+
+-- ======================================================================
+-- [14/21] 결재 양식 생성
+-- ======================================================================
 
 -- ============================================================================
 -- 14_approval_templates.sql
@@ -3623,9 +3585,10 @@ BEGIN
     RAISE NOTICE '결재선 생성 완료: %개', v_line_count;
 END $$;
 
--- ============================================================================
--- FILE: 15_approval_generator.sql
--- ============================================================================
+
+-- ======================================================================
+-- [15/21] 결재 문서 대량 생성 (~30,000건)
+-- ======================================================================
 
 -- ============================================================================
 -- 15_approval_generator.sql
@@ -3929,9 +3892,10 @@ BEGIN
     END LOOP;
 END $$;
 
--- ============================================================================
--- FILE: 16_notification_generator.sql
--- ============================================================================
+
+-- ======================================================================
+-- [16/21] 알림 데이터 생성
+-- ======================================================================
 
 -- ============================================================================
 -- 16_notification_generator.sql
@@ -4226,9 +4190,10 @@ BEGIN
     RAISE NOTICE '========================================';
 END $$;
 
--- ============================================================================
--- FILE: 17_file_generator.sql
--- ============================================================================
+
+-- ======================================================================
+-- [17/21] 파일 메타데이터 생성
+-- ======================================================================
 
 -- ============================================================================
 -- 17_file_generator.sql
@@ -4367,6 +4332,7 @@ BEGIN
                (SELECT id FROM hr_core.employee WHERE tenant_id = t.id ORDER BY RANDOM() LIMIT 1) as uploader_id,
                (SELECT name FROM hr_core.employee WHERE tenant_id = t.id ORDER BY RANDOM() LIMIT 1) as uploader_name
         FROM tenant_common.tenant t
+        WHERE EXISTS (SELECT 1 FROM hr_core.employee WHERE tenant_id = t.id)
     LOOP
         FOR i IN 1..10 LOOP  -- 테넌트당 10개의 공지사항 첨부파일
             v_stored_name := 'announcement/' || v_emp.tenant_id || '/notice_' || i || '.pdf';
@@ -4435,9 +4401,10 @@ BEGIN
     RAISE NOTICE '========================================';
 END $$;
 
--- ============================================================================
--- FILE: 18_recruitment_generator.sql
--- ============================================================================
+
+-- ======================================================================
+-- [18/21] 채용 데이터 생성
+-- ======================================================================
 
 -- ============================================================================
 -- 18_recruitment_generator.sql
@@ -4955,9 +4922,10 @@ BEGIN
     RAISE NOTICE '========================================';
 END $$;
 
--- ============================================================================
--- FILE: 19_appointment_generator.sql
--- ============================================================================
+
+-- ======================================================================
+-- [19/21] 발령 데이터 생성
+-- ======================================================================
 
 -- ============================================================================
 -- 19_appointment_generator.sql
@@ -5272,9 +5240,10 @@ BEGIN
     RAISE NOTICE '========================================';
 END $$;
 
--- ============================================================================
--- FILE: 20_certificate_generator.sql
--- ============================================================================
+
+-- ======================================================================
+-- [20/21] 증명서 데이터 생성
+-- ======================================================================
 
 -- ============================================================================
 -- 20_certificate_generator.sql
@@ -5680,9 +5649,10 @@ BEGIN
     RAISE NOTICE '========================================';
 END $$;
 
--- ============================================================================
--- FILE: 21_auth_login_history_generator.sql
--- ============================================================================
+
+-- ======================================================================
+-- [21/21] Auth 로그인 이력 생성
+-- ======================================================================
 
 -- ============================================================================
 -- 21_auth_login_history_generator.sql
@@ -5881,4 +5851,70 @@ BEGIN
     RAISE NOTICE '========================================';
 END $$;
 
-ROLLBACK;
+
+-- ======================================================================
+-- 최종 데이터 검증
+-- ======================================================================
+
+SELECT '테넌트' as "테이블", COUNT(*)::TEXT as "건수" FROM tenant_common.tenant
+UNION ALL SELECT '테넌트정책', COUNT(*)::TEXT FROM tenant_common.tenant_policy
+UNION ALL SELECT '테넌트기능', COUNT(*)::TEXT FROM tenant_common.tenant_feature
+UNION ALL SELECT '코드그룹', COUNT(*)::TEXT FROM tenant_common.code_group
+UNION ALL SELECT '공통코드', COUNT(*)::TEXT FROM tenant_common.common_code
+UNION ALL SELECT '직급', COUNT(*)::TEXT FROM hr_core.grade
+UNION ALL SELECT '직책', COUNT(*)::TEXT FROM hr_core.position
+UNION ALL SELECT '부서', COUNT(*)::TEXT FROM hr_core.department
+UNION ALL SELECT '직원', COUNT(*)::TEXT FROM hr_core.employee
+UNION ALL SELECT '직원가족', COUNT(*)::TEXT FROM hr_core.employee_family
+UNION ALL SELECT '직원학력', COUNT(*)::TEXT FROM hr_core.employee_education
+UNION ALL SELECT '직원경력', COUNT(*)::TEXT FROM hr_core.employee_career
+UNION ALL SELECT '직원자격증', COUNT(*)::TEXT FROM hr_core.employee_certificate
+UNION ALL SELECT '공휴일', COUNT(*)::TEXT FROM hr_attendance.holiday
+UNION ALL SELECT '휴가잔액', COUNT(*)::TEXT FROM hr_attendance.leave_balance
+UNION ALL SELECT '근태기록', COUNT(*)::TEXT FROM hr_attendance.attendance_record
+UNION ALL SELECT '휴가신청', COUNT(*)::TEXT FROM hr_attendance.leave_request
+UNION ALL SELECT '초과근무신청', COUNT(*)::TEXT FROM hr_attendance.overtime_request
+UNION ALL SELECT '결재양식', COUNT(*)::TEXT FROM hr_approval.approval_template
+UNION ALL SELECT '결재문서', COUNT(*)::TEXT FROM hr_approval.approval_document
+UNION ALL SELECT '결재선', COUNT(*)::TEXT FROM hr_approval.approval_line
+UNION ALL SELECT '결재이력', COUNT(*)::TEXT FROM hr_approval.approval_history
+UNION ALL SELECT '알림템플릿', COUNT(*)::TEXT FROM hr_notification.notification_template
+UNION ALL SELECT '알림설정', COUNT(*)::TEXT FROM hr_notification.notification_preference
+UNION ALL SELECT '알림', COUNT(*)::TEXT FROM hr_notification.notification
+UNION ALL SELECT '파일', COUNT(*)::TEXT FROM hr_file.file_metadata
+UNION ALL SELECT '채용공고', COUNT(*)::TEXT FROM hr_recruitment.job_posting
+UNION ALL SELECT '지원자', COUNT(*)::TEXT FROM hr_recruitment.applicant
+UNION ALL SELECT '지원서', COUNT(*)::TEXT FROM hr_recruitment.application
+UNION ALL SELECT '면접', COUNT(*)::TEXT FROM hr_recruitment.interview
+UNION ALL SELECT '면접평가', COUNT(*)::TEXT FROM hr_recruitment.interview_score
+UNION ALL SELECT '채용오퍼', COUNT(*)::TEXT FROM hr_recruitment.offer
+UNION ALL SELECT '발령안', COUNT(*)::TEXT FROM hr_appointment.appointment_draft
+UNION ALL SELECT '발령상세', COUNT(*)::TEXT FROM hr_appointment.appointment_detail
+UNION ALL SELECT '예약발령', COUNT(*)::TEXT FROM hr_appointment.appointment_schedule
+UNION ALL SELECT '발령이력', COUNT(*)::TEXT FROM hr_appointment.appointment_history
+UNION ALL SELECT '증명서템플릿', COUNT(*)::TEXT FROM hr_certificate.certificate_template
+UNION ALL SELECT '증명서유형', COUNT(*)::TEXT FROM hr_certificate.certificate_type
+UNION ALL SELECT '증명서신청', COUNT(*)::TEXT FROM hr_certificate.certificate_request
+UNION ALL SELECT '발급증명서', COUNT(*)::TEXT FROM hr_certificate.certificate_issue
+UNION ALL SELECT '진위확인로그', COUNT(*)::TEXT FROM hr_certificate.verification_log
+UNION ALL SELECT '로그인이력', COUNT(*)::TEXT FROM tenant_common.login_history;
+
+SELECT
+    t.name as "계열사",
+    COUNT(e.id) as "직원수",
+    (SELECT COUNT(*) FROM hr_core.department WHERE tenant_id = t.id) as "부서수"
+FROM tenant_common.tenant t
+LEFT JOIN hr_core.employee e ON t.id = e.tenant_id
+GROUP BY t.id, t.name
+ORDER BY COUNT(e.id) DESC;
+
+-- ============================================================================
+-- 완료! 테스트 계정:
+--   시스템관리자: superadmin / Admin@2025!
+--   CEO(한성전자): ceo.elec / Ceo@2025!
+--   HR관리자: hr.admin.elec / HrAdmin@2025!
+--   HR담당자: hr.manager.elec / HrMgr@2025!
+--   부서장: dev.manager.elec / DevMgr@2025!
+--   선임: dev.senior.elec / DevSr@2025!
+--   일반직원: dev.staff.elec / DevStaff@2025!
+-- ============================================================================

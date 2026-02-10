@@ -141,7 +141,7 @@ DECLARE
     v_position_code VARCHAR(5);
     v_department_id UUID;
     v_dept_record RECORD;
-    v_name_counter INT := 1;
+    v_name_counter INT := 100;  -- 100부터 시작 (테스트 계정 번호 충돌 방지)
     v_employment_type VARCHAR(20);
     v_batch_size INT := 1000;
     v_batch_count INT := 0;

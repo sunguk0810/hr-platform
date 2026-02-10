@@ -154,8 +154,9 @@ BEGIN
             INSERT INTO hr_attendance.overtime_request (
                 tenant_id, employee_id, employee_name,
                 department_id, department_name,
-                overtime_date, planned_start_time, planned_end_time,
+                overtime_date, start_time, end_time,
                 actual_start_time, actual_end_time,
+                planned_hours, actual_hours,
                 reason, status,
                 created_at, updated_at, created_by, updated_by
             ) VALUES (
@@ -165,10 +166,12 @@ BEGIN
                 v_emp.department_id,
                 v_dept.name,
                 v_overtime_date,
-                v_overtime_date + v_start_time,
-                v_overtime_date + v_end_time,
-                CASE WHEN v_status = 'APPROVED' AND v_overtime_date < CURRENT_DATE THEN v_overtime_date + v_start_time ELSE NULL END,
-                CASE WHEN v_status = 'APPROVED' AND v_overtime_date < CURRENT_DATE THEN v_overtime_date + v_end_time ELSE NULL END,
+                v_start_time,
+                v_end_time,
+                CASE WHEN v_status = 'APPROVED' AND v_overtime_date < CURRENT_DATE THEN v_start_time ELSE NULL END,
+                CASE WHEN v_status = 'APPROVED' AND v_overtime_date < CURRENT_DATE THEN v_end_time ELSE NULL END,
+                EXTRACT(EPOCH FROM (v_end_time - v_start_time)) / 3600,
+                CASE WHEN v_status = 'APPROVED' AND v_overtime_date < CURRENT_DATE THEN EXTRACT(EPOCH FROM (v_end_time - v_start_time)) / 3600 ELSE NULL END,
                 CASE
                     WHEN RANDOM() < 0.3 THEN '프로젝트 마감'
                     WHEN RANDOM() < 0.5 THEN '긴급 업무'

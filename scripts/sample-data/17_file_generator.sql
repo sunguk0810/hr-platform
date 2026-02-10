@@ -135,6 +135,7 @@ BEGIN
                (SELECT id FROM hr_core.employee WHERE tenant_id = t.id ORDER BY RANDOM() LIMIT 1) as uploader_id,
                (SELECT name FROM hr_core.employee WHERE tenant_id = t.id ORDER BY RANDOM() LIMIT 1) as uploader_name
         FROM tenant_common.tenant t
+        WHERE EXISTS (SELECT 1 FROM hr_core.employee WHERE tenant_id = t.id)
     LOOP
         FOR i IN 1..10 LOOP  -- 테넌트당 10개의 공지사항 첨부파일
             v_stored_name := 'announcement/' || v_emp.tenant_id || '/notice_' || i || '.pdf';

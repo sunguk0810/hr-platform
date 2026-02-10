@@ -36,7 +36,7 @@ BEGIN
             END;
 
             INSERT INTO hr_core.employee_family (
-                tenant_id, employee_id, relation_type, name, birth_date, phone, is_dependent
+                tenant_id, employee_id, relation, name, birth_date, phone, is_dependent
             ) VALUES (
                 v_emp.tenant_id,
                 v_emp.id,
@@ -123,8 +123,8 @@ BEGIN
             END;
 
             INSERT INTO hr_core.employee_education (
-                tenant_id, employee_id, school_name, degree_type, major,
-                admission_date, graduation_date, graduation_status
+                tenant_id, employee_id, school_name, degree, major,
+                start_date, end_date, graduation_status
             ) VALUES (
                 v_emp.tenant_id,
                 v_emp.id,

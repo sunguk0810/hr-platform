@@ -75,7 +75,7 @@ BEGIN
                 END;
             END IF;
 
-            INSERT INTO hr_appointment.appointment_drafts (
+            INSERT INTO hr_appointment.appointment_draft (
                 id, tenant_id, draft_number, title, effective_date, description, status,
                 approved_at, executed_at, created_at, updated_at, created_by, updated_by
             ) VALUES (
@@ -125,7 +125,7 @@ BEGIN
                         v_to_dept := v_from_dept;
                     END IF;
 
-                    INSERT INTO hr_appointment.appointment_details (
+                    INSERT INTO hr_appointment.appointment_detail (
                         tenant_id, draft_id, employee_id, employee_name, employee_number,
                         appointment_type, from_department_id, from_department_name,
                         to_department_id, to_department_name,
@@ -199,13 +199,13 @@ BEGIN
         -- APPROVED 상태의 미래 발령안에 대해 예약 발령 생성
         FOR v_draft IN
             SELECT id, effective_date
-            FROM hr_appointment.appointment_drafts
+            FROM hr_appointment.appointment_draft
             WHERE tenant_id = v_tenant.id
               AND status = 'APPROVED'
               AND effective_date > CURRENT_DATE
             LIMIT 20
         LOOP
-            INSERT INTO hr_appointment.appointment_schedules (
+            INSERT INTO hr_appointment.appointment_schedule (
                 tenant_id, draft_id, scheduled_date, scheduled_time, status,
                 created_at, updated_at, created_by, updated_by
             ) VALUES (
@@ -241,12 +241,12 @@ BEGIN
     -- 실행 완료된 발령 상세를 이력으로 복사
     FOR v_detail IN
         SELECT d.*, dr.effective_date, dr.draft_number
-        FROM hr_appointment.appointment_details d
-        JOIN hr_appointment.appointment_drafts dr ON d.draft_id = dr.id
+        FROM hr_appointment.appointment_detail d
+        JOIN hr_appointment.appointment_draft dr ON d.draft_id = dr.id
         WHERE d.status = 'EXECUTED'
         LIMIT 5000
     LOOP
-        INSERT INTO hr_appointment.appointment_histories (
+        INSERT INTO hr_appointment.appointment_history (
             tenant_id, detail_id, employee_id, employee_name, employee_number,
             appointment_type, effective_date, from_values, to_values, reason, draft_number,
             created_at, updated_at, created_by, updated_by
@@ -295,10 +295,10 @@ DECLARE
     v_schedule_count INT;
     v_history_count INT;
 BEGIN
-    SELECT COUNT(*) INTO v_draft_count FROM hr_appointment.appointment_drafts;
-    SELECT COUNT(*) INTO v_detail_count FROM hr_appointment.appointment_details;
-    SELECT COUNT(*) INTO v_schedule_count FROM hr_appointment.appointment_schedules;
-    SELECT COUNT(*) INTO v_history_count FROM hr_appointment.appointment_histories;
+    SELECT COUNT(*) INTO v_draft_count FROM hr_appointment.appointment_draft;
+    SELECT COUNT(*) INTO v_detail_count FROM hr_appointment.appointment_detail;
+    SELECT COUNT(*) INTO v_schedule_count FROM hr_appointment.appointment_schedule;
+    SELECT COUNT(*) INTO v_history_count FROM hr_appointment.appointment_history;
 
     RAISE NOTICE '';
     RAISE NOTICE '========================================';

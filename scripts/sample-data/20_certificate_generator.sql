@@ -39,7 +39,7 @@ BEGIN
         FOR i IN 1..array_length(v_templates, 1) LOOP
             v_template_id := gen_random_uuid();
 
-            INSERT INTO hr_certificate.certificate_templates (
+            INSERT INTO hr_certificate.certificate_template (
                 id, tenant_id, name, description, content_html, header_html, footer_html,
                 css_styles, page_size, orientation, margin_top, margin_bottom, margin_left, margin_right,
                 variables, include_company_seal, include_signature, is_active,
@@ -122,12 +122,12 @@ BEGIN
         FOR i IN 1..array_length(v_cert_types, 1) LOOP
             -- 매칭되는 템플릿 찾기
             SELECT id INTO v_template
-            FROM hr_certificate.certificate_templates
+            FROM hr_certificate.certificate_template
             WHERE tenant_id = v_tenant.id
             ORDER BY RANDOM()
             LIMIT 1;
 
-            INSERT INTO hr_certificate.certificate_types (
+            INSERT INTO hr_certificate.certificate_type (
                 tenant_id, code, name, name_en, description, template_id,
                 requires_approval, auto_issue, valid_days, fee, max_copies_per_request,
                 sort_order, is_active,
@@ -202,7 +202,7 @@ BEGIN
 
             -- 랜덤 증명서 유형 선택
             SELECT * INTO v_cert_type
-            FROM hr_certificate.certificate_types
+            FROM hr_certificate.certificate_type
             WHERE tenant_id = v_tenant.id
             ORDER BY RANDOM()
             LIMIT 1;
@@ -219,7 +219,7 @@ BEGIN
                     ELSE 'REJECTED'
                 END;
 
-                INSERT INTO hr_certificate.certificate_requests (
+                INSERT INTO hr_certificate.certificate_request (
                     id, tenant_id, certificate_type_id, employee_id, employee_name, employee_number,
                     request_number, purpose, submission_target, copies, language,
                     include_salary, status, issued_at,
@@ -253,7 +253,7 @@ BEGIN
                     v_issue_number := 'ISS-' || v_tenant.code || '-' || TO_CHAR(CURRENT_DATE, 'YYYYMM') || '-' || LPAD(v_total_issues::TEXT, 6, '0');
                     v_verification_code := UPPER(SUBSTRING(MD5(RANDOM()::TEXT) FROM 1 FOR 12));
 
-                    INSERT INTO hr_certificate.certificate_issues (
+                    INSERT INTO hr_certificate.certificate_issue (
                         id, tenant_id, request_id, issue_number, verification_code,
                         content_snapshot, issued_by, issued_at,
                         download_count, verified_count, expires_at, is_revoked,
@@ -309,12 +309,12 @@ BEGIN
     -- 발급된 증명서 중 일부에 대해 진위확인 로그 생성
     FOR v_issue IN
         SELECT id, verification_code, verified_count
-        FROM hr_certificate.certificate_issues
+        FROM hr_certificate.certificate_issue
         WHERE verified_count > 0
         LIMIT 500
     LOOP
         FOR i IN 1..v_issue.verified_count LOOP
-            INSERT INTO hr_certificate.verification_logs (
+            INSERT INTO hr_certificate.verification_log (
                 issue_id, verification_code, verified_at,
                 verifier_ip, verifier_user_agent, verifier_name, verifier_organization,
                 is_valid, failure_reason,
@@ -341,7 +341,7 @@ BEGIN
 
     -- 실패한 진위확인도 일부 생성
     FOR i IN 1..50 LOOP
-        INSERT INTO hr_certificate.verification_logs (
+        INSERT INTO hr_certificate.verification_log (
             issue_id, verification_code, verified_at,
             verifier_ip, verifier_user_agent, verifier_name, verifier_organization,
             is_valid, failure_reason,
@@ -384,11 +384,11 @@ DECLARE
     v_issue_count INT;
     v_log_count INT;
 BEGIN
-    SELECT COUNT(*) INTO v_template_count FROM hr_certificate.certificate_templates;
-    SELECT COUNT(*) INTO v_type_count FROM hr_certificate.certificate_types;
-    SELECT COUNT(*) INTO v_request_count FROM hr_certificate.certificate_requests;
-    SELECT COUNT(*) INTO v_issue_count FROM hr_certificate.certificate_issues;
-    SELECT COUNT(*) INTO v_log_count FROM hr_certificate.verification_logs;
+    SELECT COUNT(*) INTO v_template_count FROM hr_certificate.certificate_template;
+    SELECT COUNT(*) INTO v_type_count FROM hr_certificate.certificate_type;
+    SELECT COUNT(*) INTO v_request_count FROM hr_certificate.certificate_request;
+    SELECT COUNT(*) INTO v_issue_count FROM hr_certificate.certificate_issue;
+    SELECT COUNT(*) INTO v_log_count FROM hr_certificate.verification_log;
 
     RAISE NOTICE '';
     RAISE NOTICE '========================================';
