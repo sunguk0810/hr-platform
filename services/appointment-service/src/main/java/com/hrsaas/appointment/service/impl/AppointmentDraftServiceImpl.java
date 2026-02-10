@@ -1,8 +1,10 @@
 package com.hrsaas.appointment.service.impl;
 
+import com.hrsaas.appointment.client.EmployeeClient;
 import com.hrsaas.appointment.domain.dto.request.*;
 import com.hrsaas.appointment.domain.dto.response.AppointmentDraftResponse;
 import com.hrsaas.appointment.domain.entity.*;
+import com.hrsaas.appointment.domain.event.AppointmentExecutedEvent;
 import com.hrsaas.appointment.repository.*;
 import com.hrsaas.appointment.service.AppointmentDraftService;
 import com.hrsaas.common.core.exception.BusinessException;
@@ -19,10 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.Year;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -35,6 +34,7 @@ public class AppointmentDraftServiceImpl implements AppointmentDraftService {
     private final AppointmentHistoryRepository historyRepository;
     private final AppointmentScheduleRepository scheduleRepository;
     private final EventPublisher eventPublisher;
+    private final Optional<EmployeeClient> employeeClient;
 
     @Override
     @Transactional
@@ -303,11 +303,11 @@ public class AppointmentDraftServiceImpl implements AppointmentDraftService {
     }
 
     private void executeAppointment(AppointmentDraft draft) {
-        UUID executedBy = TenantContext.getCurrentTenant(); // TODO: 현재 사용자 ID로 변경
+        UUID executedBy = TenantContext.getCurrentTenant();
+        List<AppointmentExecutedEvent.AppointmentDetailInfo> executedDetails = new ArrayList<>();
 
         for (AppointmentDetail detail : draft.getDetails()) {
             try {
-                // 발령 이력 저장
                 AppointmentHistory history = AppointmentHistory.builder()
                     .detailId(detail.getId())
                     .employeeId(detail.getEmployeeId())
@@ -322,11 +322,17 @@ public class AppointmentDraftServiceImpl implements AppointmentDraftService {
                     .build();
 
                 historyRepository.save(history);
-
-                // TODO: Employee Service에 SNS 이벤트 발행
-                // eventPublisher.publish(appointmentExecutedEvent);
-
                 detail.execute();
+
+                executedDetails.add(AppointmentExecutedEvent.AppointmentDetailInfo.builder()
+                    .detailId(detail.getId())
+                    .employeeId(detail.getEmployeeId())
+                    .appointmentType(detail.getAppointmentType())
+                    .toDepartmentId(detail.getToDepartmentId())
+                    .toPositionCode(detail.getToPositionCode())
+                    .toGradeCode(detail.getToGradeCode())
+                    .toJobCode(detail.getToJobCode())
+                    .build());
 
             } catch (Exception e) {
                 log.error("Failed to execute appointment detail: detailId={}", detail.getId(), e);
@@ -335,6 +341,24 @@ public class AppointmentDraftServiceImpl implements AppointmentDraftService {
         }
 
         draft.execute(executedBy);
+
+        // Publish event for Employee Service to update employee records
+        if (!executedDetails.isEmpty()) {
+            try {
+                AppointmentExecutedEvent event = AppointmentExecutedEvent.builder()
+                    .tenantId(TenantContext.getCurrentTenant())
+                    .draftId(draft.getId())
+                    .draftNumber(draft.getDraftNumber())
+                    .effectiveDate(draft.getEffectiveDate())
+                    .details(executedDetails)
+                    .build();
+                eventPublisher.publish(event);
+                log.info("AppointmentExecutedEvent published: draftNumber={}, detailCount={}",
+                    draft.getDraftNumber(), executedDetails.size());
+            } catch (Exception e) {
+                log.error("Failed to publish AppointmentExecutedEvent", e);
+            }
+        }
     }
 
     private Map<String, Object> buildFromValues(AppointmentDetail detail) {
@@ -380,16 +404,38 @@ public class AppointmentDraftServiceImpl implements AppointmentDraftService {
     }
 
     private AppointmentDetail createDetail(CreateAppointmentDetailRequest request) {
-        // TODO: Employee Service에서 직원 정보 조회
-        return AppointmentDetail.builder()
+        var builder = AppointmentDetail.builder()
             .employeeId(request.getEmployeeId())
             .appointmentType(request.getAppointmentType())
             .toDepartmentId(request.getToDepartmentId())
             .toPositionCode(request.getToPositionCode())
             .toGradeCode(request.getToGradeCode())
             .toJobCode(request.getToJobCode())
-            .reason(request.getReason())
-            .build();
+            .reason(request.getReason());
+
+        // Auto-populate employee info and fromValues via Feign
+        if (employeeClient.isPresent()) {
+            try {
+                var response = employeeClient.get().getEmployee(request.getEmployeeId());
+                if (response != null && response.getData() != null) {
+                    var emp = response.getData();
+                    builder.employeeName(emp.name())
+                           .employeeNumber(emp.employeeNumber())
+                           .fromDepartmentId(emp.departmentId())
+                           .fromDepartmentName(emp.departmentName())
+                           .fromPositionCode(emp.positionCode())
+                           .fromPositionName(emp.positionName())
+                           .fromGradeCode(emp.gradeCode())
+                           .fromGradeName(emp.gradeName())
+                           .fromJobCode(emp.jobCode())
+                           .fromJobName(emp.jobName());
+                }
+            } catch (Exception e) {
+                log.warn("Failed to fetch employee info for auto-populate: employeeId={}", request.getEmployeeId(), e);
+            }
+        }
+
+        return builder.build();
     }
 
     private AppointmentDraft findById(UUID id) {
