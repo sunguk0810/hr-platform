@@ -925,7 +925,7 @@ erDiagram
 | 설정 경로 | 값 | 비고 |
 |-----------|-----|------|
 | `server.port` | 8092 | |
-| `spring.datasource.url` | `jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/hr_saas` | |
+| `spring.datasource.url` | `jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:15432}/hr_saas` | |
 | `spring.datasource.hikari.maximum-pool-size` | 5 | Low-traffic service |
 | `spring.datasource.hikari.minimum-idle` | 5 | |
 | `spring.datasource.hikari.connection-timeout` | 30000 (30s) | |
@@ -937,9 +937,9 @@ erDiagram
 | `spring.jpa.properties.hibernate.default_schema` | hr_certificate | |
 | `spring.flyway.schemas` | hr_certificate | |
 | `spring.data.redis.host` | `${REDIS_HOST:localhost}` | |
-| `spring.data.redis.port` | `${REDIS_PORT:6381}` | |
-| `spring.cloud.aws.sns.endpoint` | `${AWS_SNS_ENDPOINT:http://localhost:4566}` | LocalStack |
-| `spring.cloud.aws.sqs.endpoint` | `${AWS_SQS_ENDPOINT:http://localhost:4566}` | LocalStack |
+| `spring.data.redis.port` | `${REDIS_PORT:16379}` | |
+| `spring.cloud.aws.sns.endpoint` | `${AWS_SNS_ENDPOINT:http://localhost:14566}` | LocalStack |
+| `spring.cloud.aws.sqs.endpoint` | `${AWS_SQS_ENDPOINT:http://localhost:14566}` | LocalStack |
 | `spring.thymeleaf.cache` | **false** | **프로덕션: true 변경 필요** |
 | `jwt.access-token-expiry` | 1800 (30min) | |
 | `logging.level.com.hrsaas` | DEBUG | **프로덕션: INFO 변경 필요** |

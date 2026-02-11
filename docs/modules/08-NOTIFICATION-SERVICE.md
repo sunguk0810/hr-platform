@@ -931,7 +931,7 @@ spring:
   application:
     name: notification-service
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/hr_saas
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:15432}/hr_saas
     hikari:
       maximum-pool-size: 10
       minimum-idle: 5
@@ -948,7 +948,7 @@ spring:
   data:
     redis:
       host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6381}
+      port: ${REDIS_PORT:16379}
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
@@ -960,9 +960,9 @@ spring:
       region:
         static: ${AWS_REGION:ap-northeast-2}
       sns:
-        endpoint: ${AWS_SNS_ENDPOINT:http://localhost:4566}
+        endpoint: ${AWS_SNS_ENDPOINT:http://localhost:14566}
       sqs:
-        endpoint: ${AWS_SQS_ENDPOINT:http://localhost:4566}
+        endpoint: ${AWS_SQS_ENDPOINT:http://localhost:14566}
 
 notification:
   email:

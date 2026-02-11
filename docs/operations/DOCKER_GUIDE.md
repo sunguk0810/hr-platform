@@ -39,12 +39,12 @@ graph TB
     end
 
     subgraph "인프라 서비스"
-        PG[PostgreSQL 15<br/>:5433]
-        RD[Redis 7<br/>:6381]
-        LS[LocalStack 3.4<br/>:4566]
+        PG[PostgreSQL 15<br/>:15432]
+        RD[Redis 7<br/>:16379]
+        LS[LocalStack 3.4<br/>:14566]
         JA[Jaeger<br/>:16686]
-        PR[Prometheus<br/>:9009]
-        GR[Grafana<br/>:3000]
+        PR[Prometheus<br/>:19090]
+        GR[Grafana<br/>:13000]
     end
 
     subgraph "애플리케이션 서비스"
@@ -149,7 +149,7 @@ docker compose logs --tail=100 employee-service
 |------|------|
 | 이미지 | `postgres:15-alpine` |
 | 컨테이너 이름 | `hr-saas-postgres` |
-| 호스트 포트 | `5433` (내부 5432) |
+| 호스트 포트 | `15432` (내부 5432) |
 | 사용자 | `hr_saas` |
 | 비밀번호 | `hr_saas_password` |
 | 데이터베이스 | `hr_saas` |
@@ -189,7 +189,7 @@ docker exec -it hr-saas-postgres psql -U hr_saas -d hr_saas
 
 # 호스트에서 접속 (GUI 도구 사용 시)
 # Host: localhost
-# Port: 5433
+# Port: 15432
 # Database: hr_saas
 # Username: hr_saas
 # Password: hr_saas_password
@@ -217,7 +217,7 @@ docker exec -it hr-saas-postgres psql -U hr_saas -d hr_saas
 | 이미지 | `redis:7-alpine` |
 | 플랫폼 | `linux/amd64` |
 | 컨테이너 이름 | `hr-saas-redis` |
-| 호스트 포트 | `6381` (내부 6379) |
+| 호스트 포트 | `16379` (내부 6379) |
 | 비밀번호 | `redis_password` |
 
 #### 접속 방법
@@ -248,7 +248,7 @@ INFO memory   # 메모리 사용량
 |------|------|
 | 이미지 | `localstack/localstack:3.4` |
 | 컨테이너 이름 | `hr-saas-localstack` |
-| 호스트 포트 | `4566` |
+| 호스트 포트 | `14566` |
 | 활성 서비스 | `sns, sqs` |
 | 리전 | `ap-northeast-2` |
 
@@ -311,8 +311,8 @@ docker exec hr-saas-localstack awslocal sns list-subscriptions
 | 이미지 | `jaegertracing/all-in-one:1.52` |
 | 컨테이너 이름 | `hr-saas-jaeger` |
 | UI 포트 | `16686` |
-| OTLP gRPC 포트 | `4317` |
-| OTLP HTTP 포트 | `4318` |
+| OTLP gRPC 포트 | `14317` |
+| OTLP HTTP 포트 | `14318` |
 
 #### 접속
 
@@ -325,7 +325,7 @@ docker exec hr-saas-localstack awslocal sns list-subscriptions
 |------|------|
 | 이미지 | `prom/prometheus:v2.48.0` |
 | 컨테이너 이름 | `hr-saas-prometheus` |
-| 호스트 포트 | `9009` (내부 9090) |
+| 호스트 포트 | `19090` (내부 9090) |
 
 #### 스크랩 대상
 
@@ -346,7 +346,7 @@ Prometheus는 15초 간격으로 각 서비스의 `/actuator/prometheus` 엔드�
 
 #### 접속
 
-- **Prometheus UI**: http://localhost:9009
+- **Prometheus UI**: http://localhost:19090
 - 주요 PromQL 쿼리는 [MONITORING.md](./MONITORING.md) (Phase 2 생성 예정) 참조
 
 ### 4.6 Grafana (모니터링 대시보드)
@@ -355,7 +355,7 @@ Prometheus는 15초 간격으로 각 서비스의 `/actuator/prometheus` 엔드�
 |------|------|
 | 이미지 | `grafana/grafana:10.2.0` |
 | 컨테이너 이름 | `hr-saas-grafana` |
-| 호스트 포트 | `3000` |
+| 호스트 포트 | `13000` |
 | 관리자 계정 | `admin / admin` |
 
 #### 자동 프로비저닝된 데이터소스
@@ -367,7 +367,7 @@ Prometheus는 15초 간격으로 각 서비스의 `/actuator/prometheus` 엔드�
 
 #### 접속
 
-- **Grafana UI**: http://localhost:3000 (admin/admin)
+- **Grafana UI**: http://localhost:13000 (admin/admin)
 
 ---
 
@@ -511,14 +511,14 @@ cp docker/.env.example docker/.env
 
 | 서비스 | 호스트 포트 | 컨테이너 포트 | 비고 |
 |--------|-----------|-------------|------|
-| PostgreSQL | **5433** | 5432 | 로컬 PostgreSQL과 충돌 방지 |
-| Redis | **6381** | 6379 | 로컬 Redis와 충돌 방지 |
-| LocalStack | **4566** | 4566 | SNS/SQS |
+| PostgreSQL | **15432** | 5432 | 로컬 PostgreSQL과 충돌 방지 |
+| Redis | **16379** | 6379 | 로컬 Redis와 충돌 방지 |
+| LocalStack | **14566** | 4566 | SNS/SQS |
 | Jaeger UI | **16686** | 16686 | 분산 추적 UI |
-| Jaeger OTLP gRPC | **4317** | 4317 | 트레이스 수집 |
-| Jaeger OTLP HTTP | **4318** | 4318 | 트레이스 수집 |
-| Prometheus | **9009** | 9090 | 충돌 방지 |
-| Grafana | **3000** | 3000 | 모니터링 대시보드 |
+| Jaeger OTLP gRPC | **14317** | 4317 | 트레이스 수집 |
+| Jaeger OTLP HTTP | **14318** | 4318 | 트레이스 수집 |
+| Prometheus | **19090** | 9090 | 충돌 방지 |
+| Grafana | **13000** | 3000 | 모니터링 대시보드 |
 | Traefik 웹 | **18080** | 8080 | API 게이트웨이 |
 | Traefik 대시보드 | **18090** | 8090 | 라우팅 대시보드 |
 | auth-service | **8081** | 8081 | |
@@ -534,7 +534,7 @@ cp docker/.env.example docker/.env
 | certificate-service | **8092** | 8092 | |
 | recruitment-service | **8093** | 8093 | |
 
-> **참고**: PostgreSQL(5433), Redis(6381), Prometheus(9009)은 로컬에 이미 설치된 동일 소프트웨어와의 포트 충돌을 방지하기 위해 비표준 포트를 사용합니다.
+> **참고**: PostgreSQL(15432), Redis(16379), Prometheus(19090)은 로컬에 이미 설치된 동일 소프트웨어와의 포트 충돌을 방지하기 위해 비표준 포트를 사용합니다.
 
 ---
 
@@ -553,7 +553,7 @@ networks:
 - Docker 네트워크 내에서는 **컨테이너 이름**으로 서비스 접근
 - 예: `postgres:5432`, `redis:6379`, `localstack:4566`
 - 호스트에서는 매핑된 **호스트 포트**로 접근
-- 예: `localhost:5433`, `localhost:6381`, `localhost:4566`
+- 예: `localhost:15432`, `localhost:16379`, `localhost:14566`
 
 ---
 
@@ -675,15 +675,15 @@ IDE에서 서비스를 직접 실행할 때, 다음 환경변수 또는 applicat
 ```properties
 # application-dev.yml 기본값 사용 (호스트 포트로 연결)
 DB_HOST=localhost
-DB_PORT=5433
+DB_PORT=15432
 REDIS_HOST=localhost
-REDIS_PORT=6381
+REDIS_PORT=16379
 REDIS_PASSWORD=redis_password
-AWS_SNS_ENDPOINT=http://localhost:4566
-AWS_SQS_ENDPOINT=http://localhost:4566
+AWS_SNS_ENDPOINT=http://localhost:14566
+AWS_SQS_ENDPOINT=http://localhost:14566
 ```
 
-> **주의**: 호스트에서 직접 실행 시 PostgreSQL 포트는 `5433`, Redis 포트는 `6381`입니다 (Docker 매핑된 호스트 포트).
+> **주의**: 호스트에서 직접 실행 시 PostgreSQL 포트는 `15432`, Redis 포트는 `16379`입니다 (Docker 매핑된 호스트 포트).
 
 ---
 
@@ -693,8 +693,8 @@ AWS_SQS_ENDPOINT=http://localhost:4566
 
 | 도구 | URL | 인증 |
 |------|-----|------|
-| Grafana | http://localhost:3000 | admin / admin |
-| Prometheus | http://localhost:9009 | 없음 |
+| Grafana | http://localhost:13000 | admin / admin |
+| Prometheus | http://localhost:19090 | 없음 |
 | Jaeger | http://localhost:16686 | 없음 |
 | Traefik Dashboard | http://localhost:18090 | 없음 |
 
@@ -726,7 +726,7 @@ docker inspect hr-saas-postgres | grep -A 5 Health
 docker compose logs postgres
 
 # 4. 포트 점유 확인 (Windows)
-netstat -an | findstr "5433"
+netstat -an | findstr "15432"
 
 # 5. 컨테이너 재시작
 docker compose restart postgres

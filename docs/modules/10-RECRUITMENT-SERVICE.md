@@ -927,14 +927,14 @@ CREATE POLICY tenant_isolation_{table} ON hr_recruitment.{table}
 | `spring.flyway.schemas` | hr_recruitment | |
 | `spring.cache.redis.time-to-live` | 3600000 (1시간) | |
 | `spring.data.redis.host` | localhost | 환경변수 `REDIS_HOST` 오버라이드 |
-| `spring.data.redis.port` | 6381 | 기본 6379와 다름 -- `REDIS_PORT` 오버라이드 |
+| `spring.data.redis.port` | 16379 | 기본 6379와 다름 -- `REDIS_PORT` 오버라이드 |
 | `spring.datasource.hikari.maximum-pool-size` | 5 | Low-traffic service |
 | `spring.datasource.hikari.leak-detection-threshold` | 60000 | Dev only |
 | `jwt.access-token-expiry` | 1800 (30분) | |
 | `jwt.refresh-token-expiry` | 604800 (7일) | |
 | `management.endpoints.web.exposure.include` | health,info,metrics,prometheus | |
-| `spring.cloud.aws.sns.endpoint` | http://localhost:4566 | LocalStack |
-| `spring.cloud.aws.sqs.endpoint` | http://localhost:4566 | LocalStack |
+| `spring.cloud.aws.sns.endpoint` | http://localhost:14566 | LocalStack |
+| `spring.cloud.aws.sqs.endpoint` | http://localhost:14566 | LocalStack |
 
 ### 9.3 필요한 설정 변경/추가
 
@@ -1051,7 +1051,7 @@ CREATE POLICY tenant_isolation_{table} ON hr_recruitment.{table}
 | `src/main/java/.../domain/dto/response/` | DTOs | 10 response DTOs |
 | `src/main/java/.../repository/` | Repositories | 6 repositories |
 | `src/main/java/.../scheduler/RecruitmentScheduler.java` | Scheduler | 4 jobs (2 완료, 2 TODO) |
-| `src/main/resources/application.yml` | Config | Port 8093, Redis 6381, ddl-auto: update |
+| `src/main/resources/application.yml` | Config | Port 8093, Redis 16379, ddl-auto: update |
 | `src/main/resources/db/migration/V1__init.sql` | Migration | 6 tables, 35 indexes, 6 RLS policies |
 | `src/main/resources/db/migration/V2__add_performance_indexes.sql` | Migration | 3 performance indexes |
 | `build.gradle` | Build | 9 common modules, OpenFeign, Testcontainers |

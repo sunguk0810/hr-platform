@@ -43,7 +43,7 @@ services:
       POSTGRES_PASSWORD: hr_saas_password
       POSTGRES_DB: hr_saas
     ports:
-      - "5433:5432"
+      - "15432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -61,7 +61,7 @@ services:
     container_name: hr-saas-redis
     command: redis-server --requirepass redis_password
     ports:
-      - "6381:6379"
+      - "16379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -75,7 +75,7 @@ services:
     image: localstack/localstack:3.4
     container_name: hr-saas-localstack
     ports:
-      - "4566:4566"
+      - "14566:4566"
     environment:
       SERVICES: sns,sqs,s3
       AWS_DEFAULT_REGION: ap-northeast-2
@@ -95,8 +95,8 @@ services:
       - COLLECTOR_OTLP_ENABLED=true
     ports:
       - "16686:16686"
-      - "4317:4317"
-      - "4318:4318"
+      - "14317:4317"
+      - "14318:4318"
     networks:
       - hr-saas-network
   prometheus:
@@ -106,7 +106,7 @@ services:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
     ports:
-      - "9009:9090"
+      - "19090:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
@@ -120,7 +120,7 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false
     ports:
-      - "3000:3000"
+      - "13000:3000"
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning

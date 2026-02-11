@@ -73,7 +73,7 @@ docker compose up -d postgres redis localstack jaeger prometheus grafana traefik
 - **Active profiles**: `dev`
 - **Environment variables**:
   ```
-  DB_HOST=localhost;DB_PORT=5433;REDIS_HOST=localhost;REDIS_PORT=6381;REDIS_PASSWORD=redis_password
+  DB_HOST=localhost;DB_PORT=15432;REDIS_HOST=localhost;REDIS_PORT=16379;REDIS_PASSWORD=redis_password
   ```
 
 #### 유용한 설정
@@ -215,7 +215,7 @@ docker exec -it hr-saas-postgres psql -U hr_saas -d hr_saas
 | 항목 | 값 |
 |------|------|
 | Host | `localhost` |
-| Port | `5433` |
+| Port | `15432` |
 | Database | `hr_saas` |
 | Username | `hr_saas` |
 | Password | `hr_saas_password` |
@@ -283,7 +283,7 @@ docker exec hr-saas-localstack awslocal sqs list-queues
 
 # 큐 메시지 수 확인
 docker exec hr-saas-localstack awslocal sqs get-queue-attributes \
-  --queue-url http://localhost:4566/000000000000/notification-service-queue \
+  --queue-url http://localhost:14566/000000000000/notification-service-queue \
   --attribute-names ApproximateNumberOfMessages
 
 # 수동 메시지 발행 (테스트)
@@ -333,9 +333,9 @@ A: Docker Desktop에서 메모리를 12GB 이상으로 설정하세요. 또는 �
 docker compose up -d postgres redis localstack
 ```
 
-### Q: PostgreSQL 포트가 5433인 이유는?
+### Q: PostgreSQL 포트가 15432인 이유는?
 
-A: 로컬에 설치된 PostgreSQL(5432)과 충돌 방지. Redis도 같은 이유로 6381 사용.
+A: 로컬에 설치된 PostgreSQL(5432)과 충돌 방지. Redis도 같은 이유로 16379 사용.
 
 ### Q: Flyway 마이그레이션 에러가 발생해요
 

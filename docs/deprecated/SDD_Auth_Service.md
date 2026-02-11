@@ -1007,7 +1007,7 @@ management:
       probability: 1.0
   otlp:
     tracing:
-      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4317}
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:14317}
 ```
 
 ### 9.2 Kafka Events

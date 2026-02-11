@@ -24,6 +24,8 @@ export type OrgHistoryEventType =
   | 'department_deleted'
   | 'department_renamed'
   | 'department_moved'
+  | 'department_deactivated'
+  | 'manager_changed'
   | 'employee_joined'
   | 'employee_left'
   | 'employee_transferred';

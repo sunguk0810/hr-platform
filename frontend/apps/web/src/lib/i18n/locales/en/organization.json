@@ -164,6 +164,8 @@
       "department_deleted": "Department Deleted",
       "department_renamed": "Department Renamed",
       "department_moved": "Department Moved",
+      "department_deactivated": "Department Deactivated",
+      "manager_changed": "Manager Changed",
       "employee_joined": "Employee Joined",
       "employee_left": "Employee Left",
       "employee_transferred": "Employee Transferred"

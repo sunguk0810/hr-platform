@@ -1475,8 +1475,8 @@ services:
       - COLLECTOR_OTLP_ENABLED=true
     ports:
       - "16686:16686"  # UI
-      - "4317:4317"    # OTLP gRPC
-      - "4318:4318"    # OTLP HTTP
+      - "14317:4317"    # OTLP gRPC
+      - "14318:4318"    # OTLP HTTP
 
   # Prometheus
   prometheus:
@@ -1486,7 +1486,7 @@ services:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
     ports:
-      - "9090:9090"
+      - "19090:9090"
     volumes:
       - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
@@ -1500,7 +1500,7 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false
     ports:
-      - "3000:3000"
+      - "13000:3000"
     volumes:
       - grafana_data:/var/lib/grafana
       - ./docker/grafana/provisioning:/etc/grafana/provisioning
@@ -1564,8 +1564,8 @@ echo "  - Kafka:       localhost:9092"
 echo "  - Kafka UI:    http://localhost:8090"
 echo "  - Keycloak:    http://localhost:8180 (admin/admin)"
 echo "  - Jaeger:      http://localhost:16686"
-echo "  - Prometheus:  http://localhost:9090"
-echo "  - Grafana:     http://localhost:3000 (admin/admin)"
+echo "  - Prometheus:  http://localhost:19090"
+echo "  - Grafana:     http://localhost:13000 (admin/admin)"
 ```
 
 ---

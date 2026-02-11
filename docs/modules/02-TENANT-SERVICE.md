@@ -978,7 +978,7 @@ ON CONFLICT (code) DO NOTHING;
 | Server Port | 8082 | application.yml |
 | DB Schema | tenant_common | application.yml |
 | JPA DDL | validate | Flyway로 스키마 관리 |
-| Redis | 단일 인스턴스 (localhost:6381) | 개발 환경 |
+| Redis | 단일 인스턴스 (localhost:16379) | 개발 환경 |
 
 ### 9.2 Redis 캐시 키 패턴
 
@@ -1005,11 +1005,11 @@ ON CONFLICT (code) DO NOTHING;
 | 변수 | 설명 | 필수 | 기본값 |
 |------|------|------|--------|
 | `DB_HOST` | PostgreSQL 호스트 | ✅ | localhost |
-| `DB_PORT` | PostgreSQL 포트 | ❌ | 5433 (로컬), 5432 (AWS) |
+| `DB_PORT` | PostgreSQL 포트 | ❌ | 15432 (로컬), 5432 (AWS) |
 | `DB_USERNAME` | DB 사용자 | ✅ | hr_saas |
 | `DB_PASSWORD` | DB 비밀번호 | ✅ | hr_saas_password |
 | `REDIS_HOST` | Redis 호스트 | ✅ | localhost |
-| `REDIS_PORT` | Redis 포트 | ❌ | 6381 (로컬), 6379 (AWS) |
+| `REDIS_PORT` | Redis 포트 | ❌ | 16379 (로컬), 6379 (AWS) |
 | `REDIS_PASSWORD` | Redis 비밀번호 | ✅ | redis_password |
 | `JWT_SECRET` | JWT 서명 키 (SecurityFilter용) | ✅ | 개발용 기본값 |
 

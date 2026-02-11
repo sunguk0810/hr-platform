@@ -34,7 +34,7 @@ http:
       middlewares:
         - cors-headers
     employee:
-      rule: "PathPrefix(`/api/v1/employees`) || PathPrefix(`/api/v1/transfers`) || PathPrefix(`/api/v1/employee-numbers`) || PathPrefix(`/api/v1/condolences`)"
+      rule: "PathPrefix(`/api/v1/employees`) || PathPrefix(`/api/v1/transfers`) || PathPrefix(`/api/v1/employee-numbers`) || PathPrefix(`/api/v1/condolences`) || PathPrefix(`/api/v1/profile`) || PathPrefix(`/api/v1/my-info`)"
       entryPoints:
         - web
       service: employee-service

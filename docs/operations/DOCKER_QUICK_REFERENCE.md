@@ -89,12 +89,12 @@ docker-compose up -d --build auth-service
 ### Infrastructure
 | Service | Port | URL |
 |---------|------|-----|
-| PostgreSQL | 5433 | `localhost:5433` |
-| Redis | 6381 | `localhost:6381` |
-| LocalStack (AWS) | 4566 | `http://localhost:4566` |
+| PostgreSQL | 15432 | `localhost:15432` |
+| Redis | 16379 | `localhost:16379` |
+| LocalStack (AWS) | 14566 | `http://localhost:14566` |
 | Jaeger UI | 16686 | `http://localhost:16686` |
-| Prometheus | 9009 | `http://localhost:9009` |
-| Grafana | 3000 | `http://localhost:3000` |
+| Prometheus | 19090 | `http://localhost:19090` |
+| Grafana | 13000 | `http://localhost:13000` |
 | Traefik Dashboard | 18090 | `http://localhost:18090` |
 
 ### Application Services

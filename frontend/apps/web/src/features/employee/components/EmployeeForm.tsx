@@ -256,7 +256,7 @@ export function EmployeeForm({
                   <SelectContent>
                     {flatDepartments.map((dept) => (
                       <SelectItem key={dept.id} value={dept.id}>
-                        {'\u3000'.repeat(dept.level - 1)}
+                        {'\u3000'.repeat(Math.max(0, dept.level - 1))}
                         {dept.name}
                       </SelectItem>
                     ))}

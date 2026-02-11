@@ -273,7 +273,7 @@ public final class EventTopics {
 ```bash
 # DLQ 메시지 수 확인
 awslocal sqs get-queue-attributes \
-  --queue-url http://localhost:4566/000000000000/employee-service-dlq \
+  --queue-url http://localhost:14566/000000000000/employee-service-dlq \
   --attribute-names ApproximateNumberOfMessages
 ```
 
@@ -307,8 +307,8 @@ Spring 프로파일로 자동 전환:
 ```yaml
 # application-dev.yml
 spring.cloud.aws:
-  sns.endpoint: http://localhost:4566
-  sqs.endpoint: http://localhost:4566
+  sns.endpoint: http://localhost:14566
+  sqs.endpoint: http://localhost:14566
 
 # application-aws.yml (프로덕션)
 spring.cloud.aws:

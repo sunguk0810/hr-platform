@@ -164,6 +164,8 @@
       "department_deleted": "부서 삭제",
       "department_renamed": "부서명 변경",
       "department_moved": "부서 이동",
+      "department_deactivated": "부서 비활성화",
+      "manager_changed": "부서장 변경",
       "employee_joined": "직원 입사",
       "employee_left": "직원 퇴사",
       "employee_transferred": "직원 이동"

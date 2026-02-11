@@ -1031,7 +1031,7 @@ erDiagram
 ```yaml
 spring:
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/hr_saas
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:15432}/hr_saas
     hikari:
       maximum-pool-size: 10
       minimum-idle: 5

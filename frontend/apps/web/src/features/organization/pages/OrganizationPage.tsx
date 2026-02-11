@@ -310,7 +310,7 @@ export default function OrganizationPage() {
                     <SelectItem value="none">{t('department.topLevel')}</SelectItem>
                     {flatDepartments.map((dept) => (
                       <SelectItem key={dept.id} value={dept.id}>
-                        {'　'.repeat(dept.level - 1)}{dept.name}
+                        {'　'.repeat(Math.max(0, dept.level - 1))}{dept.name}
                       </SelectItem>
                     ))}
                   </SelectContent>

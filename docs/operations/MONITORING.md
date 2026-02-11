@@ -38,8 +38,8 @@ HR SaaS 플랫폼은 3가지 관측성(Observability) 영역을 다룹니다:
 
 | 도구 | URL | 용도 |
 |------|-----|------|
-| Prometheus | http://localhost:9009 | 메트릭 수집/쿼리 |
-| Grafana | http://localhost:3000 (admin/admin) | 대시보드/시각화 |
+| Prometheus | http://localhost:19090 | 메트릭 수집/쿼리 |
+| Grafana | http://localhost:13000 (admin/admin) | 대시보드/시각화 |
 | Jaeger | http://localhost:16686 | 분산 추적 UI |
 
 ### 데이터 소스 (자동 프로비저닝)
@@ -178,8 +178,8 @@ traefik_service_requests_total{code=~"5.."}
 
 | 프로토콜 | 포트 | 용도 |
 |---------|------|------|
-| gRPC | 4317 | 서비스 → Jaeger (기본) |
-| HTTP | 4318 | 서비스 → Jaeger (대안) |
+| gRPC | 14317 | 서비스 → Jaeger (기본) |
+| HTTP | 14318 | 서비스 → Jaeger (대안) |
 
 ### 추적 활용
 

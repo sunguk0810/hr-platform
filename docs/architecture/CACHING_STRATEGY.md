@@ -46,7 +46,7 @@ HR SaaS 플랫폼은 Redis 7.x를 캐시 계층으로 사용합니다. Spring Ca
 
 | 환경 | 호스트 | 포트 | SSL | 비밀번호 |
 |------|--------|------|-----|---------|
-| 로컬 (Docker) | `localhost` | `6381` | 아니오 | `redis_password` |
+| 로컬 (Docker) | `localhost` | `16379` | 아니오 | `redis_password` |
 | 프로덕션 (ElastiCache) | `hr-saas-cache.xxxx.cache.amazonaws.com` | `6379` | 예 | Secrets Manager |
 
 ### Spring 설정 (application.yml)
@@ -56,7 +56,7 @@ spring:
   data:
     redis:
       host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6381}
+      port: ${REDIS_PORT:16379}
       password: ${REDIS_PASSWORD:redis_password}
       ssl:
         enabled: ${SPRING_DATA_REDIS_SSL_ENABLED:false}

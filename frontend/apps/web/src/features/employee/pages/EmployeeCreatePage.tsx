@@ -346,7 +346,7 @@ export default function EmployeeCreatePage() {
               <SelectContent>
                 {departments.map((dept) => (
                   <SelectItem key={dept.id} value={dept.id}>
-                    {'　'.repeat(dept.level - 1)}
+                    {'　'.repeat(Math.max(0, dept.level - 1))}
                     {dept.name}
                   </SelectItem>
                 ))}
@@ -615,7 +615,7 @@ export default function EmployeeCreatePage() {
                   <SelectContent>
                     {departments.map((dept) => (
                       <SelectItem key={dept.id} value={dept.id}>
-                        {'　'.repeat(dept.level - 1)}
+                        {'　'.repeat(Math.max(0, dept.level - 1))}
                         {dept.name}
                       </SelectItem>
                     ))}

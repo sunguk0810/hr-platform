@@ -939,7 +939,7 @@ Content-Disposition: attachment; filename*=UTF-8''{URL 인코딩된 파일명}
 ```yaml
 spring:
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/hr_saas
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:15432}/hr_saas
     username: ${DB_USERNAME:hr_saas}
     password: ${DB_PASSWORD:hr_saas_password}
     hikari:
@@ -959,7 +959,7 @@ spring:
   data:
     redis:
       host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6381}
+      port: ${REDIS_PORT:16379}
       password: ${REDIS_PASSWORD:redis_password}
   cloud:
     aws:
@@ -969,9 +969,9 @@ spring:
         access-key: ${AWS_ACCESS_KEY_ID:test}
         secret-key: ${AWS_SECRET_ACCESS_KEY:test}
       sns:
-        endpoint: ${AWS_SNS_ENDPOINT:http://localhost:4566}
+        endpoint: ${AWS_SNS_ENDPOINT:http://localhost:14566}
       sqs:
-        endpoint: ${AWS_SQS_ENDPOINT:http://localhost:4566}
+        endpoint: ${AWS_SQS_ENDPOINT:http://localhost:14566}
   servlet:
     multipart:
       max-file-size: 100MB

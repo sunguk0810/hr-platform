@@ -1098,7 +1098,7 @@ spring:
   application:
     name: organization-service
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/hr_saas
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:15432}/hr_saas
     hikari:
       maximum-pool-size: 20
       minimum-idle: 5
@@ -1112,10 +1112,10 @@ spring:
     schemas: hr_core
   data:
     redis:
-      port: ${REDIS_PORT:6381}
+      port: ${REDIS_PORT:16379}
   cloud:
     aws:
-      sns/sqs: LocalStack 연동 (http://localhost:4566)
+      sns/sqs: LocalStack 연동 (http://localhost:14566)
 
 services:
   employee-service:

@@ -41,6 +41,8 @@ const EVENT_TYPE_ICONS: Record<OrgHistoryEventType, React.ElementType> = {
   department_deleted: Building2,
   department_renamed: Edit,
   department_moved: GitBranch,
+  department_deactivated: Building2,
+  manager_changed: UserPlus,
   employee_joined: UserPlus,
   employee_left: UserMinus,
   employee_transferred: ArrowRightLeft,
@@ -51,6 +53,8 @@ const EVENT_TYPE_COLORS: Record<OrgHistoryEventType, string> = {
   department_deleted: 'bg-red-500',
   department_renamed: 'bg-blue-500',
   department_moved: 'bg-purple-500',
+  department_deactivated: 'bg-orange-500',
+  manager_changed: 'bg-indigo-500',
   employee_joined: 'bg-green-500',
   employee_left: 'bg-red-500',
   employee_transferred: 'bg-amber-500',
@@ -70,6 +74,8 @@ export default function OrgHistoryPage() {
     department_deleted: t('history.eventTypes.department_deleted'),
     department_renamed: t('history.eventTypes.department_renamed'),
     department_moved: t('history.eventTypes.department_moved'),
+    department_deactivated: t('history.eventTypes.department_deactivated'),
+    manager_changed: t('history.eventTypes.manager_changed'),
     employee_joined: t('history.eventTypes.employee_joined'),
     employee_left: t('history.eventTypes.employee_left'),
     employee_transferred: t('history.eventTypes.employee_transferred'),
@@ -229,7 +235,7 @@ export default function OrgHistoryPage() {
                     <SelectItem value="all">{t('history.allDepartments')}</SelectItem>
                     {flatDepartments.map((dept) => (
                       <SelectItem key={dept.id} value={dept.id}>
-                        {'\u3000'.repeat(dept.level - 1)}
+                        {'\u3000'.repeat(Math.max(0, dept.level - 1))}
                         {dept.name}
                       </SelectItem>
                     ))}
@@ -391,7 +397,7 @@ export default function OrgHistoryPage() {
                     <SelectItem value="all">{t('history.allDepartments')}</SelectItem>
                     {flatDepartments.map((dept) => (
                       <SelectItem key={dept.id} value={dept.id}>
-                        {'\u3000'.repeat(dept.level - 1)}
+                        {'\u3000'.repeat(Math.max(0, dept.level - 1))}
                         {dept.name}
                       </SelectItem>
                     ))}

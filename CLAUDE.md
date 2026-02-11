@@ -192,7 +192,7 @@ cd docker && docker-compose up -d
 
 # Load sample data (after Flyway migrations)
 cd scripts/sample-data
-psql -h localhost -p 5433 -U hr_saas -d hr_saas -f 99_run_all.sql
+psql -h localhost -p 15432 -U hr_saas -d hr_saas -f 99_run_all.sql
 ```
 
 ### Test Accounts
@@ -291,8 +291,8 @@ public FilterRegistrationBean<SecurityFilter> securityFilterRegistration(Securit
 | Certificate | 8092 |
 | Recruitment | 8093 |
 | Config Server | 8888 |
-| PostgreSQL | 5432 |
-| Redis | 6379 |
-| Prometheus | 9090 |
-| Grafana | 3000 |
+| PostgreSQL | 15432 |
+| Redis | 16379 |
+| Prometheus | 19090 |
+| Grafana | 13000 |
 | Jaeger | 16686 |

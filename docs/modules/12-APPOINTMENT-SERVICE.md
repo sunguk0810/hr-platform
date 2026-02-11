@@ -1001,7 +1001,7 @@ erDiagram
 ```yaml
 spring:
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/hr_saas
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:15432}/hr_saas
     hikari:
       maximum-pool-size: 15    # Batch-heavy service
       minimum-idle: 5
@@ -1022,7 +1022,7 @@ spring:
   data:
     redis:
       host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6381}
+      port: ${REDIS_PORT:16379}
 ```
 
 ### 9.3 스케줄러 Cron 표현식

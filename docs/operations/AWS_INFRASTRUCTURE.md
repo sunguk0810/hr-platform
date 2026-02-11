@@ -388,8 +388,8 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
 ```yaml
 # application-dev.yml (로컬)
 spring.cloud.aws:
-  sns.endpoint: http://localhost:4566
-  sqs.endpoint: http://localhost:4566
+  sns.endpoint: http://localhost:14566
+  sqs.endpoint: http://localhost:14566
 
 # application-aws.yml (프로덕션)
 spring.cloud.aws:
