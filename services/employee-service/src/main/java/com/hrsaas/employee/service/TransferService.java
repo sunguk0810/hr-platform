@@ -54,15 +54,15 @@ public interface TransferService {
     /**
      * 특정 테넌트의 부서 목록 조회
      */
-    List<DepartmentSimpleResponse> getTenantDepartments(UUID tenantId);
+    List<DepartmentSimpleResponse> getTenantDepartments(String tenantId);
 
     /**
      * 특정 테넌트의 직위 목록 조회
      */
-    List<PositionSimpleResponse> getTenantPositions(UUID tenantId);
+    List<PositionSimpleResponse> getTenantPositions(String tenantId);
 
     /**
      * 특정 테넌트의 직급 목록 조회
      */
-    List<GradeSimpleResponse> getTenantGrades(UUID tenantId);
+    List<GradeSimpleResponse> getTenantGrades(String tenantId);
 }

@@ -162,7 +162,7 @@ public class TransferController {
     @Operation(summary = "특정 테넌트의 부서 목록 조회")
     @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<List<DepartmentSimpleResponse>>> getTenantDepartments(
-            @PathVariable UUID tenantId) {
+            @PathVariable String tenantId) {
         List<DepartmentSimpleResponse> response = transferService.getTenantDepartments(tenantId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
@@ -171,7 +171,7 @@ public class TransferController {
     @Operation(summary = "특정 테넌트의 직위 목록 조회")
     @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<List<PositionSimpleResponse>>> getTenantPositions(
-            @PathVariable UUID tenantId) {
+            @PathVariable String tenantId) {
         List<PositionSimpleResponse> response = transferService.getTenantPositions(tenantId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
@@ -180,7 +180,7 @@ public class TransferController {
     @Operation(summary = "특정 테넌트의 직급 목록 조회")
     @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<List<GradeSimpleResponse>>> getTenantGrades(
-            @PathVariable UUID tenantId) {
+            @PathVariable String tenantId) {
         List<GradeSimpleResponse> response = transferService.getTenantGrades(tenantId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }

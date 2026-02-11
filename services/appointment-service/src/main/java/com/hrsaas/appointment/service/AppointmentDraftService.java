@@ -2,6 +2,7 @@ package com.hrsaas.appointment.service;
 
 import com.hrsaas.appointment.domain.dto.request.*;
 import com.hrsaas.appointment.domain.dto.response.AppointmentDraftResponse;
+import com.hrsaas.appointment.domain.dto.response.AppointmentSummary;
 import com.hrsaas.appointment.domain.entity.DraftStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,4 +38,6 @@ public interface AppointmentDraftService {
     AppointmentDraftResponse cancel(UUID id, CancelAppointmentRequest request);
 
     AppointmentDraftResponse rollback(UUID id);
+
+    AppointmentSummary getSummary();
 }

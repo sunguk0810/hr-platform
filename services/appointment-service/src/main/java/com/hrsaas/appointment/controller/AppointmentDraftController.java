@@ -2,6 +2,7 @@ package com.hrsaas.appointment.controller;
 
 import com.hrsaas.appointment.domain.dto.request.*;
 import com.hrsaas.appointment.domain.dto.response.AppointmentDraftResponse;
+import com.hrsaas.appointment.domain.dto.response.AppointmentSummary;
 import com.hrsaas.appointment.domain.entity.DraftStatus;
 import com.hrsaas.appointment.service.AppointmentDraftService;
 import com.hrsaas.common.response.ApiResponse;
@@ -38,6 +39,14 @@ public class AppointmentDraftController {
         AppointmentDraftResponse response = draftService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(ApiResponse.created(response));
+    }
+
+    @GetMapping("/summary")
+    @Operation(summary = "발령안 상태별 요약 조회")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<AppointmentSummary>> getSummary() {
+        AppointmentSummary summary = draftService.getSummary();
+        return ResponseEntity.ok(ApiResponse.success(summary));
     }
 
     @GetMapping("/{id}")

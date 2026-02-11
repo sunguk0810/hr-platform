@@ -347,10 +347,16 @@ public class TransferServiceImpl implements TransferService {
     }
 
     @Override
-    public List<DepartmentSimpleResponse> getTenantDepartments(UUID tenantId) {
+    @org.springframework.cache.annotation.Cacheable(
+        value = "transfer:departments",
+        key = "#tenantId",
+        unless = "#result == null || #result.isEmpty()"
+    )
+    public List<DepartmentSimpleResponse> getTenantDepartments(String tenantId) {
         try {
+            log.debug("Cache miss - fetching departments for tenant: {}", tenantId);
             ApiResponse<List<DepartmentClientResponse>> response =
-                organizationServiceClient.getDepartments(tenantId.toString());
+                organizationServiceClient.getDepartments(tenantId);
 
             if (response == null || response.getData() == null) {
                 log.warn("Organization service returned empty departments, using fallback data for tenant: {}", tenantId);
@@ -364,7 +370,7 @@ public class TransferServiceImpl implements TransferService {
                     .name(d.getName())
                     .code(d.getCode())
                     .build())
-                .toList();
+                .collect(java.util.stream.Collectors.toList());
 
         } catch (Exception e) {
             log.error("Failed to fetch departments from organization-service for tenant: {}", tenantId, e);
@@ -383,10 +389,16 @@ public class TransferServiceImpl implements TransferService {
     }
 
     @Override
-    public List<PositionSimpleResponse> getTenantPositions(UUID tenantId) {
+    @org.springframework.cache.annotation.Cacheable(
+        value = "transfer:positions",
+        key = "#tenantId",
+        unless = "#result == null || #result.isEmpty()"
+    )
+    public List<PositionSimpleResponse> getTenantPositions(String tenantId) {
         try {
+            log.debug("Cache miss - fetching positions for tenant: {}", tenantId);
             ApiResponse<List<PositionClientResponse>> response =
-                organizationServiceClient.getPositions(tenantId.toString());
+                organizationServiceClient.getPositions(tenantId);
 
             if (response == null || response.getData() == null) {
                 log.warn("Organization service returned empty positions, using fallback data for tenant: {}", tenantId);
@@ -400,7 +412,7 @@ public class TransferServiceImpl implements TransferService {
                     .name(p.getName())
                     .code(p.getCode())
                     .build())
-                .toList();
+                .collect(java.util.stream.Collectors.toList());
 
         } catch (Exception e) {
             log.error("Failed to fetch positions from organization-service for tenant: {}", tenantId, e);
@@ -419,10 +431,16 @@ public class TransferServiceImpl implements TransferService {
     }
 
     @Override
-    public List<GradeSimpleResponse> getTenantGrades(UUID tenantId) {
+    @org.springframework.cache.annotation.Cacheable(
+        value = "transfer:grades",
+        key = "#tenantId",
+        unless = "#result == null || #result.isEmpty()"
+    )
+    public List<GradeSimpleResponse> getTenantGrades(String tenantId) {
         try {
+            log.debug("Cache miss - fetching grades for tenant: {}", tenantId);
             ApiResponse<List<GradeClientResponse>> response =
-                organizationServiceClient.getGrades(tenantId.toString());
+                organizationServiceClient.getGrades(tenantId);
 
             if (response == null || response.getData() == null) {
                 log.warn("Organization service returned empty grades, using fallback data for tenant: {}", tenantId);
@@ -436,7 +454,7 @@ public class TransferServiceImpl implements TransferService {
                     .name(g.getName())
                     .code(g.getCode())
                     .build())
-                .toList();
+                .collect(java.util.stream.Collectors.toList());
 
         } catch (Exception e) {
             log.error("Failed to fetch grades from organization-service for tenant: {}", tenantId, e);

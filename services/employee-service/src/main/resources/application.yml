@@ -61,6 +61,14 @@ spring:
       port: ${REDIS_PORT:16379}
       password: ${REDIS_PASSWORD:redis_password}
 
+  cache:
+    type: redis
+    redis:
+      time-to-live: 1800000  # 30 minutes (organizational data changes infrequently)
+      cache-null-values: false
+      key-prefix: "hr:employee:"
+      use-key-prefix: true
+
 app:
   encryption:
     key: ${ENCRYPTION_KEY:}

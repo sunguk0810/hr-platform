@@ -12,7 +12,6 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -21,9 +20,11 @@ import java.util.stream.Collectors;
 /**
  * Filter to extract user context from JWT in Authorization header.
  * Each service directly validates JWT tokens (no gateway header propagation).
+ *
+ * NOTE: @Component removed to prevent double registration (servlet filter + SecurityFilterChain).
+ * SecurityFilter is now created as @Bean in each service's SecurityConfig.
  */
 @Slf4j
-@Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 20)
 @RequiredArgsConstructor
 public class SecurityFilter extends OncePerRequestFilter {

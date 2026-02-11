@@ -67,6 +67,9 @@ management:
     web:
       exposure:
         include: health,info,metrics,prometheus
+  health:
+    mail:
+      enabled: false  # Disable mail health check in dev environment
 
 jwt:
   secret: ${JWT_SECRET:hr-saas-secret-key-for-jwt-token-signing-minimum-256-bits-required}

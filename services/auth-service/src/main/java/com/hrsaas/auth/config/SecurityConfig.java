@@ -1,6 +1,7 @@
 package com.hrsaas.auth.config;
 
 import com.hrsaas.common.security.SecurityFilter;
+import com.hrsaas.common.security.jwt.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -24,22 +25,36 @@ import java.util.Arrays;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    private final SecurityFilter securityFilter;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Value("${cors.allowed-origins:http://localhost:5173}")
     private String[] allowedOrigins;
 
-    public SecurityConfig(SecurityFilter securityFilter) {
-        this.securityFilter = securityFilter;
+    public SecurityConfig(JwtTokenProvider jwtTokenProvider) {
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilter securityFilter() {
+        return new SecurityFilter(jwtTokenProvider);
+    }
+
+    @Bean
+    public FilterRegistrationBean<SecurityFilter> securityFilterRegistration(SecurityFilter securityFilter) {
+        FilterRegistrationBean<SecurityFilter> registration = new FilterRegistrationBean<>(securityFilter);
+        registration.setEnabled(false); // Prevent automatic servlet filter registration
+        return registration;
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, SecurityFilter securityFilter) throws Exception {
         return http
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .securityContext(context -> context
+                .requireExplicitSave(true))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers("/api/v1/auth/login").permitAll()
@@ -58,13 +73,6 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public FilterRegistrationBean<SecurityFilter> securityFilterRegistration(SecurityFilter securityFilter) {
-        FilterRegistrationBean<SecurityFilter> registration = new FilterRegistrationBean<>(securityFilter);
-        registration.setEnabled(false);
-        return registration;
     }
 
     @Bean

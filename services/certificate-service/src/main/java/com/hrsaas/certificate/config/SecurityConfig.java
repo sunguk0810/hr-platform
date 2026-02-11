@@ -1,6 +1,5 @@
 package com.hrsaas.certificate.config;
 
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -11,6 +10,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.hrsaas.common.security.SecurityFilter;
+import com.hrsaas.common.security.jwt.JwtTokenProvider;
 
 import lombok.RequiredArgsConstructor;
 
@@ -20,10 +20,15 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final SecurityFilter securityFilter;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilter securityFilter() {
+        return new SecurityFilter(jwtTokenProvider);
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, SecurityFilter securityFilter) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session
@@ -37,10 +42,4 @@ public class SecurityConfig {
         return http.build();
     }
 
-    @Bean
-    public FilterRegistrationBean<SecurityFilter> securityFilterRegistration(SecurityFilter securityFilter) {
-        FilterRegistrationBean<SecurityFilter> registration = new FilterRegistrationBean<>(securityFilter);
-        registration.setEnabled(false);
-        return registration;
-    }
 }
