@@ -24,14 +24,14 @@ public class UserDashboardController {
 
     @GetMapping("/org-summary")
     @Operation(summary = "조직 현황 (관리자)")
-    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('HR_MANAGER', 'HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
     public ApiResponse<DashboardOrgSummaryResponse> getOrgSummary() {
         return ApiResponse.success(dashboardService.getOrgSummary());
     }
 
     @GetMapping("/statistics")
     @Operation(summary = "HR 주요 지표 (관리자)")
-    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('HR_MANAGER', 'HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
     public ApiResponse<DashboardStatisticsResponse> getStatistics() {
         return ApiResponse.success(dashboardService.getStatistics());
     }

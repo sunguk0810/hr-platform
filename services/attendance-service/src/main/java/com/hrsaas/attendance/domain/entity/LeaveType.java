@@ -9,6 +9,7 @@ public enum LeaveType {
     MATERNITY,      // 출산휴가
     PATERNITY,      // 배우자출산휴가
     FAMILY_CARE,    // 가족돌봄휴가
+    FAMILY_EVENT,   // 경조사
     PUBLIC_DUTY,    // 공가
     UNPAID          // 무급휴가
 }

@@ -333,6 +333,7 @@ public class RecordCardServiceImpl implements RecordCardService {
             case CONTRACT -> "계약직";
             case PART_TIME -> "파트타임";
             case INTERN -> "인턴";
+            case FULL_TIME -> "정규직(Full-time)";
         };
     }
 
