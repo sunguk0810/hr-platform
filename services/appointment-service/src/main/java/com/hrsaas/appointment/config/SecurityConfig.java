@@ -2,6 +2,7 @@ package com.hrsaas.appointment.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -25,6 +26,13 @@ public class SecurityConfig {
     @Bean
     public SecurityFilter securityFilter() {
         return new SecurityFilter(jwtTokenProvider);
+    }
+
+    @Bean
+    public FilterRegistrationBean<SecurityFilter> securityFilterRegistration(SecurityFilter securityFilter) {
+        FilterRegistrationBean<SecurityFilter> registration = new FilterRegistrationBean<>(securityFilter);
+        registration.setEnabled(false); // Prevent automatic servlet filter registration
+        return registration;
     }
 
     @Bean
