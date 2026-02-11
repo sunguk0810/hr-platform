@@ -22,13 +22,18 @@ public interface EmployeeRepository extends JpaRepository<Employee, UUID> {
 
     Optional<Employee> findByUserIdAndTenantId(UUID userId, UUID tenantId);
 
-    @Query("SELECT e FROM Employee e WHERE e.tenantId = :tenantId " +
-           "AND (:status IS NULL OR e.status = :status) " +
-           "AND (:departmentId IS NULL OR e.departmentId = :departmentId) " +
-           "AND (:name IS NULL OR e.name LIKE %:name%)")
+    @Query(value = "SELECT * FROM hr_core.employee e WHERE e.tenant_id = :tenantId " +
+           "AND (:status::TEXT IS NULL OR e.status = :status::TEXT) " +
+           "AND (:departmentId::UUID IS NULL OR e.department_id = :departmentId::UUID) " +
+           "AND (:name IS NULL OR e.name ILIKE '%' || :name || '%')",
+           countQuery = "SELECT COUNT(*) FROM hr_core.employee e WHERE e.tenant_id = :tenantId " +
+           "AND (:status::TEXT IS NULL OR e.status = :status::TEXT) " +
+           "AND (:departmentId::UUID IS NULL OR e.department_id = :departmentId::UUID) " +
+           "AND (:name IS NULL OR e.name ILIKE '%' || :name || '%')",
+           nativeQuery = true)
     Page<Employee> search(
         @Param("tenantId") UUID tenantId,
-        @Param("status") EmployeeStatus status,
+        @Param("status") String status,
         @Param("departmentId") UUID departmentId,
         @Param("name") String name,
         Pageable pageable);

@@ -114,7 +114,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         Page<Employee> page = employeeRepository.search(
             tenantId,
-            condition.getStatus(),
+            condition.getStatus() != null ? condition.getStatus().name() : null,
             condition.getDepartmentId(),
             condition.getName(),
             pageable
@@ -262,8 +262,11 @@ public class EmployeeServiceImpl implements EmployeeService {
     public byte[] exportToExcel(EmployeeSearchCondition condition) {
         UUID tenantId = TenantContext.getCurrentTenant();
         Page<Employee> page = employeeRepository.search(
-            tenantId, condition.getStatus(), condition.getDepartmentId(),
-            condition.getName(), org.springframework.data.domain.Pageable.unpaged());
+            tenantId,
+            condition.getStatus() != null ? condition.getStatus().name() : null,
+            condition.getDepartmentId(),
+            condition.getName(),
+            org.springframework.data.domain.Pageable.unpaged());
         return excelEmployeeService.exportToExcel(page.getContent());
     }
 
