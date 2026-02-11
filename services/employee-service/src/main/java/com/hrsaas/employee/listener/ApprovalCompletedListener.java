@@ -59,8 +59,14 @@ public class ApprovalCompletedListener {
             }
             case "EMPLOYEE_CHANGE" -> {
                 log.info("Processing employee change approval: referenceId={}, status={}", referenceId, status);
+                UUID actionBy = event.has("approvedBy")
+                    ? UUID.fromString(event.get("approvedBy").asText())
+                    : null;
+                String rejectionReason = event.has("reason")
+                    ? event.get("reason").asText()
+                    : null;
                 changeRequestService.handleApprovalCompleted(
-                    referenceId, "APPROVED".equals(status));
+                    referenceId, "APPROVED".equals(status), actionBy, rejectionReason);
             }
             default -> log.debug("Ignoring document type: {}", documentType);
         }

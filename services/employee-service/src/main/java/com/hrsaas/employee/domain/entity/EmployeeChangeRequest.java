@@ -42,17 +42,34 @@ public class EmployeeChangeRequest extends TenantAwareEntity {
     @Column(name = "reason", length = 500)
     private String reason;
 
+    @Column(name = "approved_by")
+    private UUID approvedBy;
+
+    @Column(name = "approved_at")
+    private java.time.LocalDateTime approvedAt;
+
+    @Column(name = "rejection_reason", length = 500)
+    private String rejectionReason;
+
+    @Column(name = "attachment_file_ids", columnDefinition = "TEXT")
+    private String attachmentFileIds; // JSON array of file IDs
+
     /**
      * Approve this change request.
      */
-    public void approve() {
+    public void approve(UUID approvedBy) {
         this.status = "APPROVED";
+        this.approvedBy = approvedBy;
+        this.approvedAt = java.time.LocalDateTime.now();
     }
 
     /**
      * Reject this change request.
      */
-    public void reject() {
+    public void reject(UUID rejectedBy, String rejectionReason) {
         this.status = "REJECTED";
+        this.approvedBy = rejectedBy;
+        this.approvedAt = java.time.LocalDateTime.now();
+        this.rejectionReason = rejectionReason;
     }
 }
