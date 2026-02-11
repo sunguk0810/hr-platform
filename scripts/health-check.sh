@@ -31,12 +31,12 @@ FAILURES=0
 # Service definitions: name:port:label
 SERVICES=(
   # Infrastructure
-  "localhost:5433:PostgreSQL Database"
-  "localhost:6381:Redis Cache"
-  "localhost:4566:LocalStack (AWS)"
+  "localhost:15432:PostgreSQL Database"
+  "localhost:16379:Redis Cache"
+  "localhost:14566:LocalStack (AWS)"
   "localhost:16686:Jaeger Tracing"
-  "localhost:9009:Prometheus Metrics"
-  "localhost:3000:Grafana Dashboard"
+  "localhost:19090:Prometheus Metrics"
+  "localhost:13000:Grafana Dashboard"
   "localhost:18080:Traefik Gateway"
 
   # Application Services (with actuator health endpoints)

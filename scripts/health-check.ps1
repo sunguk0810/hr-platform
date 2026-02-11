@@ -21,12 +21,12 @@ $Failures = 0
 # Service definitions
 $Services = @(
     # Infrastructure
-    @{Host="localhost"; Port=5433; Label="PostgreSQL Database"}
-    @{Host="localhost"; Port=6381; Label="Redis Cache"}
-    @{Host="localhost"; Port=4566; Label="LocalStack (AWS)"}
+    @{Host="localhost"; Port=15432; Label="PostgreSQL Database"}
+    @{Host="localhost"; Port=16379; Label="Redis Cache"}
+    @{Host="localhost"; Port=14566; Label="LocalStack (AWS)"}
     @{Host="localhost"; Port=16686; Label="Jaeger Tracing"}
-    @{Host="localhost"; Port=9009; Label="Prometheus Metrics"}
-    @{Host="localhost"; Port=3000; Label="Grafana Dashboard"}
+    @{Host="localhost"; Port=19090; Label="Prometheus Metrics"}
+    @{Host="localhost"; Port=13000; Label="Grafana Dashboard"}
     @{Host="localhost"; Port=18080; Label="Traefik Gateway"}
 
     # Application Services

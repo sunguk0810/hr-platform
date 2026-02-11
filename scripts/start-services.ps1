@@ -111,7 +111,7 @@ if (-not $pgRunning) {
     Write-Host "[OK] Redis is ready" -ForegroundColor Green
 
     Write-Host "Waiting for LocalStack..." -ForegroundColor Gray
-    do { Start-Sleep -Seconds 3 } until (curl.exe -sf http://localhost:4566/_localstack/health 2>$null)
+    do { Start-Sleep -Seconds 3 } until (curl.exe -sf http://localhost:14566/_localstack/health 2>$null)
     Write-Host "[OK] LocalStack is ready" -ForegroundColor Green
     Write-Host ""
 }

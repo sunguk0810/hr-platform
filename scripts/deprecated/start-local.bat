@@ -27,7 +27,7 @@ echo Redis is ready
 
 :wait_localstack
 echo Waiting for LocalStack...
-curl -sf http://localhost:4566/_localstack/health >nul 2>&1
+curl -sf http://localhost:14566/_localstack/health >nul 2>&1
 if errorlevel 1 (
     timeout /t 3 /nobreak >nul
     goto wait_localstack
@@ -40,12 +40,12 @@ echo All infrastructure services are ready!
 echo ============================================
 echo.
 echo Service URLs:
-echo   - PostgreSQL:    localhost:5433 (hr_saas/hr_saas_password)
-echo   - Redis:         localhost:6381
-echo   - LocalStack:    http://localhost:4566
+echo   - PostgreSQL:    localhost:15432 (hr_saas/hr_saas_password)
+echo   - Redis:         localhost:16379
+echo   - LocalStack:    http://localhost:14566
 echo   - Jaeger:        http://localhost:16686
-echo   - Prometheus:    http://localhost:9009
-echo   - Grafana:       http://localhost:3000 (admin/admin)
+echo   - Prometheus:    http://localhost:19090
+echo   - Grafana:       http://localhost:13000 (admin/admin)
 echo   - Traefik:       http://localhost:18080 (API Gateway)
 echo   - Traefik Dash:  http://localhost:18090
 echo.
