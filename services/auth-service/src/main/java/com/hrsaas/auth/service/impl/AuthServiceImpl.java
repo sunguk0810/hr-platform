@@ -55,13 +55,8 @@ public class AuthServiceImpl implements AuthService {
     public TokenResponse login(LoginRequest request, String ipAddress, String userAgent) {
         log.info("Login attempt: username={}", request.getUsername());
 
-        // Support tenant-scoped username lookup
-        UUID tenantId;
-        try {
-            tenantId = UUID.fromString(request.getTenantCode());
-        } catch (IllegalArgumentException | NullPointerException e) {
-            throw new BusinessException("AUTH_001", "올바르지 않은 테넌트 코드입니다.", HttpStatus.BAD_REQUEST);
-        }
+        // Resolve tenant code to tenant ID via tenant-service
+        final UUID tenantId = resolveTenantId(request.getTenantCode());
 
         UserEntity user = userRepository.findByUsernameAndTenantId(request.getUsername(), tenantId)
                 .orElseThrow(() -> {
@@ -309,6 +304,20 @@ public class AuthServiceImpl implements AuthService {
                 log.warn("Failed to check tenant status for tenantId={}: {}", tenantId, e.getMessage());
             }
         });
+    }
+
+    private UUID resolveTenantId(String tenantCode) {
+        // Try parsing as UUID first (backward compatibility)
+        try {
+            return UUID.fromString(tenantCode);
+        } catch (IllegalArgumentException | NullPointerException e) {
+            // Not a UUID, resolve via tenant-service
+            return tenantServiceClient
+                    .map(client -> client.getByTenantCode(tenantCode))
+                    .map(response -> response.getData())
+                    .map(tenant -> tenant.getId())
+                    .orElseThrow(() -> new BusinessException("AUTH_001", "올바르지 않은 테넌트 코드입니다.", HttpStatus.BAD_REQUEST));
+        }
     }
 
     private UserContext buildUserContext(UserEntity user) {
