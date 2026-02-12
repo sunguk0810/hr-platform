@@ -38,6 +38,11 @@ spring:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:16379}
       password: ${REDIS_PASSWORD:redis_password}
+feign:
+  client:
+    tenant-service:
+      url: ${TENANT_SERVICE_URL:http://localhost:8082}
+
   cloud:
     aws:
       region:
