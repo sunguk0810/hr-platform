@@ -32,5 +32,10 @@ public enum JobStatus {
     /**
      * 완료 (채용 완료)
      */
-    COMPLETED
+    COMPLETED,
+
+    /**
+     * 모집중 (공개)
+     */
+    OPEN
 }
