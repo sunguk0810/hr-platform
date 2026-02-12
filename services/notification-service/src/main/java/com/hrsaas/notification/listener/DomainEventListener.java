@@ -44,6 +44,8 @@ public class DomainEventListener {
                 case "LeaveRequestCreatedEvent" -> handleLeaveRequested(event);
                 case "EmployeeCreatedEvent" -> handleEmployeeCreated(event);
                 case "PasswordResetCompletedEvent" -> handlePasswordResetCompleted(event);
+                case "InterviewReminderEvent" -> handleInterviewReminder(event);
+                case "InterviewFeedbackReminderEvent" -> handleInterviewFeedbackReminder(event);
                 default -> log.debug("Ignoring event type: {}", eventType);
             }
         } catch (Exception e) {
@@ -192,6 +194,84 @@ public class DomainEventListener {
 
         notificationService.send(request);
         log.info("Password reset notification sent: userId={}", userId);
+    }
+
+    private void handleInterviewReminder(JsonNode event) {
+        UUID tenantId = getUUID(event, "tenantId");
+        UUID interviewId = getUUID(event, "interviewId");
+        String applicantName = getText(event, "applicantName", "");
+        String scheduledDate = getText(event, "scheduledDate", "");
+        String scheduledTime = getText(event, "scheduledTime", "");
+        String location = getText(event, "location", "");
+        String meetingUrl = getText(event, "meetingUrl", "");
+
+        JsonNode interviewersNode = event.get("interviewers");
+        if (interviewersNode != null && interviewersNode.isArray()) {
+            for (JsonNode interviewer : interviewersNode) {
+                UUID interviewerId = getUUID(interviewer, "id");
+                if (interviewerId == null) continue;
+
+                if (isOptedOut(tenantId, interviewerId, NotificationType.INTERVIEW_REMINDER)) {
+                    continue;
+                }
+
+                String content = String.format("오늘 예정된 면접이 있습니다.\n지원자: %s\n일시: %s %s",
+                        applicantName, scheduledDate, scheduledTime);
+                if (location != null && !location.isEmpty()) {
+                    content += "\n장소: " + location;
+                }
+                if (meetingUrl != null && !meetingUrl.isEmpty()) {
+                    content += "\n링크: " + meetingUrl;
+                }
+
+                SendNotificationRequest request = SendNotificationRequest.builder()
+                        .recipientId(interviewerId)
+                        .notificationType(NotificationType.INTERVIEW_REMINDER)
+                        .channels(List.of(NotificationChannel.WEB_PUSH, NotificationChannel.EMAIL))
+                        .title("[면접알림] 오늘 예정된 면접이 있습니다")
+                        .content(content)
+                        .linkUrl("/recruitment/interviews/" + interviewId)
+                        .referenceType("INTERVIEW")
+                        .referenceId(interviewId)
+                        .build();
+
+                notificationService.send(request);
+            }
+        }
+        log.info("Interview reminder processed: interviewId={}", interviewId);
+    }
+
+    private void handleInterviewFeedbackReminder(JsonNode event) {
+        UUID tenantId = getUUID(event, "tenantId");
+        UUID interviewId = getUUID(event, "interviewId");
+        String applicantName = getText(event, "applicantName", "");
+        String feedbackDeadline = getText(event, "feedbackDeadline", "");
+
+        JsonNode interviewersNode = event.get("interviewers");
+        if (interviewersNode != null && interviewersNode.isArray()) {
+            for (JsonNode interviewer : interviewersNode) {
+                UUID interviewerId = getUUID(interviewer, "id");
+                if (interviewerId == null) continue;
+
+                if (isOptedOut(tenantId, interviewerId, NotificationType.INTERVIEW_FEEDBACK_REMINDER)) {
+                    continue;
+                }
+
+                SendNotificationRequest request = SendNotificationRequest.builder()
+                        .recipientId(interviewerId)
+                        .notificationType(NotificationType.INTERVIEW_FEEDBACK_REMINDER)
+                        .channels(List.of(NotificationChannel.WEB_PUSH, NotificationChannel.EMAIL))
+                        .title("[평가요청] 면접 피드백을 작성해주세요")
+                        .content(String.format("지원자 %s님의 면접 평가 마감일입니다. (%s)", applicantName, feedbackDeadline))
+                        .linkUrl("/recruitment/interviews/" + interviewId + "/feedback")
+                        .referenceType("INTERVIEW")
+                        .referenceId(interviewId)
+                        .build();
+
+                notificationService.send(request);
+            }
+        }
+        log.info("Interview feedback reminder processed: interviewId={}", interviewId);
     }
 
     /**

@@ -11,5 +11,7 @@ public enum NotificationType {
     EMPLOYEE_RESIGNED,      // 퇴사
     ANNOUNCEMENT,           // 공지사항
     SYSTEM,                 // 시스템 알림
-    PASSWORD_RESET          // 비밀번호 초기화
+    PASSWORD_RESET,         // 비밀번호 초기화
+    INTERVIEW_REMINDER,     // 면접 알림
+    INTERVIEW_FEEDBACK_REMINDER // 면접 피드백 알림
 }
