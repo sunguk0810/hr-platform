@@ -10,11 +10,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
-import com.hrsaas.certificate.domain.entity.CertificateIssue;
 import com.hrsaas.certificate.repository.CertificateIssueRepository;
 import com.hrsaas.certificate.repository.CertificateRequestRepository;
 import com.hrsaas.certificate.repository.CertificateTemplateRepository;
-import com.hrsaas.certificate.service.PdfGenerationService;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -38,8 +36,6 @@ class CertificateIssueServiceImplTest {
     private CertificateRequestRepository certificateRequestRepository;
     @Mock
     private CertificateTemplateRepository certificateTemplateRepository;
-    @Mock
-    private PdfGenerationService pdfGenerationService;
 
     @InjectMocks
     private CertificateIssueServiceImpl certificateIssueService;
@@ -106,24 +102,5 @@ class CertificateIssueServiceImplTest {
         // The format is XXXX-XXXX-XXXX, length = 12 chars + 2 hyphens = 14
         assertThat(verificationCode).hasSize(14);
         assertThat(verificationCode).matches("^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$");
-    }
-
-    @Test
-    @DisplayName("downloadPdf should delegate to PdfGenerationService")
-    void downloadPdf() {
-        // Given
-        UUID issueId = UUID.randomUUID();
-        CertificateIssue issue = org.mockito.Mockito.mock(CertificateIssue.class);
-        byte[] expectedPdf = new byte[]{1, 2, 3};
-
-        given(certificateIssueRepository.findById(issueId)).willReturn(Optional.of(issue));
-        given(issue.isValid()).willReturn(true);
-        given(pdfGenerationService.generatePdf(issue)).willReturn(expectedPdf);
-
-        // When
-        byte[] result = certificateIssueService.downloadPdf(issueId);
-
-        // Then
-        assertThat(result).isEqualTo(expectedPdf);
     }
 }

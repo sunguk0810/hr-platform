@@ -13,7 +13,6 @@ import com.hrsaas.tenant.domain.dto.policy.PasswordPolicyData;
 import com.hrsaas.tenant.domain.dto.request.CreateTenantRequest;
 import com.hrsaas.tenant.domain.dto.request.TenantSearchRequest;
 import com.hrsaas.tenant.domain.dto.request.UpdateTenantRequest;
-import com.hrsaas.tenant.domain.dto.response.TenantBasicResponse;
 import com.hrsaas.tenant.domain.dto.response.TenantDetailResponse;
 import com.hrsaas.tenant.domain.dto.response.TenantListItemResponse;
 import com.hrsaas.tenant.domain.dto.response.TenantResponse;
@@ -130,13 +129,6 @@ public class TenantServiceImpl implements TenantService {
     public TenantResponse getById(UUID id) {
         Tenant tenant = findById(id);
         return TenantResponse.from(tenant);
-    }
-
-    @Override
-    @Cacheable(value = CacheNames.TENANT, key = "'basic:' + #id")
-    public TenantBasicResponse getBasicInfo(UUID id) {
-        Tenant tenant = findById(id);
-        return TenantBasicResponse.from(tenant);
     }
 
     @Override

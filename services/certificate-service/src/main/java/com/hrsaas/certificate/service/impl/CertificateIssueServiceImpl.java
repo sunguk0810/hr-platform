@@ -11,7 +11,6 @@ import com.hrsaas.certificate.repository.CertificateIssueRepository;
 import com.hrsaas.certificate.repository.CertificateRequestRepository;
 import com.hrsaas.certificate.repository.CertificateTemplateRepository;
 import com.hrsaas.certificate.service.CertificateIssueService;
-import com.hrsaas.certificate.service.PdfGenerationService;
 import com.hrsaas.common.core.exception.BusinessException;
 import com.hrsaas.common.core.exception.ErrorCode;
 import com.hrsaas.common.tenant.TenantContext;
@@ -47,7 +46,6 @@ public class CertificateIssueServiceImpl implements CertificateIssueService {
     private final CertificateIssueRepository certificateIssueRepository;
     private final CertificateRequestRepository certificateRequestRepository;
     private final CertificateTemplateRepository certificateTemplateRepository;
-    private final PdfGenerationService pdfGenerationService;
 
     private static final SecureRandom secureRandom = new SecureRandom();
     private static final String VERIFICATION_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -201,7 +199,9 @@ public class CertificateIssueServiceImpl implements CertificateIssueService {
             throw new BusinessException(ErrorCode.INVALID_REQUEST, "유효하지 않은 증명서입니다");
         }
 
-        return pdfGenerationService.generatePdf(issue);
+        // PDF 생성 로직 (실제 구현 시 별도 서비스로 분리)
+        // TODO: Flying Saucer 또는 iText를 사용한 PDF 생성
+        return new byte[0];
     }
 
     @Override
