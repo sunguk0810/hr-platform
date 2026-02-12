@@ -67,6 +67,15 @@ public interface InterviewRepository extends JpaRepository<Interview, UUID> {
     List<Interview> findOverdueFeedback(@Param("today") LocalDate today);
 
     /**
+     * 피드백 기한 당일 면접 목록
+     */
+    @Query(value = "SELECT * FROM hr_recruitment.interview WHERE " +
+           "status = 'COMPLETED' AND result IS NULL " +
+           "AND feedback_deadline = :today",
+           nativeQuery = true)
+    List<Interview> findFeedbackDeadlineToday(@Param("today") LocalDate today);
+
+    /**
      * 면접 유형별 목록
      */
     Page<Interview> findByInterviewTypeOrderByScheduledDateDesc(InterviewType interviewType, Pageable pageable);

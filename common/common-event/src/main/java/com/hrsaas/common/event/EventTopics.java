@@ -61,6 +61,7 @@ public interface EventTopics {
     String RECRUITMENT_INTERVIEW_SCHEDULED = "hr-saas-recruitment-interview-scheduled";
     String RECRUITMENT_OFFER_APPROVAL_REQUESTED = "hr-saas-recruitment-offer-approval-requested";
     String RECRUITMENT_INTERVIEW_REMINDER = "hr-saas-recruitment-interview-reminder";
+    String RECRUITMENT_INTERVIEW_FEEDBACK_REMINDER = "hr-saas-recruitment-interview-feedback-reminder";
 
     // MDM events
     String MDM_EVENTS = "mdm-events";
