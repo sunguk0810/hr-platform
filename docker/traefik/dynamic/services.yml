@@ -27,7 +27,7 @@ http:
       middlewares:
         - cors-headers
     mdm:
-      rule: "PathPrefix(`/api/v1/mdm`) || PathPrefix(`/api/v1/menus`)"
+      rule: "PathPrefix(`/api/v1/mdm`) || PathPrefix(`/api/v1/menus`) || PathPrefix(`/api/v1/admin/menus`)"
       entryPoints:
         - web
       service: mdm-service

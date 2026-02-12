@@ -57,5 +57,15 @@ public enum ApplicationStatus {
     /**
      * 불합격
      */
-    REJECTED
+    REJECTED,
+
+    /**
+     * 면접 (일반)
+     */
+    INTERVIEW,
+
+    /**
+     * 합격 통보
+     */
+    OFFER
 }

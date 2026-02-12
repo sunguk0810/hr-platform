@@ -76,8 +76,7 @@ public class TenantController {
     }
 
     @GetMapping("/code/{code}")
-    @Operation(summary = "테넌트 코드로 조회")
-    @PreAuthorize("hasRole('SUPER_ADMIN') or @permissionChecker.isTenantAdmin()")
+    @Operation(summary = "테넌트 코드로 조회 (로그인 시 내부 호출용, 인증 불필요)")
     public ResponseEntity<ApiResponse<TenantResponse>> getByCode(@PathVariable String code) {
         TenantResponse response = tenantService.getByCode(code);
         return ResponseEntity.ok(ApiResponse.success(response));

@@ -18,6 +18,5 @@ public class LoginRequest {
     @NotBlank(message = "비밀번호를 입력해주세요.")
     private String password;
 
-    @NotBlank(message = "테넌트 코드를 입력해주세요.")
-    private String tenantCode;
+    private String tenantCode;  // optional - 생략 시 username으로 자동 식별
 }

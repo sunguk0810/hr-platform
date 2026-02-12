@@ -23,12 +23,12 @@ public interface EmployeeRepository extends JpaRepository<Employee, UUID> {
     Optional<Employee> findByUserIdAndTenantId(UUID userId, UUID tenantId);
 
     @Query(value = "SELECT * FROM hr_core.employee e WHERE e.tenant_id = :tenantId " +
-           "AND (:status::TEXT IS NULL OR e.status = :status::TEXT) " +
-           "AND (:departmentId::UUID IS NULL OR e.department_id = :departmentId::UUID) " +
+           "AND (CAST(:status AS TEXT) IS NULL OR e.status = CAST(:status AS TEXT)) " +
+           "AND (CAST(:departmentId AS TEXT) IS NULL OR e.department_id = CAST(:departmentId AS UUID)) " +
            "AND (:name IS NULL OR e.name ILIKE '%' || :name || '%')",
            countQuery = "SELECT COUNT(*) FROM hr_core.employee e WHERE e.tenant_id = :tenantId " +
-           "AND (:status::TEXT IS NULL OR e.status = :status::TEXT) " +
-           "AND (:departmentId::UUID IS NULL OR e.department_id = :departmentId::UUID) " +
+           "AND (CAST(:status AS TEXT) IS NULL OR e.status = CAST(:status AS TEXT)) " +
+           "AND (CAST(:departmentId AS TEXT) IS NULL OR e.department_id = CAST(:departmentId AS UUID)) " +
            "AND (:name IS NULL OR e.name ILIKE '%' || :name || '%')",
            nativeQuery = true)
     Page<Employee> search(
