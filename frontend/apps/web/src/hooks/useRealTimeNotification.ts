@@ -1,8 +1,10 @@
 import { useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { wsClient, type NotificationEvent } from '@/lib/websocket';
+import { useQueryClient } from '@tanstack/react-query';
+import { wsClient, type NotificationEvent, type AttendanceEvent } from '@/lib/websocket';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useAuthStore } from '@/stores/authStore';
+import { queryKeys } from '@/lib/queryClient';
 import { useToast } from './useToast';
 
 export interface UseRealTimeNotificationOptions {
@@ -150,21 +152,47 @@ export function useApprovalRealTime() {
 
 export function useAttendanceRealTime() {
   const { isAuthenticated } = useAuthStore();
+  const { t } = useTranslation('attendance');
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const handleCheckIn = useCallback(
+    (event: AttendanceEvent) => {
+      // Invalidate attendance queries to refresh data
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.attendance() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.attendance.all });
+
+      toast({
+        title: t('realTime.checkIn'),
+        description: t('realTime.checkInDesc', { time: event.time }),
+      });
+    },
+    [t, toast, queryClient]
+  );
+
+  const handleCheckOut = useCallback(
+    (event: AttendanceEvent) => {
+      // Invalidate attendance queries to refresh data
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.attendance() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.attendance.all });
+
+      toast({
+        title: t('realTime.checkOut'),
+        description: t('realTime.checkOutDesc', { time: event.time }),
+      });
+    },
+    [t, toast, queryClient]
+  );
 
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    const unsubscribeCheckIn = wsClient.on('attendance:checked_in', (_event) => {
-      // TODO: Implement attendance check-in real-time UI update
-    });
-
-    const unsubscribeCheckOut = wsClient.on('attendance:checked_out', (_event) => {
-      // TODO: Implement attendance check-out real-time UI update
-    });
+    const unsubscribeCheckIn = wsClient.on('attendance:checked_in', handleCheckIn);
+    const unsubscribeCheckOut = wsClient.on('attendance:checked_out', handleCheckOut);
 
     return () => {
       unsubscribeCheckIn();
       unsubscribeCheckOut();
     };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, handleCheckIn, handleCheckOut]);
 }
