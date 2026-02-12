@@ -80,7 +80,8 @@ public class SecurityFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        return path.startsWith("/actuator") ||
+        return path.equals("/actuator/health") ||
+               path.equals("/actuator/info") ||
                path.startsWith("/health") ||
                path.equals("/favicon.ico");
     }

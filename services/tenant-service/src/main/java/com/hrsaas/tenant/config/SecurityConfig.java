@@ -44,16 +44,24 @@ public class SecurityConfig {
             .securityContext(context -> context
                 .requireExplicitSave(true))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/actuator/**").permitAll()
+                // [보안 패치 적용] Actuator 접근 제어 강화
+                .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                .requestMatchers("/actuator/**").hasAnyRole("SYSTEM_ADMIN", "SUPER_ADMIN")
+
+                // Swagger 및 문서
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+
+                // Tenant API (기존 경로들)
                 .requestMatchers("/api/v1/tenants/*/status").permitAll()
                 .requestMatchers("/api/v1/tenants/*/password-policy").permitAll()
                 .requestMatchers("/api/v1/tenants/*/basic").permitAll()
+
+                // [Master 내용 유지] 새로 추가된 경로 포함
                 .requestMatchers("/api/v1/tenants/code/*").permitAll()
+
                 .anyRequest().authenticated()
             )
             .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
             .build();
     }
-
 }
