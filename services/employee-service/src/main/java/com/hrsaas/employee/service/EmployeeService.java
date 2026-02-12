@@ -49,4 +49,8 @@ public interface EmployeeService {
     long countByGrade(String jobTitleCode);
 
     boolean existsById(UUID id);
+
+    List<EmployeeResponse> getBatch(List<UUID> ids);
+
+    List<EmployeeResponse> getList(EmployeeSearchCondition condition);
 }

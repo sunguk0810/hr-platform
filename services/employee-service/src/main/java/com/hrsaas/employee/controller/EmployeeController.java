@@ -213,4 +213,21 @@ public class EmployeeController {
         boolean exists = employeeService.existsById(id);
         return ResponseEntity.ok(ApiResponse.success(Map.of("exists", exists)));
     }
+
+    @PostMapping("/batch")
+    @Operation(summary = "직원 정보 일괄 조회")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<List<EmployeeResponse>>> getBatch(@RequestBody List<UUID> ids) {
+        List<EmployeeResponse> responses = employeeService.getBatch(ids);
+        return ResponseEntity.ok(ApiResponse.success(responses));
+    }
+
+    @GetMapping("/list")
+    @Operation(summary = "직원 목록 조회 (페이징 없음)")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<List<EmployeeResponse>>> getList(
+            @ModelAttribute EmployeeSearchCondition condition) {
+        List<EmployeeResponse> responses = employeeService.getList(condition);
+        return ResponseEntity.ok(ApiResponse.success(responses));
+    }
 }
