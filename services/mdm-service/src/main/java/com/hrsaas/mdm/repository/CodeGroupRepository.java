@@ -19,6 +19,12 @@ public interface CodeGroupRepository extends JpaRepository<CodeGroup, UUID> {
         @Param("groupCode") String groupCode,
         @Param("tenantId") UUID tenantId);
 
+    @Query("SELECT cg FROM CodeGroup cg WHERE cg.groupCode IN :groupCodes " +
+           "AND (cg.tenantId IS NULL OR cg.tenantId = :tenantId)")
+    List<CodeGroup> findByGroupCodeInAndTenantId(
+        @Param("groupCodes") java.util.Collection<String> groupCodes,
+        @Param("tenantId") UUID tenantId);
+
     @Query("SELECT cg FROM CodeGroup cg WHERE cg.groupCode = :groupCode AND cg.tenantId IS NULL")
     Optional<CodeGroup> findSystemCodeGroup(@Param("groupCode") String groupCode);
 
