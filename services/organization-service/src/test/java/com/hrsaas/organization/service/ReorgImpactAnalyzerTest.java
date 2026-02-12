@@ -17,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -25,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -64,10 +66,12 @@ class ReorgImpactAnalyzerTest {
 
         ReorgPlan plan = new ReorgPlan("2026 조직개편", List.of(change1, change2));
 
-        when(employeeClient.countByDepartmentId(eq(dept1Id)))
-            .thenReturn(ApiResponse.success(5L));
-        when(employeeClient.countByDepartmentId(eq(dept2Id)))
-            .thenReturn(ApiResponse.success(3L));
+        Map<UUID, Long> empCounts = new HashMap<>();
+        empCounts.put(dept1Id, 5L);
+        empCounts.put(dept2Id, 3L);
+
+        when(employeeClient.countByDepartmentIds(anyList()))
+            .thenReturn(ApiResponse.success(empCounts));
         when(approvalClient.getDepartmentApprovalCounts(anyList()))
             .thenReturn(ApiResponse.success(Collections.emptyMap()));
 
@@ -81,6 +85,8 @@ class ReorgImpactAnalyzerTest {
         assertThat(result.getPositionChanges()).hasSize(2);
         assertThat(result.getWarnings()).isEmpty();
         assertThat(result.getApprovalLineChanges()).isEqualTo(0);
+
+        verify(employeeClient).countByDepartmentIds(anyList());
     }
 
     @Test
@@ -93,8 +99,11 @@ class ReorgImpactAnalyzerTest {
 
         ReorgPlan plan = new ReorgPlan("부서 삭제 계획", List.of(deleteChange));
 
-        when(employeeClient.countByDepartmentId(eq(deptId)))
-            .thenReturn(ApiResponse.success(10L));
+        Map<UUID, Long> empCounts = new HashMap<>();
+        empCounts.put(deptId, 10L);
+
+        when(employeeClient.countByDepartmentIds(anyList()))
+            .thenReturn(ApiResponse.success(empCounts));
         when(approvalClient.getDepartmentApprovalCounts(anyList()))
             .thenReturn(ApiResponse.success(Collections.emptyMap()));
 
@@ -111,7 +120,7 @@ class ReorgImpactAnalyzerTest {
     }
 
     @Test
-    @DisplayName("analyzeImpact: 직원 서비스 장애 시 fallback(-1) 응답이면 경고를 추가한다")
+    @DisplayName("analyzeImpact: 직원 서비스 장애 시 경고를 추가한다")
     void analyzeImpact_employeeServiceDown_addsWarning() {
         // given
         UUID deptId = UUID.randomUUID();
@@ -120,9 +129,9 @@ class ReorgImpactAnalyzerTest {
 
         ReorgPlan plan = new ReorgPlan("서비스 장애 테스트", List.of(change));
 
-        // Fallback returns -1 when employee-service is unavailable
-        when(employeeClient.countByDepartmentId(eq(deptId)))
-            .thenReturn(ApiResponse.success(-1L));
+        // Simulate exception to trigger catch block
+        when(employeeClient.countByDepartmentIds(anyList()))
+            .thenThrow(new RuntimeException("Service down"));
         when(approvalClient.getDepartmentApprovalCounts(anyList()))
             .thenReturn(ApiResponse.success(Collections.emptyMap()));
 
@@ -146,7 +155,7 @@ class ReorgImpactAnalyzerTest {
         DepartmentChange change = new DepartmentChange(deptId, "DELETE", null, null);
         ReorgPlan plan = new ReorgPlan("결재 테스트", List.of(change));
 
-        when(employeeClient.countByDepartmentId(any())).thenReturn(ApiResponse.success(0L));
+        when(employeeClient.countByDepartmentIds(anyList())).thenReturn(ApiResponse.success(Collections.emptyMap()));
 
         Map<UUID, Long> approvalCounts = Map.of(deptId, 5L);
         when(approvalClient.getDepartmentApprovalCounts(anyList()))
