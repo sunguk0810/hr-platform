@@ -65,6 +65,11 @@ public class ApprovalLine extends BaseEntity {
     @Column(name = "completed_at")
     private Instant completedAt;
 
+    @Version
+    @Column(name = "version")
+    @Builder.Default
+    private Long version = 0L;
+
     public void activate() {
         if (this.status != ApprovalLineStatus.WAITING) {
             throw new IllegalStateException("Only waiting lines can be activated");
