@@ -4,6 +4,10 @@ import com.hrsaas.common.core.exception.BusinessException;
 import com.hrsaas.common.core.exception.ErrorCode;
 import com.hrsaas.common.event.EventPublisher;
 import com.hrsaas.common.tenant.TenantContext;
+import com.hrsaas.recruitment.client.NotificationServiceClient;
+import com.hrsaas.recruitment.client.dto.NotificationChannel;
+import com.hrsaas.recruitment.client.dto.NotificationType;
+import com.hrsaas.recruitment.client.dto.SendNotificationRequest;
 import com.hrsaas.recruitment.domain.dto.request.*;
 import com.hrsaas.recruitment.domain.dto.response.InterviewResponse;
 import com.hrsaas.recruitment.domain.dto.response.InterviewScoreResponse;
@@ -38,6 +42,7 @@ public class InterviewServiceImpl implements InterviewService {
     private final InterviewScoreRepository interviewScoreRepository;
     private final ApplicationRepository applicationRepository;
     private final EventPublisher eventPublisher;
+    private final NotificationServiceClient notificationServiceClient;
 
     @Override
     @Transactional
@@ -304,5 +309,84 @@ public class InterviewServiceImpl implements InterviewService {
     public InterviewResponse confirm(UUID id, ScheduleInterviewRequest request) {
         log.info("Confirming interview: {}", id);
         return schedule(id, request);
+    }
+
+    @Override
+    @Transactional
+    public void sendFeedbackReminders() {
+        LocalDate today = LocalDate.now();
+        List<Interview> dueInterviews = interviewRepository.findByFeedbackDeadlineAndStatusIn(
+                today,
+                List.of(InterviewStatus.SCHEDULED, InterviewStatus.IN_PROGRESS)
+        );
+
+        log.info("Found {} interviews with feedback deadline today", dueInterviews.size());
+
+        for (Interview interview : dueInterviews) {
+            try {
+                processFeedbackReminder(interview);
+            } catch (Exception e) {
+                log.error("Failed to send feedback reminder for interview: {}", interview.getId(), e);
+            }
+        }
+    }
+
+    private void processFeedbackReminder(Interview interview) {
+        // 1. Identify all required interviewers
+        List<Map<String, Object>> interviewers = interview.getInterviewers();
+        if (interviewers == null || interviewers.isEmpty()) {
+            return;
+        }
+
+        // 2. Identify interviewers who have already submitted scores
+        List<InterviewScore> scores = interview.getScores();
+        java.util.Set<String> submittedInterviewerIds = scores.stream()
+                .map(score -> score.getInterviewerId().toString())
+                .collect(Collectors.toSet());
+
+        // 3. Find pending interviewers
+        for (Map<String, Object> interviewer : interviewers) {
+            String idStr = (String) interviewer.get("id");
+            if (idStr == null || submittedInterviewerIds.contains(idStr)) {
+                continue;
+            }
+
+            // 4. Send notification
+            String name = (String) interviewer.get("name");
+            String email = (String) interviewer.get("email");
+
+            UUID recipientId;
+            try {
+                recipientId = UUID.fromString(idStr);
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid interviewer ID format: {}", idStr);
+                continue;
+            }
+
+            String applicantName = interview.getApplication().getApplicant().getName();
+            String jobTitle = interview.getApplication().getJobPosting().getTitle();
+
+            SendNotificationRequest request = SendNotificationRequest.builder()
+                    .recipientId(recipientId)
+                    .recipientEmail(email)
+                    .notificationType(NotificationType.INTERVIEW_FEEDBACK_REMINDER)
+                    .channels(List.of(NotificationChannel.WEB_PUSH, NotificationChannel.EMAIL))
+                    .title("면접 결과 피드백 요청")
+                    .content(String.format("[%s] %s 지원자에 대한 면접 결과 피드백을 오늘까지 제출해주세요.",
+                            jobTitle, applicantName))
+                    .linkUrl("/recruitment/interviews/" + interview.getId()) // Adjust link as needed
+                    .referenceType("INTERVIEW")
+                    .referenceId(interview.getId())
+                    .build();
+
+            try {
+                notificationServiceClient.send(request);
+                log.info("Sent feedback reminder to interviewer: {} ({}) for interview: {}",
+                        name, recipientId, interview.getId());
+            } catch (Exception e) {
+                log.error("Failed to send feedback reminder to interviewer: {} ({}) for interview: {}",
+                        name, recipientId, interview.getId(), e);
+            }
+        }
     }
 }

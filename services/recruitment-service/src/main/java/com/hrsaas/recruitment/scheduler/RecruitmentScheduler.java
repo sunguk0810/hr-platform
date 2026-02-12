@@ -5,9 +5,11 @@ import com.hrsaas.recruitment.domain.entity.Applicant;
 import com.hrsaas.recruitment.domain.entity.Application;
 import com.hrsaas.recruitment.domain.entity.Interview;
 import com.hrsaas.recruitment.domain.entity.JobPosting;
+import com.hrsaas.recruitment.domain.event.InterviewFeedbackReminderEvent;
 import com.hrsaas.recruitment.domain.event.InterviewReminderEvent;
 import com.hrsaas.recruitment.repository.InterviewRepository;
 import com.hrsaas.recruitment.repository.JobPostingRepository;
+import com.hrsaas.recruitment.service.InterviewService;
 import com.hrsaas.recruitment.service.OfferService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +31,7 @@ public class RecruitmentScheduler {
     private final JobPostingRepository jobPostingRepository;
     private final InterviewRepository interviewRepository;
     private final OfferService offerService;
+    private final InterviewService interviewService;
     private final EventPublisher eventPublisher;
 
     /**
@@ -62,13 +65,40 @@ public class RecruitmentScheduler {
 
     /**
      * 피드백 기한 알림 (매일 09:00)
-     * TODO: 실제 알림 발송 구현
      */
     @Scheduled(cron = "0 0 9 * * ?")
+    @Transactional(readOnly = true)
     public void sendFeedbackReminders() {
         log.info("Starting feedback reminder check");
-        // TODO: 피드백 기한이 오늘인 면접에 대해 알림 발송
-        log.info("Completed feedback reminder check");
+
+        List<Interview> deadlineInterviews = interviewRepository.findFeedbackDeadlineToday(LocalDate.now());
+
+        for (Interview interview : deadlineInterviews) {
+            try {
+                Application application = interview.getApplication();
+                Applicant applicant = application.getApplicant();
+
+                InterviewFeedbackReminderEvent event = InterviewFeedbackReminderEvent.builder()
+                        .tenantId(interview.getTenantId())
+                        .interviewId(interview.getId())
+                        .applicationId(application.getId())
+                        .applicantName(applicant.getName())
+                        .applicantEmail(applicant.getEmail())
+                        .interviewType(interview.getInterviewType().name())
+                        .round(interview.getRound())
+                        .scheduledDate(interview.getScheduledDate())
+                        .scheduledTime(interview.getScheduledTime())
+                        .interviewers(interview.getInterviewers())
+                        .feedbackDeadline(interview.getFeedbackDeadline())
+                        .build();
+
+                eventPublisher.publish(event);
+            } catch (Exception e) {
+                log.error("Failed to send feedback reminder for interview: {}", interview.getId(), e);
+            }
+        }
+
+        log.info("Completed feedback reminder check. Sent {} reminders.", deadlineInterviews.size());
     }
 
     /**

@@ -79,6 +79,13 @@ jwt:
 notification:
   email:
     enabled: ${NOTIFICATION_EMAIL_ENABLED:false}
+  sms:
+    enabled: ${NOTIFICATION_SMS_ENABLED:false}
+    provider: ${NOTIFICATION_SMS_PROVIDER:aws-sns}
+
+application:
+  employee-service:
+    url: ${EMPLOYEE_SERVICE_URL:http://employee-service:8080}
 
 logging:
   level:

@@ -68,6 +68,13 @@ public class TenantController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
+    @GetMapping("/{id}/basic")
+    @Operation(summary = "테넌트 기본 정보 조회 (공개용)")
+    public ResponseEntity<ApiResponse<TenantBasicResponse>> getBasicInfo(@PathVariable UUID id) {
+        TenantBasicResponse response = tenantService.getBasicInfo(id);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
     @GetMapping("/code/{code}")
     @Operation(summary = "테넌트 코드로 조회")
     @PreAuthorize("hasRole('SUPER_ADMIN') or @permissionChecker.isTenantAdmin()")

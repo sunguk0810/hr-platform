@@ -80,6 +80,12 @@ class AppointmentDraftServiceImplTest {
         );
 
         draftId = UUID.randomUUID();
+            Optional.of(employeeClient)
+        );
+
+        draftId = UUID.randomUUID();
+        // Assuming AppointmentDraft has a public builder or constructor used here
+        // The builder was visible in the source code
         draft = AppointmentDraft.builder()
                 .draftNumber("APT-2025-0001")
                 .title("Test Draft")
@@ -187,6 +193,9 @@ class AppointmentDraftServiceImplTest {
         when(detailRepository.existsByDraftIdAndEmployeeIdAndAppointmentType(any(), any(), any()))
                 .thenReturn(false);
         when(draftRepository.save(any(AppointmentDraft.class))).thenAnswer(i -> i.getArgument(0));
+
+        // We can mock employeeClient if needed, but catching exception is default behavior in service
+        // so we don't strictly need it for basic success test without employee enrichment
 
         AppointmentDraftResponse response = draftService.addDetail(draftId, request);
 
@@ -322,6 +331,23 @@ class AppointmentDraftServiceImplTest {
         assertThatThrownBy(() -> draftService.submit(draftId))
             .isInstanceOf(BusinessException.class)
             .hasMessageContaining("승인자(매니저)를 찾을 수 없습니다");
+    @DisplayName("Submit - Success")
+    void submit_success() {
+        ReflectionTestUtils.setField(draft, "status", DraftStatus.DRAFT);
+        // Add a detail because submit requires details
+        AppointmentDetail detail = AppointmentDetail.builder()
+                .employeeId(UUID.randomUUID())
+                .appointmentType(AppointmentType.PROMOTION)
+                .build();
+        draft.addDetail(detail);
+
+        when(draftRepository.findById(draftId)).thenReturn(Optional.of(draft));
+        when(draftRepository.save(any(AppointmentDraft.class))).thenAnswer(i -> i.getArgument(0));
+
+        AppointmentDraftResponse response = draftService.submit(draftId);
+
+        assertThat(response.getStatus()).isEqualTo(DraftStatus.PENDING_APPROVAL);
+        assertThat(response.getApprovalId()).isNotNull();
     }
 
     @Test
@@ -375,6 +401,14 @@ class AppointmentDraftServiceImplTest {
         when(draftRepository.save(any(AppointmentDraft.class))).thenAnswer(i -> i.getArgument(0));
 
         AppointmentDraftResponse response = draftService.rollback(draftId);
+
+        // Rollback doesn't change draft status in implementation?
+        // Implementation: "return AppointmentDraftResponse.fromWithDetails(draftRepository.save(draft));"
+        // And loops details to rollback.
+        // It doesn't seem to update draft status to anything else.
+        // But let's check detail status if possible, or verify interactions.
+        // Since we don't return detail objects in assertions easily without more setup,
+        // we assume success if no exception and save is called.
 
         verify(draftRepository).save(draft);
     }
