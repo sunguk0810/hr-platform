@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -61,7 +62,7 @@ public class HolidayImportScheduler {
         for (TenantBasicDto tenant : tenants) {
             try {
                 TenantContext.setCurrentTenant(tenant.getId());
-                int imported = importHolidaysForTenant(tenant.getId(), holidays);
+                int imported = importHolidaysForTenant(tenant.getId(), year, holidays);
                 totalImported += imported;
                 log.info("Imported {} holidays for tenant={}, year={}", imported, tenant.getId(), year);
             } catch (Exception e) {
@@ -74,12 +75,17 @@ public class HolidayImportScheduler {
         log.info("Korean holiday import completed: year={}, totalImported={}", year, totalImported);
     }
 
-    private int importHolidaysForTenant(UUID tenantId, List<KoreanHolidayProvider.HolidayInfo> holidays) {
+    private int importHolidaysForTenant(UUID tenantId, int year, List<KoreanHolidayProvider.HolidayInfo> holidays) {
         int importedCount = 0;
+
+        // Fetch existing holidays for the year to avoid N+1 queries
+        Set<LocalDate> existingDates = holidayRepository.findByYear(tenantId, year).stream()
+            .map(Holiday::getHolidayDate)
+            .collect(Collectors.toSet());
 
         for (KoreanHolidayProvider.HolidayInfo info : holidays) {
             // Skip if already exists
-            if (holidayRepository.existsByTenantIdAndHolidayDate(tenantId, info.getDate())) {
+            if (existingDates.contains(info.getDate())) {
                 log.debug("Holiday already exists: tenant={}, date={}, name={}", tenantId, info.getDate(), info.getName());
                 continue;
             }
