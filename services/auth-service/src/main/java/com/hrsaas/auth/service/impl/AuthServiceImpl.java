@@ -56,22 +56,17 @@ public class AuthServiceImpl implements AuthService {
         log.info("Login attempt: username={}", request.getUsername());
 
         // Support tenant-scoped username lookup
-        Optional<UserEntity> userOpt;
-        if (request.getTenantCode() != null && !request.getTenantCode().isBlank()) {
-            try {
-                UUID tenantId = UUID.fromString(request.getTenantCode());
-                userOpt = userRepository.findByUsernameAndTenantId(request.getUsername(), tenantId);
-            } catch (IllegalArgumentException e) {
-                // tenantCode is not a UUID - fall back to global lookup
-                userOpt = userRepository.findByUsername(request.getUsername());
-            }
-        } else {
-            userOpt = userRepository.findByUsername(request.getUsername());
+        UUID tenantId;
+        try {
+            tenantId = UUID.fromString(request.getTenantCode());
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new BusinessException("AUTH_001", "올바르지 않은 테넌트 코드입니다.", HttpStatus.BAD_REQUEST);
         }
 
-        UserEntity user = userOpt.orElseThrow(() -> {
-                    log.warn("Login failed: user not found username={}", request.getUsername());
-                    loginHistoryService.recordFailure(request.getUsername(), null, ipAddress, userAgent, "USER_NOT_FOUND");
+        UserEntity user = userRepository.findByUsernameAndTenantId(request.getUsername(), tenantId)
+                .orElseThrow(() -> {
+                    log.warn("Login failed: user not found username={}, tenantId={}", request.getUsername(), tenantId);
+                    loginHistoryService.recordFailure(request.getUsername(), tenantId, ipAddress, userAgent, "USER_NOT_FOUND");
                     return new BusinessException("AUTH_001", "아이디 또는 비밀번호가 올바르지 않습니다.", HttpStatus.UNAUTHORIZED);
                 });
 

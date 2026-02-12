@@ -119,10 +119,11 @@ class AuthServiceTest {
             LoginRequest request = LoginRequest.builder()
                     .username("admin")
                     .password("admin123!")
+                    .tenantCode(TENANT_ID.toString())
                     .build();
 
             UserEntity user = createMockUser();
-            when(userRepository.findByUsername("admin")).thenReturn(Optional.of(user));
+            when(userRepository.findByUsernameAndTenantId("admin", TENANT_ID)).thenReturn(Optional.of(user));
             when(passwordEncoder.matches("admin123!", "$2a$10$encoded")).thenReturn(true);
             when(jwtTokenProvider.generateAccessToken(any(UserContext.class))).thenReturn("access-token");
             when(jwtTokenProvider.generateRefreshToken(any(UUID.class))).thenReturn("refresh-token");
@@ -142,10 +143,11 @@ class AuthServiceTest {
             LoginRequest request = LoginRequest.builder()
                     .username("admin")
                     .password("admin123!")
+                    .tenantCode(TENANT_ID.toString())
                     .build();
 
             UserEntity user = createMockUser();
-            when(userRepository.findByUsername("admin")).thenReturn(Optional.of(user));
+            when(userRepository.findByUsernameAndTenantId("admin", TENANT_ID)).thenReturn(Optional.of(user));
             when(passwordEncoder.matches("admin123!", "$2a$10$encoded")).thenReturn(true);
             when(jwtTokenProvider.generateAccessToken(any(UserContext.class))).thenReturn("access-token");
             when(jwtTokenProvider.generateRefreshToken(any(UUID.class))).thenReturn("refresh-token");
@@ -171,10 +173,11 @@ class AuthServiceTest {
             LoginRequest request = LoginRequest.builder()
                     .username("admin")
                     .password("admin123!")
+                    .tenantCode(TENANT_ID.toString())
                     .build();
 
             UserEntity user = createMockUser();
-            when(userRepository.findByUsername("admin")).thenReturn(Optional.of(user));
+            when(userRepository.findByUsernameAndTenantId("admin", TENANT_ID)).thenReturn(Optional.of(user));
             when(passwordEncoder.matches("admin123!", "$2a$10$encoded")).thenReturn(true);
             when(jwtTokenProvider.generateAccessToken(any(UserContext.class))).thenReturn("access-token");
             when(jwtTokenProvider.generateRefreshToken(any(UUID.class))).thenReturn("refresh-token");
@@ -192,14 +195,15 @@ class AuthServiceTest {
             LoginRequest request = LoginRequest.builder()
                     .username("nonexistent")
                     .password("password")
+                    .tenantCode(TENANT_ID.toString())
                     .build();
 
-            when(userRepository.findByUsername("nonexistent")).thenReturn(Optional.empty());
+            when(userRepository.findByUsernameAndTenantId("nonexistent", TENANT_ID)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> authService.login(request, IP_ADDRESS, USER_AGENT))
                     .isInstanceOf(RuntimeException.class);
 
-            verify(loginHistoryService).recordFailure(eq("nonexistent"), any(), eq(IP_ADDRESS), eq(USER_AGENT), eq("USER_NOT_FOUND"));
+            verify(loginHistoryService).recordFailure(eq("nonexistent"), eq(TENANT_ID), eq(IP_ADDRESS), eq(USER_AGENT), eq("USER_NOT_FOUND"));
         }
 
         @Test
@@ -208,10 +212,11 @@ class AuthServiceTest {
             LoginRequest request = LoginRequest.builder()
                     .username("admin")
                     .password("wrong")
+                    .tenantCode(TENANT_ID.toString())
                     .build();
 
             UserEntity user = createMockUser();
-            when(userRepository.findByUsername("admin")).thenReturn(Optional.of(user));
+            when(userRepository.findByUsernameAndTenantId("admin", TENANT_ID)).thenReturn(Optional.of(user));
             when(passwordEncoder.matches("wrong", "$2a$10$encoded")).thenReturn(false);
 
             assertThatThrownBy(() -> authService.login(request, IP_ADDRESS, USER_AGENT))
@@ -226,15 +231,43 @@ class AuthServiceTest {
             LoginRequest request = LoginRequest.builder()
                     .username("admin")
                     .password("admin123!")
+                    .tenantCode(TENANT_ID.toString())
                     .build();
 
             UserEntity user = createMockUser();
             user.setStatus("LOCKED");
 
-            when(userRepository.findByUsername("admin")).thenReturn(Optional.of(user));
+            when(userRepository.findByUsernameAndTenantId("admin", TENANT_ID)).thenReturn(Optional.of(user));
 
             assertThatThrownBy(() -> authService.login(request, IP_ADDRESS, USER_AGENT))
                     .isInstanceOf(RuntimeException.class);
+        }
+
+        @Test
+        @DisplayName("테넌트 코드 누락 - 예외 발생")
+        void login_missingTenantCode_throwsException() {
+            LoginRequest request = LoginRequest.builder()
+                    .username("admin")
+                    .password("admin123!")
+                    .build(); // tenantCode is null
+
+            assertThatThrownBy(() -> authService.login(request, IP_ADDRESS, USER_AGENT))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessageContaining("올바르지 않은 테넌트 코드입니다.");
+        }
+
+        @Test
+        @DisplayName("잘못된 테넌트 코드 형식 - 예외 발생")
+        void login_invalidTenantCode_throwsException() {
+            LoginRequest request = LoginRequest.builder()
+                    .username("admin")
+                    .password("admin123!")
+                    .tenantCode("invalid-uuid")
+                    .build();
+
+            assertThatThrownBy(() -> authService.login(request, IP_ADDRESS, USER_AGENT))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessageContaining("올바르지 않은 테넌트 코드입니다.");
         }
     }
 

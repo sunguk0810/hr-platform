@@ -2,6 +2,7 @@ import { useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { wsClient, type NotificationEvent, type AttendanceEvent } from '@/lib/websocket';
+import { queryKeys } from '@/lib/queryClient';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useAuthStore } from '@/stores/authStore';
 import { queryKeys } from '@/lib/queryClient';
@@ -151,6 +152,8 @@ export function useApprovalRealTime() {
 }
 
 export function useAttendanceRealTime() {
+  const { t } = useTranslation('attendance');
+  const { toast } = useToast();
   const { isAuthenticated } = useAuthStore();
   const { t } = useTranslation('attendance');
   const { toast } = useToast();

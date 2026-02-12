@@ -131,4 +131,10 @@ public interface CertificateIssueRepository extends JpaRepository<CertificateIss
            "cr.employeeId = :employeeId " +
            "ORDER BY ci.issuedAt DESC")
     Page<CertificateIssue> findByEmployeeId(@Param("employeeId") UUID employeeId, Pageable pageable);
+
+    /**
+     * 특정 프리픽스를 가진 최신 발급번호 조회 (길이 및 값 기준 내림차순)
+     */
+    @Query("SELECT ci.issueNumber FROM CertificateIssue ci WHERE ci.tenantId = :tenantId AND ci.issueNumber LIKE :prefix% ORDER BY LENGTH(ci.issueNumber) DESC, ci.issueNumber DESC")
+    List<String> findLatestIssueNumbers(@Param("tenantId") UUID tenantId, @Param("prefix") String prefix, Pageable pageable);
 }
