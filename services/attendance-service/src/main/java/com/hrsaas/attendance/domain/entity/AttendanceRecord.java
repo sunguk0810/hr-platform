@@ -61,30 +61,28 @@ public class AttendanceRecord extends TenantAwareEntity {
     @Column(name = "note")
     private String note;
 
-    public void checkIn(LocalTime time, String location) {
+    public void checkIn(LocalTime time, String location, LocalTime standardStartTime) {
         this.checkInTime = time;
         this.checkInLocation = location;
-        calculateLateMinutes();
+        calculateLateMinutes(standardStartTime);
     }
 
-    public void checkOut(LocalTime time, String location) {
+    public void checkOut(LocalTime time, String location, LocalTime standardEndTime) {
         this.checkOutTime = time;
         this.checkOutLocation = location;
         calculateWorkHours();
-        calculateEarlyLeaveMinutes();
-        calculateOvertimeMinutes();
+        calculateEarlyLeaveMinutes(standardEndTime);
+        calculateOvertimeMinutes(standardEndTime);
     }
 
-    private void calculateLateMinutes() {
-        LocalTime standardStartTime = LocalTime.of(9, 0);
+    private void calculateLateMinutes(LocalTime standardStartTime) {
         if (checkInTime != null && checkInTime.isAfter(standardStartTime)) {
             this.lateMinutes = (int) java.time.Duration.between(standardStartTime, checkInTime).toMinutes();
             this.status = AttendanceStatus.LATE;
         }
     }
 
-    private void calculateEarlyLeaveMinutes() {
-        LocalTime standardEndTime = LocalTime.of(18, 0);
+    private void calculateEarlyLeaveMinutes(LocalTime standardEndTime) {
         if (checkOutTime != null && checkOutTime.isBefore(standardEndTime)) {
             this.earlyLeaveMinutes = (int) java.time.Duration.between(checkOutTime, standardEndTime).toMinutes();
             if (this.status == AttendanceStatus.NORMAL) {
@@ -101,8 +99,7 @@ public class AttendanceRecord extends TenantAwareEntity {
         }
     }
 
-    private void calculateOvertimeMinutes() {
-        LocalTime standardEndTime = LocalTime.of(18, 0);
+    private void calculateOvertimeMinutes(LocalTime standardEndTime) {
         if (checkOutTime != null && checkOutTime.isAfter(standardEndTime)) {
             this.overtimeMinutes = (int) java.time.Duration.between(standardEndTime, checkOutTime).toMinutes();
         }
