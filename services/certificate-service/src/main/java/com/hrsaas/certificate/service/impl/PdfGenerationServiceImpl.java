@@ -82,32 +82,9 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
         }
     }
 
-    private String buildFullHtml(CertificateTemplate template) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("<!DOCTYPE html>\n<html xmlns:th=\"http://www.thymeleaf.org\">\n<head>\n");
-        sb.append("<meta charset=\"UTF-8\"/>\n");
-        sb.append("<style>\n");
-        sb.append("body { font-family: 'Malgun Gothic', 'AppleGothic', sans-serif; }\n");
-        sb.append("@page { size: ").append(template.getPageSize() != null ? template.getPageSize() : "A4").append("; margin: 20mm; }\n");
-        if (template.getCssStyles() != null) {
-            sb.append(template.getCssStyles());
-        }
-        sb.append("\n</style>\n</head>\n<body>\n");
-
-        if (template.getHeaderHtml() != null) {
-            sb.append("<div id='header'>").append(template.getHeaderHtml()).append("</div>\n");
-        }
-
-        sb.append("<div id='content'>").append(template.getContentHtml()).append("</div>\n");
-
-        if (template.getFooterHtml() != null) {
-            sb.append("<div id='footer'>").append(template.getFooterHtml()).append("</div>\n");
-        }
-
-        sb.append("</body>\n</html>");
-        return sb.toString();
-    }
-
+    /**
+     * Registers available fonts for PDF rendering to support non-Latin characters.
+     */
     private void registerFonts(ITextRenderer renderer) {
         // Try to load Nanum fonts commonly found in Linux/Docker environments
         String[] fontPaths = {
@@ -134,5 +111,31 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
         if (!fontLoaded) {
             log.warn("No suitable Korean font found in system paths. PDF generation may not display Korean characters correctly.");
         }
+    }
+
+    private String buildFullHtml(CertificateTemplate template) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<!DOCTYPE html>\n<html xmlns:th=\"http://www.thymeleaf.org\">\n<head>\n");
+        sb.append("<meta charset=\"UTF-8\"/>\n");
+        sb.append("<style>\n");
+        sb.append("body { font-family: 'Malgun Gothic', 'AppleGothic', sans-serif; }\n");
+        sb.append("@page { size: ").append(template.getPageSize() != null ? template.getPageSize() : "A4").append("; margin: 20mm; }\n");
+        if (template.getCssStyles() != null) {
+            sb.append(template.getCssStyles());
+        }
+        sb.append("\n</style>\n</head>\n<body>\n");
+
+        if (template.getHeaderHtml() != null) {
+            sb.append("<div id='header'>").append(template.getHeaderHtml()).append("</div>\n");
+        }
+
+        sb.append("<div id='content'>").append(template.getContentHtml()).append("</div>\n");
+
+        if (template.getFooterHtml() != null) {
+            sb.append("<div id='footer'>").append(template.getFooterHtml()).append("</div>\n");
+        }
+
+        sb.append("</body>\n</html>");
+        return sb.toString();
     }
 }
