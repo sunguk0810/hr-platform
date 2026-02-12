@@ -44,7 +44,8 @@ public class SecurityConfig {
             .securityContext(context -> context
                 .requireExplicitSave(true))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/actuator/**").permitAll()
+                .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                .requestMatchers("/actuator/**").hasAnyRole("SYSTEM_ADMIN", "SUPER_ADMIN")
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .requestMatchers("/api/v1/tenants/*/status").permitAll()
                 .requestMatchers("/api/v1/tenants/*/password-policy").permitAll()
