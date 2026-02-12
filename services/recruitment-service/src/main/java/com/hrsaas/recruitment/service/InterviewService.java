@@ -57,4 +57,6 @@ public interface InterviewService {
     List<InterviewScoreResponse> getMyScore(UUID interviewId, UUID interviewerId);
 
     InterviewResponse confirm(UUID id, ScheduleInterviewRequest request);
+
+    void sendFeedbackReminders();
 }

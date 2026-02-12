@@ -9,6 +9,7 @@ import com.hrsaas.recruitment.domain.event.InterviewFeedbackReminderEvent;
 import com.hrsaas.recruitment.domain.event.InterviewReminderEvent;
 import com.hrsaas.recruitment.repository.InterviewRepository;
 import com.hrsaas.recruitment.repository.JobPostingRepository;
+import com.hrsaas.recruitment.service.InterviewService;
 import com.hrsaas.recruitment.service.OfferService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,7 @@ public class RecruitmentScheduler {
     private final JobPostingRepository jobPostingRepository;
     private final InterviewRepository interviewRepository;
     private final OfferService offerService;
+    private final InterviewService interviewService;
     private final EventPublisher eventPublisher;
 
     /**
