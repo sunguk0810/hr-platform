@@ -3,7 +3,9 @@ package com.hrsaas.attendance.scheduler;
 import com.hrsaas.attendance.client.TenantServiceClient;
 import com.hrsaas.attendance.client.dto.TenantBasicDto;
 import com.hrsaas.attendance.domain.entity.Holiday;
+import com.hrsaas.attendance.domain.entity.HolidayType;
 import com.hrsaas.attendance.repository.HolidayRepository;
+import com.hrsaas.attendance.service.KoreanHolidayProvider;
 import com.hrsaas.common.response.ApiResponse;
 import com.hrsaas.common.response.PageResponse;
 import com.hrsaas.common.tenant.TenantContext;
@@ -16,10 +18,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -55,11 +60,21 @@ class HolidayImportSchedulerTest {
         when(tenantServiceClient.getAllTenants()).thenReturn(ApiResponse.success(pageResponse));
 
         // All holidays already exist
-        when(holidayRepository.existsByTenantIdAndHolidayDate(eq(tenantId), any(LocalDate.class)))
-            .thenReturn(true);
+        int year = 2026;
+        List<Holiday> existingHolidays = KoreanHolidayProvider.getHolidays(year).stream()
+            .map(info -> Holiday.builder()
+                .holidayDate(info.getDate())
+                .name(info.getName())
+                .nameEn(info.getNameEn())
+                .holidayType(HolidayType.PUBLIC)
+                .isPaid(true)
+                .build())
+            .collect(Collectors.toList());
+
+        when(holidayRepository.findByYear(eq(tenantId), eq(year))).thenReturn(existingHolidays);
 
         // when
-        scheduler.importHolidaysForYear(2026);
+        scheduler.importHolidaysForYear(year);
 
         // then - no saves since all exist
         verify(holidayRepository, never()).save(any(Holiday.class));
@@ -76,8 +91,7 @@ class HolidayImportSchedulerTest {
         when(tenantServiceClient.getAllTenants()).thenReturn(ApiResponse.success(pageResponse));
 
         // No holidays exist yet
-        when(holidayRepository.existsByTenantIdAndHolidayDate(any(), any()))
-            .thenReturn(false);
+        when(holidayRepository.findByYear(any(), anyInt())).thenReturn(Collections.emptyList());
         when(holidayRepository.save(any(Holiday.class))).thenAnswer(inv -> inv.getArgument(0));
 
         // when
@@ -98,8 +112,7 @@ class HolidayImportSchedulerTest {
         when(tenantServiceClient.getAllTenants()).thenReturn(ApiResponse.success(pageResponse));
 
         // No holidays exist
-        when(holidayRepository.existsByTenantIdAndHolidayDate(eq(tenantId), any(LocalDate.class)))
-            .thenReturn(false);
+        when(holidayRepository.findByYear(eq(tenantId), anyInt())).thenReturn(Collections.emptyList());
         when(holidayRepository.save(any(Holiday.class))).thenAnswer(inv -> inv.getArgument(0));
 
         // when
