@@ -1,7 +1,9 @@
 package com.hrsaas.employee.service;
 
 import com.hrsaas.common.tenant.TenantContext;
+import com.hrsaas.employee.domain.entity.Employee;
 import com.hrsaas.employee.domain.entity.EmployeeNumberRule;
+import com.hrsaas.employee.domain.entity.EmployeeStatus;
 import com.hrsaas.employee.repository.EmployeeNumberRuleRepository;
 import com.hrsaas.employee.repository.EmployeeRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -191,17 +193,24 @@ class EmployeeNumberGeneratorTest {
 
         String name = "Hong Gildong";
         LocalDate birthDate = LocalDate.of(1990, 5, 20);
+        String existingNumber = "HR-2025-0099";
+
+        // Mock Employee to return the existing number
+        Employee mockEmployee = mock(Employee.class);
+        when(mockEmployee.getEmployeeNumber()).thenReturn(existingNumber);
+
+        when(employeeRepository.findTopByTenantIdAndNameAndBirthDateAndStatusOrderByResignDateDesc(
+            TENANT_ID, name, birthDate, EmployeeStatus.RESIGNED))
+            .thenReturn(Optional.of(mockEmployee));
 
         // when
-        // Note: The current implementation has a TODO for archive lookup and returns null.
-        // This test verifies the allowReuse check does not short-circuit when reuse is enabled.
         String result = employeeNumberGenerator.findExistingNumber(TENANT_ID, name, birthDate);
 
         // then
-        // The rule allows reuse, so the method proceeds to the archive lookup (which currently returns null).
-        // When the archive lookup is implemented, this would return the existing number.
-        assertThat(result).isNull();
+        assertThat(result).isEqualTo(existingNumber);
         verify(ruleRepository).findActiveByTenantId(TENANT_ID);
+        verify(employeeRepository).findTopByTenantIdAndNameAndBirthDateAndStatusOrderByResignDateDesc(
+            TENANT_ID, name, birthDate, EmployeeStatus.RESIGNED);
     }
 
     @Test
