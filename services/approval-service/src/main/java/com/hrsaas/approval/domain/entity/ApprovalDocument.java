@@ -94,6 +94,11 @@ public class ApprovalDocument extends TenantAwareEntity {
     @Builder.Default
     private List<ApprovalHistory> histories = new ArrayList<>();
 
+    @Version
+    @Column(name = "version")
+    @Builder.Default
+    private Long version = 0L;
+
     public void submit() {
         if (this.status != ApprovalStatus.DRAFT) {
             throw new IllegalStateException("Only draft documents can be submitted");

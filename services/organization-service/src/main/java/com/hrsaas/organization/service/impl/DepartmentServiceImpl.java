@@ -8,6 +8,7 @@ import com.hrsaas.common.event.EventPublisher;
 import com.hrsaas.common.tenant.TenantContext;
 import com.hrsaas.organization.client.EmployeeClient;
 import com.hrsaas.organization.client.dto.BulkTransferRequest;
+import com.hrsaas.organization.client.dto.EmployeeClientResponse;
 import com.hrsaas.organization.domain.event.DepartmentCreatedEvent;
 import com.hrsaas.organization.domain.event.DepartmentMergedEvent;
 import com.hrsaas.organization.domain.event.DepartmentSplitEvent;
@@ -429,6 +430,28 @@ public class DepartmentServiceImpl implements DepartmentService {
             empCountMap = Map.of();
         }
 
+        // Batch fetch manager details
+        List<UUID> managerIds = allDepartments.stream()
+            .map(Department::getManagerId)
+            .filter(java.util.Objects::nonNull)
+            .distinct()
+            .toList();
+
+        Map<UUID, EmployeeClientResponse> managerInfoMap;
+        if (!managerIds.isEmpty()) {
+            try {
+                List<EmployeeClientResponse> managers = employeeClient.getBatch(managerIds).getData();
+                managerInfoMap = managers != null ? managers.stream()
+                    .collect(Collectors.toMap(EmployeeClientResponse::getId, m -> m))
+                    : Map.of();
+            } catch (Exception e) {
+                log.warn("Failed to batch get manager info: {}", e.getMessage());
+                managerInfoMap = Map.of();
+            }
+        } else {
+            managerInfoMap = Map.of();
+        }
+
         // parentId 기준 Map 구성
         Map<UUID, List<Department>> childrenMap = allDepartments.stream()
             .filter(d -> d.getParent() != null)
@@ -436,23 +459,35 @@ public class DepartmentServiceImpl implements DepartmentService {
 
         // 루트 부서 필터링 후 트리 빌드
         Map<UUID, Long> finalEmpCountMap = empCountMap;
+        Map<UUID, EmployeeClientResponse> finalManagerInfoMap = managerInfoMap;
         return allDepartments.stream()
             .filter(d -> d.getParent() == null)
-            .map(root -> buildOrgChartNode(root, childrenMap, finalEmpCountMap))
+            .map(root -> buildOrgChartNode(root, childrenMap, finalEmpCountMap, finalManagerInfoMap))
             .collect(Collectors.toList());
     }
 
     private OrgChartNodeResponse buildOrgChartNode(Department department,
                                                      Map<UUID, List<Department>> childrenMap,
-                                                     Map<UUID, Long> empCountMap) {
+                                                     Map<UUID, Long> empCountMap,
+                                                     Map<UUID, EmployeeClientResponse> managerInfoMap) {
         Long empCount = empCountMap.getOrDefault(department.getId(), 0L);
         if (empCount < 0) empCount = 0L;
 
         OrgChartNodeResponse.ManagerInfo managerInfo = null;
         if (department.getManagerId() != null) {
-            managerInfo = OrgChartNodeResponse.ManagerInfo.builder()
-                .id(department.getManagerId())
-                .build();
+            EmployeeClientResponse emp = managerInfoMap.get(department.getManagerId());
+            if (emp != null) {
+                managerInfo = OrgChartNodeResponse.ManagerInfo.builder()
+                    .id(department.getManagerId())
+                    .name(emp.getName())
+                    .gradeName(emp.getGradeName())
+                    .positionName(emp.getPositionName())
+                    .build();
+            } else {
+                managerInfo = OrgChartNodeResponse.ManagerInfo.builder()
+                    .id(department.getManagerId())
+                    .build();
+            }
         }
 
         List<OrgChartNodeResponse> children = null;
@@ -460,7 +495,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         if (childDepts != null && !childDepts.isEmpty()) {
             children = childDepts.stream()
                 .filter(Department::isActive)
-                .map(child -> buildOrgChartNode(child, childrenMap, empCountMap))
+                .map(child -> buildOrgChartNode(child, childrenMap, empCountMap, managerInfoMap))
                 .collect(Collectors.toList());
         }
 

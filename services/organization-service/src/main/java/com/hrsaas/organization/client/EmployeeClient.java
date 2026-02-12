@@ -2,6 +2,7 @@ package com.hrsaas.organization.client;
 
 import com.hrsaas.common.response.ApiResponse;
 import com.hrsaas.organization.client.dto.BulkTransferRequest;
+import com.hrsaas.organization.client.dto.EmployeeClientResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,4 +38,7 @@ public interface EmployeeClient {
      */
     @PostMapping("/api/v1/employees/count-by-departments")
     ApiResponse<Map<UUID, Long>> countByDepartmentIds(@RequestBody List<UUID> departmentIds);
+
+    @PostMapping("/api/v1/employees/batch")
+    ApiResponse<List<EmployeeClientResponse>> getBatch(@RequestBody List<UUID> ids);
 }

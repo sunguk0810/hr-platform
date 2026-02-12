@@ -52,8 +52,28 @@ public class AppointmentDraftServiceImpl implements AppointmentDraftService {
             .description(request.getDescription())
             .build();
 
+        // Bulk fetch employee info to avoid N+1 HTTP calls
+        Map<UUID, EmployeeClient.EmployeeResponse> employeeMap = new HashMap<>();
+        if (employeeClient.isPresent() && request.getDetails() != null && !request.getDetails().isEmpty()) {
+            try {
+                List<UUID> employeeIds = request.getDetails().stream()
+                    .map(CreateAppointmentDetailRequest::getEmployeeId)
+                    .distinct()
+                    .toList();
+
+                List<EmployeeClient.EmployeeResponse> employees = employeeClient.get().getBatch(employeeIds).getData();
+                if (employees != null) {
+                    for (EmployeeClient.EmployeeResponse emp : employees) {
+                        employeeMap.put(emp.id(), emp);
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Failed to batch fetch employee info", e);
+            }
+        }
+
         for (CreateAppointmentDetailRequest detailRequest : request.getDetails()) {
-            AppointmentDetail detail = createDetail(detailRequest);
+            AppointmentDetail detail = createDetail(detailRequest, employeeMap.get(detailRequest.getEmployeeId()));
             draft.addDetail(detail);
         }
 
@@ -306,6 +326,7 @@ public class AppointmentDraftServiceImpl implements AppointmentDraftService {
     private void executeAppointment(AppointmentDraft draft) {
         UUID executedBy = TenantContext.getCurrentTenant();
         List<AppointmentExecutedEvent.AppointmentDetailInfo> executedDetails = new ArrayList<>();
+        List<AppointmentHistory> historiesToSave = new ArrayList<>();
 
         for (AppointmentDetail detail : draft.getDetails()) {
             try {
@@ -322,7 +343,7 @@ public class AppointmentDraftServiceImpl implements AppointmentDraftService {
                     .draftNumber(draft.getDraftNumber())
                     .build();
 
-                historyRepository.save(history);
+                historiesToSave.add(history);
                 detail.execute();
 
                 executedDetails.add(AppointmentExecutedEvent.AppointmentDetailInfo.builder()
@@ -339,6 +360,10 @@ public class AppointmentDraftServiceImpl implements AppointmentDraftService {
                 log.error("Failed to execute appointment detail: detailId={}", detail.getId(), e);
                 detail.fail(e.getMessage());
             }
+        }
+
+        if (!historiesToSave.isEmpty()) {
+            historyRepository.saveAll(historiesToSave);
         }
 
         draft.execute(executedBy);
@@ -405,6 +430,22 @@ public class AppointmentDraftServiceImpl implements AppointmentDraftService {
     }
 
     private AppointmentDetail createDetail(CreateAppointmentDetailRequest request) {
+        // Legacy support for single creation without pre-fetched map
+        EmployeeClient.EmployeeResponse emp = null;
+        if (employeeClient.isPresent()) {
+            try {
+                var response = employeeClient.get().getEmployee(request.getEmployeeId());
+                if (response != null) {
+                    emp = response.getData();
+                }
+            } catch (Exception e) {
+                log.warn("Failed to fetch employee info for auto-populate: employeeId={}", request.getEmployeeId(), e);
+            }
+        }
+        return createDetail(request, emp);
+    }
+
+    private AppointmentDetail createDetail(CreateAppointmentDetailRequest request, EmployeeClient.EmployeeResponse emp) {
         var builder = AppointmentDetail.builder()
             .employeeId(request.getEmployeeId())
             .appointmentType(request.getAppointmentType())
@@ -414,26 +455,17 @@ public class AppointmentDraftServiceImpl implements AppointmentDraftService {
             .toJobCode(request.getToJobCode())
             .reason(request.getReason());
 
-        // Auto-populate employee info and fromValues via Feign
-        if (employeeClient.isPresent()) {
-            try {
-                var response = employeeClient.get().getEmployee(request.getEmployeeId());
-                if (response != null && response.getData() != null) {
-                    var emp = response.getData();
-                    builder.employeeName(emp.name())
-                           .employeeNumber(emp.employeeNumber())
-                           .fromDepartmentId(emp.departmentId())
-                           .fromDepartmentName(emp.departmentName())
-                           .fromPositionCode(emp.positionCode())
-                           .fromPositionName(emp.positionName())
-                           .fromGradeCode(emp.gradeCode())
-                           .fromGradeName(emp.gradeName())
-                           .fromJobCode(emp.jobCode())
-                           .fromJobName(emp.jobName());
-                }
-            } catch (Exception e) {
-                log.warn("Failed to fetch employee info for auto-populate: employeeId={}", request.getEmployeeId(), e);
-            }
+        if (emp != null) {
+            builder.employeeName(emp.name())
+                   .employeeNumber(emp.employeeNumber())
+                   .fromDepartmentId(emp.departmentId())
+                   .fromDepartmentName(emp.departmentName())
+                   .fromPositionCode(emp.positionCode())
+                   .fromPositionName(emp.positionName())
+                   .fromGradeCode(emp.gradeCode())
+                   .fromGradeName(emp.gradeName())
+                   .fromJobCode(emp.jobCode())
+                   .fromJobName(emp.jobName());
         }
 
         return builder.build();
