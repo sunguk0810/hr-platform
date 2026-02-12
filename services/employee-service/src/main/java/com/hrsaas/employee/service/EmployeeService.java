@@ -57,4 +57,12 @@ public interface EmployeeService {
     void suspend(UUID id);
 
     void activate(UUID id);
+
+    void bulkUpdate(List<UpdateEmployeeRequest> requests);
+
+    void bulkResign(List<UUID> ids, String resignDate);
+
+    void bulkSuspend(List<UUID> ids);
+
+    void bulkActivate(List<UUID> ids);
 }

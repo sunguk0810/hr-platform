@@ -15,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -165,10 +166,13 @@ class ApprovalCompletedListenerTest {
 
         listener.handleMessage(message);
 
-        ArgumentCaptor<UpdateEmployeeRequest> requestCaptor = ArgumentCaptor.forClass(UpdateEmployeeRequest.class);
-        verify(employeeService).update(eq(employeeId), requestCaptor.capture());
+        ArgumentCaptor<List<UpdateEmployeeRequest>> requestCaptor = ArgumentCaptor.forClass(List.class);
+        verify(employeeService).bulkUpdate(requestCaptor.capture());
 
-        UpdateEmployeeRequest request = requestCaptor.getValue();
+        List<UpdateEmployeeRequest> requests = requestCaptor.getValue();
+        assertThat(requests).hasSize(1);
+        UpdateEmployeeRequest request = requests.get(0);
+        assertThat(request.getEmployeeId()).isEqualTo(employeeId);
         assertThat(request.getDepartmentId()).isNotNull();
         assertThat(request.getPositionCode()).isEqualTo("POS_001");
         assertThat(request.getJobTitleCode()).isEqualTo("GRD_001");
@@ -192,7 +196,9 @@ class ApprovalCompletedListenerTest {
 
         listener.handleMessage(message);
 
-        verify(employeeService).resign(employeeId, effectiveDate);
+        ArgumentCaptor<List<UUID>> idCaptor = ArgumentCaptor.forClass(List.class);
+        verify(employeeService).bulkResign(idCaptor.capture(), eq(effectiveDate));
+        assertThat(idCaptor.getValue()).containsExactly(employeeId);
     }
 
     @Test
@@ -213,7 +219,9 @@ class ApprovalCompletedListenerTest {
 
         listener.handleMessage(message);
 
-        verify(employeeService).suspend(employeeId);
+        ArgumentCaptor<List<UUID>> idCaptor = ArgumentCaptor.forClass(List.class);
+        verify(employeeService).bulkSuspend(idCaptor.capture());
+        assertThat(idCaptor.getValue()).containsExactly(employeeId);
     }
 
     @Test
@@ -234,7 +242,9 @@ class ApprovalCompletedListenerTest {
 
         listener.handleMessage(message);
 
-        verify(employeeService).activate(employeeId);
+        ArgumentCaptor<List<UUID>> idCaptor = ArgumentCaptor.forClass(List.class);
+        verify(employeeService).bulkActivate(idCaptor.capture());
+        assertThat(idCaptor.getValue()).containsExactly(employeeId);
     }
 
     @Test
@@ -261,7 +271,7 @@ class ApprovalCompletedListenerTest {
 
         listener.handleMessage(message);
 
-        verify(employeeService).update(eq(employeeId), any(UpdateEmployeeRequest.class));
-        verify(employeeService).resign(eq(employeeId2), eq(effectiveDate));
+        verify(employeeService).bulkUpdate(anyList());
+        verify(employeeService).bulkResign(anyList(), eq(effectiveDate));
     }
 }

@@ -81,17 +81,24 @@ public class ApprovalCompletedListener {
 
         JsonNode details = event.get("details");
         if (details != null && details.isArray()) {
+            java.util.List<UUID> resignationIds = new java.util.ArrayList<>();
+            java.util.List<UUID> suspendIds = new java.util.ArrayList<>();
+            java.util.List<UUID> activateIds = new java.util.ArrayList<>();
+            java.util.List<UpdateEmployeeRequest> updateRequests = new java.util.ArrayList<>();
+
             for (JsonNode detail : details) {
                 try {
                     UUID employeeId = UUID.fromString(detail.get("employeeId").asText());
                     String appointmentType = detail.get("appointmentType").asText();
 
                     switch (appointmentType) {
-                        case "RESIGNATION", "RETIREMENT" -> employeeService.resign(employeeId, effectiveDateStr);
-                        case "LEAVE_OF_ABSENCE" -> employeeService.suspend(employeeId);
-                        case "REINSTATEMENT" -> employeeService.activate(employeeId);
+                        case "RESIGNATION", "RETIREMENT" -> resignationIds.add(employeeId);
+                        case "LEAVE_OF_ABSENCE" -> suspendIds.add(employeeId);
+                        case "REINSTATEMENT" -> activateIds.add(employeeId);
                         case "PROMOTION", "TRANSFER", "POSITION_CHANGE", "JOB_CHANGE", "DEMOTION" -> {
                             UpdateEmployeeRequest request = new UpdateEmployeeRequest();
+                            request.setEmployeeId(employeeId);
+
                             if (detail.has("toDepartmentId") && !detail.get("toDepartmentId").isNull()) {
                                 request.setDepartmentId(UUID.fromString(detail.get("toDepartmentId").asText()));
                             }
@@ -103,14 +110,28 @@ public class ApprovalCompletedListener {
                             }
 
                             if (request.getDepartmentId() != null || request.getPositionCode() != null || request.getJobTitleCode() != null) {
-                                employeeService.update(employeeId, request);
+                                updateRequests.add(request);
                             }
                         }
                         default -> log.warn("Unsupported appointment type: {}", appointmentType);
                     }
                 } catch (Exception e) {
-                    log.error("Failed to process appointment detail: {}", detail, e);
+                    log.error("Failed to parse appointment detail: {}", detail, e);
                 }
+            }
+
+            // Execute bulk operations
+            if (!resignationIds.isEmpty()) {
+                employeeService.bulkResign(resignationIds, effectiveDateStr);
+            }
+            if (!suspendIds.isEmpty()) {
+                employeeService.bulkSuspend(suspendIds);
+            }
+            if (!activateIds.isEmpty()) {
+                employeeService.bulkActivate(activateIds);
+            }
+            if (!updateRequests.isEmpty()) {
+                employeeService.bulkUpdate(updateRequests);
             }
         }
     }
