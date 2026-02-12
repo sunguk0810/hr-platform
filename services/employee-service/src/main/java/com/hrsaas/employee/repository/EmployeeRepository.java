@@ -86,4 +86,17 @@ public interface EmployeeRepository extends JpaRepository<Employee, UUID> {
     long countResigned(@Param("tenantId") UUID tenantId,
                        @Param("startDate") java.time.LocalDate startDate,
                        @Param("endDate") java.time.LocalDate endDate);
+
+    /**
+     * Finds the most recently resigned employee matching the given criteria.
+     * Used for employee number reuse logic when rehiring.
+     *
+     * @param tenantId  the tenant ID
+     * @param name      the employee name
+     * @param birthDate the employee birth date
+     * @param status    the employee status (typically RESIGNED)
+     * @return the most recent matching employee, if any
+     */
+    Optional<Employee> findTopByTenantIdAndNameAndBirthDateAndStatusOrderByResignDateDesc(
+        UUID tenantId, String name, java.time.LocalDate birthDate, EmployeeStatus status);
 }

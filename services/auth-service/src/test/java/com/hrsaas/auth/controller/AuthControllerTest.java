@@ -83,6 +83,7 @@ class AuthControllerTest {
             LoginRequest request = LoginRequest.builder()
                     .username("admin")
                     .password("admin123!")
+                    .tenantCode("00000000-0000-0000-0000-000000000001")
                     .build();
 
             when(authService.login(any(), any(), any())).thenReturn(createMockTokenResponse());
@@ -103,6 +104,7 @@ class AuthControllerTest {
             LoginRequest request = LoginRequest.builder()
                     .username("admin")
                     .password("wrong")
+                    .tenantCode("00000000-0000-0000-0000-000000000001")
                     .build();
 
             when(authService.login(any(), any(), any()))
@@ -119,6 +121,7 @@ class AuthControllerTest {
         void login_missingUsername_returns400() throws Exception {
             LoginRequest request = LoginRequest.builder()
                     .password("admin123!")
+                    .tenantCode("00000000-0000-0000-0000-000000000001")
                     .build();
 
             mockMvc.perform(post("/api/v1/auth/login")
