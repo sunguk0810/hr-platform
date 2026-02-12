@@ -238,7 +238,9 @@ public class ApprovalServiceImpl implements ApprovalService {
     @Transactional
     public ApprovalDocumentResponse process(UUID documentId, UUID approverId, ProcessApprovalRequest request) {
         try {
-            return processInternal(documentId, approverId, request);
+            ApprovalDocumentResponse response = processInternal(documentId, approverId, request);
+            documentRepository.flush(); // Force flush to trigger version check and catch OptimisticLockingFailureException
+            return response;
         } catch (OptimisticLockingFailureException e) {
             throw new BusinessException("APV_005", "다른 사용자가 문서를 수정했습니다. 다시 시도해주세요.");
         }
