@@ -2,6 +2,7 @@ package com.hrsaas.certificate.service.impl;
 
 import com.hrsaas.certificate.domain.dto.request.VerifyCertificateRequest;
 import com.hrsaas.certificate.domain.dto.response.VerificationLogResponse;
+import com.hrsaas.certificate.client.TenantServiceClient;
 import com.hrsaas.certificate.domain.dto.response.VerificationResultResponse;
 import com.hrsaas.certificate.domain.entity.CertificateIssue;
 import com.hrsaas.certificate.domain.entity.VerificationLog;
@@ -31,6 +32,7 @@ public class CertificateVerificationServiceImpl implements CertificateVerificati
 
     private final CertificateIssueRepository certificateIssueRepository;
     private final VerificationLogRepository verificationLogRepository;
+    private final TenantServiceClient tenantServiceClient;
 
     private static final int MAX_VERIFICATIONS_PER_HOUR = 10;
 
@@ -87,13 +89,23 @@ public class CertificateVerificationServiceImpl implements CertificateVerificati
         issue.markVerified();
         certificateIssueRepository.save(issue);
 
+        String tenantName = "회사명"; // Fallback
+        try {
+            var response = tenantServiceClient.getBasicInfo(issue.getTenantId());
+            if (response != null && response.getData() != null) {
+                tenantName = response.getData().getName();
+            }
+        } catch (Exception e) {
+            log.warn("Failed to fetch tenant name for id: {}", issue.getTenantId(), e);
+        }
+
         return VerificationResultResponse.success(
                 issue.getRequest().getCertificateType().getName(),
                 issue.getRequest().getEmployeeName(),
                 issue.getIssueNumber(),
                 issue.getIssuedAt(),
                 issue.getExpiresAt(),
-                "회사명" // TODO: 테넌트에서 회사명 조회
+                tenantName
         );
     }
 

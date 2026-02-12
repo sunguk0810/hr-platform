@@ -36,7 +36,6 @@ public class AppointmentDraftServiceImpl implements AppointmentDraftService {
     private final AppointmentScheduleRepository scheduleRepository;
     private final EventPublisher eventPublisher;
     private final Optional<EmployeeClient> employeeClient;
-    private final com.hrsaas.appointment.client.ApprovalClient approvalClient;
 
     @Override
     @Transactional
@@ -213,43 +212,8 @@ public class AppointmentDraftServiceImpl implements AppointmentDraftService {
             throw new BusinessException("APT_006", "발령 상세가 없습니다");
         }
 
-        UUID currentEmployeeId = com.hrsaas.common.security.SecurityContextHolder.getCurrentEmployeeId();
-        if (currentEmployeeId == null) {
-            throw new BusinessException("APT_013", "현재 사용자의 직원 정보를 찾을 수 없습니다");
-        }
-
-        EmployeeClient.EmployeeResponse drafter = employeeClient
-            .orElseThrow(() -> new BusinessException("APT_014", "직원 서비스에 연결할 수 없습니다"))
-            .getEmployee(currentEmployeeId)
-            .getData();
-
-        if (drafter.managerId() == null) {
-            throw new BusinessException("APT_015", "승인자(매니저)를 찾을 수 없습니다");
-        }
-
-        EmployeeClient.EmployeeResponse manager = employeeClient.get()
-            .getEmployee(drafter.managerId())
-            .getData();
-
-        var approver = new com.hrsaas.appointment.client.ApprovalClient.ApprovalLineRequest(
-            manager.id(),
-            manager.name(),
-            manager.positionName(),
-            manager.departmentName(),
-            "SEQUENTIAL"
-        );
-
-        var approvalRequest = new com.hrsaas.appointment.client.ApprovalClient.CreateApprovalRequest(
-            draft.getTitle(),
-            draft.getDescription(),
-            "APPOINTMENT",
-            "APPOINTMENT_DRAFT",
-            draft.getId(),
-            List.of(approver),
-            true
-        );
-
-        UUID approvalId = approvalClient.create(approvalRequest).getData().id();
+        // TODO: Approval Service 연동하여 결재 생성
+        UUID approvalId = UUID.randomUUID(); // 임시
         draft.submit(approvalId);
 
         AppointmentDraft saved = draftRepository.save(draft);

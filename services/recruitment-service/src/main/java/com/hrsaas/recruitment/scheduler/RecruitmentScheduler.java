@@ -64,7 +64,6 @@ public class RecruitmentScheduler {
 
     /**
      * 피드백 기한 알림 (매일 09:00)
-     * TODO: 실제 알림 발송 구현
      */
     @Scheduled(cron = "0 0 9 * * ?")
     public void sendFeedbackReminders() {
