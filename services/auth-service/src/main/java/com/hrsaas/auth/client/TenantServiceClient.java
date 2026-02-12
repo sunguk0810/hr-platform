@@ -24,4 +24,7 @@ public interface TenantServiceClient {
 
     @GetMapping("/api/v1/tenants/{tenantId}/status")
     ApiResponse<String> getTenantStatus(@PathVariable UUID tenantId);
+
+    @GetMapping("/api/v1/tenants/{tenantId}/basic")
+    ApiResponse<TenantDto> getTenantBasicInfo(@PathVariable UUID tenantId);
 }

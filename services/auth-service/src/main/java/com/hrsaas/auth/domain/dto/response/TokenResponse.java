@@ -19,4 +19,7 @@ public class TokenResponse {
     private boolean passwordExpired;
     private Integer passwordExpiresInDays;
     private boolean mfaRequired;
+    private String tenantId;
+    private String tenantCode;
+    private String tenantName;
 }

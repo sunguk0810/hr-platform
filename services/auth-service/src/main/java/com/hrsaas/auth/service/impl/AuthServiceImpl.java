@@ -23,6 +23,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.hrsaas.auth.domain.dto.TenantDto;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -55,15 +56,32 @@ public class AuthServiceImpl implements AuthService {
     public TokenResponse login(LoginRequest request, String ipAddress, String userAgent) {
         log.info("Login attempt: username={}", request.getUsername());
 
-        // Resolve tenant code to tenant ID via tenant-service
-        final UUID tenantId = resolveTenantId(request.getTenantCode());
+        UserEntity user;
 
-        UserEntity user = userRepository.findByUsernameAndTenantId(request.getUsername(), tenantId)
-                .orElseThrow(() -> {
-                    log.warn("Login failed: user not found username={}, tenantId={}", request.getUsername(), tenantId);
-                    loginHistoryService.recordFailure(request.getUsername(), tenantId, ipAddress, userAgent, "USER_NOT_FOUND");
-                    return new BusinessException("AUTH_001", "아이디 또는 비밀번호가 올바르지 않습니다.", HttpStatus.UNAUTHORIZED);
-                });
+        if (request.getTenantCode() != null && !request.getTenantCode().isBlank()) {
+            // Path A: tenantCode 제공 → 기존 흐름 (하위 호환)
+            final UUID tenantId = resolveTenantId(request.getTenantCode());
+            user = userRepository.findByUsernameAndTenantId(request.getUsername(), tenantId)
+                    .orElseThrow(() -> {
+                        log.warn("Login failed: user not found username={}, tenantId={}", request.getUsername(), tenantId);
+                        loginHistoryService.recordFailure(request.getUsername(), tenantId, ipAddress, userAgent, "USER_NOT_FOUND");
+                        return new BusinessException("AUTH_001", "아이디 또는 비밀번호가 올바르지 않습니다.", HttpStatus.UNAUTHORIZED);
+                    });
+        } else {
+            // Path B: tenantCode 없음 → username만으로 조회
+            List<UserEntity> users = userRepository.findAllByUsername(request.getUsername());
+            if (users.isEmpty()) {
+                log.warn("Login failed: user not found username={}", request.getUsername());
+                loginHistoryService.recordFailure(request.getUsername(), null, ipAddress, userAgent, "USER_NOT_FOUND");
+                throw new BusinessException("AUTH_001", "아이디 또는 비밀번호가 올바르지 않습니다.", HttpStatus.UNAUTHORIZED);
+            }
+            if (users.size() > 1) {
+                log.warn("Login failed: multiple users found for username={}, count={}", request.getUsername(), users.size());
+                throw new BusinessException("AUTH_015",
+                        "동일한 사용자명이 여러 회사에 등록되어 있습니다. 회사코드를 입력해주세요.", HttpStatus.CONFLICT);
+            }
+            user = users.get(0);
+        }
 
         // Check tenant status
         if (user.getTenantId() != null) {
@@ -154,6 +172,9 @@ public class AuthServiceImpl implements AuthService {
             }
         }
 
+        // Resolve tenant info for response
+        TenantDto tenantInfo = resolveTenantInfo(user.getTenantId());
+
         return TokenResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
@@ -162,6 +183,9 @@ public class AuthServiceImpl implements AuthService {
                 .refreshExpiresIn(jwtTokenProvider.getRefreshTokenExpiry())
                 .passwordExpired(passwordExpired)
                 .passwordExpiresInDays(passwordExpiresInDays)
+                .tenantId(user.getTenantId() != null ? user.getTenantId().toString() : null)
+                .tenantCode(tenantInfo != null ? tenantInfo.getCode() : null)
+                .tenantName(tenantInfo != null ? tenantInfo.getName() : null)
                 .build();
     }
 
@@ -318,6 +342,23 @@ public class AuthServiceImpl implements AuthService {
                     .map(tenant -> tenant.getId())
                     .orElseThrow(() -> new BusinessException("AUTH_001", "올바르지 않은 테넌트 코드입니다.", HttpStatus.BAD_REQUEST));
         }
+    }
+
+    private TenantDto resolveTenantInfo(UUID tenantId) {
+        if (tenantId == null) {
+            return null;
+        }
+        return tenantServiceClient
+                .map(client -> {
+                    try {
+                        var response = client.getTenantBasicInfo(tenantId);
+                        return response != null ? response.getData() : null;
+                    } catch (Exception e) {
+                        log.warn("Failed to resolve tenant info for tenantId={}: {}", tenantId, e.getMessage());
+                        return null;
+                    }
+                })
+                .orElse(null);
     }
 
     private UserContext buildUserContext(UserEntity user) {

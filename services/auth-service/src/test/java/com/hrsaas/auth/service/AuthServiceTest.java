@@ -24,6 +24,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -244,16 +245,62 @@ class AuthServiceTest {
         }
 
         @Test
-        @DisplayName("테넌트 코드 누락 - 예외 발생")
-        void login_missingTenantCode_throwsException() {
+        @DisplayName("테넌트 코드 누락 + 단일 사용자 - 정상 로그인")
+        void login_missingTenantCode_singleUser_success() {
             LoginRequest request = LoginRequest.builder()
                     .username("admin")
                     .password("admin123!")
                     .build(); // tenantCode is null
 
+            UserEntity user = createMockUser();
+            when(userRepository.findAllByUsername("admin")).thenReturn(List.of(user));
+            when(passwordEncoder.matches("admin123!", "$2a$10$encoded")).thenReturn(true);
+            when(jwtTokenProvider.generateAccessToken(any(UserContext.class))).thenReturn("access-token");
+            when(jwtTokenProvider.generateRefreshToken(any(UUID.class))).thenReturn("refresh-token");
+            when(jwtTokenProvider.getRefreshTokenExpiry()).thenReturn(86400L);
+            when(jwtTokenProvider.getAccessTokenExpiry()).thenReturn(3600L);
+
+            TokenResponse response = authService.login(request, IP_ADDRESS, USER_AGENT);
+
+            assertThat(response).isNotNull();
+            assertThat(response.getAccessToken()).isEqualTo("access-token");
+            assertThat(response.getRefreshToken()).isEqualTo("refresh-token");
+            verify(userRepository, never()).findByUsernameAndTenantId(anyString(), any(UUID.class));
+        }
+
+        @Test
+        @DisplayName("테넌트 코드 누락 + 다수 사용자 - AUTH_015 에러")
+        void login_missingTenantCode_multipleUsers_throwsConflict() {
+            LoginRequest request = LoginRequest.builder()
+                    .username("admin")
+                    .password("admin123!")
+                    .build();
+
+            UserEntity user1 = createMockUser();
+            UserEntity user2 = createMockUser();
+            user2.setTenantId(UUID.fromString("00000000-0000-0000-0000-000000000002"));
+            when(userRepository.findAllByUsername("admin")).thenReturn(List.of(user1, user2));
+
             assertThatThrownBy(() -> authService.login(request, IP_ADDRESS, USER_AGENT))
                     .isInstanceOf(RuntimeException.class)
-                    .hasMessageContaining("올바르지 않은 테넌트 코드입니다.");
+                    .hasMessageContaining("동일한 사용자명이 여러 회사에 등록되어 있습니다");
+        }
+
+        @Test
+        @DisplayName("테넌트 코드 누락 + 미존재 사용자 - AUTH_001 에러")
+        void login_missingTenantCode_noUser_throwsUnauthorized() {
+            LoginRequest request = LoginRequest.builder()
+                    .username("nonexistent")
+                    .password("password")
+                    .build();
+
+            when(userRepository.findAllByUsername("nonexistent")).thenReturn(List.of());
+
+            assertThatThrownBy(() -> authService.login(request, IP_ADDRESS, USER_AGENT))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessageContaining("아이디 또는 비밀번호가 올바르지 않습니다");
+
+            verify(loginHistoryService).recordFailure(eq("nonexistent"), eq(null), eq(IP_ADDRESS), eq(USER_AGENT), eq("USER_NOT_FOUND"));
         }
 
         @Test

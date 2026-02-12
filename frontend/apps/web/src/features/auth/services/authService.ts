@@ -24,6 +24,9 @@ export interface BackendTokenResponse {
   tokenType: string;
   expiresIn: number;
   refreshExpiresIn: number;
+  tenantId?: string;
+  tenantCode?: string;
+  tenantName?: string;
 }
 
 // 백엔드 UserResponse 매핑
@@ -281,12 +284,12 @@ async function realLogin(data: LoginRequest): Promise<ApiResponse<LoginResponse>
     permissions: backendUser.permissions || [],
   };
 
-  // 4. JWT에서 테넌트 정보 추출
-  const tenantId = extractTenantFromToken(tokens.accessToken);
+  // 4. 백엔드 응답에서 테넌트 정보 추출 (JWT 폴백)
+  const tenantId = tokens.tenantId || extractTenantFromToken(tokens.accessToken);
   const defaultTenant: Tenant = {
     id: tenantId || 'unknown',
-    code: 'DEFAULT',
-    name: '기본 테넌트',
+    code: tokens.tenantCode || 'UNKNOWN',
+    name: tokens.tenantName || '테넌트',
     status: 'ACTIVE',
   };
 
