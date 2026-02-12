@@ -74,8 +74,8 @@ describe('useAttendanceRealTime', () => {
     expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: queryKeys.attendance.all });
     expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: queryKeys.dashboard.attendance() });
     expect(mockToast).toHaveBeenCalledWith({
-      title: 'checkIn.checkIn',
-      description: 'checkIn.checkInComplete',
+      title: 'realTime.checkIn',
+      description: 'realTime.checkInDesc',
     });
   });
 
@@ -92,8 +92,8 @@ describe('useAttendanceRealTime', () => {
     expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: queryKeys.attendance.all });
     expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: queryKeys.dashboard.attendance() });
     expect(mockToast).toHaveBeenCalledWith({
-      title: 'checkIn.checkOut',
-      description: 'checkIn.checkOutComplete',
+      title: 'realTime.checkOut',
+      description: 'realTime.checkOutDesc',
     });
   });
 });
