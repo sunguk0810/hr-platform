@@ -2,6 +2,7 @@ package com.hrsaas.organization.client;
 
 import com.hrsaas.common.response.ApiResponse;
 import com.hrsaas.organization.client.dto.BulkTransferRequest;
+import com.hrsaas.organization.client.dto.EmployeeClientResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -48,5 +49,11 @@ public class EmployeeClientFallback implements EmployeeClient {
     public ApiResponse<Map<UUID, Long>> countByDepartmentIds(List<UUID> departmentIds) {
         log.warn("EmployeeClient fallback: countByDepartmentIds({})", departmentIds.size());
         return ApiResponse.success(Collections.emptyMap());
+    }
+
+    @Override
+    public ApiResponse<List<EmployeeClientResponse>> getBatch(List<UUID> ids) {
+        log.warn("EmployeeClient fallback: getBatch({})", ids.size());
+        return ApiResponse.success(Collections.emptyList());
     }
 }

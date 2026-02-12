@@ -17,6 +17,8 @@ import com.hrsaas.attendance.domain.entity.OvertimeRequest;
 import com.hrsaas.attendance.domain.entity.OvertimeStatus;
 import com.hrsaas.attendance.domain.entity.Holiday;
 import com.hrsaas.attendance.repository.AttendanceModificationLogRepository;
+import com.hrsaas.attendance.client.EmployeeServiceClient;
+import com.hrsaas.attendance.client.dto.EmployeeBasicDto;
 import com.hrsaas.attendance.repository.AttendanceRecordRepository;
 import com.hrsaas.attendance.repository.HolidayRepository;
 import com.hrsaas.attendance.repository.LeaveRequestRepository;
@@ -55,6 +57,7 @@ public class AttendanceServiceImpl implements AttendanceService {
     private final AttendanceModificationLogRepository modificationLogRepository;
     private final HolidayRepository holidayRepository;
     private final LeaveRequestRepository leaveRequestRepository;
+    private final EmployeeServiceClient employeeServiceClient;
 
     @Override
     @Transactional
@@ -269,10 +272,23 @@ public class AttendanceServiceImpl implements AttendanceService {
     public DepartmentAttendanceSummaryResponse getDepartmentSummary(UUID departmentId, LocalDate date) {
         UUID tenantId = TenantContext.getCurrentTenant();
 
-        // 1. Get all attendance records for the given date
-        List<AttendanceRecord> allRecords = attendanceRecordRepository.findByWorkDate(tenantId, date);
+        // 1. Get employees in the department
+        List<EmployeeBasicDto> employees = employeeServiceClient.getEmployees(departmentId, "ACTIVE").getData();
+        if (employees == null) {
+            employees = new ArrayList<>();
+        }
 
-        // 2. Get approved leave requests that cover this date for the department
+        List<UUID> employeeIds = employees.stream()
+            .map(EmployeeBasicDto::getId)
+            .toList();
+
+        // 2. Get attendance records for these employees only
+        List<AttendanceRecord> deptRecords = new ArrayList<>();
+        if (!employeeIds.isEmpty()) {
+            deptRecords = attendanceRecordRepository.findByEmployeeIdsAndWorkDate(tenantId, employeeIds, date);
+        }
+
+        // 3. Get approved leave requests that cover this date for the department
         List<LeaveRequest> approvedLeaves = leaveRequestRepository
             .findApprovedByDepartmentAndDateRange(tenantId, departmentId, date, date);
 
@@ -281,50 +297,40 @@ public class AttendanceServiceImpl implements AttendanceService {
             .map(LeaveRequest::getEmployeeId)
             .collect(java.util.stream.Collectors.toSet());
 
-        // 3. Also filter attendance records by employees that have ON_LEAVE status
-        //    or match department via leave request correlation
-        //    Since AttendanceRecord doesn't have departmentId, we use leave data
-        //    to identify department employees and cross-reference with attendance records
-        java.util.Set<UUID> departmentEmployeeIds = new java.util.HashSet<>(onLeaveEmployeeIds);
+        // 4. Calculate metrics
+        int totalEmployees = employees.size();
 
-        // Also check attendance records that have ON_LEAVE status for this department's employees
-        List<AttendanceRecord> onLeaveRecords = allRecords.stream()
-            .filter(r -> r.getStatus() == AttendanceStatus.ON_LEAVE)
-            .toList();
-        for (AttendanceRecord record : onLeaveRecords) {
-            if (onLeaveEmployeeIds.contains(record.getEmployeeId())) {
-                departmentEmployeeIds.add(record.getEmployeeId());
-            }
-        }
-
-        // 4. Since AttendanceRecord lacks departmentId, use all records for the date
-        //    In production, this would be enriched via employee-service Feign call
-        //    For now, count status-based metrics across all records for the date
-        int totalRecords = allRecords.size();
-        int presentCount = (int) allRecords.stream()
+        // Count from records
+        int presentCount = (int) deptRecords.stream()
             .filter(r -> r.getCheckInTime() != null && r.getStatus() != AttendanceStatus.ON_LEAVE)
             .count();
-        int lateCount = (int) allRecords.stream()
+
+        int lateCount = (int) deptRecords.stream()
             .filter(r -> r.getStatus() == AttendanceStatus.LATE)
             .count();
-        int absentCount = (int) allRecords.stream()
-            .filter(r -> r.getStatus() == AttendanceStatus.ABSENT)
-            .count();
-        int onLeaveCount = (int) allRecords.stream()
+
+        int onLeaveRecordCount = (int) deptRecords.stream()
             .filter(r -> r.getStatus() == AttendanceStatus.ON_LEAVE)
             .count();
 
-        // Supplement on-leave count from approved leave requests not reflected in attendance
-        // Set으로 변환하여 O(n²) → O(n+m)으로 개선
-        java.util.Set<UUID> recordedEmployeeIds = allRecords.stream()
+        // Calculate additional on-leave count (approved leaves not yet recorded as attendance)
+        java.util.Set<UUID> recordedEmployeeIds = deptRecords.stream()
             .map(AttendanceRecord::getEmployeeId)
             .collect(java.util.stream.Collectors.toSet());
+
         int additionalOnLeave = (int) onLeaveEmployeeIds.stream()
             .filter(empId -> !recordedEmployeeIds.contains(empId))
             .count();
-        onLeaveCount += additionalOnLeave;
 
-        int totalEmployees = totalRecords + additionalOnLeave;
+        int onLeaveCount = onLeaveRecordCount + additionalOnLeave;
+
+        // Absent count = Total - Present - OnLeave (simplistic logic, real world might differ)
+        // If an employee has no record and is not on leave, they are absent or haven't checked in yet
+        // For past dates, it's absent. For today, it might be just "not checked in yet".
+        // Assuming this summary handles "absent" as "no record and not on leave"
+        int absentCount = totalEmployees - presentCount - onLeaveCount;
+        if (absentCount < 0) absentCount = 0; // Safety
+
         double attendanceRate = totalEmployees > 0
             ? (double) presentCount / totalEmployees * 100.0
             : 0.0;

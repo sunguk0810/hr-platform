@@ -17,6 +17,10 @@ import com.hrsaas.employee.domain.entity.Employee;
 import com.hrsaas.employee.domain.entity.EmployeeStatus;
 import com.hrsaas.employee.domain.event.EmployeeCreatedEvent;
 import com.hrsaas.employee.repository.EmployeeRepository;
+import com.hrsaas.employee.client.OrganizationServiceClient;
+import com.hrsaas.employee.client.dto.DepartmentClientResponse;
+import com.hrsaas.employee.client.dto.GradeClientResponse;
+import com.hrsaas.employee.client.dto.PositionClientResponse;
 import com.hrsaas.employee.service.EmployeeHistoryRecorder;
 import com.hrsaas.employee.service.EmployeeService;
 import com.hrsaas.employee.service.ExcelEmployeeService;
@@ -48,6 +52,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final EmployeeHistoryRecorder historyRecorder;
     private final OrganizationValidationService organizationValidationService;
     private final ExcelEmployeeService excelEmployeeService;
+    private final OrganizationServiceClient organizationServiceClient;
 
     @Override
     @Transactional
@@ -94,7 +99,9 @@ public class EmployeeServiceImpl implements EmployeeService {
         // Set viewing employee ID for privacy context (determines if masking should be applied)
         PrivacyContext.setViewingEmployeeId(id);
         Employee employee = findById(id);
-        return EmployeeResponse.from(employee);
+        EmployeeResponse response = EmployeeResponse.from(employee);
+        populateNames(List.of(response));
+        return response;
     }
 
     @Override
@@ -105,7 +112,9 @@ public class EmployeeServiceImpl implements EmployeeService {
             .orElseThrow(() -> new NotFoundException("EMP_001", "직원을 찾을 수 없습니다: " + employeeNumber));
         // Set viewing employee ID for privacy context
         PrivacyContext.setViewingEmployeeId(employee.getId());
-        return EmployeeResponse.from(employee);
+        EmployeeResponse response = EmployeeResponse.from(employee);
+        populateNames(List.of(response));
+        return response;
     }
 
     @Override
@@ -120,9 +129,12 @@ public class EmployeeServiceImpl implements EmployeeService {
             pageable
         );
 
-        return PageResponse.from(page, page.getContent().stream()
+        List<EmployeeResponse> responses = page.getContent().stream()
             .map(EmployeeResponse::from)
-            .toList());
+            .toList();
+        populateNames(responses);
+
+        return PageResponse.from(page, responses);
     }
 
     @Override
@@ -135,9 +147,12 @@ public class EmployeeServiceImpl implements EmployeeService {
             pageable
         );
 
-        return PageResponse.from(page, page.getContent().stream()
+        List<EmployeeResponse> responses = page.getContent().stream()
             .map(EmployeeResponse::from)
-            .toList());
+            .toList();
+        populateNames(responses);
+
+        return PageResponse.from(page, responses);
     }
 
     @Override
@@ -366,5 +381,85 @@ public class EmployeeServiceImpl implements EmployeeService {
     Employee findById(UUID id) {
         return employeeRepository.findById(id)
             .orElseThrow(() -> new NotFoundException("EMP_001", "직원을 찾을 수 없습니다: " + id));
+    }
+
+    @Override
+    public List<EmployeeResponse> getBatch(List<UUID> ids) {
+        List<Employee> employees = employeeRepository.findAllById(ids);
+        List<EmployeeResponse> responses = employees.stream()
+            .map(EmployeeResponse::from)
+            .toList();
+        populateNames(responses);
+        return responses;
+    }
+
+    private void populateNames(List<EmployeeResponse> responses) {
+        if (responses.isEmpty()) {
+            return;
+        }
+
+        try {
+            String tenantId = TenantContext.getCurrentTenant().toString();
+            List<DepartmentClientResponse> departments = organizationServiceClient.getDepartments(tenantId).getData();
+            List<PositionClientResponse> positions = organizationServiceClient.getPositions(tenantId).getData();
+            List<GradeClientResponse> grades = organizationServiceClient.getGrades(tenantId).getData();
+
+            java.util.Map<UUID, String> deptMap = departments != null ?
+                departments.stream().collect(java.util.stream.Collectors.toMap(
+                    DepartmentClientResponse::getId,
+                    DepartmentClientResponse::getName,
+                    (v1, v2) -> v1
+                )) : java.util.Collections.emptyMap();
+
+            java.util.Map<String, String> posMap = positions != null ?
+                positions.stream().collect(java.util.stream.Collectors.toMap(
+                    PositionClientResponse::getCode,
+                    PositionClientResponse::getName,
+                    (v1, v2) -> v1
+                )) : java.util.Collections.emptyMap();
+
+            java.util.Map<String, String> gradeMap = grades != null ?
+                grades.stream().collect(java.util.stream.Collectors.toMap(
+                    GradeClientResponse::getCode,
+                    GradeClientResponse::getName,
+                    (v1, v2) -> v1
+                )) : java.util.Collections.emptyMap();
+
+            for (EmployeeResponse response : responses) {
+                if (response.getDepartmentId() != null) {
+                    response.setDepartmentName(deptMap.get(response.getDepartmentId()));
+                }
+                if (response.getPositionCode() != null) {
+                    response.setPositionName(posMap.get(response.getPositionCode()));
+                }
+                if (response.getJobTitleCode() != null) {
+                    response.setGradeCode(response.getJobTitleCode());
+                    response.setGradeName(gradeMap.get(response.getJobTitleCode()));
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to populate names from organization service", e);
+            // Proceed without names rather than failing the whole request
+        }
+    }
+
+    @Override
+    public List<EmployeeResponse> getList(EmployeeSearchCondition condition) {
+        UUID tenantId = TenantContext.getCurrentTenant();
+
+        Page<Employee> page = employeeRepository.search(
+            tenantId,
+            condition.getStatus() != null ? condition.getStatus().name() : null,
+            condition.getDepartmentId(),
+            condition.getName(),
+            Pageable.unpaged()
+        );
+
+        List<EmployeeResponse> responses = page.getContent().stream()
+            .map(EmployeeResponse::from)
+            .toList();
+        populateNames(responses);
+
+        return responses;
     }
 }
