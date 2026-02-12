@@ -8,6 +8,7 @@ import com.hrsaas.recruitment.domain.entity.JobPosting;
 import com.hrsaas.recruitment.domain.event.InterviewReminderEvent;
 import com.hrsaas.recruitment.repository.InterviewRepository;
 import com.hrsaas.recruitment.repository.JobPostingRepository;
+import com.hrsaas.recruitment.service.InterviewService;
 import com.hrsaas.recruitment.service.OfferService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +30,7 @@ public class RecruitmentScheduler {
     private final JobPostingRepository jobPostingRepository;
     private final InterviewRepository interviewRepository;
     private final OfferService offerService;
+    private final InterviewService interviewService;
     private final EventPublisher eventPublisher;
 
     /**
@@ -62,12 +64,11 @@ public class RecruitmentScheduler {
 
     /**
      * 피드백 기한 알림 (매일 09:00)
-     * TODO: 실제 알림 발송 구현
      */
     @Scheduled(cron = "0 0 9 * * ?")
     public void sendFeedbackReminders() {
         log.info("Starting feedback reminder check");
-        // TODO: 피드백 기한이 오늘인 면접에 대해 알림 발송
+        interviewService.sendFeedbackReminders();
         log.info("Completed feedback reminder check");
     }
 

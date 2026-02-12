@@ -3,6 +3,8 @@ package com.hrsaas.recruitment.service.impl;
 import com.hrsaas.common.core.exception.BusinessException;
 import com.hrsaas.common.event.EventPublisher;
 import com.hrsaas.common.tenant.TenantContext;
+import com.hrsaas.recruitment.client.NotificationServiceClient;
+import com.hrsaas.recruitment.client.dto.SendNotificationRequest;
 import com.hrsaas.recruitment.domain.dto.request.CompleteInterviewRequest;
 import com.hrsaas.recruitment.domain.dto.request.CreateInterviewRequest;
 import com.hrsaas.recruitment.domain.dto.request.ScheduleInterviewRequest;
@@ -31,7 +33,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -48,6 +50,9 @@ class InterviewServiceImplTest {
 
     @Mock
     private EventPublisher eventPublisher;
+
+    @Mock
+    private NotificationServiceClient notificationServiceClient;
 
     @InjectMocks
     private InterviewServiceImpl interviewService;
@@ -258,6 +263,82 @@ class InterviewServiceImplTest {
 
         verify(interviewRepository).findById(interviewId);
         verify(interviewRepository).save(any(Interview.class));
+    }
+
+    // ===== sendFeedbackReminders =====
+
+    @Test
+    @DisplayName("sendFeedbackReminders: sendsNotificationsToPendingInterviewers")
+    void sendFeedbackReminders_sendsNotificationsToPendingInterviewers() {
+        // given
+        UUID interviewId = UUID.randomUUID();
+        UUID interviewer1Id = UUID.randomUUID();
+        UUID interviewer2Id = UUID.randomUUID();
+
+        // Application & Interview Setup
+        Application app = createScreenedApplication();
+        setEntityId(app, UUID.randomUUID());
+
+        Interview interview = Interview.builder()
+                .application(app)
+                .interviewType(InterviewType.FIRST_ROUND)
+                .scheduledDate(LocalDate.now().minusDays(1))
+                .scheduledTime(LocalTime.of(10, 0))
+                .interviewers(List.of(
+                        Map.of("id", interviewer1Id.toString(), "name", "Interviewer 1", "email", "int1@test.com"),
+                        Map.of("id", interviewer2Id.toString(), "name", "Interviewer 2", "email", "int2@test.com")
+                ))
+                .feedbackDeadline(LocalDate.now())
+                .build();
+        // Manually set status to IN_PROGRESS via reflection or helper if needed,
+        // but builder sets SCHEDULING. Let's assume we update it.
+        try {
+            var statusField = Interview.class.getDeclaredField("status");
+            statusField.setAccessible(true);
+            statusField.set(interview, InterviewStatus.IN_PROGRESS);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        setEntityId(interview, interviewId);
+
+        // Interviewer 1 submitted a score
+        InterviewScore score1 = InterviewScore.builder()
+                .interview(interview)
+                .interviewerId(interviewer1Id)
+                .interviewerName("Interviewer 1")
+                .criterion("Technical")
+                .score(4)
+                .build();
+        // Add score to interview's list (since OneToMany is mappedBy, we need to ensure getter returns it if we rely on getter)
+        // However, Interview.scores is initialized to new ArrayList<>().
+        // We can add it directly via reflection or if there is a method.
+        // Interview has 'scores' field.
+        try {
+            var scoresField = Interview.class.getDeclaredField("scores");
+            scoresField.setAccessible(true);
+            ((List<InterviewScore>) scoresField.get(interview)).add(score1);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        when(interviewRepository.findByFeedbackDeadlineAndStatusIn(any(LocalDate.class), anyList()))
+                .thenReturn(List.of(interview));
+
+        // when
+        interviewService.sendFeedbackReminders();
+
+        // then
+        // Expect notification ONLY for Interviewer 2
+        verify(notificationServiceClient, times(1)).send(argThat(request ->
+                request.getRecipientId().equals(interviewer2Id) &&
+                request.getRecipientEmail().equals("int2@test.com") &&
+                request.getTitle().contains("면접 결과 피드백 요청")
+        ));
+
+        // Verify Interviewer 1 did NOT receive notification
+        verify(notificationServiceClient, never()).send(argThat(request ->
+                request.getRecipientId().equals(interviewer1Id)
+        ));
     }
 
     // ===== Helper methods =====
