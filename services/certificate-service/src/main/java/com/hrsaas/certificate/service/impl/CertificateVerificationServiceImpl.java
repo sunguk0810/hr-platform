@@ -1,5 +1,7 @@
 package com.hrsaas.certificate.service.impl;
 
+import com.hrsaas.certificate.client.TenantClient;
+import com.hrsaas.certificate.domain.dto.client.TenantInfoResponse;
 import com.hrsaas.certificate.domain.dto.request.VerifyCertificateRequest;
 import com.hrsaas.certificate.domain.dto.response.VerificationLogResponse;
 import com.hrsaas.certificate.domain.dto.response.VerificationResultResponse;
@@ -8,6 +10,7 @@ import com.hrsaas.certificate.domain.entity.VerificationLog;
 import com.hrsaas.certificate.repository.CertificateIssueRepository;
 import com.hrsaas.certificate.repository.VerificationLogRepository;
 import com.hrsaas.certificate.service.CertificateVerificationService;
+import com.hrsaas.common.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -31,6 +34,7 @@ public class CertificateVerificationServiceImpl implements CertificateVerificati
 
     private final CertificateIssueRepository certificateIssueRepository;
     private final VerificationLogRepository verificationLogRepository;
+    private final TenantClient tenantClient;
 
     private static final int MAX_VERIFICATIONS_PER_HOUR = 10;
 
@@ -87,13 +91,23 @@ public class CertificateVerificationServiceImpl implements CertificateVerificati
         issue.markVerified();
         certificateIssueRepository.save(issue);
 
+        String companyName = "회사명";
+        try {
+            ApiResponse<TenantInfoResponse> response = tenantClient.getInternalInfo(issue.getTenantId());
+            if (response != null && response.getData() != null) {
+                companyName = response.getData().getName();
+            }
+        } catch (Exception e) {
+            log.error("Failed to fetch tenant info for id: {}", issue.getTenantId(), e);
+        }
+
         return VerificationResultResponse.success(
                 issue.getRequest().getCertificateType().getName(),
                 issue.getRequest().getEmployeeName(),
                 issue.getIssueNumber(),
                 issue.getIssuedAt(),
                 issue.getExpiresAt(),
-                "회사명" // TODO: 테넌트에서 회사명 조회
+                companyName
         );
     }
 

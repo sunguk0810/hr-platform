@@ -335,4 +335,10 @@ public class TenantController {
         PasswordPolicyData policy = tenantService.getPasswordPolicy(tenantId);
         return ResponseEntity.ok(ApiResponse.success(policy));
     }
+
+    @GetMapping("/internal/{id}")
+    @Operation(summary = "테넌트 내부 정보 조회 (서비스 간 통신용)")
+    public ResponseEntity<ApiResponse<TenantInternalResponse>> getInternalInfo(@PathVariable UUID id) {
+        return ResponseEntity.ok(ApiResponse.success(tenantService.getInternalInfo(id)));
+    }
 }
