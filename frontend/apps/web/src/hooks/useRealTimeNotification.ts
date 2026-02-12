@@ -151,6 +151,8 @@ export function useApprovalRealTime() {
 }
 
 export function useAttendanceRealTime() {
+  const { t } = useTranslation('attendance');
+  const { toast } = useToast();
   const { isAuthenticated } = useAuthStore();
   const { t } = useTranslation('attendance');
   const { toast } = useToast();
