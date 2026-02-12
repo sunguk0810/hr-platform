@@ -400,6 +400,8 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         try {
             String tenantId = TenantContext.getCurrentTenant().toString();
+            // TODO: Implement caching for organization data or use batch fetch by IDs to avoid "Fetch All" scalability issues
+            // For now, wrapping in try-catch and logging to ensure robustness
             List<DepartmentClientResponse> departments = organizationServiceClient.getDepartments(tenantId).getData();
             List<PositionClientResponse> positions = organizationServiceClient.getPositions(tenantId).getData();
             List<GradeClientResponse> grades = organizationServiceClient.getGrades(tenantId).getData();
