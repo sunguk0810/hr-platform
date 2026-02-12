@@ -76,7 +76,8 @@ public class LeaveAccrualService {
                     try {
                         leaveType = LeaveType.valueOf(rule.getLeaveTypeCode());
                     } catch (IllegalArgumentException e) {
-                        leaveType = LeaveType.ANNUAL; // fallback
+                        log.warn("Skipping rule with invalid leave type code: {}", rule.getLeaveTypeCode());
+                        continue;
                     }
 
                     // Get or create balance from map
