@@ -36,6 +36,10 @@ public interface CommonCodeRepository extends JpaRepository<CommonCode, UUID> {
            "AND cc.active = true ORDER BY cc.sortOrder ASC")
     List<CommonCode> findByCodeGroupId(@Param("codeGroupId") UUID codeGroupId);
 
+    @Query("SELECT cc FROM CommonCode cc WHERE cc.codeGroup.id IN :codeGroupIds " +
+           "AND cc.active = true ORDER BY cc.codeGroup.id ASC, cc.sortOrder ASC")
+    List<CommonCode> findByCodeGroupIdIn(@Param("codeGroupIds") java.util.Collection<UUID> codeGroupIds);
+
     boolean existsByCodeGroupIdAndCodeAndTenantId(UUID codeGroupId, String code, UUID tenantId);
 
     @Query("SELECT cc FROM CommonCode cc WHERE (cc.tenantId IS NULL OR cc.tenantId = :tenantId) " +
