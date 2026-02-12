@@ -82,15 +82,15 @@ public class PermissionChecker {
     }
 
     public boolean isSuperAdmin() {
-        return SecurityContextHolder.hasRole("ROLE_SUPER_ADMIN");
+        return SecurityContextHolder.hasRole("SUPER_ADMIN");
     }
 
     public boolean isGroupAdmin() {
-        return SecurityContextHolder.hasAnyRole("ROLE_SUPER_ADMIN", "ROLE_GROUP_ADMIN");
+        return SecurityContextHolder.hasAnyRole("SUPER_ADMIN", "GROUP_ADMIN");
     }
 
     public boolean isTenantAdmin() {
-        return SecurityContextHolder.hasAnyRole("ROLE_SUPER_ADMIN", "ROLE_GROUP_ADMIN", "ROLE_TENANT_ADMIN");
+        return SecurityContextHolder.hasAnyRole("SUPER_ADMIN", "GROUP_ADMIN", "TENANT_ADMIN");
     }
 
     /**
@@ -99,7 +99,7 @@ public class PermissionChecker {
      */
     public boolean isHrManager() {
         return SecurityContextHolder.hasAnyRole(
-            "ROLE_SUPER_ADMIN", "ROLE_GROUP_ADMIN", "ROLE_TENANT_ADMIN", "ROLE_HR_MANAGER"
+            "SUPER_ADMIN", "GROUP_ADMIN", "TENANT_ADMIN", "HR_MANAGER", "HR_ADMIN"
         );
     }
 
@@ -113,15 +113,15 @@ public class PermissionChecker {
 
     public boolean isDeptManager() {
         return SecurityContextHolder.hasAnyRole(
-            "ROLE_SUPER_ADMIN", "ROLE_GROUP_ADMIN", "ROLE_TENANT_ADMIN",
-            "ROLE_HR_MANAGER", "ROLE_DEPT_MANAGER"
+            "SUPER_ADMIN", "GROUP_ADMIN", "TENANT_ADMIN",
+            "HR_MANAGER", "HR_ADMIN", "DEPT_MANAGER"
         );
     }
 
     public boolean isTeamLeader() {
         return SecurityContextHolder.hasAnyRole(
-            "ROLE_SUPER_ADMIN", "ROLE_GROUP_ADMIN", "ROLE_TENANT_ADMIN",
-            "ROLE_HR_MANAGER", "ROLE_DEPT_MANAGER", "ROLE_TEAM_LEADER"
+            "SUPER_ADMIN", "GROUP_ADMIN", "TENANT_ADMIN",
+            "HR_MANAGER", "HR_ADMIN", "DEPT_MANAGER", "TEAM_LEADER"
         );
     }
 
