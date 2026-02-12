@@ -2,7 +2,7 @@ import { useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queryClient';
-import { wsClient, type NotificationEvent } from '@/lib/websocket';
+import { wsClient, type NotificationEvent, type AttendanceEvent } from '@/lib/websocket';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useToast } from './useToast';
@@ -157,9 +157,9 @@ export function useAttendanceRealTime() {
   const queryClient = useQueryClient();
 
   const handleCheckIn = useCallback(
-    (_event: unknown) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.attendance.today() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.attendance.list() });
+    (_event: AttendanceEvent) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.attendance.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.attendance() });
 
       toast({
         title: t('checkIn.checkIn'),
@@ -170,9 +170,9 @@ export function useAttendanceRealTime() {
   );
 
   const handleCheckOut = useCallback(
-    (_event: unknown) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.attendance.today() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.attendance.list() });
+    (_event: AttendanceEvent) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.attendance.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.attendance() });
 
       toast({
         title: t('checkIn.checkOut'),

@@ -5,6 +5,7 @@ import { wsClient } from '@/lib/websocket';
 import { useAuthStore } from '@/stores/authStore';
 import { useToast } from '../useToast';
 import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/queryClient';
 
 // Mock dependencies
 vi.mock('@/lib/websocket', () => ({
@@ -24,6 +25,7 @@ vi.mock('../useToast', () => ({
 
 vi.mock('@tanstack/react-query', () => ({
   useQueryClient: vi.fn(),
+  QueryClient: vi.fn(),
 }));
 
 vi.mock('react-i18next', () => ({
@@ -69,7 +71,8 @@ describe('useAttendanceRealTime', () => {
     // Simulate event
     checkInCallback({});
 
-    expect(mockInvalidateQueries).toHaveBeenCalledTimes(2); // today and list
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: queryKeys.attendance.all });
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: queryKeys.dashboard.attendance() });
     expect(mockToast).toHaveBeenCalledWith({
       title: 'checkIn.checkIn',
       description: 'checkIn.checkInComplete',
@@ -86,7 +89,8 @@ describe('useAttendanceRealTime', () => {
     // Simulate event
     checkOutCallback({});
 
-    expect(mockInvalidateQueries).toHaveBeenCalledTimes(2);
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: queryKeys.attendance.all });
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({ queryKey: queryKeys.dashboard.attendance() });
     expect(mockToast).toHaveBeenCalledWith({
       title: 'checkIn.checkOut',
       description: 'checkIn.checkOutComplete',
