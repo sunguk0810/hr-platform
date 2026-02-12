@@ -56,7 +56,7 @@ class AttendanceRecordTest {
                 .build();
 
         // when - check out at 17:30
-        record.checkOut(LocalTime.of(17, 30), "Office", standardEndTime);
+        record.checkOut(LocalTime.of(17, 30), "Office", standardEndTime, 60);
 
         // then
         assertThat(record.getEarlyLeaveMinutes()).isEqualTo(30);
@@ -74,7 +74,7 @@ class AttendanceRecordTest {
                 .build();
 
         // when - check out at 18:05
-        record.checkOut(LocalTime.of(18, 5), "Office", standardEndTime);
+        record.checkOut(LocalTime.of(18, 5), "Office", standardEndTime, 60);
 
         // then
         assertThat(record.getEarlyLeaveMinutes()).isEqualTo(0);
@@ -91,7 +91,7 @@ class AttendanceRecordTest {
                 .build();
 
         // when - check out at 19:30
-        record.checkOut(LocalTime.of(19, 30), "Office", standardEndTime);
+        record.checkOut(LocalTime.of(19, 30), "Office", standardEndTime, 60);
 
         // then
         assertThat(record.getOvertimeMinutes()).isEqualTo(90);
@@ -108,9 +108,55 @@ class AttendanceRecordTest {
                 .build();
 
         // when - check out at 18:00
-        record.checkOut(LocalTime.of(18, 0), "Office", standardEndTime);
+        record.checkOut(LocalTime.of(18, 0), "Office", standardEndTime, 60);
 
         // then - 9 hours total - 1 hour lunch = 8 hours
         assertThat(record.getWorkHours()).isEqualTo(8);
+    }
+
+    @Test
+    @DisplayName("checkOut: calculates work hours correctly with custom lunch break")
+    void checkOut_calculatesWorkHours_customLunch() {
+        // given
+        LocalTime standardEndTime = LocalTime.of(18, 0);
+        AttendanceRecord record = AttendanceRecord.builder()
+            .employeeId(UUID.randomUUID())
+            .checkInTime(LocalTime.of(9, 0))
+            .build();
+
+        // when - check out at 18:00, lunch break 30 mins
+        // Work: 9h = 540m. 540 - 30 = 510m. 510/60 = 8.5 -> round to 9
+        record.checkOut(LocalTime.of(18, 0), "Office", standardEndTime, 30);
+
+        // then
+        assertThat(record.getWorkHours()).isEqualTo(9);
+
+        // when - check out at 18:00, lunch break 90 mins
+        // Work: 9h = 540m. 540 - 90 = 450m. 450/60 = 7.5 -> round to 8
+        record.checkOut(LocalTime.of(18, 0), "Office", standardEndTime, 90);
+
+        // then
+        assertThat(record.getWorkHours()).isEqualTo(8);
+    }
+
+    @Test
+    @DisplayName("checkOut: rounds work hours correctly")
+    void checkOut_roundsWorkHours() {
+        // given
+        LocalTime standardEndTime = LocalTime.of(18, 0);
+        AttendanceRecord record = AttendanceRecord.builder()
+            .employeeId(UUID.randomUUID())
+            .checkInTime(LocalTime.of(9, 0))
+            .build();
+
+        // Case 1: 5h 20m work (excluding lunch) -> 5.33h -> rounds to 5
+        // Total duration needed: 320m + 60m (lunch) = 380m = 6h 20m -> 15:20
+        record.checkOut(LocalTime.of(15, 20), "Office", standardEndTime, 60);
+        assertThat(record.getWorkHours()).isEqualTo(5);
+
+        // Case 2: 5h 40m work (excluding lunch) -> 5.66h -> rounds to 6
+        // Total duration needed: 340m + 60m (lunch) = 400m = 6h 40m -> 15:40
+        record.checkOut(LocalTime.of(15, 40), "Office", standardEndTime, 60);
+        assertThat(record.getWorkHours()).isEqualTo(6);
     }
 }

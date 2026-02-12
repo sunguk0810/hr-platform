@@ -117,7 +117,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         }
 
         AttendanceConfig config = getAttendanceConfig(tenantId);
-        record.checkOut(now, request.location(), config.getStandardEndTime());
+        record.checkOut(now, request.location(), config.getStandardEndTime(), config.getLunchBreakMinutes());
         if (request.note() != null && !request.note().isBlank()) {
             String existingNote = record.getNote();
             String newNote = existingNote != null ? existingNote + " | " + request.note() : request.note();
@@ -393,11 +393,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         }
 
         // workHours 재계산
-        if (record.getCheckInTime() != null && record.getCheckOutTime() != null) {
-            long minutes = Duration.between(record.getCheckInTime(), record.getCheckOutTime()).toMinutes();
-            minutes -= 60; // 점심시간 1시간 제외
-            record.setWorkHours((int) (minutes / 60));
-        }
+        record.calculateWorkHours(config.getLunchBreakMinutes());
 
         // earlyLeaveMinutes 재계산
         if (record.getCheckOutTime() != null && record.getCheckOutTime().isBefore(standardEndTime)) {

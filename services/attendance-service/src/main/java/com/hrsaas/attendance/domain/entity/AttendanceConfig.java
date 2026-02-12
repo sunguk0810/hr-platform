@@ -24,4 +24,8 @@ public class AttendanceConfig extends TenantAwareEntity {
     @Column(name = "standard_end_time", nullable = false)
     @Builder.Default
     private LocalTime standardEndTime = LocalTime.of(18, 0);
+
+    @Column(name = "lunch_break_minutes", nullable = false)
+    @Builder.Default
+    private Integer lunchBreakMinutes = 60;
 }
