@@ -148,7 +148,7 @@ class EmployeeChangeRequestServiceTest {
             .thenReturn(pendingRequest);
 
         // when
-        changeRequestService.handleApprovalCompleted(CHANGE_REQUEST_ID, true);
+        changeRequestService.handleApprovalCompleted(CHANGE_REQUEST_ID, true, null, null);
 
         // then
         assertThat(pendingRequest.getStatus()).isEqualTo("APPROVED");
@@ -178,7 +178,7 @@ class EmployeeChangeRequestServiceTest {
             .thenReturn(pendingRequest);
 
         // when
-        changeRequestService.handleApprovalCompleted(CHANGE_REQUEST_ID, false);
+        changeRequestService.handleApprovalCompleted(CHANGE_REQUEST_ID, false, null, "Rejected");
 
         // then
         assertThat(pendingRequest.getStatus()).isEqualTo("REJECTED");
@@ -196,7 +196,7 @@ class EmployeeChangeRequestServiceTest {
             .thenReturn(Optional.empty());
 
         // when & then
-        assertThatThrownBy(() -> changeRequestService.handleApprovalCompleted(nonExistentId, true))
+        assertThatThrownBy(() -> changeRequestService.handleApprovalCompleted(nonExistentId, true, null, null))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("Change request not found");
 
@@ -262,7 +262,7 @@ class EmployeeChangeRequestServiceTest {
             .thenAnswer(invocation -> invocation.getArgument(0));
 
         // when
-        changeRequestService.handleApprovalCompleted(CHANGE_REQUEST_ID, true);
+        changeRequestService.handleApprovalCompleted(CHANGE_REQUEST_ID, true, null, null);
 
         // then
         verify(changeRequestRepository).save(requestCaptor.capture());
@@ -290,7 +290,7 @@ class EmployeeChangeRequestServiceTest {
             .thenAnswer(invocation -> invocation.getArgument(0));
 
         // when
-        changeRequestService.handleApprovalCompleted(CHANGE_REQUEST_ID, false);
+        changeRequestService.handleApprovalCompleted(CHANGE_REQUEST_ID, false, null, "Rejected");
 
         // then
         verify(changeRequestRepository).save(requestCaptor.capture());

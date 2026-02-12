@@ -464,4 +464,133 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         return responses;
     }
+
+    @Override
+    @Transactional
+    @CacheEvict(value = CacheNames.EMPLOYEE, allEntries = true)
+    public void suspend(UUID id) {
+        Employee employee = findById(id);
+        employee.suspend();
+        employeeRepository.save(employee);
+        log.info("Employee suspended: id={}", id);
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(value = CacheNames.EMPLOYEE, allEntries = true)
+    public void activate(UUID id) {
+        Employee employee = findById(id);
+        employee.activate();
+        employeeRepository.save(employee);
+        log.info("Employee activated: id={}", id);
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(value = CacheNames.EMPLOYEE, allEntries = true)
+    public void bulkUpdate(List<UpdateEmployeeRequest> requests) {
+        if (requests == null || requests.isEmpty()) {
+            return;
+        }
+
+        List<UUID> ids = requests.stream()
+            .map(UpdateEmployeeRequest::getEmployeeId)
+            .toList();
+        List<Employee> employees = employeeRepository.findAllById(ids);
+
+        // Map employees by ID for quick lookup
+        java.util.Map<UUID, Employee> employeeMap = employees.stream()
+            .collect(java.util.stream.Collectors.toMap(Employee::getId, e -> e));
+
+        for (UpdateEmployeeRequest request : requests) {
+            Employee employee = employeeMap.get(request.getEmployeeId());
+            if (employee == null) {
+                log.warn("Employee not found for bulk update: {}", request.getEmployeeId());
+                continue;
+            }
+
+            UUID oldDeptId = employee.getDepartmentId();
+            String oldPositionCode = employee.getPositionCode();
+            String oldJobTitleCode = employee.getJobTitleCode();
+
+            if (request.getDepartmentId() != null) {
+                organizationValidationService.validateDepartment(request.getDepartmentId());
+                employee.setDepartmentId(request.getDepartmentId());
+            }
+            if (request.getPositionCode() != null) {
+                organizationValidationService.validatePosition(request.getPositionCode());
+                employee.setPositionCode(request.getPositionCode());
+            }
+            if (request.getJobTitleCode() != null) {
+                organizationValidationService.validateGrade(request.getJobTitleCode());
+                employee.setJobTitleCode(request.getJobTitleCode());
+            }
+
+            // Record history
+            if (request.getDepartmentId() != null && !request.getDepartmentId().equals(oldDeptId)) {
+                historyRecorder.recordDepartmentChange(employee, oldDeptId, request.getDepartmentId(), "부서 변경 (일괄)");
+            }
+            if (request.getPositionCode() != null && !request.getPositionCode().equals(oldPositionCode)) {
+                historyRecorder.recordPositionChange(employee, oldPositionCode, request.getPositionCode(), "직책 변경 (일괄)");
+            }
+            if (request.getJobTitleCode() != null && !request.getJobTitleCode().equals(oldJobTitleCode)) {
+                historyRecorder.recordGradeChange(employee, oldJobTitleCode, request.getJobTitleCode(), "직급 변경 (일괄)");
+            }
+        }
+
+        employeeRepository.saveAll(employees);
+        log.info("Bulk update completed: count={}", requests.size());
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(value = CacheNames.EMPLOYEE, allEntries = true)
+    public void bulkResign(List<UUID> ids, String resignDate) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+        List<Employee> employees = employeeRepository.findAllById(ids);
+        LocalDate date = LocalDate.parse(resignDate);
+
+        for (Employee employee : employees) {
+            employee.resign(date);
+        }
+
+        employeeRepository.saveAll(employees);
+        log.info("Bulk resign completed: count={}", ids.size());
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(value = CacheNames.EMPLOYEE, allEntries = true)
+    public void bulkSuspend(List<UUID> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+        List<Employee> employees = employeeRepository.findAllById(ids);
+
+        for (Employee employee : employees) {
+            employee.suspend();
+        }
+
+        employeeRepository.saveAll(employees);
+        log.info("Bulk suspend completed: count={}", ids.size());
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(value = CacheNames.EMPLOYEE, allEntries = true)
+    public void bulkActivate(List<UUID> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+        List<Employee> employees = employeeRepository.findAllById(ids);
+
+        for (Employee employee : employees) {
+            employee.activate();
+        }
+
+        employeeRepository.saveAll(employees);
+        log.info("Bulk activate completed: count={}", ids.size());
+    }
 }
