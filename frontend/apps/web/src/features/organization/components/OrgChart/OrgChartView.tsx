@@ -1,4 +1,5 @@
-import { useCallback, useState, useMemo, useEffect } from 'react';
+import { useCallback, useState, useMemo, useEffect, useRef } from 'react';
+import { useReactToPrint } from 'react-to-print';
 import ReactFlow, {
   Node,
   Edge,
@@ -320,9 +321,23 @@ function OrgChartViewInner({
     setViewMode((prev) => (prev === 'tree' ? 'flat' : 'tree'));
   }, []);
 
-  const handleExport = useCallback(() => {
-    // TODO: Export functionality would be implemented here
-  }, []);
+  const componentRef = useRef<HTMLDivElement>(null);
+
+  const handleExport = useReactToPrint({
+    content: () => componentRef.current,
+    documentTitle: `OrgChart-${format(selectedDate, 'yyyy-MM-dd')}`,
+    pageStyle: `
+      @page {
+        size: landscape;
+        margin: 20mm;
+      }
+      @media print {
+        body {
+          -webkit-print-color-adjust: exact;
+        }
+      }
+    `,
+  });
 
   const minimapNodeColor = useCallback((node: Node) => {
     const data = node.data as OrgNodeData;
@@ -335,7 +350,10 @@ function OrgChartViewInner({
     format(selectedDate, 'yyyy-MM-dd') !== format(today, 'yyyy-MM-dd');
 
   return (
-    <div className={cn('h-[600px] w-full rounded-lg border bg-muted/30', className)}>
+    <div
+      ref={componentRef}
+      className={cn('h-[600px] w-full rounded-lg border bg-muted/30', className)}
+    >
       {/* Past date indicator banner */}
       {showDateSelector && isViewingPast && (
         <div className="absolute top-0 left-0 right-0 z-10 bg-amber-50 border-b border-amber-200 px-4 py-2 text-sm text-amber-800 flex items-center justify-center gap-2">
