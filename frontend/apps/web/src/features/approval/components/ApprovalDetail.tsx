@@ -27,6 +27,7 @@ import {
   Paperclip,
   Loader2,
 } from 'lucide-react';
+import { sanitizeHtml } from '@/utils/htmlSanitizer';
 import type { Approval, ApprovalLine } from '@hr-platform/shared-types';
 
 export interface ApprovalDetailProps {
@@ -185,7 +186,7 @@ export function ApprovalDetail({
         <CardContent>
           <div
             className="prose prose-sm max-w-none dark:prose-invert"
-            dangerouslySetInnerHTML={{ __html: approval.content }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(approval.content) }}
           />
         </CardContent>
       </Card>
