@@ -2,6 +2,7 @@ package com.hrsaas.organization.service.impl;
 
 import com.hrsaas.common.security.SecurityContextHolder;
 import com.hrsaas.common.tenant.TenantContext;
+import com.hrsaas.organization.domain.dto.request.OrgHistorySearchRequest;
 import com.hrsaas.organization.domain.dto.response.DepartmentHistoryResponse;
 import com.hrsaas.organization.domain.entity.OrganizationHistory;
 import com.hrsaas.organization.domain.event.DepartmentCreatedEvent;
@@ -14,12 +15,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
 
+import jakarta.persistence.criteria.Predicate;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -61,9 +66,40 @@ public class OrganizationHistoryServiceImpl implements OrganizationHistoryServic
 
     @Override
     public Page<DepartmentHistoryResponse> getOrganizationHistory(Pageable pageable) {
+        return getOrganizationHistory(new OrgHistorySearchRequest(), pageable);
+    }
+
+    @Override
+    public Page<DepartmentHistoryResponse> getOrganizationHistory(OrgHistorySearchRequest request, Pageable pageable) {
         UUID tenantId = TenantContext.getCurrentTenant();
-        Page<OrganizationHistory> page = organizationHistoryRepository
-            .findByTenantIdOrderByEventDateDesc(tenantId, pageable);
+
+        Specification<OrganizationHistory> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("tenantId"), tenantId));
+
+            if (request.getDepartmentId() != null) {
+                predicates.add(cb.equal(root.get("departmentId"), request.getDepartmentId()));
+            }
+
+            if (request.getEventType() != null && !request.getEventType().isBlank()) {
+                predicates.add(cb.equal(cb.upper(root.get("eventType")), request.getEventType().toUpperCase()));
+            }
+
+            if (request.getStartDate() != null) {
+                Instant start = request.getStartDate().atStartOfDay(ZoneId.systemDefault()).toInstant();
+                predicates.add(cb.greaterThanOrEqualTo(root.get("eventDate"), start));
+            }
+
+            if (request.getEndDate() != null) {
+                Instant end = request.getEndDate().plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
+                predicates.add(cb.lessThan(root.get("eventDate"), end));
+            }
+
+            query.orderBy(cb.desc(root.get("eventDate")));
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<OrganizationHistory> page = organizationHistoryRepository.findAll(spec, pageable);
         return page.map(this::toResponse);
     }
 
