@@ -67,4 +67,9 @@ public interface ApprovalService {
      * 이번 달 vs 지난 달 평균 결재 처리 시간 비교
      */
     ApprovalStatisticsResponse getStatistics();
+
+    /**
+     * 부서별 활성 결재 건수 조회 (조직개편 영향도 분석용)
+     */
+    java.util.Map<UUID, Long> getDepartmentApprovalCounts(List<UUID> departmentIds);
 }
