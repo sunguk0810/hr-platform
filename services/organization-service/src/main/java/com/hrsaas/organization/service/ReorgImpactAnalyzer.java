@@ -6,7 +6,13 @@ import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -23,68 +29,109 @@ public class ReorgImpactAnalyzer {
         ImpactAnalysisResult result = new ImpactAnalysisResult();
         result.setPlanTitle(plan.getTitle());
 
-        int totalAffected = 0;
         List<String> warnings = new ArrayList<>();
         List<String> positionChanges = new ArrayList<>();
 
-        if (plan.getChanges() != null) {
-            for (DepartmentChange change : plan.getChanges()) {
-                if (change.getDepartmentId() != null) {
-                    try {
-                        Long empCount = employeeClient.countByDepartmentId(change.getDepartmentId()).getData();
-                        if (empCount != null && empCount > 0) {
-                            totalAffected += empCount.intValue();
-                            positionChanges.add(change.getAction() + ": " + empCount + " employees affected in department " + change.getDepartmentId());
+        // 1. Employee Impact Analysis
+        int totalAffected = analyzeEmployeeImpact(plan, warnings, positionChanges);
 
-                            if ("DELETE".equalsIgnoreCase(change.getAction()) && empCount > 0) {
-                                warnings.add("삭제 예정 부서에 " + empCount + "명의 직원이 있습니다: " + change.getDepartmentId());
-                            }
-                        } else if (empCount != null && empCount < 0) {
-                            warnings.add("직원 서비스에 연결할 수 없어 부서 " + change.getDepartmentId() + "의 직원 수를 확인할 수 없습니다.");
-                        }
-                    } catch (Exception e) {
-                        warnings.add("직원 수 조회 실패: " + change.getDepartmentId() + " - " + e.getMessage());
-                    }
-                }
-            }
-        }
-
-        // Query approval-service for active approval lines
-        int totalActiveApprovals = 0;
-        if (plan.getChanges() != null && !plan.getChanges().isEmpty()) {
-            List<UUID> departmentIds = plan.getChanges().stream()
-                .map(DepartmentChange::getDepartmentId)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-
-            if (!departmentIds.isEmpty()) {
-                try {
-                    Map<UUID, Long> approvalCounts = approvalClient.getDepartmentApprovalCounts(departmentIds).getData();
-
-                    for (DepartmentChange change : plan.getChanges()) {
-                        if (change.getDepartmentId() != null) {
-                            Long count = approvalCounts.getOrDefault(change.getDepartmentId(), 0L);
-                            if (count > 0) {
-                                totalActiveApprovals += count.intValue();
-                                if ("DELETE".equalsIgnoreCase(change.getAction())) {
-                                    warnings.add("삭제 예정 부서에 " + count + "건의 진행 중인 결재가 있습니다: " + change.getDepartmentId());
-                                }
-                            }
-                        }
-                    }
-                } catch (Exception e) {
-                    log.error("Failed to query approval service", e);
-                    warnings.add("결재 서비스 조회 실패: 활성 결재 건수를 확인할 수 없습니다 - " + e.getMessage());
-                }
-            }
-        }
-        result.setApprovalLineChanges(totalActiveApprovals);
+        // 2. Approval Impact Analysis
+        int totalActiveApprovals = analyzeApprovalImpact(plan, warnings);
 
         result.setAffectedEmployeeCount(totalAffected);
         result.setPositionChanges(positionChanges);
+        result.setApprovalLineChanges(totalActiveApprovals);
         result.setWarnings(warnings);
 
         return result;
+    }
+
+    private int analyzeEmployeeImpact(ReorgPlan plan, List<String> warnings, List<String> positionChanges) {
+        int totalAffected = 0;
+        if (plan.getChanges() == null || plan.getChanges().isEmpty()) {
+            return totalAffected;
+        }
+
+        List<UUID> departmentIds = plan.getChanges().stream()
+            .map(DepartmentChange::getDepartmentId)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
+
+        if (departmentIds.isEmpty()) {
+            return totalAffected;
+        }
+
+        Map<UUID, Long> employeeCounts = new HashMap<>();
+        boolean serviceAvailable = true;
+
+        try {
+            Map<UUID, Long> data = employeeClient.countByDepartmentIds(departmentIds).getData();
+            if (data != null) {
+                employeeCounts.putAll(data);
+            }
+        } catch (Exception e) {
+            log.error("Failed to query employee service", e);
+            serviceAvailable = false;
+        }
+
+        for (DepartmentChange change : plan.getChanges()) {
+            if (change.getDepartmentId() != null) {
+                if (!serviceAvailable) {
+                    warnings.add("직원 서비스에 연결할 수 없어 부서 " + change.getDepartmentId() + "의 직원 수를 확인할 수 없습니다.");
+                    continue;
+                }
+
+                Long empCount = employeeCounts.getOrDefault(change.getDepartmentId(), 0L);
+
+                if (empCount > 0) {
+                    totalAffected += empCount.intValue();
+                    positionChanges.add(change.getAction() + ": " + empCount + " employees affected in department " + change.getDepartmentId());
+
+                    if ("DELETE".equalsIgnoreCase(change.getAction())) {
+                        warnings.add("삭제 예정 부서에 " + empCount + "명의 직원이 있습니다: " + change.getDepartmentId());
+                    }
+                }
+            }
+        }
+        return totalAffected;
+    }
+
+    private int analyzeApprovalImpact(ReorgPlan plan, List<String> warnings) {
+        int totalActiveApprovals = 0;
+        if (plan.getChanges() == null || plan.getChanges().isEmpty()) {
+            return totalActiveApprovals;
+        }
+
+        List<UUID> departmentIds = plan.getChanges().stream()
+            .map(DepartmentChange::getDepartmentId)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
+
+        if (departmentIds.isEmpty()) {
+            return totalActiveApprovals;
+        }
+
+        try {
+            Map<UUID, Long> approvalCounts = approvalClient.getDepartmentApprovalCounts(departmentIds).getData();
+            if (approvalCounts == null) approvalCounts = Collections.emptyMap();
+
+            for (DepartmentChange change : plan.getChanges()) {
+                if (change.getDepartmentId() != null) {
+                    Long count = approvalCounts.getOrDefault(change.getDepartmentId(), 0L);
+                    if (count > 0) {
+                        totalActiveApprovals += count.intValue();
+                        if ("DELETE".equalsIgnoreCase(change.getAction())) {
+                            warnings.add("삭제 예정 부서에 " + count + "건의 진행 중인 결재가 있습니다: " + change.getDepartmentId());
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to query approval service", e);
+            warnings.add("결재 서비스 조회 실패: 활성 결재 건수를 확인할 수 없습니다 - " + e.getMessage());
+        }
+
+        return totalActiveApprovals;
     }
 
     @Data

@@ -1,10 +1,10 @@
 import { useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
-import { queryKeys } from '@/lib/queryClient';
-import { wsClient, type NotificationEvent } from '@/lib/websocket';
+import { wsClient, type NotificationEvent, type AttendanceEvent } from '@/lib/websocket';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useAuthStore } from '@/stores/authStore';
+import { queryKeys } from '@/lib/queryClient';
 import { useToast } from './useToast';
 
 export interface UseRealTimeNotificationOptions {
@@ -154,45 +154,43 @@ export function useAttendanceRealTime() {
   const { t } = useTranslation('attendance');
   const { toast } = useToast();
   const { isAuthenticated } = useAuthStore();
+  const { t } = useTranslation('attendance');
+  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const handleCheckIn = useCallback(
-    (_event: unknown) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.attendance.today() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.attendance.list() });
+    (event: AttendanceEvent) => {
+      // Invalidate attendance queries to refresh data immediately after check-in
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.attendance() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.attendance.all });
 
       toast({
-        title: t('checkIn.checkIn'),
-        description: t('checkIn.checkInComplete'),
+        title: t('realTime.checkIn'),
+        description: t('realTime.checkInDesc', { time: event.time }),
       });
     },
-    [queryClient, t, toast]
+    [t, toast, queryClient]
   );
 
   const handleCheckOut = useCallback(
-    (_event: unknown) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.attendance.today() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.attendance.list() });
+    (event: AttendanceEvent) => {
+      // Invalidate attendance queries to refresh data
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.attendance() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.attendance.all });
 
       toast({
-        title: t('checkIn.checkOut'),
-        description: t('checkIn.checkOutComplete'),
+        title: t('realTime.checkOut'),
+        description: t('realTime.checkOutDesc', { time: event.time }),
       });
     },
-    [queryClient, t, toast]
+    [t, toast, queryClient]
   );
 
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    const unsubscribeCheckIn = wsClient.on(
-      'attendance:checked_in',
-      handleCheckIn
-    );
-    const unsubscribeCheckOut = wsClient.on(
-      'attendance:checked_out',
-      handleCheckOut
-    );
+    const unsubscribeCheckIn = wsClient.on('attendance:checked_in', handleCheckIn);
+    const unsubscribeCheckOut = wsClient.on('attendance:checked_out', handleCheckOut);
 
     return () => {
       unsubscribeCheckIn();

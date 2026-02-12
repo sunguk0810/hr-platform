@@ -5,7 +5,7 @@ import {
   ZoomOut,
   Maximize2,
   RotateCcw,
-  Download,
+  Printer,
   Layers,
   Calendar,
   ChevronLeft,
@@ -326,7 +326,7 @@ export function OrgChartControls({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button variant="ghost" size="icon" onClick={onExport}>
-                      <Download className="h-4 w-4" />
+                      <Printer className="h-4 w-4" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="left">{t('orgChart.controls.saveImage')}</TooltipContent>

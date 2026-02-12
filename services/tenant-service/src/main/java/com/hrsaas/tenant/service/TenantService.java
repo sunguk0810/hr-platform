@@ -5,6 +5,7 @@ import com.hrsaas.tenant.domain.dto.policy.PasswordPolicyData;
 import com.hrsaas.tenant.domain.dto.request.CreateTenantRequest;
 import com.hrsaas.tenant.domain.dto.request.TenantSearchRequest;
 import com.hrsaas.tenant.domain.dto.request.UpdateTenantRequest;
+import com.hrsaas.tenant.domain.dto.response.TenantBasicResponse;
 import com.hrsaas.tenant.domain.dto.response.TenantDetailResponse;
 import com.hrsaas.tenant.domain.dto.response.TenantListItemResponse;
 import com.hrsaas.tenant.domain.dto.response.TenantResponse;
@@ -20,6 +21,8 @@ public interface TenantService {
     TenantResponse create(CreateTenantRequest request);
 
     TenantResponse getById(UUID id);
+
+    TenantBasicResponse getBasicInfo(UUID id);
 
     TenantResponse getByCode(String code);
 

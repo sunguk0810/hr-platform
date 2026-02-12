@@ -343,4 +343,56 @@ class MenuServiceImplTest {
             throw new RuntimeException(e);
         }
     }
+
+    // ================================================================
+    // getUserMenus - with tenant overrides
+    // ================================================================
+
+    @Test
+    @DisplayName("getUserMenus - applies tenant overrides correctly")
+    void getUserMenus_withTenantOverrides() {
+        // given
+        UUID menuId = UUID.randomUUID();
+        MenuItem menu = createMenuItem(menuId, "MENU_DEFAULT", "기본 메뉴", "/default", true);
+        menu.setSortOrder(100);
+        menu.setShowInMobile(false);
+        menu.setMobileSortOrder(null);
+
+        // Tenant config overrides: Name, SortOrder, ShowInMobile, MobileSortOrder
+        TenantMenuConfig config = TenantMenuConfig.builder()
+            .tenantId(TENANT_ID)
+            .menuItem(menu)
+            .customName("커스텀 메뉴")
+            .customSortOrder(10)
+            .showInMobile(true)
+            .mobileSortOrder(5)
+            .build();
+
+        when(menuCacheService.getAllMenusWithPermissions()).thenReturn(List.of(menu));
+        when(tenantMenuConfigRepository.findDisabledMenuIdsByTenantId(TENANT_ID))
+            .thenReturn(Collections.emptyList());
+        when(tenantMenuConfigRepository.findByTenantId(TENANT_ID))
+            .thenReturn(List.of(config));
+
+        Set<String> userRoles = Collections.emptySet();
+        Set<String> userPermissions = Collections.emptySet();
+
+        // when
+        UserMenuResponse result = menuService.getUserMenus(TENANT_ID, userRoles, userPermissions);
+
+        // then
+        assertThat(result).isNotNull();
+
+        // Verify Sidebar Menu (Custom Name, Custom Sort Order)
+        assertThat(result.getSidebarMenus()).hasSize(1);
+        UserMenuResponse.UserMenuItem sidebarItem = result.getSidebarMenus().get(0);
+        assertThat(sidebarItem.getName()).isEqualTo("커스텀 메뉴"); // Overridden
+        assertThat(sidebarItem.getSortOrder()).isEqualTo(10);   // Overridden
+
+        // Verify Mobile Menu (ShowInMobile overridden to true, Custom Mobile Sort Order)
+        assertThat(result.getMobileMenus()).hasSize(1);
+        UserMenuResponse.UserMenuItem mobileItem = result.getMobileMenus().get(0);
+        assertThat(mobileItem.getName()).isEqualTo("커스텀 메뉴"); // Overridden
+        assertThat(mobileItem.getSortOrder()).isEqualTo(5);     // Overridden (Mobile Sort Order)
+    }
 }

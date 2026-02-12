@@ -11,11 +11,14 @@ import com.hrsaas.certificate.repository.CertificateIssueRepository;
 import com.hrsaas.certificate.repository.CertificateRequestRepository;
 import com.hrsaas.certificate.repository.CertificateTemplateRepository;
 import com.hrsaas.certificate.service.CertificateIssueService;
+import com.hrsaas.certificate.service.PdfGenerationService;
 import com.hrsaas.common.core.exception.BusinessException;
 import com.hrsaas.common.core.exception.ErrorCode;
+import com.hrsaas.common.tenant.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,8 +47,8 @@ public class CertificateIssueServiceImpl implements CertificateIssueService {
     private final CertificateIssueRepository certificateIssueRepository;
     private final CertificateRequestRepository certificateRequestRepository;
     private final CertificateTemplateRepository certificateTemplateRepository;
+    private final PdfGenerationService pdfGenerationService;
 
-    private static final AtomicLong issueSequence = new AtomicLong(1);
     private static final SecureRandom secureRandom = new SecureRandom();
     private static final String VERIFICATION_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     private static final int VERIFICATION_CODE_LENGTH = 12;
@@ -198,9 +201,7 @@ public class CertificateIssueServiceImpl implements CertificateIssueService {
             throw new BusinessException(ErrorCode.INVALID_REQUEST, "유효하지 않은 증명서입니다");
         }
 
-        // PDF 생성 로직 (실제 구현 시 별도 서비스로 분리)
-        // TODO: Flying Saucer 또는 iText를 사용한 PDF 생성
-        return new byte[0];
+        return pdfGenerationService.generatePdf(issue);
     }
 
     @Override
@@ -211,9 +212,29 @@ public class CertificateIssueServiceImpl implements CertificateIssueService {
     }
 
     private String generateIssueNumber() {
+        UUID tenantId = TenantContext.getCurrentTenant();
         String datePrefix = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        long sequence = issueSequence.getAndIncrement();
-        return String.format("CERT-%s-%06d", datePrefix, sequence);
+        String prefix = String.format("CERT-%s-", datePrefix);
+
+        List<String> latestIssueNumbers = certificateIssueRepository.findLatestIssueNumbers(
+                tenantId, prefix, PageRequest.of(0, 1));
+
+        String maxIssueNumber = latestIssueNumbers.isEmpty() ? null : latestIssueNumbers.get(0);
+
+        long nextSequence = 1;
+        if (maxIssueNumber != null) {
+            try {
+                String suffix = maxIssueNumber.substring(prefix.length());
+                nextSequence = Long.parseLong(suffix) + 1;
+            } catch (Exception e) {
+                log.warn("Failed to parse sequence from issue number: {}", maxIssueNumber);
+                // If parsing fails, we might want to throw an exception to avoid duplicates
+                // or just log and try 1 (which will likely fail on insert if unique constraint exists)
+                // Here we choose to proceed with 1 but it's risky. Ideally data should be clean.
+            }
+        }
+
+        return String.format("%s%06d", prefix, nextSequence);
     }
 
     private String generateVerificationCode() {

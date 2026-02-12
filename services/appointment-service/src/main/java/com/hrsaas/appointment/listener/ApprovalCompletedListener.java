@@ -3,6 +3,7 @@ package com.hrsaas.appointment.listener;
 import com.hrsaas.appointment.domain.entity.AppointmentDraft;
 import com.hrsaas.appointment.domain.entity.DraftStatus;
 import com.hrsaas.appointment.repository.AppointmentDraftRepository;
+import com.hrsaas.appointment.service.AppointmentDraftService;
 import com.hrsaas.common.core.util.JsonUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.awspring.cloud.sqs.annotation.SqsListener;
@@ -11,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 /**
@@ -23,6 +25,7 @@ import java.util.UUID;
 public class ApprovalCompletedListener {
 
     private final AppointmentDraftRepository draftRepository;
+    private final AppointmentDraftService draftService;
 
     @SqsListener("appointment-service-queue")
     @Transactional
@@ -77,6 +80,17 @@ public class ApprovalCompletedListener {
             draft.approve(approverId);
             draftRepository.save(draft);
             log.info("Appointment draft approved: id={}", referenceId);
+
+            // Execute immediately if effective date is today or past
+            if (!draft.getEffectiveDate().isAfter(LocalDate.now())) {
+                try {
+                    draftService.execute(referenceId);
+                    log.info("Appointment automatically executed: id={}", referenceId);
+                } catch (Exception e) {
+                    log.error("Failed to automatically execute appointment: id={}", referenceId, e);
+                    // Do not fail the transaction, as approval is already processed
+                }
+            }
         } else if ("REJECTED".equals(status)) {
             draft.reject();
             draftRepository.save(draft);
