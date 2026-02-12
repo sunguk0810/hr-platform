@@ -31,7 +31,8 @@ docs/
 ├── api/                               # API 문서
 │   └── API_INTEGRATION_GUIDE.md      # FE-BE 통합 패턴, REST API 규칙
 ├── requirements/                      # 요구사항
-│   └── TRACEABILITY_MATRIX.md        # 요구사항 → 구현 추적 매트릭스
+│   ├── TRACEABILITY_MATRIX.md        # 요구사항 → 구현 추적 매트릭스
+│   └── BACKEND_FRONTEND_GAP_ANALYSIS_PLAN.md # BE/FE 갭 분석 및 실행 계획
 ├── decisions/                         # 아키텍처 결정 기록 (ADR)
 │   ├── README.md                     # ADR 가이드 및 목록
 │   ├── 001-use-rls-for-multitenancy.md
@@ -77,7 +78,8 @@ docs/
 
 1. **[CURRENT_STATUS.md](status/CURRENT_STATUS.md)** - 전체 개발 현황
 2. **[TRACEABILITY_MATRIX.md](requirements/TRACEABILITY_MATRIX.md)** - 요구사항 추적
-3. **[PRD.md](deprecated/PRD.md)** - 제품 요구사항 (deprecated, 참고용)
+3. **[BACKEND_FRONTEND_GAP_ANALYSIS_PLAN.md](requirements/BACKEND_FRONTEND_GAP_ANALYSIS_PLAN.md)** - BE/FE 갭 분석 및 구현 로드맵
+4. **[PRD.md](deprecated/PRD.md)** - 제품 요구사항 (deprecated, 참고용)
 
 ### 보안 감사자
 
