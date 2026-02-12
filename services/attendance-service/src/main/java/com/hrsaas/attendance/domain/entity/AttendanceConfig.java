@@ -28,4 +28,8 @@ public class AttendanceConfig extends TenantAwareEntity {
     @Column(name = "lunch_break_minutes", nullable = false)
     @Builder.Default
     private Integer lunchBreakMinutes = 60;
+
+    // TODO: Expand configuration for conditional breaks (Future Feature)
+    // - Add minWorkHoursForDeduction (e.g., 4 hours)
+    // - Or introduce BreakRule entity for complex scenarios (1:N)
 }
