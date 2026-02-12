@@ -53,4 +53,8 @@ public interface EmployeeService {
     List<EmployeeResponse> getBatch(List<UUID> ids);
 
     List<EmployeeResponse> getList(EmployeeSearchCondition condition);
+
+    void suspend(UUID id);
+
+    void activate(UUID id);
 }

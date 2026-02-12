@@ -462,4 +462,24 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         return responses;
     }
+
+    @Override
+    @Transactional
+    @CacheEvict(value = CacheNames.EMPLOYEE, allEntries = true)
+    public void suspend(UUID id) {
+        Employee employee = findById(id);
+        employee.suspend();
+        employeeRepository.save(employee);
+        log.info("Employee suspended: id={}", id);
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(value = CacheNames.EMPLOYEE, allEntries = true)
+    public void activate(UUID id) {
+        Employee employee = findById(id);
+        employee.activate();
+        employeeRepository.save(employee);
+        log.info("Employee activated: id={}", id);
+    }
 }

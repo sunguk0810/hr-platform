@@ -1,8 +1,10 @@
 package com.hrsaas.employee.listener;
 
 import com.hrsaas.common.core.util.JsonUtils;
+import com.hrsaas.employee.domain.dto.request.UpdateEmployeeRequest;
 import com.hrsaas.employee.service.CondolenceService;
 import com.hrsaas.employee.service.EmployeeChangeRequestService;
+import com.hrsaas.employee.service.EmployeeService;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.awspring.cloud.sqs.annotation.SqsListener;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ public class ApprovalCompletedListener {
 
     private final CondolenceService condolenceService;
     private final EmployeeChangeRequestService changeRequestService;
+    private final EmployeeService employeeService;
 
     @SqsListener("employee-service-queue")
     public void handleMessage(String rawMessage) {
@@ -74,6 +77,41 @@ public class ApprovalCompletedListener {
 
     private void handleAppointmentExecuted(JsonNode event) {
         log.info("Processing appointment execution event");
-        // TODO: Update employee department/position based on appointment
+        String effectiveDateStr = event.get("effectiveDate").asText();
+
+        JsonNode details = event.get("details");
+        if (details != null && details.isArray()) {
+            for (JsonNode detail : details) {
+                try {
+                    UUID employeeId = UUID.fromString(detail.get("employeeId").asText());
+                    String appointmentType = detail.get("appointmentType").asText();
+
+                    switch (appointmentType) {
+                        case "RESIGNATION", "RETIREMENT" -> employeeService.resign(employeeId, effectiveDateStr);
+                        case "LEAVE_OF_ABSENCE" -> employeeService.suspend(employeeId);
+                        case "REINSTATEMENT" -> employeeService.activate(employeeId);
+                        case "PROMOTION", "TRANSFER", "POSITION_CHANGE", "JOB_CHANGE", "DEMOTION" -> {
+                            UpdateEmployeeRequest request = new UpdateEmployeeRequest();
+                            if (detail.has("toDepartmentId") && !detail.get("toDepartmentId").isNull()) {
+                                request.setDepartmentId(UUID.fromString(detail.get("toDepartmentId").asText()));
+                            }
+                            if (detail.has("toPositionCode") && !detail.get("toPositionCode").isNull()) {
+                                request.setPositionCode(detail.get("toPositionCode").asText());
+                            }
+                            if (detail.has("toGradeCode") && !detail.get("toGradeCode").isNull()) {
+                                request.setJobTitleCode(detail.get("toGradeCode").asText());
+                            }
+
+                            if (request.getDepartmentId() != null || request.getPositionCode() != null || request.getJobTitleCode() != null) {
+                                employeeService.update(employeeId, request);
+                            }
+                        }
+                        default -> log.warn("Unsupported appointment type: {}", appointmentType);
+                    }
+                } catch (Exception e) {
+                    log.error("Failed to process appointment detail: {}", detail, e);
+                }
+            }
+        }
     }
 }
