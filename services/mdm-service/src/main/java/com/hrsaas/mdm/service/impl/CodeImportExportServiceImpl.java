@@ -310,8 +310,29 @@ public class CodeImportExportServiceImpl implements CodeImportExportService {
         int totalCodes = 0;
         List<CodeGroupExportData> groupDataList = new ArrayList<>();
 
+        // Optimization: Fetch all codes for the groups in batches to avoid N+1 query
+        List<UUID> allGroupIds = groups.stream()
+            .map(CodeGroup::getId)
+            .collect(Collectors.toList());
+
+        Map<UUID, List<CommonCode>> codesByGroupId = new HashMap<>();
+        int batchSize = 1000;
+
+        for (int i = 0; i < allGroupIds.size(); i += batchSize) {
+            int end = Math.min(i + batchSize, allGroupIds.size());
+            List<UUID> batchIds = allGroupIds.subList(i, end);
+
+            if (!batchIds.isEmpty()) {
+                List<CommonCode> batchCodes = commonCodeRepository.findByCodeGroupIdIn(batchIds);
+                for (CommonCode code : batchCodes) {
+                    codesByGroupId.computeIfAbsent(code.getCodeGroup().getId(), k -> new ArrayList<>())
+                        .add(code);
+                }
+            }
+        }
+
         for (CodeGroup group : groups) {
-            List<CommonCode> codes = commonCodeRepository.findByCodeGroupId(group.getId());
+            List<CommonCode> codes = codesByGroupId.getOrDefault(group.getId(), Collections.emptyList());
             totalCodes += codes.size();
 
             List<CodeExportData> codeDataList = codes.stream()
