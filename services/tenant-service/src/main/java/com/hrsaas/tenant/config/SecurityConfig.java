@@ -48,7 +48,6 @@ public class SecurityConfig {
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .requestMatchers("/api/v1/tenants/*/status").permitAll()
                 .requestMatchers("/api/v1/tenants/*/password-policy").permitAll()
-                .requestMatchers("/api/v1/tenants/internal/**").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)

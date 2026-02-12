@@ -16,7 +16,6 @@ import com.hrsaas.organization.domain.event.DepartmentUpdatedEvent;
 import com.hrsaas.organization.service.OrganizationHistoryService;
 import com.hrsaas.organization.domain.dto.request.CreateDepartmentRequest;
 import com.hrsaas.organization.domain.dto.request.DepartmentMergeRequest;
-import com.hrsaas.organization.domain.dto.request.OrgHistorySearchRequest;
 import com.hrsaas.organization.domain.dto.request.DepartmentSplitRequest;
 import com.hrsaas.organization.domain.dto.request.UpdateDepartmentRequest;
 import com.hrsaas.organization.domain.dto.response.*;
@@ -259,11 +258,6 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Override
     public Page<DepartmentHistoryResponse> getOrganizationHistory(Pageable pageable) {
         return organizationHistoryService.getOrganizationHistory(pageable);
-    }
-
-    @Override
-    public Page<DepartmentHistoryResponse> getOrganizationHistory(OrgHistorySearchRequest request, Pageable pageable) {
-        return organizationHistoryService.getOrganizationHistory(request, pageable);
     }
 
     @Override

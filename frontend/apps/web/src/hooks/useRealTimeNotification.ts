@@ -1,10 +1,10 @@
 import { useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
-import { wsClient, type NotificationEvent, type AttendanceEvent } from '@/lib/websocket';
+import { queryKeys } from '@/lib/queryClient';
+import { wsClient, type NotificationEvent } from '@/lib/websocket';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useAuthStore } from '@/stores/authStore';
-import { queryKeys } from '@/lib/queryClient';
 import { useToast } from './useToast';
 
 export interface UseRealTimeNotificationOptions {
@@ -151,44 +151,48 @@ export function useApprovalRealTime() {
 }
 
 export function useAttendanceRealTime() {
-  const { isAuthenticated } = useAuthStore();
   const { t } = useTranslation('attendance');
   const { toast } = useToast();
+  const { isAuthenticated } = useAuthStore();
   const queryClient = useQueryClient();
 
   const handleCheckIn = useCallback(
-    (event: AttendanceEvent) => {
-      // Invalidate attendance queries to refresh data immediately after check-in
-      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.attendance() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.attendance.all });
+    (_event: unknown) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.attendance.today() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.attendance.list() });
 
       toast({
-        title: t('realTime.checkIn'),
-        description: t('realTime.checkInDesc', { time: event.time }),
+        title: t('checkIn.checkIn'),
+        description: t('checkIn.checkInComplete'),
       });
     },
-    [t, toast, queryClient]
+    [queryClient, t, toast]
   );
 
   const handleCheckOut = useCallback(
-    (event: AttendanceEvent) => {
-      // Invalidate attendance queries to refresh data
-      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.attendance() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.attendance.all });
+    (_event: unknown) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.attendance.today() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.attendance.list() });
 
       toast({
-        title: t('realTime.checkOut'),
-        description: t('realTime.checkOutDesc', { time: event.time }),
+        title: t('checkIn.checkOut'),
+        description: t('checkIn.checkOutComplete'),
       });
     },
-    [t, toast, queryClient]
+    [queryClient, t, toast]
   );
 
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    const unsubscribeCheckIn = wsClient.on('attendance:checked_in', handleCheckIn);
-    const unsubscribeCheckOut = wsClient.on('attendance:checked_out', handleCheckOut);
+    const unsubscribeCheckIn = wsClient.on(
+      'attendance:checked_in',
+      handleCheckIn
+    );
+    const unsubscribeCheckOut = wsClient.on(
+      'attendance:checked_out',
+      handleCheckOut
+    );
 
     return () => {
       unsubscribeCheckIn();

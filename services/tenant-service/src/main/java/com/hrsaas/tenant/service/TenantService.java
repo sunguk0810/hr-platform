@@ -6,7 +6,6 @@ import com.hrsaas.tenant.domain.dto.request.CreateTenantRequest;
 import com.hrsaas.tenant.domain.dto.request.TenantSearchRequest;
 import com.hrsaas.tenant.domain.dto.request.UpdateTenantRequest;
 import com.hrsaas.tenant.domain.dto.response.TenantDetailResponse;
-import com.hrsaas.tenant.domain.dto.response.TenantInternalResponse;
 import com.hrsaas.tenant.domain.dto.response.TenantListItemResponse;
 import com.hrsaas.tenant.domain.dto.response.TenantResponse;
 import com.hrsaas.tenant.domain.dto.response.TenantTreeNodeResponse;
@@ -56,6 +55,4 @@ public interface TenantService {
     TenantDetailResponse createWithDetail(CreateTenantRequest request);
 
     TenantDetailResponse updateWithDetail(UUID id, UpdateTenantRequest request);
-
-    TenantInternalResponse getInternalInfo(UUID id);
 }

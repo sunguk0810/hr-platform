@@ -11,6 +11,7 @@ awslocal sns create-topic --name employee-affiliation-changed
 awslocal sns create-topic --name employee-created
 awslocal sns create-topic --name leave-requested
 awslocal sns create-topic --name notification-send
+awslocal sns create-topic --name hr-saas-recruitment-interview-reminder
 
 # SQS Queues (per consumer service)
 awslocal sqs create-queue --queue-name attendance-service-queue
@@ -52,6 +53,8 @@ awslocal sns subscribe --topic-arn arn:aws:sns:${REGION}:${ACCOUNT}:approval-sub
 awslocal sns subscribe --topic-arn arn:aws:sns:${REGION}:${ACCOUNT}:leave-requested \
   --protocol sqs --notification-endpoint arn:aws:sqs:${REGION}:${ACCOUNT}:notification-service-queue
 awslocal sns subscribe --topic-arn arn:aws:sns:${REGION}:${ACCOUNT}:employee-created \
+  --protocol sqs --notification-endpoint arn:aws:sqs:${REGION}:${ACCOUNT}:notification-service-queue
+awslocal sns subscribe --topic-arn arn:aws:sns:${REGION}:${ACCOUNT}:hr-saas-recruitment-interview-reminder \
   --protocol sqs --notification-endpoint arn:aws:sqs:${REGION}:${ACCOUNT}:notification-service-queue
 
 # S3 Bucket for file-service

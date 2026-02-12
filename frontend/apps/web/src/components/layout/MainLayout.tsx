@@ -9,11 +9,21 @@ import { SkipNavigation, LiveRegionProvider } from '@/components/a11y';
 import { HelpPanel, OnboardingTour } from '@/features/help';
 import { useUIStore } from '@/stores/uiStore';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import {
+  useRealTimeNotification,
+  useApprovalRealTime,
+  useAttendanceRealTime,
+} from '@/hooks/useRealTimeNotification';
 import { cn } from '@/lib/utils';
 
 export function MainLayout() {
   const sidebarCollapsed = useUIStore(state => state.sidebarCollapsed);
   const isMobile = useIsMobile();
+
+  // Initialize Real-Time Notifications
+  useRealTimeNotification();
+  useApprovalRealTime();
+  useAttendanceRealTime();
 
   return (
     <LiveRegionProvider>
