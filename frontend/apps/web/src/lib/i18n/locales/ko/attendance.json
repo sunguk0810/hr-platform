@@ -683,5 +683,11 @@
     "endTimeAfterStart": "종료 시간은 시작 시간보다 이후여야 합니다",
     "startDateRequired": "시작일을 선택해주세요",
     "endDateRequired": "종료일을 선택해주세요"
+  },
+  "realTime": {
+    "checkIn": "출근 완료",
+    "checkInDesc": "{{time}}에 성공적으로 출근 처리되었습니다.",
+    "checkOut": "퇴근 완료",
+    "checkOutDesc": "{{time}}에 성공적으로 퇴근 처리되었습니다."
   }
 }
