@@ -13,6 +13,7 @@ import com.hrsaas.common.core.exception.BusinessException;
 import com.hrsaas.common.event.DomainEvent;
 import com.hrsaas.common.event.EventPublisher;
 import com.hrsaas.common.event.EventTopics;
+import com.hrsaas.common.tenant.TenantContext;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.SuperBuilder;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -70,7 +72,11 @@ public class UserManagementServiceImpl implements UserManagementService {
     @Override
     @Transactional(readOnly = true)
     public List<UserDetailResponse> getUsers() {
-        return userRepository.findAll().stream()
+        UUID tenantId = TenantContext.getCurrentTenant();
+        if (tenantId == null) {
+            return Collections.emptyList();
+        }
+        return userRepository.findAllByTenantId(tenantId).stream()
                 .map(this::mapToDetailResponse)
                 .collect(Collectors.toList());
     }
