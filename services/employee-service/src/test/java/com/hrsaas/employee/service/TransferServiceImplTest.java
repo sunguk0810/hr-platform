@@ -111,7 +111,7 @@ class TransferServiceImplTest {
 
     @Test
     void complete_createsEmployeeInTargetTenant() {
-        when(transferRequestRepository.findByIdAndTenantId(transferId, tenantId))
+        when(transferRequestRepository.findByIdAndRelatedTenantId(transferId, tenantId))
             .thenReturn(Optional.of(transferRequest));
         when(employeeRepository.findById(sourceEmployeeId))
             .thenReturn(Optional.of(sourceEmployee));
@@ -133,7 +133,7 @@ class TransferServiceImplTest {
 
     @Test
     void complete_resignsSourceEmployee() {
-        when(transferRequestRepository.findByIdAndTenantId(transferId, tenantId))
+        when(transferRequestRepository.findByIdAndRelatedTenantId(transferId, tenantId))
             .thenReturn(Optional.of(transferRequest));
         when(employeeRepository.findById(sourceEmployeeId))
             .thenReturn(Optional.of(sourceEmployee));
@@ -158,7 +158,7 @@ class TransferServiceImplTest {
 
     @Test
     void complete_generatesNewEmployeeNumber() {
-        when(transferRequestRepository.findByIdAndTenantId(transferId, tenantId))
+        when(transferRequestRepository.findByIdAndRelatedTenantId(transferId, tenantId))
             .thenReturn(Optional.of(transferRequest));
         when(employeeRepository.findById(sourceEmployeeId))
             .thenReturn(Optional.of(sourceEmployee));
@@ -182,7 +182,7 @@ class TransferServiceImplTest {
 
     @Test
     void complete_recordsHistoryBothTenants() {
-        when(transferRequestRepository.findByIdAndTenantId(transferId, tenantId))
+        when(transferRequestRepository.findByIdAndRelatedTenantId(transferId, tenantId))
             .thenReturn(Optional.of(transferRequest));
         when(employeeRepository.findById(sourceEmployeeId))
             .thenReturn(Optional.of(sourceEmployee));
@@ -207,7 +207,7 @@ class TransferServiceImplTest {
 
     @Test
     void complete_publishesTransferCompletedEvent() {
-        when(transferRequestRepository.findByIdAndTenantId(transferId, tenantId))
+        when(transferRequestRepository.findByIdAndRelatedTenantId(transferId, tenantId))
             .thenReturn(Optional.of(transferRequest));
         when(employeeRepository.findById(sourceEmployeeId))
             .thenReturn(Optional.of(sourceEmployee));
@@ -233,7 +233,7 @@ class TransferServiceImplTest {
     void complete_notApproved_throwsValidation() {
         transferRequest.setStatus(TransferStatus.PENDING);
 
-        when(transferRequestRepository.findByIdAndTenantId(transferId, tenantId))
+        when(transferRequestRepository.findByIdAndRelatedTenantId(transferId, tenantId))
             .thenReturn(Optional.of(transferRequest));
 
         assertThatThrownBy(() -> transferService.complete(transferId))
@@ -243,7 +243,7 @@ class TransferServiceImplTest {
 
     @Test
     void complete_setsTransferStatusCompleted() {
-        when(transferRequestRepository.findByIdAndTenantId(transferId, tenantId))
+        when(transferRequestRepository.findByIdAndRelatedTenantId(transferId, tenantId))
             .thenReturn(Optional.of(transferRequest));
         when(employeeRepository.findById(sourceEmployeeId))
             .thenReturn(Optional.of(sourceEmployee));

@@ -8,6 +8,7 @@ import com.hrsaas.auth.domain.entity.UserEntity;
 import com.hrsaas.auth.repository.UserRepository;
 import com.hrsaas.auth.client.TenantServiceClient;
 import com.hrsaas.auth.service.AuthService;
+import com.hrsaas.auth.service.AuditLogService;
 import com.hrsaas.auth.service.LoginHistoryService;
 import com.hrsaas.auth.service.SessionService;
 import com.hrsaas.common.core.exception.BusinessException;
@@ -40,6 +41,7 @@ public class AuthServiceImpl implements AuthService {
     private final RedisTemplate<String, String> redisTemplate;
     private final SessionService sessionService;
     private final LoginHistoryService loginHistoryService;
+    private final Optional<AuditLogService> auditLogService;
     private final MfaServiceImpl mfaService;
     private final Optional<TenantServiceClient> tenantServiceClient;
 
@@ -65,6 +67,7 @@ public class AuthServiceImpl implements AuthService {
                     .orElseThrow(() -> {
                         log.warn("Login failed: user not found username={}, tenantId={}", request.getUsername(), tenantId);
                         loginHistoryService.recordFailure(request.getUsername(), tenantId, ipAddress, userAgent, "USER_NOT_FOUND");
+                        recordAuditFailure(tenantId, request.getUsername(), "LOGIN", "사용자 없음", ipAddress, userAgent, "USER_NOT_FOUND");
                         return new BusinessException("AUTH_001", "아이디 또는 비밀번호가 올바르지 않습니다.", HttpStatus.UNAUTHORIZED);
                     });
         } else {
@@ -73,10 +76,12 @@ public class AuthServiceImpl implements AuthService {
             if (users.isEmpty()) {
                 log.warn("Login failed: user not found username={}", request.getUsername());
                 loginHistoryService.recordFailure(request.getUsername(), null, ipAddress, userAgent, "USER_NOT_FOUND");
+                recordAuditFailure(null, request.getUsername(), "LOGIN", "사용자 없음", ipAddress, userAgent, "USER_NOT_FOUND");
                 throw new BusinessException("AUTH_001", "아이디 또는 비밀번호가 올바르지 않습니다.", HttpStatus.UNAUTHORIZED);
             }
             if (users.size() > 1) {
                 log.warn("Login failed: multiple users found for username={}, count={}", request.getUsername(), users.size());
+                recordAuditFailure(null, request.getUsername(), "LOGIN", "동일 계정 다중 테넌트", ipAddress, userAgent, "MULTI_TENANT_USERNAME");
                 throw new BusinessException("AUTH_015",
                         "동일한 사용자명이 여러 회사에 등록되어 있습니다. 회사코드를 입력해주세요.", HttpStatus.CONFLICT);
             }
@@ -90,11 +95,13 @@ public class AuthServiceImpl implements AuthService {
 
         if (!user.isActive()) {
             loginHistoryService.recordFailure(user.getUsername(), user.getTenantId(), ipAddress, userAgent, "INACTIVE_ACCOUNT");
+            recordAuditFailure(user.getTenantId(), user.getUsername(), "LOGIN", "비활성 계정 로그인 시도", ipAddress, userAgent, "INACTIVE_ACCOUNT");
             throw new BusinessException("AUTH_008", "비활성화된 계정입니다.", HttpStatus.UNAUTHORIZED);
         }
 
         if (user.isLocked()) {
             loginHistoryService.recordFailure(user.getUsername(), user.getTenantId(), ipAddress, userAgent, "ACCOUNT_LOCKED");
+            recordAuditFailure(user.getTenantId(), user.getUsername(), "LOGIN", "잠금 계정 로그인 시도", ipAddress, userAgent, "ACCOUNT_LOCKED");
             throw new BusinessException("AUTH_009", "계정이 잠겨있습니다. 잠시 후 다시 시도해주세요.", HttpStatus.UNAUTHORIZED);
         }
 
@@ -107,6 +114,7 @@ public class AuthServiceImpl implements AuthService {
             userRepository.save(user);
             log.warn("Login failed: invalid password username={}", request.getUsername());
             loginHistoryService.recordFailure(user.getUsername(), user.getTenantId(), ipAddress, userAgent, "INVALID_PASSWORD");
+            recordAuditFailure(user.getTenantId(), user.getUsername(), "LOGIN", "비밀번호 불일치", ipAddress, userAgent, "INVALID_PASSWORD");
             throw new BusinessException("AUTH_001", "아이디 또는 비밀번호가 올바르지 않습니다.", HttpStatus.UNAUTHORIZED);
         }
 
@@ -153,6 +161,7 @@ public class AuthServiceImpl implements AuthService {
 
         // Record login success
         loginHistoryService.recordSuccess(user.getUsername(), user.getTenantId(), ipAddress, userAgent);
+        recordAuditSuccess(user.getTenantId(), user.getId(), user.getUsername(), "LOGIN", "로그인 성공", ipAddress, userAgent);
 
         log.info("Login successful: username={}", request.getUsername());
 
@@ -280,6 +289,18 @@ public class AuthServiceImpl implements AuthService {
             }
 
             log.info("Logout completed: token blacklisted, session terminated");
+            UserContext context = SecurityContextHolder.getCurrentUser();
+            if (context != null) {
+                recordAuditSuccess(
+                        context.getTenantId(),
+                        context.getUserId(),
+                        context.getUsername(),
+                        "LOGOUT",
+                        "로그아웃 성공",
+                        null,
+                        null
+                );
+            }
         }
     }
 
@@ -378,5 +399,38 @@ public class AuthServiceImpl implements AuthService {
                 .roles(roles)
                 .permissions(permissions)
                 .build();
+    }
+
+    private void recordAuditSuccess(UUID tenantId, UUID actorId, String actorName, String action,
+                                    String description, String ipAddress, String userAgent) {
+        auditLogService.ifPresent(service ->
+                service.log(
+                        tenantId,
+                        actorId != null ? actorId.toString() : actorName,
+                        actorName,
+                        action,
+                        "AUTH",
+                        null,
+                        description,
+                        ipAddress,
+                        userAgent
+                ));
+    }
+
+    private void recordAuditFailure(UUID tenantId, String actorName, String action, String description,
+                                    String ipAddress, String userAgent, String errorMessage) {
+        auditLogService.ifPresent(service ->
+                service.logFailure(
+                        tenantId,
+                        actorName,
+                        actorName,
+                        action,
+                        "AUTH",
+                        null,
+                        description,
+                        ipAddress,
+                        userAgent,
+                        errorMessage
+                ));
     }
 }

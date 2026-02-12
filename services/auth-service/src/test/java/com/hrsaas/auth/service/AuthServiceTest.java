@@ -64,6 +64,9 @@ class AuthServiceTest {
     private LoginHistoryService loginHistoryService;
 
     @Mock
+    private AuditLogService auditLogService;
+
+    @Mock
     private MfaServiceImpl mfaService;
 
     @Mock
@@ -98,6 +101,7 @@ class AuthServiceTest {
                 redisTemplate,
                 sessionService,
                 loginHistoryService,
+                Optional.of(auditLogService),
                 mfaService,
                 Optional.of(tenantServiceClient)
         );

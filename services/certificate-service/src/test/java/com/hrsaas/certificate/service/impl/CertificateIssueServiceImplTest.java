@@ -1,5 +1,7 @@
 package com.hrsaas.certificate.service.impl;
 
+import com.hrsaas.certificate.domain.entity.CertificateIssue;
+import com.hrsaas.common.core.exception.BusinessException;
 import com.hrsaas.common.tenant.TenantContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,11 +19,12 @@ import com.hrsaas.certificate.repository.CertificateTemplateRepository;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -102,5 +105,47 @@ class CertificateIssueServiceImplTest {
         // The format is XXXX-XXXX-XXXX, length = 12 chars + 2 hyphens = 14
         assertThat(verificationCode).hasSize(14);
         assertThat(verificationCode).matches("^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$");
+    }
+
+    @Test
+    @DisplayName("downloadPdf should return non-empty PDF bytes for valid certificate")
+    void downloadPdf_validCertificate_returnsPdfBytes() {
+        UUID issueId = UUID.randomUUID();
+        CertificateIssue issue = CertificateIssue.builder()
+                .request(null)
+                .issueNumber("CERT-20260212-000001")
+                .verificationCode("ABCD-EFGH-IJKL")
+                .issuedBy(UUID.randomUUID())
+                .expiresAt(java.time.LocalDate.now().plusDays(30))
+                .contentSnapshot(new HashMap<>())
+                .build();
+        ReflectionTestUtils.setField(issue, "id", issueId);
+
+        given(certificateIssueRepository.findById(issueId)).willReturn(java.util.Optional.of(issue));
+
+        byte[] pdf = certificateIssueService.downloadPdf(issueId);
+
+        assertThat(pdf).isNotNull();
+        assertThat(pdf.length).isGreaterThan(0);
+    }
+
+    @Test
+    @DisplayName("downloadPdf should throw when certificate is expired")
+    void downloadPdf_expiredCertificate_throwsBusinessException() {
+        UUID issueId = UUID.randomUUID();
+        CertificateIssue issue = CertificateIssue.builder()
+                .request(null)
+                .issueNumber("CERT-20260212-000002")
+                .verificationCode("ZZZZ-YYYY-XXXX")
+                .issuedBy(UUID.randomUUID())
+                .expiresAt(java.time.LocalDate.now().minusDays(1))
+                .contentSnapshot(new HashMap<>())
+                .build();
+        ReflectionTestUtils.setField(issue, "id", issueId);
+
+        given(certificateIssueRepository.findById(issueId)).willReturn(java.util.Optional.of(issue));
+
+        assertThatThrownBy(() -> certificateIssueService.downloadPdf(issueId))
+                .isInstanceOf(BusinessException.class);
     }
 }

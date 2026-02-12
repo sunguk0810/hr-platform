@@ -1,6 +1,6 @@
 # Module 02: Tenant Service — PRD 및 프로덕션 정책 분석
 
-> **최종 업데이트**: 2026-02-10
+> **최종 업데이트**: 2026-02-12
 > **분석 범위**: `services/tenant-service/`, `common/common-tenant/`, `common/common-database/rls/`
 > **문서 버전**: v2.0 (Phase A/B/C 확장)
 
@@ -80,7 +80,7 @@
 |------|------|------|-----------|
 | 테넌트 정지 시 기존 세션 강제 종료 | ❌ 미구현 | Auth Service에서 TenantStatusChangedEvent 소비 필요 | Auth에서 이벤트 소비자 구현 |
 | 정책 변경 시 관련 서비스 캐시 갱신 | ⚠️ 부분 | 이벤트 발행 완료, 소비자 미구현 | 각 서비스에서 TenantPolicyChangedEvent 소비 |
-| 테넌트 간 인사이동 (FR-TM-003-03) | ❌ 미구현 | — | Employee/Appointment Service 연동 필요 |
+| 테넌트 간 인사이동 (FR-TM-003-03) | ✅ 구현 완료 (플랫폼) | employee-service `TransferController`, `TransferServiceImpl` | tenant-service 직접 구현 대상 아님 (연동/정합성 관리만 필요) |
 | 감사 로그 (common-audit) | ❌ 미구현 | — | common-audit 모듈 전체 구현 필요 |
 | 브랜딩 이미지 실제 파일 저장 | ⚠️ MVP | `TenantBrandingService.uploadBrandingImage()` — 플레이스홀더 URL | File Service 연동 필요 |
 | CORS 설정 (프로덕션) | ⚠️ 부분 | SecurityConfig | 프로덕션 도메인 추가 필요 |
@@ -210,7 +210,7 @@
 | FR-TM-002-05 | 자동 결재선 규칙 | §5.1 | ✅ 완전 구현 | ApprovalPolicyData (autoApproveOnTimeout, escalation 등) | -- |
 | FR-TM-003-01 | 그룹 통합 대시보드 | §5.1 | ✅ 완전 구현 | `GroupDashboardService` -- Feign 기반 집계 + CircuitBreaker | -- |
 | FR-TM-003-02 | 그룹 공통 정책 일괄 적용 | §5.1 | ✅ 완전 구현 | `PolicyInheritanceService.inheritPolicies()` | -- |
-| FR-TM-003-03 | 계열사 간 인사이동 | §5.1 | ❌ 미구현 | -- | Employee/Appointment 연동 필요 |
+| FR-TM-003-03 | 계열사 간 인사이동 | §5.1 | ✅ 구현 완료 | employee-service `TransferController`, `TransferServiceImpl` | tenant-service는 API 직접 제공하지 않음 |
 
 ### 3.2 코드에만 있는 기능 (역분석)
 
@@ -238,7 +238,7 @@ PRD에 명시적 요구사항이 없지만, 코드에 구현된 기능들:
 |---------|--------|------|----------|----------|--------|-----------|
 | **HIGH** | TM-G01 | 테넌트 정지 시 기존 세션 강제 종료 | Auth에서 상태 확인은 구현, 세션 강제 종료 없음 | Auth Service에서 `TenantStatusChangedEvent` 소비 -> 해당 테넌트 세션 전체 종료 | Auth Service | 중간 |
 | **HIGH** | TM-G02 | 정책 변경 시 관련 서비스 캐시 갱신 | 이벤트 발행 완료, 소비자 없음 | 각 서비스에서 `TenantPolicyChangedEvent` SQS 소비 -> 로컬 캐시 무효화 | 전 서비스 | 중간 |
-| **MEDIUM** | TM-G03 | 계열사 간 인사이동 (FR-TM-003-03) | 미구현 | Cross-tenant employee transfer API 구현 | Employee, Appointment | 높음 |
+| **MEDIUM** | TM-G03 | 계열사 간 인사이동 후속 고도화 (FR-TM-003-03) | 기본 구현 완료 | 분산 트랜잭션(Saga) 및 장애 복구 보강 | Employee, Appointment | 높음 |
 | **MEDIUM** | TM-G04 | 감사 로그 모듈 (common-audit) | 미구현 | AOP @Audited + SQS -> Auth Service 저장 | 전 서비스 | 높음 |
 | **LOW** | TM-G05 | 브랜딩 이미지 실제 저장 | 플레이스홀더 URL | File Service Feign 연동 | File Service | 낮음 |
 | **LOW** | TM-G06 | CORS 프로덕션 설정 | 개발 도메인만 | 환경별 도메인 분리 | 배포 환경 확정 | 낮음 |
@@ -1051,7 +1051,7 @@ ON CONFLICT (code) DO NOTHING;
 | FR-TM-002-05 | 자동 결재선 규칙 | `TenantPolicyController` (APPROVAL) | `TenantPolicyServiceImpl` | `TenantPolicy` | ✅ |
 | FR-TM-003-01 | 그룹 통합 대시보드 | `GroupDashboardController` | `GroupDashboardService` | -- (Feign) | ✅ |
 | FR-TM-003-02 | 그룹 공통 정책 일괄 적용 | `TenantController.inheritPolicies()` | `PolicyInheritanceService` | `TenantPolicy`, `PolicyChangeHistory` | ✅ |
-| FR-TM-003-03 | 계열사 간 인사이동 | -- | -- | -- | ❌ |
+| FR-TM-003-03 | 계열사 간 인사이동 | employee-service `TransferController` | employee-service `TransferServiceImpl` | `TransferRequest`, `TransferCompletedEvent` | ✅ |
 | FR-TM-014 | 계약 만료 스케줄러 | -- (스케줄러) | `ContractExpiryScheduler` | `Tenant` | ✅ |
 | FR-TM-015 | 테넌트 프로비저닝 | `TenantController.create()` | `TenantProvisioningService` | `TenantPolicy`, `TenantFeature` | ✅ |
 | FR-TM-016 | 플랜 기반 기능 게이팅 | `TenantPolicyController` | `TenantFeatureServiceImpl` | `PlanFeatureMapping` | ✅ |
@@ -1069,10 +1069,7 @@ ON CONFLICT (code) DO NOTHING;
 
 | 상태 | 수 | 비율 |
 |------|---|------|
-| ✅ 완전 구현 | 24 | 96% |
-| ❌ 미구현 | 1 | 4% |
-
-**미구현**: FR-TM-003-03 (계열사 간 인사이동) -- Employee/Appointment Service 연동 필요
+| ✅ 완전 구현 | 25 | 100% |
 
 ---
 
@@ -1080,6 +1077,7 @@ ON CONFLICT (code) DO NOTHING;
 
 | 날짜 | 버전 | 변경 내용 | 작성자 |
 |------|------|----------|--------|
+| 2026-02-12 | v2.1 | FR-TM-003-03 상태 정정: tenant-service 미구현 표기를 플랫폼 구현 완료로 정합화 (employee-service TransferController/TransferServiceImpl 기반). Gap TM-G03를 "후속 고도화(Saga/복구)" 항목으로 재분류. | Codex |
 | 2026-02-06 | v1.0 | 초기 프로덕션 정책/설정 분석 | Claude |
 | 2026-02-10 | v2.0 | Phase A (Gap 분석), Phase B (비즈니스 규칙), Phase C (서비스 연동) 추가. 코드 최신 상태 반영: TenantResolver 구현, 테넌트 검색/필터, PlanFeatureMapping, ContractExpiryScheduler, TenantCleanupScheduler, PolicyDataValidator, DefaultPolicyData, PolicyChangeHistory, PolicyInheritance, TenantHierarchy, TenantBranding, TenantProvisioning, UserDashboard, GroupDashboard(Feign), PlanUpgradeService, 6종 이벤트 발행 모두 구현 완료 확인. 추적성 매트릭스 추가 (24/25 구현 = 96%). | Claude |
 

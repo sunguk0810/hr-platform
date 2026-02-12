@@ -73,7 +73,7 @@ pnpm dev
                     │   │         ECS Fargate (프라이빗 서브넷)           │  │
                     │   │                    [ARM64]                       │  │
                     │   │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌────────┐ │  │
-                    │   │  │ Gateway │ │  Auth   │ │ Tenant  │ │  Org   │ │  │
+                    │   │  │Traefik GW│ │  Auth   │ │ Tenant  │ │  Org   │ │  │
                     │   │  └─────────┘ └─────────┘ └─────────┘ └────────┘ │  │
                     │   │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌────────┐ │  │
                     │   │  │Employee │ │Attendance│ │Approval │ │  MDM   │ │  │
@@ -105,7 +105,6 @@ pnpm dev
 
 | 서비스 | 포트 | 설명 |
 |--------|------|------|
-| Gateway | 8080 | API 게이트웨이, 라우팅, 속도 제한 |
 | Auth | 8081 | 인증, 세션 관리 |
 | Tenant | 8082 | 멀티테넌시 관리 |
 | Organization | 8083 | 조직 구조, 부서, 직위 |
@@ -132,8 +131,7 @@ hr-platform/
 │   ├── common-security/        # JWT, 권한
 │   ├── common-tenant/          # 멀티테넌시 지원
 │   └── ...
-├── services/                   # 마이크로서비스 (13개)
-│   ├── gateway-service/
+├── services/                   # 마이크로서비스 (12개)
 │   ├── auth-service/
 │   ├── employee-service/
 │   └── ...
@@ -175,7 +173,6 @@ cd docker && docker-compose up -d
 # 2. 백엔드 서비스 실행
 # 주의: 보안 강화를 위해 JWT_SECRET 환경 변수 설정이 필수입니다.
 export JWT_SECRET=hr-saas-jwt-secret-key-minimum-256-bits-for-hmac-sha256
-./gradlew :services:gateway-service:bootRun &
 ./gradlew :services:auth-service:bootRun &
 ./gradlew :services:employee-service:bootRun &
 # ... 또는 전체 서비스 실행
@@ -255,7 +252,7 @@ aws ecr get-login-password --region ap-northeast-2 | \
 
 # buildx를 사용한 ARM64 이미지 빌드
 docker buildx create --use
-services="gateway-service auth-service tenant-service organization-service employee-service attendance-service approval-service mdm-service notification-service file-service appointment-service certificate-service recruitment-service"
+services="auth-service tenant-service organization-service employee-service attendance-service approval-service mdm-service notification-service file-service appointment-service certificate-service recruitment-service"
 for service in $services; do
   docker buildx build --platform linux/arm64 \
     -t <account-id>.dkr.ecr.ap-northeast-2.amazonaws.com/hr-platform/$service:latest \
@@ -286,7 +283,7 @@ curl -k https://<alb-dns>/actuator/health
 
 | 리소스 | 구성 | 비용 |
 |--------|------|------|
-| ECS Fargate (13개 서비스) | ARM64, 256 CPU, 512MB | ~$156 |
+| ECS Fargate (12개 서비스) | ARM64, 256 CPU, 512MB | ~$144 |
 | Redis (Fargate) | ARM64, 256 CPU, 512MB | ~$8 |
 | SQS/SNS | 서버리스 (사용량 기반) | ~$5 |
 | RDS | db.t3.micro | ~$25 |
@@ -324,7 +321,7 @@ curl -k https://<alb-dns>/actuator/health
 
 로컬 또는 AWS에서 서비스 시작 후:
 
-- Gateway Swagger: `http://localhost:8080/swagger-ui.html`
+- Traefik 라우팅 진입점: `http://localhost:18080`
 - 개별 서비스: `http://localhost:<port>/swagger-ui.html`
 
 ### 주요 API 엔드포인트

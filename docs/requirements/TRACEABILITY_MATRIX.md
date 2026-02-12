@@ -1,6 +1,6 @@
 # 요구사항 추적 매트릭스
 
-> **최종 업데이트**: 2026-02-10
+> **최종 업데이트**: 2026-02-12
 > **대상**: 프로젝트 관리자, QA 엔지니어, 개발자
 > **출처**: [PRD.md](../deprecated/PRD.md), [PRD_GAP_ANALYSIS.md](../deprecated/PRD_GAP_ANALYSIS.md)
 
@@ -81,7 +81,7 @@
 | FR-TM-002-05 | 자동 결재선 규칙 | Should | ✅ | tenant-service | `TenantPolicyController` (APPROVAL) | `TenantPolicyServiceImpl` | `TenantPolicy` |
 | FR-TM-003-01 | 그룹 통합 대시보드 | Must | ✅ | tenant-service | `GroupDashboardController` | `GroupDashboardService` | Feign 5개 서비스 집계 |
 | FR-TM-003-02 | 그룹 공통 정책 일괄 적용 | Should | ✅ | tenant-service | `TenantController.inheritPolicies()` | `PolicyInheritanceService` | `TenantPolicy`, `PolicyChangeHistory` |
-| FR-TM-003-03 | 계열사 간 인사이동 | Must | ❌ | — | — | — | 전출/전입 워크플로우 전체 미구현 |
+| FR-TM-003-03 | 계열사 간 인사이동 | Must | ✅ | employee-service | `TransferController` | `TransferServiceImpl` | 전출/전입 승인 + 완료 + `TransferCompletedEvent` 발행 |
 | FR-TM-014 | 계약 만료 스케줄러 | Should | ✅ | tenant-service | — (스케줄러) | `ContractExpiryScheduler` | `Tenant` |
 | FR-TM-015 | 테넌트 프로비저닝 | Must | ✅ | tenant-service | `TenantController.create()` | `TenantProvisioningService` | `TenantPolicy`, `TenantFeature` |
 | FR-TM-016 | 플랜 기반 기능 게이팅 | Must | ✅ | tenant-service | `TenantPolicyController` | `TenantFeatureServiceImpl` | `PlanFeatureMapping` |
@@ -95,7 +95,7 @@
 | FR-TM-024 | 비밀번호 정책 전용 API | Must | ✅ | tenant-service | `TenantController.getPasswordPolicy()` | `TenantServiceImpl.getPasswordPolicy()` | `TenantPolicy` |
 | FR-TM-025 | 모듈 설정 | Should | ✅ | tenant-service | `TenantController.updateModules()` | — (직접 저장) | `Tenant.allowedModules` |
 
-**완전율**: 96% (24/25 완전) — 미구현: FR-TM-003-03 (계열사 간 인사이동)
+**완전율**: 100% (25/25 완전)
 
 ---
 
@@ -112,19 +112,19 @@
 | FR-AUTH-004 | 비밀번호 변경/초기화 | Must | ✅ | auth-service | `PasswordController` | `PasswordServiceImpl` | BCrypt, 이메일 리셋, 이력 관리 |
 | FR-AUTH-005 | 계정 잠금 | Must | ✅ | auth-service | `AuthController` | `AuthServiceImpl` | 5회 실패 → 30분 잠금, 관리자 해제 |
 | FR-AUTH-006 | 7단계 계층적 RBAC | Must | ✅ | common-security | — | `RoleHierarchyConfig`, `PermissionMappingService` | 100+ 퍼미션, `@PreAuthorize` |
-| FR-AUTH-007 | 데이터 접근 제어 (scope) | Must | 🟡 | common-security | — | `PermissionChecker` | self/team/dept/org 범위, 부서/팀 실제 조회 TODO |
+| FR-AUTH-007 | 데이터 접근 제어 (scope) | Must | ✅ | common-security + auth-service | — | `PermissionChecker`, `SecurityEmployeeServiceClientAdapter` | self/team/dept/org 범위 + Employee Feign 기반 부서/팀 조회 |
 | FR-AUTH-008 | Keycloak SSO | Must | ❌ | — | — | — | **자체 JWT 유지 결정** (의도적 미구현) |
-| FR-AUTH-009 | API Gateway JWT 검증 | Must | 🟡 | gateway-service | — | — | Traefik 라우팅 존재, JWT 미들웨어 미완 |
+| FR-AUTH-009 | API Gateway JWT 검증 | Must | 🟡 | traefik-gateway | — | — | Traefik 라우팅 존재, 중앙 JWT 검증 미들웨어 미완 |
 | FR-AUTH-010 | MFA (TOTP 다중 인증) | Should | ✅ | auth-service | `MfaController` | `MfaServiceImpl` | TOTP + 복구코드 10개, QR코드, GoogleAuthenticator |
 | FR-AUTH-011 | 사용자 계정 관리 (관리자) | Must | ✅ | auth-service | `UserController` | `UserManagementServiceImpl` | CRUD, 상태 변경, 역할 관리, 잠금 해제 |
 | FR-AUTH-012 | 테넌트별 비밀번호 정책 | Should | ✅ | auth-service | — | `PasswordPolicyServiceImpl` | Feign → Tenant Service, 시스템 최소 기준 강제 |
 | FR-AUTH-013 | 비밀번호 이력 (재사용 방지) | Should | ✅ | auth-service | — | `PasswordHistoryServiceImpl` | 최근 N개 BCrypt 비교, `PasswordHistory` 엔티티 |
 | FR-AUTH-014 | 비밀번호 만료 체크 | Should | ✅ | auth-service | `AuthController` | `AuthServiceImpl` | passwordExpiryDays 설정, 로그인 시 플래그 반환 |
 | FR-AUTH-015 | 로그인 이력 기록 | Must | ✅ | auth-service | — | `LoginHistoryServiceImpl` | SUCCESS/FAILURE, IP, UA, 실패사유 |
-| FR-AUTH-016 | 비즈니스 감사 로그 | Must | ❌ | auth-service | — | — | 설계 완료, common-audit AOP + SQS 리스너 미구현 |
+| FR-AUTH-016 | 비즈니스 감사 로그 | Must | 🟡 | auth-service | `AuditLogController` | `AuditLogServiceImpl`, `AuthServiceImpl` | Auth 로그인/로그아웃 적재 구현, 전사 common-audit AOP + SQS 리스너는 미구현 |
 | FR-AUTH-017 | 테넌트 상태 검증 | Must | ✅ | auth-service | `AuthController` | `AuthServiceImpl` | Feign → SUSPENDED/TERMINATED 체크 |
 
-**완전율**: 76% (13/17 완전) — Keycloak 의도적 미구현 제외 시 81% (13/16)
+**완전율**: 82% (14/17 완전) — Keycloak 의도적 미구현 제외 시 88% (14/16)
 
 ---
 
@@ -382,8 +382,8 @@
 
 | 기능 영역 | 전체 | 완전 (✅) | 부분 (🟡) | 미구현 (❌) | 완전율 |
 |-----------|------|-----------|-----------|------------|--------|
-| FR-TM (테넌트) | 25 | 24 | 0 | 1 | **96%** |
-| FR-AUTH (인증) | 17 | 13 | 2 | 2 | **76%** |
+| FR-TM (테넌트) | 25 | 25 | 0 | 0 | **100%** |
+| FR-AUTH (인증) | 17 | 14 | 2 | 1 | **82%** |
 | FR-MDM (기준정보) | 20 | 20 | 0 | 0 | **100%** |
 | FR-ORG (조직) | 11 | 8 | 2 | 1 | **73%** |
 | FR-EMP (인사) | 16 | 10 | 5 | 1 | **63%** |
@@ -391,7 +391,7 @@
 | FR-APR (결재) | 17 | 13 | 3 | 0 | **76%** |
 | FR-NTF (알림) | 5 | 3 | 1 | 1 | 60% |
 | FR-FILE (파일) | 4 | 2 | 2 | 0 | 50% |
-| **합계** | **128** | **103** | **18** | **7** | **81%** |
+| **합계** | **128** | **105** | **18** | **5** | **82%** |
 
 ### 비기능 요구사항 (NFR) 요약
 
@@ -411,10 +411,10 @@
 | 순위 | 항목 | ID | 유형 | 영향도 |
 |------|------|-----|------|--------|
 | 1 | Keycloak SSO 미연동 | NFR-SEC-001 | 인프라 | 높음 |
-| 2 | 계열사 간 인사이동 | FR-TM-003-03 | 기능 | 높음 |
+| 2 | API Gateway JWT 검증 미완 | FR-AUTH-009 | 보안 | 높음 |
 | 3 | 테스트 커버리지 5% | NFR-TEST-001 | 품질 | 높음 |
 | 4 | 감사 로그 5년 보관 | NFR-SEC-005 | 컴플라이언스 | 중간 |
-| 5 | 비즈니스 감사 로그 | FR-AUTH-016 | 기능 | 중간 |
+| 5 | 비즈니스 감사 로그 (전사 common-audit) | FR-AUTH-016 | 기능 | 중간 |
 
 ---
 

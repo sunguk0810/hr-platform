@@ -18,6 +18,13 @@ public interface TransferRequestRepository extends JpaRepository<TransferRequest
 
     Optional<TransferRequest> findByIdAndTenantId(UUID id, UUID tenantId);
 
+    @Query("""
+        SELECT t FROM TransferRequest t
+        WHERE t.id = :id
+          AND (t.tenantId = :tenantId OR t.sourceTenantId = :tenantId OR t.targetTenantId = :tenantId)
+        """)
+    Optional<TransferRequest> findByIdAndRelatedTenantId(@Param("id") UUID id, @Param("tenantId") UUID tenantId);
+
     @Query("SELECT t FROM TransferRequest t WHERE t.tenantId = :tenantId OR t.sourceTenantId = :tenantId OR t.targetTenantId = :tenantId")
     Page<TransferRequest> findAllByRelatedTenantId(@Param("tenantId") UUID tenantId, Pageable pageable);
 

@@ -1,6 +1,6 @@
 # HR Platform 개발 현황 (통합)
 
-> **최종 업데이트**: 2026-02-10
+> **최종 업데이트**: 2026-02-12
 > **통합 대상**: `deprecated/CURRENT_STATUS.md` + `deprecated/CURRENT_STATUS_BACKEND.md`
 
 ---
@@ -15,7 +15,7 @@ Enterprise-grade 멀티테넌트 HR SaaS 플랫폼 (100+ 계열사 지원)
 
 | 영역 | 완료 | 전체 | 진행률 |
 |------|------|------|--------|
-| 백엔드 서비스 | 13 | 13 | 100% |
+| 백엔드 서비스 | 12 | 12 | 100% |
 | 프론트엔드 Features | 23 | 23 | 100% |
 | 프론트엔드 Pages | 61 | 61 | 100% |
 | MSW Mock Handlers | 22 | 22 | 100% |
@@ -25,11 +25,10 @@ Enterprise-grade 멀티테넌트 HR SaaS 플랫폼 (100+ 계열사 지원)
 
 ---
 
-## 3. 백엔드 서비스 현황 (13개)
+## 3. 백엔드 서비스 현황 (12개)
 
 | 서비스 | 포트 | RLS | Permission | Privacy | Flyway | HikariCP | 상태 |
 |--------|------|:---:|:----------:|:-------:|:------:|:--------:|------|
-| gateway-service | 8080 | N/A | N/A | N/A | N/A | N/A | 완료 |
 | auth-service | 8081 | N/A | N/A | N/A | N/A | 20 | 완료 |
 | tenant-service | 8082 | O | O | O | V1-V4 | 10 | 완료 |
 | organization-service | 8083 | O | O | - | V1-V4 | 20 | 완료 |
@@ -81,7 +80,7 @@ Enterprise-grade 멀티테넌트 HR SaaS 플랫폼 (100+ 계열사 지원)
 - Phase A (Gap 분석): PRD vs 코드 비교표, 코드 역분석, 미구현 Gap 목록, 로드맵
 - Phase B (비즈니스 규칙): 상태 머신 Mermaid, 유효성 규칙, 계산 공식, 엣지 케이스
 - Phase C (서비스 연동): 연동 아키텍처, Feign Client, SNS/SQS 이벤트, 통합 테스트 시나리오
-- 추적성 매트릭스 동기화: 128 FR 중 102 완전 구현 (80%)
+- 추적성 매트릭스 동기화: 128 FR 중 105 완전 구현 (82%)
 - 상세: `docs/modules/01~12-*-SERVICE.md`, `docs/requirements/TRACEABILITY_MATRIX.md`
 
 ---

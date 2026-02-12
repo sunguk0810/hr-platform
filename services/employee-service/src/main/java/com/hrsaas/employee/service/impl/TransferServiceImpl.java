@@ -302,7 +302,7 @@ public class TransferServiceImpl implements TransferService {
     }
 
     private TransferRequest findByIdAndTenantId(UUID id, UUID tenantId) {
-        return transferRequestRepository.findByIdAndTenantId(id, tenantId)
+        return transferRequestRepository.findByIdAndRelatedTenantId(id, tenantId)
             .orElseThrow(() -> new NotFoundException("EMP_028", "전출/전입 요청을 찾을 수 없습니다: " + id));
     }
 

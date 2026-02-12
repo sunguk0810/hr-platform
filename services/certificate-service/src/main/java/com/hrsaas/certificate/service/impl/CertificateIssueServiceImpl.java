@@ -16,12 +16,17 @@ import com.hrsaas.common.core.exception.ErrorCode;
 import com.hrsaas.common.tenant.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Paragraph;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.ByteArrayOutputStream;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -199,9 +204,7 @@ public class CertificateIssueServiceImpl implements CertificateIssueService {
             throw new BusinessException(ErrorCode.INVALID_REQUEST, "유효하지 않은 증명서입니다");
         }
 
-        // PDF 생성 로직 (실제 구현 시 별도 서비스로 분리)
-        // TODO: Flying Saucer 또는 iText를 사용한 PDF 생성
-        return new byte[0];
+        return generatePdf(issue);
     }
 
     @Override
@@ -262,5 +265,34 @@ public class CertificateIssueServiceImpl implements CertificateIssueService {
         snapshot.put("customFields", request.getCustomFields());
         snapshot.put("issuedAt", Instant.now().toString());
         return snapshot;
+    }
+
+    private byte[] generatePdf(CertificateIssue issue) {
+        Map<String, Object> snapshot = issue.getContentSnapshot() != null
+                ? issue.getContentSnapshot()
+                : Map.of();
+
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            PdfWriter writer = new PdfWriter(outputStream);
+            PdfDocument pdfDocument = new PdfDocument(writer);
+            Document document = new Document(pdfDocument);
+
+            document.add(new Paragraph("HR SaaS Certificate").setBold().setFontSize(16));
+            document.add(new Paragraph("Issue Number: " + issue.getIssueNumber()));
+            document.add(new Paragraph("Verification Code: " + issue.getVerificationCode()));
+            document.add(new Paragraph("Issued At: " + issue.getIssuedAt()));
+            document.add(new Paragraph("Expires At: " + issue.getExpiresAt()));
+            document.add(new Paragraph("Employee Name: " + String.valueOf(snapshot.getOrDefault("employeeName", "-"))));
+            document.add(new Paragraph("Employee Number: " + String.valueOf(snapshot.getOrDefault("employeeNumber", "-"))));
+            document.add(new Paragraph("Certificate Type: " + String.valueOf(snapshot.getOrDefault("certificateType", "-"))));
+            document.add(new Paragraph("Purpose: " + String.valueOf(snapshot.getOrDefault("purpose", "-"))));
+            document.add(new Paragraph("Submission Target: " + String.valueOf(snapshot.getOrDefault("submissionTarget", "-"))));
+
+            document.close();
+            return outputStream.toByteArray();
+        } catch (Exception e) {
+            log.error("Failed to generate certificate PDF: issueId={}", issue.getId(), e);
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "증명서 PDF 생성에 실패했습니다");
+        }
     }
 }
