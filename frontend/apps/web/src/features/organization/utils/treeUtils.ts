@@ -10,6 +10,7 @@ export const filterTree = (
   nodes: DepartmentTreeNode[],
   keyword: string
 ): DepartmentTreeNode[] => {
+  // If keyword is empty, return original nodes without filtering
   if (!keyword) return nodes;
   const lower = keyword.toLowerCase();
   return nodes.reduce<DepartmentTreeNode[]>((acc, node) => {
