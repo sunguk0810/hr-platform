@@ -2,6 +2,7 @@ package com.hrsaas.recruitment.scheduler;
 
 import com.hrsaas.recruitment.domain.entity.JobPosting;
 import com.hrsaas.recruitment.repository.JobPostingRepository;
+import com.hrsaas.recruitment.service.InterviewService;
 import com.hrsaas.recruitment.service.OfferService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,7 @@ public class RecruitmentScheduler {
 
     private final JobPostingRepository jobPostingRepository;
     private final OfferService offerService;
+    private final InterviewService interviewService;
 
     /**
      * 마감된 채용공고 자동 처리 (매일 00:05)
@@ -59,7 +61,7 @@ public class RecruitmentScheduler {
     @Scheduled(cron = "0 0 9 * * ?")
     public void sendFeedbackReminders() {
         log.info("Starting feedback reminder check");
-        // TODO: 피드백 기한이 오늘인 면접에 대해 알림 발송
+        interviewService.sendFeedbackReminders();
         log.info("Completed feedback reminder check");
     }
 

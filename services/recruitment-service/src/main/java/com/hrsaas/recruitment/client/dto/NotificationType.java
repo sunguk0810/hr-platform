@@ -1,4 +1,4 @@
-package com.hrsaas.notification.domain.entity;
+package com.hrsaas.recruitment.client.dto;
 
 public enum NotificationType {
     APPROVAL_REQUESTED,     // 결재 요청됨
