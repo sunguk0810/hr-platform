@@ -86,7 +86,4 @@ public interface EmployeeRepository extends JpaRepository<Employee, UUID> {
     long countResigned(@Param("tenantId") UUID tenantId,
                        @Param("startDate") java.time.LocalDate startDate,
                        @Param("endDate") java.time.LocalDate endDate);
-
-    Optional<Employee> findTopByTenantIdAndNameAndBirthDateAndStatusOrderByResignDateDesc(
-        UUID tenantId, String name, java.time.LocalDate birthDate, EmployeeStatus status);
 }

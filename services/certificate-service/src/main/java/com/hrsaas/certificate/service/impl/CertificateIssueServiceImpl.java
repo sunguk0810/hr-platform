@@ -13,11 +13,9 @@ import com.hrsaas.certificate.repository.CertificateTemplateRepository;
 import com.hrsaas.certificate.service.CertificateIssueService;
 import com.hrsaas.common.core.exception.BusinessException;
 import com.hrsaas.common.core.exception.ErrorCode;
-import com.hrsaas.common.tenant.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,6 +45,7 @@ public class CertificateIssueServiceImpl implements CertificateIssueService {
     private final CertificateRequestRepository certificateRequestRepository;
     private final CertificateTemplateRepository certificateTemplateRepository;
 
+    private static final AtomicLong issueSequence = new AtomicLong(1);
     private static final SecureRandom secureRandom = new SecureRandom();
     private static final String VERIFICATION_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     private static final int VERIFICATION_CODE_LENGTH = 12;
@@ -212,29 +211,9 @@ public class CertificateIssueServiceImpl implements CertificateIssueService {
     }
 
     private String generateIssueNumber() {
-        UUID tenantId = TenantContext.getCurrentTenant();
         String datePrefix = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        String prefix = String.format("CERT-%s-", datePrefix);
-
-        List<String> latestIssueNumbers = certificateIssueRepository.findLatestIssueNumbers(
-                tenantId, prefix, PageRequest.of(0, 1));
-
-        String maxIssueNumber = latestIssueNumbers.isEmpty() ? null : latestIssueNumbers.get(0);
-
-        long nextSequence = 1;
-        if (maxIssueNumber != null) {
-            try {
-                String suffix = maxIssueNumber.substring(prefix.length());
-                nextSequence = Long.parseLong(suffix) + 1;
-            } catch (Exception e) {
-                log.warn("Failed to parse sequence from issue number: {}", maxIssueNumber);
-                // If parsing fails, we might want to throw an exception to avoid duplicates
-                // or just log and try 1 (which will likely fail on insert if unique constraint exists)
-                // Here we choose to proceed with 1 but it's risky. Ideally data should be clean.
-            }
-        }
-
-        return String.format("%s%06d", prefix, nextSequence);
+        long sequence = issueSequence.getAndIncrement();
+        return String.format("CERT-%s-%06d", datePrefix, sequence);
     }
 
     private String generateVerificationCode() {
