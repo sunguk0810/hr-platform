@@ -1,0 +1,5 @@
+
+jwt:
+  secret: test-secret-key-for-jwt-token-signing-minimum-256-bits-required-for-testing
+  access-token-expiry: 1800
+  refresh-token-expiry: 604800

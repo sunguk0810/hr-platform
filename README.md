@@ -173,6 +173,8 @@ hr-platform/
 cd docker && docker-compose up -d
 
 # 2. 백엔드 서비스 실행
+# 주의: 보안 강화를 위해 JWT_SECRET 환경 변수 설정이 필수입니다.
+export JWT_SECRET=hr-saas-jwt-secret-key-minimum-256-bits-for-hmac-sha256
 ./gradlew :services:gateway-service:bootRun &
 ./gradlew :services:auth-service:bootRun &
 ./gradlew :services:employee-service:bootRun &
@@ -190,7 +192,8 @@ pnpm dev
 # 전체 모듈 빌드
 ./gradlew build
 
-# 특정 서비스 실행
+# 특정 서비스 실행 (환경 변수 설정 필요)
+export JWT_SECRET=hr-saas-jwt-secret-key-minimum-256-bits-for-hmac-sha256
 ./gradlew :services:employee-service:bootRun
 
 # 테스트 실행

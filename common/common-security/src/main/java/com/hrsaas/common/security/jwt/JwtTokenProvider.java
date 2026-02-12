@@ -25,12 +25,19 @@ public class JwtTokenProvider {
     private final long refreshTokenExpiry;
 
     public JwtTokenProvider(
-            @Value("${jwt.secret:hr-saas-secret-key-for-jwt-token-signing-minimum-256-bits-required}") String secret,
+            @Value("${jwt.secret}") String secret,
             @Value("${jwt.access-token-expiry:1800}") long accessTokenExpiry,
             @Value("${jwt.refresh-token-expiry:604800}") long refreshTokenExpiry) {
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.accessTokenExpiry = accessTokenExpiry;
         this.refreshTokenExpiry = refreshTokenExpiry;
+
+        if (accessTokenExpiry <= 0) {
+            throw new IllegalArgumentException("Access token expiry must be positive");
+        }
+        if (refreshTokenExpiry <= 0) {
+            throw new IllegalArgumentException("Refresh token expiry must be positive");
+        }
     }
 
     /**
