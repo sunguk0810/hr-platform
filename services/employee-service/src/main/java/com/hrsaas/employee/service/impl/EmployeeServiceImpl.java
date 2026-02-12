@@ -440,7 +440,7 @@ public class EmployeeServiceImpl implements EmployeeService {
                 }
             }
         } catch (Exception e) {
-            log.warn("Failed to populate names from organization service: {}", e.getMessage());
+            log.warn("Failed to populate names from organization service", e);
             // Proceed without names rather than failing the whole request
         }
     }
