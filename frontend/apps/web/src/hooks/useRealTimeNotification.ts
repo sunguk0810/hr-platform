@@ -1,5 +1,7 @@
 import { useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/queryClient';
 import { wsClient, type NotificationEvent } from '@/lib/websocket';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -149,22 +151,52 @@ export function useApprovalRealTime() {
 }
 
 export function useAttendanceRealTime() {
+  const { t } = useTranslation('attendance');
+  const { toast } = useToast();
   const { isAuthenticated } = useAuthStore();
+  const queryClient = useQueryClient();
+
+  const handleCheckIn = useCallback(
+    (_event: unknown) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.attendance.today() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.attendance.list() });
+
+      toast({
+        title: t('checkIn.checkIn'),
+        description: t('checkIn.checkInComplete'),
+      });
+    },
+    [queryClient, t, toast]
+  );
+
+  const handleCheckOut = useCallback(
+    (_event: unknown) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.attendance.today() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.attendance.list() });
+
+      toast({
+        title: t('checkIn.checkOut'),
+        description: t('checkIn.checkOutComplete'),
+      });
+    },
+    [queryClient, t, toast]
+  );
 
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    const unsubscribeCheckIn = wsClient.on('attendance:checked_in', (_event) => {
-      // TODO: Implement attendance check-in real-time UI update
-    });
-
-    const unsubscribeCheckOut = wsClient.on('attendance:checked_out', (_event) => {
-      // TODO: Implement attendance check-out real-time UI update
-    });
+    const unsubscribeCheckIn = wsClient.on(
+      'attendance:checked_in',
+      handleCheckIn
+    );
+    const unsubscribeCheckOut = wsClient.on(
+      'attendance:checked_out',
+      handleCheckOut
+    );
 
     return () => {
       unsubscribeCheckIn();
       unsubscribeCheckOut();
     };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, handleCheckIn, handleCheckOut]);
 }
