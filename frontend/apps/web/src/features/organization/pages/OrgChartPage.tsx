@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { OrgTree } from '../components/OrgTree';
@@ -11,6 +11,7 @@ import { Building2, Users, Search, ArrowLeft, User } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { apiClient, ApiResponse } from '@/lib/apiClient';
 import type { DepartmentTreeNode } from '@hr-platform/shared-types';
+import { filterTree } from '../utils/treeUtils';
 
 interface DepartmentEmployee {
   id: string;
@@ -66,32 +67,10 @@ export default function OrgChartPage() {
   const selectedDept =
     treeData && selectedDeptId ? findDept(treeData, selectedDeptId) : undefined;
 
-  // Filter tree by search keyword
-  const filterTree = (
-    nodes: DepartmentTreeNode[],
-    keyword: string
-  ): DepartmentTreeNode[] => {
-    if (!keyword) return nodes;
-    const lower = keyword.toLowerCase();
-    return nodes.reduce<DepartmentTreeNode[]>((acc, node) => {
-      const filteredChildren = filterTree(node.children || [], keyword);
-      if (
-        node.name.toLowerCase().includes(lower) ||
-        filteredChildren.length > 0
-      ) {
-        acc.push({
-          ...node,
-          children:
-            filteredChildren.length > 0
-              ? filteredChildren
-              : node.children || [],
-        });
-      }
-      return acc;
-    }, []);
-  };
-
-  const filteredTree = treeData ? filterTree(treeData, searchKeyword) : [];
+  const filteredTree = useMemo(
+    () => (treeData ? filterTree(treeData, searchKeyword) : []),
+    [treeData, searchKeyword]
+  );
 
   const handleSelectDept = (node: DepartmentTreeNode) => {
     setSelectedDeptId(node.id);
