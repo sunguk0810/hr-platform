@@ -160,7 +160,7 @@ public class SecurityFilter extends OncePerRequestFilter {
 ### 제외 경로
 
 다음 경로는 JWT 인증을 건너뜁니다:
-- `/actuator/**` (헬스체크/메트릭)
+- `/actuator/health`, `/actuator/info` (헬스체크/정보)
 - `/health` (헬스체크)
 - `/favicon.ico`
 
@@ -199,7 +199,8 @@ public class SecurityConfig {
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/actuator/**").permitAll()
+                .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                .requestMatchers("/actuator/**").hasAnyRole("SYSTEM_ADMIN", "SUPER_ADMIN")
                 .requestMatchers("/swagger-ui/**").permitAll()
                 .requestMatchers("/v3/api-docs/**").permitAll()
                 .anyRequest().authenticated()
