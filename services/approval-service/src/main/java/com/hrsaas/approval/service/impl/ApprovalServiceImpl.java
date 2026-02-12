@@ -19,6 +19,7 @@ import com.hrsaas.common.core.exception.BusinessException;
 import com.hrsaas.common.core.exception.ForbiddenException;
 import com.hrsaas.common.core.exception.NotFoundException;
 import com.hrsaas.common.event.EventPublisher;
+import org.springframework.dao.OptimisticLockingFailureException;
 import com.hrsaas.common.response.PageResponse;
 import com.hrsaas.common.tenant.TenantContext;
 import lombok.RequiredArgsConstructor;
@@ -236,6 +237,14 @@ public class ApprovalServiceImpl implements ApprovalService {
     @Override
     @Transactional
     public ApprovalDocumentResponse process(UUID documentId, UUID approverId, ProcessApprovalRequest request) {
+        try {
+            return processInternal(documentId, approverId, request);
+        } catch (OptimisticLockingFailureException e) {
+            throw new BusinessException("APV_005", "다른 사용자가 문서를 수정했습니다. 다시 시도해주세요.");
+        }
+    }
+
+    private ApprovalDocumentResponse processInternal(UUID documentId, UUID approverId, ProcessApprovalRequest request) {
         ApprovalDocument document = findById(documentId);
 
         ApprovalLine currentLine = document.getApprovalLines().stream()
