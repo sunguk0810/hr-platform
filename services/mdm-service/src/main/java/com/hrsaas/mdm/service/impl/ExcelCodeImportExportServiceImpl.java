@@ -20,9 +20,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Excel 기반 코드 임포트/엑스포트 서비스 구현체
@@ -223,9 +222,32 @@ public class ExcelCodeImportExportServiceImpl implements ExcelCodeImportExportSe
             Sheet codeSheet = workbook.createSheet("공통코드");
             writeHeaderRow(codeSheet, CODE_HEADERS, headerStyle);
 
+            // Fetch all codes for the groups in a single query
+            Map<UUID, List<CommonCode>> codesByGroup = new HashMap<>();
+            if (!groups.isEmpty()) {
+                List<UUID> groupIds = groups.stream()
+                    .map(CodeGroup::getId)
+                    .collect(Collectors.toList());
+
+                List<CommonCode> allCodes = commonCodeRepository.findByCodeGroupIdIn(groupIds);
+
+                codesByGroup = allCodes.stream()
+                    .collect(Collectors.groupingBy(code -> code.getCodeGroup().getId()));
+            }
+
             int codeRowIdx = 1;
             for (CodeGroup group : groups) {
-                List<CommonCode> codes = commonCodeRepository.findByCodeGroupId(group.getId());
+                List<CommonCode> codes = codesByGroup.getOrDefault(group.getId(), Collections.emptyList());
+                // Sort codes if needed (already sorted by query but list order might not be guaranteed after grouping)
+                // However, the query sorted by group ID then sort order.
+                // GroupingBy usually preserves order if the stream is ordered, but standard Map doesn't guarantee iteration order.
+                // But here we iterate over 'groups' and get from 'codesByGroup'.
+                // The list inside the map should preserve order if we collected it that way.
+                // But groupingBy returns a Map<K, List<V>>. The List<V> implementation is usually ArrayList.
+                // Since the input stream 'allCodes' is sorted by GroupID then SortOrder,
+                // the elements for a specific group will appear in the stream in SortOrder.
+                // So the list for that group will be sorted.
+
                 for (CommonCode code : codes) {
                     Row row = codeSheet.createRow(codeRowIdx++);
                     row.createCell(0).setCellValue(group.getGroupCode());
