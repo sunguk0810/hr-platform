@@ -3,6 +3,7 @@ package com.hrsaas.organization.service;
 import com.hrsaas.common.response.ApiResponse;
 import com.hrsaas.common.tenant.TenantContext;
 import com.hrsaas.organization.client.EmployeeClient;
+import com.hrsaas.organization.client.ApprovalClient;
 import com.hrsaas.organization.service.ReorgImpactAnalyzer.DepartmentChange;
 import com.hrsaas.organization.service.ReorgImpactAnalyzer.ImpactAnalysisResult;
 import com.hrsaas.organization.service.ReorgImpactAnalyzer.ReorgPlan;
@@ -15,10 +16,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -27,6 +32,9 @@ class ReorgImpactAnalyzerTest {
 
     @Mock
     private EmployeeClient employeeClient;
+
+    @Mock
+    private ApprovalClient approvalClient;
 
     @InjectMocks
     private ReorgImpactAnalyzer reorgImpactAnalyzer;
@@ -60,6 +68,8 @@ class ReorgImpactAnalyzerTest {
             .thenReturn(ApiResponse.success(5L));
         when(employeeClient.countByDepartmentId(eq(dept2Id)))
             .thenReturn(ApiResponse.success(3L));
+        when(approvalClient.getDepartmentApprovalCounts(anyList()))
+            .thenReturn(ApiResponse.success(Collections.emptyMap()));
 
         // when
         ImpactAnalysisResult result = reorgImpactAnalyzer.analyzeImpact(plan);
@@ -85,6 +95,8 @@ class ReorgImpactAnalyzerTest {
 
         when(employeeClient.countByDepartmentId(eq(deptId)))
             .thenReturn(ApiResponse.success(10L));
+        when(approvalClient.getDepartmentApprovalCounts(anyList()))
+            .thenReturn(ApiResponse.success(Collections.emptyMap()));
 
         // when
         ImpactAnalysisResult result = reorgImpactAnalyzer.analyzeImpact(plan);
@@ -111,6 +123,8 @@ class ReorgImpactAnalyzerTest {
         // Fallback returns -1 when employee-service is unavailable
         when(employeeClient.countByDepartmentId(eq(deptId)))
             .thenReturn(ApiResponse.success(-1L));
+        when(approvalClient.getDepartmentApprovalCounts(anyList()))
+            .thenReturn(ApiResponse.success(Collections.emptyMap()));
 
         // when
         ImpactAnalysisResult result = reorgImpactAnalyzer.analyzeImpact(plan);
@@ -122,5 +136,29 @@ class ReorgImpactAnalyzerTest {
         assertThat(result.getWarnings().get(0)).contains("직원 서비스에 연결할 수 없어");
         assertThat(result.getWarnings().get(0)).contains(deptId.toString());
         assertThat(result.getPositionChanges()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("analyzeImpact: 활성 결재가 있는 부서 삭제 시 경고를 추가한다")
+    void analyzeImpact_deleteWithActiveApprovals_addsWarning() {
+        // given
+        UUID deptId = UUID.randomUUID();
+        DepartmentChange change = new DepartmentChange(deptId, "DELETE", null, null);
+        ReorgPlan plan = new ReorgPlan("결재 테스트", List.of(change));
+
+        when(employeeClient.countByDepartmentId(any())).thenReturn(ApiResponse.success(0L));
+
+        Map<UUID, Long> approvalCounts = Map.of(deptId, 5L);
+        when(approvalClient.getDepartmentApprovalCounts(anyList()))
+            .thenReturn(ApiResponse.success(approvalCounts));
+
+        // when
+        ImpactAnalysisResult result = reorgImpactAnalyzer.analyzeImpact(plan);
+
+        // then
+        assertThat(result.getApprovalLineChanges()).isEqualTo(5);
+        assertThat(result.getWarnings()).hasSize(1);
+        assertThat(result.getWarnings().get(0)).contains("삭제 예정 부서에");
+        assertThat(result.getWarnings().get(0)).contains("5건");
     }
 }

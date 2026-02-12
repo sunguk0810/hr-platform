@@ -259,4 +259,11 @@ public class ApprovalController {
     public ApiResponse<ApprovalStatisticsResponse> getStatistics() {
         return ApiResponse.success(approvalService.getStatistics());
     }
+
+    @PostMapping("/department-counts")
+    @Operation(summary = "부서별 활성 결재 건수 조회")
+    @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
+    public ApiResponse<Map<UUID, Long>> getDepartmentApprovalCounts(@RequestBody List<UUID> departmentIds) {
+        return ApiResponse.success(approvalService.getDepartmentApprovalCounts(departmentIds));
+    }
 }

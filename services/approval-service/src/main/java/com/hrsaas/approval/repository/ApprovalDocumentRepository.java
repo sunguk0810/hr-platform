@@ -82,4 +82,14 @@ public interface ApprovalDocumentRepository extends JpaRepository<ApprovalDocume
     @Query("SELECT d FROM ApprovalDocument d WHERE d.status = 'IN_PROGRESS' " +
            "AND d.deadlineAt IS NOT NULL AND d.deadlineAt < :now AND d.escalated = false")
     List<ApprovalDocument> findOverdueDocuments(@Param("now") java.time.Instant now);
+
+    @Query("SELECT d.drafterDepartmentId, COUNT(d) FROM ApprovalDocument d " +
+           "WHERE d.tenantId = :tenantId " +
+           "AND d.drafterDepartmentId IN :departmentIds " +
+           "AND d.status IN :statuses " +
+           "GROUP BY d.drafterDepartmentId")
+    List<Object[]> countActiveApprovalsByDepartments(
+        @Param("tenantId") UUID tenantId,
+        @Param("departmentIds") List<UUID> departmentIds,
+        @Param("statuses") List<ApprovalStatus> statuses);
 }

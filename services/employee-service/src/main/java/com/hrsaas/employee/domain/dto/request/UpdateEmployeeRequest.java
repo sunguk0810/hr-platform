@@ -15,6 +15,8 @@ import java.util.UUID;
 @AllArgsConstructor
 public class UpdateEmployeeRequest {
 
+    private UUID employeeId;
+
     @Size(max = 100, message = "이름은 100자 이하여야 합니다.")
     private String name;
 

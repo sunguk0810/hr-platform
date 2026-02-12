@@ -1,11 +1,13 @@
 package com.hrsaas.organization.service;
 
+import com.hrsaas.organization.client.ApprovalClient;
 import com.hrsaas.organization.client.EmployeeClient;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -13,6 +15,7 @@ import java.util.*;
 public class ReorgImpactAnalyzer {
 
     private final EmployeeClient employeeClient;
+    private final ApprovalClient approvalClient;
 
     public ImpactAnalysisResult analyzeImpact(ReorgPlan plan) {
         log.info("Analyzing reorg impact for plan: {}", plan.getTitle());
@@ -46,8 +49,36 @@ public class ReorgImpactAnalyzer {
             }
         }
 
-        // TODO: Query approval-service for active approval lines
-        result.setApprovalLineChanges(0);
+        // Query approval-service for active approval lines
+        int totalActiveApprovals = 0;
+        if (plan.getChanges() != null && !plan.getChanges().isEmpty()) {
+            List<UUID> departmentIds = plan.getChanges().stream()
+                .map(DepartmentChange::getDepartmentId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+            if (!departmentIds.isEmpty()) {
+                try {
+                    Map<UUID, Long> approvalCounts = approvalClient.getDepartmentApprovalCounts(departmentIds).getData();
+
+                    for (DepartmentChange change : plan.getChanges()) {
+                        if (change.getDepartmentId() != null) {
+                            Long count = approvalCounts.getOrDefault(change.getDepartmentId(), 0L);
+                            if (count > 0) {
+                                totalActiveApprovals += count.intValue();
+                                if ("DELETE".equalsIgnoreCase(change.getAction())) {
+                                    warnings.add("삭제 예정 부서에 " + count + "건의 진행 중인 결재가 있습니다: " + change.getDepartmentId());
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    log.error("Failed to query approval service", e);
+                    warnings.add("결재 서비스 조회 실패: 활성 결재 건수를 확인할 수 없습니다 - " + e.getMessage());
+                }
+            }
+        }
+        result.setApprovalLineChanges(totalActiveApprovals);
 
         result.setAffectedEmployeeCount(totalAffected);
         result.setPositionChanges(positionChanges);

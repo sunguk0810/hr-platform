@@ -19,6 +19,8 @@ import com.hrsaas.attendance.domain.entity.Holiday;
 import com.hrsaas.attendance.repository.AttendanceModificationLogRepository;
 import com.hrsaas.attendance.client.EmployeeServiceClient;
 import com.hrsaas.attendance.client.dto.EmployeeBasicDto;
+import com.hrsaas.attendance.domain.entity.AttendanceConfig;
+import com.hrsaas.attendance.repository.AttendanceConfigRepository;
 import com.hrsaas.attendance.repository.AttendanceRecordRepository;
 import com.hrsaas.attendance.repository.HolidayRepository;
 import com.hrsaas.attendance.repository.LeaveRequestRepository;
@@ -58,6 +60,7 @@ public class AttendanceServiceImpl implements AttendanceService {
     private final HolidayRepository holidayRepository;
     private final LeaveRequestRepository leaveRequestRepository;
     private final EmployeeServiceClient employeeServiceClient;
+    private final AttendanceConfigRepository attendanceConfigRepository;
 
     @Override
     @Transactional
@@ -82,7 +85,8 @@ public class AttendanceServiceImpl implements AttendanceService {
                 .workDate(today)
                 .build());
 
-        record.checkIn(now, request.location());
+        AttendanceConfig config = getAttendanceConfig(tenantId);
+        record.checkIn(now, request.location(), config.getStandardStartTime());
         if (request.note() != null && !request.note().isBlank()) {
             record.setNote(request.note());
         }
@@ -112,7 +116,8 @@ public class AttendanceServiceImpl implements AttendanceService {
             throw new BusinessException(AttendanceErrorCode.ALREADY_CHECKED_OUT, "이미 퇴근 처리가 되어 있습니다", HttpStatus.CONFLICT);
         }
 
-        record.checkOut(now, request.location());
+        AttendanceConfig config = getAttendanceConfig(tenantId);
+        record.checkOut(now, request.location(), config.getStandardEndTime(), config.getLunchBreakMinutes());
         if (request.note() != null && !request.note().isBlank()) {
             String existingNote = record.getNote();
             String newNote = existingNote != null ? existingNote + " | " + request.note() : request.note();
@@ -373,8 +378,9 @@ public class AttendanceServiceImpl implements AttendanceService {
     }
 
     private void recalculateTimeFields(AttendanceRecord record) {
-        LocalTime standardStartTime = LocalTime.of(9, 0);
-        LocalTime standardEndTime = LocalTime.of(18, 0);
+        AttendanceConfig config = getAttendanceConfig(record.getTenantId());
+        LocalTime standardStartTime = config.getStandardStartTime();
+        LocalTime standardEndTime = config.getStandardEndTime();
 
         // lateMinutes 재계산
         if (record.getCheckInTime() != null && record.getCheckInTime().isAfter(standardStartTime)) {
@@ -387,11 +393,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         }
 
         // workHours 재계산
-        if (record.getCheckInTime() != null && record.getCheckOutTime() != null) {
-            long minutes = Duration.between(record.getCheckInTime(), record.getCheckOutTime()).toMinutes();
-            minutes -= 60; // 점심시간 1시간 제외
-            record.setWorkHours((int) (minutes / 60));
-        }
+        record.calculateWorkHours(config.getLunchBreakMinutes());
 
         // earlyLeaveMinutes 재계산
         if (record.getCheckOutTime() != null && record.getCheckOutTime().isBefore(standardEndTime)) {
@@ -686,5 +688,13 @@ public class AttendanceServiceImpl implements AttendanceService {
             .sum();
         return BigDecimal.valueOf(totalOvertimeMinutes)
             .divide(BigDecimal.valueOf(employeeIds.size() * 60L), 1, java.math.RoundingMode.HALF_UP);
+    }
+
+    private AttendanceConfig getAttendanceConfig(UUID tenantId) {
+        return attendanceConfigRepository.findByTenantId(tenantId)
+            .orElseGet(() -> AttendanceConfig.builder()
+                .standardStartTime(LocalTime.of(9, 0))
+                .standardEndTime(LocalTime.of(18, 0))
+                .build());
     }
 }
