@@ -79,6 +79,13 @@ jwt:
 notification:
   email:
     enabled: ${NOTIFICATION_EMAIL_ENABLED:false}
+  sms:
+    enabled: ${NOTIFICATION_SMS_ENABLED:false}
+    provider: ${NOTIFICATION_SMS_PROVIDER:local} # local, aws-sns, twilio
+    twilio:
+      account-sid: ${TWILIO_ACCOUNT_SID:}
+      auth-token: ${TWILIO_AUTH_TOKEN:}
+      from-number: ${TWILIO_FROM_NUMBER:}
 
 logging:
   level:

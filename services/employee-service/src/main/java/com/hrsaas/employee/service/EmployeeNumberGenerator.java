@@ -1,9 +1,7 @@
 package com.hrsaas.employee.service;
 
 import com.hrsaas.common.tenant.TenantContext;
-import com.hrsaas.employee.domain.entity.Employee;
 import com.hrsaas.employee.domain.entity.EmployeeNumberRule;
-import com.hrsaas.employee.domain.entity.EmployeeStatus;
 import com.hrsaas.employee.repository.EmployeeNumberRuleRepository;
 import com.hrsaas.employee.repository.EmployeeRepository;
 import lombok.RequiredArgsConstructor;
@@ -103,9 +101,7 @@ public class EmployeeNumberGenerator {
         if (rule == null || !rule.getAllowReuse()) {
             return null;
         }
-        return employeeRepository.findTopByTenantIdAndNameAndBirthDateAndStatusOrderByResignDateDesc(
-                tenantId, name, birthDate, EmployeeStatus.RESIGNED)
-            .map(Employee::getEmployeeNumber)
-            .orElse(null);
+        // TODO: Search in employee_archive for resigned employees with same name+birthDate
+        return null;
     }
 }

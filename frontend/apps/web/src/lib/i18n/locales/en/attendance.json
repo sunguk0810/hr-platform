@@ -683,5 +683,11 @@
     "endTimeAfterStart": "End time must be after start time",
     "startDateRequired": "Please select a start date",
     "endDateRequired": "Please select an end date"
+  },
+  "realTime": {
+    "checkIn": "Checked In",
+    "checkInDesc": "Successfully checked in at {{time}}.",
+    "checkOut": "Checked Out",
+    "checkOutDesc": "Successfully checked out at {{time}}."
   }
 }
