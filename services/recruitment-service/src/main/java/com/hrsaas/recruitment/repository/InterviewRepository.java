@@ -106,4 +106,9 @@ public interface InterviewRepository extends JpaRepository<Interview, UUID> {
      */
     @Query("SELECT i.status, COUNT(i) FROM Interview i GROUP BY i.status")
     List<Object[]> countGroupByStatus();
+
+    /**
+     * 피드백 기한이 deadline이고 특정 상태인 면접 목록
+     */
+    List<Interview> findByFeedbackDeadlineAndStatusIn(LocalDate deadline, List<InterviewStatus> statuses);
 }

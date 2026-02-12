@@ -5,6 +5,7 @@ import com.hrsaas.common.response.PageResponse;
 import com.hrsaas.tenant.domain.dto.policy.PasswordPolicyData;
 import com.hrsaas.tenant.domain.dto.request.CreateTenantRequest;
 import com.hrsaas.tenant.domain.dto.request.UpdateTenantRequest;
+import com.hrsaas.tenant.domain.dto.response.TenantBasicResponse;
 import com.hrsaas.tenant.domain.dto.response.TenantDetailResponse;
 import com.hrsaas.tenant.domain.dto.response.TenantListItemResponse;
 import com.hrsaas.tenant.domain.dto.response.TenantResponse;
@@ -59,6 +60,9 @@ class TenantControllerTest {
 
     @MockBean
     private TenantRepository tenantRepository;
+
+    @MockBean
+    private TenantFeatureService tenantFeatureService;
 
     @MockBean
     private com.hrsaas.common.security.SecurityFilter securityFilter;
@@ -251,5 +255,21 @@ class TenantControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.minLength").value(8));
+    }
+
+    @Test
+    void getBasicInfo_permitAll_returns200() throws Exception {
+        TenantBasicResponse basicResponse = TenantBasicResponse.builder()
+                .id(testTenantId)
+                .code("ACME")
+                .name("Acme Corporation")
+                .build();
+
+        when(tenantService.getBasicInfo(testTenantId)).thenReturn(basicResponse);
+
+        mockMvc.perform(get("/api/v1/tenants/{id}/basic", testTenantId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.name").value("Acme Corporation"));
     }
 }

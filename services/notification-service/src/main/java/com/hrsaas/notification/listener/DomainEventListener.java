@@ -43,6 +43,7 @@ public class DomainEventListener {
                 case "ApprovalCompletedEvent" -> handleApprovalCompleted(event);
                 case "LeaveRequestCreatedEvent" -> handleLeaveRequested(event);
                 case "EmployeeCreatedEvent" -> handleEmployeeCreated(event);
+                case "PasswordResetCompletedEvent" -> handlePasswordResetCompleted(event);
                 default -> log.debug("Ignoring event type: {}", eventType);
             }
         } catch (Exception e) {
@@ -167,6 +168,30 @@ public class DomainEventListener {
 
         notificationService.send(request);
         log.info("Welcome notification sent: employeeId={}, name={}", employeeId, name);
+    }
+
+    private void handlePasswordResetCompleted(JsonNode event) {
+        UUID userId = getUUID(event, "userId");
+        if (userId == null) return;
+
+        String username = getText(event, "username", "");
+        String tempPassword = getText(event, "tempPassword", "");
+        String email = getText(event, "email", "");
+
+        SendNotificationRequest request = SendNotificationRequest.builder()
+                .recipientId(userId)
+                .recipientEmail(email)
+                .notificationType(NotificationType.PASSWORD_RESET)
+                .channels(List.of(NotificationChannel.EMAIL))
+                .title("[알림] 비밀번호가 초기화되었습니다")
+                .content(String.format("비밀번호가 초기화되었습니다.\n사용자명: %s\n임시 비밀번호: %s\n로그인 후 비밀번호를 변경해주세요.", username, tempPassword))
+                .linkUrl("/login")
+                .referenceType("USER")
+                .referenceId(userId)
+                .build();
+
+        notificationService.send(request);
+        log.info("Password reset notification sent: userId={}", userId);
     }
 
     /**

@@ -24,7 +24,7 @@ public class EmployeeDashboardService {
 
     public DashboardBirthdayResponse getBirthdays() {
         UUID tenantId = TenantContext.getCurrentTenant();
-        LocalDate today = LocalDate.now();
+        LocalDate today = getToday();
 
         int todayMonthDay = today.getMonthValue() * 100 + today.getDayOfMonth();
 
@@ -63,7 +63,7 @@ public class EmployeeDashboardService {
 
     public EmployeeSummaryResponse getEmployeeSummary() {
         UUID tenantId = TenantContext.getCurrentTenant();
-        YearMonth currentMonth = YearMonth.now();
+        YearMonth currentMonth = getCurrentMonth();
         LocalDate monthStart = currentMonth.atDay(1);
         LocalDate monthEnd = currentMonth.atEndOfMonth();
 
@@ -78,5 +78,13 @@ public class EmployeeDashboardService {
             .newHiresThisMonth(newHires)
             .resignedThisMonth(resigned)
             .build();
+    }
+
+    protected LocalDate getToday() {
+        return LocalDate.now();
+    }
+
+    protected YearMonth getCurrentMonth() {
+        return YearMonth.now();
     }
 }
