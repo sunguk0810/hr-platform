@@ -67,6 +67,14 @@ public class EmployeeController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
+    @GetMapping("/department/{departmentId}")
+    @Operation(summary = "부서 소속 직원 목록 조회")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<List<EmployeeResponse>>> getByDepartment(@PathVariable UUID departmentId) {
+        List<EmployeeResponse> response = employeeService.getByDepartment(departmentId);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "직원 상세 조회")
     @PreAuthorize("hasAnyRole('EMPLOYEE', 'HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN') and @permissionChecker.canAccessEmployee(#id)")

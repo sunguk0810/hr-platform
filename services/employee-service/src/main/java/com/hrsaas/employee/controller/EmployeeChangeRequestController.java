@@ -22,7 +22,7 @@ import java.util.UUID;
  * REST controller for employee self-service change requests.
  */
 @RestController
-@RequestMapping("/api/v1/employees/me/change-requests")
+@RequestMapping({"/api/v1/employees/me/change-requests", "/api/v1/my-info/change-requests"})
 @RequiredArgsConstructor
 @Tag(name = "EmployeeChangeRequest", description = "본인 정보 변경 요청 API")
 public class EmployeeChangeRequestController {

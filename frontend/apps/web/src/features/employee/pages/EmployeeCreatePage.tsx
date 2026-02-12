@@ -20,6 +20,7 @@ import { User, Upload, ArrowLeft, Save, Loader2, Hash, AlertCircle } from 'lucid
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useOrganizationTree } from '@/features/organization/hooks/useOrganization';
 import { useCreateEmployee } from '../hooks/useEmployees';
+import { apiClient } from '@/lib/apiClient';
 import type { CreateEmployeeRequest, Gender, DepartmentTreeNode } from '@hr-platform/shared-types';
 
 interface EmployeeNumberRule {
@@ -104,8 +105,8 @@ export default function EmployeeCreatePage() {
   useEffect(() => {
     const fetchPreview = async () => {
       try {
-        const response = await fetch('/api/v1/settings/employee-number-rule/preview');
-        const data = await response.json();
+        const response = await apiClient.get('/employees/number-rules/preview');
+        const data = response.data;
         if (data.success) {
           setNumberPreview(data.data);
         }

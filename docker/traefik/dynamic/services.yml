@@ -34,7 +34,7 @@ http:
       middlewares:
         - cors-headers
     employee:
-      rule: "PathPrefix(`/api/v1/employees`) || PathPrefix(`/api/v1/transfers`) || PathPrefix(`/api/v1/employee-numbers`) || PathPrefix(`/api/v1/condolences`) || PathPrefix(`/api/v1/profile`) || PathPrefix(`/api/v1/my-info`)"
+      rule: "PathPrefix(`/api/v1/employees`) || PathPrefix(`/api/v1/transfers`) || PathPrefix(`/api/v1/employee-numbers`) || PathPrefix(`/api/v1/condolences`) || PathPrefix(`/api/v1/employee-cards`) || PathPrefix(`/api/v1/profile`) || PathPrefix(`/api/v1/my-info`) || PathPrefix(`/api/v1/settings/employee-number-rule`)"
       entryPoints:
         - web
       service: employee-service
@@ -55,14 +55,14 @@ http:
       middlewares:
         - cors-headers
     notification:
-      rule: "PathPrefix(`/api/v1/notifications`)"
+      rule: "PathPrefix(`/api/v1/notifications`) || PathPrefix(`/api/v1/settings/notification-channels`)"
       entryPoints:
         - web
       service: notification-service
       middlewares:
         - cors-headers
     file:
-      rule: "PathPrefix(`/api/v1/files`)"
+      rule: "PathPrefix(`/api/v1/files`) || PathPrefix(`/api/v1/settings/file-upload-policy`)"
       entryPoints:
         - web
       service: file-service

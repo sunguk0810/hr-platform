@@ -2,6 +2,8 @@ package com.hrsaas.organization.controller;
 
 import com.hrsaas.common.response.ApiResponse;
 import com.hrsaas.common.response.PageResponse;
+import com.hrsaas.organization.client.EmployeeClient;
+import com.hrsaas.organization.client.dto.EmployeeClientResponse;
 import com.hrsaas.organization.domain.dto.request.CreateDepartmentRequest;
 import com.hrsaas.organization.domain.dto.request.DepartmentMergeRequest;
 import com.hrsaas.organization.domain.dto.request.DepartmentSplitRequest;
@@ -32,6 +34,7 @@ public class DepartmentController {
 
     private final DepartmentService departmentService;
     private final ReorgImpactAnalyzer reorgImpactAnalyzer;
+    private final EmployeeClient employeeClient;
 
     @PostMapping
     @Operation(summary = "부서 생성")
@@ -64,6 +67,14 @@ public class DepartmentController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<List<DepartmentTreeResponse>>> getTree() {
         List<DepartmentTreeResponse> response = departmentService.getTree();
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @GetMapping("/{id}/employees")
+    @Operation(summary = "부서 소속 직원 목록 조회")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<List<EmployeeClientResponse>>> getDepartmentEmployees(@PathVariable UUID id) {
+        List<EmployeeClientResponse> response = employeeClient.getEmployeesByDepartment(id).getData();
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

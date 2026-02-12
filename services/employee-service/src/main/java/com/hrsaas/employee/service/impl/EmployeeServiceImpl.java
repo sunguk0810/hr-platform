@@ -466,6 +466,16 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
+    public List<EmployeeResponse> getByDepartment(UUID departmentId) {
+        List<Employee> employees = employeeRepository.findByDepartmentIdAndStatus(departmentId, EmployeeStatus.ACTIVE);
+        List<EmployeeResponse> responses = employees.stream()
+            .map(EmployeeResponse::from)
+            .toList();
+        populateNames(responses);
+        return responses;
+    }
+
+    @Override
     @Transactional
     @CacheEvict(value = CacheNames.EMPLOYEE, allEntries = true)
     public void suspend(UUID id) {

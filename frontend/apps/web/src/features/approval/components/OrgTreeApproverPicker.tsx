@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { OrgTree } from '@/features/organization/components/OrgTree';
+import { apiClient } from '@/lib/apiClient';
 import { Search, UserPlus, X, Check } from 'lucide-react';
 import type { DepartmentTreeNode } from '@hr-platform/shared-types';
 
@@ -61,8 +62,8 @@ export function OrgTreeApproverPicker({
   const { data: treeData } = useQuery({
     queryKey: ['departments', 'tree'],
     queryFn: async () => {
-      const res = await fetch('/api/v1/departments/tree');
-      const json = await res.json();
+      const res = await apiClient.get('/departments/tree');
+      const json = res.data;
       return json.data as DepartmentTreeNode[];
     },
     enabled: open,
@@ -72,8 +73,8 @@ export function OrgTreeApproverPicker({
   const { data: employees, isLoading: isLoadingEmployees } = useQuery({
     queryKey: ['departments', selectedDeptId, 'employees'],
     queryFn: async () => {
-      const res = await fetch(`/api/v1/departments/${selectedDeptId}/employees`);
-      const json = await res.json();
+      const res = await apiClient.get(`/departments/${selectedDeptId}/employees`);
+      const json = res.data;
       return json.data as DepartmentEmployee[];
     },
     enabled: !!selectedDeptId && open,

@@ -241,7 +241,7 @@ services:
         condition: service_healthy
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.employee.rule=PathPrefix(`/api/v1/employees`) || PathPrefix(`/api/v1/transfers`) || PathPrefix(`/api/v1/condolences`) || PathPrefix(`/api/v1/employee-cards`) || PathPrefix(`/api/v1/profile`)"
+      - "traefik.http.routers.employee.rule=PathPrefix(`/api/v1/employees`) || PathPrefix(`/api/v1/transfers`) || PathPrefix(`/api/v1/condolences`) || PathPrefix(`/api/v1/employee-cards`) || PathPrefix(`/api/v1/profile`) || PathPrefix(`/api/v1/my-info`) || PathPrefix(`/api/v1/settings/employee-number-rule`)"
       - "traefik.http.routers.employee.entrypoints=web"
       - "traefik.http.routers.employee.middlewares=cors-headers@file,rate-limit@file"
       - "traefik.http.services.employee.loadbalancer.server.port=8084"
@@ -351,7 +351,7 @@ services:
         condition: service_healthy
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.notification.rule=PathPrefix(`/api/v1/notifications`) || PathPrefix(`/api/v1/announcements`) || PathPrefix(`/api/v1/help`)"
+      - "traefik.http.routers.notification.rule=PathPrefix(`/api/v1/notifications`) || PathPrefix(`/api/v1/announcements`) || PathPrefix(`/api/v1/help`) || PathPrefix(`/api/v1/settings/notification-channels`)"
       - "traefik.http.routers.notification.entrypoints=web"
       - "traefik.http.routers.notification.middlewares=cors-headers@file,rate-limit@file"
       - "traefik.http.services.notification.loadbalancer.server.port=8088"
@@ -382,7 +382,7 @@ services:
         condition: service_healthy
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.file.rule=PathPrefix(`/api/v1/files`)"
+      - "traefik.http.routers.file.rule=PathPrefix(`/api/v1/files`) || PathPrefix(`/api/v1/settings/file-upload-policy`)"
       - "traefik.http.routers.file.entrypoints=web"
       - "traefik.http.routers.file.middlewares=cors-headers@file,rate-limit@file"
       - "traefik.http.services.file.loadbalancer.server.port=8089"

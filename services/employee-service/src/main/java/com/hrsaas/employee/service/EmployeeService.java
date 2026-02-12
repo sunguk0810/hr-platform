@@ -54,6 +54,8 @@ public interface EmployeeService {
 
     List<EmployeeResponse> getList(EmployeeSearchCondition condition);
 
+    List<EmployeeResponse> getByDepartment(UUID departmentId);
+
     void suspend(UUID id);
 
     void activate(UUID id);

@@ -5,16 +5,21 @@ import com.hrsaas.approval.domain.dto.request.CreateApprovalRequest;
 import com.hrsaas.approval.domain.dto.request.DelegateStepRequest;
 import com.hrsaas.approval.domain.dto.request.DirectApproveStepRequest;
 import com.hrsaas.approval.domain.dto.request.ProcessApprovalRequest;
+import com.hrsaas.approval.domain.entity.ApprovalLine;
+import com.hrsaas.approval.domain.entity.ApprovalLineStatus;
+import com.hrsaas.approval.domain.entity.ApprovalLineType;
 import com.hrsaas.approval.domain.entity.ApprovalActionType;
 import com.hrsaas.approval.domain.dto.response.ApprovalDocumentResponse;
 import com.hrsaas.approval.domain.dto.response.ApprovalHistoryResponse;
 import com.hrsaas.approval.domain.dto.response.ApprovalStatisticsResponse;
 import com.hrsaas.approval.domain.dto.response.ApprovalSummaryResponse;
 import com.hrsaas.approval.domain.dto.response.BatchApprovalResponse;
+import com.hrsaas.approval.repository.ApprovalDocumentRepository;
 import com.hrsaas.approval.service.ApprovalService;
 import com.hrsaas.common.response.ApiResponse;
 import com.hrsaas.common.response.PageResponse;
 import com.hrsaas.common.security.SecurityContextHolder;
+import com.hrsaas.common.security.UserContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -27,6 +32,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.HashSet;
 import java.util.UUID;
 
 @RestController
@@ -36,6 +42,7 @@ import java.util.UUID;
 public class ApprovalController {
 
     private final ApprovalService approvalService;
+    private final ApprovalDocumentRepository approvalDocumentRepository;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -124,6 +131,97 @@ public class ApprovalController {
             @PageableDefault(size = 20) Pageable pageable) {
         UUID userId = SecurityContextHolder.getCurrentUser().getUserId();
         return ApiResponse.success(approvalService.search(status, type, userId, pageable));
+    }
+
+    @GetMapping("/recommend-line")
+    @Operation(summary = "결재선 추천")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<Map<String, List<Map<String, String>>>> recommendLine(
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) UUID departmentId) {
+        UserContext currentUser = SecurityContextHolder.getCurrentUser();
+        String normalizedType = type != null ? type : "GENERAL";
+        UUID effectiveDepartmentId = departmentId != null ? departmentId : currentUser.getDepartmentId();
+
+        Map<String, String> defaultApprover = Map.of(
+            "id", currentUser.getUserId().toString(),
+            "name", currentUser.getEmployeeName() != null ? currentUser.getEmployeeName() :
+                (currentUser.getUsername() != null ? currentUser.getUsername() : ""),
+            "position", "담당자",
+            "department", currentUser.getDepartmentName() != null ? currentUser.getDepartmentName() : ""
+        );
+
+        List<Map<String, String>> approvers = List.of(defaultApprover);
+        return ApiResponse.success(Map.of("approvers", approvers),
+            "Recommended approval line generated for type=" + normalizedType +
+                (effectiveDepartmentId != null ? ", departmentId=" + effectiveDepartmentId : ""));
+    }
+
+    @PutMapping("/{id}/approval-line")
+    @Operation(summary = "결재선 수정")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<ApprovalDocumentResponse> updateApprovalLine(
+            @PathVariable UUID id,
+            @RequestBody ApprovalLineUpdateRequest request) {
+        var document = approvalDocumentRepository.findByIdWithLinesAndHistories(id)
+            .orElseThrow(() -> new com.hrsaas.common.core.exception.NotFoundException("APR_001", "결재 문서를 찾을 수 없습니다: " + id));
+
+        Map<UUID, ApprovalLine> existingById = document.getApprovalLines().stream()
+            .collect(java.util.stream.Collectors.toMap(ApprovalLine::getId, line -> line));
+        HashSet<UUID> payloadIds = new HashSet<>();
+        List<ApprovalLine> nextLines = new java.util.ArrayList<>();
+
+        for (ApprovalLine current : document.getApprovalLines()) {
+            if (current.getStatus() != ApprovalLineStatus.WAITING) {
+                nextLines.add(current);
+            }
+        }
+
+        for (ApprovalLineStepRequest step : request.getSteps()) {
+            if (step.getId() != null) {
+                UUID lineId = UUID.fromString(step.getId());
+                payloadIds.add(lineId);
+                ApprovalLine existing = existingById.get(lineId);
+                if (existing != null) {
+                    if (existing.getStatus() == ApprovalLineStatus.WAITING) {
+                        existing.setSequence(step.getSequence());
+                        existing.setApproverId(UUID.fromString(step.getApproverId()));
+                        existing.setApproverName(step.getApproverName());
+                        existing.setApproverDepartmentName(step.getApproverDepartmentName());
+                        existing.setApproverPosition(step.getApproverPosition());
+                    }
+                    if (!nextLines.contains(existing)) {
+                        nextLines.add(existing);
+                    }
+                }
+                continue;
+            }
+
+            ApprovalLine newLine = ApprovalLine.builder()
+                .document(document)
+                .sequence(step.getSequence())
+                .lineType(ApprovalLineType.SEQUENTIAL)
+                .approverId(UUID.fromString(step.getApproverId()))
+                .approverName(step.getApproverName())
+                .approverDepartmentName(step.getApproverDepartmentName())
+                .approverPosition(step.getApproverPosition())
+                .status(ApprovalLineStatus.WAITING)
+                .build();
+            nextLines.add(newLine);
+        }
+
+        for (ApprovalLine current : document.getApprovalLines()) {
+            if (current.getStatus() == ApprovalLineStatus.WAITING && current.getId() != null && !payloadIds.contains(current.getId())) {
+                // removed waiting line: skip adding to nextLines
+            }
+        }
+
+        nextLines.sort(java.util.Comparator.comparing(ApprovalLine::getSequence));
+        document.getApprovalLines().clear();
+        document.getApprovalLines().addAll(nextLines);
+
+        var saved = approvalDocumentRepository.save(document);
+        return ApiResponse.success(ApprovalDocumentResponse.from(saved));
     }
 
     @PostMapping("/{id}/approve")
@@ -265,5 +363,22 @@ public class ApprovalController {
     @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
     public ApiResponse<Map<UUID, Long>> getDepartmentApprovalCounts(@RequestBody List<UUID> departmentIds) {
         return ApiResponse.success(approvalService.getDepartmentApprovalCounts(departmentIds));
+    }
+
+    @lombok.Data
+    public static class ApprovalLineUpdateRequest {
+        private List<ApprovalLineStepRequest> steps;
+        private String reason;
+    }
+
+    @lombok.Data
+    public static class ApprovalLineStepRequest {
+        private String id;
+        private Integer sequence;
+        private String approverId;
+        private String approverName;
+        private String approverDepartmentName;
+        private String approverPosition;
+        private String status;
     }
 }

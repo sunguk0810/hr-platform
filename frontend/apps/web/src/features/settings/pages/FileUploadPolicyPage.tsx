@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/useToast';
+import { apiClient } from '@/lib/apiClient';
 import { Save, Upload, HardDrive, FileType, Loader2 } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
@@ -97,8 +98,8 @@ export default function FileUploadPolicyPage() {
   useEffect(() => {
     const fetchPolicy = async () => {
       try {
-        const response = await fetch('/api/v1/settings/file-upload-policy');
-        const data = await response.json();
+        const response = await apiClient.get('/settings/file-upload-policy');
+        const data = response.data;
         if (data.success) {
           setDefaultPolicy(data.data.defaultPolicy);
           setCategoryOverrides(data.data.categoryOverrides);
@@ -215,12 +216,11 @@ export default function FileUploadPolicyPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const response = await fetch('/api/v1/settings/file-upload-policy', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ defaultPolicy, categoryOverrides }),
+      const response = await apiClient.put('/settings/file-upload-policy', {
+        defaultPolicy,
+        categoryOverrides,
       });
-      const data = await response.json();
+      const data = response.data;
 
       if (data.success) {
         toast({

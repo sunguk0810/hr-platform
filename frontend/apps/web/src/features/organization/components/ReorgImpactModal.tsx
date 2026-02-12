@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { AlertTriangle, GitMerge, GitBranch, Pencil, Trash2, Users, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { showErrorToast } from '@/components/common/Error/ErrorToast';
+import { apiClient } from '@/lib/apiClient';
 
 /**
  * Position titles that indicate a manager role.
@@ -100,12 +101,23 @@ export function ReorgImpactModal({
   const fetchImpactData = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(
-        `/api/v1/organizations/departments/${sourceDepartment.id}/impact?changeType=${changeType}`
-      );
-      const json = await response.json();
-      if (json.success) {
-        setImpactData(json.data);
+      const response = await apiClient.post('/departments/reorg/impact', {
+        title: `${changeType}:${sourceDepartment.name}`,
+        changes: [
+          {
+            departmentId: sourceDepartment.id,
+            action: changeType.toUpperCase(),
+            targetDepartmentId: targetDepartment?.id,
+            newName: targetDepartment?.name,
+          },
+        ],
+      });
+      const json = response.data;
+      if (json.success && json.data) {
+        setImpactData({
+          affectedCount: json.data.affectedEmployeeCount ?? 0,
+          employees: [],
+        });
       }
     } catch (error) {
       showErrorToast(error, { title: t('reorg.loadFailed') });

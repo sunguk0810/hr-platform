@@ -56,4 +56,10 @@ public class EmployeeClientFallback implements EmployeeClient {
         log.warn("EmployeeClient fallback: getBatch({})", ids.size());
         return ApiResponse.success(Collections.emptyList());
     }
+
+    @Override
+    public ApiResponse<List<EmployeeClientResponse>> getEmployeesByDepartment(UUID departmentId) {
+        log.warn("EmployeeClient fallback: getEmployeesByDepartment({})", departmentId);
+        return ApiResponse.success(Collections.emptyList());
+    }
 }

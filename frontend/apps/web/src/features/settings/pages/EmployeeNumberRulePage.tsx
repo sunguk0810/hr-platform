@@ -15,13 +15,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/useToast';
+import { apiClient } from '@/lib/apiClient';
 import { Save, Loader2, Eye, Hash, Settings2, RefreshCw, Info } from 'lucide-react';
 
 interface EmployeeNumberRule {
   prefix: string;
   includeYear: boolean;
   sequenceDigits: number;
-  allowRecycling: boolean;
+  allowReuse: boolean;
 }
 
 export default function EmployeeNumberRulePage() {
@@ -34,7 +35,7 @@ export default function EmployeeNumberRulePage() {
     prefix: 'EMP',
     includeYear: true,
     sequenceDigits: 3,
-    allowRecycling: false,
+    allowReuse: false,
   });
 
   // Track the saved rule to detect changes
@@ -42,7 +43,7 @@ export default function EmployeeNumberRulePage() {
     prefix: 'EMP',
     includeYear: true,
     sequenceDigits: 3,
-    allowRecycling: false,
+    allowReuse: false,
   });
 
   const hasChanges = useMemo(() => {
@@ -50,7 +51,7 @@ export default function EmployeeNumberRulePage() {
       rule.prefix !== savedRule.prefix ||
       rule.includeYear !== savedRule.includeYear ||
       rule.sequenceDigits !== savedRule.sequenceDigits ||
-      rule.allowRecycling !== savedRule.allowRecycling
+      rule.allowReuse !== savedRule.allowReuse
     );
   }, [rule, savedRule]);
 
@@ -83,9 +84,9 @@ export default function EmployeeNumberRulePage() {
   useEffect(() => {
     const fetchRule = async () => {
       try {
-        const response = await fetch('/api/v1/settings/employee-number-rule');
-        const data = await response.json();
-        if (data.success) {
+        const response = await apiClient.get('/employees/number-rules');
+        const data = response.data;
+        if (data.success && data.data) {
           setRule(data.data);
           setSavedRule(data.data);
         }
@@ -115,12 +116,8 @@ export default function EmployeeNumberRulePage() {
 
     setIsSaving(true);
     try {
-      const response = await fetch('/api/v1/settings/employee-number-rule', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(rule),
-      });
-      const data = await response.json();
+      const response = await apiClient.put('/employees/number-rules', rule);
+      const data = response.data;
 
       if (data.success) {
         setSavedRule(data.data);
@@ -324,20 +321,20 @@ export default function EmployeeNumberRulePage() {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between max-w-xs">
               <div className="space-y-0.5">
-                <Label htmlFor="allowRecycling">{t('employeeNumberRule.recycling.toggleLabel')}</Label>
+                <Label htmlFor="allowReuse">{t('employeeNumberRule.recycling.toggleLabel')}</Label>
                 <p className="text-sm text-muted-foreground">
                   {t('employeeNumberRule.recycling.toggleDescription')}
                 </p>
               </div>
               <Switch
-                id="allowRecycling"
-                checked={rule.allowRecycling}
+                id="allowReuse"
+                checked={rule.allowReuse}
                 onCheckedChange={(checked) =>
-                  setRule((prev) => ({ ...prev, allowRecycling: checked }))
+                  setRule((prev) => ({ ...prev, allowReuse: checked }))
                 }
               />
             </div>
-            {rule.allowRecycling && (
+            {rule.allowReuse && (
               <div className="flex items-start gap-2 p-3 rounded-md bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800">
                 <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
                 <p className="text-sm text-blue-700 dark:text-blue-300">

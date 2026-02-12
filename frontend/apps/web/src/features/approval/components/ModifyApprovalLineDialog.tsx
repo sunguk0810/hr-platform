@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/useToast';
+import { apiClient } from '@/lib/apiClient';
 import { User, Plus, Trash2, Search, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import type { ApprovalLine, ApprovalLineStatus } from '@hr-platform/shared-types';
 
@@ -187,24 +188,20 @@ export function ModifyApprovalLineDialog({
 
     setIsSaving(true);
     try {
-      const response = await fetch(`/api/v1/approvals/${approvalId}/approval-line`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          steps: modifiedSteps.map((s) => ({
-            id: s.isNew ? undefined : s.id,
-            sequence: s.sequence,
-            approverId: s.approverId,
-            approverName: s.approverName,
-            approverDepartmentName: s.approverDepartmentName,
-            approverPosition: s.approverPosition,
-            status: s.status,
-          })),
-          reason,
-        }),
+      const response = await apiClient.put(`/approvals/${approvalId}/approval-line`, {
+        steps: modifiedSteps.map((s) => ({
+          id: s.isNew ? undefined : s.id,
+          sequence: s.sequence,
+          approverId: s.approverId,
+          approverName: s.approverName,
+          approverDepartmentName: s.approverDepartmentName,
+          approverPosition: s.approverPosition,
+          status: s.status,
+        })),
+        reason,
       });
 
-      const data = await response.json();
+      const data = response.data;
 
       if (data.success) {
         toast({

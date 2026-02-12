@@ -41,4 +41,7 @@ public interface EmployeeClient {
 
     @PostMapping("/api/v1/employees/batch")
     ApiResponse<List<EmployeeClientResponse>> getBatch(@RequestBody List<UUID> ids);
+
+    @GetMapping("/api/v1/employees/department/{departmentId}")
+    ApiResponse<List<EmployeeClientResponse>> getEmployeesByDepartment(@PathVariable("departmentId") UUID departmentId);
 }

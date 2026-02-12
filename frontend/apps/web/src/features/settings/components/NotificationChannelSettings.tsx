@@ -28,6 +28,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/useToast';
+import { apiClient } from '@/lib/apiClient';
 import { Mail, MessageSquare, Send, FlaskConical, Save } from 'lucide-react';
 
 // --- Types ---
@@ -116,12 +117,11 @@ export function NotificationChannelSettings() {
   const handleSmtpConnectionTest = async () => {
     setIsTestingSmtp(true);
     try {
-      const response = await fetch('/api/v1/settings/notification-channels/test-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'connection', smtp }),
+      const response = await apiClient.post('/settings/notification-channels/test-email', {
+        type: 'connection',
+        smtp,
       });
-      const result = await response.json();
+      const result = response.data;
       if (result.success) {
         toast({
           title: t('notificationChannelSettings.toast.smtpTestSuccess'),
@@ -149,12 +149,12 @@ export function NotificationChannelSettings() {
     if (!testEmailAddress.trim()) return;
     setIsSending(true);
     try {
-      const response = await fetch('/api/v1/settings/notification-channels/test-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'send', smtp, recipientEmail: testEmailAddress }),
+      const response = await apiClient.post('/settings/notification-channels/test-email', {
+        type: 'send',
+        smtp,
+        recipientEmail: testEmailAddress,
       });
-      const result = await response.json();
+      const result = response.data;
       if (result.success) {
         toast({
           title: t('notificationChannelSettings.toast.testSendSuccess'),
@@ -183,12 +183,11 @@ export function NotificationChannelSettings() {
   const handleSmsConnectionTest = async () => {
     setIsTestingSms(true);
     try {
-      const response = await fetch('/api/v1/settings/notification-channels/test-sms', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'connection', sms }),
+      const response = await apiClient.post('/settings/notification-channels/test-sms', {
+        type: 'connection',
+        sms,
       });
-      const result = await response.json();
+      const result = response.data;
       if (result.success) {
         toast({
           title: t('notificationChannelSettings.toast.smsTestSuccess'),
@@ -216,12 +215,12 @@ export function NotificationChannelSettings() {
     if (!testPhoneNumber.trim()) return;
     setIsSending(true);
     try {
-      const response = await fetch('/api/v1/settings/notification-channels/test-sms', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'send', sms, recipientPhone: testPhoneNumber }),
+      const response = await apiClient.post('/settings/notification-channels/test-sms', {
+        type: 'send',
+        sms,
+        recipientPhone: testPhoneNumber,
       });
-      const result = await response.json();
+      const result = response.data;
       if (result.success) {
         toast({
           title: t('notificationChannelSettings.toast.testSendSuccess'),
@@ -260,12 +259,8 @@ export function NotificationChannelSettings() {
   const handleSaveAll = async () => {
     setIsSaving(true);
     try {
-      const response = await fetch('/api/v1/settings/notification-channels', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ smtp, sms, channelMappings }),
-      });
-      const result = await response.json();
+      const response = await apiClient.put('/settings/notification-channels', { smtp, sms, channelMappings });
+      const result = response.data;
       if (result.success) {
         toast({
           title: t('notificationChannelSettings.toast.saveSuccess'),

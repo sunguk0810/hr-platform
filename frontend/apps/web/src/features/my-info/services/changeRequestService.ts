@@ -70,7 +70,7 @@ export const changeRequestService = {
   ): Promise<ApiResponse<MyInfoChangeRequest[]>> {
     const params = status && status !== 'ALL' ? { status } : {};
     const response = await apiClient.get<ApiResponse<MyInfoChangeRequest[]>>(
-      '/my-info/change-requests',
+      '/employees/me/change-requests',
       { params }
     );
     return response.data;
@@ -83,7 +83,7 @@ export const changeRequestService = {
     data: CreateChangeRequestPayload
   ): Promise<ApiResponse<MyInfoChangeRequest>> {
     const response = await apiClient.post<ApiResponse<MyInfoChangeRequest>>(
-      '/my-info/change-requests',
+      '/employees/me/change-requests',
       data
     );
     return response.data;

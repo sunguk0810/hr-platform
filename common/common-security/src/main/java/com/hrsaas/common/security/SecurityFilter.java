@@ -47,11 +47,25 @@ public class SecurityFilter extends OncePerRequestFilter {
 
     private void extractFromJwt(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        String token = null;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+        }
+
+        // EventSource cannot set custom Authorization headers in browsers.
+        // Allow access_token query parameter for SSE subscription endpoints only.
+        if (token == null && request.getRequestURI() != null &&
+            request.getRequestURI().startsWith("/api/v1/notifications/sse/")) {
+            String queryToken = request.getParameter("access_token");
+            if (queryToken != null && !queryToken.isBlank()) {
+                token = queryToken;
+            }
+        }
+
+        if (token == null) {
             return;
         }
 
-        String token = authHeader.substring(7);
         try {
             UserContext context = jwtTokenProvider.parseToken(token);
             SecurityContextHolder.setContext(context);
