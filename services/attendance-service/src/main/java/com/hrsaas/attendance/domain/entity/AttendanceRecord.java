@@ -67,10 +67,10 @@ public class AttendanceRecord extends TenantAwareEntity {
         calculateLateMinutes(standardStartTime);
     }
 
-    public void checkOut(LocalTime time, String location, LocalTime standardEndTime) {
+    public void checkOut(LocalTime time, String location, LocalTime standardEndTime, int lunchBreakMinutes) {
         this.checkOutTime = time;
         this.checkOutLocation = location;
-        calculateWorkHours();
+        calculateWorkHours(lunchBreakMinutes);
         calculateEarlyLeaveMinutes(standardEndTime);
         calculateOvertimeMinutes(standardEndTime);
     }
@@ -91,11 +91,18 @@ public class AttendanceRecord extends TenantAwareEntity {
         }
     }
 
-    private void calculateWorkHours() {
+    public void calculateWorkHours(int lunchBreakMinutes) {
         if (checkInTime != null && checkOutTime != null) {
             long minutes = java.time.Duration.between(checkInTime, checkOutTime).toMinutes();
-            minutes -= 60; // 점심시간 1시간 제외
-            this.workHours = (int) (minutes / 60);
+
+            // TODO: Implement conditional deduction logic (Future Feature)
+            // 1. Add minWorkHoursForDeduction parameter (e.g., deduct only if worked > 4 hours)
+            // 2. Handle circular dependency: deduction depends on work hours, but work hours depend on deduction.
+            //    -> Use total stay duration (checkOut - checkIn) as the base for conditions.
+            // 3. Consider legal requirements for break time placement (e.g., middle of work).
+            minutes -= lunchBreakMinutes;
+
+            this.workHours = (int) Math.round(minutes / 60.0);
         }
     }
 
