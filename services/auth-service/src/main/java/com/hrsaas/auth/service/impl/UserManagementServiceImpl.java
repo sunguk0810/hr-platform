@@ -10,7 +10,12 @@ import com.hrsaas.auth.repository.UserSessionRepository;
 import com.hrsaas.auth.service.SessionService;
 import com.hrsaas.auth.service.UserManagementService;
 import com.hrsaas.common.core.exception.BusinessException;
+import com.hrsaas.common.event.DomainEvent;
+import com.hrsaas.common.event.EventPublisher;
+import com.hrsaas.common.event.EventTopics;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -31,6 +36,7 @@ public class UserManagementServiceImpl implements UserManagementService {
     private final UserSessionRepository userSessionRepository;
     private final PasswordEncoder passwordEncoder;
     private final SessionService sessionService;
+    private final EventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -124,7 +130,14 @@ public class UserManagementServiceImpl implements UserManagementService {
         userRepository.save(user);
 
         log.info("Password reset completed for user: {}", userId);
-        // TODO: Send notification with temporary password via event
+
+        // Send notification with temporary password via event
+        PasswordResetCompletedEvent event = PasswordResetCompletedEvent.builder()
+                .userId(user.getUsername())
+                .email(user.getEmail())
+                .tempPassword(tempPassword)
+                .build();
+        eventPublisher.publish(event);
     }
 
     private UserEntity findUserById(UUID userId) {
@@ -151,5 +164,21 @@ public class UserManagementServiceImpl implements UserManagementService {
                 .createdAt(user.getCreatedAt())
                 .activeSessionCount(sessionCount)
                 .build();
+    }
+
+    /**
+     * Event published when an admin resets a user's password.
+     */
+    @Getter
+    @SuperBuilder
+    public static class PasswordResetCompletedEvent extends DomainEvent {
+        private final String userId;
+        private final String email;
+        private final String tempPassword;
+
+        @Override
+        public String getTopic() {
+            return EventTopics.NOTIFICATION_SEND;
+        }
     }
 }

@@ -86,7 +86,7 @@ public interface CommonCodeRepository extends JpaRepository<CommonCode, UUID> {
     /**
      * G04: 폐기된 코드 중 deprecatedAt이 있는 코드 조회
      */
-    @Query("SELECT cc FROM CommonCode cc WHERE cc.status = 'DEPRECATED' AND cc.deprecatedAt IS NOT NULL")
+    @Query("SELECT cc FROM CommonCode cc JOIN FETCH cc.codeGroup WHERE cc.status = 'DEPRECATED' AND cc.deprecatedAt IS NOT NULL")
     List<CommonCode> findAllDeprecatedWithTimestamp();
 
     /**

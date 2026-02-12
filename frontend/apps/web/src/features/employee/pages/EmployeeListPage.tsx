@@ -117,9 +117,10 @@ interface EmployeeCardProps {
   isSelected: boolean;
   onSelect: (id: string, checked: boolean) => void;
   onClick: () => void;
+  onDelete: (id: string) => void;
 }
 
-function EmployeeCard({ employee, isSelected, onSelect, onClick }: EmployeeCardProps) {
+function EmployeeCard({ employee, isSelected, onSelect, onClick, onDelete }: EmployeeCardProps) {
   const { t } = useTranslation('employee');
   const isMobile = useIsMobile();
   const getInitials = (name: string) => name.slice(0, 2);
@@ -177,8 +178,7 @@ function EmployeeCard({ employee, isSelected, onSelect, onClick }: EmployeeCardP
         icon: <Trash2 className="h-5 w-5" />,
         color: 'rgb(239, 68, 68)',
         label: t('common.delete'),
-        // eslint-disable-next-line no-console -- TODO: 삭제 다이얼로그 연결
-        onClick: () => console.log('Delete employee:', employee.id),
+        onClick: () => onDelete(employee.id),
       }}
       threshold={80}
     >
@@ -200,6 +200,7 @@ export default function EmployeeListPage() {
   const [viewMode, setViewMode] = useState<'table' | 'card'>(isMobile ? 'card' : 'table');
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [idsToDelete, setIdsToDelete] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Fetch selected employee detail for tablet split view
@@ -262,6 +263,11 @@ export default function EmployeeListPage() {
     setSelectedIds(newSet);
   };
 
+  const handleDeleteClick = (id: string) => {
+    setIdsToDelete([id]);
+    setDeleteDialogOpen(true);
+  };
+
   const isAllSelected = employees.length > 0 && employees.every((emp) => selectedIds.has(emp.id));
   const isSomeSelected = selectedIds.size > 0;
 
@@ -283,17 +289,23 @@ export default function EmployeeListPage() {
     queryClient.invalidateQueries({ queryKey: ['employees'] });
   };
 
-  const handleBulkDelete = async () => {
-    if (selectedIds.size === 0) return;
+  const handleConfirmDelete = async () => {
+    if (idsToDelete.length === 0) return;
 
     setIsDeleting(true);
     try {
-      const response = await employeeService.bulkDelete(Array.from(selectedIds));
+      const response = await employeeService.bulkDelete(idsToDelete);
       toast({
         title: t('toast.deleteComplete'),
-        description: t('listPage.deleteSuccess', { count: response.data?.deleted || selectedIds.size }),
+        description: t('listPage.deleteSuccess', { count: response.data?.deleted || idsToDelete.length }),
       });
-      setSelectedIds(new Set());
+
+      // Update selectedIds to remove deleted employees
+      const newSelectedIds = new Set(selectedIds);
+      idsToDelete.forEach((id) => newSelectedIds.delete(id));
+      setSelectedIds(newSelectedIds);
+
+      setIdsToDelete([]);
       setDeleteDialogOpen(false);
       queryClient.invalidateQueries({ queryKey: ['employees'] });
     } catch {
@@ -313,6 +325,7 @@ export default function EmployeeListPage() {
       const emails = selectedEmployees.map((emp) => emp.email).join(',');
       window.location.href = `mailto:${emails}`;
     } else if (action === 'delete') {
+      setIdsToDelete(Array.from(selectedIds));
       setDeleteDialogOpen(true);
     }
   };
@@ -528,11 +541,11 @@ export default function EmployeeListPage() {
           open={deleteDialogOpen}
           onOpenChange={setDeleteDialogOpen}
           title={t('listPage.bulkDeleteTitle')}
-          description={t('listPage.bulkDeleteDescription', { count: selectedIds.size })}
+          description={t('listPage.bulkDeleteDescription', { count: idsToDelete.length })}
           confirmLabel={t('common.delete')}
           variant="destructive"
           isLoading={isDeleting}
-          onConfirm={handleBulkDelete}
+          onConfirm={handleConfirmDelete}
         />
       </div>
     );
@@ -708,6 +721,7 @@ export default function EmployeeListPage() {
                 isSelected={selectedIds.has(employee.id)}
                 onSelect={handleSelectOne}
                 onClick={() => handleRowClick(employee.id)}
+                onDelete={handleDeleteClick}
               />
             ))}
           </div>
@@ -830,7 +844,10 @@ export default function EmployeeListPage() {
                               {t('listPage.sendEmail')}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive">
+                            <DropdownMenuItem
+                              className="text-destructive"
+                              onClick={() => handleDeleteClick(employee.id)}
+                            >
                               <Trash2 className="mr-2 h-4 w-4" />
                               {t('common.delete')}
                             </DropdownMenuItem>
@@ -866,11 +883,11 @@ export default function EmployeeListPage() {
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         title={t('listPage.bulkDeleteTitle')}
-        description={t('listPage.bulkDeleteDescription', { count: selectedIds.size })}
+        description={t('listPage.bulkDeleteDescription', { count: idsToDelete.length })}
         confirmLabel={t('common.delete')}
         variant="destructive"
         isLoading={isDeleting}
-        onConfirm={handleBulkDelete}
+        onConfirm={handleConfirmDelete}
       />
     </>
   );
