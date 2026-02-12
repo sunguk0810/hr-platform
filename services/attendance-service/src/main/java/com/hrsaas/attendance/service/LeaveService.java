@@ -7,6 +7,7 @@ import com.hrsaas.common.response.PageResponse;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -15,7 +16,7 @@ public interface LeaveService {
     LeaveRequestResponse create(CreateLeaveRequest request, UUID employeeId, String employeeName,
                                  UUID departmentId, String departmentName);
 
-    LeaveRequestResponse getById(UUID id);
+    LeaveRequestResponse getById(UUID id, UUID userId, Collection<String> roles);
 
     PageResponse<LeaveRequestResponse> getMyLeaves(UUID employeeId, Pageable pageable);
 
