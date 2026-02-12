@@ -222,7 +222,9 @@ public class ExcelCodeImportExportServiceImpl implements ExcelCodeImportExportSe
             Sheet codeSheet = workbook.createSheet("공통코드");
             writeHeaderRow(codeSheet, CODE_HEADERS, headerStyle);
 
-            // Fetch all codes for the groups in a single query
+            // Fetch all codes for the groups in a single query to avoid N+1 queries.
+            // Note: This loads all codes for the groups into memory. If the total number of codes is very large
+            // or the number of groups exceeds database IN clause limits (e.g., > 1000), consider partitioning.
             Map<UUID, List<CommonCode>> codesByGroup = new HashMap<>();
             if (!groups.isEmpty()) {
                 List<UUID> groupIds = groups.stream()

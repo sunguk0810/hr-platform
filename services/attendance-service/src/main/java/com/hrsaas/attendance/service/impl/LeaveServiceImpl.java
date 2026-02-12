@@ -33,7 +33,6 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -127,16 +126,8 @@ public class LeaveServiceImpl implements LeaveService {
     }
 
     @Override
-    public LeaveRequestResponse getById(UUID id, UUID userId, Collection<String> roles) {
+    public LeaveRequestResponse getById(UUID id) {
         LeaveRequest leaveRequest = findById(id);
-
-        boolean isAdmin = roles != null && roles.stream()
-            .anyMatch(role -> "HR_ADMIN".equals(role) || "TENANT_ADMIN".equals(role) || "SUPER_ADMIN".equals(role));
-
-        if (!leaveRequest.getEmployeeId().equals(userId) && !isAdmin) {
-            throw new ForbiddenException(AttendanceErrorCode.LEAVE_FORBIDDEN, "본인의 휴가 신청 내역만 조회할 수 있습니다");
-        }
-
         return LeaveRequestResponse.from(leaveRequest);
     }
 

@@ -1,10 +1,8 @@
 package com.hrsaas.employee.listener;
 
 import com.hrsaas.common.core.util.JsonUtils;
-import com.hrsaas.employee.domain.dto.request.UpdateEmployeeRequest;
 import com.hrsaas.employee.service.CondolenceService;
 import com.hrsaas.employee.service.EmployeeChangeRequestService;
-import com.hrsaas.employee.service.EmployeeService;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.awspring.cloud.sqs.annotation.SqsListener;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +21,6 @@ public class ApprovalCompletedListener {
 
     private final CondolenceService condolenceService;
     private final EmployeeChangeRequestService changeRequestService;
-    private final EmployeeService employeeService;
 
     @SqsListener("employee-service-queue")
     public void handleMessage(String rawMessage) {
@@ -77,62 +74,6 @@ public class ApprovalCompletedListener {
 
     private void handleAppointmentExecuted(JsonNode event) {
         log.info("Processing appointment execution event");
-        String effectiveDateStr = event.get("effectiveDate").asText();
-
-        JsonNode details = event.get("details");
-        if (details != null && details.isArray()) {
-            java.util.List<UUID> resignationIds = new java.util.ArrayList<>();
-            java.util.List<UUID> suspendIds = new java.util.ArrayList<>();
-            java.util.List<UUID> activateIds = new java.util.ArrayList<>();
-            java.util.List<UpdateEmployeeRequest> updateRequests = new java.util.ArrayList<>();
-
-            for (JsonNode detail : details) {
-                try {
-                    UUID employeeId = UUID.fromString(detail.get("employeeId").asText());
-                    String appointmentType = detail.get("appointmentType").asText();
-
-                    switch (appointmentType) {
-                        case "RESIGNATION", "RETIREMENT" -> resignationIds.add(employeeId);
-                        case "LEAVE_OF_ABSENCE" -> suspendIds.add(employeeId);
-                        case "REINSTATEMENT" -> activateIds.add(employeeId);
-                        case "PROMOTION", "TRANSFER", "POSITION_CHANGE", "JOB_CHANGE", "DEMOTION" -> {
-                            UpdateEmployeeRequest request = new UpdateEmployeeRequest();
-                            request.setEmployeeId(employeeId);
-
-                            if (detail.has("toDepartmentId") && !detail.get("toDepartmentId").isNull()) {
-                                request.setDepartmentId(UUID.fromString(detail.get("toDepartmentId").asText()));
-                            }
-                            if (detail.has("toPositionCode") && !detail.get("toPositionCode").isNull()) {
-                                request.setPositionCode(detail.get("toPositionCode").asText());
-                            }
-                            if (detail.has("toGradeCode") && !detail.get("toGradeCode").isNull()) {
-                                request.setJobTitleCode(detail.get("toGradeCode").asText());
-                            }
-
-                            if (request.getDepartmentId() != null || request.getPositionCode() != null || request.getJobTitleCode() != null) {
-                                updateRequests.add(request);
-                            }
-                        }
-                        default -> log.warn("Unsupported appointment type: {}", appointmentType);
-                    }
-                } catch (Exception e) {
-                    log.error("Failed to parse appointment detail: {}", detail, e);
-                }
-            }
-
-            // Execute bulk operations
-            if (!resignationIds.isEmpty()) {
-                employeeService.bulkResign(resignationIds, effectiveDateStr);
-            }
-            if (!suspendIds.isEmpty()) {
-                employeeService.bulkSuspend(suspendIds);
-            }
-            if (!activateIds.isEmpty()) {
-                employeeService.bulkActivate(activateIds);
-            }
-            if (!updateRequests.isEmpty()) {
-                employeeService.bulkUpdate(updateRequests);
-            }
-        }
+        // TODO: Update employee department/position based on appointment
     }
 }

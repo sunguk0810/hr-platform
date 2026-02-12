@@ -228,7 +228,7 @@ class CodeImportExportServiceImplTest {
         CommonCode code2 = createTestCode(UUID.randomUUID(), testCodeGroup, "SICK", "병가");
 
         when(codeGroupRepository.findAllForTenant(TENANT_ID)).thenReturn(List.of(testCodeGroup));
-        when(commonCodeRepository.findByCodeGroupIdIn(List.of(CODE_GROUP_ID))).thenReturn(List.of(code1, code2));
+        when(commonCodeRepository.findByCodeGroupId(CODE_GROUP_ID)).thenReturn(List.of(code1, code2));
 
         // when
         CodeExportResponse result = codeImportExportService.exportAll();

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -27,18 +27,6 @@ import { MenuTreeItem } from '../components/MenuTreeItem';
 import { MenuItemForm } from '../components/MenuItemForm';
 import { MobileMenuPreview } from '../components/MobileMenuPreview';
 import type { MenuItemResponse, CreateMenuItemRequest, UpdateMenuItemRequest } from '../types';
-
-// Flatten menus for mobile preview
-const flattenMenus = (items: MenuItemResponse[]): MenuItemResponse[] => {
-  const result: MenuItemResponse[] = [];
-  for (const item of items) {
-    result.push(item);
-    if (item.children) {
-      result.push(...flattenMenus(item.children));
-    }
-  }
-  return result;
-};
 
 export function MenuManagementPage() {
   const { t } = useTranslation('menu');
@@ -166,7 +154,17 @@ export function MenuManagementPage() {
     }
   };
 
-  const mobileMenus = useMemo(() => flattenMenus(menus), [menus]);
+  // Flatten menus for mobile preview
+  const flattenMenus = (items: MenuItemResponse[]): MenuItemResponse[] => {
+    const result: MenuItemResponse[] = [];
+    for (const item of items) {
+      result.push(item);
+      if (item.children) {
+        result.push(...flattenMenus(item.children));
+      }
+    }
+    return result;
+  };
 
   return (
     <div className="container py-6">
@@ -228,7 +226,7 @@ export function MenuManagementPage() {
         </TabsContent>
 
         <TabsContent value="mobile" className="mt-4">
-          <MobileMenuPreview menus={mobileMenus} />
+          <MobileMenuPreview menus={flattenMenus(menus)} />
         </TabsContent>
       </Tabs>
 

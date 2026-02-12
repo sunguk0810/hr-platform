@@ -53,16 +53,4 @@ public interface EmployeeService {
     List<EmployeeResponse> getBatch(List<UUID> ids);
 
     List<EmployeeResponse> getList(EmployeeSearchCondition condition);
-
-    void suspend(UUID id);
-
-    void activate(UUID id);
-
-    void bulkUpdate(List<UpdateEmployeeRequest> requests);
-
-    void bulkResign(List<UUID> ids, String resignDate);
-
-    void bulkSuspend(List<UUID> ids);
-
-    void bulkActivate(List<UUID> ids);
 }

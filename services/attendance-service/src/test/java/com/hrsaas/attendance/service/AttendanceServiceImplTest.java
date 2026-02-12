@@ -4,7 +4,6 @@ import com.hrsaas.attendance.domain.dto.request.UpdateAttendanceRecordRequest;
 import com.hrsaas.attendance.domain.dto.response.AttendanceRecordResponse;
 import com.hrsaas.attendance.domain.dto.response.AttendanceSummaryResponse;
 import com.hrsaas.attendance.domain.entity.*;
-import com.hrsaas.attendance.repository.AttendanceConfigRepository;
 import com.hrsaas.attendance.repository.AttendanceModificationLogRepository;
 import com.hrsaas.attendance.repository.AttendanceRecordRepository;
 import com.hrsaas.attendance.repository.HolidayRepository;
@@ -52,9 +51,6 @@ class AttendanceServiceImplTest {
     @Mock
     private HolidayRepository holidayRepository;
 
-    @Mock
-    private AttendanceConfigRepository attendanceConfigRepository;
-
     @InjectMocks
     private AttendanceServiceImpl attendanceService;
 
@@ -69,10 +65,6 @@ class AttendanceServiceImplTest {
     @BeforeEach
     void setUp() {
         TenantContext.setCurrentTenant(TENANT_ID);
-        lenient().when(attendanceConfigRepository.findByTenantId(any())).thenReturn(Optional.of(AttendanceConfig.builder()
-            .standardStartTime(LocalTime.of(9, 0))
-            .standardEndTime(LocalTime.of(18, 0))
-            .build()));
     }
 
     @AfterEach

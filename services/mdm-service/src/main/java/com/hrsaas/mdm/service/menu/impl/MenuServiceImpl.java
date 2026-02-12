@@ -430,42 +430,18 @@ public class MenuServiceImpl implements MenuService {
     @Override
     @Transactional
     public void reorderMenus(MenuReorderRequest request) {
-        // Collect all IDs to fetch
-        Set<UUID> allIds = new HashSet<>();
         for (MenuReorderRequest.MenuOrderItem item : request.getItems()) {
-            allIds.add(item.getId());
-            if (item.getParentId() != null) {
-                allIds.add(item.getParentId());
-            }
-        }
-
-        // Batch fetch all involved menus
-        Map<UUID, MenuItem> menuMap = menuItemRepository.findAllById(allIds).stream()
-            .collect(Collectors.toMap(MenuItem::getId, m -> m));
-
-        List<MenuItem> menusToSave = new ArrayList<>();
-
-        for (MenuReorderRequest.MenuOrderItem item : request.getItems()) {
-            MenuItem menu = menuMap.get(item.getId());
-            if (menu == null) {
-                throw new NotFoundException("MDM_MENU_001", "메뉴를 찾을 수 없습니다: " + item.getId());
-            }
-
+            MenuItem menu = getMenuEntityById(item.getId());
             menu.setSortOrder(item.getSortOrder());
 
             if (item.getParentId() != null) {
-                MenuItem parent = menuMap.get(item.getParentId());
-                if (parent == null) {
-                    throw new NotFoundException("MDM_MENU_001", "부모 메뉴를 찾을 수 없습니다: " + item.getParentId());
-                }
+                MenuItem parent = getMenuEntityById(item.getParentId());
                 menu.setParent(parent);
                 menu.setLevel(parent.getLevel() + 1);
             }
 
-            menusToSave.add(menu);
+            menuItemRepository.save(menu);
         }
-
-        menuItemRepository.saveAll(menusToSave);
         menuCacheService.invalidateMenuCache();
 
         log.info("Reordered {} menus", request.getItems().size());

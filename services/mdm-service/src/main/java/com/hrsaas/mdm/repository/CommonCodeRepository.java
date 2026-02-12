@@ -36,6 +36,12 @@ public interface CommonCodeRepository extends JpaRepository<CommonCode, UUID> {
            "AND cc.active = true ORDER BY cc.sortOrder ASC")
     List<CommonCode> findByCodeGroupId(@Param("codeGroupId") UUID codeGroupId);
 
+    /**
+     * Finds active CommonCodes for multiple CodeGroups in a single query.
+     * <p>
+     * Used to avoid N+1 queries when exporting multiple groups.
+     * Note: The number of IDs in codeGroupIds should be reasonable (e.g., < 1000) to avoid database IN clause limits.
+     */
     @Query("SELECT cc FROM CommonCode cc WHERE cc.codeGroup.id IN :codeGroupIds " +
            "AND cc.active = true ORDER BY cc.codeGroup.id, cc.sortOrder ASC")
     List<CommonCode> findByCodeGroupIdIn(@Param("codeGroupIds") List<UUID> codeGroupIds);
@@ -86,7 +92,7 @@ public interface CommonCodeRepository extends JpaRepository<CommonCode, UUID> {
     /**
      * G04: 폐기된 코드 중 deprecatedAt이 있는 코드 조회
      */
-    @Query("SELECT cc FROM CommonCode cc JOIN FETCH cc.codeGroup WHERE cc.status = 'DEPRECATED' AND cc.deprecatedAt IS NOT NULL")
+    @Query("SELECT cc FROM CommonCode cc WHERE cc.status = 'DEPRECATED' AND cc.deprecatedAt IS NOT NULL")
     List<CommonCode> findAllDeprecatedWithTimestamp();
 
     /**
