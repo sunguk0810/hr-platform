@@ -14,7 +14,6 @@ import com.hrsaas.tenant.domain.dto.request.CreateTenantRequest;
 import com.hrsaas.tenant.domain.dto.request.TenantSearchRequest;
 import com.hrsaas.tenant.domain.dto.request.UpdateTenantRequest;
 import com.hrsaas.tenant.domain.dto.response.TenantDetailResponse;
-import com.hrsaas.tenant.domain.dto.response.TenantInternalResponse;
 import com.hrsaas.tenant.domain.dto.response.TenantListItemResponse;
 import com.hrsaas.tenant.domain.dto.response.TenantResponse;
 import com.hrsaas.tenant.domain.dto.response.TenantTreeNodeResponse;
@@ -176,12 +175,6 @@ public class TenantServiceImpl implements TenantService {
     public TenantDetailResponse updateWithDetail(UUID id, UpdateTenantRequest request) {
         Tenant tenant = applyUpdate(id, request);
         return detailAssembler.toDetailResponse(tenant);
-    }
-
-    @Override
-    public TenantInternalResponse getInternalInfo(UUID id) {
-        Tenant tenant = findById(id);
-        return TenantInternalResponse.from(tenant);
     }
 
     private Tenant applyUpdate(UUID id, UpdateTenantRequest request) {

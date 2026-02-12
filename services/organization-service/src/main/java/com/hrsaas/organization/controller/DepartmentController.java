@@ -5,7 +5,6 @@ import com.hrsaas.common.response.PageResponse;
 import com.hrsaas.organization.domain.dto.request.CreateDepartmentRequest;
 import com.hrsaas.organization.domain.dto.request.DepartmentMergeRequest;
 import com.hrsaas.organization.domain.dto.request.DepartmentSplitRequest;
-import com.hrsaas.organization.domain.dto.request.OrgHistorySearchRequest;
 import com.hrsaas.organization.domain.dto.request.UpdateDepartmentRequest;
 import com.hrsaas.organization.domain.dto.response.*;
 import com.hrsaas.organization.service.DepartmentService;
@@ -90,9 +89,8 @@ public class DepartmentController {
     @Operation(summary = "조직 변경 이력 조회")
     @PreAuthorize("hasAnyRole('HR_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<PageResponse<DepartmentHistoryResponse>>> getOrganizationHistory(
-            @ModelAttribute OrgHistorySearchRequest request,
             @PageableDefault(size = 20) Pageable pageable) {
-        Page<DepartmentHistoryResponse> page = departmentService.getOrganizationHistory(request, pageable);
+        Page<DepartmentHistoryResponse> page = departmentService.getOrganizationHistory(pageable);
         return ResponseEntity.ok(ApiResponse.success(PageResponse.from(page)));
     }
 

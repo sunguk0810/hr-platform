@@ -3,7 +3,6 @@ package com.hrsaas.organization.service;
 import com.hrsaas.organization.domain.dto.request.CreateDepartmentRequest;
 import com.hrsaas.organization.domain.dto.request.DepartmentMergeRequest;
 import com.hrsaas.organization.domain.dto.request.DepartmentSplitRequest;
-import com.hrsaas.organization.domain.dto.request.OrgHistorySearchRequest;
 import com.hrsaas.organization.domain.dto.request.UpdateDepartmentRequest;
 import com.hrsaas.organization.domain.dto.response.*;
 import org.springframework.data.domain.Page;
@@ -27,8 +26,6 @@ public interface DepartmentService {
     void delete(UUID id);
 
     Page<DepartmentHistoryResponse> getOrganizationHistory(Pageable pageable);
-
-    Page<DepartmentHistoryResponse> getOrganizationHistory(OrgHistorySearchRequest request, Pageable pageable);
 
     List<DepartmentHistoryResponse> getDepartmentHistory(UUID departmentId);
 

@@ -30,9 +30,6 @@ dependencies {
     // Firebase (for push notifications)
     implementation 'com.google.firebase:firebase-admin:9.2.0'
 
-    // SMS (Twilio)
-    implementation 'com.twilio.sdk:twilio:10.1.0'
-
     // Documentation
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
 

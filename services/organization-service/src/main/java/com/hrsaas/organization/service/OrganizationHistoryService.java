@@ -1,6 +1,5 @@
 package com.hrsaas.organization.service;
 
-import com.hrsaas.organization.domain.dto.request.OrgHistorySearchRequest;
 import com.hrsaas.organization.domain.dto.response.DepartmentHistoryResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,8 +15,6 @@ public interface OrganizationHistoryService {
                      String metadata);
 
     Page<DepartmentHistoryResponse> getOrganizationHistory(Pageable pageable);
-
-    Page<DepartmentHistoryResponse> getOrganizationHistory(OrgHistorySearchRequest request, Pageable pageable);
 
     List<DepartmentHistoryResponse> getDepartmentHistory(UUID departmentId);
 }
