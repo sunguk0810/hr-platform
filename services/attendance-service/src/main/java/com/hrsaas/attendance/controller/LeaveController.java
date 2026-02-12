@@ -47,7 +47,8 @@ public class LeaveController {
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<LeaveRequestResponse> getById(@PathVariable UUID id) {
-        return ApiResponse.success(leaveService.getById(id));
+        UserContext user = SecurityContextHolder.getCurrentUser();
+        return ApiResponse.success(leaveService.getById(id, user.getUserId(), user.getRoles()));
     }
 
     @Operation(summary = "내 휴가 목록")

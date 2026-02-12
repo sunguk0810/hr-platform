@@ -6,6 +6,7 @@ import com.hrsaas.attendance.repository.LeaveBalanceRepository;
 import com.hrsaas.attendance.repository.LeaveRequestRepository;
 import com.hrsaas.attendance.service.impl.LeaveServiceImpl;
 import com.hrsaas.common.core.exception.BusinessException;
+import com.hrsaas.common.core.exception.ForbiddenException;
 import com.hrsaas.common.core.exception.NotFoundException;
 import com.hrsaas.common.event.EventPublisher;
 import com.hrsaas.common.response.PageResponse;
@@ -95,6 +96,48 @@ class LeaveServiceImplTest {
                 .pendingDays(pending)
                 .carriedOverDays(BigDecimal.ZERO)
                 .build();
+    }
+
+    @Test
+    @DisplayName("getById: owner can access")
+    void getById_owner_success() {
+        // given
+        LeaveRequest request = createPendingRequest();
+        when(leaveRequestRepository.findById(request.getId())).thenReturn(Optional.of(request));
+
+        // when
+        LeaveRequestResponse response = leaveService.getById(request.getId(), EMPLOYEE_ID, List.of());
+
+        // then
+        assertThat(response.getId()).isEqualTo(request.getId());
+    }
+
+    @Test
+    @DisplayName("getById: admin can access other's request")
+    void getById_admin_success() {
+        // given
+        LeaveRequest request = createPendingRequest();
+        when(leaveRequestRepository.findById(request.getId())).thenReturn(Optional.of(request));
+
+        // when
+        LeaveRequestResponse response = leaveService.getById(request.getId(), ADMIN_ID, List.of("HR_ADMIN"));
+
+        // then
+        assertThat(response.getId()).isEqualTo(request.getId());
+    }
+
+    @Test
+    @DisplayName("getById: unauthorized user throws exception")
+    void getById_unauthorized_throwsException() {
+        // given
+        LeaveRequest request = createPendingRequest();
+        when(leaveRequestRepository.findById(request.getId())).thenReturn(Optional.of(request));
+        UUID otherUserId = UUID.randomUUID();
+
+        // when & then
+        assertThatThrownBy(() -> leaveService.getById(request.getId(), otherUserId, List.of()))
+                .isInstanceOf(ForbiddenException.class)
+                .hasMessageContaining("본인의 휴가 신청 내역만 조회할 수 있습니다");
     }
 
     // ===== Phase 2 Tests: Admin APIs =====
