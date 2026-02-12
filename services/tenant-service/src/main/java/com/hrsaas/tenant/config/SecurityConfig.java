@@ -49,6 +49,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/tenants/*/status").permitAll()
                 .requestMatchers("/api/v1/tenants/*/password-policy").permitAll()
                 .requestMatchers("/api/v1/tenants/*/basic").permitAll()
+                .requestMatchers("/api/v1/tenants/code/*").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
