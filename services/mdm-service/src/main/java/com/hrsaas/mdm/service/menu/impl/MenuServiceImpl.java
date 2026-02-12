@@ -150,11 +150,7 @@ public class MenuServiceImpl implements MenuService {
         }
 
         // Sort top level
-        topLevel.sort(Comparator.comparing(m -> {
-            TenantMenuConfig config = tenantConfigs.get(m.getId());
-            return config != null && config.getCustomSortOrder() != null
-                ? config.getCustomSortOrder() : m.getSortOrder();
-        }));
+        topLevel.sort(Comparator.comparing(m -> getEffectiveSortOrder(m, tenantConfigs.get(m.getId()))));
 
         // Build response
         return topLevel.stream()
@@ -170,10 +166,6 @@ public class MenuServiceImpl implements MenuService {
             Set<String> userPermissions) {
 
         TenantMenuConfig config = tenantConfigs.get(menu.getId());
-
-        String name = config != null && config.getCustomName() != null
-            ? config.getCustomName() : menu.getName();
-
         List<MenuItem> children = byParent.get(menu.getId());
         List<UserMenuResponse.UserMenuItem> childItems = null;
 
@@ -184,28 +176,15 @@ public class MenuServiceImpl implements MenuService {
                 .collect(Collectors.toList());
 
             // Sort children
-            children.sort(Comparator.comparing(c -> {
-                TenantMenuConfig childConfig = tenantConfigs.get(c.getId());
-                return childConfig != null && childConfig.getCustomSortOrder() != null
-                    ? childConfig.getCustomSortOrder() : c.getSortOrder();
-            }));
+            children.sort(Comparator.comparing(c -> getEffectiveSortOrder(c, tenantConfigs.get(c.getId()))));
 
             childItems = children.stream()
                 .map(c -> buildUserMenuItem(c, byParent, tenantConfigs, userRoles, userPermissions))
                 .collect(Collectors.toList());
         }
 
-        return UserMenuResponse.UserMenuItem.builder()
-            .code(menu.getCode())
-            .name(name)
-            .nameEn(menu.getNameEn())
-            .path(menu.getPath())
-            .icon(menu.getIcon())
-            .externalUrl(menu.getExternalUrl())
-            .isExternal(MenuType.EXTERNAL.equals(menu.getMenuType()))
-            .sortOrder(config != null && config.getCustomSortOrder() != null
-                ? config.getCustomSortOrder() : menu.getSortOrder())
-            .groupName(menu.getGroupName())
+        return createUserMenuItemBuilder(menu, config)
+            .sortOrder(getEffectiveSortOrder(menu, config))
             .children(childItems)
             .build();
     }
@@ -215,33 +194,12 @@ public class MenuServiceImpl implements MenuService {
             Map<UUID, TenantMenuConfig> tenantConfigs) {
 
         return menus.stream()
-            .filter(menu -> {
-                TenantMenuConfig config = tenantConfigs.get(menu.getId());
-                Boolean showInMobile = config != null && config.getShowInMobile() != null
-                    ? config.getShowInMobile() : menu.getShowInMobile();
-                return Boolean.TRUE.equals(showInMobile);
-            })
-            .sorted(Comparator.comparing(m -> {
-                TenantMenuConfig config = tenantConfigs.get(m.getId());
-                Integer mobileSortOrder = config != null && config.getMobileSortOrder() != null
-                    ? config.getMobileSortOrder() : m.getMobileSortOrder();
-                return mobileSortOrder != null ? mobileSortOrder : Integer.MAX_VALUE;
-            }))
+            .filter(menu -> Boolean.TRUE.equals(getEffectiveShowInMobile(menu, tenantConfigs.get(menu.getId()))))
+            .sorted(Comparator.comparing(m -> getEffectiveMobileSortOrder(m, tenantConfigs.get(m.getId()))))
             .map(menu -> {
                 TenantMenuConfig config = tenantConfigs.get(menu.getId());
-                String name = config != null && config.getCustomName() != null
-                    ? config.getCustomName() : menu.getName();
-
-                return UserMenuResponse.UserMenuItem.builder()
-                    .code(menu.getCode())
-                    .name(name)
-                    .nameEn(menu.getNameEn())
-                    .path(menu.getPath())
-                    .icon(menu.getIcon())
-                    .externalUrl(menu.getExternalUrl())
-                    .isExternal(MenuType.EXTERNAL.equals(menu.getMenuType()))
-                    .sortOrder(config != null && config.getMobileSortOrder() != null
-                        ? config.getMobileSortOrder() : menu.getMobileSortOrder())
+                return createUserMenuItemBuilder(menu, config)
+                    .sortOrder(getEffectiveMobileSortOrder(menu, config))
                     .build();
             })
             .collect(Collectors.toList());
@@ -644,6 +602,40 @@ public class MenuServiceImpl implements MenuService {
     // ============================================
     // Internal Operations
     // ============================================
+
+    private String getEffectiveName(MenuItem menu, TenantMenuConfig config) {
+        return config != null && config.getCustomName() != null
+            ? config.getCustomName() : menu.getName();
+    }
+
+    private Integer getEffectiveSortOrder(MenuItem menu, TenantMenuConfig config) {
+        return config != null && config.getCustomSortOrder() != null
+            ? config.getCustomSortOrder() : menu.getSortOrder();
+    }
+
+    private Integer getEffectiveMobileSortOrder(MenuItem menu, TenantMenuConfig config) {
+        Integer mobileSortOrder = config != null && config.getMobileSortOrder() != null
+            ? config.getMobileSortOrder() : menu.getMobileSortOrder();
+        return mobileSortOrder != null ? mobileSortOrder : Integer.MAX_VALUE;
+    }
+
+    private Boolean getEffectiveShowInMobile(MenuItem menu, TenantMenuConfig config) {
+        return config != null && config.getShowInMobile() != null
+            ? config.getShowInMobile() : menu.getShowInMobile();
+    }
+
+    private UserMenuResponse.UserMenuItem.UserMenuItemBuilder createUserMenuItemBuilder(
+            MenuItem menu, TenantMenuConfig config) {
+        return UserMenuResponse.UserMenuItem.builder()
+            .code(menu.getCode())
+            .name(getEffectiveName(menu, config))
+            .nameEn(menu.getNameEn())
+            .path(menu.getPath())
+            .icon(menu.getIcon())
+            .externalUrl(menu.getExternalUrl())
+            .isExternal(MenuType.EXTERNAL.equals(menu.getMenuType()))
+            .groupName(menu.getGroupName());
+    }
 
     @Override
     @Transactional(readOnly = true)
