@@ -195,7 +195,7 @@ class EmployeeNumberGeneratorTest {
         LocalDate birthDate = LocalDate.of(1990, 5, 20);
         String existingNumber = "HR-2025-0099";
 
-        // Mock Employee
+        // Mock Employee to return the existing number
         Employee mockEmployee = mock(Employee.class);
         when(mockEmployee.getEmployeeNumber()).thenReturn(existingNumber);
 
