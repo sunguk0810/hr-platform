@@ -16,9 +16,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -34,18 +37,77 @@ public class LeaveAccrualService {
      */
     @Transactional
     public int generateAnnualLeave(UUID tenantId, int year, List<EmployeeLeaveInfo> employees) {
+        if (employees == null || employees.isEmpty()) {
+            return 0;
+        }
+
         TenantContext.setCurrentTenant(tenantId);
         List<LeaveAccrualRule> rules = ruleRepository.findActiveByTenantId(tenantId);
+        if (rules.isEmpty()) {
+            return 0;
+        }
+
+        // Collect all employee IDs
+        List<UUID> employeeIds = employees.stream()
+                .map(EmployeeLeaveInfo::getEmployeeId)
+                .collect(Collectors.toList());
+
+        // Batch fetch existing balances
+        List<LeaveBalance> existingBalances = balanceRepository.findByEmployeeIdsAndYear(tenantId, employeeIds, year);
+
+        // Map: EmployeeId -> LeaveType -> LeaveBalance
+        Map<UUID, Map<LeaveType, LeaveBalance>> balanceMap = new HashMap<>();
+        for (LeaveBalance b : existingBalances) {
+            balanceMap
+                .computeIfAbsent(b.getEmployeeId(), k -> new HashMap<>())
+                .put(b.getLeaveType(), b);
+        }
+
+        List<LeaveBalance> balancesToSave = new ArrayList<>();
         int count = 0;
 
         for (EmployeeLeaveInfo emp : employees) {
             for (LeaveAccrualRule rule : rules) {
                 if (shouldGenerate(rule, emp, year)) {
                     BigDecimal entitlement = calculateEntitlement(emp.getHireDate(), year, rule);
-                    createOrUpdateBalance(tenantId, emp.getEmployeeId(), year, rule.getLeaveTypeCode(), entitlement);
+
+                    // Determine LeaveType
+                    LeaveType leaveType;
+                    try {
+                        leaveType = LeaveType.valueOf(rule.getLeaveTypeCode());
+                    } catch (IllegalArgumentException e) {
+                        log.warn("Skipping rule with invalid leave type code: {}", rule.getLeaveTypeCode());
+                        continue;
+                    }
+
+                    // Get or create balance from map
+                    Map<LeaveType, LeaveBalance> empBalances = balanceMap.computeIfAbsent(emp.getEmployeeId(), k -> new HashMap<>());
+                    LeaveBalance balance = empBalances.get(leaveType);
+
+                    if (balance == null) {
+                        balance = LeaveBalance.builder()
+                                .tenantId(tenantId)
+                                .employeeId(emp.getEmployeeId())
+                                .year(year)
+                                .leaveType(leaveType)
+                                .totalDays(BigDecimal.ZERO)
+                                .usedDays(BigDecimal.ZERO)
+                                .pendingDays(BigDecimal.ZERO)
+                                .carriedOverDays(BigDecimal.ZERO)
+                                .build();
+                        empBalances.put(leaveType, balance);
+                    }
+
+                    // Update entitlement
+                    balance.setTotalDays(entitlement);
+                    balancesToSave.add(balance);
                     count++;
                 }
             }
+        }
+
+        if (!balancesToSave.isEmpty()) {
+            balanceRepository.saveAll(balancesToSave);
         }
 
         log.info("Generated {} leave balances for tenant={}, year={}", count, tenantId, year);
