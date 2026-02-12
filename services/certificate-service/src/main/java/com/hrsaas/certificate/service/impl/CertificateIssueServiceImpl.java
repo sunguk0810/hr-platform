@@ -48,6 +48,8 @@ public class CertificateIssueServiceImpl implements CertificateIssueService {
     private static final AtomicLong issueSequence = new AtomicLong(1);
     private static final SecureRandom secureRandom = new SecureRandom();
     private static final String VERIFICATION_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    private static final int VERIFICATION_CODE_LENGTH = 12;
+    private static final int VERIFICATION_CODE_GROUP_SIZE = 4;
 
     @Override
     @Transactional
@@ -216,9 +218,9 @@ public class CertificateIssueServiceImpl implements CertificateIssueService {
 
     private String generateVerificationCode() {
         StringBuilder code = new StringBuilder();
-        for (int i = 0; i < 12; i++) {
+        for (int i = 0; i < VERIFICATION_CODE_LENGTH; i++) {
             code.append(VERIFICATION_CHARS.charAt(secureRandom.nextInt(VERIFICATION_CHARS.length())));
-            if ((i + 1) % 4 == 0 && i < 11) {
+            if ((i + 1) % VERIFICATION_CODE_GROUP_SIZE == 0 && i < VERIFICATION_CODE_LENGTH - 1) {
                 code.append("-");
             }
         }
