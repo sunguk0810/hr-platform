@@ -276,9 +276,8 @@ class MenuServiceImplTest {
 
         request.setItems(List.of(item1, item2));
 
-        when(menuItemRepository.findById(menu1Id)).thenReturn(Optional.of(menu1));
-        when(menuItemRepository.findById(menu2Id)).thenReturn(Optional.of(menu2));
-        when(menuItemRepository.save(any(MenuItem.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(menuItemRepository.findAllById(any())).thenReturn(List.of(menu1, menu2));
+        when(menuItemRepository.saveAll(any())).thenReturn(List.of(menu1, menu2));
 
         // when
         menuService.reorderMenus(request);
@@ -286,8 +285,30 @@ class MenuServiceImplTest {
         // then
         assertThat(menu1.getSortOrder()).isEqualTo(2);
         assertThat(menu2.getSortOrder()).isEqualTo(1);
-        verify(menuItemRepository, times(2)).save(any(MenuItem.class));
+        verify(menuItemRepository).saveAll(any());
         verify(menuCacheService).invalidateMenuCache();
+    }
+
+    @Test
+    @DisplayName("reorderMenus - missing menu throws NotFoundException")
+    void reorderMenus_missingMenu_throwsNotFound() {
+        // given
+        UUID menuId = UUID.randomUUID();
+
+        MenuReorderRequest request = new MenuReorderRequest();
+        MenuReorderRequest.MenuOrderItem item = new MenuReorderRequest.MenuOrderItem();
+        item.setId(menuId);
+        item.setSortOrder(1);
+        request.setItems(List.of(item));
+
+        when(menuItemRepository.findAllById(any())).thenReturn(Collections.emptyList());
+
+        // when & then
+        assertThatThrownBy(() -> menuService.reorderMenus(request))
+            .isInstanceOf(NotFoundException.class)
+            .hasMessageContaining("메뉴를 찾을 수 없습니다");
+
+        verify(menuItemRepository, never()).saveAll(any());
     }
 
     // ================================================================
