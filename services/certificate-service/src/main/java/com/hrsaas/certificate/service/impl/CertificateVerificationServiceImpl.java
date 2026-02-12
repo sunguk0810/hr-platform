@@ -92,6 +92,7 @@ public class CertificateVerificationServiceImpl implements CertificateVerificati
         certificateIssueRepository.save(issue);
 
         String companyName = "회사명";
+        // 테넌트 서비스에서 내부 정보(보안상 안전한 DTO)를 조회하여 회사명 설정
         try {
             ApiResponse<TenantInfoResponse> response = tenantClient.getInternalInfo(issue.getTenantId());
             if (response != null && response.getData() != null) {
