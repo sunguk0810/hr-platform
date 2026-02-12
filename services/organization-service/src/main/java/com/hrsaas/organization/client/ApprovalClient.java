@@ -20,4 +20,7 @@ public interface ApprovalClient {
 
     @DeleteMapping("/api/v1/approvals/{id}")
     ApiResponse<Void> cancelApproval(@PathVariable("id") UUID id);
+
+    @PostMapping("/api/v1/approvals/department-counts")
+    ApiResponse<java.util.Map<UUID, Long>> getDepartmentApprovalCounts(@RequestBody java.util.List<UUID> departmentIds);
 }

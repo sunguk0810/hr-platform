@@ -553,4 +553,29 @@ public class ApprovalServiceImpl implements ApprovalService {
         int nextNumber = Integer.parseInt(maxNumber.substring(maxNumber.length() - 4)) + 1;
         return prefix + String.format("%04d", nextNumber);
     }
+
+    @Override
+    public java.util.Map<UUID, Long> getDepartmentApprovalCounts(List<UUID> departmentIds) {
+        if (departmentIds == null || departmentIds.isEmpty()) {
+            return java.util.Collections.emptyMap();
+        }
+
+        UUID tenantId = TenantContext.getCurrentTenant();
+        List<ApprovalStatus> activeStatuses = List.of(ApprovalStatus.PENDING, ApprovalStatus.IN_PROGRESS);
+
+        List<Object[]> results = documentRepository.countActiveApprovalsByDepartments(tenantId, departmentIds, activeStatuses);
+
+        java.util.Map<UUID, Long> countMap = new java.util.HashMap<>();
+        // Initialize map with 0 for all requested departments
+        departmentIds.forEach(id -> countMap.put(id, 0L));
+
+        // Update with actual counts
+        for (Object[] result : results) {
+            UUID departmentId = (UUID) result[0];
+            Long count = (Long) result[1];
+            countMap.put(departmentId, count);
+        }
+
+        return countMap;
+    }
 }
