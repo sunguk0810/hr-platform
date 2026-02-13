@@ -549,16 +549,16 @@ export default function FileManagementPage() {
             <DialogTitle>{selectedFile?.originalName}</DialogTitle>
           </DialogHeader>
           <div className="overflow-auto max-h-[60vh]">
-            {selectedFile && fileService.isImageFile(selectedFile.contentType) && (
-              <OptimizedImage
-                src={fileService.getPreviewUrl(selectedFile.id)}
+              {selectedFile && fileService.isImageFile(selectedFile.contentType) && (
+                <OptimizedImage
+                src={fileService.getDownloadUrl(selectedFile.id)}
                 alt={selectedFile.originalName}
                 className="w-full h-auto"
               />
             )}
             {selectedFile && fileService.isPdfFile(selectedFile.contentType) && (
               <iframe
-                src={fileService.getPreviewUrl(selectedFile.id)}
+                src={fileService.getDownloadUrl(selectedFile.id)}
                 title={selectedFile.originalName}
                 className="w-full h-[60vh]"
               />
