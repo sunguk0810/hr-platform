@@ -616,90 +616,9 @@ export const certificateHandlers = [
     });
   }),
 
-  // Download certificate
-  http.get('/api/v1/certificates/issues/:issueId/download', async ({ params }) => {
-    await delay(500);
-
-    const { issueId } = params;
-    const issue = mockIssues.find(i => i.id === issueId);
-
-    if (!issue) {
-      return HttpResponse.json(
-        {
-          success: false,
-          error: {
-            code: 'CERT_ISSUE_001',
-            message: '발급 내역을 찾을 수 없습니다.',
-          },
-          timestamp: new Date().toISOString(),
-        },
-        { status: 404 }
-      );
-    }
-
-    if (issue.revoked) {
-      return HttpResponse.json(
-        {
-          success: false,
-          error: {
-            code: 'CERT_ISSUE_002',
-            message: '폐기된 증명서는 다운로드할 수 없습니다.',
-          },
-          timestamp: new Date().toISOString(),
-        },
-        { status: 400 }
-      );
-    }
-
-    // Update download count
-    issue.downloadCount++;
-    issue.downloadedAt = new Date().toISOString();
-
-    // Return mock PDF content
-    const pdfContent = `%PDF-1.4
-1 0 obj
-<< /Type /Catalog /Pages 2 0 R >>
-endobj
-2 0 obj
-<< /Type /Pages /Kids [3 0 R] /Count 1 >>
-endobj
-3 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R >>
-endobj
-4 0 obj
-<< /Length 44 >>
-stream
-BT
-/F1 12 Tf
-100 700 Td
-(${issue.certificateTypeName} - ${issue.employeeName}) Tj
-ET
-endstream
-endobj
-xref
-0 5
-0000000000 65535 f
-0000000009 00000 n
-0000000058 00000 n
-0000000115 00000 n
-0000000214 00000 n
-trailer
-<< /Size 5 /Root 1 0 R >>
-startxref
-307
-%%EOF`;
-
-    return new HttpResponse(pdfContent, {
-      headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${issue.fileName}"`,
-      },
-    });
-  }),
-
   // Backward-compatible alias: issueNumber based path
-  http.get('/api/v1/certificates/issues/:issueNumber/download', async ({ request, params }) => {
-    const { issueNumber } = params;
+  http.get('/api/v1/certificates/issues/ISS-:issueSuffix/download', async ({ request, params }) => {
+    const issueNumber = `ISS-${params.issueSuffix}`;
     const issue = mockIssues.find(i => i.issueNumber === issueNumber);
 
     if (!issue) {
@@ -718,6 +637,51 @@ startxref
 
     const requestUrl = new URL(request.url);
     return HttpResponse.redirect(`${requestUrl.origin}/api/v1/certificates/issues/${issue.id}/download`);
+  }),
+
+  // Download certificate (id based)
+  http.get('/api/v1/certificates/issues/:issueId/download', async ({ params }) => {
+    const { issueId } = params;
+    const issue = mockIssues.find(i => i.id === issueId);
+
+    if (!issue) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'CERT_ISSUE_001',
+            message: '발급 내역을 찾을 수 없습니다.',
+          },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 404 }
+      );
+    }
+
+  if (issue.revoked) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'CERT_ISSUE_002',
+            message: '폐기된 증명서는 다운로드할 수 없습니다.',
+          },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 400 }
+      );
+    }
+
+    issue.downloadCount++;
+    issue.downloadedAt = new Date().toISOString();
+    const safeFileName = encodeURIComponent(issue.fileName);
+
+    return new HttpResponse('PDF', {
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${safeFileName}"`,
+      },
+    });
   }),
 
   // Verify certificate

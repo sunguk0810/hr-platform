@@ -18,6 +18,11 @@
 ### 확인 필요로 남은 항목
 - 아래 항목은 구현/연동 자체가 필요함: 검색 파라미터 계약, 파일럿 미리보기 경로, certificate 다운로드/필터 계약.
 
+## 2.5) 현재 완료 상태 (2026-02-13 기준)
+
+- REQ-APP-01 ~ REQ-FILE-01: 완료
+- P0 핵심 항목은 구현/정렬 모두 완료로 판단, Phase 2는 회귀/운영 게이트 강화 목적.
+
 ## 3) 목표 (DoD)
 
 1. P0 API가 런타임 400/500 없이 동작
@@ -133,20 +138,52 @@
 - BE는 통합 단위 기반 계약 검증 강화.
 - FE는 UI 컴포넌트에서의 예외 노출(빈 값/미지원 필드)도 포함.
 
-### 구현 우선순위
-1. `docs`에 “P0 완료항목 + P1 테스트 상태” 명시(신규 항목만 갱신).
-2. 계약 단위/서비스 테스트 보강(Phase 2-1)
-   - FE: `useCertificates`/`certificateService`/`fileService` 경로 및 파라미터 스냅샷 테스트 확장.
-   - BE: `CertificateRequestServiceImpl`/`CertificateIssueServiceImpl` 필터 및 컨텍스트 처리 레그 케이스 확장.
-3. Mock parity 테스트 보강(Phase 2-2)
-   - `frontend/apps/web/src/mocks/handlers/certificateHandlers.ts`
-   - `frontend/apps/web/src/mocks/handlers/fileHandlers.ts`
-   - 경로/쿼리 키 미스매치 감지 테스트 추가.
-4. E2E smoke 추가(Phase 2-3)
-   - 내 발령 조회
-   - 증명서 신청 생성 → 신청 목록 노출
-   - 발급 이력에서 PDF 다운로드 버튼 동작
-   - 파일 이미지/PDF 미리보기 동작
+### Phase 2-1: 계약 단위/서비스 테스트
+
+1. FE 계약 테스트 보강
+   - `frontend/apps/web/src/features/appointment/hooks/__tests__/useAppointments.test.ts`
+   - `frontend/apps/web/src/features/certificate/services/__tests__/certificateService.test.ts`
+   - `frontend/apps/web/src/features/certificate/hooks/__tests__/useCertificates.test.ts`
+   - `frontend/apps/web/src/features/file/services/__tests__/fileService.test.ts`
+   - `frontend/apps/web/src/mocks/handlers/__tests__/contractParity.spec.ts`
+
+2. BE 테스트 보강
+   - `services/appointment-service/src/test/java/com/hrsaas/appointment/service/impl/AppointmentDraftServiceImplTest.java`
+   - `services/certificate-service/src/test/java/com/hrsaas/certificate/service/impl/CertificateRequestServiceImplTest.java`
+   - `services/certificate-service/src/test/java/com/hrsaas/certificate/service/impl/CertificateIssueServiceImplTest.java`
+
+AC
+- P0 수정보조 항목(파라미터, 컨텍스트, 필터, id 경로)이 테스트 보호 대상으로 반영.
+
+### Phase 2-2: Mock parity 강화
+
+1. 핸들러 경로/쿼리 회귀 테스트 보강
+   - `frontend/apps/web/src/mocks/handlers/__tests__/contractParity.spec.ts`
+   - 포커스:
+     - `/api/v1/appointments/drafts`의 `startDate/endDate`
+     - `/api/v1/certificates/issues/my`의 `typeCode`, `includeExpired`
+     - `/api/v1/certificates/requests/my` 쿼리 미전달
+     - `/api/v1/certificates/issues/:issueNumber/download` alias
+     - `/api/v1/files/:id/preview` 404 + `/download` 200
+
+AC
+- Mock 라우팅 규격이 변경될 경우 즉시 실패.
+
+### Phase 2-3: E2E smoke 자동화
+
+1. 내 발령 조회
+2. 내 증명서 신청/발급 이력 조회
+3. 발급 PDF 다운로드 버튼 동작
+4. 파일 이미지/PDF 미리보기 동작
+
+AC
+- mock 또는 real 모드에서 상기 4개 스모크 최소 시나리오 통과.
+
+### 실행 순서
+1. 문서 상태/체크리스트 확정
+2. Phase 2-1 테스트 보강
+3. Phase 2-2 parity 테스트 보강
+4. Phase 2-3 e2e smoke 고정
 
 ### AC
 - P0 경로가 `mock`/`real` 모두에서 동작.
@@ -156,3 +193,6 @@
 ### 오픈 이슈(진행 전 확인 필요)
 1. `playwright` smoke 환경에서 파일 preview는 `download URL`로 렌더링할지, `presigned URL` 중 어디를 기본값으로 둘지(현재는 둘 다 지원하도록 유지 예정).
 2. E2E 테스트 데이터 구성에 사용할 사전 seed 정책(인증 토큰/증명서 타입/파일 샘플) 확정.
+
+### 변경 이력
+- 2026-02-13: P0 완료 항목 반영 및 Phase 2를 3개 서브 페이즈로 분해.
