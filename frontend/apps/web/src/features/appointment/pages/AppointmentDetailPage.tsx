@@ -345,7 +345,7 @@ export default function AppointmentDetailPage() {
                   label={t('detailInfo.status')}
                   value={<AppointmentDraftStatusBadge status={draft.status} />}
                 />
-                <InfoRow label={t('detailInfo.drafter')} value={draft.draftCreatedBy?.name} />
+                <InfoRow label={t('detailInfo.drafter')} value={draft.draftCreatedBy?.name ?? '-'} />
                 <InfoRow
                   label={t('detailInfo.createdAt')}
                   value={format(new Date(draft.createdAt), 'yyyy-MM-dd HH:mm', { locale: ko })}

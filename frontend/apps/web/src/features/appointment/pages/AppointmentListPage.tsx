@@ -137,6 +137,11 @@ export default function AppointmentListPage() {
                 aria-label={t('list.searchAriaLabel')}
               />
               {searchState.keyword && (
+                <p className="mt-1 text-xs text-amber-600">
+                  제목/번호 키워드 검색은 서버 계약에서 미지원이며 상태 필터만 반영됩니다.
+                </p>
+              )}
+              {searchState.keyword && (
                 <button
                   onClick={clearSearch}
                   className="absolute right-3 top-1/2 -translate-y-1/2"
@@ -244,7 +249,7 @@ export default function AppointmentListPage() {
                           <td className="px-4 py-3">
                             <AppointmentDraftStatusBadge status={draft.status} />
                           </td>
-                          <td className="px-4 py-3 text-sm">{draft.draftCreatedBy.name}</td>
+                          <td className="px-4 py-3 text-sm">{draft.draftCreatedBy?.name ?? '-'}</td>
                           <td className="px-4 py-3 text-sm text-muted-foreground">
                             {format(new Date(draft.createdAt), 'M/d', { locale: ko })}
                           </td>

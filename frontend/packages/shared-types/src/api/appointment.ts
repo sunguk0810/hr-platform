@@ -62,7 +62,7 @@ export interface AppointmentDraftListItem {
   effectiveDate: string;
   status: DraftStatus;
   detailCount: number;
-  draftCreatedBy: AppointmentCreator;
+  draftCreatedBy?: AppointmentCreator;
   createdAt: string;
 }
 
@@ -149,8 +149,8 @@ export interface CancelAppointmentDraftRequest {
 // ============================================
 export interface AppointmentSearchParams extends PageRequest {
   status?: DraftStatus;
-  effectiveDateFrom?: string;
-  effectiveDateTo?: string;
+  startDate?: string;
+  endDate?: string;
   keyword?: string;
 }
 
