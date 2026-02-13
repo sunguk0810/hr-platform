@@ -78,6 +78,30 @@ describe('mock handler contract parity', () => {
     expect(legacyPayload.data.content.length).toBe(startDatePayload.data.content.length);
   });
 
+  it('certificate my requests endpoint works without employeeId query and filters by typeCode/status', async () => {
+    const requestsRes = await fetch(
+      '/api/v1/certificates/requests/my?typeCode=EMPLOYMENT&status=APPROVED&page=0&size=20'
+    );
+    expect(requestsRes.status).toBe(200);
+
+    const requestsPayload = (await requestsRes.json()) as PagedResponse<{
+      status: string;
+      certificateTypeName: string;
+    }>;
+    expect(requestsPayload.data.content.length).toBeGreaterThanOrEqual(0);
+    if (requestsPayload.data.content.length > 0) {
+      expect(
+        requestsPayload.data.content.every((item) => item.certificateTypeName === '재직증명서')
+      ).toBe(true);
+      expect(requestsPayload.data.content.every((item) => item.status === 'APPROVED')).toBe(true);
+    }
+
+    const legacyWithEmployeeIdRes = await fetch(
+      '/api/v1/certificates/requests/my?employeeId=emp-001&typeCode=EMPLOYMENT'
+    );
+    expect(legacyWithEmployeeIdRes.status).toBe(200);
+  });
+
   it('certificate issues mock respects typeCode and includeExpired defaults', async () => {
     const issueRes = await fetch('/api/v1/certificates/issues/my?typeCode=EMPLOYMENT');
     expect(issueRes.status).toBe(200);
