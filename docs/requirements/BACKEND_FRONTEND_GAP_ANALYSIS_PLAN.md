@@ -122,3 +122,37 @@
 3. Appointment 렌더 안전화
 4. File preview 정렬
 5. 문서/회귀 테스트 정리
+
+## 9) 다음 Phase(Phase 2): 계약 회귀 자동화
+
+### 목표
+- P0에서 정합성 수정한 계약이 향후 회귀되지 않도록, FE/BE/Mock/운영 점검을 한 번에 검증하는 파이프라인 확보.
+
+### 범위
+- Appointment / Certificate / File의 기존 핵심 경로 + Mock parity + E2E smoke.
+- BE는 통합 단위 기반 계약 검증 강화.
+- FE는 UI 컴포넌트에서의 예외 노출(빈 값/미지원 필드)도 포함.
+
+### 구현 우선순위
+1. `docs`에 “P0 완료항목 + P1 테스트 상태” 명시(신규 항목만 갱신).
+2. 계약 단위/서비스 테스트 보강(Phase 2-1)
+   - FE: `useCertificates`/`certificateService`/`fileService` 경로 및 파라미터 스냅샷 테스트 확장.
+   - BE: `CertificateRequestServiceImpl`/`CertificateIssueServiceImpl` 필터 및 컨텍스트 처리 레그 케이스 확장.
+3. Mock parity 테스트 보강(Phase 2-2)
+   - `frontend/apps/web/src/mocks/handlers/certificateHandlers.ts`
+   - `frontend/apps/web/src/mocks/handlers/fileHandlers.ts`
+   - 경로/쿼리 키 미스매치 감지 테스트 추가.
+4. E2E smoke 추가(Phase 2-3)
+   - 내 발령 조회
+   - 증명서 신청 생성 → 신청 목록 노출
+   - 발급 이력에서 PDF 다운로드 버튼 동작
+   - 파일 이미지/PDF 미리보기 동작
+
+### AC
+- P0 경로가 `mock`/`real` 모두에서 동작.
+- 계약 변경 없이 코드 수정 시 테스트가 실패로 즉시 감지.
+- 1주기 CI에서 P0 + P1 항목이 기본 게이트로 유지.
+
+### 오픈 이슈(진행 전 확인 필요)
+1. `playwright` smoke 환경에서 파일 preview는 `download URL`로 렌더링할지, `presigned URL` 중 어디를 기본값으로 둘지(현재는 둘 다 지원하도록 유지 예정).
+2. E2E 테스트 데이터 구성에 사용할 사전 seed 정책(인증 토큰/증명서 타입/파일 샘플) 확정.
