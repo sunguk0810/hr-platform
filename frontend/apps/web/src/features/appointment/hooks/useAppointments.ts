@@ -180,8 +180,8 @@ export function useCancelDraft() {
 interface AppointmentSearchState {
   status: DraftStatus | '';
   keyword: string;
-  effectiveDateFrom: string;
-  effectiveDateTo: string;
+  startDate: string;
+  endDate: string;
   page: number;
   size: number;
 }
@@ -190,8 +190,8 @@ export function useAppointmentSearchParams(initialSize = 10) {
   const [searchState, setSearchState] = useState<AppointmentSearchState>({
     status: '',
     keyword: '',
-    effectiveDateFrom: '',
-    effectiveDateTo: '',
+    startDate: '',
+    endDate: '',
     page: 0,
     size: initialSize,
   });
@@ -200,9 +200,8 @@ export function useAppointmentSearchParams(initialSize = 10) {
     page: searchState.page,
     size: searchState.size,
     ...(searchState.status && { status: searchState.status }),
-    ...(searchState.keyword && { keyword: searchState.keyword }),
-    ...(searchState.effectiveDateFrom && { effectiveDateFrom: searchState.effectiveDateFrom }),
-    ...(searchState.effectiveDateTo && { effectiveDateTo: searchState.effectiveDateTo }),
+    ...(searchState.startDate && { startDate: searchState.startDate }),
+    ...(searchState.endDate && { endDate: searchState.endDate }),
   }), [searchState]);
 
   const setStatus = useCallback((status: DraftStatus | '') => {
@@ -213,8 +212,8 @@ export function useAppointmentSearchParams(initialSize = 10) {
     setSearchState(prev => ({ ...prev, keyword, page: 0 }));
   }, []);
 
-  const setDateRange = useCallback((effectiveDateFrom: string, effectiveDateTo: string) => {
-    setSearchState(prev => ({ ...prev, effectiveDateFrom, effectiveDateTo, page: 0 }));
+  const setDateRange = useCallback((startDate: string, endDate: string) => {
+    setSearchState(prev => ({ ...prev, startDate, endDate, page: 0 }));
   }, []);
 
   const setPage = useCallback((page: number) => {
@@ -225,8 +224,8 @@ export function useAppointmentSearchParams(initialSize = 10) {
     setSearchState({
       status: '',
       keyword: '',
-      effectiveDateFrom: '',
-      effectiveDateTo: '',
+      startDate: '',
+      endDate: '',
       page: 0,
       size: initialSize,
     });
