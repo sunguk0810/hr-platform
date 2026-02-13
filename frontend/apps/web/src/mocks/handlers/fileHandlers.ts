@@ -304,27 +304,4 @@ export const fileHandlers = [
       },
     });
   }),
-
-  // Preview file
-  http.get('/api/v1/files/:id/preview', async ({ params }) => {
-    await delay(100);
-
-    const { id } = params;
-    const file = mockFiles.find((f) => f.id === id);
-
-    if (!file) {
-      return HttpResponse.json({ error: 'Not found' }, { status: 404 });
-    }
-
-    if (file.contentType.startsWith('image/')) {
-      // Return placeholder image
-      return new HttpResponse(new Blob([''], { type: file.contentType }), {
-        headers: { 'Content-Type': file.contentType },
-      });
-    }
-
-    return new HttpResponse(new Blob(['Mock PDF content'], { type: 'application/pdf' }), {
-      headers: { 'Content-Type': 'application/pdf' },
-    });
-  }),
 ];
