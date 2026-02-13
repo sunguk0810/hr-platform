@@ -32,6 +32,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.given;
 
@@ -173,5 +174,26 @@ class CertificateIssueServiceImplTest {
 
         then(certificateIssueRepository).should()
                 .findByEmployeeIdWithFilter(employeeId, "EMPLOYMENT", false, today, pageable);
+    }
+
+    @Test
+    @DisplayName("getByEmployeeId with only includeExpired flag should call filter repository method")
+    void getByEmployeeId_withOnlyIncludeExpired_shouldStillUseFilterMethod() {
+        UUID employeeId = UUID.randomUUID();
+        Pageable pageable = PageRequest.of(0, 20);
+        LocalDate today = LocalDate.now();
+
+        given(certificateIssueRepository.findByEmployeeIdWithFilter(
+                eq(employeeId),
+                isNull(),
+                eq(false),
+                eq(today),
+                eq(pageable)))
+                .willReturn(new PageImpl<>(List.of(), pageable, 0));
+
+        certificateIssueService.getByEmployeeId(employeeId, null, false, pageable);
+
+        then(certificateIssueRepository).should()
+                .findByEmployeeIdWithFilter(employeeId, null, false, today, pageable);
     }
 }

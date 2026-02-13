@@ -31,6 +31,23 @@ describe('certificateService', () => {
     expect(apiClient.get).toHaveBeenCalledWith('/certificates/requests/my', { params });
   });
 
+  it('should fetch my issues with filter params', async () => {
+    const mockResponse = {
+      data: {
+        success: true,
+        data: { content: [], page: 0, size: 10, totalElements: 0, totalPages: 0, first: true, last: true },
+        timestamp: '2026-02-12T00:00:00Z',
+      },
+    };
+
+    vi.mocked(apiClient.get).mockResolvedValue(mockResponse);
+
+    const params = { page: 0, size: 10, typeCode: 'EMPLOYMENT', includeExpired: false };
+    await certificateService.getMyIssues(params);
+
+    expect(apiClient.get).toHaveBeenCalledWith('/certificates/issues/my', { params });
+  });
+
   it('should download certificate using id-based endpoint', async () => {
     const mockBlob = new Blob(['pdf'], { type: 'application/pdf' });
     vi.mocked(apiClient.get).mockResolvedValue({ data: mockBlob });

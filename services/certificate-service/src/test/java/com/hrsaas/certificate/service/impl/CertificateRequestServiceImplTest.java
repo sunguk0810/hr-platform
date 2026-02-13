@@ -151,4 +151,51 @@ class CertificateRequestServiceImplTest {
         assertThat(result).isNotNull();
         assertThat(result.getTotalElements()).isEqualTo(0);
     }
+
+    @Test
+    @DisplayName("getMyRequests should query repository with status only")
+    void getMyRequests_withStatusOnly_shouldDelegateToStatusMethod() {
+        Pageable pageable = Pageable.unpaged();
+
+        given(certificateRequestRepository.findByEmployeeIdAndStatusOrderByCreatedAtDesc(
+                eq(employeeId),
+                eq(RequestStatus.CANCELLED),
+                eq(pageable)))
+                .willReturn(new PageImpl<>(java.util.List.of(), pageable, 0));
+
+        Page<?> result = certificateRequestService.getMyRequests(
+                employeeId,
+                RequestStatus.CANCELLED,
+                null,
+                pageable);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getTotalElements()).isEqualTo(0);
+        then(certificateRequestRepository).should()
+                .findByEmployeeIdAndStatusOrderByCreatedAtDesc(employeeId, RequestStatus.CANCELLED, pageable);
+    }
+
+    @Test
+    @DisplayName("getMyRequests should query repository with typeCode only")
+    void getMyRequests_withTypeCodeOnly_shouldDelegateToTypeCodeMethod() {
+        Pageable pageable = Pageable.unpaged();
+        String typeCode = "SALARY";
+
+        given(certificateRequestRepository.findByEmployeeIdAndCertificateTypeCodeOrderByCreatedAtDesc(
+                eq(employeeId),
+                eq(typeCode),
+                eq(pageable)))
+                .willReturn(new PageImpl<>(java.util.List.of(), pageable, 0));
+
+        Page<?> result = certificateRequestService.getMyRequests(
+                employeeId,
+                null,
+                typeCode,
+                pageable);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getTotalElements()).isEqualTo(0);
+        then(certificateRequestRepository).should()
+                .findByEmployeeIdAndCertificateTypeCodeOrderByCreatedAtDesc(employeeId, typeCode, pageable);
+    }
 }

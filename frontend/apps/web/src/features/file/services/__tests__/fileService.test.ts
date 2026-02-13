@@ -25,4 +25,11 @@ describe('fileService', () => {
 
     expect(url).toBe('/api/v1/files/file-001/presigned-url?expirationMinutes=30');
   });
+
+  it('should prioritize download URL for binary preview flow', () => {
+    const url = fileService.getDownloadUrl('file-001');
+
+    expect(url).toContain('/files/file-001/download');
+    expect(url).not.toContain('/files/file-001/preview');
+  });
 });
