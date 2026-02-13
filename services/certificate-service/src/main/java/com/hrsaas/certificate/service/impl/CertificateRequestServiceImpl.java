@@ -12,6 +12,7 @@ import com.hrsaas.certificate.repository.CertificateTypeRepository;
 import com.hrsaas.certificate.service.CertificateRequestService;
 import com.hrsaas.common.core.exception.BusinessException;
 import com.hrsaas.common.core.exception.ErrorCode;
+import com.hrsaas.common.security.SecurityContextHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -42,7 +43,12 @@ public class CertificateRequestServiceImpl implements CertificateRequestService 
     @Override
     @Transactional
     public CertificateRequestResponse create(CreateCertificateRequestRequest request) {
-        log.info("Creating certificate request for employee: {}", request.getEmployeeId());
+        UUID employeeId = SecurityContextHolder.getCurrentEmployeeId();
+        if (employeeId == null) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED, "인증 정보에서 직원 식별자를 확인할 수 없습니다");
+        }
+
+        log.info("Creating certificate request for employee: {}", employeeId);
 
         CertificateType certificateType = certificateTypeRepository.findById(request.getCertificateTypeId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND,
@@ -62,7 +68,7 @@ public class CertificateRequestServiceImpl implements CertificateRequestService 
 
         CertificateRequest certificateRequest = CertificateRequest.builder()
                 .certificateType(certificateType)
-                .employeeId(request.getEmployeeId())
+                .employeeId(employeeId)
                 .requestNumber(requestNumber)
                 .purpose(request.getPurpose())
                 .submissionTarget(request.getSubmissionTarget())
@@ -184,6 +190,39 @@ public class CertificateRequestServiceImpl implements CertificateRequestService 
 
     @Override
     public Page<CertificateRequestResponse> getMyRequests(UUID employeeId, Pageable pageable) {
+        if (employeeId == null) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED, "인증 정보에서 직원 식별자를 확인할 수 없습니다");
+        }
+
+        return getByEmployeeId(employeeId, pageable);
+    }
+
+    @Override
+    public Page<CertificateRequestResponse> getMyRequests(UUID employeeId, RequestStatus status, String typeCode, Pageable pageable) {
+        if (employeeId == null) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED, "인증 정보에서 직원 식별자를 확인할 수 없습니다");
+        }
+
+        if (status != null && typeCode != null && !typeCode.isBlank()) {
+            return certificateRequestRepository
+                    .findByEmployeeIdAndCertificateTypeCodeAndStatusOrderByCreatedAtDesc(
+                            employeeId,
+                            typeCode,
+                            status,
+                            pageable)
+                    .map(CertificateRequestResponse::from);
+        }
+
+        if (status != null) {
+            return getByEmployeeIdAndStatus(employeeId, status, pageable);
+        }
+
+        if (typeCode != null && !typeCode.isBlank()) {
+            return certificateRequestRepository
+                    .findByEmployeeIdAndCertificateTypeCodeOrderByCreatedAtDesc(employeeId, typeCode, pageable)
+                    .map(CertificateRequestResponse::from);
+        }
+
         return getByEmployeeId(employeeId, pageable);
     }
 

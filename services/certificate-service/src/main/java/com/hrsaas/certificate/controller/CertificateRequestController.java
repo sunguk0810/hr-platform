@@ -7,6 +7,7 @@ import com.hrsaas.certificate.domain.dto.response.CertificateRequestResponse;
 import com.hrsaas.certificate.domain.entity.RequestStatus;
 import com.hrsaas.certificate.service.CertificateRequestService;
 import com.hrsaas.common.response.ApiResponse;
+import com.hrsaas.common.security.SecurityContextHolder;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -131,8 +132,10 @@ public class CertificateRequestController {
     @GetMapping("/my")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<Page<CertificateRequestResponse>> getMyRequests(
-            @RequestParam UUID employeeId,
+            @RequestParam(required = false) RequestStatus status,
+            @RequestParam(required = false) String typeCode,
             @PageableDefault(size = 20) Pageable pageable) {
-        return ApiResponse.success(certificateRequestService.getMyRequests(employeeId, pageable));
+        UUID employeeId = SecurityContextHolder.getCurrentEmployeeId();
+        return ApiResponse.success(certificateRequestService.getMyRequests(employeeId, status, typeCode, pageable));
     }
 }

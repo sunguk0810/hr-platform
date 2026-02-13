@@ -5,6 +5,8 @@ import com.hrsaas.certificate.domain.dto.request.RevokeCertificateRequest;
 import com.hrsaas.certificate.domain.dto.response.CertificateIssueResponse;
 import com.hrsaas.certificate.service.CertificateIssueService;
 import com.hrsaas.common.response.ApiResponse;
+import com.hrsaas.common.core.exception.BusinessException;
+import com.hrsaas.common.core.exception.ErrorCode;
 import com.hrsaas.common.security.SecurityContextHolder;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -51,9 +53,15 @@ public class CertificateIssueController {
     @GetMapping("/my")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<Page<CertificateIssueResponse>> getMyIssues(
+            @RequestParam(required = false) String typeCode,
+            @RequestParam(defaultValue = "false") boolean includeExpired,
             @PageableDefault(size = 20) Pageable pageable) {
-        UUID employeeId = SecurityContextHolder.getCurrentUser().getEmployeeId();
-        return ApiResponse.success(certificateIssueService.getByEmployeeId(employeeId, pageable));
+        UUID employeeId = SecurityContextHolder.getCurrentEmployeeId();
+        if (employeeId == null) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED, "인증 정보에서 직원 식별자를 확인할 수 없습니다");
+        }
+        return ApiResponse.success(
+                certificateIssueService.getByEmployeeId(employeeId, typeCode, includeExpired, pageable));
     }
 
     @Operation(summary = "발급 증명서 상세 조회")

@@ -15,8 +15,12 @@ import org.springframework.test.util.ReflectionTestUtils;
 import com.hrsaas.certificate.repository.CertificateIssueRepository;
 import com.hrsaas.certificate.repository.CertificateRequestRepository;
 import com.hrsaas.certificate.repository.CertificateTemplateRepository;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.HashMap;
@@ -28,6 +32,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.given;
 
 @ExtendWith(MockitoExtension.class)
@@ -147,5 +152,26 @@ class CertificateIssueServiceImplTest {
 
         assertThatThrownBy(() -> certificateIssueService.downloadPdf(issueId))
                 .isInstanceOf(BusinessException.class);
+    }
+
+    @Test
+    @DisplayName("getByEmployeeId with filters should route to repository filter query")
+    void getByEmployeeId_withFilters_usesFilterRepositoryMethod() {
+        UUID employeeId = UUID.randomUUID();
+        Pageable pageable = PageRequest.of(0, 20);
+        LocalDate today = LocalDate.now();
+
+        given(certificateIssueRepository.findByEmployeeIdWithFilter(
+                eq(employeeId),
+                eq("EMPLOYMENT"),
+                eq(false),
+                eq(today),
+                eq(pageable)))
+                .willReturn(new PageImpl<>(List.of(), pageable, 0));
+
+        certificateIssueService.getByEmployeeId(employeeId, "EMPLOYMENT", false, pageable);
+
+        then(certificateIssueRepository).should()
+                .findByEmployeeIdWithFilter(employeeId, "EMPLOYMENT", false, today, pageable);
     }
 }

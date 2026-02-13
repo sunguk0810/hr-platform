@@ -564,6 +564,8 @@ export const certificateHandlers = [
     const size = parseInt(url.searchParams.get('size') || '10', 10);
     const typeCode = url.searchParams.get('typeCode');
     const includeExpired = url.searchParams.get('includeExpired') === 'true';
+    const startDate = url.searchParams.get('startDate');
+    const endDate = url.searchParams.get('endDate');
 
     let filtered = [...mockIssues];
 
@@ -577,6 +579,16 @@ export const certificateHandlers = [
     if (!includeExpired) {
       const now = new Date();
       filtered = filtered.filter(i => new Date(i.expiresAt) >= now);
+    }
+
+    if (startDate) {
+      const parsedStart = new Date(startDate);
+      filtered = filtered.filter(i => new Date(i.issuedAt) >= parsedStart);
+    }
+
+    if (endDate) {
+      const parsedEnd = new Date(endDate);
+      filtered = filtered.filter(i => new Date(i.issuedAt) <= parsedEnd);
     }
 
     const totalElements = filtered.length;
@@ -605,11 +617,11 @@ export const certificateHandlers = [
   }),
 
   // Download certificate
-  http.get('/api/v1/certificates/issues/:issueNumber/download', async ({ params }) => {
+  http.get('/api/v1/certificates/issues/:issueId/download', async ({ params }) => {
     await delay(500);
 
-    const { issueNumber } = params;
-    const issue = mockIssues.find(i => i.issueNumber === issueNumber);
+    const { issueId } = params;
+    const issue = mockIssues.find(i => i.id === issueId);
 
     if (!issue) {
       return HttpResponse.json(
@@ -683,6 +695,29 @@ startxref
         'Content-Disposition': `attachment; filename="${issue.fileName}"`,
       },
     });
+  }),
+
+  // Backward-compatible alias: issueNumber based path
+  http.get('/api/v1/certificates/issues/:issueNumber/download', async ({ request, params }) => {
+    const { issueNumber } = params;
+    const issue = mockIssues.find(i => i.issueNumber === issueNumber);
+
+    if (!issue) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'CERT_ISSUE_001',
+            message: '발급 내역을 찾을 수 없습니다.',
+          },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 404 }
+      );
+    }
+
+    const requestUrl = new URL(request.url);
+    return HttpResponse.redirect(`${requestUrl.origin}/api/v1/certificates/issues/${issue.id}/download`);
   }),
 
   // Verify certificate

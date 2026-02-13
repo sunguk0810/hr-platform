@@ -70,7 +70,7 @@ export default function CertificateIssueHistoryPage() {
     }
 
     try {
-      const blob = await downloadMutation.mutateAsync(issue.issueNumber);
+      const blob = await downloadMutation.mutateAsync(issue.id);
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;

@@ -142,6 +142,21 @@ public class CertificateIssueServiceImpl implements CertificateIssueService {
     }
 
     @Override
+    public Page<CertificateIssueResponse> getByEmployeeId(
+            UUID employeeId,
+            String typeCode,
+            boolean includeExpired,
+            Pageable pageable) {
+        return certificateIssueRepository.findByEmployeeIdWithFilter(
+                employeeId,
+                typeCode,
+                includeExpired,
+                LocalDate.now(),
+                pageable)
+                .map(CertificateIssueResponse::from);
+    }
+
+    @Override
     public Page<CertificateIssueResponse> getByIssuedDateRange(Instant startDate, Instant endDate, Pageable pageable) {
         return certificateIssueRepository.findByIssuedDateRange(startDate, endDate, pageable)
                 .map(CertificateIssueResponse::from);

@@ -77,7 +77,7 @@ export function useMyIssues(params?: CertificateIssueSearchParams) {
 
 export function useDownloadCertificate() {
   return useMutation({
-    mutationFn: (issueNumber: string) => certificateService.downloadCertificate(issueNumber),
+    mutationFn: (issueId: string) => certificateService.downloadCertificate(issueId),
   });
 }
 

@@ -25,9 +25,6 @@ public class CreateCertificateRequestRequest {
     @NotNull(message = "증명서 유형 ID는 필수입니다")
     private UUID certificateTypeId;
 
-    @NotNull(message = "직원 ID는 필수입니다")
-    private UUID employeeId;
-
     @Size(max = 200, message = "발급목적은 200자 이내여야 합니다")
     private String purpose;
 

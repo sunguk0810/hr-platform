@@ -75,4 +75,13 @@ public interface CertificateRequestService {
      * 내 신청 목록 조회 (현재 로그인 사용자)
      */
     Page<CertificateRequestResponse> getMyRequests(UUID employeeId, Pageable pageable);
+
+    /**
+     * 내 신청 목록 조회 (필터 기반)
+     */
+    Page<CertificateRequestResponse> getMyRequests(
+            UUID employeeId,
+            RequestStatus status,
+            String typeCode,
+            Pageable pageable);
 }

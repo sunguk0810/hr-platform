@@ -47,6 +47,11 @@ public interface CertificateIssueService {
     Page<CertificateIssueResponse> getByEmployeeId(UUID employeeId, Pageable pageable);
 
     /**
+     * 직원별 발급 증명서 목록 (필터 적용)
+     */
+    Page<CertificateIssueResponse> getByEmployeeId(UUID employeeId, String typeCode, boolean includeExpired, Pageable pageable);
+
+    /**
      * 기간별 발급 목록
      */
     Page<CertificateIssueResponse> getByIssuedDateRange(Instant startDate, Instant endDate, Pageable pageable);

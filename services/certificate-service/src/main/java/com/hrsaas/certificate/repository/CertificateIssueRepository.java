@@ -133,6 +133,22 @@ public interface CertificateIssueRepository extends JpaRepository<CertificateIss
     Page<CertificateIssue> findByEmployeeId(@Param("employeeId") UUID employeeId, Pageable pageable);
 
     /**
+     * 직원별 발급 증명서 목록 (타입/만료 필터)
+     */
+    @Query("SELECT ci FROM CertificateIssue ci " +
+           "JOIN FETCH ci.request cr WHERE " +
+           "cr.employeeId = :employeeId " +
+           "AND (:typeCode IS NULL OR cr.certificateType.code = :typeCode) " +
+           "AND (:includeExpired = true OR ci.expiresAt >= :today) " +
+           "ORDER BY ci.issuedAt DESC")
+    Page<CertificateIssue> findByEmployeeIdWithFilter(
+            @Param("employeeId") UUID employeeId,
+            @Param("typeCode") String typeCode,
+            @Param("includeExpired") boolean includeExpired,
+            @Param("today") java.time.LocalDate today,
+            Pageable pageable);
+
+    /**
      * 특정 프리픽스를 가진 최신 발급번호 조회 (길이 및 값 기준 내림차순)
      */
     @Query("SELECT ci.issueNumber FROM CertificateIssue ci WHERE ci.tenantId = :tenantId AND ci.issueNumber LIKE :prefix% ORDER BY LENGTH(ci.issueNumber) DESC, ci.issueNumber DESC")

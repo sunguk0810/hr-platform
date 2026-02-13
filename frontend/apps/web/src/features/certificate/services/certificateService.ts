@@ -55,8 +55,8 @@ export const certificateService = {
     return response.data;
   },
 
-  async downloadCertificate(issueNumber: string): Promise<Blob> {
-    const response = await apiClient.get(`/certificates/issues/${issueNumber}/download`, {
+  async downloadCertificate(issueId: string): Promise<Blob> {
+    const response = await apiClient.get(`/certificates/issues/${issueId}/download`, {
       responseType: 'blob',
     });
     return response.data;
