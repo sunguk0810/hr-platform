@@ -221,8 +221,8 @@ export const appointmentHandlers = [
     const size = parseInt(url.searchParams.get('size') || '10', 10);
     const status = url.searchParams.get('status') as DraftStatus | null;
     const keyword = url.searchParams.get('keyword');
-    const effectiveDateFrom = url.searchParams.get('effectiveDateFrom');
-    const effectiveDateTo = url.searchParams.get('effectiveDateTo');
+    const startDate = url.searchParams.get('startDate') || url.searchParams.get('effectiveDateFrom');
+    const endDate = url.searchParams.get('endDate') || url.searchParams.get('effectiveDateTo');
 
     let filtered = [...drafts];
 
@@ -236,11 +236,11 @@ export const appointmentHandlers = [
         d.draftNumber.toLowerCase().includes(lowerKeyword)
       );
     }
-    if (effectiveDateFrom) {
-      filtered = filtered.filter(d => d.effectiveDate >= effectiveDateFrom);
+    if (startDate) {
+      filtered = filtered.filter(d => d.effectiveDate >= startDate);
     }
-    if (effectiveDateTo) {
-      filtered = filtered.filter(d => d.effectiveDate <= effectiveDateTo);
+    if (endDate) {
+      filtered = filtered.filter(d => d.effectiveDate <= endDate);
     }
 
     filtered.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
@@ -255,7 +255,7 @@ export const appointmentHandlers = [
       effectiveDate: d.effectiveDate,
       status: d.status,
       detailCount: d.detailCount,
-      draftCreatedBy: d.draftCreatedBy!,
+      draftCreatedBy: d.draftCreatedBy,
       createdAt: d.createdAt,
     }));
 
